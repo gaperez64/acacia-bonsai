@@ -30,6 +30,43 @@ def is_signal_crash(exit_code: str) -> bool:
     return code < 0 or code >= 128
 
 
+def audit_solved_verdicts(rows: dict[str, dict[str, str]],
+                          others: dict[str, dict[str, dict[str, str]]],
+                          expected: dict[str, str], cap: float) -> list[dict[str, str]]:
+    """Flag a legacy series' solved verdicts that cannot be trusted, in place.
+
+    Acacia 1.x predates the fix for signal-killed workers being read as
+    REALIZABLE, so its exit convention is not trusted blindly.  A solved row
+    is flagged when it contradicts another series' solved verdict, the
+    expected status, or its own exit code; a flagged row is rescored as ERROR
+    charged at the cap.  Rows are cactus dicts (result, seconds, exit).
+    """
+    audit = []
+    for name, row in rows.items():
+        verdict = row["result"]
+        if verdict not in SOLVED:
+            continue
+        conflicting = [tool for tool, other in others.items()
+                       if other[name]["result"] in SOLVED and other[name]["result"] != verdict]
+        expected_conflict = expected.get(name) not in (None, verdict)
+        exit_code = str(row["exit"]).strip()
+        unexpected_exit = exit_code != ("0" if verdict == "REALIZABLE" else "1")
+        # run-subset.py writes run.returncode. Direct subprocess signals
+        # are negative; systemd-run may encode them as 128 + signal.
+        signal_crash = is_signal_crash(exit_code)
+        if conflicting or expected_conflict or unexpected_exit:
+            audit.append({"instance": name, "verdict": verdict, "exit": exit_code,
+                          "contradicts_tools": ",".join(conflicting),
+                          "expected_status": expected.get(name, ""),
+                          "contradicts_expected": str(expected_conflict).lower(),
+                          "unexpected_exit": str(unexpected_exit).lower(),
+                          "signal_crash": str(signal_crash).lower()})
+            # A suspect verdict must not earn solved credit in the report.
+            row["result"] = "ERROR"
+            row["seconds"] = str(cap)
+    return audit
+
+
 def load_csv(path: pathlib.Path, ids: set[str], cap: int) -> dict[str, dict[str, str]]:
     rows = {}
     with path.open(newline="") as stream:
@@ -126,31 +163,18 @@ def main() -> int:
             ltlsynt = {to_obf[name]: {**row, "instance": to_obf[name]} for name, row in ltlsynt_original.items()}
             tacas_raw = {to_obf[name]: {**row, "instance": to_obf[name]} for name, row in tacas_original.items()}
             tacas = {name: dict(row) for name, row in tacas_raw.items()}
-            audit = []
-            for original, obf in to_obf.items():
-                row = tacas[obf]
-                verdict = row["result"]
-                if verdict not in SOLVED:
-                    continue
-                conflicting = [tool for tool, other in (("Acacia", acacia[obf]), ("ltlsynt", ltlsynt[obf]))
-                               if other["result"] in SOLVED and other["result"] != verdict]
-                expected_conflict = expected.get(original) not in (None, verdict)
-                exit_code = row["exit"].strip()
-                unexpected_exit = exit_code != ("0" if verdict == "REALIZABLE" else "1")
-                # run-subset.py writes run.returncode. Direct subprocess signals
-                # are negative; systemd-run may encode them as 128 + signal.
-                signal_crash = is_signal_crash(exit_code)
-                if conflicting or expected_conflict or unexpected_exit:
-                    audit.append({"original_id": original, "obfuscated_id": obf,
-                                  "tacas_verdict": verdict, "exit": exit_code,
-                                  "contradicts_tools": ",".join(conflicting),
-                                  "expected_status": expected.get(original, ""),
-                                  "contradicts_expected": str(expected_conflict).lower(),
-                                  "unexpected_exit": str(unexpected_exit).lower(),
-                                  "signal_crash": str(signal_crash).lower()})
-                    # A suspect verdict must not earn solved credit in the report.
-                    row["result"] = "ERROR"
-                    row["seconds"] = str(cap)
+            to_original = {obf: original for original, obf in to_obf.items()}
+            flagged = audit_solved_verdicts(
+                {obf: tacas[obf] for obf in to_obf.values()},
+                {"Acacia": acacia, "ltlsynt": ltlsynt},
+                {to_obf[original]: verdict for original, verdict in expected.items()
+                 if original in to_obf}, cap)
+            audit = [{"original_id": to_original[entry["instance"]],
+                      "obfuscated_id": entry["instance"], "tacas_verdict": entry["verdict"],
+                      **{key: entry[key] for key in (
+                          "exit", "contradicts_tools", "expected_status",
+                          "contradicts_expected", "unexpected_exit", "signal_crash")}}
+                     for entry in flagged]
             out = args.out / f"{cap}s"
             out.mkdir(parents=True, exist_ok=True)
             write_csv(out / "ltlsynt-obfuscated.csv", ltlsynt, obf_ids)
