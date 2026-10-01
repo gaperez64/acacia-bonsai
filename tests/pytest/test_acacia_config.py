@@ -50,6 +50,32 @@ def test_committed_registry_is_valid():
     module.command_validate(options, presets)
 
 
+def test_p4_final_candidate_inherits_only_native_arms_and_portfolio():
+    module = load_module()
+    options, presets = module.load_registry()
+    name = "otf_sparse_formula_gr1_lift"
+    data = presets["presets"][name]
+    assert data["role"] == "sweep"
+    assert data["inherits"] == "otf_sparse_formula"
+    assert set(data) == {"description", "role", "inherits", "native_arms", "default_arms"}
+    assert name not in presets["groups"]["docker_default"]
+
+    parent = module.normalize_preset(options, presets, "otf_sparse_formula")
+    candidate = module.normalize_preset(options, presets, name)
+    assert candidate["default_arms"].split(",") == [
+        "real:small:backward",
+        "real:small:forward",
+        "unreal:formula:spot-guarded-sparse",
+        "unreal:automaton:forward",
+        "both:gr1:oxidd",
+        "real:param-lift:oxidd",
+    ]
+    assert candidate["native_arms"] is True
+    assert {
+        key for key in candidate if key not in {"_preset", "preset"} and candidate[key] != parent[key]
+    } == {"native_arms", "default_arms"}
+
+
 def test_docker_launcher_uses_registry_group_without_python():
     module = load_module()
     _options, presets = module.load_registry()
