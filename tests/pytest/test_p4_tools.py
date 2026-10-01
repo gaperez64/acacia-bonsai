@@ -759,12 +759,17 @@ def test_recycle_rejects_decline_from_unlisted_arm(tmp_path):
 
 
 def test_review_native_equals_flag_requires_phase_records(tmp_path):
-    fixture = ROOT / "build_scratch/p4tools/review-r2-native-flag"
-    first = coverage.load_output(fixture / "short.tsv")[0]
+    first = observation("a", "REALIZABLE")
+    first["flags"] = "--arms=real:small:backward"
+    short, long = tmp_path / "short.tsv", tmp_path / "sample.tsv"
+    write_observations(short, [first])
+    write_observations(long, [{**observation("a", "REALIZABLE", cap=60),
+                               "flags": first["flags"]}])
+    first = coverage.load_output(short)[0]
     assert first["flags"] == "--arms=real:small:backward"
     assert recycle.arms_from_flags(first["flags"]) == ["real:small:backward"]
     prefix = tmp_path / "plan"
-    recycle.plan(argparse.Namespace(short=fixture / "short.tsv", list=None, long_cap=60,
+    recycle.plan(argparse.Namespace(short=short, list=None, long_cap=60,
                                     deadline_margin=1, deadline_stage_regex="deadline",
                                     memory_max="8G", memory_swap_max="0", records=None,
                                     deterministic_error_list=None, out_prefix=prefix))
@@ -774,7 +779,7 @@ def test_review_native_equals_flag_requires_phase_records(tmp_path):
                                       out_prefix=tmp_path / "draw"))
     with pytest.raises(recycle.RecycleError, match="requires short phase records"):
         recycle.validate(argparse.Namespace(plan=plan, sample=tmp_path / "draw-sample.json",
-                                          long=fixture / "sample.tsv", long_records=None,
+                                          long=long, long_records=None,
                                           out=tmp_path / "verdict.json"))
 
 
@@ -802,20 +807,42 @@ def test_native_manifest_identity_does_not_depend_on_flag_spelling(tmp_path):
     assert (kind, arms, digest) == ("native", ["synthetic"], recycle.sha256_file(manifest))
 
 
-def test_review_manifest_subset_cannot_cover_full_observation(tmp_path):
-    fixture = ROOT / "build_scratch/p4tools/review-r2-manifest-subset"
+def manifest_subset_fixture(tmp_path):
+    listing = tmp_path / "full.list"
+    listing.write_text("a\nb\n")
+    selected = tmp_path / "selected.list"
+    selected.write_text("a\n")
+    mapping = tmp_path / "map.tsv"
+    mapping.write_text("instance\ttlsf\na\ta.tlsf\nb\tb.tlsf\n")
+    for name in ("a", "b"):
+        (tmp_path / f"{name}.tlsf").write_text("// STATUS: REALIZABLE\n")
+    exceptions = tmp_path / "exceptions.tsv"
+    exceptions.write_text("instance\tannotated_status\tcorrected_status\tevidence\n")
+    for label in ("old", "new"):
+        write_observations(tmp_path / f"{label}.tsv", [
+            observation(name, "REALIZABLE", label=label) for name in ("a", "b")])
     manifest = tmp_path / "manifest.json"
-    frozen = json.loads((fixture / "manifest.json").read_text())
-    frozen["cap_s"] = 17
-    manifest.write_text(json.dumps(frozen))
-    args = argparse.Namespace(list=fixture / "full.list", cap=17,
-                              series=[f"old={fixture / 'old.tsv'}",
-                                      f"new={fixture / 'new.tsv'}"], internal=[], new="new",
+    manifest.write_text(json.dumps({
+        "frozen_list_sha256": threeway.sha256_file(listing), "cap_s": 17,
+        "inputs": {"list": {"path": str(selected), "sha256": threeway.sha256_file(selected)}},
+        "corpus_sha256": threeway.corpus_digest(["a"],
+                                                coverage.read_tlsf_map(mapping), tmp_path),
+        "series": {"new": {"binary_sha256": "a" * 64,
+                           "source_revision": "source"}},
+    }))
+    args = argparse.Namespace(list=listing, cap=17,
+                              series=[f"old={tmp_path / 'old.tsv'}",
+                                      f"new={tmp_path / 'new.tsv'}"], internal=[], new="new",
                               legacy_audit=[], untimed_conversion=[],
-                              tlsf_map=fixture / "map.tsv", tlsf_corpus=fixture,
-                              status_exceptions=fixture / "exceptions.tsv",
+                              tlsf_map=mapping, tlsf_corpus=tmp_path,
+                              status_exceptions=exceptions,
                               noise_floor=None, noise_floor_source="",
                               manifest=[manifest], out=tmp_path)
+    return args, manifest
+
+
+def test_review_manifest_subset_cannot_cover_full_observation(tmp_path):
+    args, _ = manifest_subset_fixture(tmp_path)
     with pytest.raises(threeway.JoinError, match="selected panel differs"):
         threeway.join(args)
 
@@ -1161,16 +1188,10 @@ def test_mixed_comparison_rejects_wrong_sizes_and_launches(tmp_path, monkeypatch
 
 
 def test_capless_review_reproduction_is_rejected(tmp_path):
-    fixture = ROOT / "build_scratch/p4tools/review-r2-manifest-subset"
-    capless = ROOT / "build_scratch/p4tools/review-r3-capless-manifest/manifest.json"
-    args = argparse.Namespace(list=fixture / "full.list", cap=17,
-                              series=[f"old={fixture / 'old.tsv'}",
-                                      f"new={fixture / 'new.tsv'}"], internal=[], new="new",
-                              legacy_audit=[], untimed_conversion=[],
-                              tlsf_map=fixture / "map.tsv", tlsf_corpus=fixture,
-                              status_exceptions=fixture / "exceptions.tsv",
-                              noise_floor=None, noise_floor_source="", manifest=[capless],
-                              out=tmp_path)
+    args, manifest = manifest_subset_fixture(tmp_path)
+    frozen = json.loads(manifest.read_text())
+    del frozen["cap_s"]
+    manifest.write_text(json.dumps(frozen))
     with pytest.raises(threeway.JoinError, match="valid positive cap_s"):
         threeway.join(args)
 
