@@ -369,6 +369,38 @@ def test_scoped_rusage_and_worker_capture(monkeypatch, campaign, tmp_path):
     assert len(calls) == 1
 
 
+def test_resume_row_index_and_interrupted_phase_records(monkeypatch, campaign, tmp_path):
+    records = tmp_path / "phase-records"
+    campaign.phase_records_dir = records
+    seen = []
+
+    def scoped(_cmd, **kwargs):
+        directory = pathlib.Path(kwargs["env"]["ACACIA_PHASE_RECORDS"])
+        seen.append(directory)
+        (directory / "fresh.jsonl").write_text('{"phase":"record_summary"}\n')
+        return coverage.RunResult("REALIZABLE\n", "", 0, 0.1, False)
+
+    monkeypatch.setattr(coverage, "run_systemd_scope", scoped)
+    assert coverage.run(campaign) == 0
+    assert seen[0].name == "case.ltl-0"
+    (tmp_path / "another.tlsf").write_text("//STATUS: realizable\n")
+    (tmp_path / "list").write_text("case.ltl\nanother.ltl\n")
+    (tmp_path / "map").write_text(
+        "instance\ttlsf\ncase.ltl\tcase.tlsf\nanother.ltl\tanother.tlsf\n")
+    interrupted = records / "candidate/17/another.ltl-1"
+    interrupted.mkdir(parents=True)
+    (interrupted / "stale.jsonl").write_text("{torn")
+    campaign.resume = True
+    assert coverage.run(campaign) == 0
+    assert len(seen) == 2 and seen[1] == interrupted
+    assert not (interrupted / "stale.jsonl").exists()
+    quarantined, = interrupted.parent.glob("another.ltl-1.interrupted-*")
+    assert (quarantined / "stale.jsonl").read_text() == "{torn"
+    with pathlib.Path(campaign.output).open(newline="") as stream:
+        rows = list(csv.DictReader(stream, delimiter="\t"))
+    assert [row["run_index"] for row in rows] == ["0", "1"]
+
+
 def test_legacy_resume_preserves_measurements_and_does_not_rerun(monkeypatch, campaign):
     calls = []
     def scoped(*args, **kwargs):

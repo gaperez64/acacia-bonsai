@@ -63,6 +63,9 @@ NORMALIZED_RESULTS = {
     "MEMOUT",
     "CRASH",
     "ERROR",
+    # Only run-subset.py's converted-pair legs (ltlsynt, Acacia 1.x) write
+    # this: the untimed SyFCo conversion failed, so no solver ran.
+    "SYFCO-FAIL",
 }
 OUTPUT_COLUMNS = [
     "solver_label",
@@ -95,6 +98,10 @@ OUTPUT_COLUMNS = [
     "scope_unit",
 ]
 ROUTE_COLUMNS = ["winner", "lift_elapsed", "fallback_start"]
+# A derived series (tools/recycle-cap.py merge) keeps the observation columns
+# and states, per row, whether it was measured at the series cap or recycled
+# from a shorter-cap run, which run it came from, and that run's file digest.
+DERIVED_COLUMNS = ["provenance", "source_run", "source_run_sha256", "source_cap_s"]
 CONFLICT_COLUMNS = [
     "solver_label",
     "instance",
@@ -420,6 +427,8 @@ def load_output(
                         OUTPUT_COLUMNS,
                         legacy_columns,
                         OUTPUT_COLUMNS + ROUTE_COLUMNS,
+                        OUTPUT_COLUMNS + DERIVED_COLUMNS,
+                        OUTPUT_COLUMNS + ROUTE_COLUMNS + DERIVED_COLUMNS,
                     )]
         if header not in expected or len(set(reader.fieldnames or [])) != len(reader.fieldnames or []):
             raise CoverageError(
@@ -427,6 +436,7 @@ def load_output(
                 + "\t".join(OUTPUT_COLUMNS)
             )
         has_route_columns = all(column in header for column in ROUTE_COLUMNS)
+        has_derived_columns = all(column in header for column in DERIVED_COLUMNS)
         if expect_route_columns is not None and has_route_columns != expect_route_columns:
             state = "with" if expect_route_columns else "without"
             raise CoverageError(f"resume output {path} must be {state} route columns")
@@ -450,6 +460,18 @@ def load_output(
                     f"resume output {path}:{line_number} has invalid "
                     f"expectation_source {row['expectation_source']!r}"
                 )
+            if has_derived_columns:
+                try:
+                    int(row["source_cap_s"])
+                except ValueError:
+                    raise CoverageError(
+                        f"resume output {path}:{line_number} has invalid source_cap_s"
+                    ) from None
+                if not row["provenance"] or not row["source_run"] or not re.fullmatch(
+                        r"[0-9a-f]{64}", row["source_run_sha256"]):
+                    raise CoverageError(
+                        f"resume output {path}:{line_number} has incomplete provenance"
+                    )
             row.setdefault("scope_unit", "")
             if has_route_columns:
                 for column in ROUTE_COLUMNS:
@@ -570,9 +592,9 @@ def conflict_row(
     }
 
 
-def normalize_result(run: RunResult) -> tuple[str, str]:
+def normalize_result(run: RunResult, tool: str = "acacia") -> tuple[str, str]:
     """Map benchlib classifications to the coverage file's exact vocabulary."""
-    result = classify_run(run, tool="acacia")
+    result = classify_run(run, tool=tool)
     if result == "TIMEOUT":
         return "TIMEOUT", "timeout"
     if result == "RESOURCE_LIMIT":
@@ -580,6 +602,22 @@ def normalize_result(run: RunResult) -> tuple[str, str]:
     if run.returncode < 0:
         return "CRASH", f"signal:{-run.returncode}"
     return result, ""
+
+
+def quarantine_interrupted_records(directory: pathlib.Path) -> pathlib.Path | None:
+    """Move aside records left by an attempt that never wrote its TSV row.
+
+    The row is written only after the solver exits, so a directory that
+    already holds files belongs to an interrupted attempt.  Mixing its records
+    with the new attempt's would misattribute decisions; deleting them would
+    lose evidence.  They are renamed, not removed.
+    """
+    if not directory.is_dir() or not any(directory.iterdir()):
+        return None
+    target = directory.with_name(f"{directory.name}.interrupted-{uuid.uuid4().hex[:12]}")
+    directory.rename(target)
+    print(f"moved interrupted phase records {directory} to {target}", file=sys.stderr)
+    return target
 
 
 def unique_in_order(instances: list[str]) -> list[str]:
@@ -804,6 +842,9 @@ def export_cactus_main(argv: list[str]) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bin", required=True, metavar="PATH")
+    parser.add_argument("--binary-identity", type=pathlib.Path, metavar="PATH",
+                        help="underlying executable when --bin is a frozen-runtime wrapper; "
+                             "hash this path in the observation")
     parser.add_argument("--solver-label", required=True, metavar="LABEL")
     parser.add_argument("--list", required=True, metavar="PATH")
     parser.add_argument("--tlsf-map", required=True, metavar="PATH")
@@ -895,7 +936,10 @@ def run(args: argparse.Namespace) -> int:
     except ValueError as error:
         raise CoverageError(f"invalid --flags value: {error}") from error
 
-    binary_sha256 = sha256_file(binary)
+    identity_binary = getattr(args, "binary_identity", None)
+    if identity_binary is not None and not identity_binary.is_file():
+        raise CoverageError(f"binary identity does not exist: {identity_binary}")
+    binary_sha256 = sha256_file(identity_binary or binary)
     acacia_sha = args.acacia_sha if args.acacia_sha is not None else git_head()
     records_root = getattr(args, "worker_records_dir", None)
     if records_root is not None:
@@ -925,6 +969,8 @@ def run(args: argparse.Namespace) -> int:
         rows = load_output(
             output, expect_route_columns=route_records_root is not None
         )
+        if rows and "provenance" in rows[0]:
+            raise CoverageError(f"resume output {output} is a derived series, not a run")
         for row in rows:
             if row["solver_label"] == args.solver_label and any(
                 row.get(key) != value for key, value in run_metadata.items()
@@ -979,7 +1025,10 @@ def run(args: argparse.Namespace) -> int:
             key = (row["solver_label"], row["instance"])
             decisive_caps.setdefault(key, set()).add(int(row["cap_s"]))
 
-    run_index = 0
+    # run_index counts invocations recorded in this file, including those
+    # loaded on resume, so a resumed run never reuses an earlier run's
+    # phase-record directory name.
+    run_index = len(rows)
     with output.open("a", encoding="utf-8", newline="") as stream:
         writer = csv.DictWriter(
             stream, fieldnames=output_columns, delimiter="\t", lineterminator="\n"
@@ -1020,6 +1069,7 @@ def run(args: argparse.Namespace) -> int:
                     safe_instance = re.sub(r"[^A-Za-z0-9_.-]", "_", instance)
                     directory = (phase_records_root / safe_label / str(cap) /
                                  f"{safe_instance}-{run_index}")
+                    quarantine_interrupted_records(directory)
                     directory.mkdir(parents=True, exist_ok=True)
                     run_env = dict(os.environ if run_env is None else run_env,
                                    ACACIA_PHASE_RECORDS=str(directory))
