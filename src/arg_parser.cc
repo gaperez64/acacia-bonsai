@@ -581,6 +581,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   // unreal child.  Given without -u it must not suppress the default
   // portfolio below -- unreal_strategies is what decides whether an unreal
   // child was actually requested, not whether this override was mentioned.
+  bool build_default_arms = false;
   if (not retval.arms.has_value () and not retval.real_strategies.has_value () and
       not retval.unreal_strategies.has_value ()) {
     // A build may ship a portfolio of its own, because the best measured
@@ -601,7 +602,38 @@ arg_parse_result arg_parser (int argc, char** argv) {
                "Error: this build's acacia_default_arms is not valid --arms "
                "syntax (%s).\n", ACACIA_DEFAULT_ARMS);
       retval.arms = std::move (parsed.arms);
+      build_default_arms = true;
     }
+  }
+
+  if (build_default_arms && (not retval.tlsf_specified || retval.synth_fname)) {
+    const bool needed_real = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+      return !arm.unreal || arm.both;
+    });
+    const bool needed_unreal = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+      return arm.unreal || arm.both;
+    });
+    std::erase_if (*retval.arms, [&] (const portfolio_arm& arm) {
+      if (arm.kind == portfolio_arm_kind::legacy)
+        return false;
+      if (retval.verbose_level)
+        std::cerr << "Skipping default native arm " << arm.native_name ()
+                  << (retval.tlsf_specified ? " during synthesis" : " without -T") << '\n';
+      return true;
+    });
+    const bool has_real = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+      return !arm.unreal || arm.both;
+    });
+    const bool has_unreal = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+      return arm.unreal || arm.both;
+    });
+    if (needed_real && !has_real)
+      for (auto preference : default_real_strategies ())
+        retval.arms->emplace_back (false, preference, UNREAL_X_FORMULA, retval.real_backend);
+    if (needed_unreal && !has_unreal)
+      for (auto strategy : default_unreal_strategies ())
+        retval.arms->emplace_back (true, retval.primary_translation_pref, strategy,
+                                   retval.unreal_backend);
   }
 
   if (retval.synth_fname.has_value ()) {
