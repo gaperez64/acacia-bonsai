@@ -702,3 +702,52 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
     campaign.
 - Raw rows for this entry are pending archive. Evidence IDs will be added when the campaign
   closes.
+
+## 2026-10-01 — P4-R2 admitted; G gets R and U as pre-passes; U is ported natively before the campaign
+
+- **Owner:**
+  - Make R region-first and drop the duplicated certification before the campaign, then
+    re-prepare the candidate.
+  - Then: "both U and R as prepasses in G", with U ported natively first.
+- **The gates on the 4427bd60 candidate found a shipping bug.** A build whose DEFAULT
+  portfolio contains native arms failed every LTL input and every `-s` run:
+  - 4 unit failures;
+  - 25 of the 40 G1 sentinels returned ERROR.
+  The races never saw it, because they always passed `-T`. Fixed in c2689e55: build-default
+  native arms are dropped for non-TLSF input and synthesis, and an explicit `--arms` keeps
+  its errors.
+- **P4-R2** (1e3f4813, with tlsf-tools gaperez64/tlsf-tools#54):
+  - Acacia prepares a trusted target context from its own source copy. It holds a separate
+    hashed copy of the game, the generator gets a const view, and the hash is re-verified
+    immediately before the single independent check.
+  - Decision-only R is region-first, with the policy route kept as a bounded fallback.
+  - Three codex review rounds. Round 1 found the trusted game still mutable during
+    generation.
+- **A/B against the race binary** (`p4r2ab/`, same options, 60 s, plus a NEW 17 s rerun):
+  - outcomes identical on all 136 paired rows (R's 19 solves, the dev and held-out panels,
+    and 40 seeded declines), with no lost solve;
+  - R's 19 solves: 80.1 → 26.6 s (×0.33, CI 0.26–0.41); peak RSS 618 → 452 MiB;
+  - policy exports 19 → 0, checks 38 → 19, and all 19 now proven by the region method;
+  - all 19 finish within 17 s, and 122/122 eligible rows pass the 17/60 s cap-independence
+    check.
+  - **Admitted.** Closes #198 and #199 with #197.
+- **Pre-pass evidence:** lifting first, then the direct solve, loses no G or R solve on the
+  384 panel at 60 or 17 s, simulated from the standalone legs. R's declines take a median
+  of 0.04 s. All 15 of R's panel timeouts stall in target reduction, which G shares.
+- **Plan** (`p4un/DESIGN.md`): a new arm `both:gr1-lift:oxidd` alongside the unchanged
+  direct `both:gr1:oxidd`. It does one trusted reduction and one seed cache, routes R or U on
+  seed polarity, falls back to the direct solve on any decline, and runs one final check.
+  - Milestones:
+    - N1: typed provenance into tlsf-tools;
+    - N2: native U, differential against U-D's 30 confirmatory rows;
+    - N3: the arm;
+    - N4: legs, U against D for admission, and a race against 1234G7.
+  - The 1234G7 freeze is superseded by this plan.
+- **U-D: the addendum's engineering gate is met** (accepted on review). Under one
+  predeclared setting (owner-interleaved order, 3M nodes, 12M applies, 180 s):
+  - the previously blocked corpus template `simple_arbiter_unreal1` verifies at sizes 7
+    and 9;
+  - so do the generated causal, global and forbidden designs;
+  - the renamed and negative controls pass.
+- **Filed during this stretch:** #202–#208 (deferred optimizations). #197's description now
+  closes #194, #198 and #199.
