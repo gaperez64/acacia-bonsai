@@ -645,3 +645,60 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   - The 17 s view is derived by censoring, after a native-arm cap-independence spot check.
 - **tlsf-tools main `31fd5bb`** (#52 U0, #53 OxiDD build stamp) is pinned in Acacia; CI is
   green.
+
+## 2026-10-01 — Arm races, owner freezes 1234G7; U gets one more bounded step
+
+- **G = `both:gr1:oxidd`** (bb543762). One exact GR(1) solve reports whichever side it
+  proves, with that side's certificate. It replaces separate `real:` and `unreal:gr1:oxidd`
+  arms. On the 225 panel, G equals arm 5 ∪ arm 6, with no disagreements and a median time
+  ratio of 0.99.
+- **Augmented panel** (`p4aug/`, 384 instances): the 225, plus 159 archived exclusives,
+  backward-only and near-cap cases.
+  - Standalone 60 s legs: G on all 384; arms 1–4 and R on the 159 additions. No conflicts.
+  - The virtual-best screen nominated 1234G (315 against O5's 308) and 1234G7 (316).
+  - Dropping backward arm 1 loses 14 full-corpus instances only it solves.
+- **Equivariant census** (diagnostic build of HEAD d2504aa3):
+  - Equivariant solving is attempted on 22 full-corpus instances, all solved by arm 1. Only
+    `amba_decomposed_arbiter_pb_6` is arm-1-exclusive.
+  - The representative path, E-B's only target, activates on 6 instances, all solved in
+    under 5 s, and on no unsolved instance.
+- **Addendum packages:**
+  - **E-A admitted** (d2504aa3): the equivariant actioner table is borrowed. About 24.8k
+    fewer allocations, 1.2–1.7 MB lower peak RSS, runtime ratio 0.99–1.00.
+  - **E-B not pursued:** the census bounds its payoff at about 11 s of already-solved
+    runtime, with no coverage upside.
+  - **U-A accepted after three review rounds.** Typed role, owner and field identities,
+    fail-closed sibling linkage, and an exact identity preflight before any BDD. 8 of the 9
+    blocked templates pass preflight at sizes 7 and 9; the ninth gains an encoding bit only
+    at seed 5 and correctly declines.
+  - **U-B accepted with fixes.** It learns only ranks; the fairness-memory update and the
+    admissible moves are constructed from the target. The generated causal and global designs
+    verify independently at sizes 7 and 9, under one fixed budget: lexical order, 1M nodes.
+    Wrong-memory, mutated-rank and current-letter certificates are rejected; the target-REAL
+    control yields no UNREAL. **The gate's generated half is met.**
+  - **U-C** combines U-B with the rank study's distinct-role projection key, and loads no seed
+    policy outputs. All four `z_0` templates now fit exactly, then stop at `y_1`; the pair
+    probe finds no `y_1` fit. Three capacity templates still exceed 1M nodes at `z_0`. **The
+    corpus half is still open.**
+- **No hardcoding.**
+  - **Static guard** (5bbcd3c3, 09438bb4): a corpus-derived literal and comparison guard over
+    the Meson-derived solver path. It took six review rounds, and is green in CI.
+  - **Behavioural audit:** 60 neutralized renamed copies, 72 native pairs. No contrary
+    conclusive outcome. Three near-cap status changes are associated with renaming (one) or
+    reordering (two).
+- **Races** (`p4race/`, one binary eae6fa0f at bb543762, 60 s, 8 GiB, 3×3 Latin square over
+  three chunks; the package ran at 98–100 °C):
+
+  | Membership | Solved | Paired against the previous row | Mean PAR-2 | MEMOUT |
+  |---|---:|---|---:|---:|
+  | O5 | 297 | — | 30.69 s | 1 |
+  | 1234G | 302 | +5/−0, all UNREAL via G; Δ mean PAR-2 −1.69 s, CI [−3.12, −0.54] | 29.01 s | 1 |
+  | 1234G7 | 304 | +2/−0, both REAL via R (`amba_decomposed_lock_pb_14`/`15`) | 28.51 s | 2 |
+
+- **Owner decision:**
+  - **Freeze 1234G7** as the final candidate membership, accepting its extra scope MEMOUT
+    (`collector_v3_pb_9`) against the §9.3 no-additional-memory-failure condition.
+  - **Give U one more bounded step** (richer `y`-rank classes) in parallel with the closing
+    campaign.
+- Raw rows for this entry are pending archive. Evidence IDs will be added when the campaign
+  closes.
