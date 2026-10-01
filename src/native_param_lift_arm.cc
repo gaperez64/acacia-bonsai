@@ -63,21 +63,28 @@ namespace acacia {
     const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
     TlsfGr1LiftStats stats {};
     options.budget = budget;
+    options.proof_order = TLSF_GR1_LIFT_REGION_FIRST;
     options.stats = &stats;
     options.stats_callback = phase_records_enabled () ? record_lift_stage : nullptr;
     lift_record_context lift_context {arm, &stats};
     options.stats_context = &lift_context;
 # ifdef ACACIA_NATIVE_TEST_HOOKS
-    native_lift_test_options (options.phase_budget);
+    native_lift_test_options (options);
 # endif
     // All remaining caps are the bounded defaults of the native lifting API.
     native_lift_owner lifted;
     TlsfGr1LiftError lift_error {};
     phase_scope lift_phase (arm, "lift_call");
     const auto* source = reinterpret_cast<const uint8_t*> (args.tlsf_source.data ());
-    const auto lift_status = tlsf_gr1_lift (
+    TlsfGr1LiftTarget* raw_target = nullptr;
+    auto lift_status = tlsf_gr1_lift_target_prepare (
         source, args.tlsf_source.size (), nullptr, 0, &options,
-        &lifted.value, &lift_error);
+        &raw_target, &lift_error);
+    std::unique_ptr<TlsfGr1LiftTarget, decltype (&tlsf_gr1_lift_target_free)> target (
+        raw_target, tlsf_gr1_lift_target_free);
+    if (lift_status == TLSF_GR1_LIFT_OK)
+      lift_status = tlsf_gr1_lift_from_target (
+          target.get (), &options, &lifted.value, &lift_error);
     lift_phase.finish ();
     const auto& work = stats.work;
     if (phase_records_enabled ()) {
@@ -160,71 +167,9 @@ namespace acacia {
       return EXIT_CODE_UNKNOWN;
     }
     binding_phase.finish ();
-    phase_scope rereduce_phase (arm, "game_rereduction");
-    // The lift result returns game bytes but no source-bound target-game handle.
-    // Recompute the target reduction from this immutable snapshot before check.
-    TlsfPipelineError pipeline_error {};
-    TlsfPipelineOptions pipeline_options {};
-    pipeline_options.certify = true;
-    pipeline_options.template_mask = TPL_ALL;
-    pipeline_options.require_unambiguous_origin = true;
-    pipeline_options.error = &pipeline_error;
-    std::unique_ptr<TlsfPipeline, decltype (&tlsf_pipeline_free)> pipeline (
-        tlsf_pipeline_load_bytes (reinterpret_cast<const uint8_t*> (args.tlsf_source.data ()),
-                                  args.tlsf_source.size (), &pipeline_options),
-        tlsf_pipeline_free);
-    if (!pipeline || args.tlsf_sha256 != pipeline->source_sha256) {
-      native_arm_diagnostic (arm, "source", -1, "could not bind target reduction to snapshot");
-      return EXIT_CODE_UNKNOWN;
-    }
-    TlsfGr1ReductionOptions reduction_options {};
-    reduction_options.semantics = result.semantics;
-    reduction_options.deadline_mono_ns = deadline_mono_ns;
-    reduction_options.max_artifact_bytes = TLSF_GR1_LIFT_DEFAULT_MAX_ARTIFACT_BYTES;
-    reduction_options.max_monitor_states = TLSF_GR1_LIFT_DEFAULT_MAX_MONITOR_STATES;
-    native_reduction_owner target;
-    TlsfGr1ReductionError reduction_error {};
-    if (tlsf_gr1_reduce (pipeline.get (), &reduction_options, &target.value, &reduction_error) !=
-            TLSF_GR1_REDUCE_OK ||
-        target.value.aag_size != result.game_size || !target.value.aag ||
-        std::memcmp (target.value.aag, result.game_aag, result.game_size) != 0) {
+    if (!tlsf_gr1_lift_target_matches (target.get (), &result)) {
       native_arm_diagnostic (arm, "source_game", -1,
                              "checked game differs from snapshot reduction");
-      return EXIT_CODE_UNKNOWN;
-    }
-    rereduce_phase.finish ();
-    phase_scope target_teardown (arm, "teardown_target_reduction");
-    tlsf_gr1_reduction_clear (&target.value);
-    target_teardown.finish ();
-    phase_scope pipeline_teardown (arm, "teardown_target_pipeline");
-    pipeline.reset ();
-    pipeline_teardown.finish ();
-    const auto span = [] (const char* data, size_t size) -> TlsfGr1Bytes {
-      return {reinterpret_cast<const uint8_t*> (data), size};
-    };
-    TlsfGr1CheckInput input {};
-    input.game_aag = span (result.game_aag, result.game_size);
-    input.certificate_aag = span (result.certificate_aag, result.certificate_size);
-    input.certificate_json = span (result.certificate_json, result.certificate_json_size);
-    if (certificate_method) {
-      input.policy_aag = span (result.policy_aag, result.policy_size);
-      input.policy_json = span (result.policy_json, result.policy_json_size);
-    }
-    TlsfGr1CheckOptions check_options {};
-    check_options.method = result.method;
-    check_options.node_cap = TLSF_GR1_LIFT_DEFAULT_CHECKER_NODES;
-    check_options.cache_cap = TLSF_GR1_LIFT_DEFAULT_CHECKER_CACHE;
-    check_options.max_artifact_bytes = TLSF_GR1_LIFT_DEFAULT_MAX_ARTIFACT_BYTES;
-    check_options.deadline_mono_ns = deadline_mono_ns;
-    native_check_owner checked;
-    phase_scope check_phase (arm, "outer_check");
-    const auto check_status = tlsf_gr1_check (&input, &check_options, &checked.value);
-    check_phase.finish (static_cast<long long> (checked.value.peak_nodes));
-    if (check_status != TLSF_GR1_CHECK_OK || checked.value.verdict != result.verdict) {
-      native_arm_diagnostic (
-          arm, checked.value.stage[0] ? checked.value.stage : "check",
-          check_status == TLSF_GR1_CHECK_OK ? int (checked.value.verdict) : int (check_status),
-          checked.value.message[0] ? checked.value.message : "proof not verified");
       return EXIT_CODE_UNKNOWN;
     }
     return EXIT_CODE_REAL;
