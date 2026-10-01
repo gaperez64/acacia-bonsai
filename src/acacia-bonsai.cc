@@ -2,6 +2,7 @@
 #include "configuration.hh"
 #include "error_msg.hh"
 #include "native_gr1_arm.hh"
+#include "native_gr1_lift_arm.hh"
 #include "native_param_lift_arm.hh"
 #include "native_support.hh"
 #include "phase_records.hh"
@@ -153,6 +154,8 @@ namespace {
       try {
         const int result = arm.kind == portfolio_arm_kind::gr1
             ? acacia::run_native_gr1_arm (arg_values, arm.unreal, arm.both, deadline_mono_ns)
+            : arm.kind == portfolio_arm_kind::gr1_lift
+                ? acacia::run_native_gr1_lift_arm (arg_values, deadline_mono_ns)
             : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns);
         acacia::phase_records_summary (arm.native_name ());
         _exit (result);

@@ -132,20 +132,38 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'included header, test control, or diagnostic record',
     ('src/acacia-bonsai.cc', 'native_param_lift_arm.hh'):
         'included header, test control, or diagnostic record',
+    ('src/acacia-bonsai.cc', 'native_gr1_lift_arm.hh'):
+        'included native arm header',
     ('src/acacia-bonsai.cc', '{\\"stage\\":\\"test_reaped\\",\\"before_deadline\\":'):
         'included header, test control, or diagnostic record',
     ('src/arg_parser.cc', '                    real:param-lift:oxidd (realizability only);\\n'):
         'user-facing option syntax or error help',
+    ('src/arg_parser.cc', '                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\\n'):
+        'user-facing option syntax',
     ('src/arg_parser.cc', '  -I VAL            increment value for K, used when M < K\\n'):
         'user-facing option syntax or error help',
     ('src/arg_parser.cc', 'Error: invalid field count in --arms spec %s; expected polarity:transform:backend[:provider]; native forms are both:gr1:oxidd, real:gr1:oxidd, unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\\n'):
         'user-facing option syntax or error help',
+    ('src/arg_parser.cc', 'Error: invalid field count in --arms spec %s; expected polarity:transform:backend[:provider]; native forms are both:gr1:oxidd, both:gr1-lift:oxidd, real:gr1:oxidd, unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\\n'):
+        'user-facing option syntax',
+    ('src/arg_parser.cc', 'Error: invalid transform %s in --arms spec %s; real arms accept small or any (or gr1, gr1-lift, or param-lift with oxidd).\\n'):
+        'user-facing transform help',
+    ('src/arg_parser.cc', 'Error: gr1-lift requires both polarity.\\n'):
+        'user-facing native arm polarity error',
+    ('src/arg_parser.cc', 'Error: polarity both requires gr1 or gr1-lift with oxidd in --arms spec %s.\\n'):
+        'user-facing native arm polarity error',
     ('src/arg_parser.cc', 'Error: invalid transform %s in --arms spec %s; real arms accept small or any (or gr1 or param-lift with oxidd).\\n'):
         'user-facing option syntax or error help',
     ('src/boolean_states/transition_core.hh', 'solver/acceptance_core.hh'):
         'included solver header',
     ('src/native_gr1_arm.cc', 'native_test_hooks.hh'):
         'included test-hook header, only used under test define',
+    ('src/native_gr1_lift_arm.cc', 'native_gr1_lift_arm.hh'):
+        'included native arm header',
+    ('src/native_gr1_lift_arm.cc', 'native_test_hooks.hh'):
+        'included test-hook header, only used under test define',
+    ('src/native_gr1_lift_arm.cc', 'both:gr1-lift:oxidd'):
+        'native arm label',
     ('src/native_param_lift_arm.cc', 'incomplete or unverified system proof'):
         'native arm label or proof diagnostic',
     ('src/native_param_lift_arm.cc', 'invalid lift evidence JSON'):
@@ -188,7 +206,11 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'test record writer option name',
     ('src/portfolio_arm.cc', 'param-lift'):
         'native transformation name in CLI parsing',
+    ('src/portfolio_arm.cc', 'gr1-lift'):
+        'native transformation name in CLI parsing',
     ('src/portfolio_arm.hh', 'real:param-lift:oxidd'):
+        'native arm label',
+    ('src/portfolio_arm.hh', 'both:gr1-lift:oxidd'):
         'native arm label',
     ('src/solver/configured_components.hh', 'boolean_states/transition_core.hh'):
         'included solver header',

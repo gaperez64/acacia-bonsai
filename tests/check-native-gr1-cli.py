@@ -91,6 +91,8 @@ def main() -> None:
                    code, verdict)
             expect(binary, ["-T", str(source), "--arms", "both:gr1:oxidd"],
                    code, verdict)
+            expect(binary, ["-T", str(source), "--arms", "both:gr1-lift:oxidd"],
+                   code, verdict)
             expect(binary, ["--arms", f"{winner}:gr1:oxidd", "-T", str(source)],
                    code, verdict)
             expect(binary, ["-T", str(source), "--arms", f"{loser}:gr1:oxidd"],
@@ -99,6 +101,8 @@ def main() -> None:
             expect(binary, ["-T", str(renamed), "--arms", f"{winner}:gr1:oxidd"],
                    code, verdict)
             expect(binary, ["-T", str(renamed), "--arms", "both:gr1:oxidd"],
+                   code, verdict)
+            expect(binary, ["-T", str(renamed), "--arms", "both:gr1-lift:oxidd"],
                    code, verdict)
         expect(binary, ["-T", str(adversarial), "--arms", "real:gr1:oxidd"],
                0, "REALIZABLE")
@@ -152,9 +156,13 @@ def main() -> None:
             ("real:gr1:oxidd,real:gr1:oxidd", "duplicate arm"),
             ("real:gr1:oxidd:frozen-graph", "does not accept a provider"),
             ("unreal:param-lift:oxidd", "realizability only"),
+            ("real:gr1-lift:oxidd", "requires both polarity"),
+            ("unreal:gr1-lift:oxidd", "requires both polarity"),
+            ("both:gr1-lift:backward", "requires the oxidd backend"),
+            ("both:gr1-lift:oxidd:frozen-graph", "does not accept a provider"),
             ("real:gr1:backward", "requires the oxidd backend"),
-            ("both:param-lift:oxidd", "both is supported only for the gr1 transform"),
-            ("both:small:backward", "both is supported only for the gr1 transform"),
+            ("both:param-lift:oxidd", "polarity both requires gr1 or gr1-lift with oxidd"),
+            ("both:small:backward", "polarity both requires gr1 or gr1-lift with oxidd"),
             ("both:gr1:backward", "requires the oxidd backend"),
             ("both:gr1:oxidd:frozen-graph", "does not accept a provider"),
             ("both:gr1:oxidd,both:gr1:oxidd", "duplicate arm"),

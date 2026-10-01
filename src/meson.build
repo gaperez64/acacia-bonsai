@@ -21,6 +21,7 @@ if get_option ('acacia_native_arms')
     'native_support.cc',
     'native_proof_binding.cc',
     'native_gr1_arm.cc',
+    'native_gr1_lift_arm.cc',
     'native_param_lift_arm.cc',
   ]
 endif

@@ -88,7 +88,7 @@ void show_help (const char* program_name) {
       << "                    with -r, -u, and per-polarity backend/translation options\n"
       << "                    provider options apply to arms without an explicit provider\n"
       << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, decision only\n"
-      << "                    native -T arms: both:gr1:oxidd (either checked verdict),\n"
+      << "                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\n"
       << "                    real:gr1:oxidd, unreal:gr1:oxidd, and\n"
       << "                    real:param-lift:oxidd (realizability only);\n"
       << "                    require -Dacacia_native_arms=true and -T FILE;\n"
@@ -285,7 +285,7 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       error (EXIT_CODE_ERROR,
              "Error: invalid field count in --arms spec %s; expected "
              "polarity:transform:backend[:provider]; native forms are "
-             "both:gr1:oxidd, real:gr1:oxidd, unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\n",
+             "both:gr1:oxidd, both:gr1-lift:oxidd, real:gr1:oxidd, unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\n",
              parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::polarity:
@@ -296,7 +296,7 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
     case portfolio_arm_parse_error::real_transform:
       error (EXIT_CODE_ERROR,
              "Error: invalid transform %s in --arms spec %s; real arms accept small or any "
-             "(or gr1 or param-lift with oxidd).\n",
+             "(or gr1, gr1-lift, or param-lift with oxidd).\n",
              parsed.value.c_str (), parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::unreal_transform:
@@ -321,8 +321,11 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
     case portfolio_arm_parse_error::native_transform:
       error (EXIT_CODE_ERROR, "Error: parameter lifting is realizability only.\n");
       break;
+    case portfolio_arm_parse_error::gr1_lift_polarity:
+      error (EXIT_CODE_ERROR, "Error: gr1-lift requires both polarity.\n");
+      break;
     case portfolio_arm_parse_error::both_transform:
-      error (EXIT_CODE_ERROR, "Error: polarity both is supported only for the gr1 transform with oxidd in --arms spec %s.\n",
+      error (EXIT_CODE_ERROR, "Error: polarity both requires gr1 or gr1-lift with oxidd in --arms spec %s.\n",
              parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::native_backend:

@@ -12,6 +12,7 @@ build = Path(sys.argv[2])
 arms = sys.argv[3].split(",")
 expected_ltl_children = int(sys.argv[4])
 legacy = [a for a in arms if ":gr1:oxidd" not in a and
+          ":gr1-lift:oxidd" not in a and
           ":param-lift:oxidd" not in a]
 native = [a for a in arms if a not in legacy]
 assert native
