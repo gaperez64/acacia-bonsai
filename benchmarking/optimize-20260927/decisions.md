@@ -751,3 +751,41 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   - the renamed and negative controls pass.
 - **Filed during this stretch:** #202–#208 (deferred optimizations). #197's description now
   closes #194, #198 and #199.
+
+## 2026-10-02 — U fails admission; R ships as a pre-pass inside G; final candidate 1234G-R
+
+- **Native U and the pre-pass arm, all merged.**
+  - tlsf-tools #55, typed provenance;
+  - tlsf-tools #56, native U, which matches the research prototype on all 30 confirmatory
+    rows;
+  - tlsf-tools #58, the shared trusted reduction and seed cache;
+  - Acacia 70bdefa0, `both:gr1-lift:oxidd`: one reduction, one seed cache, routing by seed
+    polarity, fallback to the direct solve, and one final check per verdict.
+- **N4** (`p4n4/`, one binary ea363fff at 9f5ea45f, 384 panel, 60 s):
+
+  | Race | Solved | MEMOUTs |
+  |---|---:|---:|
+  | 1234G | 304 | 1 |
+  | 1234G7 | 305 | 2 |
+  | 1234G′ | 305 | 1 |
+
+  - **U fails the addendum's admission test.** On 64 U-relevant instances, G′ and direct G
+    solve 29 each, with no gains or losses. All 5 of U's answers were also solved directly,
+    and slower: 0.7–2.9 s against 0.09–0.22 s. U's declines also delay the direct solve.
+- **Owner decision: an R-only pre-pass.**
+  - tlsf-tools #60, `disable_env_lift`;
+  - Acacia 7e491b3f, `both:gr1-real-lift:oxidd`, and 54032834, preset
+    `otf_sparse_formula_gr1_real_prepass`: O5's four legacy arms plus that arm.
+- **N6** (`p4n6/`, one binary 2d29aa8c at 54032834, 384 panel, 60 s):
+  - 1234G 302 against 1234G-R **305**: +3/−0, with amba_decomposed_lock_pb_14, _15 and _16
+    all via R, in 5.8, 14.0 and 43.1 s;
+  - Δ mean PAR-2 −0.79 s, CI [−1.77, −0.003];
+  - derived 17 s: +3/−0;
+  - no additional MEMOUT;
+  - **the four N4 near-cap flips do not persist** in three alternating reruns each.
+  - **Admitted. 1234G-R is the final candidate**, and the N6 binary (build_p4n6_54032834) is
+    frozen for the gates and the closing campaign.
+- **Also fixed on the way:**
+  - the U test scripts carried the local run-marker protocol, writing to the checkout's
+    parent directory; removed before #56 merged;
+  - the native-U API tests were too slow for CI's -O0 job; shrunk.
