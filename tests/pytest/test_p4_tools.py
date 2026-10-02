@@ -378,11 +378,10 @@ def test_orchestrator_manifest_resume_and_frozen_binary(tmp_path, monkeypatch):
         sums.append(f"{orchestrate.sha256_file(target)}  ./lib/{target.name}\n")
     sums_file = tmp_path / "SHA256SUMS"
     sums_file.write_text("".join(sums))
-    monkeypatch.setattr(orchestrate, "RUNTIME_SHA256SUMS", sums_file)
     comparison = tmp_path / "comparison.json"
     spec = {"schema": 1, "memory_max": "8G", "memory_swap_max": "0",
             "list": "all.list", "tlsf_map": "map.tsv", "tlsf_corpus": ".",
-            "status_exceptions": "exceptions.tsv",
+            "status_exceptions": "exceptions.tsv", "runtime_sha256s": "SHA256SUMS",
             "series": [{"label": "leg", "kind": "arm", "arms": ["real:one:backend"],
                         "portfolio_size": 1,
                         "binary": "solver", "binary_sha256": orchestrate.sha256_file(binary),
@@ -395,6 +394,12 @@ def test_orchestrator_manifest_resume_and_frozen_binary(tmp_path, monkeypatch):
                         "source_revision": "source"}]}
     comparison.write_text(json.dumps(spec))
     out = tmp_path / "out"
+    missing_runtime = dict(spec)
+    missing_runtime.pop("runtime_sha256s")
+    comparison.write_text(json.dumps(missing_runtime))
+    with pytest.raises(orchestrate.CampaignError, match="runtime_sha256s"):
+        orchestrate.prepare(comparison, 17, out, dry_run=True)
+    comparison.write_text(json.dumps(spec))
     frozen, commands = orchestrate.prepare(comparison, 17, out, dry_run=True)
     assert frozen["series"]["leg"]["runtime_identity"]["libraries"]["libspot.so.0"] == \
         orchestrate.sha256_file(runtime / "libspot.so.0")
@@ -468,11 +473,11 @@ def test_converted_pairs_and_syfco_are_pinned_for_resume(tmp_path, monkeypatch, 
         sums.append(f"{orchestrate.sha256_file(target)}  ./lib/{target.name}\n")
     sums_file = tmp_path / "SHA256SUMS"
     sums_file.write_text("".join(sums))
-    monkeypatch.setattr(orchestrate, "RUNTIME_SHA256SUMS", sums_file)
     comparison = tmp_path / "comparison.json"
     spec = {"schema": 1, "memory_max": "8G", "memory_swap_max": "0",
             "list": "all.list", "tlsf_map": "map.tsv", "tlsf_corpus": ".",
-            "status_exceptions": "exceptions.tsv", "series": [
+            "status_exceptions": "exceptions.tsv", "runtime_sha256s": "SHA256SUMS",
+            "series": [
                 {"label": "legacy", "kind": "legacy", "tool": tool,
                  "portfolio_size": None,
                  "binary": "solver", "binary_sha256": orchestrate.sha256_file(binary),
@@ -999,7 +1004,6 @@ def mixed_comparison_fixture(tmp_path, monkeypatch):
         sums.append(f"{orchestrate.sha256_file(target)}  ./lib/{target.name}\n")
     sums_file = tmp_path / "SHA256SUMS"
     sums_file.write_text("".join(sums))
-    monkeypatch.setattr(orchestrate, "RUNTIME_SHA256SUMS", sums_file)
     five = ["real:small:backward", "real:small:forward", "unreal:formula:forward",
             "unreal:automaton:forward", "real:gr1:oxidd"]
     six = five + ["unreal:gr1:oxidd"]
@@ -1009,7 +1013,8 @@ def mixed_comparison_fixture(tmp_path, monkeypatch):
               "source_revision": "source"}
     spec = {"schema": 1, "memory_max": "8G", "memory_swap_max": "0",
             "list": "all.list", "tlsf_map": "map.tsv", "tlsf_corpus": ".",
-            "status_exceptions": "exceptions.tsv", "series": [
+            "status_exceptions": "exceptions.tsv", "runtime_sha256s": "SHA256SUMS",
+            "series": [
                 {**shared, "label": "ltlsynt", "kind": "legacy", "tool": "ltlsynt",
                  "portfolio_size": None, "instances_dir": "pairs",
                  "syfco_failures": "failures.list", "semantics_map": "semantics.tsv",
@@ -1044,9 +1049,6 @@ def test_mixed_portfolio_sizes_and_preset_default_arms(tmp_path, monkeypatch):
 
 def test_mixed_campaign_recycle_and_derived_join(tmp_path, monkeypatch):
     comparison, _, _ = mixed_comparison_fixture(tmp_path, monkeypatch)
-    sums = tmp_path / "SHA256SUMS"
-    monkeypatch.setattr(recycle.campaign, "RUNTIME_SHA256SUMS", sums)
-    monkeypatch.setattr(threeway.campaign, "RUNTIME_SHA256SUMS", sums)
     (tmp_path / "all.list").write_text("a.ltl\nb.ltl\n")
     (tmp_path / "b.tlsf").write_text("// STATUS: REALIZABLE\n")
     (tmp_path / "map.tsv").write_text(

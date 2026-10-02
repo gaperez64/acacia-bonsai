@@ -34,10 +34,6 @@ NATIVE = ROOT / "benchmarking/run-syntcomp26-coverage.py"
 SUBSET = ROOT / "benchmarking/run-subset.py"
 SAFE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*\Z")
 HEX = re.compile(r"[0-9a-f]{64}\Z")
-DEFAULT_MARKER_DIR = pathlib.Path(
-    "/home/gperez/GIT-repos/acacia-bonsai/build_scratch/optimize-20260927")
-RUNTIME_SHA256SUMS = pathlib.Path(
-    "/home/gperez/opt/spot-2.15.1.dev-goodset-runtime/SHA256SUMS")
 
 
 def load_coverage():
@@ -79,12 +75,14 @@ def directory_digest(path):
     return digest.hexdigest()
 
 
-def preserved_runtime_identity(runtime):
+def preserved_runtime_identity(runtime, sums_file):
     """Verify the soname files against the preserved 2.15.1.dev goodset."""
     if runtime is None or not runtime.is_dir():
         raise CampaignError("pre-2.16 series needs an existing runtime_lib_dir")
+    if sums_file is None or not sums_file.is_file():
+        raise CampaignError("pre-2.16 series needs an existing runtime_sha256s")
     expected = {}
-    for line in RUNTIME_SHA256SUMS.read_text().splitlines():
+    for line in sums_file.read_text().splitlines():
         digest, name = line.split(maxsplit=1)
         expected[pathlib.Path(name).name] = digest
     libraries = {}
@@ -97,8 +95,8 @@ def preserved_runtime_identity(runtime):
         if digest != expected.get(target.name):
             raise CampaignError(f"preserved runtime SHA-256 mismatch: {path}")
         libraries[soname] = digest
-    return {"sha256s_path": str(RUNTIME_SHA256SUMS),
-            "sha256s_sha256": sha256_file(RUNTIME_SHA256SUMS), "libraries": libraries,
+    return {"sha256s_path": str(sums_file),
+            "sha256s_sha256": sha256_file(sums_file), "libraries": libraries,
             "verification": ("soname bytes match the preserved SHA256SUMS; "
                              "checksum-file authority is unverified")}
 
@@ -167,6 +165,10 @@ def read_comparison(path, cap, *, selected=None, subset_list=None):
     base = path.parent
     paths = {key: resolve(base, spec[key]) for key in
              ("list", "tlsf_map", "tlsf_corpus", "status_exceptions")}
+    runtime_sha256s = (resolve(base, spec["runtime_sha256s"])
+                      if spec.get("runtime_sha256s") else None)
+    if runtime_sha256s is not None:
+        paths["runtime_sha256s"] = runtime_sha256s
     if any(not value.exists() for value in paths.values()):
         raise CampaignError("a comparison input path does not exist")
     original_list = paths["list"]
@@ -219,7 +221,8 @@ def read_comparison(path, cap, *, selected=None, subset_list=None):
             raise CampaignError(f"{label}: pre_spot_216 must be a boolean")
         pre_216 = record.get("pre_spot_216", False) or kind == "legacy" and \
             record.get("tool") == "acacia1x"
-        runtime_identity = preserved_runtime_identity(runtime) if pre_216 or runtime else None
+        runtime_identity = (preserved_runtime_identity(runtime, runtime_sha256s)
+                            if pre_216 or runtime else None)
         arms = record.get("arms", [])
         if not isinstance(arms, list):
             raise CampaignError(f"{label}: arms must be an array")
@@ -437,7 +440,7 @@ def prepare(comparison, cap, out, *, resume=False, dry_run=False, selected=None,
     return frozen, commands
 
 
-def execute(frozen, commands, out, *, invoke=subprocess.run, marker_dir=DEFAULT_MARKER_DIR):
+def execute(frozen, commands, out, *, marker_dir, invoke=subprocess.run):
     def check_frozen_inputs():
         if "comparison" not in frozen:
             return
@@ -503,8 +506,8 @@ def main(argv=None):
                         help="frozen-list subset for deadline reruns or validation samples")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--dry-run", action="store_true", help="validate and print commands only")
-    parser.add_argument("--marker-dir", type=pathlib.Path, default=DEFAULT_MARKER_DIR,
-                        help="shared sprint marker directory")
+    parser.add_argument("--marker-dir", required=True, type=pathlib.Path,
+                        help="shared timed-run marker directory")
     args = parser.parse_args(argv)
     if args.cap <= 0:
         parser.error("--cap must be positive")
