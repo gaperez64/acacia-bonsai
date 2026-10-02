@@ -81,13 +81,18 @@ namespace acacia {
       artifact[0] = 'X';
   }
   void native_lift_test_options (TlsfGr1LiftOptions& options) {
-    if (const char* fault = std::getenv ("ACACIA_NATIVE_TEST_LIFT_FAULT"))
-      if (std::strcmp (fault, "region-method") == 0 ||
+    if (const char* fault = std::getenv ("ACACIA_NATIVE_TEST_LIFT_FAULT")) {
+      if (std::strcmp (fault, "r-decline") == 0) {
+        options.schema_nodes = 1;
+        options.proof_order = TLSF_GR1_LIFT_POLICY_FIRST;
+      }
+      else if (std::strcmp (fault, "region-method") == 0 ||
           std::strcmp (fault, "unexpected-region-policy-hash") == 0)
         options.phase_budget.policy_proof_ns = 1;
       else if (std::strcmp (fault, "missing-policy-hash") == 0 ||
                std::strcmp (fault, "swap-certificate") == 0)
         options.proof_order = TLSF_GR1_LIFT_POLICY_FIRST;
+    }
   }
 }
 #endif

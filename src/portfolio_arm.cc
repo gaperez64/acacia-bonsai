@@ -46,11 +46,12 @@ portfolio_arm_parse_result parse_portfolio_arms (std::string_view arg) {
     const std::string backend_name = spec.substr (second_colon + 1, third_colon == std::string::npos
         ? std::string::npos : third_colon - second_colon - 1);
     const bool native_transform = transform == "gr1" || transform == "gr1-lift" ||
-                                  transform == "param-lift";
+                                  transform == "gr1-real-lift" || transform == "param-lift";
     portfolio_arm arm = native_transform
         ? portfolio_arm::native (polarity == "unreal", transform == "gr1"
             ? portfolio_arm_kind::gr1 : transform == "gr1-lift"
-                ? portfolio_arm_kind::gr1_lift : portfolio_arm_kind::param_lift,
+                ? portfolio_arm_kind::gr1_lift : transform == "gr1-real-lift"
+                    ? portfolio_arm_kind::gr1_real_lift : portfolio_arm_kind::param_lift,
             polarity == "both")
         : portfolio_arm {false, ACACIA_TRANSLATION_PREF, UNREAL_X_FORMULA,
                          acacia::game_backend::backward};
@@ -68,7 +69,7 @@ portfolio_arm_parse_result parse_portfolio_arms (std::string_view arg) {
         result.spec = spec;
         return result;
       }
-      if (transform == "gr1-lift" && polarity != "both") {
+      if ((transform == "gr1-lift" || transform == "gr1-real-lift") && polarity != "both") {
         result.error = portfolio_arm_parse_error::gr1_lift_polarity;
         result.spec = spec;
         return result;

@@ -154,6 +154,16 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'user-facing native arm polarity error',
     ('src/arg_parser.cc', 'Error: invalid transform %s in --arms spec %s; real arms accept small or any (or gr1 or param-lift with oxidd).\\n'):
         'user-facing option syntax or error help',
+    ('src/arg_parser.cc', '                    both:gr1-real-lift:oxidd,\\n'):
+        'user-facing native arm syntax',
+    ('src/arg_parser.cc', 'Error: invalid field count in --arms spec %s; expected polarity:transform:backend[:provider]; native forms are both:gr1:oxidd, both:gr1-lift:oxidd, both:gr1-real-lift:oxidd, real:gr1:oxidd, unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\\n'):
+        'user-facing native arm syntax',
+    ('src/arg_parser.cc', 'Error: invalid transform %s in --arms spec %s; real arms accept small or any (or gr1, gr1-lift, gr1-real-lift, or param-lift with oxidd).\\n'):
+        'user-facing native transform help',
+    ('src/arg_parser.cc', 'Error: gr1-lift or gr1-real-lift requires both polarity.\\n'):
+        'user-facing native arm polarity error',
+    ('src/arg_parser.cc', 'Error: polarity both requires gr1, gr1-lift, or gr1-real-lift with oxidd in --arms spec %s.\\n'):
+        'user-facing native arm polarity error',
     ('src/boolean_states/transition_core.hh', 'solver/acceptance_core.hh'):
         'included solver header',
     ('src/native_gr1_arm.cc', 'native_test_hooks.hh'):
@@ -164,6 +174,8 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'included test-hook header, only used under test define',
     ('src/native_gr1_lift_arm.cc', 'both:gr1-lift:oxidd'):
         'native arm label',
+    ('src/native_gr1_lift_arm.cc', 'both:gr1-real-lift:oxidd'):
+        'native arm label selected by the user',
     ('src/native_param_lift_arm.cc', 'incomplete or unverified system proof'):
         'native arm label or proof diagnostic',
     ('src/native_param_lift_arm.cc', 'invalid lift evidence JSON'):
@@ -208,9 +220,13 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'native transformation name in CLI parsing',
     ('src/portfolio_arm.cc', 'gr1-lift'):
         'native transformation name in CLI parsing',
+    ('src/portfolio_arm.cc', 'gr1-real-lift'):
+        'native transformation name in CLI parsing',
     ('src/portfolio_arm.hh', 'real:param-lift:oxidd'):
         'native arm label',
     ('src/portfolio_arm.hh', 'both:gr1-lift:oxidd'):
+        'native arm label',
+    ('src/portfolio_arm.hh', 'both:gr1-real-lift:oxidd'):
         'native arm label',
     ('src/solver/configured_components.hh', 'boolean_states/transition_core.hh'):
         'included solver header',

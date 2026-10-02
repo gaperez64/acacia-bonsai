@@ -117,11 +117,15 @@ if get_option ('acacia_native_arms')
   test ('native-gr1-cli', py,
         args : native_gr1_cli_args,
         suite : ['unit', 'native-gr1'], depends : native_cli_depends)
+  native_gr1_lift_cli_args = [files ('check-native-gr1-lift-cli.py'), ab_exe,
+                              meson.project_build_root ()]
+  if native_test_hooks
+    native_gr1_lift_cli_args += [native_test_exe.full_path ()]
+  endif
   test ('native-gr1-lift-cli', py,
-        args : [files ('check-native-gr1-lift-cli.py'), ab_exe,
-                meson.project_build_root ()],
+        args : native_gr1_lift_cli_args,
         suite : ['unit', 'native-gr1'], timeout : 180,
-        depends : [ab_exe])
+        depends : native_cli_depends)
   test ('native-gr1-same-thread', py,
         args : [files ('check-native-gr1-same-thread.py'), ab_exe,
                 meson.project_build_root ()],
@@ -523,7 +527,7 @@ if default_arms_opt != ''
     unreal_arm = spec.startswith ('unreal:') or spec.startswith ('both:')
     needs_real = needs_real or real_arm
     needs_unreal = needs_unreal or unreal_arm
-    native_arm = spec.contains (':gr1:oxidd') or spec.contains (':gr1-lift:oxidd') or spec.contains (':param-lift:oxidd')
+    native_arm = spec.contains (':gr1:oxidd') or spec.contains (':gr1-lift:oxidd') or spec.contains (':gr1-real-lift:oxidd') or spec.contains (':param-lift:oxidd')
     if not native_arm
       default_check_children += 1
       has_legacy_real = has_legacy_real or real_arm
@@ -539,6 +543,7 @@ if default_arms_opt != ''
 endif
 if get_option ('acacia_native_arms') and (default_arms_opt.contains (':gr1:oxidd') or
     default_arms_opt.contains (':gr1-lift:oxidd') or
+    default_arms_opt.contains (':gr1-real-lift:oxidd') or
     default_arms_opt.contains (':param-lift:oxidd'))
   test ('default-native-arms', py,
         args : [files ('check-default-native-arms.py'), ab_exe,

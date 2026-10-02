@@ -113,12 +113,14 @@ Moore-target controller conversion happens inside Acacia.
 
 With `-Dacacia_native_arms=true`, the same `acacia-bonsai` binary accepts
 `--arms real:gr1:oxidd`, `--arms unreal:gr1:oxidd`, `--arms both:gr1:oxidd`,
-`--arms both:gr1-lift:oxidd`,
+`--arms both:gr1-lift:oxidd`, `--arms both:gr1-real-lift:oxidd`,
 and `--arms real:param-lift:oxidd` with `-T spec.tlsf`. These arms run in
 process and are opt in. The GR(1) reduction is exact, so one solve decides
 the winner: `both:gr1:oxidd` reports whichever side it proves, while
 `both:gr1-lift:oxidd` first tries a checked system or environment lift from
-shared seeds and falls back to the same exact game solve. The `real` and
+shared seeds and falls back to the same exact game solve.
+`both:gr1-real-lift:oxidd` tries only the checked system lift; unreal seeds and
+declined lifts go directly to the exact game solve. The `real` and
 `unreal` forms answer only for their own side. The former Python lifting route lives only in
 [the research oracle](benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py) for
 differential tests.

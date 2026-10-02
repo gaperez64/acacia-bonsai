@@ -17,8 +17,9 @@
 # include <string>
 
 namespace acacia {
-  int run_native_gr1_lift_arm (const arg_parse_result& args, uint64_t deadline_mono_ns) {
-    constexpr const char* arm = "both:gr1-lift:oxidd";
+  int run_native_gr1_lift_arm (const arg_parse_result& args, uint64_t deadline_mono_ns,
+                               bool real_only) {
+    const char* arm = real_only ? "both:gr1-real-lift:oxidd" : "both:gr1-lift:oxidd";
     if (!native_limit_address_space (arm))
       return EXIT_CODE_UNKNOWN;
     const uint64_t construction_started_ns = phase_clock (CLOCK_MONOTONIC);
@@ -30,6 +31,7 @@ namespace acacia {
     options.env_budget.max_rss_bytes = budget.max_rss_bytes;
     options.proof_order = TLSF_GR1_LIFT_REGION_FIRST;
     options.env_candidate_ns = 12000000000ull;
+    options.disable_env_lift = real_only;
     options.stats = &stats;
 # ifdef ACACIA_NATIVE_TEST_HOOKS
     native_lift_test_options (options);
@@ -60,6 +62,10 @@ namespace acacia {
     phase_scope combined_phase (arm, "combined_call");
     status = tlsf_gr1_both_from_target (target.get (), &options, &result, &error);
     combined_phase.finish ();
+    if (real_only && result.route == TLSF_GR1_BOTH_ENV_LIFT) {
+      native_arm_diagnostic (arm, "route", -1, "R-only arm selected U");
+      return EXIT_CODE_UNKNOWN;
+    }
     if (phase_records_enabled ()) {
       const char* route = result.route == TLSF_GR1_BOTH_REAL_LIFT  ? "route_R"
                           : result.route == TLSF_GR1_BOTH_ENV_LIFT ? "route_U"

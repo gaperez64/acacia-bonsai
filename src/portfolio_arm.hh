@@ -11,7 +11,7 @@
 #include <string_view>
 #include <vector>
 
-enum class portfolio_arm_kind { legacy, gr1, gr1_lift, param_lift };
+enum class portfolio_arm_kind { legacy, gr1, gr1_lift, gr1_real_lift, param_lift };
 
 struct legacy_arm_options {
     TRANSLATION_PREF_T translation_pref;
@@ -50,6 +50,8 @@ struct portfolio_arm {
         return both ? "both:gr1:oxidd" : unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd";
       if (kind == portfolio_arm_kind::gr1_lift)
         return "both:gr1-lift:oxidd";
+      if (kind == portfolio_arm_kind::gr1_real_lift)
+        return "both:gr1-real-lift:oxidd";
       return "real:param-lift:oxidd";
     }
 

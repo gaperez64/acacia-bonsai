@@ -154,8 +154,11 @@ namespace {
       try {
         const int result = arm.kind == portfolio_arm_kind::gr1
             ? acacia::run_native_gr1_arm (arg_values, arm.unreal, arm.both, deadline_mono_ns)
-            : arm.kind == portfolio_arm_kind::gr1_lift
-                ? acacia::run_native_gr1_lift_arm (arg_values, deadline_mono_ns)
+            : arm.kind == portfolio_arm_kind::gr1_lift ||
+                      arm.kind == portfolio_arm_kind::gr1_real_lift
+                ? acacia::run_native_gr1_lift_arm (
+                      arg_values, deadline_mono_ns,
+                      arm.kind == portfolio_arm_kind::gr1_real_lift)
             : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns);
         acacia::phase_records_summary (arm.native_name ());
         _exit (result);

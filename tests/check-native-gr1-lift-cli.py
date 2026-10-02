@@ -28,10 +28,15 @@ MAIN { INPUTS { a; } OUTPUTS { b; } GUARANTEES { G F b; } }
 '''
 
 
-def run(binary: Path, source: Path, arm: str, records: Path) -> tuple[int, str, list[dict]]:
+def run(binary: Path, source: Path, arm: str, records: Path,
+        fault: str | None = None) -> tuple[int, str, list[dict]]:
     env = os.environ.copy()
     env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + 60)
     env["ACACIA_PHASE_RECORDS"] = str(records)
+    if fault:
+        env["ACACIA_NATIVE_TEST_LIFT_FAULT"] = fault
+    else:
+        env.pop("ACACIA_NATIVE_TEST_LIFT_FAULT", None)
     process = subprocess.run([str(binary), "-T", str(source), "--arms", arm],
                              capture_output=True, text=True, env=env, timeout=65)
     rows = [json.loads(line) for path in records.glob("*.jsonl")
@@ -42,6 +47,7 @@ def run(binary: Path, source: Path, arm: str, records: Path) -> tuple[int, str, 
 def main() -> None:
     binary = Path(sys.argv[1]).resolve()
     build = Path(sys.argv[2]).resolve()
+    hook_binary = Path(sys.argv[3]).resolve() if len(sys.argv) > 3 else None
     with tempfile.TemporaryDirectory(dir=build) as temporary:
         root = Path(temporary)
         for name, source, verdict, route, polarity, code in (
@@ -65,6 +71,34 @@ def main() -> None:
             baseline, baseline_output, _ = run(binary, path, "both:gr1:oxidd",
                                                direct_records)
             assert (baseline, baseline_output) == (result, output), name
+
+            real_only_records = root / f"{name}-real-only-records"
+            real_only_records.mkdir()
+            real_only_arm = "both:gr1-real-lift:oxidd"
+            only_result, only_output, only_rows = run(
+                binary, path, real_only_arm, real_only_records)
+            only_phases = {row.get("phase"): row for row in only_rows
+                           if row.get("arm") == real_only_arm}
+            assert (only_result, only_output) == (baseline, baseline_output), name
+            assert ("route_R" if name == "real" else "route_direct") in only_phases, only_phases
+            assert "route_U" not in only_phases, only_phases
+            if name == "unreal":
+                assert "seed_UNREAL" in only_phases, only_phases
+            assert only_phases["final_checks"]["work_count"] == 1, only_phases
+            assert only_phases["target_reductions"]["work_count"] == 1, only_phases
+
+            if name == "real" and hook_binary is not None:
+                decline_records = root / "real-decline-records"
+                decline_records.mkdir()
+                decline_result, decline_output, decline_rows = run(
+                    hook_binary, path, real_only_arm, decline_records, "r-decline")
+                decline_phases = {row.get("phase"): row for row in decline_rows
+                                  if row.get("arm") == real_only_arm}
+                assert (decline_result, decline_output) == (baseline, baseline_output)
+                assert "route_direct" in decline_phases, decline_phases
+                assert "route_U" not in decline_phases, decline_phases
+                assert decline_phases["final_checks"]["work_count"] == 1, decline_phases
+                assert decline_phases["target_reductions"]["work_count"] == 1, decline_phases
 
 
 if __name__ == "__main__":
