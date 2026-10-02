@@ -112,16 +112,23 @@ input with `--tlsf`. No external TLSF converter is needed at runtime, and
 Moore-target controller conversion happens inside Acacia.
 
 With `-Dacacia_native_arms=true`, the same `acacia-bonsai` binary accepts
-`--arms real:gr1:oxidd`, `--arms unreal:gr1:oxidd`, and
-`--arms real:param-lift:oxidd` with `-T spec.tlsf`. These arms run in process
-and are opt in. The former Python lifting route lives only in
-[the research oracle](benchmarking/gr1-par2-20260923/oracle/README.md) for
+`--arms real:gr1:oxidd`, `--arms unreal:gr1:oxidd`, `--arms both:gr1:oxidd`,
+`--arms both:gr1-lift:oxidd`, `--arms both:gr1-real-lift:oxidd`,
+and `--arms real:param-lift:oxidd` with `-T spec.tlsf`. These arms run in
+process and are opt in. The GR(1) reduction is exact, so one solve decides
+the winner: `both:gr1:oxidd` reports whichever side it proves, while
+`both:gr1-lift:oxidd` first tries a checked system or environment lift from
+shared seeds and falls back to the same exact game solve.
+`both:gr1-real-lift:oxidd` tries only the checked system lift; unreal seeds and
+declined lifts go directly to the exact game solve. The `real` and
+`unreal` forms answer only for their own side. The former Python lifting route lives only in
+[the research oracle](benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py) for
 differential tests.
 
 Correctness and performance gates, including the sequential measurement
 protocol, are documented in [benchmarking/README.md](benchmarking/README.md).
 The comparison with `ltlsynt` is in
-[benchmarking/LTLSYNT-GAP.md](benchmarking/LTLSYNT-GAP.md).
+[benchmarking/RESULTS.md](benchmarking/RESULTS.md).
 
 # Compile-time configurations
 
@@ -154,8 +161,8 @@ The options pick data structures and algorithms, for instance:
 
 Some configurations take Spot's on-the-fly paths instead of the frozen automaton
 graph, gated by `-Dacacia_spot_guarded_backend` and `-Dacacia_spot_lazy_provider`
-and selected per polarity through `--arms`; the providers are described in
-[benchmarking/OTF-AND-SPOT.md](benchmarking/OTF-AND-SPOT.md).
+and selected per polarity through `--arms`; current results and archived
+provider evidence are indexed in [benchmarking/RESULTS.md](benchmarking/RESULTS.md).
 
 Inspect the registry with:
 ```

@@ -1,3 +1,0 @@
-Ok:                575 
-Fail:              0   
-Timeout:           49  

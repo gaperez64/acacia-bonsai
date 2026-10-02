@@ -1395,7 +1395,8 @@ namespace acacia::spot_lazy_game {
         }
       }
       void expand (RankNodeId id) {
-        // OTF-AND-SPOT.md handoff 7.4, in order. Copy the rank: interning s may grow nodes.
+        // OTF-AND-SPOT.md handoff 7.4 (archived in benchmarking-root-legacy,
+        // evidence-2026-09-27), in order. Copy the rank: interning s may grow nodes.
         if (result_.nodes[id].losing)
           return;
         const Rank rank = result_.nodes[id].rank;

@@ -28,6 +28,7 @@ declared in `lifting/settings.py`:
 | `POLICY_PROOF_FRACTION` | 0.75 | Proof time reserved for policy export/check |
 | `SOLVER_NODE_CAP`, `SOLVER_CACHE_CAP` | 2²⁵, 2²³ | Direct and seed solver allocation limits |
 | `CHECKER_NODE_CAP` | 2²⁶ | Direct and lifted checker node limit |
+| `CHECKER_CACHE_CAP` | 2²⁰ | Direct and lifted checker cache entries |
 | `BUDDY_INITIAL_NODES`, `BUDDY_INITIAL_CACHE`, `BUDDY_MAX_INCREASE` | 4,000,000; 400,000; 1,000,000 | BuDDy allocation limits |
 | `ROUTE_ORDER` | `lift-then-direct` | Route order recorded in evidence |
 | `DEFAULT_LIFT_FRACTION` | 1/3 | Wrapper lift share unless overridden by CLI |

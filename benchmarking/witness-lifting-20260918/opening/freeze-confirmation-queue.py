@@ -7,17 +7,8 @@ writes one row per (cap, instance); it never launches a solver.
 
 from __future__ import annotations
 
-import collections
-import csv
-import pathlib
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[3]
-OPENING = pathlib.Path(__file__).resolve().parent
-GAINS_LOSSES = OPENING / "gains-losses.tsv"
-P4_LIST = ROOT / "benchmarking" / "symbolic-rows-20260917" / "targets" / "p4.list"
-FAMILY_INSTANCES = ROOT / "benchmarking" / "syntcomp26-family-instances.tsv"
-OUTPUT = OPENING / "confirmations-queue.tsv"
 
 CAPS = (120, 17)
 EPOCHS = (1, 2)
@@ -228,83 +219,3 @@ def build_confirmation_queue(
             }
         )
     return rows
-
-
-def read_tsv(path):
-    with path.open(encoding="utf-8", newline="") as stream:
-        return list(csv.DictReader(stream, delimiter="\t"))
-
-
-def raw_path(candidate, cap):
-    label = f"{candidate}-cap{cap}-epoch1"
-    return OPENING / f"{cap}s" / "epoch-1" / f"{label}.tsv"
-
-
-def validate_documented_cases(p4_instances, family_rows):
-    """Ensure the manually classified B1/holdout identities still exist."""
-    missing_p4 = DECLARED_BENEFITS - p4_instances
-    if missing_p4:
-        raise ValueError(f"declared benefit cases absent from p4.list: {sorted(missing_p4)!r}")
-    family_instances = {row["logical_instance"] for row in family_rows}
-    missing_controls = NEAR_CAP_CONTROLS - family_instances
-    if missing_controls:
-        raise ValueError(
-            "near-cap controls absent from family metadata: " f"{sorted(missing_controls)!r}"
-        )
-
-
-def print_summary(rows):
-    for cap in CAPS:
-        cap_rows = [row for row in rows if row["cap"] == str(cap)]
-        counts = collections.Counter(
-            reason for row in cap_rows for reason in row["reason"].split("|")
-        )
-        breakdown = ", ".join(
-            f"{reason}={counts[reason]}" for reason in REASON_ORDER
-        )
-        print(f"cap={cap}: {len(cap_rows)} rows ({breakdown})")
-
-    queued = {(row["cap"], row["instance"]) for row in rows}
-    missing_controls = [
-        (str(cap), instance)
-        for cap in CAPS
-        for instance in sorted(NEAR_CAP_CONTROLS)
-        if (str(cap), instance) not in queued
-    ]
-    print(
-        "near-cap controls: "
-        + ("all four present at both caps" if not missing_controls else f"missing {missing_controls!r}")
-    )
-    memory_rows = [row for row in rows if "memory-increase" in row["reason"].split("|")]
-    print(f"memory-increase rows: {len(memory_rows)}")
-
-
-def main():
-    gains_loss_rows = read_tsv(GAINS_LOSSES)
-    baseline_rows = [row for cap in CAPS for row in read_tsv(raw_path("B", cap))]
-    candidate_rows = [row for cap in CAPS for row in read_tsv(raw_path("S", cap))]
-    p4_instances = set(P4_LIST.read_text(encoding="utf-8").split())
-    family_rows = read_tsv(FAMILY_INSTANCES)
-    validate_documented_cases(p4_instances, family_rows)
-
-    rows = build_confirmation_queue(
-        gains_loss_rows,
-        baseline_rows,
-        candidate_rows,
-        DECLARED_BENEFITS,
-        NEAR_CAP_CONTROLS,
-    )
-    with OUTPUT.open("w", encoding="utf-8", newline="") as stream:
-        writer = csv.DictWriter(
-            stream, fieldnames=OUTPUT_COLUMNS, delimiter="\t", lineterminator="\n"
-        )
-        writer.writeheader()
-        writer.writerows(rows)
-
-    print(f"wrote {OUTPUT}")
-    print_summary(rows)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

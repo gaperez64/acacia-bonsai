@@ -10,7 +10,6 @@ import json
 import pathlib
 import random
 
-HERE = pathlib.Path(__file__).resolve().parent
 
 
 def read(path: pathlib.Path) -> dict[str, dict[str, str]]:
@@ -26,12 +25,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("phase", choices=("choose", "compare"))
     parser.add_argument("--seed", type=int, default=20260924)
-    parser.add_argument("--list", type=pathlib.Path,
-                        default=HERE / "generic-selection/all-obfuscated.list")
-    parser.add_argument("--sample", type=pathlib.Path,
-                        default=HERE / "generic-selection/B-obfuscated-30.list")
+    parser.add_argument("--list", required=True, type=pathlib.Path,
+                        help="owner-supplied obfuscated ID list")
+    parser.add_argument("--sample", required=True, type=pathlib.Path,
+                        help="owner-supplied sample or ignored output path")
     parser.add_argument("--mapping", type=pathlib.Path,
-                        default=HERE / "generic-selection/sealed-mapping.jsonl")
+                        help="owner-supplied sealed map for compare phase")
     parser.add_argument("--renamed-csv", type=pathlib.Path)
     parser.add_argument("--original-csv", type=pathlib.Path)
     args = parser.parse_args()
@@ -45,6 +44,8 @@ def main() -> None:
         return
     if args.renamed_csv is None or args.original_csv is None:
         parser.error("compare needs --renamed-csv and --original-csv")
+    if args.mapping is None:
+        parser.error("compare needs --mapping and its adjacent .sha256 file")
     digest = hashlib.sha256(args.mapping.read_bytes()).hexdigest()
     if digest != args.mapping.with_suffix(".sha256").read_text().split()[0]:
         raise ValueError("sealed mapping hash mismatch")

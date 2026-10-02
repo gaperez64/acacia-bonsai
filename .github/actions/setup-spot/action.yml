@@ -9,7 +9,7 @@ inputs:
   version:
     description: Spot release to install.
     required: false
-    default: '2.15.1'
+    default: '2.16'
   prefix:
     description: Install prefix. Kept off /usr/local so it is writable during a cache restore.
     required: false

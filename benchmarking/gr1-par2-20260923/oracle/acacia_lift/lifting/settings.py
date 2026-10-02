@@ -27,6 +27,9 @@ PROCESS_POLL_INTERVAL_SECONDS = 0.005
 SOLVER_NODE_CAP = 1 << 25
 SOLVER_CACHE_CAP = 1 << 23
 CHECKER_NODE_CAP = 1 << 26
+# The checker otherwise allocates one cache entry per permitted node up front.
+# A smaller cache preserves the node limit without paying for 2^26 entries.
+CHECKER_CACHE_CAP = 1 << 20
 BUDDY_INITIAL_NODES = 4_000_000
 BUDDY_INITIAL_CACHE = 400_000
 BUDDY_MAX_INCREASE = 1_000_000

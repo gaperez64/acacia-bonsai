@@ -19,9 +19,9 @@ from acacia_lift.tools import configuration_defaults  # noqa: E402
 from _lift_requirements import require_lift_tools  # noqa: E402
 
 WRAPPER = ROOT / "benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py"
-OBFUSCATOR = ROOT / "benchmarking/gr1-par2-20260923/obfuscate-tlsf.py"
+OBFUSCATOR = ROOT / "benchmarking/tools/obfuscate-tlsf.py"
 BUILD = configuration_defaults().tlsf_tools_build
-VERIFY = ROOT / "benchmarking/gr1-par2-20260923/verify-obfuscation.py"
+VERIFY = ROOT / "benchmarking/tools/verify-obfuscation.py"
 
 CASES = (
     ("G out;", "Mealy"),

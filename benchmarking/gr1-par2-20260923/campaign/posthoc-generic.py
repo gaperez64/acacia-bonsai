@@ -10,7 +10,6 @@ import json
 import pathlib
 from collections import Counter
 
-HERE = pathlib.Path(__file__).resolve().parent
 SOLVED = {"REALIZABLE", "UNREALIZABLE"}
 
 
@@ -68,8 +67,8 @@ def route_label(directory: pathlib.Path, obfuscated_id: str, digest: str,
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mapping", type=pathlib.Path,
-                        default=HERE / "generic-selection/sealed-mapping.jsonl")
+    parser.add_argument("--mapping", required=True, type=pathlib.Path,
+                        help="owner-supplied sealed mapping JSONL")
     parser.add_argument("--obfuscated-csv", required=True, type=pathlib.Path)
     parser.add_argument("--final-tsv", required=True, type=pathlib.Path)
     parser.add_argument("--route-records", required=True, type=pathlib.Path)

@@ -237,30 +237,28 @@ COLUMNS = [
 
 
 def main(argv=None) -> int:
-    root = pathlib.Path(__file__).resolve().parents[1]
-    bench = root / "benchmarking"
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--preselection", type=pathlib.Path,
-                        default=bench / "syntcomp26-frontier-preselection.tsv")
+                        required=True)
     parser.add_argument("--diagnostics", type=pathlib.Path,
-                        default=bench / "syntcomp26-frontier-diagnostics.tsv")
+                        help="optional fetched diagnostic CSV")
     parser.add_argument("--frontiers", type=pathlib.Path,
-                        default=bench / "syntcomp26-family-frontiers.tsv")
+                        help="optional fetched family frontier TSV")
     parser.add_argument("--target-count", type=int, default=20)
     parser.add_argument("--memory-quota", type=int, default=2)
     parser.add_argument("--out-tsv", type=pathlib.Path,
-                        default=bench / "syntcomp26-frontier-targets.tsv")
+                        default=pathlib.Path("_bm-logs/frontier/syntcomp26-frontier-targets.tsv"))
     parser.add_argument("--out-list", type=pathlib.Path,
-                        default=bench / "syntcomp26-frontier-targets.list")
+                        default=pathlib.Path("_bm-logs/frontier/syntcomp26-frontier-targets.list"))
     args = parser.parse_args(argv)
 
     candidates = read_tsv(args.preselection)
     diagnostics = (aggregate_diagnostics(read_csv(args.diagnostics))
-                   if args.diagnostics.is_file() else {})
+                   if args.diagnostics is not None and args.diagnostics.is_file() else {})
     cutoff_families = {
         row["family_key"] for row in read_tsv(args.frontiers)
         if row.get("classification") == "clean_cutoff"
-    } if args.frontiers.is_file() else set()
+    } if args.frontiers is not None and args.frontiers.is_file() else set()
 
     scored: list[dict] = []
     for row in candidates:

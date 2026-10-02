@@ -4,8 +4,6 @@ on:
     branches:
       - master
   pull_request:
-    branches:
-      - master
 
 permissions:
   contents: read
@@ -19,6 +17,34 @@ env:
   CXX: g++-14
 
 jobs:
+  evidence-growth:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - name: Check new evidence blobs in commit history
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          head="$HEAD_SHA"
+          if [[ "$EVENT_NAME" == pull_request ]]; then
+            # Check the PR's own commits. github.sha is GitHub's test merge,
+            # which for a stacked PR sits on synthetic merges of the lower
+            # PRs and would count their history as new here.
+            base="$PR_BASE_SHA"
+            head="$PR_HEAD_SHA"
+          elif [[ "$BEFORE" != 0000000000000000000000000000000000000000 ]]; then
+            base="$BEFORE"
+          else
+            base="$(git merge-base "origin/$DEFAULT_BRANCH" "$HEAD_SHA")"
+          fi
+          python3 -s scripts/check-evidence-growth.py --range "$base..$head"
+
   # Cheap, and it gates everything: an invalid registry would make every
   # build below answer the wrong question. It also publishes the shipped
   # configuration list, so the group stays the pointer here too rather than

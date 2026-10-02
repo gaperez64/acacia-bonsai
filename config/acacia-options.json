@@ -342,7 +342,7 @@
       "meson": "acacia_native_arms",
       "type": "boolean",
       "default": false,
-      "description": "Build opt-in exact GR(1) arms with the pinned tlsf-tools OxiDD API",
+      "description": "Build opt-in exact GR(1) arms, including the both-polarity arm, with the pinned tlsf-tools OxiDD API",
       "macros": [
         {
           "name": "ACACIA_NATIVE_ARMS",

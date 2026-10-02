@@ -100,6 +100,13 @@ def main() -> None:
                   "REALIZABLE", 1.0)
             check(binary, single, "real", 0.3, 1, 2, "UNKNOWN", 1.2,
                   delay_after_reap=True)
+            if kind == "native":
+                both_single = ["-T", str(source), "--arms", "both:gr1:oxidd"]
+                both_pair = ["-T", str(source), "--arms",
+                            "unreal:gr1:oxidd,both:gr1:oxidd"]
+                check(binary, both_single, "stall", 0.4, 1, 2, "UNKNOWN", 1.2)
+                check(binary, both_pair, "stall,real-delayed", 2.0, 2, 0,
+                      "REALIZABLE", 1.0)
     print("portfolio deadline and group cleanup checks passed")
 
 

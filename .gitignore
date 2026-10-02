@@ -187,3 +187,4 @@ tlsf-corpus-obf/
 _coverage26/
 benchmarking/_coverage26/
 benchmarking/gr1-par2-20260923/s0/raw/runs/
+/benchmarking/*.lock

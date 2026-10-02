@@ -16,7 +16,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = spec_from_file_location("obfuscate_tlsf", ROOT / "benchmarking" /
-                               "gr1-par2-20260923" / "obfuscate-tlsf.py")
+                               "tools" / "obfuscate-tlsf.py")
 assert spec and spec.loader
 obfuscator = module_from_spec(spec)
 spec.loader.exec_module(obfuscator)

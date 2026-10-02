@@ -90,12 +90,18 @@ test ('config-transition-acceptance',
       suite : ['unit', 'config-frontends'])
 
 if get_option ('acacia_native_arms')
+  phase_record_failure_worker = executable (
+    'phase-record-failure-worker', 'phase-record-failure-worker.cc',
+    cpp_args : ['-DACACIA_PHASE_RECORDS_TEST_HOOKS'])
   native_json_binding_test = executable (
-    'native-json-binding-test', 'native_json_binding_test.cc',
+    'native-json-binding-test',
+    ['native_json_binding_test.cc', '../src/native_proof_binding.cc'],
+    include_directories : inc,
     dependencies : tlsf_deps)
   test ('native-json-binding', native_json_binding_test,
         suite : ['unit', 'native-gr1', 'native-param-lift'])
-  native_gr1_cli_args = [files ('check-native-gr1-cli.py'), ab_exe, meson.project_build_root ()]
+  native_gr1_cli_args = [files ('check-native-gr1-cli.py'), ab_exe,
+                         meson.project_build_root (), phase_record_failure_worker]
   native_lift_cli_args = [files ('check-native-param-lift-cli.py'), ab_exe,
                           meson.project_build_root ()]
   native_cli_depends = [ab_exe]
@@ -111,6 +117,15 @@ if get_option ('acacia_native_arms')
   test ('native-gr1-cli', py,
         args : native_gr1_cli_args,
         suite : ['unit', 'native-gr1'], depends : native_cli_depends)
+  native_gr1_lift_cli_args = [files ('check-native-gr1-lift-cli.py'), ab_exe,
+                              meson.project_build_root ()]
+  if native_test_hooks
+    native_gr1_lift_cli_args += [native_test_exe.full_path ()]
+  endif
+  test ('native-gr1-lift-cli', py,
+        args : native_gr1_lift_cli_args,
+        suite : ['unit', 'native-gr1'], timeout : 180,
+        depends : native_cli_depends)
   test ('native-gr1-same-thread', py,
         args : [files ('check-native-gr1-same-thread.py'), ab_exe,
                 meson.project_build_root ()],
@@ -162,7 +177,7 @@ test ('translator-options',
       suite : ['unit', 'translator-options'])
 
 game_backend_test = executable ('game-backend-test',
-                                'game_backend_test.cc',
+                                ['game_backend_test.cc', '../src/portfolio_arm.cc'],
                                 link_with : closure_buchi_provider_lib,
                                 include_directories : inc,
                                 dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
@@ -397,6 +412,8 @@ game_backend_cli = find_program ('check-game-backend-cli.sh')
 # binary uses the same sources; no installed binary, preset or arm is changed.
 game_backend_integration_sources = [
   '../src/acacia-bonsai.cc',
+  '../src/arg_parser.cc',
+  '../src/portfolio_arm.cc',
   '../src/version.cc',
   '../src/solver/mealy_to_moore.cc',
   '../src/solver/real_backend_selector.cc',
@@ -404,6 +421,15 @@ game_backend_integration_sources = [
   '../src/solver/solve_game.cc',
   '../src/solver/solve_game_vector.cc',
 ]
+if get_option ('acacia_native_arms')
+  game_backend_integration_sources += [
+    '../src/native_support.cc',
+    '../src/native_proof_binding.cc',
+    '../src/native_gr1_arm.cc',
+    '../src/native_gr1_lift_arm.cc',
+    '../src/native_param_lift_arm.cc',
+  ]
+endif
 if enable_tlsf_frontend
   game_backend_integration_sources += '../src/tlsf_frontend.cc'
 endif
@@ -490,7 +516,41 @@ endif
 # and still take the compile-time backend.
 default_arms_opt = get_option ('acacia_default_arms').strip ()
 if default_arms_opt != ''
-  default_check_children = default_arms_opt.split (',').length ()
+  default_check_children = 0
+  needs_real = false
+  needs_unreal = false
+  has_legacy_real = false
+  has_legacy_unreal = false
+  foreach arm : default_arms_opt.split (',')
+    spec = arm.strip ()
+    real_arm = spec.startswith ('real:') or spec.startswith ('both:')
+    unreal_arm = spec.startswith ('unreal:') or spec.startswith ('both:')
+    needs_real = needs_real or real_arm
+    needs_unreal = needs_unreal or unreal_arm
+    native_arm = spec.contains (':gr1:oxidd') or spec.contains (':gr1-lift:oxidd') or spec.contains (':gr1-real-lift:oxidd') or spec.contains (':param-lift:oxidd')
+    if not native_arm
+      default_check_children += 1
+      has_legacy_real = has_legacy_real or real_arm
+      has_legacy_unreal = has_legacy_unreal or unreal_arm
+    endif
+  endforeach
+  if needs_real and not has_legacy_real
+    default_check_children += default_real_children
+  endif
+  if needs_unreal and not has_legacy_unreal
+    default_check_children += default_unreal_children
+  endif
+endif
+if get_option ('acacia_native_arms') and (default_arms_opt.contains (':gr1:oxidd') or
+    default_arms_opt.contains (':gr1-lift:oxidd') or
+    default_arms_opt.contains (':gr1-real-lift:oxidd') or
+    default_arms_opt.contains (':param-lift:oxidd'))
+  test ('default-native-arms', py,
+        args : [files ('check-default-native-arms.py'), ab_exe,
+                meson.project_build_root (), default_arms_opt,
+                default_check_children.to_string ()],
+        suite : ['unit', 'cli', 'native-gr1', 'native-param-lift'],
+        timeout : 60, depends : [ab_exe])
 endif
 test ('check-selection',
       bash,
@@ -812,7 +872,8 @@ endif
 #     syntcomp24 crossover records Acacia 1.x solving it in 9.437s, but the 1.x
 #     binary reports REALIZABLE when a worker is killed by a signal, and 9.437s
 #     matches time-to-exhaust-memory; see the section on that in
-#     benchmarking/LTLSYNT-GAP.md. CI did not see this before because at -O0 the
+#     LTLSYNT-GAP.md (archived in benchmarking-root-legacy,
+#     evidence-2026-09-27). CI did not see this before because at -O0 the
 #     solver reached the 51s timeout, which the harness tolerates, before it
 #     reached its memory limit; at -O2 it gets there in ~11s and answers.
 #     It fails the ab/large1 suite for the same reason, which CI does not run.

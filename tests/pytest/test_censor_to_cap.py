@@ -11,7 +11,7 @@ import pytest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "benchmarking/gr1-par2-20260923/campaign/censor-to-cap.py"
+SCRIPT = ROOT / "benchmarking/tools/censor-to-cap.py"
 
 
 def load_script():

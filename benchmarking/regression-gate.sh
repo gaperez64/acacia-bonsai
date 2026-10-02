@@ -44,7 +44,7 @@ fi
 
 . "$repo_root/benchmarking/lib/scope-guard.sh"
 
-scratch=$(mktemp -d /tmp/acacia-regression-gate.XXXXXX)
+scratch=$(mktemp -d "${TMPDIR:-$build_dir}/acacia-regression-gate.XXXXXX")
 on_exit() {
   local rc=$?
   acacia_scope_guard_end
@@ -70,7 +70,7 @@ fi
 # whose corpus has since moved cannot resolve its own -T inputs; exporting the
 # resolved directory lets check-real-correct.sh find the same file under a live
 # one.  See issue #134.
-tlsf_corpus_dir=$(python3 -c '
+tlsf_corpus_dir=$(python3 -s -c '
 import pathlib
 import sys
 sys.path.insert(0, sys.argv[1])
@@ -105,7 +105,7 @@ if [[ ! -s "$testlog" ]]; then
 fi
 
 set +e
-python3 - "$expected" "$testlog" "$meson_status" \
+python3 -s - "$expected" "$testlog" "$meson_status" \
   "$scratch/baseline.csv" "$scratch/candidate.csv" "$repo_root" \
   "$build_dir" "$scratch/tlsf-corpus-dir" "$tlsf_corpus_dir" <<'PY'
 from collections import defaultdict
@@ -397,7 +397,7 @@ if [[ -s "$scratch/tlsf-corpus-dir" ]]; then
 fi
 
 set +e
-python3 "$repo_root/benchmarking/landing-bar.py" \
+python3 -s "$repo_root/benchmarking/landing-bar.py" \
   "$scratch/baseline.csv" "$scratch/candidate.csv" \
   --timeout 17 \
   --baseline-bin "$baseline_bin" \
@@ -419,7 +419,7 @@ if [[ ${coverage_losses:-0} -gt 0 ]]; then
   # reconstruct it from a flag list.  A build that predates acacia_preset, or
   # one assembled by hand, says so -- which is itself the answer to "is this
   # the configuration the expectations were frozen on?".
-  candidate_preset=$(python3 -c '
+  candidate_preset=$(python3 -s -c '
 import pathlib
 import sys
 sys.path.insert(0, sys.argv[1])

@@ -81,17 +81,22 @@ compiler flags — parallelism moves it and optimization largely does not.
 
 ## Artifacts
 
-`build*/` and `_bm-logs*/` are gitignored and accumulate without limit. Two
-signals mark the ones that are evidence rather than scratch, neither visible
-from the name:
+New raw campaign rows, logs, proofs, thermal samples, and generated plots go
+into ignored `_bm-logs*/` directories or outside the checkout **from their first
+observation**. A campaign closes by packing and verifying its original inputs,
+corrections, and outputs with `scripts/acacia-evidence.py`. Durable evidence is
+the verified external archive **plus a committed row** in
+`benchmarking/evidence-index.tsv`, not raw data left in source Git. Restore an
+archive with `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest
+DIR`; fetch checks its digest and member layout before extraction. Normal
+builds and tests do not fetch evidence.
 
-- a **write-protected** directory is deliberately frozen;
-- a directory whose binary's **SHA-256 appears in a committed file** is
-  provenance — campaign results carry a `binary_sha256` column, and
-  `benchmarking/README.md` pins the frozen G1 baseline by hash.
-
-`scripts/prune-artifacts.sh` encodes both. It reports by default and only
-removes with `--delete`.
+Frozen executables are pinned by SHA-256 in `benchmarking/baselines.tsv` and
+archived separately. `scripts/prune-artifacts.sh` reads both registries and
+protects write-protected local artifacts; it reports by default and only
+removes with `--delete`. Retain active, unpublished, unadjudicated, or sole-copy
+local evidence until its archive is verified. CI runs
+`scripts/check-evidence-growth.py` to reject new generated bulk in Git.
 
 ## Conventions
 
@@ -100,5 +105,6 @@ removes with `--delete`.
 - Python is linted with ruff using the configuration in `pyproject.toml`.
 - `.clang-format` matches the house style (`foo (x)`, 99 columns) but is not
   enforced anywhere yet.
-- Benchmark evidence is durable: sprint records under `benchmarking/` are kept
-  rather than deleted, and measured numbers are carried forward verbatim.
+- Keep `benchmarking/RESULTS.md` current with measured outcomes and rejected
+  ideas. Cite archive IDs for the underlying observations; do not edit old
+  measured rows to fit a new interpretation.

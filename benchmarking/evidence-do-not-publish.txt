@@ -1,0 +1,6 @@
+# Glob patterns checked against each repository-relative member path and basename.
+benchmarking/gr1-par2-20260923/campaign/generic-selection/*
+**/sealed-mapping*
+sealed-mapping*
+**/sealed-map*
+sealed-map*

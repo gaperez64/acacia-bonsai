@@ -1,4 +1,0 @@
-solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
-decide-arm-5	TwoCountersDisButA9.ltl				true	TIMEOUT	60
-decide-arm-5	TwoCountersDisButAC.ltl				true	TIMEOUT	60
-decide-arm-5	lift_wrong_physics_unreal_pb_10_pe_.ltl				true	TIMEOUT	60

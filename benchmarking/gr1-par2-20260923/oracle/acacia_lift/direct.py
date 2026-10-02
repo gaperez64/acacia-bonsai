@@ -12,7 +12,7 @@ import time
 from dataclasses import dataclass
 
 from acacia_lift.tools import ToolConfiguration, bindings_environment
-from acacia_lift.lifting.settings import (CHECKER_NODE_CAP, SOLVER_CACHE_CAP,
+from acacia_lift.lifting.settings import (CHECKER_CACHE_CAP, CHECKER_NODE_CAP, SOLVER_CACHE_CAP,
                                           SOLVER_NODE_CAP, CHECKER_TIMEOUT_FLOOR_SECONDS)
 
 
@@ -135,6 +135,7 @@ def run_exact_direct(source: pathlib.Path, output: pathlib.Path,
         str(config.checker), "--method", "certificate", "--timeout",
         str(max(CHECKER_TIMEOUT_FLOOR_SECONDS, deadline - time.monotonic())),
         "--node-cap", str(CHECKER_NODE_CAP),
+        "--cache-cap", str(CHECKER_CACHE_CAP),
         "--json-out", str(check_json), "--certificate", str(certificate),
         "--certificate-json", str(cert_json), str(game), str(policy),
     ], deadline, "target_check")

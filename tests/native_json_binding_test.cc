@@ -49,4 +49,33 @@ int main () {
   if (native_proof_sidecars (duplicate_certificate, sizeof duplicate_certificate - 1, nullptr, 0,
                              "exact", false))
     return 11;
+
+  const std::string real_certificate =
+      R"({"side":"system","status":"realizable","reduction_semantics":"exact"})";
+  const std::string unreal_certificate =
+      R"({"side":"environment","status":"unrealizable","reduction_semantics":"exact"})";
+  const std::string real_policy = R"({"side":"system","reduction_semantics":"exact"})";
+  const std::string unreal_policy = R"({"side":"environment","reduction_semantics":"exact"})";
+  const auto bound = [] (const std::string& cert, const std::string& policy, bool unreal) {
+    return native_proof_sidecars (cert.data (), cert.size (), policy.data (), policy.size (),
+                                  "exact", true, unreal);
+  };
+  if (!bound (real_certificate, real_policy, false) ||
+      !bound (unreal_certificate, unreal_policy, true))
+    return 12;
+  if (bound (real_certificate, real_policy, true) ||
+      bound (unreal_certificate, unreal_policy, false) ||
+      bound (real_certificate, unreal_policy, false) ||
+      bound (unreal_certificate, real_policy, true))
+    return 13;
+  if (bound (R"({"side":"system","status":"unrealizable","reduction_semantics":"exact"})",
+             real_policy, false) ||
+      bound (R"({"side":"environment","status":"realizable","reduction_semantics":"exact"})",
+             unreal_policy, true) ||
+      bound (R"({"side":"system","status":"realizable","reduction_semantics":"approximate"})",
+             real_policy, false) ||
+      bound (R"({"side":"environment","status":"unrealizable","reduction_semantics":"approximate"})",
+             unreal_policy, true))
+    return 14;
+  return 0;
 }

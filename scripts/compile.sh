@@ -2,7 +2,7 @@
 set -euo pipefail
 
 NPROC=$(nproc)
-SPOT_VERSION=${SPOT_VERSION:-2.15.1}
+SPOT_VERSION=${SPOT_VERSION:-2.16}
 
 # --- Compile and install Spot ---
 if pkg-config --exists libspot 2>/dev/null; then

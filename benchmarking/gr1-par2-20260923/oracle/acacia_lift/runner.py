@@ -13,7 +13,8 @@ from acacia_lift.direct import Decline, run_exact_direct, sha256_file
 from acacia_lift.lifting import provenance, schema, source
 from acacia_lift.lifting import settings
 from acacia_lift.tools import (add_configuration_arguments, bindings_environment,
-                               configuration_from_args)
+                               configuration_from_args, probe_frontend_toolchain,
+                               ProbeError)
 
 
 def _reason(value: str) -> str:
@@ -78,6 +79,10 @@ def main(argv: list[str] | None = None) -> int:
         os.execve(str(config.bindings_python),
                   [str(config.bindings_python), "-s", "-m", "acacia_lift.runner",
                    *os.sys.argv[1:]], bindings_environment(config))
+    try:
+        probe_frontend_toolchain(config)
+    except ProbeError as error:
+        parser.error(str(error))
     started = time.monotonic()
     deadline = started + args.budget
     evidence: dict = {"schema_version": 3, "path_kind": "attempted-declined",
@@ -95,6 +100,7 @@ def main(argv: list[str] | None = None) -> int:
                           "solver_node_cap": settings.SOLVER_NODE_CAP,
                           "solver_cache_cap": settings.SOLVER_CACHE_CAP,
                           "checker_node_cap": settings.CHECKER_NODE_CAP,
+                          "checker_cache_cap": settings.CHECKER_CACHE_CAP,
                           "buddy_initial_nodes": settings.BUDDY_INITIAL_NODES,
                           "buddy_initial_cache": settings.BUDDY_INITIAL_CACHE,
                           "buddy_max_increase": settings.BUDDY_MAX_INCREASE,

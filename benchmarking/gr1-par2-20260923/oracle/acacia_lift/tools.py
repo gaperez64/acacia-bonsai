@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib
 import json
 import os
@@ -10,6 +11,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 import textwrap
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -18,13 +20,13 @@ from dataclasses import dataclass
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 TLSF_TOOLS = ROOT / "subprojects" / "tlsf-tools"
-DEFAULT_TLSF_TOOLS_BUILD = TLSF_TOOLS / "build-oxidd"
-DEFAULT_BINDINGS_PYTHON = (
-    pathlib.Path("/usr/bin/python3.13")
-    if pathlib.Path("/usr/bin/python3.13").exists()
-    else pathlib.Path(os.sys.executable)
+DEFAULT_TLSF_TOOLS_BUILD = ROOT / "build_oracle_tlsf"
+# Spot's Python bindings are installed for the running interpreter under
+# /usr/local, so the defaults follow it rather than naming one Python version.
+DEFAULT_BINDINGS_PYTHON = pathlib.Path(sys.executable)
+DEFAULT_BINDINGS_SITE = pathlib.Path(
+    f"/usr/local/lib64/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
 )
-DEFAULT_BINDINGS_SITE = pathlib.Path("/usr/local/lib64/python3.13/site-packages")
 
 ENV_TLSF_TOOLS_BUILD = "ACACIA_TLSF_TOOLS_BUILD"
 ENV_BINDINGS_PYTHON = "ACACIA_BINDINGS_PYTHON"
@@ -71,7 +73,7 @@ class ToolConfiguration:
 
     @property
     def monitor(self) -> pathlib.Path:
-        return self.tlsf_tools_root / "scripts" / "gr1_monitor_game.py"
+        return TLSF_TOOLS / "scripts" / "gr1_monitor_game.py"
 
     @property
     def solver(self) -> pathlib.Path:
@@ -397,6 +399,66 @@ def _probe_bindings(config: ToolConfiguration) -> dict[str, object]:
     return payload
 
 
+def probe_frontend_toolchain(config: ToolConfiguration) -> dict[str, str]:
+    """Reject stale binaries before the oracle can silently take a fallback route."""
+    hint = "run scripts/build-oracle-toolchain.sh from the Acacia checkout"
+    names = ("tlsf2tlsf", "tlsf2ltl", "tlsfinfo", "tlsfsolve", "tlsfcertcheck")
+    for name in names:
+        _require_file(config.tlsf_tools_build / name, name, executable=True)
+    manifest_path = config.tlsf_tools_build / "acacia-toolchain.json"
+    if not manifest_path.is_file():
+        raise ProbeError(f"oracle toolchain has no source/binary manifest: {manifest_path}; {hint}")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        current = subprocess.check_output(
+            ["git", "-C", str(TLSF_TOOLS), "rev-parse", "HEAD"],
+            text=True, timeout=10,
+        ).strip()
+        oxidd_commit = subprocess.check_output(
+            ["git", "-C", str(TLSF_TOOLS / "external/oxidd"), "rev-parse", "HEAD"],
+            text=True, timeout=10,
+        ).strip()
+        pinned_oxidd = subprocess.check_output(
+            ["git", "-C", str(TLSF_TOOLS), "rev-parse", "HEAD:external/oxidd"],
+            text=True, timeout=10,
+        ).strip()
+        if manifest.get("source_commit") != current:
+            raise ProbeError(f"oracle toolchain does not match tlsf-tools commit {current}; {hint}")
+        if manifest.get("oxidd_commit") != oxidd_commit or oxidd_commit != pinned_oxidd:
+            raise ProbeError(f"oracle OxiDD commit differs from the submodule; {hint}")
+        for name in names:
+            digest = hashlib.sha256((config.tlsf_tools_build / name).read_bytes()).hexdigest()
+            if manifest.get("sha256", {}).get(name) != digest:
+                raise ProbeError(f"oracle {name} differs from the pinned build manifest; {hint}")
+        with tempfile.TemporaryDirectory(dir=config.tlsf_tools_build) as directory:
+            source = pathlib.Path(directory) / "probe.tlsf"
+            provenance = pathlib.Path(directory) / "provenance.json"
+            source.write_text(
+                'INFO { TITLE: "probe" SEMANTICS: Mealy TARGET: Mealy }\n'
+                'MAIN { INPUTS { p; } OUTPUTS { q; } GUARANTEES { G (p -> q); } }\n',
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [str(config.tlsf2tlsf), "--provenance-out", str(provenance),
+                 "--output", os.devnull, str(source)],
+                capture_output=True, text=True, timeout=10, check=False,
+            )
+            if result.returncode != 0 or not provenance.is_file():
+                detail = (result.stderr or result.stdout).strip()
+                raise ProbeError(f"oracle frontend lacks working --provenance-out ({detail}); {hint}")
+            data = json.loads(provenance.read_text(encoding="utf-8"))
+            if (data.get("schema") != "tlsf-tools.frontend-provenance.v1"
+                    or data.get("format_version") != 1
+                    or data.get("ambiguous") is not False
+                    or data.get("source_sha256") != hashlib.sha256(source.read_bytes()).hexdigest()):
+                raise ProbeError(f"oracle frontend provenance has no matching source binding; {hint}")
+    except ProbeError:
+        raise
+    except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
+        raise ProbeError(f"oracle frontend provenance probe failed: {error}; {hint}") from error
+    return {"source_commit": current, "provenance_schema": data["schema"]}
+
+
 def probe_configuration(
     config: ToolConfiguration,
     *,
@@ -405,6 +467,7 @@ def probe_configuration(
     checker: pathlib.Path | None = None,
     required_checker_method: str | None = None,
 ) -> dict[str, object]:
+    frontend = probe_frontend_toolchain(config)
     effective_monitor = (monitor or config.monitor).expanduser().resolve()
     effective_solver = (solver or config.solver).expanduser().resolve()
     effective_checker = (checker or config.checker).expanduser().resolve()
@@ -421,6 +484,7 @@ def probe_configuration(
         )
     return {
         "tlsf_tools_build": str(config.tlsf_tools_build),
+        "frontend": frontend,
         "tools": {
             "gr1_monitor_game": str(effective_monitor),
             "tlsfsolve": {

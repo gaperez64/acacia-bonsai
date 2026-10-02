@@ -14,7 +14,10 @@ MONITOR = ROOT / "subprojects/tlsf-tools/scripts/gr1_monitor_game.py"
 ORACLE_FILES = [ORACLE / "acacia-lift-portfolio.py",
                 *(ORACLE / "acacia_lift").rglob("*.py"), MONITOR]
 NATIVE_ROUTE = [ROOT / "src/acacia-bonsai.cc", ROOT / "src/arg_parser.hh",
-                ROOT / "src/portfolio_arm.hh", *(ROOT / "src").glob("native_*.hh"),
+                ROOT / "src/arg_parser.cc",
+                ROOT / "src/portfolio_arm.hh", ROOT / "src/portfolio_arm.cc",
+                *(ROOT / "src").glob("native_*.hh"),
+                *(ROOT / "src").glob("native_*.cc"),
                 *(ROOT / "subprojects/tlsf-tools" / path for path in (
     "src/lib/gr1_check.c", "src/lib/gr1_check_internal.h",
     "src/lib/gr1_reduction.cc", "src/lib/gr1_lift.cc",

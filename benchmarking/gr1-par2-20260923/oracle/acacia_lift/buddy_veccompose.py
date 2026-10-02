@@ -18,7 +18,12 @@ BUDDY_MAX_VARIABLE_COUNT = 2_097_150
 # header.  Keep the measured ceiling tied to the exact library image that was
 # validated when this adapter was introduced; unknown builds fail closed.
 PINNED_BDDX_MAX_VARIABLE_COUNTS = {
+    # Spot 2.15.1.dev (spot-goodset fork), the image first validated.
     "a991f2049c44e3f3cf9102b7d40d9efc2c5bb2b8a3a1af7d120f7c23c9caf44d":
+        BUDDY_MAX_VARIABLE_COUNT,
+    # Spot 2.16 release: buddy/src/kernel.{h,c} are unchanged, so MAXVAR is
+    # the same 0x1FFFFF-1.
+    "b4a78b4b6d8ce8cb275ac705ca91cac8d5c8a723ebc2d11175aac32b48e0fec4":
         BUDDY_MAX_VARIABLE_COUNT,
 }
 

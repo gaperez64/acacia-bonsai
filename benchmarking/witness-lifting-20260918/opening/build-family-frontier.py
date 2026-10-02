@@ -10,20 +10,9 @@ or run this sprint (the plan section 3.1 fallback recorded in decisions.md).
 from __future__ import annotations
 
 import collections
-import csv
-import pathlib
 import re
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[3]
-OPENING = pathlib.Path(__file__).resolve().parent
-FAMILY_INSTANCES = ROOT / "benchmarking" / "syntcomp26-family-instances.tsv"
-TARGET_CHECKS = OPENING.parent / "families" / "target-checks.tsv"
-P2_LIST = ROOT / "benchmarking" / "symbolic-rows-20260917" / "targets" / "p2.list"
-P4_LIST = ROOT / "benchmarking" / "symbolic-rows-20260917" / "targets" / "p4.list"
-FRONTIER_OUTPUT = OPENING / "family-frontier.tsv"
-OUT_OF_COHORT_OUTPUT = OPENING / "out-of-previous-cohort.md"
-EXPECTED_INSTANCES = 1524
 
 OUTPUT_COLUMNS = (
     "logical_instance",
@@ -198,16 +187,6 @@ def target_witness_references(
     return references
 
 
-def read_tsv(path: pathlib.Path) -> list[dict[str, str]]:
-    with path.open(encoding="utf-8", newline="") as stream:
-        return list(csv.DictReader(stream, delimiter="\t"))
-
-
-def summary_path(candidate: str, cap: int) -> pathlib.Path:
-    label = f"{candidate}-cap{cap}-epoch1"
-    return OPENING / f"{cap}s" / "epoch-1" / f"{label}-summary.tsv"
-
-
 def out_of_previous_cohort(
     frontier: list[dict[str, str]], already_used_ids: set[str]
 ) -> tuple[str, int, int]:
@@ -254,58 +233,3 @@ def out_of_previous_cohort(
             )
         lines.append("")
     return "\n".join(lines), family_count, instance_count
-
-
-def write_tsv(path: pathlib.Path, rows: list[dict[str, str]]) -> None:
-    with path.open("w", encoding="utf-8", newline="") as stream:
-        writer = csv.DictWriter(
-            stream, fieldnames=OUTPUT_COLUMNS, delimiter="\t", lineterminator="\n"
-        )
-        writer.writeheader()
-        writer.writerows(rows)
-
-
-def main() -> int:
-    family_rows = read_tsv(FAMILY_INSTANCES)
-    if len(family_rows) != EXPECTED_INSTANCES:
-        raise ValueError(
-            f"expected {EXPECTED_INSTANCES} family rows, found {len(family_rows)}"
-        )
-    references = target_witness_references(read_tsv(TARGET_CHECKS), family_rows)
-    frontier = build_frontier(
-        family_rows,
-        read_tsv(summary_path("B", 120)),
-        read_tsv(summary_path("S", 120)),
-        read_tsv(summary_path("B", 17)),
-        read_tsv(summary_path("S", 17)),
-        references,
-    )
-    write_tsv(FRONTIER_OUTPUT, frontier)
-
-    already_used_ids = set(P2_LIST.read_text(encoding="utf-8").split())
-    already_used_ids.update(P4_LIST.read_text(encoding="utf-8").split())
-    report, family_count, instance_count = out_of_previous_cohort(
-        frontier, already_used_ids
-    )
-    OUT_OF_COHORT_OUTPUT.write_text(report, encoding="utf-8")
-
-    counts = collections.Counter(row["verdict_transition"] for row in frontier)
-    print(f"wrote {FRONTIER_OUTPUT} ({len(frontier)} rows)")
-    for category in (
-        "stable-realizable",
-        "stable-unrealizable",
-        "stable-unsolved",
-        "b-solved-s-not",
-        "s-solved-b-not",
-        "verdict-conflict",
-    ):
-        print(f"  {category}: {counts[category]}")
-    print(
-        f"wrote {OUT_OF_COHORT_OUTPUT} "
-        f"({family_count} families, {instance_count} instances)"
-    )
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

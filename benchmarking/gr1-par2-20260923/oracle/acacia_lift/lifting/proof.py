@@ -10,7 +10,7 @@ from acacia_lift.artifact import Aag, AagBuilder, _certificate_sidecar, _policy_
 from acacia_lift.direct import Decline, run_command, sha256_file
 from acacia_lift.tools import ToolConfiguration
 from .schema import Bdds, GameInstance
-from .settings import (CHECKER_NODE_CAP, CHECKER_TIMEOUT_FLOOR_SECONDS,
+from .settings import (CHECKER_CACHE_CAP, CHECKER_NODE_CAP, CHECKER_TIMEOUT_FLOOR_SECONDS,
                        POLICY_PROOF_FRACTION)
 
 
@@ -193,7 +193,8 @@ def _check(config: ToolConfiguration, method: str, target: GameInstance,
     path = output / f"check-{method}.json"
     command = [str(config.checker), "--method", method, "--timeout",
                str(max(CHECKER_TIMEOUT_FLOOR_SECONDS, deadline - time.monotonic())),
-               "--node-cap", str(CHECKER_NODE_CAP), "--json-out", str(path),
+               "--node-cap", str(CHECKER_NODE_CAP),
+               "--cache-cap", str(CHECKER_CACHE_CAP), "--json-out", str(path),
                "--certificate", str(certificate), "--certificate-json",
                str(certificate) + ".json", str(target.files.game)]
     if policy is not None:

@@ -1,495 +1,152 @@
-# What is in this directory
+# Benchmarking protocol
 
-| document | status |
-|---|---|
-| [README.md](README.md) (this file) | how to measure: plots, PAR-2, panels, the gates, the measurement protocol |
-| [LTLSYNT-GAP.md](LTLSYNT-GAP.md) | **living.** The standing comparison against `ltlsynt` and the residual gap |
-| [SPOT-ANOMALIES.md](SPOT-ANOMALIES.md) | **living.** Upstream-facing reproducers for Spot and `ltlsynt` defects |
-| [SEMANTIC-ACTIONS-AND-M2-SPRINT.md](SEMANTIC-ACTIONS-AND-M2-SPRINT.md) | **living**, replace-in-place. M1 landed; M2 closed as a representation problem |
-| [SMALL-INDUCTIVE-INVARIANT-SPRINT.md](SMALL-INDUCTIVE-INVARIANT-SPRINT.md) | **living**, replace-in-place. Small inductive invariants for the M2 downset |
-| [ADAPTIVE-PORTFOLIO-OTFUR-SPRINT.md](ADAPTIVE-PORTFOLIO-OTFUR-SPRINT.md) | **living**, replace-in-place. Work removed from the sparse guarded solver; the arm census is not yet run |
-| [OTF-AND-SPOT.md](OTF-AND-SPOT.md) | closed. On-the-fly Spot solving: the result of record, the coverage packages, the API audit, the handoff spec |
-| [COVERAGE.md](COVERAGE.md) | closed. Where the solver stops on SYNTCOMP 2026, and the forward safety-game solver |
-| [DATA-STRUCTURES.md](DATA-STRUCTURES.md) | closed. Downset and state-vector representations, and four attempts to change them |
-| `plots/<campaign>/` | dated, immutable campaign outputs with their provenance |
-| `frontiers/` | generated family dossiers (`make-frontier-dossiers.py`) |
+[RESULTS.md](RESULTS.md) is the one current results-and-gaps report.
+[DATA-STRUCTURES.md](DATA-STRUCTURES.md) is the retained architecture reference
+for antichains, state vectors and the forward graph. Historical campaign
+narratives and original measurements are in the archives named by
+[evidence-index.tsv](evidence-index.tsv). The active work is in
+[optimize-20260927/plan.md](optimize-20260927/plan.md).
 
-A **living** record is replaced in place: each campaign rewrites its own section
-rather than appending, and rejected experiments move to a "What has been tried"
-section and stay there. A **closed** record states its decision up front and is
-not expected to change; it is kept because its numbers are the evidence for that
-decision, and re-deriving them costs corpus-days.
+## Evidence and retention
 
-# At a glimpse: suggested process
+Start every new campaign in an ignored `_bm-logs*/` directory or outside the
+checkout. That includes raw rows, route records, proofs, thermal samples,
+plots, and generated reports from their first observation. Do not first write
+raw data under `benchmarking/` and later remove it. Keep original rows and
+correction sidecars together; do not normalize old observations in place.
 
-In the coming sections of this README, all of the following commands are
-explained and justified. We sum up the process we suggest here for
-convenience.
+When a campaign closes, use `scripts/acacia-evidence.py` to pack and verify its
+original inputs and outputs, publish the archive to an authorized durable
+location, read it back, and commit its URL, SHA-256, status, and provenance to
+[evidence-index.tsv](evidence-index.tsv). **Durable evidence is the verified
+external archive plus its committed index row.** The index does not turn a
+partial or stopped campaign into a completed measurement. Fetch and verify
+archived inputs into a separate directory with:
 
-Build the configurations you want to compare:
-```
-./self-benchmark.sh -R -c best_decomp_mona,otf_sparse_formula
+```sh
+python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR
 ```
 
-Run each binary over the same instances, recording a verdict and a wall-clock
-time per instance. Keep the campaign inside a memory scope, and run
-sequentially, as the measurement protocol at the end of this file requires:
-```
-python3 benchmarking/run-subset.py \
+Restored archives preserve their `benchmarking/` paths under `DIR`. Reporting
+tools in [tools/](tools/) accept that root or explicit input paths. Fetch is
+opt-in; ordinary builds, tests, and solver runs stay offline. Frozen executables
+are pinned by SHA-256 in [baselines.tsv](baselines.tsv) and also archived; G1
+must use the matching old configuration's executable. The read-only/default
+`scripts/prune-artifacts.sh` respects the registries and write-protected local
+artifacts. Do not prune active, unpublished, unadjudicated, or sole-copy local
+evidence before archive verification.
+
+CI runs `scripts/check-evidence-growth.py` to reject new generated rows, logs,
+proof bundles, thermal data and compressed archives in Git. Its small fixture
+exceptions are explicit in [evidence-growth-allowlist.tsv](evidence-growth-allowlist.tsv).
+
+## Running and reporting
+
+Build the compile-time presets with `./self-benchmark.sh -R -c PRESET` and use
+the registry in `config/acacia-presets.json` to identify options. Run both
+binaries on exactly the same instance list, one solver at a time, recording
+verdict, wall time, exit code, cap, binary SHA-256 and resource regime. For
+example:
+
+```sh
+python3 -s benchmarking/run-subset.py \
   --bin build_best_decomp_mona/src/acacia-bonsai \
   --list tests/suites/benchmarks/syntcomp26/all.list \
   --timeout 17 --systemd-scope --memory-max 8G \
   --csv _bm-logs/best_decomp_mona.csv
-```
-
-Turn the CSVs into a PAR-2 table and a cactus plot:
-```
-python3 benchmarking/cactus-report.py \
+python3 -s benchmarking/cactus-report.py \
   --csv baseline=_bm-logs/best_decomp_mona.csv \
   --csv candidate=_bm-logs/otf_sparse_formula.csv \
-  --title "SYNTCOMP26" --timeout 17 \
-  --out-prefix _bm-logs/comparison --markdown _bm-logs/comparison.md
-```
-`--virtual-best LABEL=a,b` adds a synthetic portfolio series that keeps, per
-instance, the fastest member that solved it. The dated directories under
-`benchmarking/plots/` are the committed outputs of exactly this step.
-
-# Generating the plots
-
-`cactus-report.py` writes both `PATH.png` and `PATH.pdf` from `--out-prefix`,
-and the PAR-2 table as Markdown from `--markdown`. Only REALIZABLE and
-UNREALIZABLE rows count as solved; every other outcome is charged twice the
-timeout in PAR-2 and omitted from the cactus curve, so a timeout cannot be
-read as a fast answer.
-
-For saved `run-syntcomp26-coverage.py` observations, export the coverage summary
-and its raw runs before passing them to the same reporter:
-
-```sh
-python3 benchmarking/run-syntcomp26-coverage.py export-cactus \
-  --summary /path/to/acacia-summary.tsv --runs /path/to/acacia.tsv \
-  --list tests/suites/benchmarks/syntcomp26/all.list --cap 17 \
-  --output /path/to/acacia.csv
+  --timeout 17 --out-prefix _bm-logs/comparison \
+  --markdown _bm-logs/comparison.md
 ```
 
-`--runs` defaults to the summary path with `-summary.tsv` replaced by `.tsv`.
-Export validates the exact list, one observation per ID, uniform cap, finite
-nonnegative times, summary/run agreement, solved verdict/exit agreement, and
-uniform recorded solver/resource provenance before writing. Staged campaigns,
-missing observations, and nonempty `<runs-stem>-conflicts.tsv` sidecars are
-rejected; collected conflicts need adjudication before reporting. Keep the
-original runs and conflict sidecar together. Export does not run a solver or
-inspect systemd scopes.
+For `run-syntcomp26-coverage.py` observations, export a uniform-cap CSV with
+`benchmarking/run-syntcomp26-coverage.py export-cactus --summary SUMMARY --runs RUNS --list LIST
+--cap 17 --output CSV`. Export validates exact list membership, one row per
+ID, finite nonnegative times, summary/run agreement, solved verdict/exit
+agreement, and recorded provenance. It rejects staged or missing observations
+and unresolved conflict sidecars. The accompanying `.raw.tsv` keeps original
+result, exit, wall time and cap for subtype counts. CSVs alone do not carry a
+cap or source identity. `cactus-report.py` reports PAR-2, solved REAL/UNREAL,
+TIMEOUT, RESOURCE_LIMIT, UNKNOWN, ERROR, and SYFCO-FAIL separately. A virtual
+best is a derived per-instance best of named series, never a measured runner.
 
-The CSV preserves real exit codes and solved wall times. Nonsolved rows use the
-cap as their CSV time and map MEMOUT to RESOURCE_LIMIT and CRASH to ERROR.
-The accompanying `acacia.raw.tsv` retains each original result, exit code, wall
-time, and cap for subtype counts. Other unsupported failures stop the export.
-The report keeps its existing columns (TIMEOUT, RESOURCE_LIMIT, UNKNOWN, ERROR,
-SYFCO-FAIL for timeouts, memory failures, unknowns, errors/crashes, and conversion
-failures), and appends REAL, UNREAL, PAR-2 mean, and the SHA-256 of each input CSV.
-Virtual-best rows are marked `derived` in the hash column. The reporter checks
-verdict totals, cactus endpoints, and PAR-2 total/mean agreement. CSVs themselves
-do not contain caps or provenance; use the validated export for coverage data
-and the matching recorded regime for `run-subset.py` CSVs.
+`rank_bm_logs.py` scores `_bm-logs/` configurations by PAR-2. For Meson
+`--slice=N/M` runs, first use `aggregate_bm_slices.py` with `--min-slices` to
+exclude incomplete sets. `loss-set.py`, `ltlsynt_ablation_report.py`,
+`run_diag_targets.py`, and `summarize-diag-phases.py` inspect individual losses
+and phase stalls. `speedup-scatter.py` provides a paired per-instance view.
+These tools read explicit input paths and write to an ignored output directory.
 
-For the per-instance view that a cactus plot cannot give -- which instances a
-change actually helped, rather than how the sorted curves compare --
-`speedup-scatter.py` plots one point per instance against the diagonal.
+## Corpus and panel selection
 
-# Ranking configurations by PAR-2
+For TLSF-backed SYNTCOMP25/26 suites, `syntcomp-corpus.py materialize` creates
+a flat corpus from the `tests/syntcomp-benchmarks` submodule, verifies it and
+records `.acacia-tlsf-corpus-path` unless `--no-record` is set. A corpus can be
+selected by `--tlsf-corpus DIR`, `ACACIA_TLSF_CORPUS=DIR`, or the build's
+`-Dacacia_tlsf_corpus_dir=DIR`, in that order. G1 uses the same lookup without
+a CLI corpus flag. Stale paths are skipped; configure Meson with the corpus
+directory to enumerate corpus suites. The benchmark suite lists and TLSF
+source maps fix logical instance identity; use the same set and frontend for
+both candidates. A stratified panel is a screen, not a full-corpus result.
 
-`rank_bm_logs.py` prints a table of all configurations in `_bm-logs/`
-sorted by PAR-2 score. It reports timeout, UNKNOWN/resource-limit, and error
-separately; every non-answer is charged `2 × timeout`. Useful for picking the
-strongest configurations after adding or re-running benchmarks:
-```
-benchmarking/rank_bm_logs.py              # reads ../_bm-logs by default
-benchmarking/rank_bm_logs.py path/to/logs # or a custom directory
-```
-The per-instance timeout cap defaults to the largest `duration` observed
-across the TIMEOUT entries in the logs; override it with
-`--timeout SECONDS` if you want a specific value.
-
-When benchmark runs are split with Meson's `--slice=N/M`, aggregate the complete
-slice sets first:
-```
-benchmarking/aggregate_bm_slices.py _bm-logs --out _bm-logs/aggregated
-benchmarking/rank_bm_logs.py _bm-logs/aggregated --timeout 17
-```
-Incomplete slice sets are skipped, so interrupted smoke runs do not pollute the
-ranking table.
-
-If the directory also contains older one-shot runs, require the current slice
-count explicitly:
-```
-benchmarking/aggregate_bm_slices.py _bm-logs --out _bm-logs/aggregated --min-slices 4
-```
-
-For Acacia-vs-ltlsynt diagnostics, `loss-set.py` extracts the `ltlsynt_only`
-and `acacia_slow` instances, while `ltlsynt_ablation_report.py` annotates those
-instances with the ltlsynt ablations that still solve them:
-```
-python3 benchmarking/loss-set.py --logs _bm-logs/aggregated \
-  --acacia best_decomp_mona --ltlsynt ltlsynt \
-  --csv _bm-logs/best_decomp_mona-vs-ltlsynt-loss-set.csv
-
-benchmarking/ltlsynt_ablation_report.py --logs _bm-logs/aggregated \
-  --acacia best_decomp_mona \
-  --csv _bm-logs/best_decomp_mona-ltlsynt-ablation-report.csv
-```
-
-For focused Acacia phase diagnostics, build a preset with diagnostics enabled
-and run selected LTL instances directly through the diagnostics binary:
-```
-python3 benchmarking/run_diag_targets.py \
-  --build build_best_decomp_mona_diag \
-  --timeout 25 \
-  --systemd-scope --memory-max 8G --memory-swap-max 0 \
-  --csv _bm-logs/best_decomp_mona_diag-targets.csv \
-  ltl2dba_E8.ltl ltl2dba_Q6.ltl
-```
-Direct mode is the default because it preserves `ACACIA_DIAG` progress lines
-when the timeout kills the solver. Use `--systemd-scope` for experiments so
-the solver and all forked children run in a named memory-limited cgroup;
-`--via-wrapper` is available when the `check-real-correct.sh` wrapper behavior
-itself is what needs testing. Use `--progress-every N` to control periodic
-solve-loop snapshots; `0` disables loop snapshots.
-
-The shared bounded-runner path uses `KillMode=control-group` and tears down both
-the named user scope and the launcher's process group on every return path. It
-accepts a printed Acacia verdict only when the documented process exit code
-agrees, and classifies timeouts or resource limits before parsing solver output.
-
-The cap and direct-simulation preprocessing census is deliberately excluded
-from ordinary diagnostics because it can be expensive. Add
-`--preprocessing-census-only` to measure those reductions and stop before the
-game solver; its CSV fields otherwise remain zero.
-
-`summarize-diag-phases.py` first separates translation, action construction,
-and fixed-point stalls.  Diagnostics builds also split fixed-point time into
-input picking, backward action application, and downset work; the summary
-labels a target `letter-loop-bound`, `downset-bound`, or `mixed` (within 20%).
-
-The semantic-action and M2 sprint -- the pre-decoding action quotient that landed, and the
-representation measurements that closed the compressed-downset branch -- is in
-[SEMANTIC-ACTIONS-AND-M2-SPRINT.md](SEMANTIC-ACTIONS-AND-M2-SPRINT.md), with its census in
-[semantic-action-census.tsv](semantic-action-census.tsv).
-
-The completed zero-tail versus bare-vector ablation — five-by-20-second
-LTO/no-LTO runs, profile, and disassembly comparison — is in
-[DATA-STRUCTURES.md](DATA-STRUCTURES.md). The TLSF
-normalization/HOA replay outcome is in
-[DATA-STRUCTURES.md](DATA-STRUCTURES.md).
-The checksum-verified final current-versus-Acacia-1.x cactus plots are in
-[plots/final-v1-current-20260825](plots/final-v1-current-20260825/README.md).
-
-# Deterministic stratified panels
-
-The current flow for the TLSF-backed `syntcomp25` and `syntcomp26` suites
-reconstructs the SYNTCOMP TLSF corpus from the `tests/syntcomp-benchmarks`
-submodule. `syntcomp-corpus.py materialize` verifies and writes a flat corpus,
-and `-Dacacia_tlsf_corpus_dir` makes that directory available to Meson. Each
-suite's `tlsf-sources.tsv` maps its logical `.ltl` instance names to the TLSF
-sources passed to the configured backend.
-
-Materialize once: any one of `--tlsf-corpus DIR` (G2s/G3),
-`ACACIA_TLSF_CORPUS=DIR`, or the build's `-Dacacia_tlsf_corpus_dir=DIR` is
-enough for the gates, in that precedence order. Without an override, they use
-the repository's `.acacia-tlsf-corpus-path` pointer written by materialize,
-provided the directory still exists and contains its `.acacia-tlsf-corpus`
-marker. The marker records the entry count and manifest SHA-256;
-`materialize --no-record` skips updating the pointer. A setting that names a
-directory which is not there is skipped rather than used, so a stale
-`acacia_tlsf_corpus_dir` left in an old build cannot mask a live
-`ACACIA_TLSF_CORPUS`; when nothing resolves, the gate says which mechanisms it
-consulted and why each one failed. Meson still needs the
-build option at configure time to enumerate these suites; the gates reuse it
-without a second setting. G2s/G3 look in the candidate binary's build directory
-(`BUILD/src/acacia-bonsai`); G2s calibration uses the baseline build.
-
-For example:
-```
-python3 benchmarking/syntcomp-corpus.py materialize \
-  --out /tmp/syntcomp-tlsf
-
-meson setup build \
-  -Dacacia_tlsf_corpus_dir=/tmp/syntcomp-tlsf
-```
-
-The retained flow applies to the `syntcomp21` and `syntcomp24` suites.
-`convert-tlsf-corpus-native.py` produced their still-vendored `.ltl`/`.part`
-pairs through the linked `tlsf-frontend-inspect` implementation, and
-`syntcomp-pool.py` imported those pairs into the shared content-addressed
-`tests/ltl/syntcomp` corpus with year-specific `sources.tsv` maps. Their
-upstream TLSF provenance was not retained, so those suites cannot be
-reconstructed from the TLSF submodule and remain vendored. Both tools remain
-the supported conversion and import path when the original TLSF corpus and
-selection are available; the converter records conversion metadata without
-invoking SyFCo or a standalone tlsf-tools binary.
-
-For example, given the original `syntcomp24` inputs:
-```
-python3 benchmarking/convert-tlsf-corpus-native.py \
-  /path/to/syntcomp24-tlsf /tmp/syntcomp24-stage \
-  --native-inspect build/tests/tlsf-frontend-inspect \
-  --selection /path/to/syntcomp24.tlsf.list \
-  --list-output /tmp/syntcomp24.list
-
-python3 benchmarking/syntcomp-pool.py \
-  --pool tests/ltl/syntcomp --maps-root tests/suites/benchmarks \
-  --suite syntcomp24=/tmp/syntcomp24-stage
-```
-
-`make-panel.py` builds a family-balanced easy/border/gap/open panel from paired
-Acacia and `ltlsynt` Meson JSON logs.  Repeat `--reference` with the newest
-campaign first: reference coverage is unioned, and the first campaign that
-contains an instance supplies its timings and `source_campaign` provenance.
-This lets a later full-corpus sweep repair or extend an older partial reference
-without the panel monotonically shrinking to the campaigns' intersection.
-
-For example:
-```
-python3 benchmarking/make-panel.py \
-  --reference _bm-logs/full-current \
-  --reference _bm-logs/older-supplement \
-  --source-map tests/suites/benchmarks/syntcomp24/sources.tsv \
-  --output tests/suites/benchmarks/syntcomp24/panel \
-  --cap 17 --easy 40 --border 65 --gap 60 --open 15
-```
-
-# Local tuning protocol
-
-Use the local Meson LTL benchmark suites as the default optimization loop.  A
-typical first pass is:
-```
-./self-benchmark.sh \
-  -b ab/syntcomp21/crit \
-  -c ltlsynt,best_decomp_mona,best_mona,base_iosprecom_mona,best_decomp_kdtree_mona,best_decomp_sharingtrie_mona,best_decomp_sharingtree_mona,best_decomp_simpsharingtree_mona,best_decomp_skiplist_mona,best_decomp_cst_mona \
-  -t 1.7 -f
-benchmarking/rank_bm_logs.py _bm-logs > _bm-logs/ranking.txt
-```
-
-For the cgrouped overnight campaign, the default Acacia set comes from the
-`local_tuning_default` preset group.  To run only the downset data-structure
-sweep against already-collected tool logs, use:
-```
-ACACIA_CONFIG_GROUP=posets_downset_sweep TOOL_CONFIGS= \
-  ./scripts/overnight-benchmark-session.sh
-```
-
-Use the measured top four Acacia configurations from that ranking for the next
-comparison round.  Do not use a TLSF walk as the default evidence for an
-optimization unless the local Meson suites do not contain the family being
-diagnosed.
-
-The focused `ab/symmetry-2025` suite vendors a 24-instance panel from the 2025
-LTL selection: ten expected symmetry cases, four indexed protocol controls,
-and ten general controls.  Run the top-four on/off comparison with a 17-second
-per-instance limit as follows:
-```
-./self-benchmark.sh \
-  -b ab/symmetry-2025 \
-  -c best_decomp_mona,best_decomp_mona_noequivariant,best_decomp_rank_bucketed_mona,best_decomp_rank_bucketed_mona_noequivariant,best_decomp_bboxtree_mona,best_decomp_bboxtree_mona_noequivariant,best_decomp_filtered_vector_mona,best_decomp_filtered_vector_mona_noequivariant \
-  -t 1.7 -f
-```
-The source selection and category labels are recorded in
-`benchmarking/symmetry-2025-sample.tsv`; the default-on decision campaign is
-summarized below. Across all four configuration pairs, enabling the exact
-equivariant path preserved every answer, gained two answers, reduced common
-solved time by 39.81% (97.870 s to 58.909 s), and improved PAR-2 from
-1117.870 s to 1032.447 s.
-
-| configuration | solved off/on | common time off/on (s) | gain | PAR-2 off/on (s) |
-|---|---:|---:|---:|---:|
-| `best_decomp_mona` | 17/17 | 37.760/16.358 | 56.68% | 275.760/254.358 |
-| `best_decomp_rank_bucketed_mona` | 17/17 | 11.875/8.993 | 24.26% | 249.875/246.993 |
-| `best_decomp_bboxtree_mona` | 16/17 | 22.253/19.075 | 14.28% | 294.253/273.911 |
-| `best_decomp_filtered_vector_mona` | 16/17 | 25.982/14.482 | 44.26% | 297.982/257.184 |
-
-The August 2026 admission-gate campaign lowered the shipping
-`acacia_equivariant_min_blocks` threshold from 4 to 2.  It passed G1 at 40/40,
-preserved all SYNTCOMP26 panel answers, and converted
-`arbiter_with_buffer_pb_5_pe_.ltl` from a timeout to REALIZABLE in 7.011 s.
-
-| panel | solved, blocks 4/2 | PAR-2, blocks 4/2 (s) |
-|---|---:|---:|
-| SYNTCOMP25 | 106/107 | 2780.724/2746.223 |
-| SYNTCOMP26 | 134/134 | 1702.186/1706.153 |
-
-The four `best_decomp_rank_bucketed_mona_eq_*` experiment presets pin all three admission values,
-so the one-at-a-time comparisons remain reproducible after the shipping default changed.
-The combined minimum-block plus safety-core-witness head also passed the SYNTCOMP21 critical
-screen at 91/94; common solved time moved from 114.711 s with the four-block preset to 103.355 s
-with the two-block preset, with the same three timeouts.
-
-See [LTLSYNT-GAP.md](LTLSYNT-GAP.md) for the current comparison with `ltlsynt`, the residual gap
-analysis, and the durable record of optimization ideas rejected by the gates.
-
-`self-benchmark.sh` also exposes ltlsynt ablation pseudo-configs.  They run the
-same local `ltlsynt/...` Meson suites as `ltlsynt`, but set `LTLSYNT_OPTS`:
-```
-./self-benchmark.sh \
-  -b ab/syntcomp21/crit \
-  -c ltlsynt,ltlsynt_no_bypass,ltlsynt_no_obligation,ltlsynt_no_decompose,ltlsynt_no_specials \
-  -t 1.7 -f
-```
-
-Use these only to classify why ltlsynt wins a local loss-set instance:
-decomposition, bypass/direct-strategy checks, obligation synthesis, or the
-general backend.
-
-Benchmark configurations are the same compile-time presets described in the
-top-level README.  `self-benchmark.sh -c NAME -R` asks
-`scripts/acacia-config.py` for the selected preset, configures Meson with the
-corresponding `-Dacacia_*` options, records the normalized preset in
-`build_NAME/.acacia-config.json`, and rebuilds when that metadata no longer
-matches.  Add new benchmark variants as presets in `config/acacia-presets.json`
-instead of passing ad hoc macro flags, so benchmark logs and build directories
-remain reproducible.
-
-# Acacia–ltlsynt gap diagnosis
-
-The August 2026 shipping-matched census originally audited 267 rows. A corrected empty-partition
-wrapper reclassified six of them, leaving 153 `ltlsynt_only` rows plus 108 rows where both tools
-solve but Acacia is more than 2× slower and takes more than 0.3 s. See
-[LTLSYNT-GAP.md](LTLSYNT-GAP.md) for the 261-row residual census, the six-row audit trail, and
-exact telemetry.
-
-| set | M1 letter-loop | M2 downset | M3 translation-stall | M4 one-sided-race | mixed | residual total |
-|---|---:|---:|---:|---:|---:|---:|
-| corrected census rows | 122 | 68 | 36 | 9 | 26 | 261 |
-| `ltlsynt_only` | 57 | 39 | 36 | 9 | 12 | 153 |
-
-The measured outcomes are deliberately mechanism-specific:
-
-- Every `ltlsynt` feature to which the ablation attributed a win is present in Acacia; the
-  syntactic bypass captured 17/17 predicted instances.
-- 86/153 residual losses (56%) are instances `ltlsynt` answers in under 0.2 s. The largest
-  concentration is the parameterized arbiter/lift/AMBA block, but the census distinguishes its
-  letter-loop, downset, and translation modes.
-- The equivariant minimum-block threshold moved from 4 to 2, admitting verified two- and
-  three-block layouts. It gained one SYNTCOMP25 panel answer; the other recognition thresholds
-  gained none and remain unchanged.
-- The `simple_arbiter_unreal2` M3 anchor was Spot's 64-acceptance-set exception, not a translator
-  timeout or `push_aps` limit. A sound safety-core witness now solves the measured 25/50/60/75
-  family in 0.009–0.020 s.
-- Twelve rows formerly labeled M3 had already built a 105–775-state automaton. Two `LedMatrix`
-  rows are now M2 and the other ten are M1, leaving 36 M3 losses. Only four rows in the original
-  48-row M3 cohort show an architectural parity-translation advantage.
-- Correct empty-side partitions raise the reported campaign coverage from 104/180 to 106/180 on
-  SYNTCOMP25 and from 133/180 to 134/180 on SYNTCOMP26; all 187 empty-side corpus instances solve
-  through the repaired wrapper.
-- A semantic whole-letter quotient cut action applications by 14.16–15.59× on the three M1 spike
-  targets. After correcting the baseline and corpus lookup, it passed G1 at 40/40 (PAR-2
-  101.867 → 87.880 s), gained two SYNTCOMP25 G3 answers, and preserved the SYNTCOMP26 panel.
-  G2s then exposed a 680.604% cycle regression on `round_robin_arbiter4` with three candidate
-  timeouts, so the quotient was rejected and removed. M4 had only 9 losses and did not meet the
-  plan's 15-instance implementation threshold.
-
-Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMALIES.md).
-
-# Gates
+## Gates
 
 - **G0, correctness:** `meson test -C build --suite=unit` and
   `meson test -C subprojects/posets/build`; both must report `Fail: 0`.
 - **G1, frozen verdicts and coverage:**
-  `benchmarking/regression-gate.sh --baseline-bin PREVIOUS-BIN build`;
+  `benchmarking/regression-gate.sh --baseline-bin PREVIOUS-BIN build`.
   `--baseline-bin` or `REGRESSION_BASELINE_BIN` is required, with no default.
-  Use the same configuration built from the previous revision. All 40 sentinels
-  must pass and the script must print `GATE PASS`; verdict changes and coverage
-  losses are reported separately, and either kind fails the gate.
-- **G2, Posets proxy (advisory):** `benchmarking/posets-microbench.sh`.
-- **G2s, solver-profile proxy:** `benchmarking/solver-profile-gate.sh BASELINE-BIN CANDIDATE-BIN`. The SYNTCOMP25
-  `mixed` target is `evasion0.ltl`; `g-unreal-116.ltl` was retired (census: M1 letter-loop).
-- **G3, landing bar:** run `benchmarking/landing-campaign.sh` with paired
-  binaries, suite lists, a 17-second timeout, and an output directory. It
-  invokes `benchmarking/landing-bar.py`; every suite must print `GATE PASS`.
-  Use `--scope-mode instance` to keep the runner outside each solver's 8 GiB
-  scope, so a solver OOM is recorded without terminating the panel. The default
-  `campaign` mode retains the shared scope. Changing modes requires a fresh
-  output directory and matched remeasurement of both binaries.
-  The syntcomp25 and syntcomp26 panels are reconstructed from the TLSF
-  submodule and have no `.ltl` pair for 77 of 180 and 180 of 180 of their rows,
-  so both G2s and G3 need a materialized corpus. Materialize once: any one of
-  `--tlsf-corpus DIR`, `ACACIA_TLSF_CORPUS=DIR`, or the candidate build's
-  `-Dacacia_tlsf_corpus_dir=DIR` suffices, in that precedence order; otherwise
-  the gates use the recorded corpus path. G1 uses the same lookup without a
-  `--tlsf-corpus` flag.
+  Use the same configuration built from the previous revision. All 40
+  sentinels must pass and the script must print `GATE PASS`; verdict changes
+  and coverage losses fail. Its baseline CSV uses frozen verdicts and
+  `baseline_seconds` from `tests/suites/benchmarks/regress-expected.tsv`.
+  The binary serves near-cap remeasurement only.
+- **G2, Posets proxy:** `benchmarking/posets-microbench.sh` (advisory).
+- **G2s, solver-profile proxy:**
+  `benchmarking/solver-profile-gate.sh BASELINE-BIN CANDIDATE-BIN`.
+  The SYNTCOMP25 `mixed` target is `evasion0.ltl`.
+- **G3, landing bar:** `benchmarking/landing-campaign.sh` compares paired
+  binaries, suite lists and a 17 s timeout using `landing-bar.py`; every suite
+  must print `GATE PASS`. `--scope-mode instance` keeps the runner outside
+  each solver's 8 GiB scope so solver OOM is recorded. The default `campaign`
+  mode shares the scope. A mode change needs a fresh output directory and
+  matched remeasurement of both binaries.
 - **G4, corpus correctness:**
-  `meson test -C build --num-processes 1 --suite=ab/realizable --suite=ab/unrealizable`;
-  timeouts are allowed, but `Fail: 0` and no false-positive/negative marker are
-  required.
-- **G5, native TLSF parity:** run `benchmarking/tlsf-verdict-parity.py` and
-  `benchmarking/check-tlsf-conversion.py` against the selected TLSF corpus.
+  `meson test -C build --num-processes 1 --suite=ab/realizable
+  --suite=ab/unrealizable`; timeouts are allowed, but `Fail: 0` and no false
+  verdict marker are required.
+- **G5, native TLSF parity:** run `tlsf-verdict-parity.py` and
+  `check-tlsf-conversion.py` against the selected TLSF corpus.
 
-Frozen G1 baselines were measured with the shipping preset (see the top-level README) through its
-pinned twin `best_decomp_rank_bucketed_mona_eq_min_blocks_2`, which resolves to an identical option
-set now that `acacia_equivariant_min_blocks` defaults to 2, and re-validated on the final tree; the
-producing binary's SHA-256 is
+The frozen G1 shipping-preset twin is
+`best_decomp_rank_bucketed_mona_eq_min_blocks_2`, whose binary SHA-256 is
 `6467869a4411233ec148f7136fe6a6595a43205cc2bbd412f8d8beacb55ec2e9`.
-G1 builds its baseline CSV from the frozen verdicts and `baseline_seconds` in
-`tests/suites/benchmarks/regress-expected.tsv`, not from the supplied baseline binary.
-That binary is used only for near-cap remeasurement, which reruns both binaries at
-three times the timeout. It must be supplied through `--baseline-bin` or
-`REGRESSION_BASELINE_BIN` and must use the candidate's configuration built from the
-previous revision. The former `build_best_decomp_mona` default differed from the
-frozen configuration above and silently answered a different question during
-remeasurement.
+It is pinned in [baselines.tsv](baselines.tsv). The old
+`build_best_decomp_mona` default was a different configuration; substituting
+it changes the question answered by near-cap remeasurement. Verdict flips and
+row-set mismatches are configuration-independent regressions. A lost solve
+against a different configuration is not evidence of a change regression;
+establish one with a same-configuration previous-revision comparison such as
+G3. G1 still fails on either category.
 
-Verdict changes (`REALIZABLE` ↔ `UNREALIZABLE`) and row-set mismatches are
-configuration-independent regressions attributable to the change under test.
-Coverage losses (a solved instance becoming `TIMEOUT` or otherwise unsolved) depend
-on the configuration: losses against a different configuration from the frozen one
-are expected and are not evidence about the change under test. Establish coverage
-regressions with a comparison to the same configuration from the previous revision,
-such as G3's paired binary campaign. G1 still fails on either kind of failure.
+## Measurement regime
 
-`syntcomp24/Morning_f2774e0b.ltl` is frozen at 14.542 s, above the 13.6 s threshold that admits a
-51 s cap remeasurement. Full gate results are in [LTLSYNT-GAP.md](LTLSYNT-GAP.md).
+Performance gates use a 17 s per-instance cap and run sequentially in a user
+systemd scope with `MemoryMax=8G` and `MemorySwapMax=0`. Campaign tools create
+process groups for individual solvers inside that scope. PAR-2 charges twice
+the cap for every timeout, UNKNOWN, resource limit, or error, reporting those
+categories separately. If a lost baseline answer took more than 80% of the
+cap, `landing-bar.py` remeasures both binaries at three times the cap before
+deciding. Native TLSF primary runs and their diagnostics both use
+`--tlsf-only` so an available `.ltl` sibling cannot change the frontend.
+Longer diagnostic answers affect the gate decision, never the primary 17 s
+coverage. Report censored higher-cap rows as **derived**, with their source
+and transformation recorded.
 
-# Native TLSF parity
-
-The native route was rechecked against tlsf-tools `338fdd3`. SyFCo is a
-compatibility reference, not the semantic oracle: the native frontend follows
-TLSF's Strict weak-until rules, semantics/target adaptation, and enum
-valuation-list, wildcard, and REQUIRE/ASSERT validity rules where they differ.
-
-| check | cohort | result |
-|---|---:|---|
-| solver verdicts | 1,579 | GATE PASS; 0 opposite verdicts, 0 errors, 2 native-only and 1 converted-only answers; 3 native and 2 converted resource limits |
-| regenerated SyFCo pairs | 50 | 50/50 `.ltl`/`.part` pairs matched |
-| native formula semantics | 50 | 48 matches; 1 deliberate enum-validity divergence; 1 normalization exceeded 600 s |
-| native I/O lists | 50 | 49/49 classifiable comparisons matched; the normalization timeout was unclassified |
-
-The deliberate formula divergence is
-`amba_case_study_pb_2_pe_.tlsf`; the native route places enum validity according
-to TLSF rather than SyFCo. The unclassified normalization is
-`full_arbiter_unreal1_pb_3_16_pe_.tlsf`; its regenerated SyFCo pair still
-matched, but `ltlfilt` did not finish canonicalizing it within 600 seconds.
-Literal formula bytes matched 0/49 because the independent printers choose
-different parentheses and derived-operator spellings.
-
-# Measurement protocol
-
-Performance gates use a 17-second per-instance cap and run sequentially. Put
-each campaign in a user systemd scope with `MemoryMax=8G` and
-`MemorySwapMax=0`; the campaign tools use process groups for individual solver
-runs inside that outer scope. PAR-2 charges twice the cap for every timeout,
-UNKNOWN/resource-limit result, or error, while reporting those categories
-separately. If a lost baseline answer took more than 80% of the cap,
-`landing-bar.py` automatically re-measures both binaries at three times the
-cap before deciding the gate.
-
-Native TLSF campaigns pass `--tlsf-only` to that remeasurement, so an available
-legacy `.ltl` file cannot change the frontend between the primary run and its
-longer diagnostic. Direct callers of `landing-bar.py` should also pass
-`--tlsf-only` with `--tlsf-source-map SUITE=PATH` and `--tlsf-corpus DIR` when
-their primary measurements used native TLSF. Without that flag, the existing
-LTL-first lookup remains available for frozen regression runs. Longer diagnostic
-answers affect the gate decision; they do not increase primary 17-second coverage.
-
-Read PAR-2-only changes against the measured same-configuration noise floor. Three baseline runs
-spanned 2778.691–2799.825 s on SYNTCOMP25 (21.134 s) and 1702.186–1714.260 s on SYNTCOMP26
-(12.074 s). A change inside that spread is not performance evidence by itself; coverage changes
-and per-instance losses remain gate evidence.
+Read PAR-2-only changes against the measured same-configuration noise floor.
+Three baseline runs spanned 2778.691–2799.825 s on SYNTCOMP25 (**21.134 s**)
+and 1702.186–1714.260 s on SYNTCOMP26 (**12.074 s**). A change inside that
+spread alone is not performance evidence; coverage changes and per-instance
+losses remain gate evidence.

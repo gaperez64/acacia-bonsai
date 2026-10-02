@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-: "${SPOT_VERSION:=2.15.1}"
+: "${SPOT_VERSION:=2.16}"
 
 echo "== Installing build dependencies =="
 yum install -y --setopt=install_weak_deps=False \
