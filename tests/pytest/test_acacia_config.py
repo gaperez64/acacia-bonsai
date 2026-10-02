@@ -91,6 +91,28 @@ def test_gr1_prepass_preset_is_five_arms():
     ]
 
 
+def test_gr1_real_prepass_preset_is_five_arms():
+    module = load_module()
+    options, presets = module.load_registry()
+    parent = module.normalize_preset(options, presets, "otf_sparse_formula")
+    name = "otf_sparse_formula_gr1_real_prepass"
+    data = presets["presets"][name]
+    assert data["role"] == "sweep"
+    assert data["inherits"] == "otf_sparse_formula"
+    candidate = module.normalize_preset(options, presets, name)
+    assert candidate["native_arms"] is True
+    assert candidate["default_arms"].split(",") == [
+        "real:small:backward",
+        "real:small:forward",
+        "unreal:formula:spot-guarded-sparse",
+        "unreal:automaton:forward",
+        "both:gr1-real-lift:oxidd",
+    ]
+    assert {
+        key for key in candidate if key not in {"_preset", "preset"} and candidate[key] != parent[key]
+    } == {"native_arms", "default_arms"}
+
+
 def test_docker_launcher_uses_registry_group_without_python():
     module = load_module()
     _options, presets = module.load_registry()

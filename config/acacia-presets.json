@@ -399,6 +399,13 @@
       "native_arms": true,
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-lift:oxidd"
     },
+    "otf_sparse_formula_gr1_real_prepass": {
+      "description": "Five-worker sparse guarded formula portfolio with a checked realizability-only GR(1) pre-pass.",
+      "role": "sweep",
+      "inherits": "otf_sparse_formula",
+      "native_arms": true,
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-real-lift:oxidd"
+    },
     "otf_sparse_formula_diag": {
       "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile sparse guarded formula-unreal solving.",
       "role": "diagnostic",
