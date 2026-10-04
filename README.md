@@ -16,7 +16,11 @@ docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
 The CLI image contains the dependencies and sources. It compiles inside the
-container so `-march=native` can target the host:
+container so `-march=native` can target the host. Its first shipped
+configuration uses a native GR(1) realizability pre-pass on TLSF input. The
+image includes Rust, `cbindgen`, the OxiDD source, and cached Cargo
+dependencies needed by `scripts/compile.sh`; that script builds OxiDD before
+the native preset:
 
 ```
 docker pull ghcr.io/gaperez64/acacia-bonsai:latest
@@ -36,7 +40,10 @@ The wrappers name no configuration and follow the `docker_default` group. Pass
 a name as the first argument to choose a different shipped configuration, or run
 a wrapper without arguments to list the ones it accepts. The CLI launcher reads
 `config/docker-default.list`, which tests keep aligned with the registry group;
-Python is only needed when compiling configurations.
+Python is only needed when compiling configurations. The GR(1) pre-pass is a
+decision arm: LTL `-f` input and synthesis `-s` use the regular solver arms.
+The previous four-arm sparse formula configuration remains available in the
+group as the non-native fallback.
 
 # Dependencies
 
@@ -54,8 +61,17 @@ Initialize the vendored Posets and TLSF-tools dependencies after cloning:
 ```
 git submodule update --init
 ```
-This is deliberately non-recursive for the default build. Native GR(1) arms
-require TLSF-tools' OxiDD dependency as well.
+This is deliberately non-recursive. To compile a `docker_default` preset with
+native GR(1) arms, also initialize TLSF-tools' nested OxiDD submodule, install
+Rust 1.91 or newer with Cargo and `cbindgen`, and build its stamped C library
+before Meson setup:
+```
+git -C subprojects/tlsf-tools submodule update --init external/oxidd
+subprojects/tlsf-tools/scripts/build_oxidd.sh
+```
+Meson checks the OxiDD source commit and archive hash recorded in that stamp.
+The Docker CLI release checkout includes the nested submodule, and
+`scripts/compile.sh` builds its library.
 
 The corpus test driver (`tests/check-real-correct.sh`) can optionally run the
 solver under Valgrind (`-V`) or Callgrind (`-c`); no test does so by default,
@@ -111,11 +127,14 @@ build_$preset/src/acacia-bonsai -T spec.tlsf
 input with `--tlsf`. No external TLSF converter is needed at runtime, and
 Moore-target controller conversion happens inside Acacia.
 
-With `-Dacacia_native_arms=true`, the same `acacia-bonsai` binary accepts
+The first `docker_default` preset enables `acacia_native_arms` and includes
+`both:gr1-real-lift:oxidd` in its default TLSF decision portfolio. With
+`-Dacacia_native_arms=true`, the same `acacia-bonsai` binary accepts
 `--arms real:gr1:oxidd`, `--arms unreal:gr1:oxidd`, `--arms both:gr1:oxidd`,
 `--arms both:gr1-lift:oxidd`, `--arms both:gr1-real-lift:oxidd`,
 and `--arms real:param-lift:oxidd` with `-T spec.tlsf`. These arms run in
-process and are opt in. The GR(1) reduction is exact, so one solve decides
+process and can also be selected explicitly. The GR(1) reduction is exact, so
+one solve decides
 the winner: `both:gr1:oxidd` reports whichever side it proves, while
 `both:gr1-lift:oxidd` first tries a checked system or environment lift from
 shared seeds and falls back to the same exact game solve.

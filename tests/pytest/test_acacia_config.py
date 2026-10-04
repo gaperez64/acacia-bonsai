@@ -97,7 +97,8 @@ def test_gr1_real_prepass_preset_is_five_arms():
     parent = module.normalize_preset(options, presets, "otf_sparse_formula")
     name = "otf_sparse_formula_gr1_real_prepass"
     data = presets["presets"][name]
-    assert data["role"] == "sweep"
+    assert data["role"] == "shipping"
+    assert presets["groups"]["docker_default"][0] == name
     assert data["inherits"] == "otf_sparse_formula"
     candidate = module.normalize_preset(options, presets, name)
     assert candidate["native_arms"] is True
@@ -630,11 +631,11 @@ def test_all_groups_reference_existing_presets_and_docker_defaults_are_fixed():
 
     # docker_default is the pointer that says which configurations we ship, and
     # it is meant to be repointed when the measurements say so.  Pin its shape,
-    # not its membership: pinning the four names makes every reselection a test
+    # not its membership: pinning the names makes every reselection a test
     # failure, which is what this assertion used to do.
     docker_default = presets["groups"]["docker_default"]
-    assert len(docker_default) == 4
-    assert len(set(docker_default)) == 4
+    assert len(docker_default) == 5
+    assert len(set(docker_default)) == 5
     for name in docker_default:
         assert name in presets["presets"]
         assert not name.endswith("_diag"), f"{name} is a diagnostic build"

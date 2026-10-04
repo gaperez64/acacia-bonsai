@@ -176,6 +176,28 @@ jobs:
         with: {fetch-depth: 0, submodules: true}
       - uses: ./.github/actions/setup-packages
       - uses: ./.github/actions/setup-spot
+      - name: Check whether the shipped preset needs OxiDD
+        id: native
+        run: |
+          native=$(python3 -s scripts/acacia-config.py show '${{ matrix.config }}' \
+                   | python3 -c 'import json, sys; print(str(json.load(sys.stdin)["native_arms"]).lower())')
+          echo "enabled=$native" >> "$GITHUB_OUTPUT"
+      - name: Check out the nested OxiDD submodule
+        if: steps.native.outputs.enabled == 'true'
+        run: git -C subprojects/tlsf-tools submodule update --init external/oxidd
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.native.outputs.enabled == 'true'
+        with: {toolchain: '1.91.0'}
+      - uses: Swatinem/rust-cache@v2
+        if: steps.native.outputs.enabled == 'true'
+        with:
+          workspaces: subprojects/tlsf-tools/external/oxidd -> target
+          key: ci-shipped-oxidd
+      - name: Build OxiDD for native arms
+        if: steps.native.outputs.enabled == 'true'
+        run: |
+          cargo install cbindgen --version 0.29.4 --locked
+          subprojects/tlsf-tools/scripts/build_oxidd.sh
       - uses: hendrikmuhs/ccache-action@v1
         with: {key: ci-shipped, max-size: 500M}
       - name: Compile and test ${{ matrix.config }}

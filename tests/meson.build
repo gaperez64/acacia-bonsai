@@ -548,7 +548,8 @@ if get_option ('acacia_native_arms') and (default_arms_opt.contains (':gr1:oxidd
   test ('default-native-arms', py,
         args : [files ('check-default-native-arms.py'), ab_exe,
                 meson.project_build_root (), default_arms_opt,
-                default_check_children.to_string ()],
+                default_check_children.to_string (),
+                (compiler_profile == 'debug').to_string ()],
         suite : ['unit', 'cli', 'native-gr1', 'native-param-lift'],
         timeout : 60, depends : [ab_exe])
 endif

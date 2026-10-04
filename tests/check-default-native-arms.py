@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """The shipped portfolio adapts to input type; explicit arms stay strict."""
 
+import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -11,6 +13,7 @@ binary = Path(sys.argv[1])
 build = Path(sys.argv[2])
 arms = sys.argv[3].split(",")
 expected_ltl_children = int(sys.argv[4])
+verbose_enabled = sys.argv[5] == "true"
 legacy = [a for a in arms if ":gr1:oxidd" not in a and
           ":gr1-lift:oxidd" not in a and
           ":gr1-real-lift:oxidd" not in a and
@@ -19,25 +22,49 @@ native = [a for a in arms if a not in legacy]
 assert native
 
 
-def run(*args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run([str(binary), *args], capture_output=True,
-                          text=True, timeout=30)
+def run_recorded(command: list[str], *, input: str | None = None
+                 ) -> tuple[subprocess.CompletedProcess[str], list[dict]]:
+    # Worker startup records remain available when NO_VERBOSE hides child counts.
+    with tempfile.TemporaryDirectory(prefix="default-native-records-", dir=build) as tmp:
+        env = os.environ.copy()
+        env["ACACIA_PHASE_RECORDS"] = tmp
+        result = subprocess.run(command, input=input, env=env, capture_output=True,
+                                text=True, timeout=30)
+        records = [json.loads(line) for path in Path(tmp).glob("*.jsonl")
+                   for line in path.read_text().splitlines()]
+    assert any(record.get("arm") == "legacy_parent" and
+               record.get("phase") == "record_summary" for record in records), (result, records)
+    return result, records
+
+
+def check_children(result: subprocess.CompletedProcess[str], records: list[dict],
+                   expected: int, expected_native: bool) -> None:
+    startups = [record["arm"] for record in records
+                if record.get("phase") == "child_startup"]
+    assert len(startups) == expected, (result, startups)
+    for arm in native:
+        assert (arm in startups) == expected_native, (result, arm, startups)
+    if verbose_enabled:
+        assert f"Starting {expected} solver children" in result.stdout, result
 
 
 ltl = ("-f", "G(i -> o)", "-i", "i", "-o", "o")
-plain = run(*ltl, "-v")
+plain, plain_records = run_recorded([str(binary), *ltl, "-v"])
 assert plain.returncode == 0, plain
-assert f"Starting {expected_ltl_children} solver children" in plain.stdout, plain
+check_children(plain, plain_records, expected_ltl_children, False)
 assert plain.stderr.count("Skipping default native arm") == len(native), plain
 
 synth = build / "default-native-synthesis.aag"
 synth.unlink(missing_ok=True)
-made = run(*ltl, "-v", "-s", str(synth))
+made, made_records = run_recorded([str(binary), *ltl, "-v", "-s", str(synth)])
 assert made.returncode == 0 and synth.is_file() and synth.stat().st_size, made
+assert not any(record.get("phase") == "child_startup" and
+               record.get("arm") in native for record in made_records), (made, made_records)
 assert made.stderr.count("Skipping default native arm") == len(native), made
 synth.unlink()
 
-explicit = run(*ltl, "--arms", native[0])
+explicit = subprocess.run([str(binary), *ltl, "--arms", native[0]],
+                          capture_output=True, text=True, timeout=30)
 assert (explicit.returncode == 3 and
         "native arms require -T FILE" in explicit.stderr), explicit
 
@@ -46,9 +73,9 @@ source_text = ('INFO { TITLE: "real" SEMANTICS: Mealy TARGET: Mealy }\n'
 source = build / "default-native-input.tlsf"
 source.write_text(source_text)
 try:
-    tlsf = run("-T", str(source), "-v")
+    tlsf, tlsf_records = run_recorded([str(binary), "-T", str(source), "-v"])
     assert tlsf.returncode == 0, tlsf
-    assert f"Starting {len(arms)} solver children" in tlsf.stdout, tlsf
+    check_children(tlsf, tlsf_records, len(arms), True)
     assert "Skipping default native arm" not in tlsf.stderr, tlsf
 finally:
     source.unlink(missing_ok=True)
@@ -68,16 +95,13 @@ with tempfile.TemporaryDirectory(prefix="default-native-wrapper-", dir=build) as
     (root / "build_test_native" / "src" / "acacia-bonsai").symlink_to(
         binary.resolve())
 
-    wrapped_tlsf = subprocess.run([str(wrapper), "--tlsf", "-v"],
-                                  input=source_text, capture_output=True,
-                                  text=True, timeout=30)
+    wrapped_tlsf, wrapped_tlsf_records = run_recorded(
+        [str(wrapper), "--tlsf", "-v"], input=source_text)
     assert wrapped_tlsf.returncode == 0, wrapped_tlsf
-    assert f"Starting {len(arms)} solver children" in wrapped_tlsf.stdout, wrapped_tlsf
+    check_children(wrapped_tlsf, wrapped_tlsf_records, len(arms), True)
     assert "Skipping default native arm" not in wrapped_tlsf.stderr, wrapped_tlsf
 
-    wrapped_ltl = subprocess.run([str(wrapper), *ltl, "-v"],
-                                 capture_output=True, text=True, timeout=30)
+    wrapped_ltl, wrapped_ltl_records = run_recorded([str(wrapper), *ltl, "-v"])
     assert wrapped_ltl.returncode == 0, wrapped_ltl
-    assert (f"Starting {expected_ltl_children} solver children"
-            in wrapped_ltl.stdout), wrapped_ltl
+    check_children(wrapped_ltl, wrapped_ltl_records, expected_ltl_children, False)
     assert wrapped_ltl.stderr.count("Skipping default native arm") == len(native), wrapped_ltl
