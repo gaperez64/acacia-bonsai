@@ -6,7 +6,8 @@
 // decision, not formula translation: the caller supplies features already
 // computed from the shared, already-preprocessed frozen automaton.
 //
-// Evidence (benchmarking/symbolic-rows-20260917/selector.md): raw states (N)
+// Evidence (selector.md archived in symbolic-rows-20260917,
+// evidence-2026-09-27): raw states (N)
 // does NOT separate the confirmed 5/5 sparse-real coverage gains on the
 // frozen P4 list (N in [25, 2577]) from the confirmed regression on
 // workstation_resupply_pb_3_pe_ (N=151, squarely inside that range;

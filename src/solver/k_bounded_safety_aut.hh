@@ -183,7 +183,9 @@ class k_bounded_safety_aut_detail {
       verb_do (1, vout << "Make actions..." << std::endl);
       auto actioner = actioner_maker.make (aut, inputs_to_ios, k);
       verb_do (1, vout << "Fetching IO actions" << std::endl);
-      auto input_output_fwd_actions = actioner.actions ();
+      // The actioner owns this table for the whole solve.  The picker may
+      // reorder actions within each input, so keep a mutable view of it.
+      auto& input_output_fwd_actions = actioner.actions ();
       acacia::diagnostics::set_support_actions (input_output_fwd_actions);
 #if ACACIA_ENABLE_DIAGNOSTICS
       construction_timer.reset ();

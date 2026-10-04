@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Adjudicate Sprint A's gates from the semantic-action census.
 
-Reads benchmarking/semantic-action-census.tsv, joins it to gap-census.tsv on
+Reads a fetched or regenerated semantic-action-census.tsv, joins it to gap-census.tsv on
 (suite, instance), and prints the tables the sprint record carries plus an
 explicit gate verdict, so the record's numbers are regenerated rather than
 retyped.
@@ -17,8 +17,8 @@ one worker at >= 4.
 Example:
 
     benchmarking/semantic-action-report.py \\
-        --census benchmarking/semantic-action-census.tsv \\
-        --gap-census benchmarking/gap-census.tsv
+        --census _bm-logs/semantic-action-census.tsv \\
+        --gap-census FETCHED/benchmarking/gap-census.tsv
 """
 
 from __future__ import annotations
@@ -90,14 +90,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--census", default="benchmarking/semantic-action-census.tsv")
-    parser.add_argument("--gap-census", default="benchmarking/gap-census.tsv")
+    parser.add_argument("--census", required=True, help="fetched or regenerated census TSV")
+    parser.add_argument("--gap-census", help="optional fetched gap census TSV")
     parser.add_argument("--top", type=int, default=5, help="rows per leaderboard")
     args = parser.parse_args()
 
     census_path = pathlib.Path(args.census)
-    gap_path = pathlib.Path(args.gap_census)
-    workers = load(census_path, gap_path if gap_path.exists() else None)
+    gap_path = pathlib.Path(args.gap_census) if args.gap_census else None
+    workers = load(census_path, gap_path)
     if not workers:
         raise SystemExit(f"{census_path} has no worker rows with a census")
 

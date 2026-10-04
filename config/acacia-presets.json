@@ -385,6 +385,27 @@
       "inherits": "otf_contradiction",
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward"
     },
+    "otf_sparse_formula_gr1_lift": {
+      "description": "Extend the sparse guarded formula portfolio with GR(1) and parameter-lift workers for the P4 final-candidate sweep.",
+      "role": "sweep",
+      "inherits": "otf_sparse_formula",
+      "native_arms": true,
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1:oxidd,real:param-lift:oxidd"
+    },
+    "otf_sparse_formula_gr1_prepass": {
+      "description": "Five-worker sparse guarded formula portfolio with one exact GR(1) worker using checked parameter pre-passes.",
+      "role": "sweep",
+      "inherits": "otf_sparse_formula",
+      "native_arms": true,
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-lift:oxidd"
+    },
+    "otf_sparse_formula_gr1_real_prepass": {
+      "description": "Five-worker sparse guarded formula portfolio with a checked realizability-only GR(1) pre-pass.",
+      "role": "shipping",
+      "inherits": "otf_sparse_formula",
+      "native_arms": true,
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-real-lift:oxidd"
+    },
     "otf_sparse_formula_diag": {
       "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile sparse guarded formula-unreal solving.",
       "role": "diagnostic",
@@ -515,6 +536,7 @@
   },
   "groups": {
     "docker_default": [
+      "otf_sparse_formula_gr1_real_prepass",
       "otf_sparse_formula",
       "best_decomp_rank_bucketed_semantic_mona",
       "best_four_arm_bboxtree",

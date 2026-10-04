@@ -14,6 +14,7 @@ import sys
 import threading
 import time
 import uuid
+from collections.abc import Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Callable
@@ -520,6 +521,7 @@ def run_systemd_scope(
     capture_consumer: Callable[[str], None] | None = None,
     allowed_cpus: str | None = None,
     cpu_quota: str | None = None,
+    scope_env: Mapping[str, str] | None = None,
 ) -> RunResult:
     """Run cmd in a resource-limited user scope and stop the scope on timeout.
 
@@ -572,6 +574,15 @@ def run_systemd_scope(
         scoped_cmd.append(f"--property=AllowedCPUs={allowed_cpus}")
     if cpu_quota is not None:
         scoped_cmd.append(f"--property=CPUQuota={cpu_quota}")
+    # A transient scope receives the user manager's environment, not arbitrary
+    # additions made to the systemd-run client's environment.  Keep this
+    # opt-in so every existing campaign argv stays unchanged, while callers
+    # which need child-only metadata can explicitly propagate it through the
+    # manager boundary.
+    if scope_env is not None:
+        scoped_cmd.extend(
+            f"--setenv={name}={value}" for name, value in sorted(scope_env.items())
+        )
     scoped_cmd += [*cmd]
     started = time.monotonic()
     proc = subprocess.Popen(
@@ -869,3 +880,324 @@ def write_csv(path: str | pathlib.Path, rows: list[dict], fieldnames: list[str])
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+
+
+# --- Opt-in phase records (ACACIA_PHASE_RECORDS) -----------------------------
+#
+# The solver's writer process appends one JSON object per line to <pid>.jsonl
+# below the directory the coverage runner creates for each run (see
+# src/phase_records.hh).  Every producer process ends with a record_summary
+# event when it exits normally; a process killed by the race winner, the
+# runner's timeout or the OOM killer has none.  Declines are encoded as:
+#   lift_decline_<stage>     the lifting arm's final tlsf-tools stage
+#   reduce_decline_<stage>   the direct GR(1) arm's reduction stage
+#   budget_decline           a construction-budget stop, with a "stage" field
+# None of these carries the tlsf-tools status: a deadline expiry is recorded
+# under whatever stage was running when the clock check fired, so a stage name
+# alone cannot show that a decline was, or was not, caused by the deadline.
+
+#: Fields that measure time or memory rather than work or decisions.
+PHASE_VOLATILE_FIELDS = frozenset({
+    "wall_ns", "cpu_ns", "elapsed_ns", "rss_kb", "peak_rss_kb",
+    "peak_rss_bytes", "mallinfo2",
+})
+PHASE_DECLINE_PREFIXES = ("lift_decline_", "reduce_decline_")
+
+
+def phase_record_dir(root, solver_label: str, cap, instance: str, run_index) -> pathlib.Path:
+    """The per-run directory run-syntcomp26-coverage.py gives ACACIA_PHASE_RECORDS."""
+    safe_label = re.sub(r"[^A-Za-z0-9_.-]", "_", solver_label)
+    safe_instance = re.sub(r"[^A-Za-z0-9_.-]", "_", instance)
+    return pathlib.Path(root) / safe_label / str(cap) / f"{safe_instance}-{run_index}"
+
+
+@dataclass(frozen=True)
+class PhaseProcess:
+    """The records one solver process wrote, in file order."""
+    name: str
+    events: tuple
+    finished: bool
+    dropped: int
+
+    @property
+    def arms(self) -> frozenset:
+        return frozenset(event.get("arm", "") for event in self.events
+                         if event.get("phase") != "record_summary")
+
+
+@dataclass(frozen=True)
+class PhaseRecords:
+    """All processes' records for one run; empty when the run wrote none."""
+    directory: pathlib.Path
+    processes: tuple
+
+    @property
+    def dropped(self) -> int:
+        return sum(process.dropped for process in self.processes)
+
+    def arms(self) -> list[str]:
+        return sorted({arm for process in self.processes for arm in process.arms})
+
+    def arm_processes(self, arm: str) -> list[PhaseProcess]:
+        return [process for process in self.processes if arm in process.arms]
+
+    def arm_finished(self, arm: str) -> bool:
+        processes = self.arm_processes(arm)
+        return bool(processes) and all(process.finished for process in processes)
+
+    def declines(self) -> list[tuple[str, str, str]]:
+        """(arm, kind, stage) for every recorded decline, in record order."""
+        found = []
+        for process in self.processes:
+            for event in process.events:
+                phase = str(event.get("phase", ""))
+                arm = str(event.get("arm", ""))
+                if phase == "budget_decline":
+                    found.append((arm, "budget_decline", str(event.get("stage", ""))))
+                    continue
+                for prefix in PHASE_DECLINE_PREFIXES:
+                    if phase.startswith(prefix):
+                        found.append((arm, prefix.rstrip("_"), phase[len(prefix):]))
+        return found
+
+    def canonical(self, arm: str, volatile=PHASE_VOLATILE_FIELDS) -> tuple:
+        """Order-independent, time-free content of one arm's records.
+
+        Each process contributes its event sequence with volatile fields and
+        the drop counter removed; processes are sorted, because PIDs (and
+        hence file names and order) differ between runs.
+        """
+        sequences = []
+        for process in self.arm_processes(arm):
+            sequences.append(tuple(
+                json.dumps({key: value for key, value in event.items()
+                            if key not in volatile and key != "dropped_records"},
+                           sort_keys=True)
+                for event in process.events))
+        return tuple(sorted(sequences))
+
+
+def load_phase_records(directory) -> PhaseRecords:
+    """Read every <pid>.jsonl below one run's record directory.
+
+    A missing directory yields no processes; malformed JSON raises ValueError,
+    because a torn record cannot establish what the run decided.
+    """
+    directory = pathlib.Path(directory)
+    processes = []
+    if directory.is_dir():
+        for path in sorted(directory.glob("*.jsonl")):
+            events = []
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if not line.strip():
+                    continue
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError as error:
+                    raise ValueError(f"{path}:{number}: malformed phase record") from error
+                if not isinstance(event, dict):
+                    raise ValueError(f"{path}:{number}: phase record is not an object")
+                events.append(event)
+            summaries = [event for event in events if event.get("phase") == "record_summary"]
+            dropped = sum(int(event.get("dropped_records") or 0) for event in summaries)
+            processes.append(PhaseProcess(path.name, tuple(events), bool(summaries), dropped))
+    return PhaseRecords(directory, tuple(processes))
+
+
+# --- Timed-run marker protocol ------------------------------------------------
+#
+# Sprint scripts share one directory of marker files.  A timed run waits while
+# any blocking marker exists (a build, another timed run), then creates its own
+# marker atomically and removes it on exit.  Builds and other timed runs wait
+# for that marker in turn.
+
+DEFAULT_BLOCKING_MARKERS = ("DRIVER-BUILDING", "TRACKB-BUILDING", "TIMED-RUN-ACTIVE")
+TIMED_RUN_MARKER = "TIMED-RUN-ACTIVE"
+
+
+class MarkerTimeout(RuntimeError):
+    """The blocking markers did not clear within the allowed wait."""
+
+
+@contextmanager
+def timed_run_marker(marker_dir, owner: str, *, blocking=DEFAULT_BLOCKING_MARKERS,
+                     marker: str = TIMED_RUN_MARKER, poll: float = 5.0,
+                     max_wait: float | None = None, sleep=time.sleep,
+                     announce=None):
+    """Hold the timed-run marker for the duration of the block.
+
+    Creation uses O_EXCL, so two drivers cannot both pass the wait and start
+    timing: the loser sees the winner's marker and keeps waiting.  The marker
+    is removed on exit only if it still holds this owner's token.
+    """
+    marker_dir = pathlib.Path(marker_dir)
+    if not marker_dir.is_dir():
+        raise FileNotFoundError(f"marker directory does not exist: {marker_dir}")
+    path = marker_dir / marker
+    token = json.dumps({"owner": owner, "pid": os.getpid(), "token": uuid.uuid4().hex,
+                        "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())},
+                       sort_keys=True) + "\n"
+    waited = 0.0
+    announced = False
+    while True:
+        present = [name for name in blocking if (marker_dir / name).exists()]
+        if not present:
+            try:
+                descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+            except FileExistsError:
+                present = [marker]
+            else:
+                with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                    stream.write(token)
+                break
+        if max_wait is not None and waited >= max_wait:
+            raise MarkerTimeout(f"blocking markers still present after {waited:g} s: "
+                                + ", ".join(present))
+        if announce is not None and not announced:
+            announce(f"waiting for marker(s) to clear: {', '.join(present)}")
+            announced = True
+        sleep(poll)
+        waited += poll
+    try:
+        yield path
+    finally:
+        try:
+            if path.read_text(encoding="utf-8") == token:
+                path.unlink()
+        except FileNotFoundError:
+            pass
+
+
+# --- Host-condition sampling (§9.1) ------------------------------------------
+#
+# A Python port of the per-arm campaign's thermal sampler: the same eight
+# leading columns, so thermal-annotate.py's metrics() and coverage() read the
+# output unchanged, plus mean CPU clock and swap in use.  Times are UTC.
+
+SAMPLE_COLUMNS = ["time", "pkg_c", "load1", "mem_avail_mib", "pkg_throttle",
+                  "core_throttle_sum", "leg", "rows", "cpu_mhz_mean", "swap_used_mib"]
+
+
+def _read_text(path: pathlib.Path) -> str | None:
+    try:
+        return path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+
+
+def read_host_sample(sys_root="/sys", proc_root="/proc") -> dict[str, str]:
+    """One reading of package temperature, load, memory, throttling and clock.
+
+    Every field is best effort: an unreadable source leaves an empty cell
+    rather than a guess, and nothing here starts a subprocess.
+    """
+    sys_root, proc_root = pathlib.Path(sys_root), pathlib.Path(proc_root)
+    sample = dict.fromkeys(SAMPLE_COLUMNS, "")
+    for hwmon in sorted((sys_root / "class/hwmon").glob("hwmon*")):
+        for label in sorted(hwmon.glob("temp*_label")):
+            if _read_text(label) == "Package id 0":
+                value = _read_text(hwmon / label.name.replace("_label", "_input"))
+                if value and value.lstrip("-").isdigit():
+                    sample["pkg_c"] = f"{int(value) / 1000:.1f}"
+                break
+        if sample["pkg_c"]:
+            break
+    loadavg = _read_text(proc_root / "loadavg")
+    if loadavg:
+        sample["load1"] = loadavg.split()[0]
+    meminfo = {}
+    for line in (_read_text(proc_root / "meminfo") or "").splitlines():
+        name, _, rest = line.partition(":")
+        fields = rest.split()
+        if fields and fields[0].isdigit():
+            meminfo[name] = int(fields[0])
+    if "MemAvailable" in meminfo:
+        sample["mem_avail_mib"] = str(meminfo["MemAvailable"] // 1024)
+    if "SwapTotal" in meminfo and "SwapFree" in meminfo:
+        sample["swap_used_mib"] = str((meminfo["SwapTotal"] - meminfo["SwapFree"]) // 1024)
+    cpus = sorted((sys_root / "devices/system/cpu").glob("cpu[0-9]*"))
+    package = _read_text(sys_root / "devices/system/cpu/cpu0/thermal_throttle/package_throttle_count")
+    if package and package.isdigit():
+        sample["pkg_throttle"] = package
+    core_counts = [_read_text(cpu / "thermal_throttle/core_throttle_count") for cpu in cpus]
+    core_counts = [int(value) for value in core_counts if value and value.isdigit()]
+    if core_counts:
+        sample["core_throttle_sum"] = str(sum(core_counts))
+    clocks = [_read_text(cpu / "cpufreq/scaling_cur_freq") for cpu in cpus]
+    clocks = [int(value) for value in clocks if value and value.isdigit()]
+    if clocks:
+        sample["cpu_mhz_mean"] = f"{sum(clocks) / len(clocks) / 1000:.0f}"
+    return sample
+
+
+def count_data_rows(path) -> str:
+    """Rows written so far to a header-first TSV, or empty if it is absent."""
+    try:
+        with pathlib.Path(path).open(encoding="utf-8") as stream:
+            return str(max(0, sum(1 for _ in stream) - 1))
+    except OSError:
+        return ""
+
+
+class HostSampler:
+    """Append a host sample every `interval` seconds while a campaign runs.
+
+    The current leg label and its output file are set by the driver; the row
+    count lets a reader place each sample within the leg.
+    """
+
+    def __init__(self, output, interval: float = 30.0, reader=read_host_sample,
+                 clock=None):
+        self.output = pathlib.Path(output)
+        self.interval = interval
+        self.reader = reader
+        self.clock = clock or (lambda: time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime()))
+        self._leg = ""
+        self._rows_path = None
+        self._lock = threading.Lock()
+        self._stop = threading.Event()
+        self._thread = None
+
+    def set_leg(self, label: str, rows_path=None) -> None:
+        with self._lock:
+            self._leg = label
+            self._rows_path = rows_path
+
+    def sample_once(self) -> dict[str, str]:
+        with self._lock:
+            leg, rows_path = self._leg, self._rows_path
+        row = self.reader()
+        row.update(time=self.clock(), leg=leg,
+                   rows=count_data_rows(rows_path) if rows_path else "")
+        self.output.parent.mkdir(parents=True, exist_ok=True)
+        new = not self.output.exists() or self.output.stat().st_size == 0
+        with self.output.open("a", encoding="utf-8", newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=SAMPLE_COLUMNS, delimiter="\t",
+                                    lineterminator="\n", extrasaction="ignore")
+            if new:
+                writer.writeheader()
+            writer.writerow(row)
+        return row
+
+    def _loop(self) -> None:
+        while not self._stop.is_set():
+            try:
+                self.sample_once()
+            except OSError as error:
+                print(f"host sampler: {error}", file=sys.stderr)
+            self._stop.wait(self.interval)
+
+    def __enter__(self):
+        self._stop.clear()
+        self._thread = threading.Thread(target=self._loop, name="host-sampler", daemon=True)
+        self._thread.start()
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join(timeout=5)
+        try:
+            self.sample_once()
+        except OSError:
+            pass

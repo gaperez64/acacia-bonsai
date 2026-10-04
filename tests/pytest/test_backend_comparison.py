@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import importlib.util
 import pathlib
+import sys
 
 import pytest
 
@@ -11,7 +12,11 @@ import pytest
 SCRIPT = pathlib.Path(__file__).resolve().parents[2] / "benchmarking" / "compare-backend-race.py"
 spec = importlib.util.spec_from_file_location("backend_comparison", SCRIPT)
 comparison = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(comparison)
+sys.path.insert(0, str(SCRIPT.parent))
+try:
+    spec.loader.exec_module(comparison)
+finally:
+    sys.path.pop(0)
 
 
 def write_rows(path, rows):

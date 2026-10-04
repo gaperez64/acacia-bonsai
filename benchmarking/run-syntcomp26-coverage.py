@@ -32,6 +32,7 @@ import argparse
 import csv
 import datetime
 import hashlib
+import json
 import math
 import os
 import pathlib
@@ -39,6 +40,8 @@ import re
 import shlex
 import subprocess
 import sys
+import time
+import uuid
 
 from benchlib import (
     CACTUS_NON_SOLVED_RESULTS,
@@ -60,6 +63,9 @@ NORMALIZED_RESULTS = {
     "MEMOUT",
     "CRASH",
     "ERROR",
+    # Only run-subset.py's converted-pair legs (ltlsynt, Acacia 1.x) write
+    # this: the untimed SyFCo conversion failed, so no solver ran.
+    "SYFCO-FAIL",
 }
 OUTPUT_COLUMNS = [
     "solver_label",
@@ -91,6 +97,11 @@ OUTPUT_COLUMNS = [
     "worker_records_dir",
     "scope_unit",
 ]
+ROUTE_COLUMNS = ["winner", "lift_elapsed", "fallback_start"]
+# A derived series (tools/recycle-cap.py merge) keeps the observation columns
+# and states, per row, whether it was measured at the series cap or recycled
+# from a shorter-cap run, which run it came from, and that run's file digest.
+DERIVED_COLUMNS = ["provenance", "source_run", "source_run_sha256", "source_cap_s"]
 CONFLICT_COLUMNS = [
     "solver_label",
     "instance",
@@ -397,7 +408,10 @@ def atomic_write_tsv(
 
 
 def load_output(
-    path: pathlib.Path, *, allow_missing_memory: bool = False,
+    path: pathlib.Path,
+    *,
+    allow_missing_memory: bool = False,
+    expect_route_columns: bool | None = None,
 ) -> list[dict[str, str]]:
     try:
         stream = path.open(encoding="utf-8", newline="")
@@ -409,12 +423,23 @@ def load_output(
         optional = {"max_process_rss_bytes", "scope_memory_peak_bytes"} if allow_missing_memory else set()
         header = [column for column in (reader.fieldnames or []) if column not in optional]
         expected = [[column for column in columns if column not in optional]
-                    for columns in (OUTPUT_COLUMNS, legacy_columns)]
+                    for columns in (
+                        OUTPUT_COLUMNS,
+                        legacy_columns,
+                        OUTPUT_COLUMNS + ROUTE_COLUMNS,
+                        OUTPUT_COLUMNS + DERIVED_COLUMNS,
+                        OUTPUT_COLUMNS + ROUTE_COLUMNS + DERIVED_COLUMNS,
+                    )]
         if header not in expected or len(set(reader.fieldnames or [])) != len(reader.fieldnames or []):
             raise CoverageError(
                 f"resume output {path} has an unexpected header; expected "
                 + "\t".join(OUTPUT_COLUMNS)
             )
+        has_route_columns = all(column in header for column in ROUTE_COLUMNS)
+        has_derived_columns = all(column in header for column in DERIVED_COLUMNS)
+        if expect_route_columns is not None and has_route_columns != expect_route_columns:
+            state = "with" if expect_route_columns else "without"
+            raise CoverageError(f"resume output {path} must be {state} route columns")
         rows: list[dict[str, str]] = []
         for line_number, row in enumerate(reader, 2):
             if None in row or any(value is None for value in row.values()):
@@ -435,11 +460,57 @@ def load_output(
                     f"resume output {path}:{line_number} has invalid "
                     f"expectation_source {row['expectation_source']!r}"
                 )
+            if has_derived_columns:
+                try:
+                    int(row["source_cap_s"])
+                except ValueError:
+                    raise CoverageError(
+                        f"resume output {path}:{line_number} has invalid source_cap_s"
+                    ) from None
+                if not row["provenance"] or not row["source_run"] or not re.fullmatch(
+                        r"[0-9a-f]{64}", row["source_run_sha256"]):
+                    raise CoverageError(
+                        f"resume output {path}:{line_number} has incomplete provenance"
+                    )
             row.setdefault("scope_unit", "")
+            if has_route_columns:
+                for column in ROUTE_COLUMNS:
+                    row.setdefault(column, "")
             for column in optional:
                 row.setdefault(column, "")
             rows.append(dict(row))
     return rows
+
+
+def route_record_fields(path: pathlib.Path) -> dict[str, str]:
+    """Read the small, stable route attribution projected into the raw TSV."""
+    if not path.exists():
+        return dict.fromkeys(ROUTE_COLUMNS, "")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise CoverageError(f"invalid route record {path}: {error}") from error
+    if not isinstance(payload, dict):
+        raise CoverageError(f"invalid route record {path}: expected a JSON object")
+    winner = payload.get("winner")
+    if winner not in {"lifting", "fallback-pending"}:
+        raise CoverageError(f"invalid route record {path}: unsupported winner {winner!r}")
+
+    def number(name: str) -> str:
+        value = payload.get(name)
+        if value is None:
+            return ""
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise CoverageError(f"invalid route record {path}: {name} is not numeric")
+        if not math.isfinite(value) or value < 0:
+            raise CoverageError(f"invalid route record {path}: {name} is invalid")
+        return str(value)
+
+    return {
+        "winner": winner,
+        "lift_elapsed": number("lift_elapsed"),
+        "fallback_start": number("fallback_start"),
+    }
 
 
 def load_conflicts(path: pathlib.Path) -> list[dict[str, str]]:
@@ -521,9 +592,9 @@ def conflict_row(
     }
 
 
-def normalize_result(run: RunResult) -> tuple[str, str]:
+def normalize_result(run: RunResult, tool: str = "acacia") -> tuple[str, str]:
     """Map benchlib classifications to the coverage file's exact vocabulary."""
-    result = classify_run(run, tool="acacia")
+    result = classify_run(run, tool=tool)
     if result == "TIMEOUT":
         return "TIMEOUT", "timeout"
     if result == "RESOURCE_LIMIT":
@@ -531,6 +602,22 @@ def normalize_result(run: RunResult) -> tuple[str, str]:
     if run.returncode < 0:
         return "CRASH", f"signal:{-run.returncode}"
     return result, ""
+
+
+def quarantine_interrupted_records(directory: pathlib.Path) -> pathlib.Path | None:
+    """Move aside records left by an attempt that never wrote its TSV row.
+
+    The row is written only after the solver exits, so a directory that
+    already holds files belongs to an interrupted attempt.  Mixing its records
+    with the new attempt's would misattribute decisions; deleting them would
+    lose evidence.  They are renamed, not removed.
+    """
+    if not directory.is_dir() or not any(directory.iterdir()):
+        return None
+    target = directory.with_name(f"{directory.name}.interrupted-{uuid.uuid4().hex[:12]}")
+    directory.rename(target)
+    print(f"moved interrupted phase records {directory} to {target}", file=sys.stderr)
+    return target
 
 
 def unique_in_order(instances: list[str]) -> list[str]:
@@ -755,6 +842,9 @@ def export_cactus_main(argv: list[str]) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bin", required=True, metavar="PATH")
+    parser.add_argument("--binary-identity", type=pathlib.Path, metavar="PATH",
+                        help="underlying executable when --bin is a frozen-runtime wrapper; "
+                             "hash this path in the observation")
     parser.add_argument("--solver-label", required=True, metavar="LABEL")
     parser.add_argument("--list", required=True, metavar="PATH")
     parser.add_argument("--tlsf-map", required=True, metavar="PATH")
@@ -799,6 +889,15 @@ def build_parser() -> argparse.ArgumentParser:
                         help="wrap the solver with GNU time inside the existing scope")
     parser.add_argument("--worker-records-dir", type=pathlib.Path,
                         help="diagnostic run: capture transformed workers below this directory")
+    parser.add_argument("--phase-records-dir", type=pathlib.Path,
+                        help="diagnostic run: save opt-in per-process phase JSONL by instance")
+    parser.add_argument(
+        "--route-records",
+        type=pathlib.Path,
+        metavar="DIR",
+        help=("enable wrapper attribution: put unique route JSON records below DIR "
+              "and append winner/lift timing fields to the raw TSV"),
+    )
     return parser
 
 
@@ -837,11 +936,24 @@ def run(args: argparse.Namespace) -> int:
     except ValueError as error:
         raise CoverageError(f"invalid --flags value: {error}") from error
 
-    binary_sha256 = sha256_file(binary)
+    identity_binary = getattr(args, "binary_identity", None)
+    if identity_binary is not None and not identity_binary.is_file():
+        raise CoverageError(f"binary identity does not exist: {identity_binary}")
+    binary_sha256 = sha256_file(identity_binary or binary)
     acacia_sha = args.acacia_sha if args.acacia_sha is not None else git_head()
     records_root = getattr(args, "worker_records_dir", None)
     if records_root is not None:
         records_root = records_root.resolve()
+    phase_records_root = getattr(args, "phase_records_dir", None)
+    if phase_records_root is not None:
+        phase_records_root = phase_records_root.resolve()
+    route_records_root = getattr(args, "route_records", None)
+    if route_records_root is not None:
+        route_records_root = route_records_root.resolve()
+        route_records_root.mkdir(parents=True, exist_ok=True)
+    output_columns = (
+        OUTPUT_COLUMNS + ROUTE_COLUMNS if route_records_root is not None else OUTPUT_COLUMNS
+    )
     run_metadata = {
         "acacia_sha": acacia_sha, "binary_sha256": binary_sha256,
         "preset": args.preset, "flags": args.flags,
@@ -854,7 +966,11 @@ def run(args: argparse.Namespace) -> int:
     }
     output = pathlib.Path(args.output)
     if args.resume and output.exists():
-        rows = load_output(output)
+        rows = load_output(
+            output, expect_route_columns=route_records_root is not None
+        )
+        if rows and "provenance" in rows[0]:
+            raise CoverageError(f"resume output {output} is a derived series, not a run")
         for row in rows:
             if row["solver_label"] == args.solver_label and any(
                 row.get(key) != value for key, value in run_metadata.items()
@@ -862,10 +978,10 @@ def run(args: argparse.Namespace) -> int:
                 raise CoverageError("resume configuration or binary differs from recorded campaign")
         # Upgrade the older header only after validating the recorded treatment.
         # Empty scope IDs preserve the distinction from a measured identifier.
-        atomic_write_tsv(output, OUTPUT_COLUMNS, rows)
+        atomic_write_tsv(output, output_columns, rows)
     else:
         rows = []
-        atomic_write_tsv(output, OUTPUT_COLUMNS, rows)
+        atomic_write_tsv(output, output_columns, rows)
 
     conflicts_path = output.with_name(f"{output.stem}-conflicts.tsv")
     conflict_keys: set[tuple[str, str, int]] = set()
@@ -909,10 +1025,13 @@ def run(args: argparse.Namespace) -> int:
             key = (row["solver_label"], row["instance"])
             decisive_caps.setdefault(key, set()).add(int(row["cap_s"]))
 
-    run_index = 0
+    # run_index counts invocations recorded in this file, including those
+    # loaded on resume, so a resumed run never reuses an earlier run's
+    # phase-record directory name.
+    run_index = len(rows)
     with output.open("a", encoding="utf-8", newline="") as stream:
         writer = csv.DictWriter(
-            stream, fieldnames=OUTPUT_COLUMNS, delimiter="\t", lineterminator="\n"
+            stream, fieldnames=output_columns, delimiter="\t", lineterminator="\n"
         )
         for cap in args.caps:
             selected = [
@@ -934,22 +1053,70 @@ def run(args: argparse.Namespace) -> int:
                 if getattr(args, "collect_rusage", False):
                     cmd = ["/usr/bin/time", "-q", "-f", "ACACIA_RUSAGE %U %S %M", *cmd]
                 run_env = None
+                child_env_overrides: dict[str, str] = {}
                 if records_root is not None:
                     safe_label = re.sub(r"[^A-Za-z0-9_.-]", "_", args.solver_label)
                     directory = records_root / safe_label / str(cap) / pathlib.Path(instance).name
                     directory.mkdir(parents=True, exist_ok=True)
                     run_env = dict(os.environ, ACACIA_SPOT_CAPTURE_DIR=str(directory),
                                    ACACIA_DIAG_INSTANCE=instance)
-                solver_run = run_systemd_scope(
-                    cmd,
-                    timeout=cap,
-                    memory_max=args.memory_max,
-                    memory_swap_max=args.memory_swap_max,
-                    allowed_cpus=args.allowed_cpus,
-                    cpu_quota=args.cpu_quota,
-                    unit_prefix="acacia-syntcomp26-coverage",
-                    env=run_env,
-                )
+                    child_env_overrides.update({
+                        "ACACIA_SPOT_CAPTURE_DIR": str(directory),
+                        "ACACIA_DIAG_INSTANCE": instance,
+                    })
+                if phase_records_root is not None:
+                    safe_label = re.sub(r"[^A-Za-z0-9_.-]", "_", args.solver_label)
+                    safe_instance = re.sub(r"[^A-Za-z0-9_.-]", "_", instance)
+                    directory = (phase_records_root / safe_label / str(cap) /
+                                 f"{safe_instance}-{run_index}")
+                    quarantine_interrupted_records(directory)
+                    directory.mkdir(parents=True, exist_ok=True)
+                    run_env = dict(os.environ if run_env is None else run_env,
+                                   ACACIA_PHASE_RECORDS=str(directory))
+                    child_env_overrides["ACACIA_PHASE_RECORDS"] = str(directory)
+                route_path = None
+                if route_records_root is None:
+                    # Keep the historical launch call exactly unchanged when
+                    # route attribution is disabled.
+                    solver_run = run_systemd_scope(
+                        cmd,
+                        timeout=cap,
+                        memory_max=args.memory_max,
+                        memory_swap_max=args.memory_swap_max,
+                        allowed_cpus=args.allowed_cpus,
+                        cpu_quota=args.cpu_quota,
+                        unit_prefix="acacia-syntcomp26-coverage",
+                        env=run_env,
+                        **({"scope_env": child_env_overrides}
+                           if phase_records_root is not None else {}),
+                    )
+                else:
+                    safe_label = re.sub(r"[^A-Za-z0-9_.-]", "_", args.solver_label)
+                    safe_instance = re.sub(r"[^A-Za-z0-9_.-]", "_", instance)
+                    route_directory = route_records_root / safe_label / str(cap)
+                    route_directory.mkdir(parents=True, exist_ok=True)
+                    route_path = route_directory / f"{safe_instance}.{uuid.uuid4().hex}.json"
+                    # This is deliberately the last clock read before launch:
+                    # directory creation and command assembly are charged, but
+                    # systemd-run startup cannot escape the absolute deadline.
+                    outer_deadline = time.monotonic() + cap
+                    child_env_overrides.update({
+                        "ACACIA_OUTER_DEADLINE_MONOTONIC": repr(outer_deadline),
+                        "ACACIA_ROUTE_RECORD": str(route_path),
+                    })
+                    run_env = dict(os.environ if run_env is None else run_env)
+                    run_env.update(child_env_overrides)
+                    solver_run = run_systemd_scope(
+                        cmd,
+                        timeout=cap,
+                        memory_max=args.memory_max,
+                        memory_swap_max=args.memory_swap_max,
+                        allowed_cpus=args.allowed_cpus,
+                        cpu_quota=args.cpu_quota,
+                        unit_prefix="acacia-syntcomp26-coverage",
+                        env=run_env,
+                        scope_env=child_env_overrides,
+                    )
                 result, resource_reason = normalize_result(solver_run)
                 usage = re.search(r"^ACACIA_RUSAGE ([0-9.]+) ([0-9.]+) ([0-9]+)$",
                                   solver_run.stderr, re.M)
@@ -979,6 +1146,8 @@ def run(args: argparse.Namespace) -> int:
                     "scope_unit": solver_run.scope_unit,
                     **run_metadata,
                 }
+                if route_path is not None:
+                    row.update(route_record_fields(route_path))
                 writer.writerow(row)
                 stream.flush()
                 os.fsync(stream.fileno())

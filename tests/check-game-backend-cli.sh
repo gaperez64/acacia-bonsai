@@ -82,7 +82,7 @@ output=$(run 3 "${common[@]}" --arms real:small:sideways)
 [[ $output == *'invalid backend sideways'* && $output == *'backward, forward, spot-guarded or spot-guarded-sparse'* ]]
 
 output=$(run 3 "${common[@]}" --arms sideways:small:forward)
-[[ $output == *'invalid polarity sideways'* && $output == *'real or unreal'* ]]
+[[ $output == *'invalid polarity sideways'* && $output == *'real, unreal, or both for gr1'* ]]
 
 output=$(run 3 "${common[@]}" --arms real:formula:forward)
 [[ $output == *'invalid transform formula'* && $output == *'small or any'* ]]
@@ -249,7 +249,7 @@ if [[ $lazy_enabled == true && $guarded_enabled == true ]]; then
         grep -qx REALIZABLE <<<"$output"
     done
     if [[ -n $taa_cap_default ]]; then
-        output=$(run 2 -h)
+        output=$(run 0 -h)
         [[ $output == *"--candidate-mode VAL     [only|fallback] on candidate resource limits (default $candidate_default)"* ]]
         for provider in spot-eager spot-lazy; do
             bounded=(-f 'G(i <-> X(o))' -i i -o o --spot-fast off \

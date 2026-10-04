@@ -28,8 +28,18 @@ REGIME = ("memory_max", "memory_swap_max", "allowed_cpus", "cpu_quota", "collect
 
 def load_screen(args):
     """Require exactly the declared rounds, complete runner sidecars and matched IDs."""
-    if args.cap != 17 or args.rounds < 1:
-        raise ValueError("--cap must be 17 and --rounds must be positive (§8 uses five)")
+    if not math.isfinite(args.cap) or args.cap <= 0:
+        raise ValueError("--cap must be a finite, positive number of seconds")
+    if args.rounds < 1:
+        raise ValueError("--rounds must be positive (§8 uses five)")
+    if args.cap != 17 and not args.research_protocol:
+        raise ValueError(
+            "--research-protocol LABEL is required for any --cap other than 17 "
+            "(the historical 17-second protocol needs no label; a non-17s cap "
+            "must be an explicit, labelled long-budget research protocol)"
+        )
+    if args.cap == 17 and args.research_protocol:
+        raise ValueError("--research-protocol is only for a non-17s research cap")
     labels = (args.control, args.treatment)
     if len(set(labels)) != 2 or any(not re.fullmatch(r"[\w.-]+", label) for label in labels):
         raise ValueError("control and treatment must be distinct filename labels")
@@ -310,13 +320,16 @@ def display(value):
 def write_reports(args, rows, result, inputs):
     """Write the complete audit, measurement definitions and all input hashes."""
     if {path.resolve() for path in inputs} & {
-        (args.screen_dir / name).resolve() for name in ("admission.md", "admission.tsv")
+        (args.screen_dir / name).resolve()
+        for name in ("admission.md", "admission.tsv", "admission-result.json")
     }:
         raise ValueError("admission outputs must be distinct from the inputs")
+    protocol = "historical-17s" if args.cap == 17 else args.research_protocol
     hashes = [(str(path.resolve()), coverage.sha256_file(path)) for path in dict.fromkeys(inputs)]
     lines = ["# Paired admission (§8)", "", f"Decision: **{result['decision']}**", "",
              f"Screen: `{args.screen_dir.resolve()}`; control: `{args.control}`; "
-             f"treatment: `{args.treatment}`; rounds: {args.rounds}; cap: {args.cap:g} s.",
+             f"treatment: `{args.treatment}`; rounds: {args.rounds}; cap: {args.cap:g} s; "
+             f"protocol: `{protocol}`.",
              f"Benefit targets: `{args.benefit_targets or 'all targets.list IDs'}`.", "",
              "| Input | SHA-256 |", "| --- | --- |"]
     lines.extend(f"| `{path}` | `{digest}` |" for path, digest in hashes)
@@ -376,6 +389,14 @@ def write_reports(args, rows, result, inputs):
     coverage.atomic_write_tsv(args.screen_dir / "admission.tsv", list(rows[0]),
                               [{key: display(value) for key, value in row.items()} for row in rows])
     (args.screen_dir / "admission.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # A machine-readable field, not incidental prose: exit 0 alone is not ADMIT
+    # (this script exits 0 for every completed evaluation, including REJECT).
+    (args.screen_dir / "admission-result.json").write_text(json.dumps({
+        "decision": result["decision"], "correctness": result["correctness"],
+        "no_regression": result["no_regression"], "improvement": result["improvement"],
+        "confirmation_complete": result["confirmation_complete"],
+        "cap": args.cap, "protocol": protocol, "rounds": args.rounds,
+    }, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def main(argv=None):
@@ -386,7 +407,13 @@ def main(argv=None):
     parser.add_argument("--rounds", required=True, type=int,
                         help="complete pairs to report; admission requires at least five")
     parser.add_argument("--benefit-targets", type=Path, help="frozen ID list (default: targets.list)")
-    parser.add_argument("--cap", type=float, default=17, help="must be 17 (default: 17)")
+    parser.add_argument("--cap", type=float, default=17,
+                        help="17 for the historical protocol (default), or a positive research "
+                             "cap paired with --research-protocol")
+    parser.add_argument("--research-protocol", metavar="LABEL",
+                        help="required alongside any --cap other than 17: an explicit label for "
+                             "the long-budget research protocol (e.g. long-budget-120s); refused "
+                             "at --cap 17, where no label applies")
     args = parser.parse_args(argv)
     try:
         targets, benefits, sides, inputs = load_screen(args)

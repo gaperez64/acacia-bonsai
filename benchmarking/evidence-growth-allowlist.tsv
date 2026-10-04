@@ -1,0 +1,9 @@
+path	reason
+benchmarking/evidence-index.tsv	Compact archive locator and digest registry
+benchmarking/baselines.tsv	Compact frozen-binary retention registry
+benchmarking/evidence-growth-allowlist.tsv	Exact guard policy file with justified fixture paths
+benchmarking/evidence-do-not-publish.txt	Exact publication hold policy file
+benchmarking/optimize-20260927/dev-panel.tsv	Small fixed P1 development selection metadata, no observations
+benchmarking/optimize-20260927/heldout-panel.tsv	Small fixed held-out selection metadata, no observations
+benchmarking/param-lift-20260922/m0-instances.tsv	Input fixture: default instance list read by legacy_lift/runner.py; includes the M0 census 120 s solved/unsolved column
+benchmarking/param-lift-20260922/m0-census.tsv	Input fixture: default family census read by legacy_lift/runner.py; includes the M0 census route mix

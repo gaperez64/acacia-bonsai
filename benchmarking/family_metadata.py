@@ -16,7 +16,8 @@ parameter data at all, fall back to the filename heuristic, and those rows are
 marked `heuristic` (or `none`) so that no downstream frontier analysis can
 mistake a guess for a measurement.
 
-The join is deliberately strict.  Every one of the official instances must
+This table is reporting metadata only; no solver path consumes it. The join is
+deliberately strict.  Every one of the official instances must
 resolve through all four tables, or the module raises: a coverage frontier
 computed over a silently incomplete corpus would be worse than none.
 """
@@ -139,8 +140,10 @@ def parse_origin(origin: str, logical_instance: str) -> dict:
 
 
 def load_overrides(path: pathlib.Path | None) -> dict[str, dict[str, str]]:
-    if path is None or not path.is_file():
+    if path is None:
         return {}
+    if not path.is_file():
+        raise FileNotFoundError(f"explicit overrides file not found: {path}")
     overrides = read_tsv(path, "logical_instance")
     for name, row in overrides.items():
         if not row.get("reason", "").strip():
@@ -276,10 +279,10 @@ def main(argv=None) -> int:
                         default=suite / "syntcomp26" / "conversion.tsv")
     parser.add_argument("--corpus", type=pathlib.Path, default=root / "tlsf-corpus")
     parser.add_argument("--overrides", type=pathlib.Path,
-                        default=root / "benchmarking" / "syntcomp26-family-overrides.tsv")
+                        help="optional fetched reporting-only overrides TSV")
     parser.add_argument("--expected", type=int, default=EXPECTED_INSTANCES)
     parser.add_argument("--output", type=pathlib.Path,
-                        default=root / "benchmarking" / "syntcomp26-family-instances.tsv")
+                        default=pathlib.Path("_bm-logs/family-metadata/syntcomp26-family-instances.tsv"))
     args = parser.parse_args(argv)
 
     rows = build(args.list, args.tlsf_sources, args.manifest, args.conversion,

@@ -1,0 +1,30 @@
+INFO {
+  TITLE:       "";
+  DESCRIPTION: "
+                This is a new version of full_arbiter:
+                it is modularized (that is a syntactic difference)
+                but more importantly it uses W where previous spec
+                used R (the prev spec was for Moore semantics actually!).
+               ";
+  SEMANTICS:   Mealy;
+  TARGET:      Mealy;
+}
+
+MAIN {
+
+  INPUTS {
+    r_0;
+    r_1;
+  }
+
+  OUTPUTS {
+    g_0;
+    g_1;
+  }
+
+    GUARANTEE {
+      G (((!(g_0) && true) || (true && !(g_1))));
+      (((((!(g_0) W r_0) && G (((g_0 && X ((!(r_0) && !(g_0)))) -> X ((!(g_0) W r_0))))) && G (((g_0 && G (!(r_0))) -> F (!(g_0))))) && G ((r_0 -> F (g_0)))) && ((((!(g_1) W r_1) && G (((g_1 && X ((!(r_1) && !(g_1)))) -> X ((!(g_1) W r_1))))) && G (((g_1 && G (!(r_1))) -> F (!(g_1))))) && G ((r_1 -> F (g_1)))));
+    }
+
+}

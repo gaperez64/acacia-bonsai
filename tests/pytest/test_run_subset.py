@@ -80,6 +80,34 @@ def test_parse_tlsf_semantics_is_order_insensitive():
     assert parse("Mealy,Weak") is None
 
 
+def test_preconverted_ltlsynt_uses_frozen_semantics_map(monkeypatch, tmp_path):
+    module = load_module()
+    (tmp_path / "all.list").write_text("a.ltl\n")
+    pairs = tmp_path / "pairs"
+    pairs.mkdir()
+    (pairs / "a.ltl").write_text("G(i -> o)\n")
+    (pairs / "a.part").write_text(".inputs: i\n.outputs: o\n")
+    (tmp_path / "failures.list").write_text("")
+    semantics = tmp_path / "semantics.tsv"
+    semantics.write_text("instance\tsemantics\na.ltl\tMoore\n")
+    assert module.read_semantics_map(semantics) == {"a.ltl": "Moore"}
+    commands = []
+
+    def fake_run(cmd, _timeout):
+        commands.append(cmd)
+        return SimpleNamespace(stdout="REALIZABLE\n", stderr="", returncode=0,
+                               seconds=0.1, timed_out=False, resource_limited=False)
+
+    monkeypatch.setattr(module, "run_process_group", fake_run)
+    monkeypatch.setattr(sys, "argv", [str(SCRIPT), "--tool", "ltlsynt", "--bin", "fake",
+                                      "--list", str(tmp_path / "all.list"),
+                                      "--instances-dir", str(pairs),
+                                      "--syfco-failures", str(tmp_path / "failures.list"),
+                                      "--semantics-map", str(semantics)])
+    module.main()
+    assert "--semantics=Moore" in commands[0]
+
+
 def test_convert_tlsf_returns_declared_model_without_overwriting_semantics(tmp_path):
     module = load_module()
     tlsf = tmp_path / "example.tlsf"

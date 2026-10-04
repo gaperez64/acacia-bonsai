@@ -1,17 +1,22 @@
 FROM gcc:14.2-bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG SPOT_VERSION=2.15.1
+ARG SPOT_VERSION=2.16
 
 # Build tools (extends syntcomp_tgcc docker_full package list)
 RUN apt-get update && \
-    apt-get install -y ca-certificates wget cmake autoconf time python3-dev \
+    apt-get install -y ca-certificates curl wget cmake autoconf time python3-dev \
         meson ninja-build pkg-config python3-pip \
         automake libtool libltdl-dev bison flex zsh git \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade meson (bookworm's version may be too old for C++23 project features)
 RUN pip3 install --break-system-packages --upgrade meson
+
+# OxiDD requires Rust 1.91 or newer. Bookworm's rustc is too old.
+RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.91.0
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN cargo install cbindgen --version 0.29.4 --locked
 
 # Spot sources — NOT compiled; user compiles with -march=native
 WORKDIR /opt/spot
@@ -22,6 +27,11 @@ RUN wget -q https://www.lrde.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz \
 # acacia-bonsai sources (with submodules, via checkout in the workflow)
 WORKDIR /opt/acacia-bonsai
 COPY . .
+
+# Keep the source image ready for an offline native-arm build on the host.
+# The checkout includes tlsf-tools' nested external/oxidd submodule.
+RUN cargo fetch --locked --manifest-path subprojects/tlsf-tools/external/oxidd/crates/oxidd-ffi-c/Cargo.toml
+ENV CARGO_NET_OFFLINE=true
 
 # Pre-fetch std-simd meson wrap so scripts/compile.sh works fully offline
 RUN meson subprojects download std-simd || true

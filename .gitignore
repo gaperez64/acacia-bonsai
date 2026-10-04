@@ -1,6 +1,9 @@
 _bm-logs
 _bm-logs*/
 selection-ltl-2025v2/
+# Reproducible-from-source cache copy, not primary evidence (see reuse.tsv);
+# large enough (tens of MiB, thousands of files) to keep out of git history.
+benchmarking/witness-lifting-20260918/opening/syfco-cache/
 .pytest_cache/
 virtenv/
 .venv/
@@ -32,6 +35,7 @@ _build
 subprojects/spot
 subprojects/std-simd
 /subprojects/*.wraplock
+/subprojects/yyjson.wrap
 
 # Created by https://www.toptal.com/developers/gitignore/api/macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos
@@ -176,8 +180,11 @@ latex/**/*
 
 .idea/**/*
 tlsf-corpus/
+tlsf-corpus-obf/
 /.acacia-tlsf-corpus-path
 
 # Raw staged-coverage runs; summarized TSVs are committed separately.
 _coverage26/
 benchmarking/_coverage26/
+benchmarking/gr1-par2-20260923/s0/raw/runs/
+/benchmarking/*.lock

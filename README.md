@@ -16,7 +16,11 @@ docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
 The CLI image contains the dependencies and sources. It compiles inside the
-container so `-march=native` can target the host:
+container so `-march=native` can target the host. Its first shipped
+configuration uses a native GR(1) realizability pre-pass on TLSF input. The
+image includes Rust, `cbindgen`, the OxiDD source, and cached Cargo
+dependencies needed by `scripts/compile.sh`; that script builds OxiDD before
+the native preset:
 
 ```
 docker pull ghcr.io/gaperez64/acacia-bonsai:latest
@@ -34,7 +38,12 @@ it with `docker start -ai acacia`.
 
 The wrappers name no configuration and follow the `docker_default` group. Pass
 a name as the first argument to choose a different shipped configuration, or run
-a wrapper without arguments to list the ones it accepts.
+a wrapper without arguments to list the ones it accepts. The CLI launcher reads
+`config/docker-default.list`, which tests keep aligned with the registry group;
+Python is only needed when compiling configurations. The GR(1) pre-pass is a
+decision arm: LTL `-f` input and synthesis `-s` use the regular solver arms.
+The previous four-arm sparse formula configuration remains available in the
+group as the non-native fallback.
 
 # Dependencies
 
@@ -52,8 +61,17 @@ Initialize the vendored Posets and TLSF-tools dependencies after cloning:
 ```
 git submodule update --init
 ```
-This is deliberately non-recursive; Acacia disables TLSF-tools' optional
-OxiDD backend.
+This is deliberately non-recursive. To compile a `docker_default` preset with
+native GR(1) arms, also initialize TLSF-tools' nested OxiDD submodule, install
+Rust 1.91 or newer with Cargo and `cbindgen`, and build its stamped C library
+before Meson setup:
+```
+git -C subprojects/tlsf-tools submodule update --init external/oxidd
+subprojects/tlsf-tools/scripts/build_oxidd.sh
+```
+Meson checks the OxiDD source commit and archive hash recorded in that stamp.
+The Docker CLI release checkout includes the nested submodule, and
+`scripts/compile.sh` builds its library.
 
 The corpus test driver (`tests/check-real-correct.sh`) can optionally run the
 solver under Valgrind (`-V`) or Callgrind (`-c`); no test does so by default,
@@ -109,10 +127,27 @@ build_$preset/src/acacia-bonsai -T spec.tlsf
 input with `--tlsf`. No external TLSF converter is needed at runtime, and
 Moore-target controller conversion happens inside Acacia.
 
+The first `docker_default` preset enables `acacia_native_arms` and includes
+`both:gr1-real-lift:oxidd` in its default TLSF decision portfolio. With
+`-Dacacia_native_arms=true`, the same `acacia-bonsai` binary accepts
+`--arms real:gr1:oxidd`, `--arms unreal:gr1:oxidd`, `--arms both:gr1:oxidd`,
+`--arms both:gr1-lift:oxidd`, `--arms both:gr1-real-lift:oxidd`,
+and `--arms real:param-lift:oxidd` with `-T spec.tlsf`. These arms run in
+process and can also be selected explicitly. The GR(1) reduction is exact, so
+one solve decides
+the winner: `both:gr1:oxidd` reports whichever side it proves, while
+`both:gr1-lift:oxidd` first tries a checked system or environment lift from
+shared seeds and falls back to the same exact game solve.
+`both:gr1-real-lift:oxidd` tries only the checked system lift; unreal seeds and
+declined lifts go directly to the exact game solve. The `real` and
+`unreal` forms answer only for their own side. The former Python lifting route lives only in
+[the research oracle](benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py) for
+differential tests.
+
 Correctness and performance gates, including the sequential measurement
 protocol, are documented in [benchmarking/README.md](benchmarking/README.md).
 The comparison with `ltlsynt` is in
-[benchmarking/LTLSYNT-GAP.md](benchmarking/LTLSYNT-GAP.md).
+[benchmarking/RESULTS.md](benchmarking/RESULTS.md).
 
 # Compile-time configurations
 
@@ -145,8 +180,8 @@ The options pick data structures and algorithms, for instance:
 
 Some configurations take Spot's on-the-fly paths instead of the frozen automaton
 graph, gated by `-Dacacia_spot_guarded_backend` and `-Dacacia_spot_lazy_provider`
-and selected per polarity through `--arms`; the providers are described in
-[benchmarking/OTF-AND-SPOT.md](benchmarking/OTF-AND-SPOT.md).
+and selected per polarity through `--arms`; current results and archived
+provider evidence are indexed in [benchmarking/RESULTS.md](benchmarking/RESULTS.md).
 
 Inspect the registry with:
 ```

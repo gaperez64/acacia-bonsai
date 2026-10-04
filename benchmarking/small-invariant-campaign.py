@@ -15,9 +15,9 @@ Example:
 
     benchmarking/small-invariant-campaign.py \\
         --build build_research \\
-        --from-census benchmarking/gap-census.tsv --mechanism M2 \\
+        --from-census FETCHED/benchmarking/gap-census.tsv --mechanism M2 \\
         --source-map syntcomp24=tests/suites/benchmarks/syntcomp24/sources.tsv \\
-        --out benchmarking/small-invariant-results.tsv --timeout 120
+        --out _bm-logs/small-invariant-results.tsv --timeout 120
 """
 
 from __future__ import annotations

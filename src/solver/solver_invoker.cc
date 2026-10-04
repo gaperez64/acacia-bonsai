@@ -404,7 +404,9 @@ namespace {
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("synthesis-check-after-translation");
-        assert (not aut->intersects (mealy_aig->as_automaton (false)));
+        assert (check_unreal.has_value ()
+                    ? aut->intersects (mealy_aig->as_automaton (false))
+                    : not aut->intersects (mealy_aig->as_automaton (false)));
 
 #endif
       }
@@ -556,7 +558,8 @@ namespace {
 #endif
 
         const bool want_controller_strategy =
-            synth_fname.has_value () and not check_unreal.has_value ();
+            synth_fname.has_value () and
+            (not check_unreal.has_value () or *check_unreal == UNREAL_X_FORMULA);
         // The nondeterministic GFG path is decision-only and currently validated
         // only in the REAL-child orientation. Keep unreal children on the
         // deterministic fast path or the existing Acacia solver.
@@ -712,7 +715,8 @@ namespace {
           std::cerr << acacia::automaton_provider_name (provider) << " fallback rebuild_ms="
                     << std::chrono::duration<double, std::milli> (
                            std::chrono::steady_clock::now () - fallback_started).count () << '\n';
-        assert (not synth_fname.has_value () or not check_unreal.has_value ());
+        assert (not synth_fname.has_value () or not check_unreal.has_value () or
+                *check_unreal == UNREAL_X_FORMULA);
 #if ACACIA_REAL_BACKEND_SELECTOR && ACACIA_SPOT_GUARDED_BACKEND
         // B2 (§8.3): selection precedes action-table construction, happens
         // once, and never re-translates or re-preprocesses. Real-forward
@@ -780,7 +784,8 @@ namespace {
     // original Mealy frame, after realizability simplification and before the
     // unreal workers swap I/O.  Strategy-producing no-input requests retain the
     // existing lasso-to-AIG path; this fast path is intentionally decision-only.
-    if (input_aps.empty () and synth_fname.has_value ())
+    if (input_aps.empty () and synth_fname.has_value () and
+        not (check_unreal.has_value () and *check_unreal == UNREAL_X_FORMULA))
       return std::optional<bool> {acacia::diagnostics::finish (
           run_no_input_ltl (output_aps, spot_formula, check_unreal, translation_pref, synth_fname,
                             synthesize_moore),
@@ -895,7 +900,9 @@ namespace {
 
   std::optional<bool> try_unreal_safety_core_witnesses (
       const spot::formula& spot_formula, std::optional<UNREAL_X_T> check_unreal,
-      run_one_ltl& runner) {
+      const std::optional<std::string>& synth_fname, run_one_ltl& runner) {
+    if (synth_fname.has_value ())
+      return std::nullopt;
     if (check_unreal.has_value ()) {
       auto witnesses = acacia::unreal_witnesses::make_safety_core_witnesses (spot_formula);
       for (const spot::formula& witness : witnesses) {
@@ -917,6 +924,15 @@ namespace {
                          const std::vector<std::string>& output_aps,
                          std::optional<UNREAL_X_T> check_unreal,
                          const std::optional<std::string>& synth_fname, run_one_ltl& runner) {
+    if (check_unreal.has_value () and synth_fname.has_value ()) {
+      if (runner (spot_formula)) {
+        std::vector<std::vector<std::string>> out_part = {output_aps};
+        runner.synthesis (spot_formula, out_part);
+        return acacia::diagnostics::finish (true, "monolithic-unreal-synthesis");
+      }
+      return acacia::diagnostics::finish (false, "monolithic-unreal-synthesis");
+    }
+
     // We are up for decomposition, so first we need to split the formula.
     // NOTE: we may have flipped inputs and outputs already, so we need to
     // provide inputs to the split function in that case.
@@ -1115,7 +1131,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
                           ((metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-") ? "Mealy" : metadata.tlsf_effective_target) +
                           (check_unreal ? ";polarity=unreal-formula" : ";polarity=real"));
 
-  if (auto answer = try_unreal_safety_core_witnesses (spot_formula, check_unreal, runner);
+  if (auto answer =
+          try_unreal_safety_core_witnesses (spot_formula, check_unreal, synth_fname, runner);
       answer.has_value ())
     return *answer;
 

@@ -176,19 +176,23 @@ def test_output_is_byte_stable(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Integration against the committed corpus, skipped when it is not materialized.
-
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-SUITE = ROOT / "tests" / "suites" / "benchmarks"
-GENERATED = ROOT / "benchmarking" / "syntcomp26-family-instances.tsv"
-
-
-@pytest.mark.skipif(not GENERATED.is_file(), reason="metadata not generated")
-def test_generated_table_covers_the_official_set():
-    with open(GENERATED, newline="") as handle:
+# Reporting-table contract over a small, complete fixture.
+def test_reporting_table_covers_fixture_and_preserves_parameter_origins(tmp_path):
+    instances = [
+        ("first.ltl", "first.tlsf", "param:tlsf/zoo/arb.tlsf:n=2"),
+        ("second.ltl", "second.tlsf", "param:tlsf/zoo/arb.tlsf:n=3"),
+        ("direct.ltl", "direct.tlsf", "direct:tlsf/direct.tlsf"),
+    ]
+    rows = build(tmp_path, instances)
+    table = tmp_path / "reporting.tsv"
+    with table.open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=family_metadata.COLUMNS, delimiter="\t")
+        writer.writeheader()
+        writer.writerows(rows)
+    with table.open(newline="") as handle:
         rows = list(csv.DictReader(handle, delimiter="\t"))
-    assert len(rows) == family_metadata.EXPECTED_INSTANCES
-    assert len({r["logical_instance"] for r in rows}) == len(rows)
+    assert len(rows) == len(instances)
+    assert {r["logical_instance"] for r in rows} == {item[0] for item in instances}
     assert all(r["origin_kind"] in ("param", "direct") for r in rows)
     # Every exact row must carry a parseable parameter object.
     for row in rows:
@@ -197,3 +201,4 @@ def test_generated_table_covers_the_official_set():
         if row["parameter_confidence"] == "exact":
             assert row["origin"].startswith("param:")
             assert values
+    assert family_metadata.orderable_families(rows) == {"param:tlsf/zoo/arb.tlsf"}

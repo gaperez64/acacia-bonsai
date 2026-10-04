@@ -19,3 +19,6 @@ __pycache__/
 _trash
 builddir
 buildir
+subprojects/tlsf-tools/external/oxidd/target/
+subprojects/tlsf-tools/external/oxidd/build/
+benchmarking/gr1-par2-20260923/oracle/

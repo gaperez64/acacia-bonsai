@@ -1,0 +1,37 @@
+family	instances	unsolved_120s	route_mix	smallest_instance	smallest_parameters	assume_classes	guarantee_classes	max_assume	max_guarantee	dba_reducible	non_recurrence_templates
+abcg_arbiter	6	3	ltlsynt:6	abcg_arbiter_pb_1_pe_.ltl	"{""n"": 1}"	{}	"{""R"": 2, ""S"": 5}"	-	R	true	
+amba_case_study	3	2	ltlsynt:3	amba_case_study_pb_2_pe_.ltl	"{""n"": 2}"	"{""B"": 5, ""R"": 2, ""S"": 3}"	"{""B"": 6, ""R"": 2, ""S"": 17}"	R	R	true	
+amba_case_study_unreal	4	4	ltlsynt:4	amba_case_study_unreal_pb_2_pe_.ltl	"{""n"": 2}"	"{""B"": 5, ""R"": 1, ""S"": 3}"	"{""B"": 6, ""R"": 2, ""S"": 17}"	R	R	true	
+amba_decomposed_arbiter	12	7	ltlsynt:12	amba_decomposed_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	"{""B"": 1, ""R"": 1}"	"{""B"": 2, ""R"": 2, ""S"": 9}"	R	R	true	
+amba_decomposed_encode	17	2	direct-safety:17	amba_decomposed_encode_pb_2_pe_.ltl	"{""n"": 2}"	"{""S"": 2}"	"{""S"": 3}"	S	S	true	
+amba_decomposed_lock	16	3	direct-safety:16	amba_decomposed_lock_pb_2_pe_.ltl	"{""n"": 2}"	"{""S"": 2}"	"{""S"": 3}"	S	S	true	
+arbiter	10	5	ltlsynt:10	arbiter_pb_1_pe_.ltl	"{""n"": 1}"	{}	"{""R"": 2, ""S"": 2}"	-	R	true	
+arbiter_on_inpchange	7	3	ltlsynt:7	arbiter_on_inpchange_pb_1_pe_.ltl	"{""n"": 1}"	{}	"{""R"": 2, ""S"": 2}"	-	R	true	
+arbiter_with_buffer	10	5	ltlsynt:10	arbiter_with_buffer_pb_1_pe_.ltl	"{""n"": 1}"	{}	"{""R"": 1}"	-	R	true	
+arbiter_with_cancel	10	5	ltlsynt:10	arbiter_with_cancel_pb_1_pe_.ltl	"{""n"": 1}"	{}	"{""R"": 2, ""S"": 4}"	-	R	true	
+chomp	15	12	ltlsynt:15	chomp_pb_2_2_pe_.ltl	"{""N"": 2, ""M"": 2}"	{}	"{""B"": 8, ""O"": 1, ""S"": 3}"	-	O	true	
+collector_v1	9	5	ltlsynt:9	collector_v1_pb_3_pe_.ltl	"{""n"": 3}"	{}	"{""R"": 1, ""S"": 3}"	-	R	true	
+collector_v2	10	1	ltlsynt:10	collector_v2_pb_3_pe_.ltl	"{""n"": 3}"	{}	"{""S"": 3, ""T"": 1}"	-	T	false	G: GFallfinished <-> (GFfinished_i & GFfinished_i & GFfinished_i)
+collector_v3	9	5	ltlsynt:9	collector_v3_pb_3_pe_.ltl	"{""n"": 3}"	"{""S"": 3}"	"{""R"": 1, ""S"": 3}"	S	R	true	
+full_arbiter_enc	3	3	ltlsynt:3	full_arbiter_enc_pb_8_pe_.ltl	"{""n"": 8}"	{}	"{""R"": 17, ""S"": 16}"	-	R	true	
+generalized_buffer	5	1	ltlsynt:5	generalized_buffer_pb_2_pe_.ltl	"{""n"": 2}"	{}	"{""R"": 2, ""T"": 3}"	-	T	false	G: (!r2b_ack_i & G(!b2r_req_i -> X!r2b_ack_i) & G(b2r_req_i -> XFr2b_ack_i)) -> (!b2r_req_i & G(r2b_ack_i -> X!b2r_req_i) & G((b2r_req_i & !r2b_ack_i) -> Xb2r_req_i) & G((b2r_req_i & X!b2r_req_i) -> X(!b2r_req_i U (!b2r_req_i & b2r_req_i)))) | G: (!r2b_ack_i & G(!b2r_req_i -> X!r2b_ack_i) & G(b2r_req_i -> XFr2b_ack_i)) -> (!b2r_req_i & G(r2b_ack_i -> X!b2r_req_i) & G((b2r_req_i & !r2b_ack_i) -> Xb
+lift	9	6	ltlsynt:9	lift_pb_2_pe_.ltl	"{""n"": 2}"	"{""B"": 2, ""S"": 4}"	"{""B"": 3, ""R"": 3, ""S"": 7}"	S	R	true	
+lift_gr1	6	4	ltlsynt:6	lift_gr1_pb_2_pe_.ltl	"{""n"": 2}"	"{""B"": 2}"	"{""B"": 1, ""T"": 1}"	B	T	false	G: (G(((b_i & !(!f_i & open)) -> Xb_i) & ((b_i & !(f_i & open)) -> Xb_i) & ((b_i & !f_i & open) -> X!b_i) & ((b_i & f_i & open) -> X!b_i)) & GF!obstacle) -> (!FG(!b_i & !b_i & f_i) & G(!(down & up) & ((!f_i & up) -> b_i) & ((down & f_i) -> (b_i | (!b_i & !b_i))) & (open -> (!down & !up)) & ((!f_i & open) -> b_i) & ((f_i & open) -> b_i) & (up <-> (!f_i & Xf_i)) & (down <-> (f_i & X!f_i)) & (!f_i ->
+lift_gr1+	6	4	ltlsynt:6	lift_gr1+_pb_2_pe_.ltl	"{""n"": 2}"	"{""B"": 2}"	"{""B"": 1, ""T"": 1}"	B	T	false	G: (G(((b_i & !(!f_i & open)) -> Xb_i) & ((b_i & !(f_i & open)) -> Xb_i) & ((b_i & !f_i & open) -> X!b_i) & ((b_i & f_i & open) -> X!b_i)) & GF!obstacle & (GFreq_pwr -> GFgrant_pwr)) -> (!FG(!b_i & !b_i & f_i) & GF(b_i -> (!f_i & open)) & GF(b_i -> (f_i & open)) & G(!(down & up) & ((!f_i & up) -> b_i) & ((down & f_i) -> (b_i | (!b_i & !b_i))) & (open -> (!down & !up)) & ((!f_i & open) -> b_i) & ((
+lift_unary_enc	6	3	ltlsynt:6	lift_unary_enc_pb_2_pe_.ltl	"{""n"": 2}"	"{""B"": 2, ""S"": 4}"	"{""B"": 1, ""R"": 3, ""S"": 9}"	S	R	true	
+load_balancer	10	4	ltlsynt:10	load_balancer_pb_2_pe_.ltl	"{""n"": 2}"	"{""R"": 2, ""S"": 1}"	"{""R"": 2, ""S"": 5}"	R	R	true	
+load_balancer_unreal1	51	7	ltlsynt:51	load_balancer_unreal1_pb_2_1_pe_.ltl	"{""n"": 2, ""u"": 1}"	"{""R"": 2, ""S"": 1}"	"{""R"": 2, ""S"": 6}"	R	R	true	
+load_balancer_unreal2	7	3	ltlsynt:7	load_balancer_unreal2_pb_2_pe_.ltl	"{""n"": 2}"	"{""R"": 2, ""S"": 1}"	"{""R"": 3, ""S"": 5}"	R	R	true	
+ltl2dba_C2_unreal	21	6	ltlsynt:21	ltl2dba_C2_unreal_pb_2_pe_.ltl	"{""n"": 2}"	{}	"{""S"": 1, ""T"": 1}"	-	T	false	G: GFg <-> (GFr_i & GFr_i)
+ltl2dba_R	12	4	ltlsynt:12	ltl2dba_R_pb_1_pe_.ltl	"{""n"": 1}"	{}	"{""T"": 1}"	-	T	false	G: GFp_i <-> GFacc
+ltl2dba_theta	17	5	ltlsynt:17	ltl2dba_theta_pb_1_pe_.ltl	"{""n"": 1}"	{}	"{""T"": 1}"	-	T	false	G: GFacc <-> !(GFp_i -> G(q -> Fr))
+prioritized_arbiter	11	5	ltlsynt:11	prioritized_arbiter_pb_1_pe_.ltl	"{""n"": 1}"	"{""R"": 1}"	"{""R"": 2, ""S"": 1}"	R	R	true	
+prioritized_arbiter_enc	6	6	ltlsynt:6	prioritized_arbiter_enc_pb_8_pe_.ltl	"{""n"": 8}"	"{""R"": 1}"	"{""R"": 9}"	R	R	true	
+prioritized_arbiter_unreal2	11	3	ltlsynt:11	prioritized_arbiter_unreal2_pb_2_pe_.ltl	"{""n"": 2}"	"{""R"": 1}"	"{""R"": 4, ""S"": 3}"	R	R	true	
+robot_grid	9	3	ltlsynt:9	robot_grid_pb_2_2_pe_.ltl	"{""xN"": 2, ""yN"": 2}"	"{""B"": 2}"	"{""B"": 7, ""R"": 1, ""S"": 1}"	B	R	true	
+round_robin_arbiter	8	4	gr1:8	round_robin_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	"{""R"": 2, ""S"": 4}"	"{""R"": 2, ""S"": 1}"	R	R	true	
+round_robin_arbiter_unreal1	50	21	gr1:50	round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	"{""n"": 2, ""u"": 1}"	"{""R"": 2, ""S"": 4}"	"{""R"": 2, ""S"": 2}"	R	R	true	
+round_robin_arbiter_unreal2	6	3	ltlsynt:6	round_robin_arbiter_unreal2_pb_2_pe_.ltl	"{""n"": 2}"	"{""R"": 2, ""S"": 4}"	"{""R"": 3, ""S"": 1}"	R	R	true	
+rw_arbiter	5	2	ltlsynt:5	rw_arbiter_pb_1_pe_.ltl	"{""n"": 1}"	{}	"{""R"": 4, ""S"": 6}"	-	R	true	
+simple_arbiter_enc	9	9	ltlsynt:9	simple_arbiter_enc_pb_8_pe_.ltl	"{""n"": 8}"	{}	"{""R"": 9}"	-	R	true	
+simple_arbiter_with_hints	7	4	ltlsynt:7	simple_arbiter_with_hints_pb_2_pe_.ltl	"{""n"": 2}"	{}	"{""B"": 2, ""R"": 2, ""S"": 1}"	-	R	true	
