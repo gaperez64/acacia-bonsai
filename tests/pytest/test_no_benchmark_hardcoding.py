@@ -421,7 +421,7 @@ def family_stem(filename: str) -> str:
     stem = Path(filename).stem
     stem = re.sub(r"_[0-9a-f]{8}$", "", stem, flags=re.I)
     stem = re.sub(r"_pb_\d+(?:_\d+)*_pe_$", "", stem)
-    stem = re.sub(r"(?:[_-]?\d+)+$", "", stem)
+    stem = re.sub(r"[_-]?\d+(?:[_-]\d+)*$", "", stem)
     stem = re.sub(r"\d+", "#", stem)
     return re.sub(r"[#_-]+", "_", stem).strip("_").lower()
 
