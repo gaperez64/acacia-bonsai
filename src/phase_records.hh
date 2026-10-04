@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
-#include <malloc.h>
 #include <signal.h>
 #include <cerrno>
 #include <climits>
@@ -14,6 +13,13 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+
+// mallinfo2 is glibc 2.33 and later. Elsewhere (macOS, manylinux_2_28 wheels)
+// records write "mallinfo2":null instead of inventing heap figures.
+#if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 33))
+#include <malloc.h>
+#define ACACIA_HAVE_MALLINFO2 1
+#endif
 
 namespace acacia {
   inline uint64_t phase_clock (clockid_t clock) noexcept {
@@ -161,7 +167,15 @@ namespace acacia {
     const char* dir = getenv ("ACACIA_PHASE_RECORDS");
     if (!dir || !*dir) return;
     int fds[2];
+#ifdef __linux__
     if (pipe2 (fds, O_CLOEXEC | O_NONBLOCK) != 0) return;
+#else
+    if (pipe (fds) != 0) return;
+    for (const int fd : fds) {
+      fcntl (fd, F_SETFD, FD_CLOEXEC);
+      fcntl (fd, F_SETFL, fcntl (fd, F_GETFL) | O_NONBLOCK);
+    }
+#endif
     const pid_t writer = fork ();
     if (writer == 0) {
       close (fds[1]);
@@ -207,21 +221,30 @@ namespace acacia {
     }
     rusage usage {};
     getrusage (RUSAGE_SELF, &usage);
+#ifdef ACACIA_HAVE_MALLINFO2
     const auto heap = mallinfo2 ();
+    const bool have_heap = true;
+    const phase_memory fresh {rss, usage.ru_maxrss, heap.arena, heap.hblkhd,
+                              heap.uordblks, heap.fordblks};
+#else
+    const bool have_heap = at_end != nullptr;
+    const phase_memory fresh {rss, usage.ru_maxrss, 0, 0, 0, 0};
+#endif
+    const phase_memory memory = at_end ? *at_end : fresh;
+    char heap_json[160] = "null";
+    if (have_heap)
+      std::snprintf (heap_json, sizeof heap_json,
+          "{\"arena\":%zu,\"hblkhd\":%zu,\"uordblks\":%zu,\"fordblks\":%zu}",
+          memory.arena, memory.hblkhd, memory.uordblks, memory.fordblks);
     char line[1024];
-    const phase_memory memory = at_end ? *at_end
-        : phase_memory {rss, usage.ru_maxrss, heap.arena, heap.hblkhd,
-                        heap.uordblks, heap.fordblks};
     const int n = std::snprintf (line, sizeof line,
         "{\"arm\":\"%s\",\"phase\":\"%s\",\"wall_ns\":%llu,\"cpu_ns\":%llu,"
-        "\"rss_kb\":%ld,\"peak_rss_kb\":%ld,\"mallinfo2\":{\"arena\":%zu,"
-        "\"hblkhd\":%zu,\"uordblks\":%zu,\"fordblks\":%zu},"
+        "\"rss_kb\":%ld,\"peak_rss_kb\":%ld,\"mallinfo2\":%s,"
         "\"bdd_nodes\":%lld,\"bdd_cache\":%lld,\"work_count\":%llu,"
         "\"size_bytes\":%llu,\"monitor_count\":%llu,\"monitor_states\":%llu}\n",
         arm, phase, (unsigned long long) (wall - start.wall),
         (unsigned long long) (cpu - start.cpu), memory.rss_kb, memory.peak_rss_kb,
-        memory.arena, memory.hblkhd, memory.uordblks, memory.fordblks,
-        bdd_nodes, bdd_cache, work_count, size_bytes,
+        heap_json, bdd_nodes, bdd_cache, work_count, size_bytes,
         monitor_count, monitor_states);
     if (n <= 0 || size_t (n) >= sizeof line) {
       ++phase_record_process_state ().dropped;
