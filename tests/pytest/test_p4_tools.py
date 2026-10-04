@@ -443,6 +443,63 @@ def test_lifting_work_and_target_attribution(tmp_path):
     assert detail[0]["check_method"] == "lift_method_certificate"
 
 
+def test_native_real_lift_routes_checks_declines_and_tsv(tmp_path):
+    arm = "both:gr1-real-lift:oxidd"
+    r_row = observation("r", "REALIZABLE")
+    r_row["winner"] = "lifting"
+    direct_row = observation("direct", "UNREALIZABLE")
+    decline_row = observation("decline", "TIMEOUT")
+    phase_dir(tmp_path, r_row, [
+        {"arm": arm, "phase": "trusted_prepare", "wall_ns": 20},
+        {"arm": arm, "phase": "combined_call", "wall_ns": 100},
+        {"arm": arm, "phase": "route_R"},
+        {"arm": arm, "phase": "seed_REAL", "work_count": 2},
+        {"arm": arm, "phase": "seed_cache", "work_count": 9},
+        {"arm": arm, "phase": "target_reductions", "work_count": 1},
+        {"arm": arm, "phase": "final_checks", "work_count": 1},
+        {"arm": arm, "phase": "proof_binding"},
+        {"arm": arm, "phase": "record_summary", "dropped_records": 0},
+    ])
+    phase_dir(tmp_path, direct_row, [
+        {"arm": arm, "phase": "route_direct"},
+        {"arm": arm, "phase": "seed_none"},
+        {"arm": arm, "phase": "seed_cache", "work_count": 3},
+        {"arm": arm, "phase": "target_reductions", "work_count": 1},
+        {"arm": arm, "phase": "final_checks", "work_count": 2},
+        {"arm": arm, "phase": "proof_binding"},
+        {"arm": arm, "phase": "record_summary", "dropped_records": 0},
+    ])
+    phase_dir(tmp_path, decline_row, [
+        {"arm": arm, "phase": "route_direct"},
+        {"arm": arm, "phase": "seed_cache", "work_count": 4},
+        {"arm": arm, "phase": "target_reductions", "work_count": 1},
+        {"arm": arm, "phase": "final_checks", "work_count": 0},
+        {"arm": arm, "phase": "decline_seed_window"},
+        {"arm": arm, "phase": "record_summary", "dropped_records": 0},
+    ])
+    summary, detail = lifting.report([r_row, direct_row, decline_row], tmp_path, arm)
+    assert summary["seed_work"] == 16
+    assert summary["seed_solves"] == 2
+    assert summary["seed_probes"] is None
+    assert summary["target_work"] == 6
+    assert summary["target_checks"] == 3
+    assert summary["routes"] == {"R": 1, "direct": 2}
+    assert summary["route_solves"] == {"R": 1, "direct": 1}
+    assert summary["declines"] == {"decline_seed_window": 1}
+    assert summary["unclassified_phase_work"] == 0
+    assert summary["target_solve_attributed"] == ["r"]
+    assert detail[1]["route_solve"] and not detail[1]["target_solve_attributed"]
+    assert not detail[2]["target_checked"]
+    lifting.write_report(summary, detail, tmp_path / "report")
+    with (tmp_path / "report/lifting.tsv").open(newline="") as stream:
+        tsv = list(csv.DictReader(stream, delimiter="\t"))
+    assert len(tsv) == 3
+    assert tsv[0]["arm"] == arm and tsv[0]["seed_work"] == "9"
+    assert tsv[0]["target_work"] == "2"
+    assert json.loads(tsv[0]["phase_work"])["seed_REAL"] == 2
+    assert tsv[2]["declines"] == "decline_seed_window"
+
+
 def test_reporting_requires_explicit_provenance(tmp_path):
     native = [{"series": {"kind": "arm", "tool": "acacia"},
                "verification": "campaign specification and input bytes verified"}]

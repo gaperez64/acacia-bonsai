@@ -30,12 +30,18 @@ SEED_PHASES = frozenset({"lift_seed_window", "lift_seed_solve", "lift_schema_lea
                          "lift_internal_check"})
 TARGET_PHASES = frozenset({"lift_source", "lift_target_reduce", "game_rereduction",
                            "proof_binding", "outer_check"})
+NATIVE_ARM = "both:gr1-real-lift:oxidd"
+# seed_cache is one aggregate counter; seed_REAL is a subset of it, so its
+# work must not be added to the seed total a second time.
+NATIVE_SEED_PHASES = frozenset({"seed_cache"})
+NATIVE_TARGET_PHASES = frozenset({"trusted_prepare", "target_reductions",
+                                  "final_checks", "proof_binding"})
 SOLVED = frozenset({"REALIZABLE", "UNREALIZABLE"})
 
 
 def summarize_row(row, records, arm, *, single_arm_leg=False, seed_phases=SEED_PHASES,
                   target_phases=TARGET_PHASES, method_prefix="lift_method_",
-                  outer_check_phase="outer_check"):
+                  outer_check_phase="outer_check", native_arm=False):
     processes = records.arm_processes(arm)
     events = [event for process in processes for event in process.events]
     phases = collections.defaultdict(list)
@@ -47,7 +53,7 @@ def summarize_row(row, records, arm, *, single_arm_leg=False, seed_phases=SEED_P
         phase = str(event.get("phase", ""))
         if phase == "budget_decline":
             declines.append(f"budget_decline:{event.get('stage', '')}")
-        elif "_decline_" in phase:
+        elif phase.startswith("decline_") or "_decline_" in phase:
             declines.append(phase)
 
     def totals(names):
@@ -58,33 +64,53 @@ def summarize_row(row, records, arm, *, single_arm_leg=False, seed_phases=SEED_P
             "work": sum(int(event.get("work_count", 0)) for event in relevant),
         }
 
-    method = ",".join(sorted(method_phases))
-    target_checked = bool(phases[outer_check_phase])
+    target_checks = sum(int(event.get("work_count", 0))
+                        for event in phases[outer_check_phase])
+    target_checked = target_checks > 0 if native_arm else bool(phases[outer_check_phase])
+    method = (f"native {outer_check_phase} (proof method unrecorded)" if native_arm and
+              target_checked else ",".join(sorted(method_phases)))
+    route = next((name.removeprefix("route_") for name in ("route_R", "route_direct", "route_U")
+                  if phases[name]), "") if native_arm else ""
+    records_complete = (bool(processes) and records.dropped == 0 and
+                        all(process.finished for process in processes))
     basis = ("single-arm leg" if single_arm_leg else
              "route record" if row.get("winner") == "lifting" else "unattributed race")
     attributed = (row["result"] in SOLVED and bool(method) and target_checked and
+                  (not native_arm or bool(phases["proof_binding"])) and
                   basis != "unattributed race")
     return {
         "instance": row["instance"], "outcome": row["result"],
         "provenance": row.get("provenance", "measured"),
         "arm": arm, "record_processes": len(processes),
-        "records_complete": bool(processes) and records.dropped == 0 and
-        all(process.finished for process in processes),
+        "records_complete": records_complete,
         "seed": totals(seed_phases), "target": totals(target_phases),
         "phase_work": {name: sum(int(event.get("work_count", 0)) for event in values)
                        for name, values in sorted(phases.items())},
-        "seed_probes": sum(int(event.get("work_count", 0)) for name in seed_phases
-                           if "seed_window" in name for event in phases[name]),
-        "seed_solves": sum(len(phases[name]) for name in seed_phases if "seed_solve" in name),
+        "seed_probes": (None if native_arm else
+                        sum(int(event.get("work_count", 0)) for name in seed_phases
+                            if "seed_window" in name for event in phases[name])),
+        "seed_solves": (sum(int(event.get("work_count", 0)) for name in
+                            ("seed_REAL", "seed_UNREAL", "seed_mixed")
+                            for event in phases[name]) if native_arm else
+                        sum(len(phases[name]) for name in seed_phases if "seed_solve" in name)),
         "check_method": method, "declines": declines,
+        "route": route,
+        "route_solve": (native_arm and row["result"] in SOLVED and bool(route) and
+                        records_complete and
+                        target_checked and bool(phases["proof_binding"])),
+        "target_checks": target_checks,
         "target_checked": target_checked, "target_solve_attributed": attributed,
         "attribution_basis": basis,
     }
 
 
 def report(rows, records_root, arm, *, single_arm_leg=False, short_records_root=None,
-           seed_phases=SEED_PHASES, target_phases=TARGET_PHASES,
-           method_prefix="lift_method_", outer_check_phase="outer_check"):
+           seed_phases=None, target_phases=None,
+           method_prefix="lift_method_", outer_check_phase=None):
+    native_arm = arm == NATIVE_ARM
+    seed_phases = seed_phases or (NATIVE_SEED_PHASES if native_arm else SEED_PHASES)
+    target_phases = target_phases or (NATIVE_TARGET_PHASES if native_arm else TARGET_PHASES)
+    outer_check_phase = outer_check_phase or ("final_checks" if native_arm else "outer_check")
     if set(seed_phases) & set(target_phases):
         raise ValueError("seed and target phase groups must be disjoint")
     seen = set()
@@ -108,7 +134,7 @@ def report(rows, records_root, arm, *, single_arm_leg=False, short_records_root=
         detail.append(summarize_row(row, records, arm, single_arm_leg=single_arm_leg,
                                     seed_phases=seed_phases, target_phases=target_phases,
                                     method_prefix=method_prefix,
-                                    outer_check_phase=outer_check_phase))
+                                    outer_check_phase=outer_check_phase, native_arm=native_arm))
     methods = collections.Counter(item["check_method"] or "none" for item in detail)
     declines = collections.Counter(kind for item in detail for kind in item["declines"])
     attributed = [item["instance"] for item in detail if item["target_solve_attributed"]]
@@ -119,11 +145,17 @@ def report(rows, records_root, arm, *, single_arm_leg=False, short_records_root=
         "seed_wall_s": sum(item["seed"]["wall_ns"] for item in detail) / 1e9,
         "seed_cpu_s": sum(item["seed"]["cpu_ns"] for item in detail) / 1e9,
         "seed_work": sum(item["seed"]["work"] for item in detail),
-        "seed_probes": sum(item["seed_probes"] for item in detail),
+        "seed_probes": (None if native_arm else
+                        sum(item["seed_probes"] for item in detail)),
         "seed_solves": sum(item["seed_solves"] for item in detail),
         "target_wall_s": sum(item["target"]["wall_ns"] for item in detail) / 1e9,
         "target_cpu_s": sum(item["target"]["cpu_ns"] for item in detail) / 1e9,
         "target_work": sum(item["target"]["work"] for item in detail),
+        "target_checks": sum(item["target_checks"] for item in detail),
+        "routes": dict(sorted(collections.Counter(item["route"] for item in detail
+                                                   if item["route"]).items())),
+        "route_solves": dict(sorted(collections.Counter(item["route"] for item in detail
+                                                         if item["route_solve"]).items())),
         "check_methods": dict(sorted(methods.items())),
         "declines": dict(sorted(declines.items())),
         "target_solve_attributed": attributed,
@@ -133,7 +165,8 @@ def report(rows, records_root, arm, *, single_arm_leg=False, short_records_root=
         "derived_rows": sum(item["provenance"].startswith("recycled-") for item in detail),
         "unclassified_phase_work": sum(
             work for item in detail for phase, work in item["phase_work"].items()
-            if phase not in seed_phases and phase not in target_phases),
+            if phase not in seed_phases and phase not in target_phases and
+            (not native_arm or phase not in {"seed_REAL", "seed_UNREAL", "seed_mixed"})),
     }
     return summary, detail
 
@@ -142,36 +175,54 @@ def write_report(summary, detail, out):
     out.mkdir(parents=True, exist_ok=True)
     (out / "lifting.json").write_text(json.dumps({"summary": summary, "rows": detail},
                                                    indent=2, sort_keys=True) + "\n")
-    columns = ("instance", "outcome", "provenance", "record_processes",
-               "records_complete", "seed_probes", "seed_solves", "seed_wall_ns",
-               "seed_work", "target_wall_ns", "target_work", "check_method",
+    columns = ("instance", "outcome", "provenance", "arm", "record_processes",
+               "records_complete", "route", "route_solve", "seed_probes", "seed_solves",
+               "seed_wall_ns", "seed_cpu_ns", "seed_work", "target_wall_ns",
+               "target_cpu_ns", "target_work", "target_checks", "check_method",
                "declines", "target_checked", "target_solve_attributed",
-               "attribution_basis")
+               "attribution_basis", "phase_work")
     with (out / "lifting.tsv").open("w", newline="") as stream:
         writer = csv.DictWriter(stream, columns, delimiter="\t", lineterminator="\n")
         writer.writeheader()
         for item in detail:
-            writer.writerow({**item, "seed_wall_ns": item["seed"]["wall_ns"],
-                             "seed_work": item["seed"]["work"],
-                             "target_wall_ns": item["target"]["wall_ns"],
-                             "target_work": item["target"]["work"],
-                             "declines": ";".join(item["declines"])})
+            flat = {**item, "seed_wall_ns": item["seed"]["wall_ns"],
+                    "seed_cpu_ns": item["seed"]["cpu_ns"],
+                    "seed_work": item["seed"]["work"],
+                    "target_wall_ns": item["target"]["wall_ns"],
+                    "target_cpu_ns": item["target"]["cpu_ns"],
+                    "target_work": item["target"]["work"],
+                    "declines": ";".join(item["declines"]),
+                    "phase_work": json.dumps(item["phase_work"], sort_keys=True)}
+            writer.writerow({name: flat[name] for name in columns})
     lines = [f"# Lifting arm: {summary['arm']}", "",
              f"Rows: {summary['rows']} ({summary['derived_rows']} derived); "
              f"complete arm records: {summary['rows_with_complete_arm_records']}.", "",
              f"Seed: {summary['seed_wall_s']:.6f} wall s, {summary['seed_cpu_s']:.6f} "
-             f"CPU s, {summary['seed_work']} work units, {summary['seed_probes']} probes, "
-             f"{summary['seed_solves']} solves.",
+             f"CPU s, {summary['seed_work']} work units, "
+             + ("probe count unavailable, " if summary["seed_probes"] is None else
+                f"{summary['seed_probes']} probes, ")
+             + f"{summary['seed_solves']} solves.",
              f"Target: {summary['target_wall_s']:.6f} wall s, "
              f"{summary['target_cpu_s']:.6f} CPU s, {summary['target_work']} work units.",
              f"Unclassified phase work: {summary['unclassified_phase_work']} work units "
              "(inspect lifting.json and supply phase groups if needed).",
              f"Checked target solves attributed: {len(summary['target_solve_attributed'])}.",
              f"Unattributed solved rows: {len(summary['unattributed_solves'])}.", "",
+             f"Target checks: {summary['target_checks']}.",
+             "## Routes", ""]
+    lines += [f"- {name}: {count} records, {summary['route_solves'].get(name, 0)} "
+              "completed checked arm solves" for name, count in summary["routes"].items()]
+    lines += ["",
              "## Check methods", ""]
     lines += [f"- {name}: {count}" for name, count in summary["check_methods"].items()]
     lines += ["", "## Declines", ""]
     lines += [f"- {name}: {count}" for name, count in summary["declines"].items()]
+    if summary["arm"] == NATIVE_ARM:
+        lines += ["", "The native seed_cache work count combines probes, reductions, solves, "
+                  "checks, and cache hits; individual probe counts and the proof method "
+                  "are not recorded. Seed and target phase times exclude combined_call, "
+                  "which spans both. A completed checked arm solve does not establish "
+                  "which arm won the portfolio race."]
     lines += ["", "Work units are the phase-record work field summed within each group; "
               "the per-instance JSON retains every count. Missing or interrupted records "
               "are disclosed, not imputed. A race solve is attributed to this arm only "
@@ -192,7 +243,7 @@ def main(argv=None):
     parser.add_argument("--target-phase", action="append",
                         help="override the default target phase group; repeatable")
     parser.add_argument("--method-prefix", default="lift_method_")
-    parser.add_argument("--outer-check-phase", default="outer_check")
+    parser.add_argument("--outer-check-phase")
     parser.add_argument("--single-arm-leg", action="store_true",
                         help="the TSV was measured with only this arm enabled")
     parser.add_argument("--out", required=True, type=pathlib.Path)
@@ -202,8 +253,8 @@ def main(argv=None):
         summary, detail = report(rows, args.records, args.arm,
                                  single_arm_leg=args.single_arm_leg,
                                  short_records_root=args.short_records,
-                                 seed_phases=args.seed_phase or SEED_PHASES,
-                                 target_phases=args.target_phase or TARGET_PHASES,
+                                 seed_phases=args.seed_phase,
+                                 target_phases=args.target_phase,
                                  method_prefix=args.method_prefix,
                                  outer_check_phase=args.outer_check_phase)
         write_report(summary, detail, args.out)
