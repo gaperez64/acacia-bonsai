@@ -194,6 +194,9 @@ def test_recycle_plan_sample_validate_merge_and_mismatch(tmp_path):
             for row in merged] == [("a", "recycled-17s", "17", "1"),
                                   ("b", "measured-60s", "60", "30")]
     assert all(row["binary_sha256"] == "a" * 64 and row["source_run_sha256"] for row in merged)
+    provenance = json.loads((tmp_path / "derived-provenance.json").read_text())
+    assert provenance["validation_mode"] == "phase-records"
+    assert provenance["row_validation_modes"] == {"a": "phase-records"}
     long_phase = recycle.phase_record_dir(long_records, "candidate", "60", "a", "0") / \
         "1.jsonl"
     with long_phase.open("a") as stream:
@@ -210,6 +213,106 @@ def test_recycle_plan_sample_validate_merge_and_mismatch(tmp_path):
     with pytest.raises(recycle.RecycleError, match="not validated"):
         recycle.merge(argparse.Namespace(plan=plan, long=measured, validation=verdict,
                                          output=tmp_path / "invalid.tsv"))
+
+
+def outcome_only_inputs(tmp_path):
+    short_row = observation("a", "REALIZABLE")
+    short = tmp_path / "short.tsv"
+    sample_run = tmp_path / "sample.tsv"
+    write_observations(short, [short_row])
+    write_observations(sample_run, [observation("a", "REALIZABLE", cap=60)])
+    records = tmp_path / "short-records"
+    phase_dir(records, short_row, [
+        {"arm": "synthetic", "phase": "lift_method_x", "work_count": 3},
+        {"arm": "synthetic", "phase": "record_summary", "dropped_records": 0}])
+    recycle.plan(argparse.Namespace(short=short, list=None, long_cap=60,
+                                    deadline_margin=1, deadline_stage_regex="deadline",
+                                    memory_max="8G", memory_swap_max="0", records=records,
+                                    deterministic_error_list=None, out_prefix=tmp_path / "plan"))
+    plan = tmp_path / "plan-plan.json"
+    recycle.sample(argparse.Namespace(plan=plan, seed=1, size=1,
+                                      out_prefix=tmp_path / "draw"))
+    return plan, tmp_path / "draw-sample.json", sample_run
+
+
+def test_outcome_only_validation_and_merge_skip_phase_records(tmp_path, monkeypatch):
+    plan, disclosure, sample_run = outcome_only_inputs(tmp_path)
+    reason = "legacy race arms have no shared completed records"
+    args = argparse.Namespace(plan=plan, sample=disclosure, long=sample_run,
+                              long_records=None, outcome_only=True, reason=reason,
+                              out=tmp_path / "verdict.json")
+
+    def no_phase_reads(*_args, **_kwargs):
+        raise AssertionError("outcome-only validation read phase records")
+
+    monkeypatch.setattr(recycle, "load_phase_records", no_phase_reads)
+    monkeypatch.setattr(recycle, "phase_records_digest", no_phase_reads)
+    assert recycle.validate(args) == 0
+    verdict = json.loads(args.out.read_text())
+    assert verdict["verification"] == "outcome-only"
+    assert verdict["reason"] == reason
+    assert "Per-arm decisions, decline stages and work were not compared" in verdict["limitation"]
+    assert reason in verdict["limitation"]
+    assert verdict["long_records"] == ""
+    assert verdict["long_records_sha256"] == ""
+
+    empty_long = tmp_path / "plan-empty-long.tsv"
+    derived = tmp_path / "derived.tsv"
+    assert recycle.merge(argparse.Namespace(plan=plan, long=empty_long,
+                                           validation=args.out, output=derived)) == 0
+    assert coverage.load_output(derived)[0]["provenance"] == "recycled-17s"
+    provenance = json.loads((tmp_path / "derived-provenance.json").read_text())
+    assert provenance["validation_mode"] == "outcome-only"
+    assert provenance["row_validation_modes"] == {"a": "outcome-only"}
+    assert provenance["limitation"] == verdict["limitation"]
+    forged = {**verdict, "reason": "unreviewed exception"}
+    args.out.write_text(json.dumps(forged))
+    with pytest.raises(recycle.RecycleError, match="verdict differs from replay"):
+        recycle.merge(argparse.Namespace(plan=plan, long=empty_long,
+                                         validation=args.out,
+                                         output=tmp_path / "forged.tsv"))
+
+
+@pytest.mark.parametrize("field,value", [
+    ("result", "UNREALIZABLE"),
+    ("exit_code", "1"),
+    ("timed_out", "true"),
+    ("resource_reason", "signal:9"),
+])
+def test_outcome_only_rejects_each_outcome_mismatch(tmp_path, field, value):
+    plan, disclosure, sample_run = outcome_only_inputs(tmp_path)
+    changed = observation("a", "REALIZABLE", cap=60)
+    changed[field] = value
+    write_observations(sample_run, [changed])
+    verdict = tmp_path / "verdict.json"
+    assert recycle.validate(argparse.Namespace(
+        plan=plan, sample=disclosure, long=sample_run, long_records=None,
+        outcome_only=True, reason="phase records unavailable", out=verdict)) == 1
+    failures = json.loads(verdict.read_text())["failures"]
+    assert any(failure["kind"] == "outcome" and field in failure["message"]
+               for failure in failures)
+
+
+def test_outcome_only_requires_reason_and_refuses_long_records(tmp_path):
+    plan, disclosure, sample_run = outcome_only_inputs(tmp_path)
+    args = argparse.Namespace(plan=plan, sample=disclosure, long=sample_run,
+                              long_records=None, outcome_only=True, reason=None,
+                              out=tmp_path / "verdict.json")
+    with pytest.raises(recycle.RecycleError, match="requires a nonempty --reason"):
+        recycle.validate(args)
+    args.reason = "  "
+    with pytest.raises(recycle.RecycleError, match="requires a nonempty --reason"):
+        recycle.validate(args)
+    args.reason = "no per-arm records"
+    args.long_records = tmp_path / "long-records"
+    with pytest.raises(recycle.RecycleError, match="cannot be combined"):
+        recycle.validate(args)
+    assert not args.out.exists()
+    parsed = recycle.build_parser().parse_args([
+        "validate", "--plan", str(plan), "--sample", str(disclosure),
+        "--long", str(sample_run), "--out", str(args.out),
+        "--outcome-only", "--reason", args.reason])
+    assert parsed.outcome_only and parsed.reason == args.reason
 
 
 def test_sampler_rejects_changed_work_count_on_same_outcome(tmp_path):

@@ -46,10 +46,12 @@ cannot have been stopped by it.  Stage names are still checked, so a future
 explicit deadline stage is honoured.  Rows ending just under the cap for other
 reasons are rerun; that errs towards measuring.
 
-Validation compares outcome, and per arm every non-volatile phase-record
-field (decision, decline stage, work counts), with
-check-cap-independence.py.  Any mismatch invalidates recycling for the whole
-series, which must then be rerun in full at the long cap.
+Validation normally compares outcome, and per arm every non-volatile
+phase-record field (decision, decline stage, work counts), with
+check-cap-independence.py.  Explicit --outcome-only validation compares only
+outcome and failure class when per-arm records are unavailable.  Any mismatch
+invalidates recycling for the whole series, which must then be rerun in full
+at the long cap.
 """
 
 from __future__ import annotations
@@ -427,8 +429,12 @@ def plan(args):
     return 0
 
 
-def load_plan(path):
-    """Read a plan and prove its inputs have not changed since it was made."""
+def load_plan(path, *, check_records=True):
+    """Read a plan and prove its inputs have not changed since it was made.
+
+    Outcome-only replay trusts the frozen classification and skips phase-record
+    checks; its sampled outcomes are checked separately by validate.
+    """
     manifest = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
     if manifest.get("kind") != "recycle-plan":
         raise RecycleError(f"{path}: not a recycle plan")
@@ -444,7 +450,7 @@ def load_plan(path):
     if manifest.get("deterministic_error_list") and sha256_file(
             manifest["deterministic_error_list"]) != manifest["deterministic_error_list_sha256"]:
         raise RecycleError("deterministic error list changed since the plan was made")
-    if manifest.get("records") and phase_records_digest(
+    if check_records and manifest.get("records") and phase_records_digest(
             pathlib.Path(manifest["records"]),
             load_leg(manifest["short_run"]).values()) != manifest["records_sha256"]:
         raise RecycleError("phase records changed since the plan was made")
@@ -481,13 +487,18 @@ def load_plan(path):
     counts = {}
     for item in classified:
         row = short[item["instance"]]
-        records = phase_record_dir(manifest["records"], row["solver_label"], row["cap_s"],
-                                   row["instance"], row["run_index"]) \
-            if manifest.get("records") else None
-        kind, reason, stages = classify_plan_row(
-            row, cap=manifest["short_cap_s"], margin=manifest["deadline_margin_s"],
-            records=records, stage_pattern=pattern, deterministic_errors=deterministic,
-            leg_kind=manifest["leg_kind"], arms=manifest["arms"])
+        if check_records:
+            records = phase_record_dir(manifest["records"], row["solver_label"], row["cap_s"],
+                                       row["instance"], row["run_index"]) \
+                if manifest.get("records") else None
+            kind, reason, stages = classify_plan_row(
+                row, cap=manifest["short_cap_s"], margin=manifest["deadline_margin_s"],
+                records=records, stage_pattern=pattern, deterministic_errors=deterministic,
+                leg_kind=manifest["leg_kind"], arms=manifest["arms"])
+        else:
+            kind, reason, stages = item["class"], item["reason"], item["decline_stages"]
+            if kind not in {"recycle", "rerun"} or not reason:
+                raise RecycleError(f"{path}: invalid classification for {row['instance']}")
         expected = {"instance": row["instance"], "class": kind, "reason": reason,
                     "result": row["result"], "seconds": row["seconds"],
                     "exit_code": row["exit_code"], "resource_reason": row["resource_reason"],
@@ -583,7 +594,17 @@ def check_same_treatment(manifest, long_rows, path):
 
 
 def evaluate_validation(args):
-    manifest = load_plan(args.plan)
+    outcome_only = getattr(args, "outcome_only", False)
+    reason = getattr(args, "reason", None)
+    if outcome_only:
+        if not isinstance(reason, str) or not reason.strip():
+            raise RecycleError("--outcome-only requires a nonempty --reason")
+        if args.long_records is not None:
+            raise RecycleError("--outcome-only cannot be combined with --long-records")
+        reason = reason.strip()
+    elif reason is not None:
+        raise RecycleError("--reason requires --outcome-only")
+    manifest = load_plan(args.plan, check_records=not outcome_only)
     disclosure = json.loads(pathlib.Path(args.sample).read_text(encoding="utf-8"))
     if disclosure.get("plan_sha256") != manifest["plan_sha256"]:
         raise RecycleError(f"{args.sample}: drawn from a different plan")
@@ -613,11 +634,12 @@ def evaluate_validation(args):
     long = load_leg(args.long, cap=manifest["long_cap_s"])
     check_same_treatment(manifest, long, args.long)
     native = manifest["leg_kind"] == "native"
-    if native and not manifest["records"]:
+    if not outcome_only and native and not manifest["records"]:
         raise RecycleError("native validation requires short phase records; replan with --records")
-    if (native or manifest["records"]) and not args.long_records:
+    if not outcome_only and (native or manifest["records"]) and not args.long_records:
         raise RecycleError("native validation requires --long-records")
-    short_records = pathlib.Path(manifest["records"]) if manifest["records"] else None
+    short_records = (pathlib.Path(manifest["records"])
+                     if manifest["records"] and not outcome_only else None)
     missing = [name for name in chosen if name not in long]
     extra = [name for name in long if name not in chosen]
     sampled_short = {name: short[name] for name in chosen}
@@ -626,7 +648,7 @@ def evaluate_validation(args):
         sampled_short, sampled_long, short_records,
         args.long_records if short_records is not None else None,
         arms=None, max_long_seconds=None, subset=True, allow_race_truncation=True)
-    if native:
+    if native and not outcome_only:
         for name in chosen:
             if name not in sampled_long:
                 continue
@@ -657,7 +679,7 @@ def evaluate_validation(args):
                   "message": f"{name}: long-cap row is outside the disclosed sample"}
                  for name in extra]
     arms = {failure["arm"] for failure in failures if failure["arm"]}
-    if any(failure["arm"] is None for failure in failures):
+    if not outcome_only and any(failure["arm"] is None for failure in failures):
         arms.update(manifest["arms"] or [manifest["series"]])
     arms = sorted(arms)
     verdict = {
@@ -671,8 +693,13 @@ def evaluate_validation(args):
         if args.long_records else "",
         "checked": checked, "sample_size": len(chosen),
         "failures": failures, "notes": notes, "mismatched_arms": arms,
-        "verification": "sample and phase records replayed; solver outcomes unverified",
+        "verification": ("outcome-only" if outcome_only else
+                         "sample and phase records replayed; solver outcomes unverified"),
     }
+    if outcome_only:
+        verdict["reason"] = reason
+        verdict["limitation"] = (
+            "Per-arm decisions, decline stages and work were not compared: " + reason)
     return verdict, disclosure
 
 
@@ -697,15 +724,16 @@ def validate(args):
 
 
 def merge(args):
-    manifest = load_plan(args.plan)
+    verdict = (json.loads(pathlib.Path(args.validation).read_text(encoding="utf-8"))
+               if args.validation is not None else None)
+    outcome_only = verdict is not None and verdict.get("verification") == "outcome-only"
+    manifest = load_plan(args.plan, check_records=not outcome_only)
     rows = read_tsv(manifest["classification"])
     expected_reruns = {entry["instance"] for entry in rows if entry["class"] == "rerun"}
     recycled_count = len(rows) - len(expected_reruns)
-    verdict = None
     if recycled_count:
         if args.validation is None:
             raise RecycleError("a validation verdict is required when rows are recycled")
-        verdict = json.loads(pathlib.Path(args.validation).read_text(encoding="utf-8"))
         if verdict.get("kind") != "recycle-validation" or verdict.get("status") != "pass":
             raise RecycleError(f"{args.validation}: recycling was not validated; "
                                "the series needs a full long-cap leg")
@@ -714,7 +742,7 @@ def merge(args):
         # The sample and production reruns are intentionally disjoint runs.
         if sha256_file(verdict["long_run"]) != verdict["long_run_sha256"]:
             raise RecycleError(f"{verdict['long_run']}: validation sample changed")
-        if manifest["leg_kind"] == "native":
+        if manifest["leg_kind"] == "native" and not outcome_only:
             if not verdict.get("long_records") or not verdict.get("long_records_sha256"):
                 raise RecycleError(f"{args.validation}: missing native validation records")
             if phase_records_digest(pathlib.Path(verdict["long_records"]),
@@ -729,7 +757,8 @@ def merge(args):
             plan=args.plan, sample=pathlib.Path(verdict["sample"]),
             long=pathlib.Path(verdict["long_run"]),
             long_records=pathlib.Path(verdict["long_records"])
-            if verdict.get("long_records") else None))
+            if verdict.get("long_records") else None,
+            outcome_only=outcome_only, reason=verdict.get("reason")))
         if replay != verdict:
             raise RecycleError(f"{args.validation}: validation verdict differs from replay")
     elif args.validation is not None:
@@ -777,6 +806,7 @@ def merge(args):
                                      [row["instance"] for row in derived], derived,
                                      manifest["long_cap_s"])
     recycled = sum(row["provenance"].startswith("recycled") for row in derived)
+    validation_mode = ("outcome-only" if outcome_only else "phase-records") if verdict else ""
     statement = (f"derived {manifest['long_cap_s']} s series: {recycled} rows recycled from "
                  f"the {manifest['short_cap_s']} s run, {len(derived) - recycled} measured at "
                  f"{manifest['long_cap_s']} s; not a single {manifest['long_cap_s']} s run")
@@ -784,6 +814,12 @@ def merge(args):
         "kind": "recycle-merge", "statement": statement, "series": manifest["series"],
         "plan_sha256": manifest["plan_sha256"],
         "validation_sha256": sha256_file(args.validation) if args.validation else "",
+        "validation_mode": validation_mode,
+        "limitation": verdict.get("limitation", "") if verdict else "",
+        "row_validation_modes": {
+            row["instance"]: validation_mode for row in derived
+            if row["provenance"].startswith("recycled-")
+        },
         "sources": sources, "rows": len(derived), "recycled_rows": recycled,
         "measured_rows": len(derived) - recycled,
         "verification": "source rows and validation replayed; solver outcomes unverified",
@@ -833,6 +869,10 @@ def build_parser():
     p.add_argument("--sample", required=True, type=pathlib.Path, help="the -sample.json file")
     p.add_argument("--long", required=True, type=pathlib.Path, help="long-cap coverage TSV")
     p.add_argument("--long-records", type=pathlib.Path)
+    p.add_argument("--outcome-only", action="store_true",
+                   help="compare sampled outcomes and failure classes without phase records")
+    p.add_argument("--reason", help="why per-arm validation is unavailable; required with "
+                   "--outcome-only")
     p.add_argument("--out", required=True, type=pathlib.Path, help="verdict JSON")
     p.set_defaults(func=validate)
     p = sub.add_parser("merge", help="write the derived long-cap series")
