@@ -36,10 +36,19 @@ namespace acacia {
 
   // One pipe packet is one atomic write, including its framing. The writer is
   // the only process that opens record paths. A full pipe only loses a sample.
+  // PIPE_BUF is 4096 on Linux but 512 on macOS, so the line shrinks to fit;
+  // a longer record is counted as dropped.
+  struct phase_packet_header {
+    pid_t pid;
+    uint16_t length;
+  };
+  inline constexpr size_t phase_line_max =
+      PIPE_BUF - sizeof (phase_packet_header) < 1024
+          ? PIPE_BUF - sizeof (phase_packet_header) : 1024;
   struct phase_packet {
     pid_t pid;
     uint16_t length;
-    char line[1024];
+    char line[phase_line_max];
   };
   static_assert (sizeof (phase_packet) <= PIPE_BUF);
   struct phase_record_state {
@@ -68,7 +77,11 @@ namespace acacia {
   }
   inline void phase_records_send (const char* line, size_t length) noexcept {
     auto& state = phase_record_process_state ();
-    if (!state.enabled || length > sizeof (phase_packet::line)) return;
+    if (!state.enabled) return;
+    if (length > sizeof (phase_packet::line)) {
+      ++state.dropped;
+      return;
+    }
     phase_packet packet {};
     packet.pid = getpid ();
     packet.length = static_cast<uint16_t> (length);
