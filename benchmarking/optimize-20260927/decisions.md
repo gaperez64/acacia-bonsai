@@ -789,3 +789,35 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   - the U test scripts carried the local run-marker protocol, writing to the checkout's
     parent directory; removed before #56 merged;
   - the native-U API tests were too slow for CI's -O0 job; shrunk.
+
+## 2026-10-04 — Gates and closing campaign admit the R-only default
+
+- **Final candidate:** `otf_sparse_formula_gr1_real_prepass` at `54032834`, binary
+  `2d29aa8c…`; S4 is master's `otf_sparse_formula` at `50384cf6`, binary
+  `2e10b4fe…`. The S4 prefix was checked against `p4close/s4-binary-sha256.txt`.
+- **Gates:** G0 and G1 pass; G2s fails its advisory profile threshold; G3 passes on
+  SYNTCOMP25 and SYNTCOMP26. The initial G4/G5 failure labels in `p4gates/REPORT.md`
+  were investigated: G4's 575 Ok, 0 Fail and 49 permitted timeouts meet the protocol;
+  corrected target-adapted G5 parity passes on 1,579 pairs with no opposite verdict or
+  frontend error. Its five conversion-check exceptions predate this candidate or reflect
+  plain versus adapted input; track the checker work in #211. Archive `opt20260927-p4gates`.
+- **Full close:** 1,524 measured 17 s rows per series, and derived 60 s views with seeded
+  64-row validation per series. All 320 sampled outcomes matched, but Acacia race
+  validation is outcome-only because legacy arms lack per-arm records (#210). At 60 s,
+  final solves 1,238, versus S4's 1,206 and E5's 1,228; paired +32/−0 and +10/−0.
+  At 17 s, final solves 1,205, versus S4's 1,177 and E5's 1,194; paired +31/−3
+  and +11/−0. The three S4-only solves finish close to the 17 s cap. The 17 s PAR-2
+  gains against S4 and E5 exceed the 12.1 s noise floor. Source: `p4close/REPORT.md`;
+  archive `opt20260927-p4close`.
+- **Memory:** the join's 8 GiB median for final and E5 uses only their recorded MEMOUT
+  peaks. Scoped probes show the shared robot-grid failure in S4 and legacy real arms
+  without the new native arm. #213 tracks the native portfolios' fixed cost (about 6 ms
+  median on easy instances, an eagerly initialized OxiDD cache); #214 tracks the
+  campaign's mostly empty memory columns.
+- **Decision:** ship the R-only pre-pass preset as the first `docker_default` member in
+  `b784b4c3`; `otf_sparse_formula` stays in the group as the non-native fallback. LTL
+  input and synthesis skip the native TLSF arm and use the other default arms.
+  `p4ship/REPORT.md` records the build and wrapper checks, and CI's shipped job built
+  OxiDD and passed on `b784b4c3`; the Docker image build is still unexercised. U remains unadmitted (#209)
+  after N4's 64-row tie and slower five answers; N6 supports the R-only arm. Archives
+  `opt20260927-p4n4` and `opt20260927-p4n6`. Keep #209–#214 as follow-ups.

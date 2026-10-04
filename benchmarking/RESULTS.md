@@ -5,6 +5,59 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-04 — P4 closing campaign and shipping default
+
+The 1,524-instance SYNTCOMP26 close measured all five series at 17 s and
+derived their 60 s views from validated recycled and rerun rows. The current
+first `docker_default` member is `otf_sparse_formula_gr1_real_prepass` after
+`b784b4c3`; `otf_sparse_formula` remains in the group. Resolve the live group
+through the configuration registry. The older three-way and E5 sections below
+record their status **before** this completed close. The full report, the
+joined rows, provenance, validation and the cactus plots are in archive
+`opt20260927-p4close`.
+
+The 60 s columns are **derived** (see below). Values are solved instances and
+PAR-2 totals in seconds.
+
+| Series | 60 s solved | 60 s PAR-2 (s) | 17 s solved | 17 s PAR-2 (s) |
+|---|---:|---:|---:|---:|
+| ltlsynt 2.16 | 1,286 | 29,758.035 | 1,265 | 9,302.164 |
+| Final candidate, 1234G-R | 1,238 | 36,118.463 | 1,205 | 11,652.535 |
+| E5 | 1,228 | 37,415.465 | 1,194 | 12,027.355 |
+| S4, master's four-arm default | 1,206 | 39,856.456 | 1,177 | 12,548.461 |
+| TACAS23 | 847 | 83,039.001 | 811 | 24,788.493 |
+
+Paired against the final candidate, final versus S4 is **+32/−0** solves and
+−3,737.993 s PAR-2 at derived 60 s, and **+31/−3** and −895.926 s at measured
+17 s. Final versus E5 is **+10/−0** and −1,297.002 s at 60 s, and **+11/−0**
+and −374.820 s at 17 s. The three 17 s S4-only solves finished near the cap.
+The 17 s PAR-2 differences exceed the measured 12.1 s SYNTCOMP26 noise floor.
+
+For the 60 s view, conclusive cap-independent 17 s rows were reused;
+TIMEOUT, UNKNOWN, ERROR and other unverifiable rows were rerun at 60 s. A seeded
+64-row validation per series matched all 320 outcomes. The three Acacia races
+could be validated only by outcome because legacy arms write no per-arm race
+records (#210). Acacia parsed TLSF inside the clock; ltlsynt and TACAS23 used
+SyFCo-converted pairs with conversion outside it, and seven conversion
+failures per legacy series counted unsolved. TACAS23 predates the fix for
+signal-killed workers appearing REALIZABLE, so its solved count is an upper
+bound. The gate investigation reclassified G4 as a pass with permitted
+timeouts and G5 as a pass with known conversion exceptions (#211).
+
+Native U lifting was **not admitted** (#209): on N4's 64 relevant rows it tied
+direct G with no paired gain, and its five answers were slower than direct G.
+Other sprint stops were lift policy-export changes and early owner release,
+the lift import memo, critical-picker scratch reuse, sparse backward vectors,
+backward rank reuse/SIMD, a global Spot acceptance-limit increase, and the
+equivariant representative path. The negative decisions and their measurements
+are in [decisions.md](optimize-20260927/decisions.md) and archives
+`opt20260927-p4n4`, `opt20260927-p4n6`, and `opt20260927-p4gates`.
+
+Frozen binaries: final `binary-FINAL-2d29aa8c` (revision `54032834`), S4
+`binary-S4-2e10b4fe` (revision `50384cf6`), E5 `binary-E5-65530fb4`, and
+TACAS23 `binary-TACAS23-v1-75fabd3c`. Follow-up work is tracked in issues
+#209–#214.
+
 ## Latest released three-way
 
 The v2.4.2 full 1,524-case SYNTCOMP26 comparison used a 17 s cap, sequential
