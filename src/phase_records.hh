@@ -67,6 +67,11 @@ namespace acacia {
       char route[24] = "unknown", stage[48] = "startup", reason[64] = "none";
       unsigned long long sequence = 0, dropped = 0;
       bool terminal = false, verified = false, stopped = false;
+      unsigned long long prepass = 0, declines = 0, stops = 0;
+      unsigned run_id = 0;
+      bool run_active = false, run_weakening = false;
+      phase_stamp run_start;
+      uint64_t deadline_ns = 0;
   };
   inline worker_record*& active_worker_record () noexcept {
     static worker_record* record = nullptr;
@@ -160,24 +165,63 @@ namespace acacia {
       snprintf (outcome, sizeof outcome, "\"exit_code\":%d,\"signal\":%d,", exit_code, signal);
     char escaped_reason[384];
     quote (reason, escaped_reason, sizeof escaped_reason);
+    char context[96] = "";
+    if (record.prepass)
+      snprintf (context, sizeof context, "\"prepass\":%llu,\"run_id\":%u,", record.prepass,
+                record.run_id);
     char line[1024];
-    const int n =
-        snprintf (line, sizeof line,
-                  "{\"event\":\"%s\",\"worker\":%u,\"worker_pid\":%ld,\"seq\":%llu,"
-                  "\"requested_backend\":\"%s\",\"effective_backend\":\"%s\","
-                  "\"original_polarity\":\"%s\",\"proof_polarity\":\"%s\","
-                  "\"route\":\"%s\",\"stage\":\"%s\",\"reason\":\"%s\","
-                  "%s\"mono_ns\":%llu,"
-                  "\"dropped_records\":%llu,\"telemetry\":\"%s\"}\n",
-                  event, record.index, long (record.pid), record.sequence,
-                  record.requested_backend, record.effective_backend, record.original_polarity,
-                  record.proof_polarity, record.route, record.stage, escaped_reason, outcome,
-                  (unsigned long long) phase_clock (CLOCK_MONOTONIC), record.dropped, telemetry);
+    const int n = snprintf (
+        line, sizeof line,
+        "{\"event\":\"%s\",\"worker\":%u,\"worker_pid\":%ld,\"seq\":%llu,"
+        "\"requested_backend\":\"%s\",\"effective_backend\":\"%s\","
+        "\"original_polarity\":\"%s\",\"proof_polarity\":\"%s\","
+        "\"route\":\"%s\",\"stage\":\"%s\",\"reason\":\"%s\","
+        "%s%s\"mono_ns\":%llu,"
+        "\"dropped_records\":%llu,\"telemetry\":\"%s\"}\n",
+        event, record.index, long (record.pid), record.sequence, record.requested_backend,
+        record.effective_backend, record.original_polarity, record.proof_polarity, record.route,
+        record.stage, escaped_reason, outcome, context,
+        (unsigned long long) phase_clock (CLOCK_MONOTONIC), record.dropped, telemetry);
     if (n > 0 && size_t (n) < sizeof line)
       phase_records_send (line, size_t (n));
     else
       phase_records_drop ();
   }
+  inline void weakening_event (worker_record& record, const char* event,
+                               const char* fields) noexcept {
+    if (!phase_records_enabled ())
+      return;
+    char line[1024];
+    const int n =
+        snprintf (line, sizeof line,
+                  "{\"event\":\"%s\",\"worker_pid\":%ld,\"seq\":%llu,\"prepass\":%llu,"
+                  "\"run_id\":%u,\"mono_ns\":%llu,\"dropped_records\":%llu,%s}\n",
+                  event, long (record.pid), ++record.sequence, record.prepass, record.run_id,
+                  (unsigned long long) phase_clock (CLOCK_MONOTONIC), record.dropped, fields);
+    if (n > 0 && size_t (n) < sizeof line)
+      phase_records_send (line, size_t (n));
+    else
+      phase_records_drop ();
+  }
+
+  inline void weakening_cancelled (worker_record& record, const char* reason) noexcept {
+    if (!record.run_active || !record.run_weakening)
+      return;
+    char fields[320], remaining[32] = "null";
+    const auto now = phase_clock (CLOCK_MONOTONIC);
+    if (record.deadline_ns)
+      snprintf (remaining, sizeof remaining, "%llu",
+                (unsigned long long) (now < record.deadline_ns ? record.deadline_ns - now : 0));
+    snprintf (fields, sizeof fields,
+              "\"outcome\":\"cancellation\",\"reason\":\"%s\",\"observer\":\"parent\","
+              "\"wall_ns\":%llu,\"cpu_ns\":null,\"peak_rss_kb\":null,"
+              "\"memory_reason\":\"killed_worker\",\"deadline_ns\":%llu,\"remaining_ns\":%s",
+              reason, (unsigned long long) (now - record.run_start.wall),
+              (unsigned long long) record.deadline_ns, remaining);
+    weakening_event (record, "weakening_attempt_end", fields);
+    record.run_active = false;
+  }
+
   inline void worker_stage (const char* stage) noexcept {
     if (auto* worker = active_worker_record ())
       worker_record_text (worker->stage, stage);
@@ -204,12 +248,14 @@ namespace acacia {
   }
   inline void worker_decline (const char* reason) noexcept {
     if (auto* worker = active_worker_record (); worker && !worker->stopped) {
+      ++worker->declines;
       worker_record_text (worker->reason, reason);
       worker_event (*worker, "decline", worker->reason);
     }
   }
   inline void worker_stopped (const char* reason) noexcept {
     if (auto* worker = active_worker_record ()) {
+      ++worker->stops;
       worker_record_text (worker->reason, reason);
       worker->stopped = true;
       worker_event (*worker, "route_stopped", worker->reason);

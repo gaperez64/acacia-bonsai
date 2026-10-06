@@ -5,6 +5,23 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-06 — P3 step 1: incumbent weakening instrumentation
+
+The existing UNREAL safety-core pre-pass now records structural eligibility,
+generated/started/completed candidates, proof binding, failed-attempt cost,
+exception/cancellation, and full-original fallback budget through the #210
+transport. Candidate selection/order, the existing 64-child/eight-candidate
+thresholds, solver verdicts and deadline behavior are unchanged. The
+[attribution notes](coverage-first/attribution.md#existing-unreal-safety-core-pre-pass-p3-step-1)
+describe the events and `benchmarking/weakening-census.py`, which retains UNKNOWN
+for incomplete telemetry. Review fixes distinguish absent global conjunctions from
+threshold rejection, record the largest conjunction size, join proof IDs to actual
+attempts, and classify fallback starvation from available budget. Exact cancellation
+and generation counts stay UNKNOWN for incomplete census rows, with confirmed
+observations reported separately. Generated correctness tests cover the loop and real
+CLI proof/fallback behavior. No coverage campaign or performance gain is claimed;
+#201's eligibility/budget changes remain future work.
+
 ## 2026-10-06 — coverage-first P0 attribution (#210)
 
 Worker lifecycle events and parent-accepted winners now accompany the existing

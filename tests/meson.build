@@ -344,6 +344,10 @@ unreal_safety_core_witnesses_test = executable (
 test ('unreal-safety-core-witnesses',
       unreal_safety_core_witnesses_test,
       suite : ['unit', 'translation'])
+test ('unreal-weakening-records', py,
+      args : [files ('check-weakening-records.py'), unreal_safety_core_witnesses_test,
+              meson.current_build_dir (), ab_exe],
+      suite : ['unit', 'attribution'], timeout : 60)
 
 diagnostics_attempt_test = executable (
   'diagnostics-attempt-test',
