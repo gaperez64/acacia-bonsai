@@ -252,8 +252,8 @@ def check_record_failures(worker: Path, binary: Path, real: Path,
     limit_dir = root / "records-limit"
     limit_dir.mkdir()
     assert execute(limit_dir, file_limit=True)[:2] == baseline[:2]
-    assert len(list(limit_dir.iterdir())) == 1
-    assert next(limit_dir.iterdir()).stat().st_size == 0
+    assert list(limit_dir.iterdir())
+    assert all(path.stat().st_size == 0 for path in limit_dir.iterdir())
     unwritable = root / "records-unwritable"
     unwritable.mkdir(mode=0o500)
     try:

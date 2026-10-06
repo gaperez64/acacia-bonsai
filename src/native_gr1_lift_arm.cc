@@ -17,6 +17,46 @@
 # include <string>
 
 namespace acacia {
+  namespace {
+    void record_combined_event (void*, TlsfGr1BothEventKind kind, TlsfGr1BothEventRoute route,
+                                int proof_unreal, const char* stage, const char*,
+                                TlsfGr1LiftStatus failure) {
+      auto* worker = active_worker_record ();
+      if (!worker)
+        return;
+      const char* name = route == TLSF_GR1_BOTH_EVENT_R        ? "R"
+                         : route == TLSF_GR1_BOTH_EVENT_U      ? "U"
+                         : route == TLSF_GR1_BOTH_EVENT_DIRECT ? "direct"
+                                                               : "seed_discovery";
+      const char* side = proof_unreal < 0 ? "unknown" : proof_unreal ? "UNREAL" : "REAL";
+      if (kind == TLSF_GR1_BOTH_EVENT_SELECTED) {
+        worker_select_route (name, "oxidd", side);
+      }
+      else if (kind == TLSF_GR1_BOTH_EVENT_START) {
+        worker_event (*worker, "route_start");
+      }
+      else if (kind == TLSF_GR1_BOTH_EVENT_CHECK_START) {
+        worker_stage (stage);
+        worker_record_text (worker->original_polarity, side);
+        worker_record_text (worker->proof_polarity, side);
+        worker_event (*worker, "verification_start");
+      }
+      else if (kind == TLSF_GR1_BOTH_EVENT_VERIFIED) {
+        worker_event (*worker, "check_complete");
+      }
+      else if (kind == TLSF_GR1_BOTH_EVENT_DECLINE) {
+        worker_stage (stage);
+        worker_decline (stage);
+      }
+      else if (kind == TLSF_GR1_BOTH_EVENT_STOPPED) {
+        worker_stage (stage);
+        worker_stopped (native_failure_reason (native_failure (failure)));
+      }
+# ifdef ACACIA_NATIVE_TEST_HOOKS
+      native_attribution_test_pause (kind, name);
+# endif
+    }
+  }
   int run_native_gr1_lift_arm (const arg_parse_result& args, uint64_t deadline_mono_ns,
                                bool real_only) {
     const char* arm = real_only ? "both:gr1-real-lift:oxidd" : "both:gr1-lift:oxidd";
@@ -40,17 +80,20 @@ namespace acacia {
     TlsfGr1LiftTarget* raw_target = nullptr;
     TlsfGr1LiftOptions prepare_options = options;
     prepare_options.max_artifact_bytes = 64u * 1024u * 1024u;
+    worker_route ("trusted_prepare", "oxidd");
     phase_scope prepare_phase (arm, "trusted_prepare");
-    auto status = tlsf_gr1_lift_target_prepare_exact (
+    TlsfGr1LiftStatus preparation_cause = TLSF_GR1_LIFT_OK;
+    auto status = tlsf_gr1_lift_target_prepare_exact_v1 (
         reinterpret_cast<const uint8_t*> (args.tlsf_source.data ()), args.tlsf_source.size (),
-        &prepare_options, &raw_target, &error);
+        &prepare_options, &raw_target, &error, &preparation_cause);
     std::unique_ptr<TlsfGr1LiftTarget, decltype (&tlsf_gr1_lift_target_free)> target (
         raw_target, tlsf_gr1_lift_target_free);
     prepare_phase.finish ();
     if (status != TLSF_GR1_LIFT_OK) {
       native_budget_record (arm, error.stage, stats.work, construction_started_ns);
       native_arm_diagnostic (arm, error.stage, int (status),
-                             native_budget_message (error.stage, error.message, stats.work));
+                             native_budget_message (error.stage, error.message, stats.work),
+                             native_failure (preparation_cause));
       return EXIT_CODE_UNKNOWN;
     }
 
@@ -60,42 +103,34 @@ namespace acacia {
         ~ResultGuard () { tlsf_gr1_both_result_clear (&value); }
     } guard {result};
     phase_scope combined_phase (arm, "combined_call");
-    status = tlsf_gr1_both_from_target (target.get (), &options, &result, &error);
+    const TlsfGr1BothObserverV1 observer {record_combined_event, nullptr};
+    status =
+        phase_records_enabled ()
+            ? tlsf_gr1_both_from_target_v1 (target.get (), &options, &observer, &result, &error)
+            : tlsf_gr1_both_from_target (target.get (), &options, &result, &error);
     combined_phase.finish ();
     if (real_only && result.route == TLSF_GR1_BOTH_ENV_LIFT) {
       native_arm_diagnostic (arm, "route", -1, "R-only arm selected U");
       return EXIT_CODE_UNKNOWN;
     }
     if (phase_records_enabled ()) {
-      const char* route = result.route == TLSF_GR1_BOTH_REAL_LIFT  ? "route_R"
-                          : result.route == TLSF_GR1_BOTH_ENV_LIFT ? "route_U"
-                                                                   : "route_direct";
       const char* polarity = result.seed_polarity == TLSF_GR1_SEEDS_REAL      ? "seed_REAL"
                              : result.seed_polarity == TLSF_GR1_SEEDS_UNREAL  ? "seed_UNREAL"
                              : result.seed_polarity == TLSF_GR1_SEEDS_MIXED   ? "seed_mixed"
                              : result.seed_polarity == TLSF_GR1_SEEDS_UNKNOWN ? "seed_unknown"
                                                                               : "seed_none";
-      phase_finish (arm, route, phase_start ());
       phase_finish (arm, polarity, phase_start (), -1, -1, result.seed_solves);
       phase_finish (arm, "seed_cache", phase_start (), -1, -1,
                     result.seed_probes + result.seed_reductions + result.seed_solves +
                         result.seed_checks + result.seed_cache_hits);
       phase_finish (arm, "final_checks", phase_start (), -1, -1, result.target_checks);
       phase_finish (arm, "target_reductions", phase_start (), -1, -1, result.target_reductions);
-      const std::string declines = result.decline_stages;
-      for (size_t begin = 0; begin < declines.size ();) {
-        const size_t end = declines.find (',', begin);
-        const std::string stage = "decline_" + declines.substr (begin, end - begin);
-        phase_finish (arm, stage.c_str (), phase_start ());
-        if (end == std::string::npos)
-          break;
-        begin = end + 1;
-      }
     }
     if (status != TLSF_GR1_LIFT_OK) {
       native_budget_record (arm, error.stage, stats.work, construction_started_ns);
       native_arm_diagnostic (arm, error.stage, int (status),
-                             native_budget_message (error.stage, error.message, stats.work));
+                             native_budget_message (error.stage, error.message, stats.work),
+                             native_failure (status));
       return EXIT_CODE_UNKNOWN;
     }
 # ifdef ACACIA_NATIVE_TEST_HOOKS
@@ -156,6 +191,7 @@ namespace acacia {
       return EXIT_CODE_UNKNOWN;
     }
     binding_phase.finish ();
+    worker_verified (unreal ? "UNREAL" : "REAL", unreal ? "UNREAL" : "REAL");
     return unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL;
   }
 }

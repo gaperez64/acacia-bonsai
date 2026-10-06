@@ -43,12 +43,15 @@ ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
 
 if native_test_hooks
   native_test_exe = executable ('acacia-bonsai-native-test', ab_sources,
-    'native_test_hooks.cc', version_h,
+    'native_test_hooks.cc', '../tests/native_attribution_hooks.cc', version_h,
+    tlsf_native.get_variable ('gr1_reduction_source'),
+    tlsf_native.get_variable ('reduction_contract_hooks'),
     link_with : closure_buchi_provider_lib,
     include_directories : inc,
-    cpp_args : ['-DACACIA_NATIVE_TEST_HOOKS=1'],
+    cpp_args : ['-DACACIA_NATIVE_TEST_HOOKS=1', '-DTLSF_GR1_REDUCTION_TEST_FAULT'],
     install : false,
-    dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps)
+    dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep,
+                    tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
 endif
 
 if get_option('build_research_tools')

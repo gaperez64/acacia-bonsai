@@ -1,0 +1,2938 @@
+{
+  "src/native_support.cc | worker_decline | UNKNOWN | worker | reason.c_str () | 0": {
+    "cause": "worker_decline",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/native_support.cc | worker_stopped | UNKNOWN | worker | native_failure_reason (category) | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/native_support.cc | native_arm_diagnostic | status | stage | message | 0": {
+    "cause": "category",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/native_support.cc | native_arm_diagnostic | errno | \"memory\" | \"could not read address-space cap\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_support.cc | native_arm_diagnostic | errno | \"memory\" | \"could not set address-space cap\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_proof_binding.cc | return | false | native_json_unique_keys |  while (yyjson_val* key = yyjson_obj_iter_next (&iter)) { if (!keys.emplace (yyjson_get_str (key), yyjson_get_len (key)).second)  | 0": {
+    "cause": "native_json_unique_keys",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_proof_binding.cc | return | false | native_proof_sidecars |  !native_json_field (cert, \"status\", status) \\|\\| !native_json_field (cert, \"reduction_semantics\", semantics))  | 0": {
+    "cause": "native_proof_sidecars",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_gr1_arm.cc | native_diagnostic | pipeline_error.status | pipeline_error.stage | pipeline_error.message | 0": {
+    "cause": "native_failure (pipeline_error.status)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/native_gr1_arm.cc | native_diagnostic | -1 | \"source\" | \"snapshot hash mismatch\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_gr1_arm.cc | native_diagnostic | reduced | reduction_error.stage | native_budget_message (reduction_error.stage, reduction_error.message, work) | 0": {
+    "cause": "native_failure (reduction_cause)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/native_gr1_arm.cc | native_diagnostic | -1 | \"reduction\" | \"missing exact game\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_gr1_arm.cc | native_diagnostic | -1 | \"reduction\" | \"source or game hash mismatch\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_gr1_arm.cc | native_diagnostic | int (failure.kind) | \"solve\" | certificate.failed ? certificate.error : \"solver gave no decision\" | 0": {
+    "cause": "native_failure (failure.kind)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/native_gr1_arm.cc | native_diagnostic | 0 | \"polarity\" | \"opposite side solved\" | 0": {
+    "cause": "native_failure_category::decline",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/native_gr1_arm.cc | native_diagnostic | -1 | \"certificate\" | \"certificate or policy missing\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_gr1_arm.cc | native_diagnostic | -1 | \"metadata\" | \"proof side or semantics mismatch\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_gr1_arm.cc | native_diagnostic | status == TLSF_GR1_CHECK_OK ? int (checked.value.verdict) : int (status) | checked.value.stage[0] ? checked.value.stage : \"check\" | checked.value.message[0] ? checked.value.message : \"proof not verified\" | 0": {
+    "cause": "native_failure (status, checked.value.verdict)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/native_gr1_lift_arm.cc | worker_decline | UNKNOWN | worker | stage | 0": {
+    "cause": "worker_decline",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/native_gr1_lift_arm.cc | worker_stopped | UNKNOWN | worker | native_failure_reason (native_failure (failure)) | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/native_gr1_lift_arm.cc | native_arm_diagnostic | int (status) | error.stage | native_budget_message (error.stage, error.message, stats.work) | 0": {
+    "cause": "native_failure (preparation_cause)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/native_gr1_lift_arm.cc | native_arm_diagnostic | -1 | \"route\" | \"R-only arm selected U\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_gr1_lift_arm.cc | native_arm_diagnostic | int (status) | error.stage | native_budget_message (error.stage, error.message, stats.work) | 1": {
+    "cause": "native_failure (status)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/native_gr1_lift_arm.cc | native_arm_diagnostic | -1 | \"artifact\" | \"incomplete checked proof\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_gr1_lift_arm.cc | native_arm_diagnostic | -1 | \"binding\" | \"checked proof binding mismatch\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_param_lift_arm.cc | native_arm_diagnostic | int (lift_status) | lift_error.stage | native_budget_message (lift_error.stage, lift_error.message, work) | 0": {
+    "cause": "native_failure (failure_status)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/native_param_lift_arm.cc | native_arm_diagnostic | -1 | \"artifact\" | \"incomplete or unverified system proof\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_param_lift_arm.cc | native_arm_diagnostic | -1 | \"evidence\" | \"invalid lift evidence JSON\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_param_lift_arm.cc | native_arm_diagnostic | -1 | \"source\" | \"snapshot hash mismatch\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_param_lift_arm.cc | native_arm_diagnostic | -1 | \"game\" | \"game artifact hash mismatch\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_param_lift_arm.cc | native_arm_diagnostic | -1 | \"certificate\" | \"certificate artifact hash mismatch\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_param_lift_arm.cc | native_arm_diagnostic | -1 | \"policy\" | \"policy artifact hash mismatch\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_param_lift_arm.cc | native_arm_diagnostic | -1 | \"metadata\" | \"proof side, method or semantics mismatch\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/native_param_lift_arm.cc | native_arm_diagnostic | -1 | \"source_game\" | \"checked game differs from snapshot reduction\" | 0": {
+    "cause": "error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 0": {
+    "cause": "FailureKind::cancelled",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 1": {
+    "cause": "FailureKind::guard_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 2": {
+    "cause": "FailureKind::injected",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 3": {
+    "cause": "FailureKind::memory_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 4": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 5": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 6": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 7": {
+    "cause": "FailureKind::unsupported_operator",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 8": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 9": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 10": {
+    "cause": "FailureKind::state_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 11": {
+    "cause": "FailureKind::state_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 12": {
+    "cause": "FailureKind::guard_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 13": {
+    "cause": "FailureKind::branch_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 14": {
+    "cause": "FailureKind::branch_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 15": {
+    "cause": "FailureKind::unexpected",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 16": {
+    "cause": "FailureKind::row_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 17": {
+    "cause": "FailureKind::invalid_state",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 18": {
+    "cause": "FailureKind::row_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 19": {
+    "cause": "FailureKind::unsupported_operator",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/closure_buchi_provider.cc | throw Failure | UNKNOWN | provider | kind | 0": {
+    "cause": "kind",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/closure_buchi_provider.cc | throw AdapterFailure | UNKNOWN | provider | {FailureKind::invalid_state | 0": {
+    "cause": "{FailureKind::invalid_state",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/closure_buchi_provider.cc | throw AdapterFailure | UNKNOWN | provider | {FailureKind::invalid_state | 1": {
+    "cause": "{FailureKind::invalid_state",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/closure_buchi_provider.cc | throw AdapterFailure | UNKNOWN | provider | {FailureKind::invalid_state | 2": {
+    "cause": "{FailureKind::invalid_state",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/closure_buchi_provider.cc | throw AdapterFailure | UNKNOWN | provider | *failure | 0": {
+    "cause": "*failure",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/closure_buchi_provider.cc | throw AdapterFailure | UNKNOWN | provider | caught () | 0": {
+    "cause": "caught ()",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_state_ids.hh | throw std::invalid_argument | UNKNOWN | provider | \"SpotStateIds requires a provider\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_state_ids.hh | throw std::invalid_argument | UNKNOWN | provider | \"Spot provider returned a null state\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_state_ids.hh | throw std::length_error | UNKNOWN | provider | \"Spot StateId space exhausted\" | 0": {
+    "cause": "std::length_error",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_rows.hh | throw std::invalid_argument | UNKNOWN | provider | \"frozen-acacia requires state acceptance metadata\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::invalid_argument | UNKNOWN | provider | \"frozen-acacia Boolean threshold exceeds graph size\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::logic_error | UNKNOWN | provider | \"frozen-acacia graph coordinate mismatch\" | 0": {
+    "cause": "std::logic_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::runtime_error | UNKNOWN | provider | \"Spot provider returned a null iterator\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::runtime_error | UNKNOWN | provider | \"Spot edge uses an undeclared acceptance set\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::runtime_error | UNKNOWN | provider | \"frozen-acacia discovered an unknown graph state\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::invalid_argument | UNKNOWN | provider | \"rank evaluator requires one complete AP valuation\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::invalid_argument | UNKNOWN | provider | \"Spot rows require a nonalternating view\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::invalid_argument | UNKNOWN | provider | \"Spot rows require ordinary single-set Buchi acceptance\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::runtime_error | UNKNOWN | provider | \"Spot provider changed its fixed acceptance/AP inventory\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::invalid_argument | UNKNOWN | provider | \"rank bound K must be positive\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::invalid_argument | UNKNOWN | provider | \"rank has invalid coordinates for this mode\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_rows.hh | throw std::invalid_argument | UNKNOWN | provider | \"rank value is outside [-1,K]\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_letter_oracle.hh | throw Failure | UNKNOWN | provider | Unknown::aborted | 0": {
+    "cause": "Unknown::aborted",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "src/solver/spot_letter_oracle.hh | throw Failure | UNKNOWN | provider | Unknown::resource_limit | 0": {
+    "cause": "Unknown::resource_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_letter_oracle.hh | throw Failure | UNKNOWN | provider | Unknown::resource_limit | 1": {
+    "cause": "Unknown::resource_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_letter_oracle.hh | throw Failure | UNKNOWN | provider | Unknown::invalid_query | 0": {
+    "cause": "Unknown::invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_letter_oracle.hh | throw Failure | UNKNOWN | provider | Unknown::invalid_query | 1": {
+    "cause": "Unknown::invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_letter_oracle.hh | throw Failure | UNKNOWN | provider | Unknown::invalid_query | 2": {
+    "cause": "Unknown::invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_letter_oracle.hh | throw Failure | UNKNOWN | provider | Unknown::invalid_query | 3": {
+    "cause": "Unknown::invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_letter_oracle.hh | throw detail::Failure | UNKNOWN | provider | Unknown::invalid_query | 0": {
+    "cause": "Unknown::invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_letter_oracle.hh | throw detail::Failure | UNKNOWN | provider | row.status == spot_rows::Status::resource_limit ? Unknown::resource_limit : Unknown::row_failure, row.error | 0": {
+    "cause": "row.status == spot_rows::Status::resource_limit ? Unknown::resource_limit : Unknown::row_failure, row.error",
+    "telemetry": "STOPPED/error/resource"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | cache->complete_rows () == cache->state_count () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | init != nullptr | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | q < store_.cache->state_count () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | result.row != nullptr | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | result.row != nullptr | 1": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | b.lor (kept, suffix[0]) == bddtrue | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | kept == bddtrue | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | requested.valid () && certificate.semantics.valid () && certificate.semantics == requested | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | choice.constant_output.has_value () == (certificate.semantics.output_choice == OutputChoice::constant) | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | certificate.failure == Unknown::none && not certificate.pending_loss && not certificate.pending_expansion && certificate.initial < certificate.nodes.size () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | certificate.nodes[certificate.initial].rank == rows->initial_rank () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | not node.losing && not node.queued && node.active_rows_complete && rows->is_safe (node.rank, K) | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | choice.successor < certificate.nodes.size () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | not target.losing && rows->is_safe (target.rank, K) | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | b.satisfiable (choice.input_region) | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | b.land (choice.input_region, b.negate (projection)) == bddfalse | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | covered == bddtrue && covered == node.covered_inputs | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | detail::take (oracle.invariant (rows->initial_rank (), generators, 0)) == letters::Invariant::verified | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | certificate.failure == Unknown::none && not certificate.pending_loss && certificate.initial_proof && *certificate.initial_proof < certificate.proofs.size () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | record.id == id && record.node < certificate.nodes.size () && proof.rank == certificate.nodes[record.node].rank | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | dep < id | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | not safe && record.dependencies.empty () && proof.rows.empty () && not proof.input | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | record.dependencies.size () == 1 && proof.rows.empty () && not proof.input | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | Oracle::leq (certificate.proofs[record.dependencies[0]].rank, proof.rank) | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | safe && proof.input.has_value () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | detail::complete_rows (*rows, oracle, proof.rank) == proof.rows | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | all_outputs == bddtrue | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | false | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | root.record.node == certificate.initial && root.rank == rows->initial_rank () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | semantics_.valid () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | dep < proof_id | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | input.has_value () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | input.has_value () | 1": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | output.has_value () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | rows_->is_safe (successor, K_) && not losing_.subsumes (successor) | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | b.restrict_total (C, *input, Variables::inputs) == bddtrue | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | b.satisfiable (C) && b.land (C, result_.nodes[id].covered_inputs) == bddfalse | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | not result_.nodes[sid].losing | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | throw std::runtime_error | UNKNOWN | provider | \"spot-lazy: \" + s | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_game.hh | throw detail::Failure | UNKNOWN | provider | Unknown::resource_limit | 0": {
+    "cause": "Unknown::resource_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_lazy_game.hh | throw detail::Failure | UNKNOWN | provider | Unknown::resource_limit | 1": {
+    "cause": "Unknown::resource_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_lazy_game.hh | throw detail::Failure | UNKNOWN | provider | Unknown::resource_limit | 2": {
+    "cause": "Unknown::resource_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | row.row != nullptr | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | certificate.failure == Unknown::none && not certificate.pending_loss && not certificate.pending_expansion && certificate.initial < certificate.nodes.size () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | certificate.nodes[certificate.initial].rank == rows->initial_rank () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | not node.losing && not node.queued && node.active_rows_complete && rows->is_safe (node.rank, K) | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | choice.successor < certificate.nodes.size () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | not target.losing && rows->is_safe (target.rank, K) | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | b.satisfiable (choice.input_region) | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | b.land (choice.input_region, b.negate (exact)) == bddfalse | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | covered == bddtrue && covered == node.covered_inputs | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | detail::take (oracle.invariant (rows->initial_rank (), generators, 0)) == spot_letters::Invariant::verified | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | certificate.failure == Unknown::none && not certificate.pending_loss && certificate.initial_proof && *certificate.initial_proof < certificate.proofs.size () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | record.id == id && record.node < certificate.nodes.size () && proof.rank == certificate.nodes[record.node].rank | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | dep < id | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | not safe && record.dependencies.empty () && proof.rows.empty () && not proof.input | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | record.dependencies.size () == 1 && proof.rows.empty () && not proof.input | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | Oracle::leq (certificate.proofs[record.dependencies[0]].rank, proof.rank) | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | safe && proof.input.has_value () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | detail::complete_rows (*rows, oracle, proof.rank) == proof.rows | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | all_outputs == bddtrue | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | false | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | root.record.node == certificate.initial && root.rank == rows->initial_rank () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | false | 1": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | dep < proof_id | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | input.has_value () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | output.has_value () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | successor.rank.has_value () && rows_->is_safe (*successor.rank, K_) && not losing_.subsumes (*successor.rank) | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | b.restrict_total (C, *input, Variables::inputs) == bddtrue | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | b.satisfiable (C) && b.land (C, result_.nodes[id].covered_inputs) == bddfalse | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | require | UNKNOWN | verifier | not result_.nodes[sid].losing | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | throw Failure | UNKNOWN | provider | Unknown::invalid_query | 0": {
+    "cause": "Unknown::invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | throw Failure | UNKNOWN | provider | result.unknown, result.error | 0": {
+    "cause": "result.unknown, result.error",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | throw Failure | UNKNOWN | provider | status == spot_rows::Status::resource_limit ? Unknown::resource_limit : Unknown::row_failure | 0": {
+    "cause": "status == spot_rows::Status::resource_limit ? Unknown::resource_limit : Unknown::row_failure",
+    "telemetry": "STOPPED/error/resource"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | throw detail::Failure | UNKNOWN | provider | Unknown::resource_limit | 0": {
+    "cause": "Unknown::resource_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | throw detail::Failure | UNKNOWN | provider | Unknown::resource_limit | 1": {
+    "cause": "Unknown::resource_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_guarded_forward_safety.hh | throw detail::Failure | UNKNOWN | provider | Unknown::resource_limit | 2": {
+    "cause": "Unknown::resource_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/solver_invoker.cc | worker_stopped | UNKNOWN | worker | \"resource\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/solver_invoker.cc | worker_stopped | UNKNOWN | worker | message.find (\"Too many acceptance sets\") != std::string_view::npos ? \"resource\" : \"error\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/solver_invoker.cc | worker_stopped | UNKNOWN | worker | \"error\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | ResourceLimit | UNKNOWN | provider | \"lazy Buchi BDD budget exceeded\" | 0": {
+    "cause": "resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | ResourceLimit | UNKNOWN | provider | \"lazy Buchi acceptance budget exceeded\" | 0": {
+    "cause": "resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | Declined | DECLINED | provider | \"lazy Buchi requires a conjunction of all Inf sets or false\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | Declined | DECLINED | provider | \"lazy provider changed its fixed acceptance/AP inventory\" | 0": {
+    "cause": "FailureCause::integrity",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | Declined | DECLINED | provider | \"lazy Buchi requires nonalternating successors\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | ResourceLimit | UNKNOWN | provider | \"lazy Buchi underlying state budget exceeded\" | 0": {
+    "cause": "resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | ResourceLimit | UNKNOWN | provider | \"lazy Buchi cursor state budget exceeded\" | 0": {
+    "cause": "resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | ResourceLimit | UNKNOWN | provider | \"lazy Buchi underlying row budget exceeded\" | 0": {
+    "cause": "resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | Declined | DECLINED | provider | \"lazy provider returned a null iterator\" | 0": {
+    "cause": "FailureCause::integrity",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | ResourceLimit | UNKNOWN | provider | \"lazy Buchi edge budget exceeded\" | 0": {
+    "cause": "resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | Declined | DECLINED | provider | \"lazy provider used an undeclared acceptance set\" | 0": {
+    "cause": "FailureCause::integrity",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | Declined | DECLINED | provider | \"state belongs to a different lazy Buchi view\" | 0": {
+    "cause": "FailureCause::integrity",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | Declined | DECLINED | provider | \"foreign cursor state\" | 0": {
+    "cause": "FailureCause::integrity",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | Declined | DECLINED | provider | \"lazy Buchi requires a provider\" | 0": {
+    "cause": "FailureCause::integrity",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_buchi_view.hh | Declined | DECLINED | provider | \"TAA route requires LTL\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/spot_lazy_worker.hh | worker_decline | UNKNOWN | worker | \"unsupported_operator\" | 0": {
+    "cause": "worker_decline",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/spot_lazy_worker.hh | worker_stopped | UNKNOWN | worker | \"resource\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_lazy_worker.hh | worker_stopped | UNKNOWN | worker | \"cancelled\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_lazy_worker.hh | worker_stopped | UNKNOWN | worker | \"error\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_lazy_worker.hh | worker_decline | UNKNOWN | worker | \"provider_not_applicable\" | 0": {
+    "cause": "worker_decline",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/spot_lazy_worker.hh | worker_stopped | UNKNOWN | worker | \"error\" | 1": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_lazy_worker.hh | worker_stopped | UNKNOWN | worker | \"resource\" | 1": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_lazy_worker.hh | worker_stopped | UNKNOWN | worker | \"resource\" | 2": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_lazy_worker.hh | worker_stopped | UNKNOWN | worker | \"error\" | 2": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_lazy_worker.hh | worker_stopped | UNKNOWN | worker | why == U::resource_limit ? \"resource\" : why == U::aborted ? \"cancelled\" : why == U::none ? \"inconclusive\" : \"error\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_lazy_worker.hh | require | UNKNOWN | verifier | provider->complete_rows () == 0 && provider->discovered_states () == 1 | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_worker.hh | Declined | DECLINED | provider | \"TAA route requires LTL\" | 0": {
+    "cause": "spot_lazy::FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/spot_lazy_worker.hh | require | UNKNOWN | verifier | store.cache->state_count () == 1 && store.cache->complete_rows () == 0 | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/spot_lazy_worker.hh | worker_stopped | UNKNOWN | worker | \"resource\" | 3": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_LIMIT | \"pipeline\" | \"out of memory\" | 0": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_INVALID | \"parse\" | \"TLSF parse failed\" | 0": {
+    "cause": "TLSF_PIPELINE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_INVALID | \"semantics\" | \"invalid semantics override\" | 0": {
+    "cause": "TLSF_PIPELINE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_INVALID | \"target\" | \"invalid target override\" | 0": {
+    "cause": "TLSF_PIPELINE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_DECLINED | \"semantics\" | \"unsupported semantics\" | 0": {
+    "cause": "TLSF_PIPELINE_DECLINED",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_LIMIT | \"provenance\" | \"out of memory\" | 0": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_LIMIT | \"provenance\" | \"output failed\" | 0": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_LIMIT | \"provenance\" | \"output failed\" | 1": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_LIMIT | \"adapt\" | \"adaptation failed\" | 0": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_LIMIT | \"cover\" | \"out of memory\" | 0": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_LIMIT | \"compose\" | \"out of memory\" | 0": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_LIMIT | \"diagnostic\" | \"out of memory\" | 0": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_INVALID | \"expand\" | \"invalid argument\" | 0": {
+    "cause": "TLSF_PIPELINE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_INVALID | \"override\" | \"empty parameter name\" | 0": {
+    "cause": "TLSF_PIPELINE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_INVALID | \"override\" | \"duplicate parameter override\" | 0": {
+    "cause": "TLSF_PIPELINE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_INVALID | \"override\" | \"unknown parameter\" | 0": {
+    "cause": "TLSF_PIPELINE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_DECLINED | \"expand\" | \"TLSF expansion failed\" | 0": {
+    "cause": "TLSF_PIPELINE_DECLINED",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_DECLINED | \"provenance\" | \"ambiguous source origin\" | 0": {
+    "cause": "TLSF_PIPELINE_DECLINED",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_LIMIT | \"provenance\" | \"provenance output failed\" | 0": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_LIMIT | \"expand\" | \"out of memory\" | 0": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_INVALID | \"source\" | \"invalid source bytes or embedded NUL\" | 0": {
+    "cause": "TLSF_PIPELINE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_LIMIT | \"source\" | \"out of memory\" | 0": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_LIMIT | \"source\" | \"cannot open source stream\" | 0": {
+    "cause": "TLSF_PIPELINE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | return | false | tlsf_pipeline_source_sha256 |  char output[65]) { if (!source \\|\\| !size \\|\\| !output \\|\\| memchr(source, '\\0', size))  | 0": {
+    "cause": "tlsf_pipeline_source_sha256",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | Failure | TLSF_GR1_LIFT_DECLINED | stage | why | 0": {
+    "cause": "cause",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | Failure | TLSF_GR1_LIFT_DECLINED | \"search_error\" | search_stage + \": \" + search_message | 0": {
+    "cause": "*search_cause",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | decline | DECLINED | stage | why | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | Failure | TLSF_GR1_LIFT_DEADLINE | stage | \"deadline exceeded\" | 0": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | Failure | TLSF_GR1_LIFT_LIMIT | stage | \"fixed phase budget exhausted\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | Failure | TLSF_GR1_LIFT_DEADLINE | stage | \"deadline exceeded\" | 1": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | Failure | TLSF_GR1_LIFT_DEADLINE | stage | \"deadline exceeded\" | 2": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | Failure | TLSF_GR1_LIFT_LIMIT | \"candidate_allowance\" | std::string(\"candidate allowance expired at \") + stage | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | Failure | TLSF_GR1_LIFT_DEADLINE | stage | \"deadline exceeded\" | 3": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | Failure | TLSF_GR1_LIFT_CANCELLED | stage | \"cancelled\" | 0": {
+    "cause": "FailureCause::cancelled",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | Failure | TLSF_GR1_LIFT_LIMIT | \"budget-memory\" | std::string(\"construction RSS exceeded arm memory \") + \"share at \" + stage | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | Failure | TLSF_GR1_LIFT_LIMIT | stage | \"artifact byte cap exceeded\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_CANCELLED | stage | \"cancelled\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_CANCELLED",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_ERROR | stage | \"monotonic clock failed\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_DEADLINE | stage | \"deadline exceeded\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_DEADLINE",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"budget-memory\" | \"construction RSS peak exceeded arm memory share\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | stage | \"artifact byte cap exceeded\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | stage | \"construction size overflow\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"budget-structure\" | \"structural construction limit exceeded\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"lower\" | \"classification failed\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"lower\" | \"formula build failed\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"lower\" | \"out of memory\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"lower\" | \"formula output failed\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"mp-class\" | \"not DBA reducible: \" + spot::str_psl(formula) | 0": {
+    "cause": "TLSF_GR1_REDUCE_UNSUPPORTED",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"translate\" | \"Spot translation reached its state limit\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"budget-translate\" | \"Spot translation exceeded state or edge limit\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | state_limit ? \"budget-monitor-states\" : \"budget-monitor-edges\" | \"Spot determinization exceeded construction budget; \" + reason.str() | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"determinize\" | \"Spot determinization failed; \" + reason.str() | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"determinize\" | \"Spot could not construct recurrence DBA monitor\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_UNSUPPORTED",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"budget-monitor\" | \"completed monitor exceeded state or edge limit\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"monitor\" | \"Spot produced nondeterministic or incomplete monitor\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"monitor\" | \"monitor state cap exceeded\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"monitor\" | \"Spot did not produce state-based acceptance\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"monitor\" | \"empty state\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"monitor\" | \"non-sticky safety rejecting region\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"aag-size\" | \"AAG literal overflow\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_ERROR | \"aag\" | \"unknown latch\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"transition\" | \"monitor refers to undeclared AP\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"transition\" | \"non-Boolean monitor transition label\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"provenance\" | \"non-Boolean symmetric monitor body\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"symmetry\" | \"symmetric signature valuation cap exceeded\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"publish-size\" | \"text size overflow\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_INVALID | \"source\" | \"source snapshot SHA-256 mismatch\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"semantics\" | \"unsupported non-Mealy SEMANTICS/TARGET\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_UNSUPPORTED",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"signals\" | \"expanded TLSF signal names are not unique\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"signals\" | \"expanded TLSF signal names are not unique\" | 1": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"formula\" | \"lowered formula has undeclared APs\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"budget-monitor\" | \"total monitor state or edge limit exceeded\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"monitor\" | \"total monitor state cap exceeded\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"aag\" | \"cannot open memory stream\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_ERROR | \"aag\" | \"generated AAG is invalid\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | throw std::bad_alloc | UNKNOWN | provider |  | 0": {
+    "cause": "std::bad_alloc",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_service.c | return | false | tlsf_gr1_validate_game |  if (message && capacity) snprintf(message, capacity, \"null game\");  | 0": {
+    "cause": "tlsf_gr1_validate_game",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_service.c | return | false | tlsf_gr1_validate_game |  snprintf(message, capacity, \"GR(1) requires justice and no invariant constraints\");  | 0": {
+    "cause": "tlsf_gr1_validate_game",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_service.c | return | false | tlsf_gr1_validate_game |  if (message && capacity) snprintf(message, capacity, \"justice record %u is not singleton\", j);  | 0": {
+    "cause": "tlsf_gr1_validate_game",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_service.c | return | false | tlsf_gr1_validate_game |  if (message && capacity) snprintf(message, capacity, \"latch %u has nonconstant reset\", j);  | 0": {
+    "cause": "tlsf_gr1_validate_game",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"clock\" | \"CLOCK_MONOTONIC failed\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"aag\" | \"cannot open memory stream\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"aag\" | \"invalid AAG artifact\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"aag\" | \"cannot allocate memory stream\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"aag\" | \"write failed\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"expand\" | perr.message | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | perr.status == TLSF_PIPELINE_DECLINED ? \"expand\" : \"expand_error\" | perr.message[0] ? perr.message : \"source expansion failed\" | 0": {
+    "cause": "perr.status == TLSF_PIPELINE_DECLINED ? FailureCause::applicability : FailureCause::error",
+    "telemetry": "DECLINE/applicability or STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | mapped | internal ? \"reduce_error\" : err.stage[0] ? err.stage : \"reduce\" | err.message[0] ? err.message : \"reduction failed\" | 0": {
+    "cause": "cause",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"provenance\" | \"ambiguous or source-unbound frontend provenance\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"target_binding\" | \"frontend provenance source hash differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"provenance\" | \"duplicate or non-frontend signal\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"provenance\" | \"duplicate source conjunct origin\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"provenance\" | \"missing monitor source origin\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"parameters\" | \"duplicate source parameter\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"declaration ABI changed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"declaration ABI changed\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"unproved encoding width\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"unproved encoding width\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"inconsistent coordinates\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"inconsistent coordinates\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"parameter does not index elements\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"bus_schema\" | \"unproved large template\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"seed_window\" | \"invalid selected seed count\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"seed_window\" | \"selected seed choice disagrees with artifact\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"seed_window\" | \"selected seeds are not consecutive\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"parameters\" | \"absent\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_window\" | \"fixed seed probe budget exhausted\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_window\" | \"fixed seed probe budget exhausted\" | 1": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"seed_binding\" | \"seed reduction hash differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"seed_solve\" | reason | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | \"seed_solve\" | \"deadline exceeded\" | 0": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_CANCELLED | \"seed_solve\" | \"cancelled\" | 0": {
+    "cause": "FailureCause::cancelled",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_solve\" | \"solver capacity exhausted\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | unreal ? \"seed_solve\" : \"seed_error\" | \"no system certificate\" | 0": {
+    "cause": "unreal ? FailureCause::applicability : FailureCause::error",
+    "telemetry": "DECLINE/applicability or STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"seed_metadata\" | \"certificate metadata mismatch\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"seed_solve\" | reason | 1": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | \"seed_solve\" | \"deadline exceeded\" | 1": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DECLINED | \"seed_solve\" | \"exact seed certificate unavailable\" | 0": {
+    "cause": "solver_failure_cause(failure.kind)",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"seed_metadata\" | \"seed certificate metadata mismatch\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | \"seed_check\" | \"deadline exceeded\" | 0": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DECLINED | \"seed_check\" | \"independent seed proof rejected\" | 0": {
+    "cause": "check_failure_cause(status, verdict)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"monitor inventory\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"duplicate monitor latch literal\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"unmatched latch literal\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"latch inventory\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"duplicate game literal\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"signal inventory\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"game signal unmatched\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"invalid signal direction\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"certificate input mismatch\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"certificate input mismatch\" | 1": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"duplicate justice ID\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"justice inventory\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"missing justice ID\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"multi-index goal\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"multi-member justice\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"missing seed predicate\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"missing seed predicate\" | 1": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"OxiDD allocation failed\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"cannot create OxiDD manager\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | stage | \"fixed BDD operation budget exhausted\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"node cap exceeded\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"BDD variable limit\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"unmapped BDD support\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"AIG root references missing gate\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"candidate\" | \"unmapped BDD variable\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"subset count limit\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"duplicate normalized variable\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema\" | \"within-role projection disagreement\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema\" | \"predicate not exactly reconstructed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema\" | \"no bounded exact template\" | 0": {
+    "cause": "cause",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"target subset count limit\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"instantiate\" | \"missing role template\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"instantiate\" | \"missing target variable\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema\" | \"no seeds\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"fairness changed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"role classes changed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"goal class absent\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema\" | \"empty rank depth\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DECLINED | \"schema\" | \"rank depth changed from \" + field(depth) + \" to \" + field(current) | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"goal class absent\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"multi-member justice\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"certificate_export\" | \"cannot allocate AIG\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"candidate\" | \"unmapped target game gate\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"policy\" | \"cannot allocate AIG\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DECLINED | \"target_check\" | \"prepared game changed before verification\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_CANCELLED | \"region_check\" | \"checker cancelled\" | 0": {
+    "cause": "FailureCause::cancelled",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | status == TLSF_GR1_CHECK_OK ? \"target_check\" : \"checker_error\" | \"region not verified\" | 0": {
+    "cause": "check_failure_cause(status, verdict)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_CANCELLED | \"target_check\" | \"checker cancelled\" | 0": {
+    "cause": "FailureCause::cancelled",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | status == TLSF_GR1_CHECK_OK ? \"target_check\" : \"checker_error\" | \"certificate not verified\" | 0": {
+    "cause": "check_failure_cause(status, verdict)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | policy_capacity_status | \"target_check\" | \"region and policy proof budgets exhausted\" | 0": {
+    "cause": "failure_cause(policy_capacity_status)",
+    "telemetry": "STOPPED/resource/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | region_capacity_status == TLSF_GR1_CHECK_DEADLINE ? TLSF_GR1_LIFT_DEADLINE : TLSF_GR1_LIFT_LIMIT | \"region_check\" | \"checker capacity or deadline\" | 0": {
+    "cause": "failure_cause(region_capacity_status == TLSF_GR1_CHECK_DEADLINE ? TLSF_GR1_LIFT_DEADLINE : TLSF_GR1_LIFT_LIMIT)",
+    "telemetry": "STOPPED/resource/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"publish-size\" | \"artifact size overflow\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"publish\" | \"cannot allocate result\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_INVALID | \"source\" | \"invalid byte snapshot or embedded NUL\" | 0": {
+    "cause": "FailureCause::invalid",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"parse\" | \"source parse failed\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"parameters\" | \"absent\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | retry.status | retry.stage | retry.what() | 0": {
+    "cause": "e.cause",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"parameters\" | \"absent\" | 2": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"candidate\" | \"fault hook could not mutate the game\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"target_check\" | \"unverified candidate\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"publish\" | \"artifact hash failed\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"publish\" | \"policy artifact hash failed\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_INVALID | \"override\" | \"empty or duplicate target override\" | 0": {
+    "cause": "FailureCause::invalid",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | \"direct_solve\" | \"deadline exceeded\" | 0": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DECLINED | \"direct_solve\" | \"direct exact proof unavailable\" | 0": {
+    "cause": "solver_failure_cause(failure.kind)",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"target_binding\" | \"prepared game changed before verification\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | \"target_check\" | \"deadline exceeded\" | 0": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DECLINED | \"target_check\" | \"candidate proof did not verify\" | 0": {
+    "cause": "cause",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"target_check\" | \"certificate side differs from route\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_INVALID | \"arguments\" | \"invalid proof order\" | 0": {
+    "cause": "FailureCause::invalid",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_INVALID | \"arguments\" | \"invalid proof order\" | 1": {
+    "cause": "FailureCause::invalid",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"publish\" | \"artifact seal failed\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"target_binding\" | \"trusted source or game changed\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"seed_binding\" | \"seed cache key differs from game\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"seed_error\" | \"injected unknown seed\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"candidate_integrity\" | \"R candidate checked target\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"injected candidate capacity stop\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"candidate_integrity\" | \"environment candidate checked target\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"target_check\" | \"environment proof did not verify\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | e.stage | \"worker deadline exceeded\" | 0": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"target_binding\" | \"missing reduction metadata or game\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"target_binding\" | \"source or reduction hash differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate parameter identity\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"selected parameter identity is absent\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"undetermined signal index role\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"incomplete element width identity\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"invalid width parameter identity\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"inconsistent declaration binding\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"axis has no typed element declaration\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | env_stage_seed_window | \"seed probe budget exhausted\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | env_stage_seed_window | \"unstable exact seed structure\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | env_stage_seed_window | \"target coordinate inventory changed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"seed_solve\" | why | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_CANCELLED | \"seed_solve\" | \"cancelled\" | 0": {
+    "cause": "FailureCause::cancelled",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_solve\" | \"solver capacity exhausted\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"seed_error\" | \"seed solver failed\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"seed_metadata\" | \"REAL seed certificate metadata mismatch\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | check_status == TLSF_GR1_CHECK_OK ? \"seed_check\" : \"checker_error\" | \"REAL seed certificate did not check\" | 0": {
+    "cause": "check_failure_cause(check_status, verdict)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"seed_check\" | \"checked REAL seed is ineligible for U\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | real ? \"seed_solve\" : \"seed_error\" | \"checked environment seed is unavailable\" | 0": {
+    "cause": "real ? FailureCause::applicability : FailureCause::error",
+    "telemetry": "DECLINE/applicability or STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"seed_metadata\" | \"environment seed metadata mismatch\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | check_status == TLSF_GR1_CHECK_OK ? \"seed_check\" : \"checker_error\" | \"independent environment seed check failed\" | 0": {
+    "cause": "check_failure_cause(check_status, verdict)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor owner is outside the axis\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"pair owner lacks typed reference\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate game signal literal\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"game signal inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"game signal lacks unique provenance\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate letter identity\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"game signal name inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"game signal inventory is incomplete\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate source conjunct identity\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor lacks frontend origin\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor source conjunct is missing\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor latch inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema_abi\" | \"monitor transition references differ\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor/source construction differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"ambiguous sibling linkage\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"justice ordinal inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"justice points outside its monitor\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"fairness ordinal exceeds game\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"fairness points outside its monitor\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor game inventory is incomplete\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"ambiguous sibling monitor roles\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate state identity\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"game latch name inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"certificate count inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"rank depth is unbounded\" | 0": {
+    "cause": "view.outer ? FailureCause::resource : FailureCause::error",
+    "telemetry": "STOPPED/error/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"certificate input identity differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"certificate input inventory is incomplete\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"rank number is out of range\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate certificate output name\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"goal ordinal is absent\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"rank index is out of bounds\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"rank index is out of bounds\" | 1": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"goal ordinal is absent\" | 1": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"fairness ordinal is absent\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"unexpected certificate output\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"outer rank is out of bounds\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate predicate identity\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"rank level inventory is incomplete\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"rank levels are not consecutive\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"certificate output inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"policy sidecar inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"game latch lacks a name\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate policy input\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"policy input inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate policy output\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"policy output inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate policy sidecar output\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"policy sidecar output count differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"policy sidecar output differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"rank class inventory differs across seeds\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"target conjunct or role class missing\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"target has no typed owner roles\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema_abi\" | \"typed BDD variable is absent\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"cumulative rank node cap exhausted at \" + context | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"accounted rank memory cap exhausted at \" + context | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"cumulative rank apply cap exhausted at \" + context | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"accounted rank apply cache cap exhausted at \" + context | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema_abi\" | \"unmapped BDD variable\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema_abi\" | \"AIG leaf lacks typed provenance\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"rank uses an unmapped target variable\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"arity exceeds seed width\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"within-role projection disagreement\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema_abi\" | \"normalized variable is ambiguous\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"predicate is not exactly reconstructed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"target role template is absent\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"target typed variable is ambiguous\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"target typed variable is absent\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"seed rank templates disagree\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"rank class has no seed observation\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"no exact bounded projection\" | 0": {
+    "cause": "cause",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"previous rank has ambiguous seed identity\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"previous rank is absent in seed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"selected owner term exceeds bounded arity\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"previous rank and owner term do not reconstruct\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"selected owner terms disagree across seeds\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"selected owner term exceeds bounded arity\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"selected owner template is absent\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"selected owner variable is absent\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"anchor canonicalization collision\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"summary feature lacks a lane binding\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"no exact cross-lane summary\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"anchor pattern is absent in seed summaries\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"rank class is absent in a seed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema\" | \"rank has no exact bounded grammar\" | 0": {
+    "cause": "!is_applicability(projection.cause) ? projection.cause : summary.cause",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | previous.status | previous.stage | previous.what() | 0": {
+    "cause": "cause",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"instantiate\" | \"AIG allocation failed\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"target latch is unnamed\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"target rank class is absent from seeds\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"previous target rank is absent\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"target rank level is absent in seeds\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"policy_reconstruct\" | \"Skolem output reads current letter\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"target game variable inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"policy_reconstruct\" | \"target has no unique bad predicate\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"policy_reconstruct\" | \"justice is not a single predicate\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"target inner rank is missing\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"policy_reconstruct\" | \"response letter survived quantification\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"policy_totality\" | \"no common environment move\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"policy_reconstruct\" | \"policy reads current letter\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"emit\" | \"AIG allocation failed\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"instantiate\" | \"target output lacks construction\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"target_reduction\" | \"exact target reduction is required\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"target_binding\" | \"source snapshot hash differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"target_binding\" | \"trusted game hash differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"target conjunct or role class missing\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema_abi\" | \"invalid seed certificate encoding\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"distinct owner role inventory differs\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"target_binding\" | \"prepared game changed before verification\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | \"target_check\" | \"checker deadline\" | 0": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_CANCELLED | \"target_check\" | \"checker cancelled\" | 0": {
+    "cause": "FailureCause::cancelled",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"target_check\" | \"checker capacity\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_DECLINED | \"checker_rejected\" | detail.empty() ? \"independent target certificate check failed\" : detail | 0": {
+    "cause": "check_failure_cause(status, verdict)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_BAD_ARGUMENT | \"check\" | \"invalid argument or missing resource cap\" | 0": {
+    "cause": "TLSF_GR1_CHECK_BAD_ARGUMENT",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_LIMIT | \"check\" | \"input artifact cap exceeded\" | 0": {
+    "cause": "TLSF_GR1_CHECK_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_CANCELLED | \"check\" | \"cancelled\" | 0": {
+    "cause": "TLSF_GR1_CHECK_CANCELLED",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_DEADLINE | \"check\" | \"deadline exceeded\" | 0": {
+    "cause": "TLSF_GR1_CHECK_DEADLINE",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_LIMIT | \"check\" | \"sidecar allocation failed\" | 0": {
+    "cause": "TLSF_GR1_CHECK_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_BAD_ARGUMENT | \"check\" | \"invalid checker caps\" | 0": {
+    "cause": "TLSF_GR1_CHECK_BAD_ARGUMENT",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | failure.kind == OXIDD_FAILURE_CANCELLED ? TLSF_GR1_CHECK_CANCELLED : TLSF_GR1_CHECK_DEADLINE | failure.phase ? failure.phase : \"construction\" | \"checker stopped during BDD construction\" | 0": {
+    "cause": "failure.kind == OXIDD_FAILURE_CANCELLED ? TLSF_GR1_CHECK_CANCELLED : TLSF_GR1_CHECK_DEADLINE",
+    "telemetry": "STOPPED/cancelled/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_CANCELLED | \"check\" | \"cancelled\" | 1": {
+    "cause": "TLSF_GR1_CHECK_CANCELLED",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_DEADLINE | \"check\" | \"deadline exceeded\" | 1": {
+    "cause": "TLSF_GR1_CHECK_DEADLINE",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_LIMIT | \"check\" | \"checker allocation or node cap exhausted\" | 0": {
+    "cause": "TLSF_GR1_CHECK_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_LIMIT | \"result\" | \"result artifact cap exceeded\" | 0": {
+    "cause": "TLSF_GR1_CHECK_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_LIMIT | \"result\" | \"result allocation failed\" | 0": {
+    "cause": "TLSF_GR1_CHECK_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_ERROR | \"check\" | \"checker internal or output error\" | 0": {
+    "cause": "TLSF_GR1_CHECK_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_LIMIT | \"check\" | \"result allocation or artifact cap exceeded\" | 0": {
+    "cause": "TLSF_GR1_CHECK_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | next_power_of_two |  while (power < value) { if (power > SIZE_MAX / 2)  | 0": {
+    "cause": "next_power_of_two",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | gr1_check_node_capacity |  */ if (requested > (size_t)UINT32_MAX - 1)  | 0": {
+    "cause": "gr1_check_node_capacity",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | json_unique | static bool json_unique(yyjson_val *value, unsigned depth, JsonBudget *budget) { if (depth > 64)  | 0": {
+    "cause": "json_unique",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | json_unique |  size_t entries = yyjson_obj_size(value); if (entries > SIZE_MAX / 2)  | 0": {
+    "cause": "json_unique",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | json_unique |  while (slots < entries * 2) { if (slots > SIZE_MAX / 2)  | 0": {
+    "cause": "json_unique",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | json_unique |  } if (slots > SIZE_MAX / sizeof(yyjson_val *))  | 0": {
+    "cause": "json_unique",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | json_unique |  yyjson_val **keys = json_budget_malloc(budget, slots * sizeof *keys); if (!keys)  | 0": {
+    "cause": "json_unique",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | json_unique |  memcmp(yyjson_get_str(prior), bytes, length) == 0) { json_budget_free(budget, keys);  | 0": {
+    "cause": "json_unique",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | json_unique |  if (!json_unique(member, depth + 1, budget)) { json_budget_free(budget, keys);  | 0": {
+    "cause": "json_unique",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | json_unique |  yyjson_arr_foreach( value, i, n, member) if (!json_unique(member, depth + 1, budget))  | 0": {
+    "cause": "json_unique",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | json_uint |  yyjson_val *item = yyjson_obj_get(counts, key); if (!yyjson_is_uint(item) \\|\\| yyjson_get_uint(item) > UINT32_MAX)  | 0": {
+    "cause": "json_uint",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | duplicate_inputs_or_outputs |  } }  | 0": {
+    "cause": "duplicate_inputs_or_outputs",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | has_input |  return true; }  | 0": {
+    "cause": "has_input",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_sidecars |  snprintf(message, cap, \"cannot read policy sidecar '%s'\", ck->options.policy_json_path);  | 0": {
+    "cause": "validate_sidecars",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_sidecars |  if (!ok) { snprintf(message, cap, \"policy sidecar does not match this game\");  | 0": {
+    "cause": "validate_sidecars",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_sidecars |  snprintf(message, cap, \"cannot read certificate sidecar '%s'\", ck->options.certificate_json_path);  | 0": {
+    "cause": "validate_sidecars",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_sidecars |  if (!ok) { snprintf(message, cap, \"certificate sidecar does not match this game\");  | 0": {
+    "cause": "validate_sidecars",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_region_sidecar |  snprintf(message, cap, \"cannot read certificate sidecar '%s'\", ck->options.certificate_json_path);  | 0": {
+    "cause": "validate_region_sidecar",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_region_sidecar |  \"region-v1 requires a realizable system certificate matching \" \"this game\");  | 0": {
+    "cause": "validate_region_sidecar",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_policy_interface |  if (duplicate_inputs_or_outputs(ck->policy, &kind, &name)) { snprintf(message, cap, \"%s%s%s\", kind, *name ? \": \" : \"\", name);  | 0": {
+    "cause": "validate_policy_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_policy_interface |  aig_num_fairness(ck->policy) != 0) { snprintf(message, cap, \"policy must be a combinational AIG\");  | 0": {
+    "cause": "validate_policy_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_policy_interface |  aig_num_inputs(ck->policy), expected_inputs, aig_num_outputs(ck->policy), expected_outputs);  | 0": {
+    "cause": "validate_policy_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_policy_interface |  if (!has_input(ck->policy, name)) { snprintf(message, cap, \"policy is missing state input '%s'\", name);  | 0": {
+    "cause": "validate_policy_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_policy_interface |  if (!has_input(ck->policy, generated)) { snprintf(message, cap, \"policy is missing counter input '%s'\", generated);  | 0": {
+    "cause": "validate_policy_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_policy_interface |  snprintf(message, cap, \"policy is missing counter output '%s'\", generated);  | 0": {
+    "cause": "validate_policy_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_policy_interface |  \"environment policy is missing uncontrollable output '%s'\", name);  | 0": {
+    "cause": "validate_policy_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_policy_interface |  \"Moore environment policy reads current controllable '%s'\", name);  | 0": {
+    "cause": "validate_policy_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_policy_interface |  snprintf(message, cap, \"policy is missing controllable output '%s'\", name);  | 0": {
+    "cause": "validate_policy_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_policy_interface |  snprintf(message, cap, \"policy is missing uncontrollable input '%s'\", name);  | 0": {
+    "cause": "validate_policy_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_game_names |  if (!aig_input_name(ck->game, p, nullptr)) { snprintf(message, cap, \"unnamed game input %u\", p);  | 0": {
+    "cause": "validate_game_names",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_game_names |  if (!strcmp(left, aig_input_name(ck->game, q, nullptr))) { snprintf(message, cap, \"duplicate game input name '%s'\", left);  | 0": {
+    "cause": "validate_game_names",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_game_names |  if (!strcmp(left, right)) { snprintf(message, cap, \"duplicate game state name '%s'\", left);  | 0": {
+    "cause": "validate_game_names",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_game_names |  if (!strcmp(left, aig_input_name(ck->game, p, nullptr))) { snprintf(message, cap, \"game state/input name overlap '%s'\", left);  | 0": {
+    "cause": "validate_game_names",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_game_names |  if (!strcmp(reserved, aig_input_name(ck->game, p, nullptr))) { snprintf(message, cap, \"game input uses reserved name '%s'\", reserved);  | 0": {
+    "cause": "validate_game_names",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_game_names |  latch_name(ck->game, s, fallback, sizeof fallback))) { snprintf(message, cap, \"game state uses reserved name '%s'\", reserved);  | 0": {
+    "cause": "validate_game_names",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_game_names |  if (name[strlen(CONTROLLABLE_PREFIX)] == '\\0') { snprintf(message, cap, \"empty controllable signal name\");  | 0": {
+    "cause": "validate_game_names",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | output_is_expected_certificate |  } }  | 0": {
+    "cause": "output_is_expected_certificate",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | output_is_expected_environment_certificate |  } }  | 0": {
+    "cause": "output_is_expected_environment_certificate",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_environment_certificate_interface |  if (duplicate_inputs_or_outputs(ck->certificate, &kind, &name)) { snprintf(message, cap, \"%s%s%s\", kind, *name ? \": \" : \"\", name);  | 0": {
+    "cause": "validate_environment_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_environment_certificate_interface |  aig_num_inputs(ck->certificate) != ck->nstate + ck->nin) { snprintf(message, cap, \"environment certificate shape does not match game\");  | 0": {
+    "cause": "validate_environment_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_environment_certificate_interface |  if (!has_input(ck->certificate, name)) { snprintf(message, cap, \"certificate is missing state input '%s'\", name);  | 0": {
+    "cause": "validate_environment_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_environment_certificate_interface |  if (!has_input(ck->certificate, name)) { snprintf(message, cap, \"certificate is missing game input '%s'\", name);  | 0": {
+    "cause": "validate_environment_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_environment_certificate_interface |  !has_output(ck->certificate, tlsf_gr1_check_winning_output_name)) { snprintf(message, cap, \"environment certificate is missing its region\");  | 0": {
+    "cause": "validate_environment_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_environment_certificate_interface |  if (!outer_levels) { snprintf(message, cap, \"environment certificate has no outer rank levels\");  | 0": {
+    "cause": "validate_environment_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_environment_certificate_interface |  if (!levels) { snprintf(message, cap, \"out of memory\");  | 0": {
+    "cause": "validate_environment_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_environment_certificate_interface |  snprintf(message, cap, \"unexpected certificate output '%s'\", name); free(levels);  | 0": {
+    "cause": "validate_environment_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_environment_certificate_interface | missing: snprintf(message, cap, \"certificate is missing output '%s'\", generated);  | 0": {
+    "cause": "validate_environment_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_certificate_interface |  if (duplicate_inputs_or_outputs(ck->certificate, &kind, &name)) { snprintf(message, cap, \"%s%s%s\", kind, *name ? \": \" : \"\", name);  | 0": {
+    "cause": "validate_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_certificate_interface |  aig_num_fairness(ck->certificate) != 0) { snprintf(message, cap, \"certificate must be a combinational AIG\");  | 0": {
+    "cause": "validate_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_certificate_interface |  if (aig_num_inputs(ck->certificate) != ck->nstate + ck->nin) { snprintf(message, cap, \"certificate input arity does not match game\");  | 0": {
+    "cause": "validate_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_certificate_interface |  if (!has_input(ck->certificate, name)) { snprintf(message, cap, \"certificate is missing state input '%s'\", name);  | 0": {
+    "cause": "validate_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_certificate_interface |  if (!has_input(ck->certificate, name)) { snprintf(message, cap, \"certificate is missing game input '%s'\", name);  | 0": {
+    "cause": "validate_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_certificate_interface |  if (!has_output(ck->certificate, \"inv\")) { snprintf(message, cap, \"certificate is missing output 'inv'\");  | 0": {
+    "cause": "validate_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_certificate_interface |  if (!levels) { snprintf(message, cap, \"out of memory\");  | 0": {
+    "cause": "validate_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_certificate_interface |  snprintf(message, cap, \"certificate has no rank levels for goal %u\", j); free(levels);  | 0": {
+    "cause": "validate_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_certificate_interface |  snprintf(message, cap, \"unexpected certificate output '%s'\", name); free(levels);  | 0": {
+    "cause": "validate_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_certificate_interface |  snprintf(message, cap, \"certificate is missing output '%s'\", generated); free(levels);  | 0": {
+    "cause": "validate_certificate_interface",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_aig_structure |  if (!defined) { snprintf(message, cap, \"out of memory validating %s AIG\", kind);  | 0": {
+    "cause": "validate_aig_structure",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_aig_structure |  snprintf(message, cap, \"malformed %s AIG input %u\", kind, i); free(defined);  | 0": {
+    "cause": "validate_aig_structure",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_aig_structure |  snprintf(message, cap, \"malformed %s AIG latch %u\", kind, i); free(defined);  | 0": {
+    "cause": "validate_aig_structure",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_aig_structure |  snprintf(message, cap, \"malformed %s AIG gate %u\", kind, i); free(defined);  | 0": {
+    "cause": "validate_aig_structure",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_aig_structure |  snprintf(message, cap, \"malformed %s AIG latch update %u\", kind, i); free(defined);  | 0": {
+    "cause": "validate_aig_structure",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_aig_structure |  kind, i, reset); free(defined);  | 0": {
+    "cause": "validate_aig_structure",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | validate_aig_structure |  (unsigned)(index)); \\ free(defined); \\  | 0": {
+    "cause": "validate_aig_structure",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | compile_aig_roots_seeded |  Bdd *map = calloc((size_t)maxvar + 1, sizeof *map); if (!map)  | 0": {
+    "cause": "compile_aig_roots_seeded",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | compile_aig_roots_seeded |  oxidd_bdd_unref(map[v]); free(map);  | 0": {
+    "cause": "compile_aig_roots_seeded",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | certificate_output_is_selected |  // this choice explicit here so a future method cannot inherit it silently. if (!strncmp(name, \"move_\", 5))  | 0": {
+    "cause": "certificate_output_is_selected",
+    "telemetry": "DECLINE/applicability or STOPPED/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | certificate_output_is_selected |  return !ck->environment \\|\\| strcmp(name, tlsf_gr1_check_winning_output_name); case METHOD_CLOSED_LOOP:  | 0": {
+    "cause": "certificate_output_is_selected",
+    "telemetry": "DECLINE/applicability or STOPPED/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | certificate_output_is_selected |  return false; }  | 0": {
+    "cause": "certificate_output_is_selected",
+    "telemetry": "DECLINE/applicability or STOPPED/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | compile_certificate_outputs |  uint32_t *root_by_output = calloc(noutputs, sizeof *root_by_output); if (!root_by_output)  | 0": {
+    "cause": "compile_certificate_outputs",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | compile_certificate_outputs |  free(lits); free(roots);  | 0": {
+    "cause": "compile_certificate_outputs",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | compile_certificate_outputs |  free(root_by_output); free(roots);  | 0": {
+    "cause": "compile_certificate_outputs",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | prepare_policy_independent |  free(roots); free(vars);  | 0": {
+    "cause": "prepare_policy_independent",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | compile_policy_roots |  Bdd *inputs = ninputs ? calloc(ninputs, sizeof *inputs) : nullptr; if (ninputs && !inputs)  | 0": {
+    "cause": "compile_policy_roots",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | compile_policy_roots |  if (specialized && !prepare_policy_independent(ck)) { free(inputs);  | 0": {
+    "cause": "compile_policy_roots",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | compile_policy_roots |  free(inputs); if (!prepare_policy_mode_cache(ck))  | 0": {
+    "cause": "compile_policy_roots",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | ensure_full_policy |  ck->policy_curr_next = nullptr; snprintf(message, cap, \"OxiDD capacity while compiling policy\");  | 0": {
+    "cause": "ensure_full_policy",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | checked_bdd_eq |  if (bdd_invalid(equality)) { ck->bdd_failed = true;  | 0": {
+    "cause": "checked_bdd_eq",
+    "telemetry": "DECLINE/applicability or STOPPED/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | checked_satisfiable |  if (bdd_invalid(value)) { ck->bdd_failed = true;  | 0": {
+    "cause": "checked_satisfiable",
+    "telemetry": "DECLINE/applicability or STOPPED/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  if (!ck->manager._p) { snprintf(message, cap, \"cannot create OxiDD manager\");  | 0": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  (ck->nu && (!ck->uvar \\|\\| !ck->u)) \\|\\| (ck->nc && (!ck->cvar \\|\\| !ck->c))) { snprintf(message, cap, \"out of memory\");  | 0": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  if (ck->nin && !game_inputs) { snprintf(message, cap, \"out of memory\");  | 0": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  free(game_roots); snprintf(message, cap, \"out of memory\");  | 0": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  free(game_roots); snprintf(message, cap, \"OxiDD capacity while compiling game\");  | 0": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  free(game_roots); snprintf(message, cap, \"out of memory\");  | 1": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  free(game_roots); snprintf(message, cap, \"OxiDD capacity while compiling game safety\");  | 0": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  ck->options.test_unspecialized_policy; if (need_full_policy && !ensure_full_policy(ck, message, cap))  | 0": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  if (!cert_inputs) { snprintf(message, cap, \"out of memory\");  | 0": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  free(cert_inputs); snprintf(message, cap, \"OxiDD capacity while compiling certificate\");  | 0": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  compiled_free(&cert_compiled); snprintf(message, cap, \"out of memory\");  | 0": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  compiled_free(&cert_compiled); snprintf(message, cap, \"out of memory\");  | 1": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  compiled_free(&cert_compiled); snprintf(message, cap, \"out of memory\");  | 2": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  compiled_free(&cert_compiled); snprintf(message, cap, \"out of memory\");  | 3": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  compiled_free(&cert_compiled); snprintf(message, cap, \"out of memory\");  | 4": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  compiled_free(&cert_compiled); snprintf(message, cap, \"out of memory\");  | 5": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  compiled_free(&cert_compiled); snprintf(message, cap, \"out of memory\");  | 6": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | setup_bdds |  if (ck->nu + ck->nc && !input_vars) { snprintf(message, cap, \"out of memory\");  | 0": {
+    "cause": "setup_bdds",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_state_only |  if (bdd_invalid(universal)) { ck->bdd_failed = true;  | 0": {
+    "cause": "check_state_only",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_state_only |  print_counterexample(ck, reason, dependence, nullptr); oxidd_bdd_unref(dependence);  | 0": {
+    "cause": "check_state_only",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | validate_certificate_predicates |  if (!bdd_or_into(ck, &union_x, x)) { oxidd_bdd_unref(previous);  | 0": {
+    "cause": "validate_certificate_predicates",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | validate_certificate_predicates |  oxidd_bdd_unref(union_x); oxidd_bdd_unref(previous);  | 0": {
+    "cause": "validate_certificate_predicates",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | validate_certificate_predicates |  oxidd_bdd_unref(union_x); oxidd_bdd_unref(previous);  | 0": {
+    "cause": "validate_certificate_predicates",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | validate_certificate_predicates |  oxidd_bdd_unref(union_x); oxidd_bdd_unref(previous);  | 1": {
+    "cause": "validate_certificate_predicates",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | validate_certificate_predicates |  oxidd_bdd_unref(union_x); oxidd_bdd_unref(previous);  | 1": {
+    "cause": "validate_certificate_predicates",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | reset_in_predicate |  if (ck->nstate && !args) { ck->bdd_failed = true;  | 0": {
+    "cause": "reset_in_predicate",
+    "telemetry": "DECLINE/applicability or STOPPED/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | validate_environment_certificate_predicates |  oxidd_bdd_unref(intersection); oxidd_bdd_unref(union_y);  | 0": {
+    "cause": "validate_environment_certificate_predicates",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | validate_environment_certificate_predicates |  oxidd_bdd_unref(mismatch); oxidd_bdd_unref(union_y);  | 0": {
+    "cause": "validate_environment_certificate_predicates",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | validate_environment_certificate_predicates |  mismatch, nullptr); oxidd_bdd_unref(mismatch);  | 0": {
+    "cause": "validate_environment_certificate_predicates",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | validate_environment_certificate_predicates |  nullptr); oxidd_bdd_unref(nonmonotone);  | 0": {
+    "cause": "validate_environment_certificate_predicates",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | validate_environment_certificate_predicates |  region_mismatch, nullptr); oxidd_bdd_unref(region_mismatch);  | 0": {
+    "cause": "validate_environment_certificate_predicates",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_environment_certificate_mode |  mismatch, nullptr); oxidd_bdd_unref(mismatch);  | 0": {
+    "cause": "check_environment_certificate_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_environment_certificate_mode |  mismatch, nullptr); oxidd_bdd_unref(mismatch);  | 1": {
+    "cause": "check_environment_certificate_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_environment_certificate_mode |  if (!reset_in_predicate(ck, ck->cert_inv)) { if (ck->bdd_failed)  | 0": {
+    "cause": "check_environment_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_environment_certificate_mode |  nullptr); oxidd_bdd_unref(reset);  | 0": {
+    "cause": "check_environment_certificate_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_environment_certificate_mode |  free(counter_next); free(next_state);  | 0": {
+    "cause": "check_environment_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_environment_certificate_mode |  free(counter_next); free(next_state);  | 1": {
+    "cause": "check_environment_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_environment_certificate_mode |  free(next_state); if (ck->bdd_failed)  | 0": {
+    "cause": "check_environment_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_environment_certificate_mode |  free(counter_next); free(next_state);  | 0": {
+    "cause": "check_environment_certificate_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_environment_certificate_mode |  free(counter_next); free(next_state);  | 2": {
+    "cause": "check_environment_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_certificate_mode |  oxidd_bdd_unref(counter); oxidd_bdd_unref(mismatch);  | 0": {
+    "cause": "check_certificate_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_certificate_mode |  oxidd_bdd_unref(mismatch); if (ck->bdd_failed)  | 0": {
+    "cause": "check_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_certificate_mode |  if (!reset_in_predicate(ck, ck->cert_inv)) { if (ck->bdd_failed)  | 0": {
+    "cause": "check_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_certificate_mode |  print_counterexample(ck, \"reset state is outside inv\", reset, nullptr); oxidd_bdd_unref(reset);  | 0": {
+    "cause": "check_certificate_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_certificate_mode |  if (!bdd_or_into(ck, &covered, ck->rank[j].x[k][i])) { oxidd_bdd_unref(covered);  | 0": {
+    "cause": "check_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_certificate_mode |  oxidd_bdd_unref(counter); oxidd_bdd_unref(missing);  | 0": {
+    "cause": "check_certificate_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_certificate_mode |  oxidd_bdd_unref(missing); if (ck->bdd_failed)  | 0": {
+    "cause": "check_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_certificate_mode |  free(counter_next); free(next_state);  | 0": {
+    "cause": "check_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_certificate_mode |  free(counter_next); free(next_state);  | 1": {
+    "cause": "check_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_certificate_mode |  free(counter_next); free(next_state);  | 2": {
+    "cause": "check_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_certificate_mode |  free(counter_next); free(next_state);  | 0": {
+    "cause": "check_certificate_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_certificate_mode |  profile_add(ck, PROFILE_OTHER_PROOF, section_started); if (timed_out(ck))  | 0": {
+    "cause": "check_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_certificate_mode |  free(counter_next); free(next_state);  | 3": {
+    "cause": "check_certificate_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_region_layer |  if (bdd_invalid(has_control)) { ck->bdd_failed = true;  | 0": {
+    "cause": "check_region_layer",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_region_layer |  if (bdd_invalid(missing)) { ck->bdd_failed = true;  | 0": {
+    "cause": "check_region_layer",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_INVALID | check_region_mode | static CheckResult check_region_mode(Checker *ck) { if (ck->environment)  | 0": {
+    "cause": "check_region_mode",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_region_mode |  print_counterexample(ck, reason, mismatch, nullptr); oxidd_bdd_unref(mismatch);  | 0": {
+    "cause": "check_region_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_region_mode |  oxidd_bdd_unref(mismatch); if (ck->bdd_failed)  | 0": {
+    "cause": "check_region_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_region_mode |  if (!reset_in_predicate(ck, ck->cert_inv)) { if (ck->bdd_failed)  | 0": {
+    "cause": "check_region_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_region_mode |  print_counterexample(ck, \"reset state is outside region\", reset, nullptr); oxidd_bdd_unref(reset);  | 0": {
+    "cause": "check_region_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_region_mode |  if (!bdd_or_into(ck, &covered, ck->rank[j].x[k][i])) { oxidd_bdd_unref(covered);  | 0": {
+    "cause": "check_region_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_CERT_FAILED | check_region_mode |  oxidd_bdd_unref(counter); oxidd_bdd_unref(missing);  | 0": {
+    "cause": "check_region_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_region_mode |  oxidd_bdd_unref(missing); if (ck->bdd_failed)  | 0": {
+    "cause": "check_region_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | build_closed_loop |  oxidd_bdd_substitution_t *csub = control_substitution(ck, ck->policy_control); if (ck->nc && !csub)  | 0": {
+    "cause": "build_closed_loop",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | build_closed_loop |  if (!next) { oxidd_bdd_substitution_free(csub);  | 0": {
+    "cause": "build_closed_loop",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | build_closed_loop |  oxidd_bdd_unref(*bad_out); ck->bdd_failed = true;  | 0": {
+    "cause": "build_closed_loop",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_environment_closed_loop_mode |  environment_substitution(ck, ck->policy_control); if (ck->nu && !usub)  | 0": {
+    "cause": "check_environment_closed_loop_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_environment_closed_loop_mode |  if (!next) { oxidd_bdd_substitution_free(usub);  | 0": {
+    "cause": "check_environment_closed_loop_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_REFUTED | check_environment_closed_loop_mode |  oxidd_bdd_unref(next[q]); free(next);  | 0": {
+    "cause": "check_environment_closed_loop_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_environment_closed_loop_mode |  oxidd_bdd_unref(next[q]); free(next);  | 0": {
+    "cause": "check_environment_closed_loop_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_closed_loop_mode |  Bdd bad = {0}; if (!build_closed_loop(ck, &next, &bad))  | 0": {
+    "cause": "check_closed_loop_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_REFUTED | check_closed_loop_mode |  oxidd_bdd_unref(next[q]); free(next);  | 0": {
+    "cause": "check_closed_loop_mode",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_closed_loop_mode |  } free(next);  | 0": {
+    "cause": "check_closed_loop_mode",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | emit_controller |  char **export_names = load_export_names(ck); if (!export_names)  | 0": {
+    "cause": "emit_controller",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | emit_controller |  if (!build_closed_loop(ck, &next, &bad)) { free_export_names(export_names, ck->nin);  | 0": {
+    "cause": "emit_controller",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | emit_controller |  free(next); free_export_names(export_names, ck->nin);  | 0": {
+    "cause": "emit_controller",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | write_result_json |  FILE *out = open_result_stream(&ck->options); if (!out)  | 0": {
+    "cause": "write_result_json",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | false | write_region_result_json |  FILE *out = open_result_stream(&ck->options); if (!out)  | 0": {
+    "cause": "write_region_result_json",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"export\" | \"artifact_cap\" | 0": {
+    "cause": "OXIDD_FAILURE_ARTIFACT_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | run->phase | \"realloc\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"construction\" | \"calloc\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | run->phase | \"dual_level_realloc\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | run->phase | \"certificate_allocation\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | run->phase | \"certificate_bdd2aig\" | 0": {
+    "cause": "OXIDD_FAILURE_CONVERSION",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | run->phase | \"policy_allocation\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | run->phase | \"policy_bdd2aig\" | 0": {
+    "cause": "OXIDD_FAILURE_CONVERSION",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | run->phase | \"dual_level_allocation\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"configuration\" | \"null_verdict_output\" | 0": {
+    "cause": "OXIDD_FAILURE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"configuration\" | \"safety_only_option\" | 0": {
+    "cause": "OXIDD_FAILURE_CONFIGURATION",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"configuration\" | \"export_buffers\" | 0": {
+    "cause": "OXIDD_FAILURE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"manager_create\" | \"session_nondefault_order\" | 0": {
+    "cause": "OXIDD_FAILURE_CONFIGURATION",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"manager_create\" | \"session_capacity_mismatch\" | 0": {
+    "cause": "OXIDD_FAILURE_CONFIGURATION",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"construction\" | \"calloc\" | 1": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"dual_fixpoint\" | \"reset_not_environment_winning\" | 0": {
+    "cause": "OXIDD_FAILURE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"conversion\" | \"bdd2aig_or_substitution\" | 0": {
+    "cause": "OXIDD_FAILURE_CONVERSION",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"export\" | \"artifact_cap\" | 1": {
+    "cause": "OXIDD_FAILURE_ARTIFACT_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | run->phase | \"host_allocation_or_invalid_input\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"configuration\" | \"export_buffers\" | 1": {
+    "cause": "OXIDD_FAILURE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"export\" | \"publish\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"export\" | \"staging\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_common.c | oxidd_record_failure | solver inconclusive | r->phase | \"limit\" | 0": {
+    "cause": "reason",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_common.c | oxidd_record_failure | solver inconclusive | r->phase | op | 0": {
+    "cause": "OXIDD_FAILURE_BDD",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_common.c | oxidd_record_failure | solver inconclusive | r->phase | name | 0": {
+    "cause": "OXIDD_FAILURE_INVALID",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_common.c | oxidd_record_failure | solver inconclusive | r->phase | \"realloc\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_common.c | oxidd_record_failure | solver inconclusive | r->phase | \"realloc\" | 1": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_order.c | oxidd_record_failure | solver inconclusive | \"manager_create\" | operation | 0": {
+    "cause": "kind",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"order_file_open\" | 0": {
+    "cause": "OXIDD_FAILURE_CONFIGURATION",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"order_file_invalid\" | 0": {
+    "cause": "OXIDD_FAILURE_CONFIGURATION",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"order_var_overflow\" | 0": {
+    "cause": "OXIDD_FAILURE_CONFIGURATION",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"order_allocation\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"fanin_order_allocation_or_input\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"order_invalid\" | 0": {
+    "cause": "OXIDD_FAILURE_CONFIGURATION",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"order_apply_allocation\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"order_apply_mismatch\" | 0": {
+    "cause": "OXIDD_FAILURE_CONFIGURATION",
+    "telemetry": "STOPPED/error"
+  }
+}
