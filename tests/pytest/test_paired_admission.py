@@ -20,7 +20,9 @@ MIB = admission.MIB
 def samples(times=(1,) * 5, status="REALIZABLE", memory=None, rss=None):
     return [{"result": status, "seconds": str(seconds),
              "scope_memory_peak_bytes": "" if memory is None else str(memory),
-             "max_process_rss_bytes": "" if rss is None else str(rss)} for seconds in times]
+             "max_process_rss_bytes": "" if rss is None else str(rss),
+             "scope_memory_peak_source": "cgroup-v2/memory.peak", "memory_cgroup": "/invocation",
+             "max_process_rss_source": "Linux wait4.ru_maxrss (maximum reaped process; not scope peak)"} for seconds in times]
 
 
 def write_screen(path, cases=None, cap=17):
@@ -51,6 +53,7 @@ def write_screen(path, cases=None, cap=17):
 
 def save_round(path, rows, cap=17):
     runner.atomic_write_tsv(path, runner.OUTPUT_COLUMNS, rows)
+    runner.write_memory_sidecar(path, rows)
     runner.write_summary(path, rows[0]["solver_label"], [row["instance"] for row in rows], rows, cap)
 
 
@@ -471,3 +474,12 @@ def test_120s_rows_rejected_under_17s_protocol(tmp_path):
     with pytest.raises(SystemExit) as error:
         cli(tmp_path)  # defaults to --cap 17
     assert error.value.code != 0
+
+
+def test_failed_observation_cannot_publish_paired_memory_median():
+    control = samples(memory=200 * MIB)
+    treatment = samples(memory=100 * MIB)
+    treatment[0]["scope_memory_peak_missing_reason"] = "collector failed"
+    result = admission.measure_instance("case", control, treatment, True, 17)
+    assert result["treatment_completeness_scope_memory_peak_bytes"]["numerator"] == 4
+    assert result["treatment_median_scope_memory_peak_bytes"] is None

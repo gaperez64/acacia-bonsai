@@ -122,6 +122,8 @@ def phase_records_digest(root, rows):
 
 def write_tsv(path, columns, rows):
     coverage.atomic_write_tsv(pathlib.Path(path), list(columns), rows)
+    if set(coverage.OUTPUT_COLUMNS) <= set(columns):
+        coverage.write_memory_sidecar(path, rows)
 
 
 def read_tsv(path):
@@ -800,7 +802,8 @@ def merge(args):
         else:
             row = dict(short[name], **sources["recycled"])
             row["cap_s"] = str(manifest["long_cap_s"])
-        derived.append({column: row.get(column, "") for column in columns})
+        derived.append({column: row.get(column, "")
+                        for column in columns + coverage.MEMORY_COLUMNS})
     write_tsv(output, columns, derived)
     summary = coverage.write_summary(output, manifest["series"],
                                      [row["instance"] for row in derived], derived,

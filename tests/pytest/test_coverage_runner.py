@@ -476,3 +476,45 @@ def test_empty_status_exceptions_table_is_not_an_error(tmp_path):
     write_status_exceptions(tmp_path / "exceptions.tsv", [])
     assert coverage.read_status_exceptions(
         tmp_path / "exceptions.tsv", tmp_path, required=True) == {}
+
+
+def test_primary_columns_and_rows_remain_compatible_with_master(
+        monkeypatch, campaign, master_benchmark_reader):
+    master = master_benchmark_reader("run-syntcomp26-coverage.py")
+    result = coverage.RunResult(
+        "REALIZABLE\n", "", 0, 0.1, False, scope_unit="acacia-test.scope",
+        memory_peak_bytes=4096, scope_memory_peak_source="cgroup-v2/memory.peak",
+        scope_memory_peak_missing_reason="", memory_cgroup="/invocation")
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *args, **kwargs: result)
+    assert coverage.run(campaign) == 0
+    output = pathlib.Path(campaign.output)
+    with output.open(newline="") as stream:
+        reader = csv.DictReader(stream, delimiter="\t")
+        assert reader.fieldnames == master.OUTPUT_COLUMNS
+        primary = list(reader)
+    assert master.load_output(output) == primary
+    restored = coverage.load_output(output)
+    assert restored[0]["scope_memory_peak_source"] == "cgroup-v2/memory.peak"
+    assert restored[0]["memory_cgroup"] == "/invocation"
+    campaign.resume = True
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *args, **kwargs: pytest.fail("rerun"))
+    assert coverage.run(campaign) == 0
+    assert coverage.load_output(output) == restored
+
+
+def test_expanded_primary_is_preserved_when_moved_to_sidecar(monkeypatch, campaign):
+    result = coverage.RunResult(
+        "REALIZABLE\n", "", 0, 0.1, False, scope_unit="acacia-test.scope",
+        memory_peak_bytes=4096, scope_memory_peak_source="cgroup-v2/memory.peak",
+        scope_memory_peak_missing_reason="", memory_cgroup="/invocation")
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *args, **kwargs: result)
+    assert coverage.run(campaign) == 0
+    output = pathlib.Path(campaign.output)
+    rows = coverage.load_output(output)
+    coverage.atomic_write_tsv(output, coverage.OUTPUT_COLUMNS + coverage.MEMORY_COLUMNS, rows)
+    output.with_name(output.name + ".memory.tsv").unlink()
+    original = output.read_bytes()
+    campaign.resume = True
+    assert coverage.run(campaign) == 0
+    assert output.with_name(f"{output.stem}-legacy.tsv").read_bytes() == original
+    assert coverage.load_output(output) == rows

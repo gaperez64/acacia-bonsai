@@ -49,6 +49,11 @@ import shlex
 import subprocess
 import sys
 
+from scope_memory import (
+    MEMORY_COLUMNS, append_memory_sidecar, load_memory_sidecar, memory_fields,
+    write_memory_sidecar,
+)
+
 from benchlib import build_preset, campaign_scope_guard, classify_run, run_systemd_scope
 
 
@@ -205,7 +210,8 @@ def write_tsv(path: pathlib.Path, columns: list[str], rows: list[dict[str, str]]
     def write(stream):
         writer = csv.DictWriter(stream, fieldnames=columns, delimiter="\t", lineterminator="\n")
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows({key: value for key, value in row.items()
+                          if key not in MEMORY_COLUMNS or key in columns} for row in rows)
     atomic_write(path, write)
 
 
@@ -219,7 +225,9 @@ def load_output(path, metadata, pairs, targets, plan) -> list[dict[str, str]]:
     seen = set()
     with path.open(encoding="utf-8", newline="") as stream:
         reader = csv.DictReader(stream, delimiter="\t")
-        if reader.fieldnames != OUTPUT_COLUMNS:
+        if reader.fieldnames not in (OUTPUT_COLUMNS,
+                                     OUTPUT_COLUMNS[:-len(PAIR_COLUMNS)] + MEMORY_COLUMNS
+                                     + PAIR_COLUMNS):
             raise PairError(f"resume output {path} has an unexpected header")
         for line_number, row in enumerate(reader, 2):
             if None in row or any(value is None for value in row.values()):
@@ -248,7 +256,14 @@ def load_output(path, metadata, pairs, targets, plan) -> list[dict[str, str]]:
             if not valid:
                 raise PairError(f"resume output {path}:{line_number} has invalid run data")
             seen.add(slot)
+            for column in MEMORY_COLUMNS:
+                row.setdefault(column, "missing legacy observation/provenance"
+                               if column.endswith("missing_reason") else "")
             rows.append(row)
+    try:
+        load_memory_sidecar(path, rows)
+    except ValueError as error:
+        raise PairError(str(error)) from error
     return rows
 
 
@@ -355,11 +370,20 @@ def run(args: argparse.Namespace) -> int:
                 "resume configuration, schedule or binary differs from recorded campaign"
             )
         rows = load_output(output, metadata, pairs, targets, plan)
+        with output.open(newline="") as stream:
+            legacy_header = next(csv.reader(stream, delimiter="\t")) != OUTPUT_COLUMNS
+        if legacy_header:
+            original = output.with_name(f"{output.stem}-legacy.tsv")
+            if original.exists():
+                raise PairError(f"refusing to overwrite original observations {original}")
+            original.write_bytes(output.read_bytes())
+            write_tsv(output, OUTPUT_COLUMNS, rows)
     else:
         rows = []
         atomic_write(metadata_path, lambda stream: json.dump(campaign, stream, indent=2))
         write_tsv(output, OUTPUT_COLUMNS, rows)
 
+    write_memory_sidecar(output, rows)
     conflicts = write_sidecars(output, pairs, targets, rows, metadata["cap_s"], args.repetitions)
     if conflicts:
         raise PairError(
@@ -411,10 +435,12 @@ def run(args: argparse.Namespace) -> int:
                     if solver_run.memory_peak_bytes is not None else "",
                     "scope_unit": solver_run.scope_unit, "repetition_id": str(repetition),
                     "order_index": str(slot),
+                    **memory_fields(solver_run),
                 }
-                writer.writerow(row)
+                writer.writerow({column: row[column] for column in OUTPUT_COLUMNS})
                 stream.flush()
                 os.fsync(stream.fileno())
+                append_memory_sidecar(output, row)
                 rows.append(row)
                 print(f"order={slot} repetition={repetition} pair={label} instance={instance} "
                       f"cap={metadata['cap_s']}s result={result} seconds={solver_run.seconds:.3f}",
