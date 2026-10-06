@@ -902,7 +902,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--preset", default="", metavar="S")
     parser.add_argument("--collect-rusage", action="store_true",
-                        help="wrap the solver with GNU time inside the existing scope")
+                        help="collect CPU time and max process RSS (Linux wait4; GNU time elsewhere)")
     parser.add_argument("--worker-records-dir", type=pathlib.Path,
                         help="diagnostic run: capture transformed workers below this directory")
     parser.add_argument("--phase-records-dir", type=pathlib.Path,
@@ -1075,7 +1075,9 @@ def run(args: argparse.Namespace) -> int:
                     continue
                 tlsf_file, tlsf_path = targets[instance]
                 cmd = [str(binary), *flags, "-T", str(tlsf_path)]
-                if getattr(args, "collect_rusage", False):
+                # Linux collects wait4 counters in the lifecycle owner, so
+                # its child PID is the solver rather than a time wrapper.
+                if getattr(args, "collect_rusage", False) and sys.platform != "linux":
                     cmd = ["/usr/bin/time", "-q", "-f", "ACACIA_RUSAGE %U %S %M", *cmd]
                 run_env = None
                 child_env_overrides: dict[str, str] = {}
@@ -1143,6 +1145,8 @@ def run(args: argparse.Namespace) -> int:
                         scope_env=child_env_overrides,
                     )
                 result, resource_reason = normalize_result(solver_run)
+                cpu_seconds = (solver_run.cpu_seconds
+                               if getattr(args, "collect_rusage", False) else None)
                 usage = re.search(r"^ACACIA_RUSAGE ([0-9.]+) ([0-9.]+) ([0-9]+)$",
                                   solver_run.stderr, re.M)
                 row = {
@@ -1164,7 +1168,8 @@ def run(args: argparse.Namespace) -> int:
                     "preset": args.preset,
                     "timestamp_utc": timestamp_utc(),
                     "flags": args.flags,
-                    "cpu_seconds": format(float(usage[1]) + float(usage[2]), ".6f") if usage else "",
+                    "cpu_seconds": (format(float(usage[1]) + float(usage[2]), ".6f") if usage else
+                                    format(cpu_seconds, ".6f") if cpu_seconds is not None else ""),
                     "max_process_rss_bytes": str(int(usage[3]) * 1024) if usage else "",
                     "scope_memory_peak_bytes": (str(solver_run.memory_peak_bytes)
                                                 if solver_run.memory_peak_bytes is not None else ""),

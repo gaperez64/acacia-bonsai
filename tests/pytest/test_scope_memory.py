@@ -4,6 +4,7 @@ import importlib.util
 import json
 import pathlib
 import shutil
+import signal
 import sys
 from types import SimpleNamespace
 
@@ -39,12 +40,13 @@ def test_owner_retains_cgroup_for_external_read_after_every_exit(
         (state / "cancel").touch()
     monkeypatch.setattr(memory, "current_cgroup", lambda: base)
     monkeypatch.setattr(memory.os, "fork", lambda: 1234)
+    monkeypatch.setattr(memory.os, "kill", lambda *args: None)
     waits = []
     def wait4(pid, flags):
         waits.append(pid)
         if outcome == "timeout" and len(waits) == 1:
-            return 0, 0, SimpleNamespace(ru_maxrss=0)
-        return pid, status, SimpleNamespace(ru_maxrss=2)
+            return 0, 0, SimpleNamespace(ru_maxrss=0, ru_utime=0, ru_stime=0)
+        return pid, status, SimpleNamespace(ru_maxrss=2, ru_utime=1.25, ru_stime=0.25)
     monkeypatch.setattr(memory.os, "wait4", wait4)
     mkdir = pathlib.Path.mkdir
     def fake_mkdir(path, *args, **kwargs):
@@ -69,6 +71,7 @@ def test_owner_retains_cgroup_for_external_read_after_every_exit(
     assert deleted == [base / "invocation"]
     assert observer.snapshot["memory_peak_bytes"] == 4096
     assert observer.snapshot["max_process_rss_bytes"] == 2048
+    assert observer.snapshot["cpu_seconds"] == 1.5
     assert json.loads(observer.snapshot["scope_memory_events"])["oom_kill"] == (
         1 if outcome == "child-oom" else 3 if outcome == "invocation-oom" else 0)
     assert (base / "cgroup.subtree_control").read_text() == "+memory"
@@ -105,16 +108,17 @@ def test_owner_errors_with_readable_cgroup_never_publish_complete_memory(
             raise OSError("fork failed before final drain")
         return 1234
     monkeypatch.setattr(memory.os, "fork", fork)
+    monkeypatch.setattr(memory.os, "kill", lambda *args: None)
     if failure == "cancel-kill":
         (state / "cancel").touch()
     waits = []
     def wait4(pid, flags):
         waits.append(flags)
         if failure == "cancel-kill" and len(waits) == 1:
-            return 0, 0, SimpleNamespace(ru_maxrss=0)
+            return 0, 0, SimpleNamespace(ru_maxrss=0, ru_utime=0, ru_stime=0)
         if failure == "wait4" and len(waits) == 1:
             raise OSError("wait4 failed before final drain")
-        return pid, 0, SimpleNamespace(ru_maxrss=2)
+        return pid, 0, SimpleNamespace(ru_maxrss=2, ru_utime=1.25, ru_stime=0.25)
     monkeypatch.setattr(memory.os, "wait4", wait4)
     mkdir = pathlib.Path.mkdir
     configured = []
@@ -452,3 +456,69 @@ def test_sidecar_provenance_is_bound_to_the_primary_observation(tmp_path, field)
     changed[field] = "8192" if field.endswith("_bytes") else "different"
     memory.load_memory_sidecar(path, [changed])
     assert memory.memory_statistic([changed], "scope_memory_peak_bytes")["numerator"] == 0
+
+
+@pytest.mark.parametrize("hung", [False, True])
+def test_timeout_signals_only_parent_then_enforces_one_cleanup_window(
+        monkeypatch, tmp_path, hung):
+    base = tmp_path / "scope"
+    base.mkdir()
+    state = tmp_path / "state"
+    state.mkdir()
+    clock = [10.0]
+    monkeypatch.setattr(memory.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(memory.time, "sleep", lambda seconds: clock.__setitem__(0, clock[0] + .01))
+    memory.request_cancel(state)
+    deadline = json.loads((state / "cancel").read_text())["cleanup_deadline"]
+    assert deadline == 10.5
+    clock[0] += .1  # Owner scheduling delay consumes, rather than restarts, the allowance.
+    memory.request_cancel(state)
+    assert json.loads((state / "cancel").read_text())["cleanup_deadline"] == deadline
+    monkeypatch.setattr(memory, "current_cgroup", lambda: base)
+    monkeypatch.setattr(memory.os, "fork", lambda: 1234)
+    lifecycle = []
+    monkeypatch.setattr(memory.os, "kill", lambda pid, sig: lifecycle.append(("signal", pid, sig)))
+    mkdir = pathlib.Path.mkdir
+    def create(path, *args, **kwargs):
+        mkdir(path, *args, **kwargs)
+        if path.name == "invocation":
+            files(path, "oom 0\noom_kill 0\n")
+    monkeypatch.setattr(pathlib.Path, "mkdir", create)
+    write = pathlib.Path.write_text
+    def record_kill(path, *args, **kwargs):
+        if path.name == "cgroup.kill" and args[0] == "1":
+            lifecycle.append(("kill", clock[0]))
+        return write(path, *args, **kwargs)
+    monkeypatch.setattr(pathlib.Path, "write_text", record_kill)
+    def wait4(pid, flags):
+        assert flags == memory.os.WNOHANG
+        if (hung and any(event[0] == "kill" for event in lifecycle)
+                or not hung and clock[0] >= 10.2):
+            lifecycle.append(("exit", clock[0]))
+            return pid, 9 if hung else 2 << 8, SimpleNamespace(
+                ru_maxrss=2, ru_utime=1.25, ru_stime=.25)
+        return 0, 0, None
+    monkeypatch.setattr(memory.os, "wait4", wait4)
+    observer = memory.MemoryObserver(state)
+    observer.close()
+    publish = memory.atomic_json
+    def collect(path, value):
+        publish(path, value)
+        if path.name == "ready.json":
+            lifecycle.append(("collect", clock[0]))
+            observer.collect(value)
+    monkeypatch.setattr(memory, "atomic_json", collect)
+    def remove(path):
+        assert (state / "ack").exists()
+        lifecycle.append(("delete", clock[0]))
+        shutil.rmtree(path)
+    monkeypatch.setattr(pathlib.Path, "rmdir", remove)
+    assert memory.own_invocation(state, ["solver"], "8G", "0") == (137 if hung else 2)
+    assert [event for event in lifecycle if event[0] == "signal"] == [
+        ("signal", 1234, signal.SIGTERM)]
+    first_kill = next(event[1] for event in lifecycle if event[0] == "kill")
+    assert deadline <= first_kill < deadline + .02 if hung else first_kill < deadline
+    events = [event[0] for event in lifecycle]
+    assert events.index("exit") < events.index("collect") < events.index("delete")
+    assert observer.snapshot["memory_peak_bytes"] == 4096
+    assert json.loads(observer.snapshot["scope_memory_events"]) == {"oom": 0, "oom_kill": 0}

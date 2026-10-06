@@ -153,6 +153,7 @@ class RunResult:
     memory_oom_group: str = ""
     max_process_rss_source: str = ""
     max_process_rss_missing_reason: str = "unscoped invocation: process RSS not collected"
+    cpu_seconds: float | None = None
 
 
 def _terminate_process_group(proc: subprocess.Popen, grace: float = 2.0) -> None:
@@ -544,7 +545,9 @@ def run_systemd_scope(
 
     A small lifecycle owner in a sibling cgroup holds the delegated scope
     alive, including after group OOM. The driver reads the workload's v2 files
-    before acknowledging deletion. CPU budgets still apply to the whole scope.
+    before acknowledging deletion. Timeout first requests parent-only TERM
+    with a global 500 ms cleanup allowance, then kills the invocation cgroup.
+    CPU budgets still apply to the whole scope; seconds includes teardown.
     """
     from scope_memory import MemoryObserver
 

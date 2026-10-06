@@ -20,6 +20,9 @@ MEMORY_COLUMNS = ["scope_memory_peak_source", "scope_memory_peak_missing_reason"
                   "memory_cgroup", "memory_oom_group", "max_process_rss_source", "max_process_rss_missing_reason"]
 MEMORY_KEYS = ["solver_label", "instance", "cap_s", "run_index", "binary_sha256", "scope_unit",
                "seconds", "exit_code", "scope_memory_peak_bytes", "max_process_rss_bytes"]
+# Global teardown allowance: 500 ms covers worker reaping and the writer
+# (110 ms maximum flush/reap), without extending the acceptance deadline.
+CLEANUP_GRACE_SECONDS = 0.5
 RSS_SOURCE = "Linux wait4.ru_maxrss (maximum reaped process; not scope peak)"
 TIME_RSS_SOURCE = "/usr/bin/time.ru_maxrss (not scope peak)"
 
@@ -220,6 +223,7 @@ class MemoryObserver:
             max_process_rss_source=RSS_SOURCE,
             max_process_rss_missing_reason="" if isinstance(rss, int) and rss > 0
             else ready.get("error", "wait4 RSS unavailable"))
+        self.snapshot["cpu_seconds"] = ready.get("cpu_seconds")
         returncode = ready.get("workload_returncode")
         if isinstance(returncode, int):
             self.snapshot["workload_returncode"] = returncode
@@ -227,12 +231,36 @@ class MemoryObserver:
         self.finished.set()
 
     def cancel(self):
-        (self.state / "cancel").touch()
+        request_cancel(self.state)
         self.finished.wait(3)
 
     def close(self):
         self.finished.set()
         self.thread.join(timeout=1)
+
+
+def request_cancel(state):
+    # Repeated requests must never restart the global cleanup window.
+    if not (state / "cancel").exists():
+        atomic_json(state / "cancel", {"cleanup_deadline": time.monotonic()
+                                      + CLEANUP_GRACE_SECONDS})
+
+
+def cancellation_deadline(state):
+    now = time.monotonic()
+    try:
+        deadline = float(json.loads((state / "cancel").read_text())["cleanup_deadline"])
+        if math.isfinite(deadline):
+            return min(deadline, now + CLEANUP_GRACE_SECONDS)
+    except (OSError, ValueError, TypeError, KeyError):
+        pass
+    # An old/invalid cancellation request cannot authorize extra running time.
+    return now
+
+
+def process_usage(usage):
+    return {"max_process_rss_bytes": int(usage.ru_maxrss) * 1024,
+            "cpu_seconds": usage.ru_utime + usage.ru_stime}
 
 
 def memory_limit(value):
@@ -255,6 +283,7 @@ def own_invocation(state, cmd, memory_max, swap_max, *, oom_group=False):
     cgroup = None
     pid = None
     status = None
+    cleanup_deadline = None
     outcome = {"oom_group": str(oom_group).lower()}
     try:
         base = current_cgroup()
@@ -282,9 +311,17 @@ def own_invocation(state, cmd, memory_max, swap_max, *, oom_group=False):
             found, wait_status, usage = os.wait4(pid, os.WNOHANG)
             if found:
                 status = wait_status
-                outcome["max_process_rss_bytes"] = int(usage.ru_maxrss) * 1024
+                outcome.update(process_usage(usage))
                 break
-            if (state / "cancel").exists():
+            if cleanup_deadline is None and (state / "cancel").exists():
+                cleanup_deadline = cancellation_deadline(state)
+                # Only the invocation parent receives TERM. It owns worker
+                # cancellation and keeps its diagnostic writer alive to drain.
+                try:
+                    os.kill(pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+            if cleanup_deadline is not None and time.monotonic() >= cleanup_deadline:
                 (cgroup / "cgroup.kill").write_text("1")
             time.sleep(0.01)
         # Reclaim descendants before the final peak/events read, but retain the
@@ -304,7 +341,7 @@ def own_invocation(state, cmd, memory_max, swap_max, *, oom_group=False):
                 pass
         if pid and status is None:
             _, status, usage = os.wait4(pid, 0)
-            outcome["max_process_rss_bytes"] = int(usage.ru_maxrss) * 1024
+            outcome.update(process_usage(usage))
     finally:
         outcome["workload_returncode"] = (os.waitstatus_to_exitcode(status)
                                           if status is not None else None)
@@ -332,7 +369,7 @@ def main():
     parser.add_argument("--oom-group", action="store_true", help="kill the whole invocation on OOM")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
-    signal.signal(signal.SIGTERM, lambda *unused: (args.state / "cancel").touch())
+    signal.signal(signal.SIGTERM, lambda *unused: request_cancel(args.state))
     cmd = args.command[1:] if args.command[:1] == ["--"] else args.command
     return own_invocation(args.state, cmd, args.memory_max, args.swap_max,
                           oom_group=args.oom_group)
