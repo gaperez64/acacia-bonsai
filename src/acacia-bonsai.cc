@@ -247,13 +247,13 @@ namespace {
         1, vout << "Starting solver child provider=" << acacia::automaton_provider_name (provider)
                 << " candidate_mode=" << acacia::candidate_mode_name (arg_values.candidate) << "\n"
                 << std::flush);
-    const bool res = run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k,
-                              arg_values.opt_kmin, arg_values.opt_kinc, arg_values.formula,
-                              unreal_x, translation_pref, arg_values.spot_fast, backend,
-                              (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA)
-                                  ? std::nullopt
-                                  : arg_values.synth_fname,
-                              arg_values.metadata, provider, arg_values.candidate);
+    const bool res = run_ltl (
+        arg_values.inputs, arg_values.outputs, arg_values.opt_k, arg_values.opt_kmin,
+        arg_values.opt_kinc, arg_values.formula, unreal_x, translation_pref, arg_values.spot_fast,
+        backend,
+        (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA) ? std::nullopt
+                                                                  : arg_values.synth_fname,
+        arg_values.metadata, provider, arg_values.candidate, arg_values.equivariance);
     verb_do (1, vout << "returning " << res << "\n");
 
     if (!res && acacia::active_worker_record () &&
@@ -277,6 +277,8 @@ namespace {
       auto& record = g_worker_records[g_child_count];
       record = acacia::worker_record {};
       record.index = unsigned (g_child_count);
+      record.r_prepass = arg_values.r_prepass;
+      record.equivariance = arg_values.equivariance;
       const char* backend = arm.legacy ? acacia::game_backend_name (arm.legacy->backend) : "oxidd";
       acacia::worker_record_text (record.requested_backend, backend);
       acacia::worker_record_text (record.effective_backend, backend);
@@ -327,13 +329,15 @@ namespace {
               specification, sizeof specification,
               "{\"event\":\"worker_spec\",\"worker\":%u,\"worker_pid\":%ld,"
               "\"kind\":\"%s\",\"requested_polarity\":\"%s\","
-              "\"translation\":\"%s\",\"transform\":\"%s\",\"provider\":\"%s\"}\n",
+              "\"translation\":\"%s\",\"transform\":\"%s\",\"provider\":\"%s\","
+              "\"r_prepass\":%s,\"equivariance\":%s}\n",
               spawned.index, long (pid), arm.legacy ? "legacy" : arm.native_name (),
               spawned.original_polarity,
               arm.legacy ? translation_pref_name (arm.legacy->translation_pref) : "native",
               arm.legacy ? (arm.unreal ? unreal_strategy_name (arm.legacy->unreal_x) : "real")
                          : "exact",
-              arm.legacy ? acacia::automaton_provider_name (arm.legacy->provider) : "native");
+              arm.legacy ? acacia::automaton_provider_name (arm.legacy->provider) : "native",
+              spawned.r_prepass ? "true" : "false", spawned.equivariance ? "true" : "false");
           if (length > 0 && size_t (length) < sizeof specification)
             acacia::phase_records_send (specification, size_t (length));
         }

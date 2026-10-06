@@ -7,6 +7,7 @@
 #include "solver/solver_invoker.hh"
 #if ACACIA_ENABLE_TLSF_FRONTEND
 # include "tlsf_frontend.hh"
+
 # include <tlsf/pipeline.h>
 #endif
 #include "utils/verbose.hh"
@@ -54,6 +55,8 @@ struct arg_parse_result {
     acacia::automaton_provider real_provider = acacia::automaton_provider::frozen_graph;
     acacia::automaton_provider unreal_provider = acacia::automaton_provider::frozen_graph;
     acacia::candidate_mode candidate = ACACIA_DEFAULT_CANDIDATE_MODE;
+    bool r_prepass = true;
+    bool equivariance = ACACIA_ENABLE_EQUIVARIANT_SOLVER;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     specification_metadata metadata;

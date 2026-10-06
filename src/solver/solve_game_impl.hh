@@ -1,7 +1,5 @@
 #pragma once
 
-#include "solver/spot_worker_record.hh"
-
 #include "actioners/no_ios_precomputation.hh"
 #include "config/component_checks.hh"
 #include "ios_precomputers/delegate.hh"
@@ -11,6 +9,7 @@
 #include "posets/vectors/traits.hh"
 #include "solver/configured_components.hh"
 #include "solver/game_backend.hh"
+#include "solver/spot_worker_record.hh"
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
 # include "solver/equivariant_k_bounded_safety_aut.hh"
 #endif
@@ -18,10 +17,10 @@
 # include "solver/forward_k_bounded_safety_aut.hh"
 #endif
 #if ACACIA_SPOT_GUARDED_BACKEND
-# include "solver/spot_guarded_forward_safety.hh"
-# include "solver/spot_candidate_limits.hh"
-# include "solver/spot_lazy_game.hh"
 # include "solver/k_schedule.hh"
+# include "solver/spot_candidate_limits.hh"
+# include "solver/spot_guarded_forward_safety.hh"
+# include "solver/spot_lazy_game.hh"
 #endif
 #include "solver/k_bounded_safety_aut.hh"
 #include "utils/verbose.hh"
@@ -170,15 +169,16 @@ namespace acacia::solver_detail {
       spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
       const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
       [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints,
-      acacia::game_backend backend,
-      [[maybe_unused]] acacia::candidate_mode candidate) {
+      acacia::game_backend backend, [[maybe_unused]] acacia::candidate_mode candidate,
+      [[maybe_unused]] bool equivariance) {
     backend = acacia::synthesis_backend (backend, do_synthesis);
     acacia::config::checks::check_solver_components<SpecializedDownset> ();
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
     // Deliberately bind the equivariant pre-pass to backward: the measured
     // forward configuration excluded it, so this preserves both measured
     // configurations when both solvers are compiled in.
-    if (backend == acacia::game_backend::backward and not do_synthesis) {
+    if (equivariance and backend == acacia::game_backend::backward and not do_synthesis) {
+      acacia::worker_route ("equivariance", "backward");
       auto eq = acacia::solver_detail::equivariant::try_solve<SpecializedDownset> (
           aut, kmax, kmin, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
           ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints);
@@ -187,6 +187,8 @@ namespace acacia::solver_detail {
                                               all_outputs);
     }
 #endif
+    if (backend == acacia::game_backend::backward)
+      acacia::worker_route ("backward", "backward");
 
 #if ACACIA_SPOT_GUARDED_BACKEND
     if (acacia::is_guarded_backend (backend)) {
@@ -202,30 +204,35 @@ namespace acacia::solver_detail {
       for (long long k = kmin;;) {
         acacia::diagnostics::set_support_k (static_cast<int> (k));
         struct Attempt {
-          forward_result_status status;
-          spot_letters::Unknown failure;
-          double prep_ms, solve_ms, verify_ms;
-          size_t nodes, choices, proofs, expansions;
+            forward_result_status status;
+            spot_letters::Unknown failure;
+            double prep_ms, solve_ms, verify_ms;
+            size_t nodes, choices, proofs, expansions;
         };
         const auto run = [&] () -> Attempt {
           const auto summarize = [] (const auto& r) -> Attempt {
-            return {r.status, r.failure, r.prep_ms, r.solve_ms, r.verify_ms,
+            return {r.status,        r.failure,         r.prep_ms,        r.solve_ms,  r.verify_ms,
                     r.nodes.size (), r.choices_created, r.proofs.size (), r.expansions};
           };
           if (backend == acacia::game_backend::spot_guarded_sparse) {
             spot_lazy_game::Reporter report;
             if (spot_records::active)
-              report.sink = [] (const auto& key, const auto& value) { spot_records::put (key, value); };
+              report.sink = [] (const auto& key, const auto& value) {
+                spot_records::put (key, value);
+              };
             const auto prepared = std::chrono::steady_clock::now ();
             spot_lazy_game::RowStore store {view, spot_candidate_limits ().rows, report};
-            spot_lazy_game::Search search {store, alphabet, static_cast<int32_t> (k), spot_candidate_limits ()};
+            spot_lazy_game::Search search {store, alphabet, static_cast<int32_t> (k),
+                                           spot_candidate_limits ()};
             const auto prep_ms = std::chrono::duration<double, std::milli> (
-                std::chrono::steady_clock::now () - prepared).count ();
+                                     std::chrono::steady_clock::now () - prepared)
+                                     .count ();
             auto result = summarize (search.solve ());
             result.prep_ms = prep_ms;
             return result;
           }
-          return summarize (spot_guarded::solve (view, alphabet, static_cast<int32_t> (k), spot_candidate_limits ()));
+          return summarize (spot_guarded::solve (view, alphabet, static_cast<int32_t> (k),
+                                                 spot_candidate_limits ()));
         };
         if (spot_records::active) {
           spot_records::put ("provider", "frozen-graph");
@@ -243,9 +250,8 @@ namespace acacia::solver_detail {
           spot_records::put ("game_states", std::to_string (result.nodes));
           spot_records::phase ("verified-attempt");
         }
-        verb_do (1, vout << "spot-guarded K=" << k
-                         << " prep_ms=" << result.prep_ms << " solve_ms=" << result.solve_ms
-                         << " verify_ms=" << result.verify_ms
+        verb_do (1, vout << "spot-guarded K=" << k << " prep_ms=" << result.prep_ms
+                         << " solve_ms=" << result.solve_ms << " verify_ms=" << result.verify_ms
                          << " ranks=" << result.nodes << " choices=" << result.choices
                          << " status=" << forward_result_name (result.status) << std::endl);
         if (result.status == forward_result_status::win_k) {
@@ -253,9 +259,10 @@ namespace acacia::solver_detail {
           return aut;
         }
         if (result.status != forward_result_status::lose_k) {
-          acacia::diagnostics::set_final_reason (
-              std::string {"spot-guarded-unknown-"} + spot_letters::unknown_name (result.failure));
-          if (candidate == acacia::candidate_mode::only) return std::nullopt;
+          acacia::diagnostics::set_final_reason (std::string {"spot-guarded-unknown-"} +
+                                                 spot_letters::unknown_name (result.failure));
+          if (candidate == acacia::candidate_mode::only)
+            return std::nullopt;
           std::cerr << "spot-guarded UNKNOWN: fallback provider=frozen-graph backend=backward; "
                        "rebuilding game actions on the existing preprocessed frozen graph\n";
           acacia::diagnostics::set_support_backend ("backward");
@@ -274,7 +281,8 @@ namespace acacia::solver_detail {
 #else
     // A guarded-labelled run must never silently execute the backward solver.
     // The CLI rejects this at parse time; guard internal callers as well.
-    if (acacia::is_guarded_backend (backend)) std::abort ();
+    if (acacia::is_guarded_backend (backend))
+      std::abort ();
 #endif
 
     using IOsPrecomputationMaker = IOS_PRECOMPUTER;
@@ -287,17 +295,14 @@ namespace acacia::solver_detail {
     // solver even when the forward decision backend is compiled in.
     if (backend == acacia::game_backend::forward and not do_synthesis) {
       auto forward =
-          forward_k_bounded_safety_aut_detail<SpecializedDownset,
-                                              IOsPrecomputationMaker,
+          forward_k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker,
                                               ActionerMaker, InputPickerMaker> (
-              aut, kmin, kmax, kinc, all_inputs, all_outputs,
-              IOS_PRECOMPUTER (),
-              ACTIONER<typename SpecializedDownset::value_type> (),
-              INPUT_PICKER ());
+              aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
+              ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
       auto win = forward.solve ();
       if (not forward.should_fallback_to_backward ())
-        return post_real<SpecializedDownset> (
-            std::move (win), do_synthesis, aut, all_inputs, all_outputs);
+        return post_real<SpecializedDownset> (std::move (win), do_synthesis, aut, all_inputs,
+                                              all_outputs);
     }
 #else
     // CLI requests are rejected while parsing.  Abort if an internal caller

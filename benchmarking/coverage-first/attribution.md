@@ -7,6 +7,21 @@ worker snapshot, event formatting, or native observer callback. The tlsf-tools
 worktree remains based on `404963544436013d11ca232f4721d6da4499681f`; its uncommitted
 changes must accompany the Acacia changes. Existing public C struct layouts stay unchanged; the new observer carries a typed failure status.
 
+## P1 runtime ablation states
+
+`--r-prepass on|off` and `--equivariance on|off` preserve incumbent defaults.
+Each worker lifecycle event includes boolean `r_prepass` and `equivariance`, also
+retained by parent spawn/terminal/winner records after child cancellation.
+These are invocation settings, independent of whether a worker reaches the hook.
+The native worker now calls `tlsf_gr1_both_from_target_v2` with versioned routing
+options; its observer and the legacy v1 entry point remain supported. R-off with
+U-off skips seed and candidate work inside the same combined context and retains
+its direct solver settings. Backward decision workers emit `equivariance` before
+recognition when enabled and `backward` on ordinary solving after decline or with
+it disabled. Entry into recognition does not imply an admitted symmetry.
+See [the matched ablation protocol](p1-ablation-protocol.md) for all four legs,
+resource controls and the separate backward-worker membership comparison.
+
 ## Reading events
 
 Each invocation needs a fresh, existing diagnostic directory. Files are named for
