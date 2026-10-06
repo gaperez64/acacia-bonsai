@@ -284,3 +284,28 @@ configuration frontends and release-hook isolation pass. No options, thresholds,
 budgets, worker order/membership, public C struct layouts or proof/fallback policy
 changed. Evidence and the charter-format report are in
 `build_scratch/p0-attr-final/`; no staging or commits.
+
+
+## Timeout teardown follow-up
+
+The parent already treats SIGTERM/SIGINT as orderly cancellation: its handler
+only flags interruption and kills worker groups/PIDs; normal code reaps every
+worker and emits parent terminals before the exit hook closes/drains the writer.
+The handler now preserves errno across signal delivery. Diagnostics-off behavior,
+worker order, proof checks and deadline acceptance remain the same.
+
+The coverage runner repair belongs to `wt-p0-gates`: it requests parent-only TERM
+at the cap and gives one global 500 ms cleanup window before invocation-wide
+`cgroup.kill`, while retaining TIMEOUT and collecting peak/events before deletion.
+See that worktree's `benchmarking/coverage-first/timeout-teardown.md` for the exact
+lifecycle and fresh panel command. The existing writer's flush/reap bound is 110 ms;
+the allowance also covers worker reaping and scheduling, without accepting a late
+answer. Killed workers remain explicitly producer-incomplete, with complete parent
+and writer delivery required separately.
+
+`check-attribution.py` now checks five stalled workers under deadline, SIGTERM and
+SIGINT, requiring all parent terminals, a parent summary, and a matching loss-free
+writer summary. The same fixture checks run in pytest with
+`ACACIA_ATTRIBUTION_TEST_BUILD=<checked-build>`; missing terminals or either summary
+are rejected by negative oracle tests. Deadline handling is compared with diagnostics
+disabled. The delayed-reaped-answer check now also requires complete cleanup delivery.

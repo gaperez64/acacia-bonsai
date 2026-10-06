@@ -59,6 +59,9 @@ namespace {
   }
 
   void terminate ([[maybe_unused]] int signum) {
+    const int saved_errno = errno;
+    // Keep the handler async-signal-safe; reaping, records and writer closure
+    // run on the ordinary parent path after the interruption flag is seen.
     if (getpid () == g_main_pid) {  // Main process
       g_interrupted = 1;
       for (sig_atomic_t i = 0; i < g_child_count; ++i)
@@ -69,6 +72,7 @@ namespace {
     }
     else
       _exit (EXIT_CODE_UNKNOWN);  // child procs avoid cleaning on exit
+    errno = saved_errno;
   }
 
   void kill_child_groups () {

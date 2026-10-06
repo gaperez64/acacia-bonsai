@@ -121,6 +121,79 @@ def interrupted(binary: Path, source: Path, directory: Path, route: str,
                    for row in records), records
 
 
+def complete_timeout_delivery(records: list[dict], expected_workers: int,
+                              parent_pid: int) -> None:
+    assert not any(row.get("event") == "incomplete_json" for row in records), records
+    assert all(row.get("dropped_records", 0) == 0 for row in records), records
+    spawned = [row for row in records if row.get("event") == "worker_spawn"]
+    terminals = [row for row in records if row.get("event") == "parent_terminal"]
+    assert len(spawned) == len(terminals) == expected_workers, records
+    identities = {(row["worker"], row["worker_pid"]) for row in spawned}
+    assert len(identities) == expected_workers
+    assert {(row["worker"], row["worker_pid"]) for row in terminals} == identities
+    assert all(row["emitter_pid"] == parent_pid for row in terminals), terminals
+    assert any(row.get("phase") == "record_summary" and row["emitter_pid"] == parent_pid
+               for row in records), records
+    assert not any(row.get("event") == "parent_winner" for row in records), records
+    writers = [row for row in records if row.get("event") == "writer_summary"]
+    assert len(writers) == 1 and writers[0]["failed_records"] == 0, records
+    assert not writers[0]["incomplete_packet"], writers
+    assert writers[0]["delivered_records"] == len(records) - 1, records
+
+
+def timeout_portfolio(binary: Path, directory: Path, signum: int | None = None,
+                      *, diagnostics: bool = True) -> tuple[int, str]:
+    env = os.environ.copy()
+    env.pop("ACACIA_PHASE_RECORDS", None)
+    env.pop("ACACIA_TEST_DELAY_AFTER_REAP", None)
+    env["ACACIA_TEST_CHILD_MODES"] = "stall,stall,stall,stall,stall"
+    env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + (8 if signum else .4))
+    if diagnostics:
+        env["ACACIA_PHASE_RECORDS"] = str(directory)
+    args = ["-f", "G o", "-i", "i", "-o", "o", "--arms",
+            "real:small:backward,real:small:forward,unreal:formula:backward,"
+            "unreal:automaton:forward,unreal:formula:forward"]
+    process = subprocess.Popen([str(binary), *args], env=env, text=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               start_new_session=True)
+    try:
+        if signum:
+            end = time.monotonic() + 3
+            while time.monotonic() < end:
+                starts = [row for row in rows(directory) if row.get("event") == "worker_start"]
+                if len(starts) == 5:
+                    break
+                assert process.poll() is None, rows(directory)
+                time.sleep(.002)
+            else:
+                raise AssertionError(("missing fake workers", rows(directory)))
+            os.kill(process.pid, signum)
+        # Same 500 ms allowance as the runner, following its TERM request or
+        # the solver's own deadline. No whole-group TERM reaches the writer.
+        stdout, stderr = process.communicate(timeout=.5 if signum else 1.5)
+        assert process.returncode == 2 and "UNKNOWN" in stdout + stderr, (stdout, stderr)
+        assert "REALIZABLE" not in stdout + stderr, (stdout, stderr)
+        if diagnostics:
+            records = rows(directory)
+            complete_timeout_delivery(records, 5, process.pid)
+            terminals = [row for row in records if row.get("event") == "parent_terminal"]
+            assert all(row["signal"] == signal.SIGKILL and row["telemetry"] == "incomplete"
+                       for row in terminals), terminals
+            assert all(row["reason"] == ("interrupted" if signum else "deadline")
+                       for row in terminals), terminals
+            for row in terminals:
+                try:
+                    os.kill(row["worker_pid"], 0)
+                except ProcessLookupError:
+                    continue
+                raise AssertionError(("unreaped worker", row))
+        return process.returncode, stdout
+    finally:
+        if process.poll() is None:
+            process.terminate()
+            process.communicate(timeout=3)
+
+
 def legacy_resource_stops(binary: Path, root: Path,
                           modes: tuple[str, ...] = ("only", "fallback")) -> None:
     for mode in modes:
@@ -274,6 +347,13 @@ def main() -> None:
                 directory.mkdir()
                 interrupted(hook, source, directory, route,
                             kill_child=mode == "kill", interrupt_parent=mode == "cancel")
+        for name, signum in (("deadline", None), ("sigterm", signal.SIGTERM),
+                              ("sigint", signal.SIGINT)):
+            directory = root / f"timeout-five-{name}"
+            directory.mkdir()
+            observed = timeout_portfolio(integration, directory, signum)
+            if signum is None:
+                assert timeout_portfolio(integration, directory, diagnostics=False) == observed
         directory = root / "late"
         directory.mkdir()
         result = execute(integration, ["-f", "G o", "-i", "i", "-o", "o", "--arms",
@@ -282,6 +362,8 @@ def main() -> None:
                           "ACACIA_TEST_DELAY_AFTER_REAP": "1",
                           "ACACIA_OUTER_DEADLINE_MONOTONIC": str(time.monotonic() + .3)})
         assert result.returncode == 2, result
+        terminal = next(row for row in rows(directory) if row.get("event") == "parent_terminal")
+        complete_timeout_delivery(rows(directory), 1, terminal["emitter_pid"])
         assert not any(row.get("event") == "parent_winner" for row in rows(directory))
         assert any(row.get("event") == "parent_terminal"
                    and row["reason"] == "deadline_rejected" for row in rows(directory))
