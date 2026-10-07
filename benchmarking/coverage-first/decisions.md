@@ -14,3 +14,8 @@ used only to select and evaluate measurements, never in solver logic.
 | 2026-10-07 | P2b screens the native structure-budget guards with an off-by-default global scale before changing any default. | `cov20261006-p1ablation` |
 | 2026-10-07 | Gates for the ablation switches: G0, G1, G4 pass; G5 and G2s not applicable (defaults identical, no frontend or membership change). | `cov20261006-p1ablation` (G1/G4 logs) |
 | 2026-10-07 | Shipping has no known deadline (owner): admission campaigns run without `--route-records`, the fresh no-deadline incumbent is the baseline, and every new budget is absolute and tested with and without a deadline. The P1 matrix already ran in this mode. | owner decision; `cov20261006-p1ablation` |
+| 2026-10-07 | Do not scale the native structure guard: with it off no guard-stopped input solves (103/138 are `mp-class`). | `cov20261007-screens` |
+| 2026-10-07 | Stop P4a: the dual of every `mp-class` frontier input is also rejected. | `cov20261007-screens` |
+| 2026-10-07 | Deprioritize P5: U is reachable on at most one frontier input. | `cov20261007-screens` |
+| 2026-10-08 | Keep weakening extensions opt-in only: no frontier proof even at 2 s/8 s allowances. | `cov20261007-screens` |
+| 2026-10-08 | Keep declaration order and the incumbent R alignment: structural orders and typed roles give no robust gain. | `cov20261007-screens` |
