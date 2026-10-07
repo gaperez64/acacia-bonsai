@@ -26,7 +26,7 @@ namespace acacia::synthesis {
 
   }  // namespace
 
-  spot::aig_ptr mealy_to_moore (const spot::const_aig_ptr& source) {
+  spot::aig_ptr mealy_to_moore (const spot::const_aig_ptr& source, bool advance_initial_state) {
     assert (source != nullptr);
 
     const unsigned input_count = source->num_inputs ();
@@ -41,34 +41,34 @@ namespace acacia::synthesis {
     std::vector<unsigned> literal_map (source->max_var () / 2 + 1, 0);
     std::vector<bool> reset_values (source->max_var () / 2 + 1, false);
 
-    for (unsigned i = 0; i < input_count; ++i) {
-      const unsigned source_literal = source->input_var (i);
-      literal_map[source_literal / 2] = result->input_var (i);
-      // The established mealy2moore convention chooses all-false inputs when
-      // computing the initial output valuation.
-      reset_values[source_literal / 2] = false;
-    }
-
-    for (unsigned i = 0; i < latch_count; ++i) {
-      const unsigned source_literal = source->latch_var (i);
-      literal_map[source_literal / 2] = result->latch_var (i);
-      // Spot AIG latches are initialized to false.
-      reset_values[source_literal / 2] = false;
-    }
-
     const auto& gates = source->gates ();
     for (unsigned i = 0; i < gates.size (); ++i) {
       const auto [left, right] = gates[i];
-      const unsigned source_literal = source->gate_var (i);
-      literal_map[source_literal / 2] =
-          result->aig_and (remap_literal (left, literal_map), remap_literal (right, literal_map));
-      reset_values[source_literal / 2] =
+      reset_values[source->gate_var (i) / 2] =
           evaluate_literal (left, reset_values) and evaluate_literal (right, reset_values);
     }
 
+    for (unsigned i = 0; i < input_count; ++i)
+      literal_map[source->input_var (i) / 2] = result->input_var (i);
+
     const auto& next_latches = source->next_latches ();
+    std::vector<bool> latch_resets (latch_count, false);
+    for (unsigned i = 0; i < latch_count; ++i) {
+      latch_resets[i] = advance_initial_state and evaluate_literal (next_latches[i], reset_values);
+      // Store a complemented logical latch when its reset must be true,
+      // keeping every physical AIGER latch zero-initialized.
+      literal_map[source->latch_var (i) / 2] = result->latch_var (i) ^ unsigned (latch_resets[i]);
+    }
+
+    for (unsigned i = 0; i < gates.size (); ++i) {
+      const auto [left, right] = gates[i];
+      literal_map[source->gate_var (i) / 2] =
+          result->aig_and (remap_literal (left, literal_map), remap_literal (right, literal_map));
+    }
+
     for (unsigned i = 0; i < latch_count; ++i)
-      result->set_next_latch (i, remap_literal (next_latches[i], literal_map));
+      result->set_next_latch (
+          i, remap_literal (next_latches[i], literal_map) ^ unsigned (latch_resets[i]));
 
     const auto& outputs = source->outputs ();
     for (unsigned i = 0; i < output_count; ++i) {

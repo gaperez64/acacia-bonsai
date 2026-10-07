@@ -1,4 +1,3 @@
-#include "solver/spot_worker_record.hh"
 #include "solver/solver_invoker.hh"
 
 #include "aut_preprocessors/cap_census.hh"
@@ -14,14 +13,15 @@
 #include "solver/realizability_simplify.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
+#include "solver/spot_worker_record.hh"
 #if ACACIA_SPOT_GUARDED_BACKEND
 # include "solver/spot_letter_oracle.hh"
 #endif
 #if ACACIA_COMPILE_DEMAND_PROVIDER
 # include "solver/spot_lazy_worker.hh"
 #endif
-#include "solver/symmetry_blocks.hh"
 #include "solver/symmetry.hh"
+#include "solver/symmetry_blocks.hh"
 #include "solver/syntactic_bypass.hh"
 #include "solver/translator_options.hh"
 #include "solver/unreal_safety_core_witnesses.hh"
@@ -70,6 +70,16 @@ namespace {
   }
 
   using utils::push_aps;
+
+  enum class controller_conversion { none, delay_outputs, undo_input_shift };
+
+  spot::aig_ptr convert_controller (const spot::aig_ptr& source,
+                                    controller_conversion conversion) {
+    if (conversion == controller_conversion::none)
+      return source;
+    return acacia::synthesis::mealy_to_moore (
+        source, conversion == controller_conversion::undo_input_shift);
+  }
 
 #if ACACIA_ENABLE_DIAGNOSTICS
   size_t edge_count (const spot::const_twa_graph_ptr& aut) {
@@ -144,7 +154,7 @@ namespace {
 
   void write_no_input_strategy (const std::vector<std::string>& output_aps,
                                 const std::vector<std::vector<bool>>& values, size_t loop_start,
-                                const std::string& synth_fname, bool synthesize_moore) {
+                                const std::string& synth_fname, controller_conversion conversion) {
     size_t capacity = 1;
     unsigned n_latches = 0;
     while (capacity < values.size ()) {
@@ -181,8 +191,7 @@ namespace {
 
     std::ofstream synthesis_file (synth_fname);
     if (synthesis_file) {
-      if (synthesize_moore)
-        circuit = acacia::synthesis::mealy_to_moore (circuit);
+      circuit = convert_controller (circuit, conversion);
       spot::print_aiger (synthesis_file, circuit);
     }
     else
@@ -192,7 +201,8 @@ namespace {
   bool run_no_input_ltl (const std::vector<std::string>& output_aps, spot::formula spot_formula,
                          std::optional<UNREAL_X_T> check_unreal,
                          TRANSLATION_PREF_T translation_pref,
-                         const std::optional<std::string>& synth_fname, bool synthesize_moore) {
+                         const std::optional<std::string>& synth_fname,
+                         controller_conversion conversion) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     int owner = 0;
     struct owner_cleanup {
@@ -259,7 +269,7 @@ namespace {
 
       if (values.empty ())
         values.push_back (std::vector<bool> (output_aps.size (), false));
-      write_no_input_strategy (output_aps, values, loop_start, *synth_fname, synthesize_moore);
+      write_no_input_strategy (output_aps, values, loop_start, *synth_fname, conversion);
     }
     return true;
   }
@@ -291,7 +301,7 @@ namespace {
       const acacia::candidate_mode candidate;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
-      const bool synthesize_moore;
+      const controller_conversion conversion;
       const std::string target_semantics;
       const std::vector<symmetry::indexed_family_hint>& indexed_family_hints;
       std::vector<spot::const_twa_graph_ptr> strats;
@@ -309,8 +319,7 @@ namespace {
                    std::optional<UNREAL_X_T> check_unreal, TRANSLATION_PREF_T translation_pref,
                    SPOT_FAST_T spot_fast, acacia::game_backend backend,
                    acacia::automaton_provider provider, acacia::candidate_mode candidate,
-                   const std::optional<std::string>& synth_fname,
-                   bool synthesize_moore,
+                   const std::optional<std::string>& synth_fname, controller_conversion conversion,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints,
                    std::string target_semantics)
         : dict {dict},
@@ -326,8 +335,9 @@ namespace {
           provider {provider},
           candidate {candidate},
           synth_fname {synth_fname},
-          synthesize_moore {synthesize_moore},
-          target_semantics {std::move (target_semantics)}, indexed_family_hints {indexed_family_hints} {
+          conversion {conversion},
+          target_semantics {std::move (target_semantics)},
+          indexed_family_hints {indexed_family_hints} {
         // Create BDD "cubes" that represent the sets of inputs and outputs,
         // respectively. We associate them with this object when registering
         // them.
@@ -383,8 +393,7 @@ namespace {
                                                          // inputs and outputs
                                                          // are in the AIG
                                                          input_aps, nonempty_out_part);
-        spot::aig_ptr output_aig =
-            synthesize_moore ? acacia::synthesis::mealy_to_moore (mealy_aig) : mealy_aig;
+        spot::aig_ptr output_aig = convert_controller (mealy_aig, conversion);
         std::ofstream synthesis_file (*synth_fname);
         if (synthesis_file)
           spot::print_aiger (synthesis_file, output_aig);
@@ -404,9 +413,8 @@ namespace {
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("synthesis-check-after-translation");
-        assert (check_unreal.has_value ()
-                    ? aut->intersects (mealy_aig->as_automaton (false))
-                    : not aut->intersects (mealy_aig->as_automaton (false)));
+        assert (check_unreal.has_value () ? aut->intersects (mealy_aig->as_automaton (false))
+                                          : not aut->intersects (mealy_aig->as_automaton (false)));
 
 #endif
       }
@@ -442,7 +450,9 @@ namespace {
           capture.list ("inputs", input_aps);
           capture.list ("outputs", output_aps);
           capture.put ("polarity", check_unreal ? "unreal" : "real");
-          capture.put ("transform", check_unreal ? (*check_unreal == UNREAL_X_FORMULA ? "formula" : "automaton") : "real");
+          capture.put ("transform",
+                       check_unreal ? (*check_unreal == UNREAL_X_FORMULA ? "formula" : "automaton")
+                                    : "real");
           capture.put ("translation_pref", translation_pref_name (translation_pref));
           capture.put ("requested_provider", acacia::automaton_provider_name (provider));
           capture.put ("requested_backend", acacia::game_backend_name (backend));
@@ -476,17 +486,19 @@ namespace {
           const auto result = acacia::spot_lazy_worker::solve (
               spot_formula, dict, all_inputs, all_outputs, opt_kmin, opt_k, opt_kinc,
               acacia::is_closure_provider (provider) ? acacia::spot_candidate_limits ()
-                                                    : acacia::spot_taa_candidate_limits (), provider);
+                                                     : acacia::spot_taa_candidate_limits (),
+              provider);
           if (result == acacia::spot_lazy_worker::Outcome::win)
-            return acacia::diagnostics::finish (true,
-                std::string (acacia::automaton_provider_name (provider)) + "-verified-win");
+            return acacia::diagnostics::finish (
+                true, std::string (acacia::automaton_provider_name (provider)) + "-verified-win");
           if (result != acacia::spot_lazy_worker::Outcome::unknown or
               candidate == acacia::candidate_mode::only || acacia::is_closure_provider (provider))
-            return acacia::diagnostics::finish (false,
-                std::string (acacia::automaton_provider_name (provider)) + "-inconclusive");
+            return acacia::diagnostics::finish (
+                false, std::string (acacia::automaton_provider_name (provider)) + "-inconclusive");
           // Release all candidate objects before rebuilding the existing graph
           // and preprocessing. No materialization of the lazy provider occurs.
-          std::cerr << acacia::automaton_provider_name (provider) << " UNKNOWN: fallback provider=frozen-graph backend=backward; "
+          std::cerr << acacia::automaton_provider_name (provider)
+                    << " UNKNOWN: fallback provider=frozen-graph backend=backward; "
                        "rebuilding translation and preprocessing from captured worker formula; "
                        "lazy_materialization=none\n";
           effective_backend = acacia::game_backend::backward;
@@ -508,7 +520,9 @@ namespace {
         if (provider != acacia::automaton_provider::frozen_graph)
           std::cerr << acacia::automaton_provider_name (provider) << " fallback translation_ms="
                     << std::chrono::duration<double, std::milli> (
-                           std::chrono::steady_clock::now () - fallback_started).count () << '\n';
+                           std::chrono::steady_clock::now () - fallback_started)
+                           .count ()
+                    << '\n';
         acacia::spot_records::phase ("preprocessing");
         observe_translated_automaton (aut);
         acacia::diagnostics::set_support_phase ("preprocessing");
@@ -619,8 +633,10 @@ namespace {
             diag != nullptr and
             census_mode != acacia::diagnostics::preprocessing_census_mode::off) {
           if (not aut->prop_state_acc ().is_true ()) {
-            acacia::diagnostics::snapshot ("preprocessing-census-skipped-transition-based-acceptance");
-          } else {
+            acacia::diagnostics::snapshot (
+                "preprocessing-census-skipped-transition-based-acceptance");
+          }
+          else {
             {
               acacia::diagnostics::scoped_timer timer (&diag->cap_census_ms);
               const auto census = aut_preprocessors::future_visit_cap_census (aut, opt_k);
@@ -677,7 +693,8 @@ namespace {
           std::size_t dmax = 0;
           for (unsigned s = 0; s < aut->num_states (); ++s) {
             std::size_t degree = 0;
-            for ([[maybe_unused]] const auto& e : aut->out (s)) ++degree;
+            for ([[maybe_unused]] const auto& e : aut->out (s))
+              ++degree;
             dmax = std::max (dmax, degree);
           }
           vout << "Structural features: N=" << aut->num_states () << " E=" << aut->num_edges ()
@@ -714,7 +731,9 @@ namespace {
         if (provider != acacia::automaton_provider::frozen_graph)
           std::cerr << acacia::automaton_provider_name (provider) << " fallback rebuild_ms="
                     << std::chrono::duration<double, std::milli> (
-                           std::chrono::steady_clock::now () - fallback_started).count () << '\n';
+                           std::chrono::steady_clock::now () - fallback_started)
+                           .count ()
+                    << '\n';
         assert (not synth_fname.has_value () or not check_unreal.has_value () or
                 *check_unreal == UNREAL_X_FORMULA);
 #if ACACIA_REAL_BACKEND_SELECTOR && ACACIA_SPOT_GUARDED_BACKEND
@@ -756,13 +775,14 @@ namespace {
         std::optional<spot::twa_graph_ptr> maybe_strat;
         {
           ACACIA_DIAG_SCOPED_TIMER (solve_ms);
-          maybe_strat = solve_game (aut, opt_k, opt_kmin, opt_kinc,
-                                    // we obtain the subset of inputs by projecting out the set of
-                                    // all outputs from the cube of all atomic propositions
-                                    bdd_exist (aut->ap_vars (), all_outputs),
-                                    // same for the outputs
-                                    bdd_exist (aut->ap_vars (), all_inputs),
-                                    synth_fname.has_value (), indexed_family_hints, effective_backend, candidate);
+          maybe_strat =
+              solve_game (aut, opt_k, opt_kmin, opt_kinc,
+                          // we obtain the subset of inputs by projecting out the set of
+                          // all outputs from the cube of all atomic propositions
+                          bdd_exist (aut->ap_vars (), all_outputs),
+                          // same for the outputs
+                          bdd_exist (aut->ap_vars (), all_inputs), synth_fname.has_value (),
+                          indexed_family_hints, effective_backend, candidate);
         }
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())
@@ -775,20 +795,22 @@ namespace {
       }
   };
 
-  std::optional<bool> try_degenerate_io (
-      const std::vector<std::string>& input_aps, const std::vector<std::string>& output_aps,
-      const spot::formula& spot_formula, std::optional<UNREAL_X_T> check_unreal,
-      TRANSLATION_PREF_T translation_pref, const std::optional<std::string>& synth_fname,
-      bool synthesize_moore) {
+  std::optional<bool> try_degenerate_io (const std::vector<std::string>& input_aps,
+                                         const std::vector<std::string>& output_aps,
+                                         const spot::formula& spot_formula,
+                                         std::optional<UNREAL_X_T> check_unreal,
+                                         TRANSLATION_PREF_T translation_pref,
+                                         const std::optional<std::string>& synth_fname,
+                                         controller_conversion conversion) {
     // Degenerate alphabets are language questions, not games.  Keep this in the
     // original Mealy frame, after realizability simplification and before the
     // unreal workers swap I/O.  Strategy-producing no-input requests retain the
     // existing lasso-to-AIG path; this fast path is intentionally decision-only.
     if (input_aps.empty () and synth_fname.has_value () and
-        not (check_unreal.has_value () and *check_unreal == UNREAL_X_FORMULA))
+        not(check_unreal.has_value () and *check_unreal == UNREAL_X_FORMULA))
       return std::optional<bool> {acacia::diagnostics::finish (
           run_no_input_ltl (output_aps, spot_formula, check_unreal, translation_pref, synth_fname,
-                            synthesize_moore),
+                            conversion),
           "no-input-ltl-synthesis")};
 
     if (not synth_fname.has_value () and (input_aps.empty () or output_aps.empty ())) {
@@ -819,8 +841,8 @@ namespace {
       acacia::forced_output_contradiction::result contradiction;
       {
         ACACIA_DIAG_SCOPED_TIMER (forced_contradiction_ms);
-        contradiction = acacia::forced_output_contradiction::try_direct (
-            spot_formula, input_aps, output_aps);
+        contradiction =
+            acacia::forced_output_contradiction::try_direct (spot_formula, input_aps, output_aps);
       }
 # if ACACIA_ENABLE_DIAGNOSTICS
       if (auto* diag = acacia::diagnostics::current ()) {
@@ -851,14 +873,11 @@ namespace {
         }
 # endif
         const bool child_matches = acacia::syntactic_bypass::matches_worker (
-            acacia::syntactic_bypass::verdict::unrealizable,
-            check_unreal.has_value ());
-        verb_do (1, vout << "Forced-output contradiction found " << witness_kind
-                         << " witness\n");
+            acacia::syntactic_bypass::verdict::unrealizable, check_unreal.has_value ());
+        verb_do (1, vout << "Forced-output contradiction found " << witness_kind << " witness\n");
         return std::optional<bool> {acacia::diagnostics::finish (
             child_matches,
-            child_matches ? "forced-contradiction"
-                          : "forced-contradiction-opposite-verdict")};
+            child_matches ? "forced-contradiction" : "forced-contradiction-opposite-verdict")};
       }
     }
 #elif ACACIA_ENABLE_DIAGNOSTICS
@@ -1018,32 +1037,40 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
               TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
-              acacia::game_backend backend,
-              const std::optional<std::string>& synth_fname,
-              const specification_metadata& metadata,
-              acacia::automaton_provider provider, acacia::candidate_mode candidate) {
+              acacia::game_backend backend, const std::optional<std::string>& synth_fname,
+              const specification_metadata& metadata, acacia::automaton_provider provider,
+              acacia::candidate_mode candidate) {
   // Protect internal callers as well as the CLI synthesis route.
   if (synth_fname.has_value ()) {
     backend = acacia::synthesis_backend (backend, true);
     provider = acacia::synthesis_provider (provider, true);
   }
   if (provider != acacia::automaton_provider::frozen_graph and
-      ((check_unreal && *check_unreal != UNREAL_X_FORMULA) or backend != (acacia::is_closure_provider (provider)
-          ? acacia::game_backend::spot_guarded_sparse : acacia::game_backend::spot_guarded)))
+      ((check_unreal && *check_unreal != UNREAL_X_FORMULA) or
+       backend != (acacia::is_closure_provider (provider)
+                       ? acacia::game_backend::spot_guarded_sparse
+                       : acacia::game_backend::spot_guarded)))
     std::abort ();
 #if !ACACIA_SPOT_LAZY_PROVIDER
   if (provider == acacia::automaton_provider::spot_lazy ||
-      provider == acacia::automaton_provider::spot_eager) std::abort ();
+      provider == acacia::automaton_provider::spot_eager)
+    std::abort ();
 #endif
-  const bool synthesize_moore =
-      metadata.source_format == "tlsf" and metadata.tlsf_target == "Moore";
+  controller_conversion conversion = controller_conversion::none;
+  if (metadata.source_format == "tlsf" and metadata.tlsf_target == "Moore") {
+    // Moore-to-Mealy lowering shifts inputs with X.  The first Mealy round
+    // therefore reads a dummy input: retain its output, but start the emitted
+    // circuit in its successor state before reading the first real input.
+    conversion = metadata.tlsf_semantics.find ("Moore") != std::string::npos
+                     ? controller_conversion::undo_input_shift
+                     : controller_conversion::delay_outputs;
+  }
   auto indexed_family_hints = metadata.tlsf_indexed_families;
   if (check_unreal.has_value ())
     for (auto& hint : indexed_family_hints)
       hint.is_input = not hint.is_input;
   acacia::diagnostics::scoped_child diag_scope (child_path (check_unreal));
-  acacia::diagnostics::set_support_backend (
-      acacia::game_backend_name (backend));
+  acacia::diagnostics::set_support_backend (acacia::game_backend_name (backend));
 #if ACACIA_ENABLE_DIAGNOSTICS
   if (auto* diag = acacia::diagnostics::current ()) {
     diag->automaton_provider = acacia::automaton_provider_name (provider);
@@ -1088,13 +1115,12 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
   if (!acacia::is_closure_provider (provider)) {
     if (auto answer = try_degenerate_io (input_aps, output_aps, spot_formula, check_unreal,
-                                         translation_pref, synth_fname, synthesize_moore);
+                                         translation_pref, synth_fname, conversion);
         answer.has_value ())
       return *answer;
 
     if (auto answer =
-            try_syntactic_bypass (spot_formula, input_aps, output_aps, check_unreal,
-                                  synth_fname);
+            try_syntactic_bypass (spot_formula, input_aps, output_aps, check_unreal, synth_fname);
         answer.has_value ())
       return *answer;
   }
@@ -1118,18 +1144,21 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // bdd_init installs its own hook. Install ours after manager initialization
   // and before guarded-worker setup; the parent treats exit 2 as inconclusive.
   std::optional<acacia::spot_letters::BuddyErrors> guarded_bdd_errors;
-  if (acacia::is_guarded_backend (backend)) guarded_bdd_errors.emplace ();
+  if (acacia::is_guarded_backend (backend))
+    guarded_bdd_errors.emplace ();
 #endif
 
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check.
-  run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
-                      translation_pref, spot_fast, backend, provider, candidate, synth_fname, synthesize_moore,
-                      indexed_family_hints,
-                      metadata.source_format + ";semantics=" + metadata.tlsf_semantics +
-                          ";target=" + metadata.tlsf_target + ";effective=" +
-                          ((metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-") ? "Mealy" : metadata.tlsf_effective_target) +
-                          (check_unreal ? ";polarity=unreal-formula" : ";polarity=real"));
+  run_one_ltl runner (
+      dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal, translation_pref,
+      spot_fast, backend, provider, candidate, synth_fname, conversion, indexed_family_hints,
+      metadata.source_format + ";semantics=" + metadata.tlsf_semantics +
+          ";target=" + metadata.tlsf_target + ";effective=" +
+          ((metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-")
+               ? "Mealy"
+               : metadata.tlsf_effective_target) +
+          (check_unreal ? ";polarity=unreal-formula" : ";polarity=real"));
 
   if (auto answer =
           try_unreal_safety_core_witnesses (spot_formula, check_unreal, synth_fname, runner);
