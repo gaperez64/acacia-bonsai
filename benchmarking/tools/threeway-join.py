@@ -41,7 +41,6 @@ import importlib.util
 import json
 import math
 import pathlib
-import statistics
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -56,6 +55,8 @@ def _load(name, path):
     spec.loader.exec_module(module)
     return module
 
+
+from scope_memory import memory_statistic  # noqa: E402
 
 coverage = _load("syntcomp26_coverage", ROOT / "benchmarking/run-syntcomp26-coverage.py")
 cactus = _load("cactus_report", ROOT / "benchmarking/cactus-report.py")
@@ -141,7 +142,7 @@ def load_series(label, path, cap, instances):
                 raise JoinError(f"{label}: {name} absent from source run {source}")
             if original["cap_s"] != str(source_cap):
                 raise JoinError(f"{label}: {name} source cap differs from derived provenance")
-            for field in coverage.OUTPUT_COLUMNS + coverage.ROUTE_COLUMNS:
+            for field in coverage.OUTPUT_COLUMNS + coverage.ROUTE_COLUMNS + coverage.MEMORY_COLUMNS:
                 if field == "cap_s" and provenance.startswith("recycled-"):
                     continue
                 if row.get(field) != original.get(field):
@@ -217,11 +218,14 @@ def score(label, view, cap):
 
 
 def peak_memory(series):
-    peaks = [int(row["scope_memory_peak_bytes"]) for row in series["rows"].values()
-             if row.get("scope_memory_peak_bytes", "").isdigit()]
-    return {"max_mib": round(max(peaks) / 2**20, 1) if peaks else None,
-            "median_mib": round(statistics.median(peaks) / 2**20, 1) if peaks else None,
-            "rows_with_peak": len(peaks), "rows_without_peak": len(series["rows"]) - len(peaks)}
+    rows = list(series["rows"].values())
+    scope = memory_statistic(rows, "scope_memory_peak_bytes")
+    rss = memory_statistic(rows, "max_process_rss_bytes")
+    return {"max_mib": round(scope["max_bytes"] / 2**20, 1) if scope["max_bytes"] else None,
+            "median_mib": round(scope["median_bytes"] / 2**20, 1) if scope["median_bytes"] else None,
+            "rows_with_peak": scope["numerator"],
+            "rows_without_peak": scope["denominator"] - scope["numerator"],
+            "scope": scope, "process_rss": rss}
 
 
 def conversion_boundary(label, untimed, manifests):
@@ -542,6 +546,14 @@ def render(report, labels_in_order):
                 + " | ".join(str(entry["failure_subtypes"][s]) for s in SUBTYPES)
                 + f" | {entry['exclusive_solves_in_group']} | "
                 f"{peak['max_mib']} / {peak['median_mib']} |")
+        lines.append("")
+        for label in labels:
+            for statistic, values in report["series"][label]["peak_memory"].items():
+                if statistic not in {"scope", "process_rss"}:
+                    continue
+                lines.append(f"{label} {statistic}: {values['numerator']}/{values['denominator']} "
+                             f"campaign rows; missing reasons: {values['missing_reasons']}; "
+                             f"{values['selection_bias']}. Maximum is of the observed subset.")
         lines.append("")
     lines += [f"## Paired against {report['new']}", "",
               "| Other series | Gains | Losses | PAR-2 delta (s) | Reading |", "|---|---:|---:|---:|---|"]

@@ -271,3 +271,34 @@ def test_acacia1x_rejects_tlsf_map():
         "Acacia v1 predates the TLSF frontend and must be fed converted "
         ".ltl/.part pairs"
     ) in result.stderr
+
+
+def test_raw_provenance_sidecar_and_expanded_resume_preserve_master_contract(
+        tmp_path, master_benchmark_reader):
+    module = load_module()
+    master = master_benchmark_reader("run-syntcomp26-coverage.py")
+    binary = tmp_path / "solver"
+    binary.write_text("fake binary")
+    output = tmp_path / "raw.tsv"
+    options = dict(label="candidate", tool="acacia", binary=binary, revision="frozen",
+                   flags="", cap=17, memory_max="8G", memory_swap_max="0")
+    raw = module.RawObservations(output, resume=False, **options)
+    from benchlib import RunResult
+    raw.record_run("case.ltl", "case.tlsf", RunResult(
+        "REALIZABLE\n", "", 0, 0.1, False, scope_unit="acacia-test.scope",
+        memory_peak_bytes=4096, scope_memory_peak_source="cgroup-v2/memory.peak",
+        scope_memory_peak_missing_reason="", memory_cgroup="/invocation"))
+    assert master.load_output(output)[0]["scope_memory_peak_bytes"] == "4096"
+    restored = raw.coverage.load_output(output)
+    assert restored[0]["memory_cgroup"] == "/invocation"
+    raw.coverage.atomic_write_tsv(output, raw.coverage.OUTPUT_COLUMNS + raw.coverage.MEMORY_COLUMNS,
+                                  restored)
+    output.with_name(output.name + ".memory.tsv").unlink()
+    original = output.read_bytes()
+    resumed = module.RawObservations(output, resume=True, **options)
+    assert output.with_name("raw-legacy.tsv").read_bytes() == original
+    assert resumed.rows == restored
+    resumed.record_syfco_failure("failed.ltl", "failed.tlsf")
+    assert [row["result"] for row in master.load_output(output)] == ["REALIZABLE", "SYFCO-FAIL"]
+    assert resumed.coverage.load_output(output)[1]["scope_memory_peak_missing_reason"] == (
+        "not executed: SyFCo conversion failed")

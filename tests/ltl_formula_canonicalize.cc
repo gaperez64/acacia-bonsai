@@ -2,6 +2,8 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <sstream>
+#include <unordered_set>
 #include <vector>
 
 #include <spot/tl/formula.hh>
@@ -104,6 +106,24 @@ int main (int argc, char** argv) {
                          parse_key ("a R b") == parse_key ("(b U (a & b)) | G(b)") and
                          parse_key ("a M b") == parse_key ("b U (a & b)");
     return not first.empty () and first == second and derived ? 0 : 1;
+  }
+  if (argc == 3 and std::string {argv[1]} == "--delay-aps") {
+    std::unordered_set<std::string> signals;
+    std::istringstream names {argv[2]};
+    for (std::string name; std::getline (names, name, ',');)
+      signals.insert (name);
+    const std::string text {std::istreambuf_iterator<char> {std::cin},
+                            std::istreambuf_iterator<char> {}};
+    auto parsed = spot::parse_infix_psl (text);
+    if (not parsed.f or not parsed.errors.empty ())
+      return 1;
+    const auto delay = [&signals] (auto&& self, spot::formula formula) -> spot::formula {
+      if (formula.is (spot::op::ap))
+        return signals.contains (formula.ap_name ()) ? spot::formula::X (formula) : formula;
+      return formula.map ([&self] (spot::formula child) { return self (self, child); });
+    };
+    std::cout << delay (delay, parsed.f) << '\n';
+    return 0;
   }
   if (argc != 1) {
     std::cerr << "usage: ltl-formula-canonicalize [--self-test]\n";

@@ -35,7 +35,25 @@ comparisons match the saved review evidence, including 64 common-master API case
 The charter and owner hardcoding guard remain byte-identical; the generic lifting
 guard and release-hook isolation pass.
 No new performance or coverage measurements are claimed. [Implementation and reproduction notes](coverage-first/attribution.md)
-describe completeness requirements and the uncommitted cross-repository API change.
+describe completeness requirements and the cross-repository API change (tlsf-tools#62, merged as `f6b5ecc`).
+
+## 2026-10-06 — P0 gate and memory implementation
+
+The gate corrections for #211 have regression coverage, including real generated
+Mealy, Moore and strict-semantics conversions. #214 now uses the existing runners
+with an external v2 memory observer and a retained invocation cgroup; reports state
+per-statistic completeness and suppress partial medians. Reviewer follow-up keeps
+parent journal peaks separate, validates collection provenance, retains master's
+primary TSV columns with memory sidecars, preserves signal crashes, and restores
+the previous OOM rule for every nonzero exit. The second re-review preserves owner
+errors even with a cgroup path and excludes peak/events from failed or unverified drains,
+with 20 new regressions. Validation passes 719 pytest tests
+(3 optional skips), 52 unit tests, and ruff on 29 touched Python files. This is
+implementation validation, not a new performance campaign or issue-closure claim. The real Linux
+normal/timeout/child-OOM/invocation-OOM panel passed outside the sandbox on 2026-10-06
+(archive `cov20261006-p0exit`). Commands, file ownership and limitations are in
+[the P0 decision record](coverage-first/p0-gates-memory.md). Historical rows below
+retain their original measured/derived meaning, including incomplete memory evidence.
 
 ## 2026-10-04 — P4 closing campaign and shipping default
 

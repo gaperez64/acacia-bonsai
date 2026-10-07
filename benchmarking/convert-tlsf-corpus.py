@@ -8,6 +8,8 @@ import csv
 import pathlib
 import subprocess
 
+from tlsf_pairs import convert_pair
+
 
 def failure_reason(stderr: str, stdout: str) -> str:
     text = f"{stderr}\n{stdout}".strip()
@@ -27,6 +29,10 @@ def main() -> int:
         type=pathlib.Path,
         help="also write a benchmark .list containing every converted instance",
     )
+    parser.add_argument("--target", choices=("Mealy", "Moore"),
+                        help="adapt to this solver target exactly once; keep source semantics")
+    parser.add_argument("--stage-timeout", type=float, default=120)
+    parser.add_argument("--canonicalizer", type=pathlib.Path)
     args = parser.parse_args()
 
     sources = sorted(args.source.glob("*.tlsf"), key=lambda path: path.name)
@@ -40,20 +46,12 @@ def main() -> int:
     for source in sources:
         ltl = args.output / f"{source.stem}.ltl"
         part = args.output / f"{source.stem}.part"
-        result = subprocess.run(
-            [
-                args.syfco,
-                "--format",
-                "ltlxba",
-                "--mode",
-                "fully",
-                "--part-file",
-                str(part),
-                str(source),
-            ],
-            capture_output=True,
-            text=True,
-        )
+        try:
+            formula = convert_pair(args.syfco, source, part, args.stage_timeout,
+                                   args.target, args.canonicalizer)
+            result = subprocess.CompletedProcess([], 0, formula, "")
+        except (OSError, ValueError, subprocess.SubprocessError) as error:
+            result = subprocess.CompletedProcess([], 1, "", str(error))
         if result.returncode == 0:
             ltl.write_text(result.stdout.rstrip() + "\n")
             converted += 1
@@ -93,7 +91,7 @@ def main() -> int:
             + "".join(f"{name}\n" for name in converted_names)
         )
         print(f"wrote {len(converted_names)} entries to {args.list_output}")
-    return 0
+    return int(bool(skipped))
 
 
 if __name__ == "__main__":

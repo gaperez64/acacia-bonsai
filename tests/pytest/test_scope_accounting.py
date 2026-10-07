@@ -43,8 +43,8 @@ def test_final_journal_accounting_retains_zero_and_oom(tmp_path):
     assert out["original_result"] == "CRASH"
     assert out["original_resource_reason"] == "signal:15"
     assert out["scope_cpu_seconds"] == "1.250000000"
-    assert out["scope_memory_peak_bytes"] == "8589934592"
-    assert out["scope_memory_swap_peak_bytes"] == "0"
+    assert out["parent_scope_memory_peak_bytes"] == "8589934592"
+    assert out["parent_scope_memory_swap_peak_bytes"] == "0"
     assert out["scope_accounting_source"] == "argv+timestamp"
 
 
@@ -77,7 +77,7 @@ def test_missing_accounting_is_not_measured_zero():
     missing = accounting.annotate(row(), unit(), "unit")
     measured = accounting.annotate(row(), unit(cpu=0, memory=0, swap=0), "unit")
     assert "scope_cpu_seconds" not in missing
-    assert "scope_memory_peak_bytes" not in missing
+    assert "parent_scope_memory_peak_bytes" not in missing
     assert measured["scope_cpu_seconds"] == "0.000000000"
-    assert measured["scope_memory_peak_bytes"] == measured["scope_memory_swap_peak_bytes"] == "0"
+    assert measured["parent_scope_memory_peak_bytes"] == measured["parent_scope_memory_swap_peak_bytes"] == "0"
     assert accounting.annotate(row(), None, "ambiguous")["scope_accounting_source"] == "unavailable:ambiguous"

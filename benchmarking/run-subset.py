@@ -37,7 +37,10 @@ import signal
 import shlex
 import subprocess
 import sys
+from types import SimpleNamespace
 import tempfile
+
+from scope_memory import append_memory_sidecar, memory_fields, write_memory_sidecar
 
 from benchlib import (
     campaign_scope_guard,
@@ -257,6 +260,16 @@ class RawObservations:
                 raise SystemExit(f"{self.path} exists; pass --resume to continue it")
             rows = []
             self.coverage.atomic_write_tsv(self.path, self.coverage.OUTPUT_COLUMNS, [])
+        if resume and self.path.exists():
+            with self.path.open(newline="") as stream:
+                columns = next(csv.reader(stream, delimiter="\t"))
+            if columns != self.coverage.OUTPUT_COLUMNS:
+                original = self.path.with_name(f"{self.path.stem}-legacy.tsv")
+                if original.exists():
+                    raise SystemExit(f"refusing to overwrite original observations {original}")
+                original.write_bytes(self.path.read_bytes())
+                self.coverage.atomic_write_tsv(self.path, self.coverage.OUTPUT_COLUMNS, rows)
+        write_memory_sidecar(self.path, rows)
         self.rows = rows
         self.done = {row["instance"] for row in rows if row["solver_label"] == label}
 
@@ -274,6 +287,7 @@ class RawObservations:
 
     def _append(self, row):
         self.coverage.append_tsv_row(self.path, self.coverage.OUTPUT_COLUMNS, row)
+        append_memory_sidecar(self.path, row)
         self.rows.append(row)
         self.done.add(row["instance"])
 
@@ -287,6 +301,7 @@ class RawObservations:
             "scope_memory_peak_bytes": ("" if run.memory_peak_bytes is None
                                         else str(run.memory_peak_bytes)),
             "scope_unit": run.scope_unit,
+            **memory_fields(run),
         })
         self._append(row)
 
@@ -295,6 +310,9 @@ class RawObservations:
         row.update({"result": "SYFCO-FAIL", "seconds": "0", "exit_code": "-1",
                     "timed_out": "false", "resource_reason": "syfco",
                     "stdout_bytes": "0", "stderr_bytes": "0"})
+        row.update(scope_memory_peak_missing_reason="not executed: SyFCo conversion failed",
+                   scope_memory_events_missing_reason="not executed: SyFCo conversion failed",
+                   max_process_rss_missing_reason="not executed: SyFCo conversion failed")
         self._append(row)
 
 
@@ -430,6 +448,7 @@ def main():
     semantics_map = read_semantics_map(args.semantics_map) if args.semantics_map else {}
     if args.semantics_map and set(insts) - known_syfco_failures - set(semantics_map):
         p.error("--semantics-map lacks a listed converted input")
+    memory_rows = []
     raw = None
     if args.raw_tsv:
         raw = RawObservations(
@@ -456,6 +475,10 @@ def main():
                 converted = convert_tlsf(args.syfco, tlsf, syfco_cache)
                 if converted is None:
                     print(f"  {base:44s} SYFCO-FAIL")
+                    memory_rows.append({"instance": base, **memory_fields(SimpleNamespace(
+                        scope_memory_peak_missing_reason="not executed: SyFCo conversion failed",
+                        scope_memory_events_missing_reason="not executed: SyFCo conversion failed",
+                        max_process_rss_missing_reason="not executed: SyFCo conversion failed"))})
                     rows.append({"instance": base, "result": "SYFCO-FAIL",
                                  "seconds": 0.0, "exit": -1})
                     if raw is not None:
@@ -474,6 +497,10 @@ def main():
             if ltl_path is None or not ltl_path.exists():
                 if base in known_syfco_failures:
                     print(f"  {base:44s} SYFCO-FAIL")
+                    memory_rows.append({"instance": base, **memory_fields(SimpleNamespace(
+                        scope_memory_peak_missing_reason="not executed: SyFCo conversion failed",
+                        scope_memory_events_missing_reason="not executed: SyFCo conversion failed",
+                        max_process_rss_missing_reason="not executed: SyFCo conversion failed"))})
                     rows.append({"instance": base, "result": "SYFCO-FAIL",
                                  "seconds": 0.0, "exit": -1})
                     if raw is not None:
@@ -503,6 +530,9 @@ def main():
             )
         else:
             run = run_process_group(cmd, args.timeout)
+        observation = {"instance": base, **memory_fields(run)}
+        memory_rows.append(observation)
+        print(f"# memory {base}: {observation}")
         res = classify_run(run, args.tool)
         if raw is not None:
             raw.record_run(base, source_file, run)
@@ -517,6 +547,13 @@ def main():
     if args.csv:
         write_csv(args.csv, rows, ["instance", "result", "seconds", "exit"])
         print(f"wrote {args.csv}")
+        if memory_rows:
+            memory_path = str(args.csv) + ".memory.tsv"
+            with open(memory_path, "w", newline="") as stream:
+                writer = csv.DictWriter(stream, list(memory_rows[0]), delimiter="\t")
+                writer.writeheader()
+                writer.writerows(memory_rows)
+            print(f"wrote {memory_path}")
     if temporary_cache is not None:
         temporary_cache.cleanup()
 
