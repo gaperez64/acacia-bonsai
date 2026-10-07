@@ -584,6 +584,29 @@ namespace {
     const budget::allowance quarter {{0.25, now + 4000000000ULL}, now};
     bool ok = expect ("one quarter of remaining invocation budget",
                       quarter.deadline_ns () == now + 1000000000ULL);
+    const budget::allowance reference {{0.25, 0}, now};
+    ok &= expect ("no-deadline fraction uses the fixed 5 s reference",
+                  reference.bounded () and reference.initial_remaining_ns () == 5000000000ULL and
+                      reference.total_ns () == 1250000000ULL and
+                      reference.deadline_ns () == now + 1250000000ULL);
+    const budget::allowance absolute {{std::nullopt, 0, 3000000000ULL}, now};
+    ok &= expect ("absolute allowance works without an outer deadline",
+                  absolute.bounded () and absolute.total_ns () == 3000000000ULL and
+                      absolute.deadline_ns () == now + 3000000000ULL);
+    absolute.consume (1000000000ULL);
+    absolute.enter (now + 2000000000ULL);
+    ok &= expect ("absolute allowance charges cumulative pre-pass time only",
+                  absolute.consumed_ns () == 1000000000ULL and
+                      absolute.deadline_ns () == now + 4000000000ULL);
+    const budget::allowance clipped {{std::nullopt, now + 1000000000ULL, 3000000000ULL}, now};
+    ok &= expect ("outer deadline clips an absolute allowance",
+                  clipped.deadline_ns () == now + 1000000000ULL);
+    clipped.enter (now + 2000000000ULL);
+    ok &= expect ("expired outer deadline gives no additional optional time",
+                  clipped.deadline_ns () == now + 2000000000ULL);
+    const budget::allowance incumbent {{std::nullopt, now + 1}, now};
+    ok &= expect ("unbounded default ignores pre-pass deadlines",
+                  not incumbent.bounded () and incumbent.deadline_ns () == 0);
     const budget::allowance expired {{0.0, now + 4000000000ULL}, now};
     for (unsigned n : {3U, 4U}) {
       posets::vectors::bool_threshold = 1 + 2 * n;
@@ -598,6 +621,12 @@ namespace {
           actioners::standard<state> (), input_pickers::critical (), {}, expired);
       ok &= expect ("exhaustion is typed stopped, not decline",
                     stopped.outcome == eq::status::stopped and not stopped.win);
+      const budget::allowance zero {{std::nullopt, 0, 0}, now};
+      auto no_deadline = eq::try_solve<SetOfStates> (
+          fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+          actioners::standard<state> (), input_pickers::critical (), {}, zero);
+      ok &= expect ("no-deadline zero absolute allowance is typed stopped",
+                    no_deadline.outcome == eq::status::stopped and not no_deadline.win);
     }
     posets::vectors::bool_threshold = 7;
     const fixture fx = make_aut (3);
@@ -617,6 +646,32 @@ namespace {
     ok &= expect ("same process solves with ordinary backward", ordinary.solve ().has_value ());
     ok &= expect ("ordinary solve completes with invocation time left",
                   acacia::phase_clock (CLOCK_MONOTONIC) < outer);
+    for (unsigned mode : {0U, 1U, 2U}) {
+      const uint64_t entry = acacia::phase_clock (CLOCK_MONOTONIC);
+      const budget::invocation_limits limits =
+          mode == 2 ? budget::invocation_limits {0.002, 0}
+                    : budget::invocation_limits {std::nullopt, mode ? entry + 4000000000ULL : 0,
+                                                 10000000ULL};
+      const budget::allowance timed {limits, entry};
+      auto cancelled = eq::try_solve<SetOfStates> (fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs,
+                                                   ios_precomputers::mona (), slow_actioner (),
+                                                   input_pickers::critical (), {}, timed);
+      ok &= expect ("positive finite allowance stops slow construction in every regime",
+                    cancelled.outcome == eq::status::stopped and not cancelled.win and
+                        timed.consumed_ns () == timed.total_ns () and budget::active == nullptr);
+      auto next = eq::try_solve<SetOfStates> (
+          fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+          actioners::standard<state> (), input_pickers::critical (), {}, timed);
+      ok &= expect ("finite allowance stays exhausted in the next subgame",
+                    next.outcome == eq::status::stopped and not next.win);
+      auto fallback =
+          k_bounded_safety_aut_detail<SetOfStates, ios_precomputers::mona,
+                                      actioners::standard<state>, input_pickers::critical> (
+              fx.aut, 2, 3, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+              actioners::standard<state> (), input_pickers::critical ());
+      ok &= expect ("finite exhaustion permits same-process ordinary backward solving",
+                    fallback.solve ().has_value () and budget::active == nullptr);
+    }
     const uint64_t final_start = acacia::phase_clock (CLOCK_MONOTONIC);
     const budget::allowance final_budget {{0.25, final_start + 4000000000ULL}, final_start};
     auto proven = eq::try_solve<SetOfStates> (
@@ -640,36 +695,43 @@ namespace {
                     sweep.outcome == eq::status::completed and sweep.win.has_value ());
     }
     // A cheap recognition decline must not charge ordinary work to later subgames.
-    const uint64_t shared_start = acacia::phase_clock (CLOCK_MONOTONIC);
-    const uint64_t shared_outer = shared_start + 4000000000ULL;
-    budget::invocation_allowance.emplace (budget::invocation_limits {0.25, shared_outer},
-                                          shared_start);
-    const auto& shared = *budget::invocation_allowance;
-    auto unindexed = make_aut (1);
-    posets::vectors::bool_threshold = unindexed.aut->num_states ();
-    auto declined = eq::try_solve<SetOfStates> (unindexed.aut, 3, 2, 1, unindexed.all_inputs,
-                                                unindexed.all_outputs, ios_precomputers::mona (),
-                                                actioners::standard<state> (),
-                                                input_pickers::critical (), {}, shared);
-    ok &= expect ("first subgame cheaply declines", declined.outcome == eq::status::declined);
-    // Model a slow ordinary construction, then run the real backward fixed point.
-    std::this_thread::sleep_for (std::chrono::milliseconds (1100));
-    auto first_backward =
-        k_bounded_safety_aut_detail<SetOfStates, ios_precomputers::mona,
-                                    actioners::standard<state>, input_pickers::critical> (
-            unindexed.aut, 2, 3, 1, unindexed.all_inputs, unindexed.all_outputs,
-            ios_precomputers::mona (), actioners::standard<state> (), input_pickers::critical ());
-    ok &= expect ("declined subgame solves with ordinary backward",
-                  first_backward.solve ().has_value ());
-    posets::vectors::bool_threshold = fx.aut->num_states ();
-    auto later = eq::try_solve<SetOfStates> (
-        fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
-        actioners::standard<state> (), input_pickers::critical (), {}, shared);
-    ok &= expect ("later symmetric subgame retains unused allowance",
-                  later.outcome == eq::status::completed and later.win.has_value ());
-    ok &= expect ("later symmetric subgame has invocation time left",
-                  acacia::phase_clock (CLOCK_MONOTONIC) < shared_outer);
-    budget::invocation_allowance.reset ();
+    for (unsigned mode : {0U, 1U, 2U}) {
+      const uint64_t shared_start = acacia::phase_clock (CLOCK_MONOTONIC);
+      const uint64_t shared_outer = mode == 0 ? shared_start + 4000000000ULL : 0;
+      const budget::invocation_limits limits =
+          mode == 2 ? budget::invocation_limits {std::nullopt, 0, 1250000000ULL}
+                    : budget::invocation_limits {0.25, shared_outer};
+      budget::invocation_allowance.emplace (limits, shared_start);
+      const auto& shared = *budget::invocation_allowance;
+      auto unindexed = make_aut (1);
+      posets::vectors::bool_threshold = unindexed.aut->num_states ();
+      auto declined = eq::try_solve<SetOfStates> (unindexed.aut, 3, 2, 1, unindexed.all_inputs,
+                                                  unindexed.all_outputs, ios_precomputers::mona (),
+                                                  actioners::standard<state> (),
+                                                  input_pickers::critical (), {}, shared);
+      ok &= expect ("first subgame cheaply declines", declined.outcome == eq::status::declined);
+      const uint64_t consumed = shared.consumed_ns ();
+      // Model a slow ordinary construction, then run the real backward fixed point.
+      std::this_thread::sleep_for (std::chrono::milliseconds (1100));
+      auto first_backward =
+          k_bounded_safety_aut_detail<SetOfStates, ios_precomputers::mona,
+                                      actioners::standard<state>, input_pickers::critical> (
+              unindexed.aut, 2, 3, 1, unindexed.all_inputs, unindexed.all_outputs,
+              ios_precomputers::mona (), actioners::standard<state> (),
+              input_pickers::critical ());
+      ok &= expect ("declined subgame solves with ordinary backward",
+                    first_backward.solve ().has_value () and shared.consumed_ns () == consumed);
+      posets::vectors::bool_threshold = fx.aut->num_states ();
+      auto later = eq::try_solve<SetOfStates> (
+          fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+          actioners::standard<state> (), input_pickers::critical (), {}, shared);
+      ok &= expect ("later symmetric subgame retains unused allowance in every regime",
+                    later.outcome == eq::status::completed and later.win.has_value () and
+                        shared.consumed_ns () >= consumed);
+      ok &= expect ("later symmetric subgame respects a supplied invocation deadline",
+                    not shared_outer or acacia::phase_clock (CLOCK_MONOTONIC) < shared_outer);
+      budget::invocation_allowance.reset ();
+    }
 
     bool filter_stopped = false;
     std::list<std::pair<bdd, int>> inputs {{bddtrue, 1}, {bddtrue, 2}, {bddtrue, 3}};

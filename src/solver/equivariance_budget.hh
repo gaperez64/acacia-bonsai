@@ -3,19 +3,28 @@
 #include "phase_records.hh"
 
 #include <algorithm>
+#include <limits>
 #include <optional>
 
 namespace acacia::equivariance_budget {
 
+  // One global 5 s optional-work horizon, matching extended weakening's
+  // no-deadline reference. Fractions cap this pre-pass before ordinary backward;
+  // it is a fixed time policy, independent of input structure or measured verdicts.
+  inline constexpr uint64_t reference_ns = 5000000000ULL;
+
   struct invocation_limits {
       std::optional<double> fraction;
       uint64_t deadline_ns = 0;
+      std::optional<uint64_t> absolute_ns;
+      [[nodiscard]] bool bounded () const { return fraction || absolute_ns; }
   };
   inline thread_local invocation_limits invocation;
 
   struct stopped {};
 
   class allowance {
+      bool bounded_ = false;
       uint64_t outer_deadline_ns_ = 0;
       uint64_t total_ns_ = 0;
       uint64_t initial_remaining_ns_ = 0;
@@ -25,28 +34,36 @@ namespace acacia::equivariance_budget {
     public:
       allowance () = default;
       allowance (invocation_limits limits, uint64_t now) {
-        if (limits.fraction) {
+        if (limits.bounded ()) {
+          bounded_ = true;
           outer_deadline_ns_ = limits.deadline_ns;
-          initial_remaining_ns_ = limits.deadline_ns > now ? limits.deadline_ns - now : 0;
-          total_ns_ = uint64_t (initial_remaining_ns_ * *limits.fraction);
+          initial_remaining_ns_ = limits.deadline_ns
+                                      ? (limits.deadline_ns > now ? limits.deadline_ns - now : 0)
+                                      : (limits.fraction ? reference_ns : 0);
+          total_ns_ = limits.absolute_ns ? *limits.absolute_ns
+                                         : uint64_t (initial_remaining_ns_ * *limits.fraction);
           enter (now);
         }
       }
-      [[nodiscard]] bool bounded () const { return outer_deadline_ns_ != 0; }
+      [[nodiscard]] bool bounded () const { return bounded_; }
       [[nodiscard]] uint64_t deadline_ns () const { return deadline_ns_; }
       [[nodiscard]] uint64_t total_ns () const { return total_ns_; }
       [[nodiscard]] uint64_t initial_remaining_ns () const { return initial_remaining_ns_; }
       [[nodiscard]] uint64_t consumed_ns () const { return consumed_ns_; }
       void enter (uint64_t now) const {
+        if (not bounded_)
+          return;
         const uint64_t remaining = total_ns_ - consumed_ns_;
-        const uint64_t outer_remaining = outer_deadline_ns_ > now ? outer_deadline_ns_ - now : 0;
+        const uint64_t outer_remaining =
+            outer_deadline_ns_ ? (outer_deadline_ns_ > now ? outer_deadline_ns_ - now : 0)
+                               : std::numeric_limits<uint64_t>::max () - now;
         deadline_ns_ = now + std::min (remaining, outer_remaining);
       }
       void consume (uint64_t elapsed) const {
         consumed_ns_ += std::min (elapsed, total_ns_ - consumed_ns_);
       }
       void check () const {
-        if (deadline_ns_ && phase_clock (CLOCK_MONOTONIC) >= deadline_ns_)
+        if (bounded_ && phase_clock (CLOCK_MONOTONIC) >= deadline_ns_)
           throw stopped {};
       }
   };
@@ -112,6 +129,23 @@ namespace acacia::equivariance_budget {
       phase_records_send (line, size_t (n));
     else
       phase_records_drop ();
+    if (limits.bounded ()) {
+      // Separate compact record keeps the budget packet within macOS PIPE_BUF.
+      const char* mode = limits.absolute_ns   ? "absolute"
+                         : limits.deadline_ns ? "remaining"
+                                              : "reference";
+      const int limit_n = snprintf (
+          line, sizeof line,
+          "{\"phase\":\"equivariance_limit\",\"worker\":%u,\"pid\":%ld,\"mode\":\"%s\","
+          "\"absolute_ns\":%llu,\"reference_ns\":%llu}\n",
+          worker->index, long (worker->pid), mode,
+          (unsigned long long) limits.absolute_ns.value_or (0),
+          (unsigned long long) (limits.fraction && !limits.deadline_ns ? reference_ns : 0));
+      if (limit_n > 0 && size_t (limit_n) < sizeof line)
+        phase_records_send (line, size_t (limit_n));
+      else
+        phase_records_drop ();
+    }
   }
 
   inline void phase (const char* name) {

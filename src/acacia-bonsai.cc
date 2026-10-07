@@ -504,10 +504,8 @@ int main (int argc, char** argv) {
   auto arg_values = arg_parser (argc, argv);
   argument_phase.finish ();
   const uint64_t deadline_mono_ns = outer_deadline_ns ();
-  if (arg_values.equivariance_budget && !deadline_mono_ns)
-    error (EXIT_CODE_ERROR,
-           "Error: --equivariance-budget F requires ACACIA_OUTER_DEADLINE_MONOTONIC.\n");
-  acacia::equivariance_budget::invocation = {arg_values.equivariance_budget, deadline_mono_ns};
+  acacia::equivariance_budget::invocation = {
+      arg_values.equivariance_budget, deadline_mono_ns, arg_values.equivariance_budget_ns};
   acacia::equivariance_budget::invocation_allowance.reset ();
   // set the global verbose level
   utils::verbose = arg_values.verbose_level;

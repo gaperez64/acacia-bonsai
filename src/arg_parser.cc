@@ -109,8 +109,9 @@ void show_help (const char* program_name) {
       << "  --equivariance VAL [on|off] exact pre-pass in backward decision workers (default "
       << (ACACIA_ENABLE_EQUIVARIANT_SOLVER ? "on" : "off") << ")\n"
       << "                    off keeps ordinary backward solving; on requires compiled support\n"
-      << "  --equivariance-budget F|unbounded (default unbounded); 0 <= F < 1 of remaining\n"
-      << "                    invocation budget; a supplied deadline is required\n"
+      << "  --equivariance-budget F|DURATION|unbounded (default unbounded); 0 <= F < 1\n"
+      << "                    of remaining invocation budget, or a fixed 5 s reference without\n"
+      << "                    a deadline; duration uses s or ms (e.g. 3s, 3000ms); cumulative\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
@@ -556,18 +557,36 @@ arg_parse_result arg_parser (int argc, char** argv) {
           error (EXIT_CODE_ERROR, "Error: --candidate-mode expects only or fallback.\n");
         break;
       case OPT_EQUIVARIANCE_BUDGET: {
+        retval.equivariance_budget.reset ();
+        retval.equivariance_budget_ns.reset ();
         if (case_insensitive_equals (optarg, "unbounded"))
-          retval.equivariance_budget.reset ();
-        else {
-          char* end = nullptr;
-          errno = 0;
-          const double fraction = std::strtod (optarg, &end);
-          if (errno || end == optarg || *end || !std::isfinite (fraction) ||
-              fraction < 0 || fraction >= 1)
-            error (EXIT_CODE_ERROR,
-                   "Error: --equivariance-budget expects 0 <= F < 1 or unbounded.\n");
-          retval.equivariance_budget = fraction;
-        }
+          break;
+        char* end = nullptr;
+        errno = 0;
+        const long double value = std::strtold (optarg, &end);
+        const std::string_view unit {end};
+        const long double scale = unit.empty () ? acacia::equivariance_budget::reference_ns
+                                               : unit == "s" ? 1000000000.0L : 1000000.0L;
+        const long double ns = value * scale;
+        // -Ofast can remove isfinite/signbit checks; reject nonnumeric and negative spellings.
+        const char* numeric = optarg;
+        while (std::isspace (static_cast<unsigned char> (*numeric)))
+          ++numeric;
+        if (*numeric == '+')
+          ++numeric;
+        const bool numeric_start = (*numeric >= '0' && *numeric <= '9') || *numeric == '.';
+        if (not numeric_start || errno || end == optarg || (value > 0 && ns < 1) ||
+            (unit.empty ()
+                 ? double (value) >= 1
+                 : (unit != "s" && unit != "ms") || ns >= std::numeric_limits<uint64_t>::max ()))
+          error (EXIT_CODE_ERROR,
+                 "Error: --equivariance-budget expects 0 <= F < 1, nonnegative duration "
+                 "in s or ms, or unbounded; negative zero is invalid and positive values "
+                 "must allow at least 1 ns (fractions use a 5 s reference).\n");
+        if (unit.empty ())
+          retval.equivariance_budget = double (value);
+        else
+          retval.equivariance_budget_ns = uint64_t (ns);
         break;
       }
       case OPT_R_PREPASS:

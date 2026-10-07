@@ -178,11 +178,10 @@ namespace acacia::solver_detail {
     // forward configuration excluded it, so this preserves both measured
     // configurations when both solvers are compiled in.
     if (equivariance and backend == acacia::game_backend::backward and not do_synthesis) {
-      // Opt-in global experiment: F=0.25 reserves three quarters of the time
-      // left at first route entry for ordinary backward, including its construction.
-      // The incumbent remains unbounded. No input identity selects this rule.
+      // Fractions use time left at first entry, or the global no-deadline reference;
+      // absolute times work in either regime. The incumbent remains unbounded.
       const auto limits = acacia::equivariance_budget::invocation;
-      const uint64_t now = limits.fraction || acacia::phase_records_enabled ()
+      const uint64_t now = limits.bounded () || acacia::phase_records_enabled ()
                                ? acacia::phase_clock (CLOCK_MONOTONIC) : 0;
       // Decomposed subgames share cumulative optional-phase consumption. Each
       // entry also respects the unchanged outer deadline; backward time is excluded.
