@@ -71,6 +71,16 @@ namespace {
 
   using utils::push_aps;
 
+  enum class controller_conversion { none, delay_outputs, undo_input_shift };
+
+  spot::aig_ptr convert_controller (const spot::aig_ptr& source,
+                                    controller_conversion conversion) {
+    if (conversion == controller_conversion::none)
+      return source;
+    return acacia::synthesis::mealy_to_moore (
+        source, conversion == controller_conversion::undo_input_shift);
+  }
+
 #if ACACIA_ENABLE_DIAGNOSTICS
   size_t edge_count (const spot::const_twa_graph_ptr& aut) {
     size_t count = 0;
@@ -153,7 +163,7 @@ namespace {
 
   void write_no_input_strategy (const std::vector<std::string>& output_aps,
                                 const std::vector<std::vector<bool>>& values, size_t loop_start,
-                                const std::string& synth_fname, bool synthesize_moore) {
+                                const std::string& synth_fname, controller_conversion conversion) {
     size_t capacity = 1;
     unsigned n_latches = 0;
     while (capacity < values.size ()) {
@@ -190,8 +200,7 @@ namespace {
 
     std::ofstream synthesis_file (synth_fname);
     if (synthesis_file) {
-      if (synthesize_moore)
-        circuit = acacia::synthesis::mealy_to_moore (circuit);
+      circuit = convert_controller (circuit, conversion);
       spot::print_aiger (synthesis_file, circuit);
     }
     else
@@ -201,7 +210,8 @@ namespace {
   bool run_no_input_ltl (const std::vector<std::string>& output_aps, spot::formula spot_formula,
                          std::optional<UNREAL_X_T> check_unreal,
                          TRANSLATION_PREF_T translation_pref,
-                         const std::optional<std::string>& synth_fname, bool synthesize_moore) {
+                         const std::optional<std::string>& synth_fname,
+                         controller_conversion conversion) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     int owner = 0;
     struct owner_cleanup {
@@ -268,7 +278,7 @@ namespace {
 
       if (values.empty ())
         values.push_back (std::vector<bool> (output_aps.size (), false));
-      write_no_input_strategy (output_aps, values, loop_start, *synth_fname, synthesize_moore);
+      write_no_input_strategy (output_aps, values, loop_start, *synth_fname, conversion);
     }
     return true;
   }
@@ -301,7 +311,7 @@ namespace {
       const bool equivariance;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
-      const bool synthesize_moore;
+      const controller_conversion conversion;
       const std::string target_semantics;
       const std::vector<symmetry::indexed_family_hint>& indexed_family_hints;
       std::vector<spot::const_twa_graph_ptr> strats;
@@ -320,7 +330,7 @@ namespace {
                    SPOT_FAST_T spot_fast, acacia::game_backend backend,
                    acacia::automaton_provider provider, acacia::candidate_mode candidate,
                    bool equivariance, const std::optional<std::string>& synth_fname,
-                   bool synthesize_moore,
+                   controller_conversion conversion,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints,
                    std::string target_semantics)
         : dict {dict},
@@ -337,7 +347,7 @@ namespace {
           candidate {candidate},
           equivariance {equivariance},
           synth_fname {synth_fname},
-          synthesize_moore {synthesize_moore},
+          conversion {conversion},
           target_semantics {std::move (target_semantics)},
           indexed_family_hints {indexed_family_hints} {
         // Create BDD "cubes" that represent the sets of inputs and outputs,
@@ -395,8 +405,7 @@ namespace {
                                                          // inputs and outputs
                                                          // are in the AIG
                                                          input_aps, nonempty_out_part);
-        spot::aig_ptr output_aig =
-            synthesize_moore ? acacia::synthesis::mealy_to_moore (mealy_aig) : mealy_aig;
+        spot::aig_ptr output_aig = convert_controller (mealy_aig, conversion);
         std::ofstream synthesis_file (*synth_fname);
         if (synthesis_file)
           spot::print_aiger (synthesis_file, output_aig);
@@ -811,7 +820,7 @@ namespace {
                                          std::optional<UNREAL_X_T> check_unreal,
                                          TRANSLATION_PREF_T translation_pref,
                                          const std::optional<std::string>& synth_fname,
-                                         bool synthesize_moore) {
+                                         controller_conversion conversion) {
     // Degenerate alphabets are language questions, not games.  Keep this in the
     // original Mealy frame, after realizability simplification and before the
     // unreal workers swap I/O.  Strategy-producing no-input requests retain the
@@ -820,7 +829,7 @@ namespace {
         not(check_unreal.has_value () and *check_unreal == UNREAL_X_FORMULA))
       return std::optional<bool> {acacia::diagnostics::finish (
           run_no_input_ltl (output_aps, spot_formula, check_unreal, translation_pref, synth_fname,
-                            synthesize_moore),
+                            conversion),
           "no-input-ltl-synthesis")};
 
     if (not synth_fname.has_value () and (input_aps.empty () or output_aps.empty ())) {
@@ -1066,8 +1075,15 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
       provider == acacia::automaton_provider::spot_eager)
     std::abort ();
 #endif
-  const bool synthesize_moore =
-      metadata.source_format == "tlsf" and metadata.tlsf_target == "Moore";
+  controller_conversion conversion = controller_conversion::none;
+  if (metadata.source_format == "tlsf" and metadata.tlsf_target == "Moore") {
+    // Moore-to-Mealy lowering shifts inputs with X.  The first Mealy round
+    // therefore reads a dummy input: retain its output, but start the emitted
+    // circuit in its successor state before reading the first real input.
+    conversion = metadata.tlsf_semantics.find ("Moore") != std::string::npos
+                     ? controller_conversion::undo_input_shift
+                     : controller_conversion::delay_outputs;
+  }
   auto indexed_family_hints = metadata.tlsf_indexed_families;
   if (check_unreal.has_value ())
     for (auto& hint : indexed_family_hints)
@@ -1118,7 +1134,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
   if (!acacia::is_closure_provider (provider)) {
     if (auto answer = try_degenerate_io (input_aps, output_aps, spot_formula, check_unreal,
-                                         translation_pref, synth_fname, synthesize_moore);
+                                         translation_pref, synth_fname, conversion);
         answer.has_value ())
       return *answer;
 
@@ -1155,7 +1171,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (
       dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal, translation_pref,
-      spot_fast, backend, provider, candidate, equivariance, synth_fname, synthesize_moore,
+      spot_fast, backend, provider, candidate, equivariance, synth_fname, conversion,
       indexed_family_hints,
       metadata.source_format + ";semantics=" + metadata.tlsf_semantics +
           ";target=" + metadata.tlsf_target + ";effective=" +

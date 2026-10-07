@@ -96,5 +96,33 @@ int main () {
                       positive <= moore->latch_var (moore->num_latches () - 1));
   }
 
+  // A lowered Moore specification has a dummy first Mealy input.  The
+  // converted circuit must retain that round's output and consume its state.
+  auto shifted = std::make_shared<spot::aig> (std::vector<std::string> {"sample"},
+                                              std::vector<std::string> {"response", "phase"}, 2);
+  const unsigned ready = shifted->latch_var (0);
+  const unsigned phase = shifted->latch_var (1);
+  shifted->set_next_latch (0, spot::aig::aig_true ());
+  shifted->set_next_latch (1, ready ^ 1U);
+  shifted->set_output (0, shifted->aig_and (ready, shifted->input_var (0)));
+  shifted->set_output (1, phase);
+  const auto restored = acacia::synthesis::mealy_to_moore (shifted, true);
+  for (unsigned word = 0; word < 32; ++word) {
+    const evaluation dummy = evaluate (shifted, {false}, {false, false});
+    std::vector<bool> source_state = dummy.next_latches;
+    std::vector<bool> restored_state (restored->num_latches (), false);
+    std::vector<bool> expected = dummy.outputs;
+    for (unsigned step = 0; step < 5; ++step) {
+      const std::vector<bool> letter = {bool ((word >> step) & 1U)};
+      const evaluation source = evaluate (shifted, letter, source_state);
+      const evaluation converted = evaluate (restored, letter, restored_state);
+      ok &= expect ("dummy round consumed, including true source latch resets",
+                    converted.outputs == expected);
+      expected = source.outputs;
+      source_state = source.next_latches;
+      restored_state = converted.next_latches;
+    }
+  }
+
   return ok ? 0 : 1;
 }
