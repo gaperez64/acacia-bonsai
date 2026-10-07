@@ -1,4 +1,5 @@
 #include "arg_parser.hh"
+
 #include "phase_records.hh"
 
 /**
@@ -73,34 +74,46 @@ void show_help (const char* program_name) {
       << "                    set the unrealizability translator preference to\n"
       << "                    [small|any] without also selecting a realizability\n"
       << "                    check; mutually exclusive with -r\n"
-      << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for real arms\n"
-      << "  --real-provider VAL      use [frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager] automaton provider (default frozen-graph)\n"
-      << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal requires frozen-graph\n"
+      << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] "
+         "game backend for real arms\n"
+      << "  --real-provider VAL      use "
+         "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager] automaton "
+         "provider (default frozen-graph)\n"
+      << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
+         "requires frozen-graph\n"
       << "  --candidate-mode VAL     [only|fallback] on candidate resource limits (default "
       << acacia::candidate_mode_name (ACACIA_DEFAULT_CANDIDATE_MODE) << ")\n"
-      << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for unreal arms\n"
+      << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] "
+         "game backend for unreal arms\n"
       << "  --arms LIST       run exactly the comma-separated portfolio arms\n"
       << "                    polarity:transform:backend[:provider], where polarity is real or\n"
       << "                    unreal for legacy arms; real transforms are small or any; unreal\n"
       << "                    transforms are formula or automaton; backends are\n"
-      << "                    backward, forward, spot-guarded or spot-guarded-sparse; unreal arms use the build's\n"
+      << "                    backward, forward, spot-guarded or spot-guarded-sparse; unreal arms "
+         "use the build's\n"
       << "                    primary translation preference; mutually exclusive\n"
       << "                    with -r, -u, and per-polarity backend/translation options\n"
       << "                    provider options apply to arms without an explicit provider\n"
-      << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, decision only\n"
+      << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, "
+         "decision only\n"
       << "                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\n"
       << "                    both:gr1-real-lift:oxidd,\n"
       << "                    real:gr1:oxidd, unreal:gr1:oxidd, and\n"
       << "                    real:param-lift:oxidd (realizability only);\n"
       << "                    require -Dacacia_native_arms=true and -T FILE;\n"
       << "                    native arms have no provider and do not support -s\n"
+      << "  --r-prepass VAL   [on|off] R discovery/candidates in combined native arms (default "
+         "on)\n"
+      << "  --equivariance VAL [on|off] exact pre-pass in backward decision workers (default "
+      << (ACACIA_ENABLE_EQUIVARIANT_SOLVER ? "on" : "off") << ")\n"
+      << "                    off keeps ordinary backward solving; on requires compiled support\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
-      << "\t" << (int)EXIT_CODE_REAL << "   if the input problem is realizable\n"
-      << "\t" << (int)EXIT_CODE_UNREAL << "   if it is unrealizable\n"
-      << "\t" << (int)EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
-      << "\t" << (int)EXIT_CODE_ERROR << "   if any error has been reported" << '\n';
+      << "\t" << (int) EXIT_CODE_REAL << "   if the input problem is realizable\n"
+      << "\t" << (int) EXIT_CODE_UNREAL << "   if it is unrealizable\n"
+      << "\t" << (int) EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
+      << "\t" << (int) EXIT_CODE_ERROR << "   if any error has been reported" << '\n';
   print_version (std::cout);
 }
 
@@ -114,19 +127,17 @@ bool case_insensitive_equals (std::string_view lhs, std::string_view rhs) {
 }
 
 template <typename Strategy, typename AddValue>
-std::vector<Strategy> process_strategy_list (const std::string& arg,
-                                             const char* option,
+std::vector<Strategy> process_strategy_list (const std::string& arg, const char* option,
                                              AddValue add_value) {
   std::vector<Strategy> strategies;
   std::istringstream values (arg);
   std::string value;
   while (std::getline (values, value, ',')) {
-    const auto first = std::find_if_not (
-        value.begin (), value.end (), [] (unsigned char c) { return std::isspace (c); });
-    const auto last = std::find_if_not (
-                          value.rbegin (), value.rend (),
-                          [] (unsigned char c) { return std::isspace (c); })
-                          .base ();
+    const auto first = std::find_if_not (value.begin (), value.end (),
+                                         [] (unsigned char c) { return std::isspace (c); });
+    const auto last = std::find_if_not (value.rbegin (), value.rend (), [] (unsigned char c) {
+                        return std::isspace (c);
+                      }).base ();
     if (first >= last)
       error (EXIT_CODE_ERROR, "Error: empty strategy in -%s list.\n", option);
     value = std::string (first, last);
@@ -138,11 +149,10 @@ std::vector<Strategy> process_strategy_list (const std::string& arg,
 }
 
 template <typename Strategy>
-void append_strategy (Strategy strategy, std::vector<Strategy>& strategies,
-                      const char* option, const std::string& name) {
+void append_strategy (Strategy strategy, std::vector<Strategy>& strategies, const char* option,
+                      const std::string& name) {
   if (std::ranges::find (strategies, strategy) != strategies.end ())
-    error (EXIT_CODE_ERROR, "Error: duplicate strategy %s in -%s list.\n",
-           name.c_str (), option);
+    error (EXIT_CODE_ERROR, "Error: duplicate strategy %s in -%s list.\n", name.c_str (), option);
   strategies.push_back (strategy);
 }
 
@@ -150,11 +160,9 @@ void process_arg_real (const std::string& arg, arg_parse_result& result) {
   result.real_strategies = process_strategy_list<TRANSLATION_PREF_T> (
       arg, "r", [] (const std::string& value, auto& strategies) {
         if (case_insensitive_equals (value, "small"))
-          append_strategy<TRANSLATION_PREF_T> (spot::postprocessor::Small, strategies,
-                                               "r", value);
+          append_strategy<TRANSLATION_PREF_T> (spot::postprocessor::Small, strategies, "r", value);
         else if (case_insensitive_equals (value, "any"))
-          append_strategy<TRANSLATION_PREF_T> (spot::postprocessor::Any, strategies,
-                                               "r", value);
+          append_strategy<TRANSLATION_PREF_T> (spot::postprocessor::Any, strategies, "r", value);
         else
           error (EXIT_CODE_ERROR, "Error: unexpected realizability strategy %s.\n",
                  value.c_str ());
@@ -162,14 +170,12 @@ void process_arg_real (const std::string& arg, arg_parse_result& result) {
   result.primary_translation_pref = result.real_strategies->front ();
 }
 
-void process_arg_unreal_translation_pref (const std::string& arg,
-                                            arg_parse_result& result) {
-  const auto first = std::find_if_not (
-      arg.begin (), arg.end (), [] (unsigned char c) { return std::isspace (c); });
-  const auto last = std::find_if_not (
-                        arg.rbegin (), arg.rend (),
-                        [] (unsigned char c) { return std::isspace (c); })
-                        .base ();
+void process_arg_unreal_translation_pref (const std::string& arg, arg_parse_result& result) {
+  const auto first = std::find_if_not (arg.begin (), arg.end (),
+                                       [] (unsigned char c) { return std::isspace (c); });
+  const auto last = std::find_if_not (arg.rbegin (), arg.rend (), [] (unsigned char c) {
+                      return std::isspace (c);
+                    }).base ();
   const std::string value = first < last ? std::string (first, last) : std::string {};
   if (case_insensitive_equals (value, "small"))
     result.primary_translation_pref = spot::postprocessor::Small;
@@ -197,9 +203,7 @@ void process_arg_unreal (const std::string& arg, arg_parse_result& result) {
       });
 }
 
-std::vector<TRANSLATION_PREF_T> default_real_strategies () {
-  return {ACACIA_TRANSLATION_PREFS};
-}
+std::vector<TRANSLATION_PREF_T> default_real_strategies () { return {ACACIA_TRANSLATION_PREFS}; }
 
 std::vector<UNREAL_X_T> default_unreal_strategies () {
   if (DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON)
@@ -216,24 +220,25 @@ void process_arg_spot_fast (const std::string& arg, arg_parse_result& result) {
     result.spot_fast = SPOT_FAST_DET;
   else if (case_insensitive_equals (arg, "det-and-gfg") or
            case_insensitive_equals (arg, "det_and_gfg") or
-           case_insensitive_equals (arg, "gfg-decision") or
-           case_insensitive_equals (arg, "gfg"))
+           case_insensitive_equals (arg, "gfg-decision") or case_insensitive_equals (arg, "gfg"))
     result.spot_fast = SPOT_FAST_DET_AND_GFG;
   else
     error (EXIT_CODE_ERROR, "Error: unexpected Spot fast-path option %s\n", arg.c_str ());
 }
 
 void process_arg_provider (const std::string& arg, acacia::automaton_provider& provider,
-                            const char* option) {
+                           const char* option) {
   const auto parsed = acacia::parse_automaton_provider (arg);
   if (not parsed)
     error (EXIT_CODE_ERROR,
-           "Error: unexpected value %s for --%s; expected frozen-graph, spot-lazy or spot-eager, closure-buchi or closure-buchi-eager.\n",
+           "Error: unexpected value %s for --%s; expected frozen-graph, spot-lazy or spot-eager, "
+           "closure-buchi or closure-buchi-eager.\n",
            arg.c_str (), option);
   provider = *parsed;
 #if !ACACIA_SPOT_GUARDED_BACKEND
   if (acacia::is_closure_provider (provider))
-    error (EXIT_CODE_ERROR, "Error: closure-buchi requires a binary built with "
+    error (EXIT_CODE_ERROR,
+           "Error: closure-buchi requires a binary built with "
            "-Dacacia_spot_guarded_backend=true.\n");
 #endif
 #if !ACACIA_SPOT_LAZY_PROVIDER
@@ -242,7 +247,8 @@ void process_arg_provider (const std::string& arg, acacia::automaton_provider& p
     error (EXIT_CODE_ERROR,
            "Error: unsupported configuration: --%s requests %s, but this binary was "
            "built without the Spot lazy provider (ACACIA_SPOT_LAZY_PROVIDER); configure with "
-           "-Dacacia_spot_lazy_provider=true.\n", option, arg.c_str ());
+           "-Dacacia_spot_lazy_provider=true.\n",
+           option, arg.c_str ());
 #endif
 }
 
@@ -263,12 +269,14 @@ void process_arg_game_backend (const std::string& arg, acacia::game_backend& bac
       error (EXIT_CODE_ERROR,
              "Error: --%s requests spot-guarded, but this binary was built without the "
              "Spot guarded backend (ACACIA_SPOT_GUARDED_BACKEND); configure with "
-             "-Dacacia_spot_guarded_backend=true.\n", option);
+             "-Dacacia_spot_guarded_backend=true.\n",
+             option);
 #endif
   }
   else
     error (EXIT_CODE_ERROR,
-           "Error: unexpected value %s for --%s; expected backward, forward, spot-guarded or spot-guarded-sparse.\n",
+           "Error: unexpected value %s for --%s; expected backward, forward, spot-guarded or "
+           "spot-guarded-sparse.\n",
            arg.c_str (), option);
 }
 
@@ -286,12 +294,14 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       error (EXIT_CODE_ERROR,
              "Error: invalid field count in --arms spec %s; expected "
              "polarity:transform:backend[:provider]; native forms are "
-             "both:gr1:oxidd, both:gr1-lift:oxidd, both:gr1-real-lift:oxidd, real:gr1:oxidd, unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\n",
+             "both:gr1:oxidd, both:gr1-lift:oxidd, both:gr1-real-lift:oxidd, real:gr1:oxidd, "
+             "unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\n",
              parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::polarity:
       error (EXIT_CODE_ERROR,
-             "Error: invalid polarity %s in --arms spec %s; expected real, unreal, or both for gr1.\n",
+             "Error: invalid polarity %s in --arms spec %s; expected real, unreal, or both for "
+             "gr1.\n",
              parsed.value.c_str (), parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::real_transform:
@@ -308,7 +318,8 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       break;
     case portfolio_arm_parse_error::backend:
       error (EXIT_CODE_ERROR,
-             "Error: invalid backend %s in --arms spec %s; expected backward, forward, spot-guarded or spot-guarded-sparse.\n",
+             "Error: invalid backend %s in --arms spec %s; expected backward, forward, "
+             "spot-guarded or spot-guarded-sparse.\n",
              parsed.value.c_str (), parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::provider:
@@ -326,7 +337,9 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       error (EXIT_CODE_ERROR, "Error: gr1-lift or gr1-real-lift requires both polarity.\n");
       break;
     case portfolio_arm_parse_error::both_transform:
-      error (EXIT_CODE_ERROR, "Error: polarity both requires gr1, gr1-lift, or gr1-real-lift with oxidd in --arms spec %s.\n",
+      error (EXIT_CODE_ERROR,
+             "Error: polarity both requires gr1, gr1-lift, or gr1-real-lift with oxidd in --arms "
+             "spec %s.\n",
              parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::native_backend:
@@ -334,14 +347,14 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
              parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::duplicate:
-      error (EXIT_CODE_ERROR, "Error: duplicate arm %s in --arms list.\n",
-             parsed.spec.c_str ());
+      error (EXIT_CODE_ERROR, "Error: duplicate arm %s in --arms list.\n", parsed.spec.c_str ());
       break;
   }
 
 #if !ACACIA_FORWARD_SAFETY_SOLVER
   for (const auto& arm : parsed.arms)
-    if (arm.kind == portfolio_arm_kind::legacy && arm.legacy->backend == acacia::game_backend::forward)
+    if (arm.kind == portfolio_arm_kind::legacy &&
+        arm.legacy->backend == acacia::game_backend::forward)
       error (EXIT_CODE_ERROR,
              "Error: --arms requests the forward backend, but this binary was built "
              "without the forward safety solver (ACACIA_FORWARD_SAFETY_SOLVER); "
@@ -408,6 +421,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_REAL_PROVIDER = 1005;
   static constexpr int OPT_UNREAL_PROVIDER = 1006;
   static constexpr int OPT_CANDIDATE_MODE = 1007;
+  static constexpr int OPT_R_PREPASS = 1008;
+  static constexpr int OPT_EQUIVARIANCE = 1009;
   bool unreal_translation_pref_specified = false;
   bool real_backend_specified = false;
   bool unreal_backend_specified = false;
@@ -415,14 +430,15 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"version", no_argument, nullptr, 'V'},
       {"help", no_argument, nullptr, 'h'},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
-      {"unreal-translation-pref", required_argument, nullptr,
-       OPT_UNREAL_TRANSLATION_PREF},
+      {"unreal-translation-pref", required_argument, nullptr, OPT_UNREAL_TRANSLATION_PREF},
       {"real-backend", required_argument, nullptr, OPT_REAL_BACKEND},
       {"unreal-backend", required_argument, nullptr, OPT_UNREAL_BACKEND},
       {"arms", required_argument, nullptr, OPT_ARMS},
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
+      {"r-prepass", required_argument, nullptr, OPT_R_PREPASS},
+      {"equivariance", required_argument, nullptr, OPT_EQUIVARIANCE},
 #if ACACIA_ENABLE_TLSF_FRONTEND
       {"tlsf", required_argument, nullptr, 'T'},
 #endif
@@ -463,8 +479,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
 #if ACACIA_ENABLE_TLSF_FRONTEND
       case 'T':
         if (retval.formula_specified or retval.inputs_specified or retval.outputs_specified)
-          error (EXIT_CODE_ERROR,
-                 "Error: -T/--tlsf cannot be combined with -f/-F, -i, or -o.\n");
+          error (EXIT_CODE_ERROR, "Error: -T/--tlsf cannot be combined with -f/-F, -i, or -o.\n");
         process_tlsf_file (optarg, retval);
         break;
 #endif
@@ -532,21 +547,33 @@ arg_parse_result arg_parser (int argc, char** argv) {
         if (auto mode = acacia::parse_candidate_mode (optarg))
           retval.candidate = *mode;
         else
-          error (EXIT_CODE_ERROR,
-                 "Error: --candidate-mode expects only or fallback.\n");
+          error (EXIT_CODE_ERROR, "Error: --candidate-mode expects only or fallback.\n");
         break;
+      case OPT_R_PREPASS:
+      case OPT_EQUIVARIANCE: {
+        const bool enabled = case_insensitive_equals (optarg, "on");
+        if (!enabled && !case_insensitive_equals (optarg, "off"))
+          error (EXIT_CODE_ERROR, "Error: --%s expects on or off.\n",
+                 opt == OPT_R_PREPASS ? "r-prepass" : "equivariance");
+#if !ACACIA_ENABLE_EQUIVARIANT_SOLVER
+        if (opt == OPT_EQUIVARIANCE && enabled)
+          error (EXIT_CODE_ERROR,
+                 "Error: --equivariance on requires a binary built with "
+                 "-Dacacia_enable_equivariant_solver=true.\n");
+#endif
+        (opt == OPT_R_PREPASS ? retval.r_prepass : retval.equivariance) = enabled;
+        break;
+      }
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
       case OPT_REAL_BACKEND:
         if (retval.arms.has_value ())
-          error (EXIT_CODE_ERROR,
-                 "Error: --real-backend and --arms are mutually exclusive.\n");
+          error (EXIT_CODE_ERROR, "Error: --real-backend and --arms are mutually exclusive.\n");
         process_arg_game_backend (optarg, retval.real_backend, "real-backend");
         real_backend_specified = true;
         break;
       case OPT_UNREAL_BACKEND:
         if (retval.arms.has_value ())
-          error (EXIT_CODE_ERROR,
-                 "Error: --unreal-backend and --arms are mutually exclusive.\n");
+          error (EXIT_CODE_ERROR, "Error: --unreal-backend and --arms are mutually exclusive.\n");
         process_arg_game_backend (optarg, retval.unreal_backend, "unreal-backend");
         unreal_backend_specified = true;
         break;
@@ -569,11 +596,9 @@ arg_parse_result arg_parser (int argc, char** argv) {
           error (EXIT_CODE_ERROR,
                  "Error: --arms and --unreal-translation-pref are mutually exclusive.\n");
         if (real_backend_specified)
-          error (EXIT_CODE_ERROR,
-                 "Error: --arms and --real-backend are mutually exclusive.\n");
+          error (EXIT_CODE_ERROR, "Error: --arms and --real-backend are mutually exclusive.\n");
         if (unreal_backend_specified)
-          error (EXIT_CODE_ERROR,
-                 "Error: --arms and --unreal-backend are mutually exclusive.\n");
+          error (EXIT_CODE_ERROR, "Error: --arms and --unreal-backend are mutually exclusive.\n");
         process_arg_arms (optarg, retval);
         break;
       default: show_help (argv[0]); exit (EXIT_CODE_ERROR);
@@ -604,19 +629,18 @@ arg_parse_result arg_parser (int argc, char** argv) {
       if (parsed.error != portfolio_arm_parse_error::none)
         error (EXIT_CODE_ERROR,
                "Error: this build's acacia_default_arms is not valid --arms "
-               "syntax (%s).\n", ACACIA_DEFAULT_ARMS);
+               "syntax (%s).\n",
+               ACACIA_DEFAULT_ARMS);
       retval.arms = std::move (parsed.arms);
       build_default_arms = true;
     }
   }
 
   if (build_default_arms && (not retval.tlsf_specified || retval.synth_fname)) {
-    const bool needed_real = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-      return !arm.unreal || arm.both;
-    });
-    const bool needed_unreal = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-      return arm.unreal || arm.both;
-    });
+    const bool needed_real = std::ranges::any_of (
+        *retval.arms, [] (const auto& arm) { return !arm.unreal || arm.both; });
+    const bool needed_unreal = std::ranges::any_of (
+        *retval.arms, [] (const auto& arm) { return arm.unreal || arm.both; });
     std::erase_if (*retval.arms, [&] (const portfolio_arm& arm) {
       if (arm.kind == portfolio_arm_kind::legacy)
         return false;
@@ -625,12 +649,10 @@ arg_parse_result arg_parser (int argc, char** argv) {
                   << (retval.tlsf_specified ? " during synthesis" : " without -T") << '\n';
       return true;
     });
-    const bool has_real = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-      return !arm.unreal || arm.both;
-    });
-    const bool has_unreal = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-      return arm.unreal || arm.both;
-    });
+    const bool has_real = std::ranges::any_of (
+        *retval.arms, [] (const auto& arm) { return !arm.unreal || arm.both; });
+    const bool has_unreal = std::ranges::any_of (
+        *retval.arms, [] (const auto& arm) { return arm.unreal || arm.both; });
     if (needed_real && !has_real)
       for (auto preference : default_real_strategies ())
         retval.arms->emplace_back (false, preference, UNREAL_X_FORMULA, retval.real_backend);
@@ -645,11 +667,12 @@ arg_parse_result arg_parser (int argc, char** argv) {
           return arm.kind != portfolio_arm_kind::legacy;
         }))
       error (EXIT_CODE_ERROR, "Error: native arms do not support -s controller synthesis.\n");
-    const bool closure = acacia::is_closure_provider (retval.real_provider) ||
-                         acacia::is_closure_provider (retval.unreal_provider) ||
+    const bool closure =
+        acacia::is_closure_provider (retval.real_provider) ||
+        acacia::is_closure_provider (retval.unreal_provider) ||
         (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-          return arm.legacy && acacia::is_closure_provider (arm.legacy->provider);
-        }));
+           return arm.legacy && acacia::is_closure_provider (arm.legacy->provider);
+         }));
     if (closure)
       error (EXIT_CODE_ERROR, "Error: closure-buchi does not support controller synthesis.\n");
     if (retval.arms.has_value ()) {
@@ -675,12 +698,11 @@ arg_parse_result arg_parser (int argc, char** argv) {
     retval.arms.emplace ();
     if (retval.real_strategies.has_value ())
       for (TRANSLATION_PREF_T preference : *retval.real_strategies)
-        retval.arms->push_back ({false, preference, UNREAL_X_FORMULA,
-                                 retval.real_backend});
+        retval.arms->push_back ({false, preference, UNREAL_X_FORMULA, retval.real_backend});
     if (retval.unreal_strategies.has_value ())
       for (UNREAL_X_T strategy : *retval.unreal_strategies)
-        retval.arms->push_back ({true, retval.primary_translation_pref, strategy,
-                                 retval.unreal_backend});
+        retval.arms->push_back (
+            {true, retval.primary_translation_pref, strategy, retval.unreal_backend});
   }
 
   for (auto& arm : *retval.arms) {
@@ -698,7 +720,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
     process_arg_game_backend (acacia::game_backend_name (legacy.backend), legacy.backend, "arms");
     if (!legacy.provider_explicit)
       legacy.provider = arm.unreal ? retval.unreal_provider : retval.real_provider;
-    process_arg_provider (acacia::automaton_provider_name (legacy.provider), legacy.provider, "arms");
+    process_arg_provider (acacia::automaton_provider_name (legacy.provider), legacy.provider,
+                          "arms");
     if (legacy.provider != acacia::automaton_provider::frozen_graph) {
       if (arm.unreal && legacy.unreal_x == UNREAL_X_AUTOMATON)
         error (EXIT_CODE_ERROR,
@@ -710,7 +733,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
       }
       else if (legacy.backend != acacia::game_backend::spot_guarded)
         error (EXIT_CODE_ERROR,
-               "Error: unsupported configuration: a Spot TAA provider requires --real-backend spot-guarded "
+               "Error: unsupported configuration: a Spot TAA provider requires --real-backend "
+               "spot-guarded "
                "or the corresponding unreal/--arms selection.\n");
     }
   }
@@ -729,20 +753,20 @@ arg_parse_result arg_parser (int argc, char** argv) {
       retval.formula_specified = true;
       retval.inputs_specified = true;
       retval.outputs_specified = true;
-    }
-    catch (const std::exception& exception) {
-      const bool has_native = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-        return arm.kind != portfolio_arm_kind::legacy;
-      });
+    } catch (const std::exception& exception) {
+      const bool has_native = std::ranges::any_of (
+          *retval.arms, [] (const auto& arm) { return arm.kind != portfolio_arm_kind::legacy; });
       if (not has_native)
         error (EXIT_CODE_ERROR, "Error: TLSF conversion failed: %s\n", exception.what ());
       retval.legacy_available = false;
-      std::cerr << "{\"arm\":\"legacy\",\"stage\":\"tlsf_conversion\",\"status\":\"unavailable\"}\n";
+      std::cerr
+          << "{\"arm\":\"legacy\",\"stage\":\"tlsf_conversion\",\"status\":\"unavailable\"}\n";
     }
   }
 #endif
   if (not retval.tlsf_specified && retval.formula.empty ())
-    error (EXIT_CODE_ERROR, "Error: a formula or TLSF specification must be specified (-f, -F, or -T).\n");
+    error (EXIT_CODE_ERROR,
+           "Error: a formula or TLSF specification must be specified (-f, -F, or -T).\n");
   if (not retval.tlsf_specified && not retval.inputs_specified)
     error (EXIT_CODE_ERROR, "Error: inputs must be specified (-i).\n");
   if (not retval.tlsf_specified && not retval.outputs_specified)
