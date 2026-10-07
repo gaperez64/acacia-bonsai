@@ -1,3 +1,4 @@
+#include "acacia_build_config.hh"
 #include "solver/unreal_safety_core_witnesses.hh"
 
 #include "record_transport_controls.hh"
@@ -29,6 +30,12 @@ namespace {
 int main (int argc, char** argv) {
   if (argc == 2) {
     const std::string mode = argv[1];
+    if (mode == "--solver-arm") {
+      std::cout << "unreal:formula:"
+                << (ACACIA_SPOT_GUARDED_BACKEND ? "spot-guarded-sparse" : "backward")
+                << std::endl;
+      return 0;
+    }
     acacia::record_transport_test_start ();
     auto* record = static_cast<acacia::worker_record*> (
         mmap (nullptr, sizeof (acacia::worker_record), PROT_READ | PROT_WRITE,

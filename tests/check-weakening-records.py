@@ -119,6 +119,8 @@ def main():
         assert summary["cancellations"] is None and summary["observed_cancellations"] == 0
         if len(sys.argv) > 3:
             solver = str(Path(sys.argv[3]).resolve())
+            # The helper selects a compiled formula arm from the generated build config.
+            arm = subprocess.check_output([binary, "--solver-arm"], text=True, timeout=5).strip()
             predictive = ["F(o & " + "X " * j + "!o)" for j in range(1, 65)]
             responsive = ["(i -> F(o0 & " + "X " * j + "!o0))" for j in range(1, 65)]
             cases = [
@@ -131,7 +133,7 @@ def main():
                 directory = root / name
                 directory.mkdir()
                 command = [solver, "-f", formula, "-i", "i,unused_i", "-o", outputs,
-                           "--arms", "unreal:formula:spot-guarded-sparse", "-K", "2"]
+                           "--arms", arm, "-K", "2"]
                 results = []
                 executables = [(solver, True), (solver, False)]
                 if len(sys.argv) > 4:
@@ -146,6 +148,7 @@ def main():
                                             capture_output=True, timeout=4)
                     results.append((result.returncode, result.stdout, result.stderr))
                 assert all(r == results[0] for r in results), (name, results)
+                assert results[0][0] in (1, 2), (name, arm, results)
                 records, problems = reader.read_records(directory)
                 assert not problems
                 summary, = reader.census(records)
