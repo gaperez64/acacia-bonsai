@@ -63,6 +63,9 @@ namespace acacia {
     if (!native_limit_address_space (arm))
       return EXIT_CODE_UNKNOWN;
     const uint64_t construction_started_ns = phase_clock (CLOCK_MONOTONIC);
+    if (phase_records_enabled ())
+      phase_finish (arm, args.r_typed_roles ? "r_typed_roles_on" : "r_typed_roles_off",
+                    phase_start (), -1, -1, args.r_typed_roles);
     const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
     TlsfGr1LiftStats stats {};
     TlsfGr1LiftOptions options {};
@@ -103,9 +106,14 @@ namespace acacia {
         ~ResultGuard () { tlsf_gr1_both_result_clear (&value); }
     } guard {result};
     phase_scope combined_phase (arm, "combined_call");
+    const TlsfGr1TypedRolesV1 roles {args.r_typed_roles};
     const TlsfGr1BothObserverV1 observer {record_combined_event, nullptr};
     status =
-        phase_records_enabled ()
+        args.r_typed_roles
+            ? tlsf_gr1_both_from_target_v2 (target.get (), &options,
+                                            phase_records_enabled () ? &observer : nullptr,
+                                            &result, &error, &roles)
+        : phase_records_enabled ()
             ? tlsf_gr1_both_from_target_v1 (target.get (), &options, &observer, &result, &error)
             : tlsf_gr1_both_from_target (target.get (), &options, &result, &error);
     combined_phase.finish ();

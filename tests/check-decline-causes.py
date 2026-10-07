@@ -24,6 +24,7 @@ SOURCES = (
     "subprojects/tlsf-tools/src/lib/gr1_service.c",
     "subprojects/tlsf-tools/src/lib/gr1_lift.cc",
     "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc",
+    "subprojects/tlsf-tools/src/lib/gr1_typed.cc",
     "subprojects/tlsf-tools/src/lib/gr1_check.c",
     "subprojects/tlsf-tools/src/lib/gr1_oxidd.c",
     "subprojects/tlsf-tools/src/lib/oxidd_common.c",

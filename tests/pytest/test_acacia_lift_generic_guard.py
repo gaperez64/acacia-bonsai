@@ -21,6 +21,7 @@ NATIVE_ROUTE = [ROOT / "src/acacia-bonsai.cc", ROOT / "src/arg_parser.hh",
                 *(ROOT / "subprojects/tlsf-tools" / path for path in (
     "src/lib/gr1_check.c", "src/lib/gr1_check_internal.h",
     "src/lib/gr1_reduction.cc", "src/lib/gr1_lift.cc",
+    "src/lib/gr1_env_lift.cc", "src/lib/gr1_shared.hh", "src/lib/gr1_typed.cc",
     "src/lib/gr1_service.c", "src/lib/pipeline.c",
     "src/lib/pipeline_source.c", "src/lib/pipeline_source_internal.h",
     "src/lib/spec_parse.c", "src/tools/common/cli.c",

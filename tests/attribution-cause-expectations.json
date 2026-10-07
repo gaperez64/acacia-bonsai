@@ -875,6 +875,10 @@
     "cause": "*search_cause",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
   },
+  "subprojects/tlsf-tools/src/lib/gr1_shared.hh | decline | DECLINED | stage | typed_message.c_str() | 0": {
+    "cause": "*typed_cause",
+    "telemetry": "DECLINE/applicability"
+  },
   "subprojects/tlsf-tools/src/lib/gr1_shared.hh | decline | DECLINED | stage | why | 0": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
@@ -1255,6 +1259,10 @@
     "cause": "check_failure_cause(status, verdict)",
     "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
   },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"typed_alignment\" | \"missing typed game variable\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"monitor inventory\" | 0": {
     "cause": "FailureCause::error",
     "telemetry": "STOPPED/error"
@@ -1383,6 +1391,10 @@
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"instantiate\" | \"ambiguous target variable\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"instantiate\" | \"missing target variable\" | 0": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
@@ -1399,10 +1411,6 @@
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"goal class absent\" | 0": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
-  },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema\" | \"empty rank depth\" | 0": {
     "cause": "FailureCause::error",
     "telemetry": "STOPPED/error"
@@ -1411,11 +1419,23 @@
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"goal class absent\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"goal class absent\" | 1": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"multi-member justice\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"typed_alignment\" | \"ordered goal/fairness rank depth changed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"typed_alignment\" | \"ordered goal/fairness role tuple absent\" | 0": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
@@ -1535,12 +1555,20 @@
     "cause": "FailureCause::invalid",
     "telemetry": "STOPPED/error"
   },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_INVALID | \"arguments\" | \"invalid typed roles option\" | 0": {
+    "cause": "FailureCause::invalid",
+    "telemetry": "STOPPED/error"
+  },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_INVALID | \"arguments\" | \"invalid proof order\" | 1": {
     "cause": "FailureCause::invalid",
     "telemetry": "STOPPED/error"
   },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"publish\" | \"artifact seal failed\" | 0": {
     "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_INVALID | \"arguments\" | \"invalid typed roles option\" | 1": {
+    "cause": "FailureCause::invalid",
     "telemetry": "STOPPED/error"
   },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"target_binding\" | \"trusted source or game changed\" | 0": {
@@ -1582,34 +1610,6 @@
   "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"target_binding\" | \"source or reduction hash differs\" | 0": {
     "cause": "FailureCause::error",
     "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate parameter identity\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"selected parameter identity is absent\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"undetermined signal index role\" | 0": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"incomplete element width identity\" | 0": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"invalid width parameter identity\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"inconsistent declaration binding\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"axis has no typed element declaration\" | 0": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
   },
   "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | env_stage_seed_window | \"seed probe budget exhausted\" | 0": {
     "cause": "FailureCause::resource",
@@ -1662,98 +1662,6 @@
   "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | check_status == TLSF_GR1_CHECK_OK ? \"seed_check\" : \"checker_error\" | \"independent environment seed check failed\" | 0": {
     "cause": "check_failure_cause(check_status, verdict)",
     "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor owner is outside the axis\" | 0": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"pair owner lacks typed reference\" | 0": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate game signal literal\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"game signal inventory differs\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"game signal lacks unique provenance\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate letter identity\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"game signal name inventory differs\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"game signal inventory is incomplete\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate source conjunct identity\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor lacks frontend origin\" | 0": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor source conjunct is missing\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor latch inventory differs\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"schema_abi\" | \"monitor transition references differ\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor/source construction differs\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"ambiguous sibling linkage\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"justice ordinal inventory differs\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"justice points outside its monitor\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"fairness ordinal exceeds game\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"fairness points outside its monitor\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"monitor game inventory is incomplete\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"ambiguous sibling monitor roles\" | 0": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate state identity\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"game latch name inventory differs\" | 0": {
-    "cause": "FailureCause::error",
-    "telemetry": "STOPPED/error"
   },
   "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | decline | DECLINED | \"typed_alignment\" | \"certificate count inventory differs\" | 0": {
     "cause": "FailureCause::error",
@@ -2106,6 +2014,130 @@
   "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_DECLINED | \"checker_rejected\" | detail.empty() ? \"independent target certificate check failed\" : detail | 0": {
     "cause": "check_failure_cause(status, verdict)",
     "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate parameter identity\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"selected parameter identity is absent\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"undetermined signal index role\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"incomplete element width identity\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"invalid width parameter identity\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"inconsistent declaration binding\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"axis has no typed element declaration\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"monitor owner is outside the axis\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"pair owner lacks typed reference\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate game signal literal\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"game signal inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"game signal lacks unique provenance\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate letter identity\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"game signal name inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"game signal inventory is incomplete\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate source conjunct identity\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"monitor lacks frontend origin\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"monitor source conjunct is missing\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"monitor latch inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"schema_abi\" | \"monitor transition references differ\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"monitor/source construction differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"ambiguous sibling linkage\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"justice ordinal inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"justice points outside its monitor\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"fairness ordinal exceeds game\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"fairness points outside its monitor\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"monitor game inventory is incomplete\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"ambiguous sibling monitor roles\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"duplicate state identity\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"game latch name inventory differs\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_typed.cc | decline | DECLINED | \"typed_alignment\" | \"typed R requires exact semantics\" | 0": {
+    "cause": "FailureCause::unsupported",
+    "telemetry": "DECLINE/applicability"
   },
   "subprojects/tlsf-tools/src/lib/gr1_check.c | check_failure | TLSF_GR1_CHECK_BAD_ARGUMENT | \"check\" | \"invalid argument or missing resource cap\" | 0": {
     "cause": "TLSF_GR1_CHECK_BAD_ARGUMENT",

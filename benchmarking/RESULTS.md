@@ -193,3 +193,14 @@ screened with no 17 s full-corpus leg yet, on a 152-case development screen: 60 
 The current optimization and UNREAL lifting work is tracked in
 [the active sprint record](optimize-20260927/plan.md). Results from selected
 subsets or censored higher-cap observations retain those labels when cited.
+
+## Coverage sprint P2c, opt-in implementation (7 October 2026)
+
+Typed R alignment and projection are available behind `--r-typed-roles on`;
+`off` remains the default. R and U share typed owner/variable identities and
+ordered projection keys. See [the P2c decision record](coverage-first/p2c-typed-roles.md)
+for correctness checks and exact paired screen commands. This is an implementation
+result; no new portfolio coverage, timing or memory admission is claimed.
+A correctness recheck verifies all 20 preservation inputs with both settings,
+including the historical 19 pure-R successes. #206 remains open pending the
+driver's matched off/on races.

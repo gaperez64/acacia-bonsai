@@ -81,7 +81,7 @@ def telemetry_class(row: dict) -> str:
             return "DECLINE/applicability or STOPPED/resource/deadline/cancelled"
         return "STOPPED/error"
     if c in ("worker_decline", "native_failure_category::decline") or c.endswith(
-        ("::applicability", "::unsupported_operator", "_UNSUPPORTED", "_DECLINED")
+        ("::applicability", "::unsupported", "::unsupported_operator", "_UNSUPPORTED", "_DECLINED")
     ):
         return "DECLINE/applicability"
     if c in (
@@ -103,6 +103,8 @@ def telemetry_class(row: dict) -> str:
         return "STOPPED/error/resource/deadline/cancelled"
     if c.startswith("solver_failure_cause("):
         return "STOPPED/error/resource/deadline/cancelled"
+    if c == "*typed_cause":
+        return "DECLINE/applicability"
     if c in ("*search_cause", "e.cause"):
         return "STOPPED/error/resource/deadline/cancelled"
     if c.startswith("!is_applicability("):

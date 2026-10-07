@@ -81,6 +81,10 @@ namespace acacia {
     TlsfGr1LiftError lift_error {};
     worker_route ("R", "oxidd", "REAL");
     phase_scope lift_phase (arm, "lift_call");
+    if (phase_records_enabled ())
+      phase_finish (arm, args.r_typed_roles ? "r_typed_roles_on" : "r_typed_roles_off",
+                    phase_start (), -1, -1, args.r_typed_roles);
+    const TlsfGr1TypedRolesV1 roles {args.r_typed_roles};
     const auto* source = reinterpret_cast<const uint8_t*> (args.tlsf_source.data ());
     TlsfGr1LiftTarget* raw_target = nullptr;
     TlsfGr1LiftStatus failure_status = TLSF_GR1_LIFT_OK;
@@ -90,8 +94,11 @@ namespace acacia {
     std::unique_ptr<TlsfGr1LiftTarget, decltype (&tlsf_gr1_lift_target_free)> target (
         raw_target, tlsf_gr1_lift_target_free);
     if (lift_status == TLSF_GR1_LIFT_OK)
-      lift_status = tlsf_gr1_lift_from_target_v1 (target.get (), &options, &lifted.value,
-                                                  &lift_error, &failure_status);
+      lift_status = args.r_typed_roles
+                        ? tlsf_gr1_lift_from_target_v2 (target.get (), &options, &lifted.value,
+                                                        &lift_error, &failure_status, &roles)
+                        : tlsf_gr1_lift_from_target_v1 (target.get (), &options, &lifted.value,
+                                                        &lift_error, &failure_status);
     lift_phase.finish ();
     const auto& work = stats.work;
     if (phase_records_enabled ()) {
