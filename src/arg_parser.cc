@@ -73,21 +73,29 @@ void show_help (const char* program_name) {
       << "                    set the unrealizability translator preference to\n"
       << "                    [small|any] without also selecting a realizability\n"
       << "                    check; mutually exclusive with -r\n"
-      << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for real arms\n"
-      << "  --real-provider VAL      use [frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager] automaton provider (default frozen-graph)\n"
-      << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal requires frozen-graph\n"
+      << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] "
+         "game backend for real arms\n"
+      << "  --real-provider VAL      use "
+         "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager] automaton "
+         "provider (default frozen-graph)\n"
+      << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
+         "requires frozen-graph\n"
+      << "  --weakening VAL          [incumbent|extended|off] (default incumbent)\n"
       << "  --candidate-mode VAL     [only|fallback] on candidate resource limits (default "
       << acacia::candidate_mode_name (ACACIA_DEFAULT_CANDIDATE_MODE) << ")\n"
-      << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for unreal arms\n"
+      << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] "
+         "game backend for unreal arms\n"
       << "  --arms LIST       run exactly the comma-separated portfolio arms\n"
       << "                    polarity:transform:backend[:provider], where polarity is real or\n"
       << "                    unreal for legacy arms; real transforms are small or any; unreal\n"
       << "                    transforms are formula or automaton; backends are\n"
-      << "                    backward, forward, spot-guarded or spot-guarded-sparse; unreal arms use the build's\n"
+      << "                    backward, forward, spot-guarded or spot-guarded-sparse; unreal arms "
+         "use the build's\n"
       << "                    primary translation preference; mutually exclusive\n"
       << "                    with -r, -u, and per-polarity backend/translation options\n"
       << "                    provider options apply to arms without an explicit provider\n"
-      << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, decision only\n"
+      << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, "
+         "decision only\n"
       << "                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\n"
       << "                    both:gr1-real-lift:oxidd,\n"
       << "                    real:gr1:oxidd, unreal:gr1:oxidd, and\n"
@@ -97,10 +105,10 @@ void show_help (const char* program_name) {
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
-      << "\t" << (int)EXIT_CODE_REAL << "   if the input problem is realizable\n"
-      << "\t" << (int)EXIT_CODE_UNREAL << "   if it is unrealizable\n"
-      << "\t" << (int)EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
-      << "\t" << (int)EXIT_CODE_ERROR << "   if any error has been reported" << '\n';
+      << "\t" << (int) EXIT_CODE_REAL << "   if the input problem is realizable\n"
+      << "\t" << (int) EXIT_CODE_UNREAL << "   if it is unrealizable\n"
+      << "\t" << (int) EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
+      << "\t" << (int) EXIT_CODE_ERROR << "   if any error has been reported" << '\n';
   print_version (std::cout);
 }
 
@@ -408,6 +416,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_REAL_PROVIDER = 1005;
   static constexpr int OPT_UNREAL_PROVIDER = 1006;
   static constexpr int OPT_CANDIDATE_MODE = 1007;
+  static constexpr int OPT_WEAKENING = 1008;
   bool unreal_translation_pref_specified = false;
   bool real_backend_specified = false;
   bool unreal_backend_specified = false;
@@ -415,14 +424,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"version", no_argument, nullptr, 'V'},
       {"help", no_argument, nullptr, 'h'},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
-      {"unreal-translation-pref", required_argument, nullptr,
-       OPT_UNREAL_TRANSLATION_PREF},
+      {"unreal-translation-pref", required_argument, nullptr, OPT_UNREAL_TRANSLATION_PREF},
       {"real-backend", required_argument, nullptr, OPT_REAL_BACKEND},
       {"unreal-backend", required_argument, nullptr, OPT_UNREAL_BACKEND},
       {"arms", required_argument, nullptr, OPT_ARMS},
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
+      {"weakening", required_argument, nullptr, OPT_WEAKENING},
 #if ACACIA_ENABLE_TLSF_FRONTEND
       {"tlsf", required_argument, nullptr, 'T'},
 #endif
@@ -527,6 +536,16 @@ arg_parse_result arg_parser (int argc, char** argv) {
         break;
       case OPT_UNREAL_PROVIDER:
         process_arg_provider (optarg, retval.unreal_provider, "unreal-provider");
+        break;
+      case OPT_WEAKENING:
+        if (std::string_view {optarg} == "incumbent")
+          retval.weakening = weakening_mode::incumbent;
+        else if (std::string_view {optarg} == "extended")
+          retval.weakening = weakening_mode::extended;
+        else if (std::string_view {optarg} == "off")
+          retval.weakening = weakening_mode::off;
+        else
+          error (EXIT_CODE_ERROR, "Error: --weakening expects incumbent, extended or off.\n");
         break;
       case OPT_CANDIDATE_MODE:
         if (auto mode = acacia::parse_candidate_mode (optarg))

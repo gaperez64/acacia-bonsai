@@ -12,6 +12,8 @@
 #include <vector>
 
 // These are the valid ways of treating unrealizability.
+enum class weakening_mode { incumbent, extended, off };
+
 enum UNREAL_X_T : char { UNREAL_X_FORMULA = 'f', UNREAL_X_AUTOMATON = 'a', UNREAL_X_BOTH };
 using TRANSLATION_PREF_T = spot::postprocessor::output_pref;
 
@@ -21,6 +23,8 @@ struct specification_metadata {
     std::string tlsf_target = "-";
     std::string tlsf_effective_target = "-";
     int tlsf_gr_level = -1;
+    // Exact linked-frontend normalization, before any realizability simplification.
+    std::string tlsf_normalized_objective;
     std::vector<symmetry::indexed_family_hint> tlsf_indexed_families;
 };
 
@@ -42,4 +46,5 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               acacia::automaton_provider provider = acacia::automaton_provider::frozen_graph,
               acacia::candidate_mode candidate = acacia::candidate_mode::only,
               uint64_t diagnostic_deadline_ns = 0,
-              const std::string& diagnostic_source_sha256 = {});
+              const std::string& diagnostic_source_sha256 = {},
+              weakening_mode weakening = weakening_mode::incumbent);

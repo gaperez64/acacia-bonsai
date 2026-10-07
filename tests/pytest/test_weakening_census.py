@@ -148,7 +148,8 @@ def test_fallback_starvation_uses_available_budget(budget, parent_reason):
     row, = reader().census(rows)
     assert row["census"] == "complete" and row["started"] == 1
     assert row["full_solver_started"] is True
-    assert row["full_solver_starved"] is (budget == 0 if type(budget) is int else None)
+    assert row["full_solver_starved"] is (
+        budget == 0 if type(budget) is int else False if budget is None else None)
 
 
 def test_deadline_before_fallback_is_starvation():
@@ -199,3 +200,55 @@ def test_dropped_cancellation_retains_confirmed_observation():
     assert row["census"] == "incomplete" and row["cancellations"] is None
     assert row["observed_cancellations"] == 1
     assert row["observed_generated"] == 2 and row["observed_started"] == 1
+
+
+@pytest.mark.parametrize("reason", ["deadline", "interrupted", "exit"])
+def test_never_started_fallback_with_exhausted_budget(reason):
+    rows = lifecycle("cancellation")
+    end = next(r for r in rows if r.get("event") == "weakening_attempt_end")
+    end.update(observer="parent", remaining_ns=0, deadline_ns=100)
+    next(r for r in rows if r.get("event") == "parent_terminal")["reason"] = reason
+    rows = [r for r in rows if r.get("event") != "weakening_end"]
+    for i, r in enumerate(r for r in rows if "seq" in r):
+        r["seq"] = i + 1
+    row, = reader().census(rows)
+    assert row["census"] == "complete"
+    assert row["full_solver_started"] is False
+    assert row["full_solver_starved"] is True
+
+
+def test_external_interruption_during_prepass_is_starvation():
+    rows = lifecycle("cancellation")
+    next(r for r in rows if r.get("event") == "parent_terminal")["reason"] = "interrupted"
+    row, = reader().census(rows)
+    assert row["full_solver_starved"] is True
+
+
+def test_winner_cancellation_is_not_budget_starvation():
+    rows = lifecycle("cancellation")
+    next(r for r in rows if r.get("event") == "parent_terminal")["reason"] = "winner_cancelled"
+    row, = reader().census(rows)
+    assert row["full_solver_starved"] is False
+
+
+def test_exhausted_budget_starves_even_before_any_attempt():
+    rows = lifecycle("inconclusive", fallback=True)
+    rows = [r for r in rows if r.get("event") not in {
+        "weakening_attempt_start", "weakening_attempt_end"}]
+    next(r for r in rows if r.get("event") == "weakening_fallback_start")["remaining_ns"] = 0
+    for i, r in enumerate(r for r in rows if "seq" in r):
+        r["seq"] = i + 1
+    row, = reader().census(rows)
+    assert row["census"] == "complete" and row["started"] == 0
+    assert row["full_solver_starved"] is True
+
+
+def test_requested_mode_is_distinct_from_incumbent_automaton_route():
+    rows = lifecycle("inconclusive", fallback=True)
+    rows.insert(1, {"event": "weakening_requested_mode", "worker_pid": 123, "prepass": 0,
+                    "mode": "extended", "emitter": "123", "seq": 2, "dropped_records": 0})
+    for i, r in enumerate(r for r in rows if "seq" in r):
+        r["seq"] = i + 1
+    row, = reader().census(rows)
+    assert row["census"] == "complete"
+    assert row["mode"] == "extended" and row["effective_mode"] == "incumbent"

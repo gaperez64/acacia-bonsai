@@ -54,6 +54,7 @@ struct arg_parse_result {
     acacia::automaton_provider real_provider = acacia::automaton_provider::frozen_graph;
     acacia::automaton_provider unreal_provider = acacia::automaton_provider::frozen_graph;
     acacia::candidate_mode candidate = ACACIA_DEFAULT_CANDIDATE_MODE;
+    weakening_mode weakening = weakening_mode::incumbent;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     specification_metadata metadata;

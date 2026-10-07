@@ -13,11 +13,40 @@
 
 namespace acacia::unreal_witnesses {
 
+  inline uint64_t binding_hash (std::string_view text) noexcept {
+    uint64_t h = 14695981039346656037ULL;
+    for (unsigned char c : text) {
+      h ^= c;
+      h *= 1099511628211ULL;
+    }
+    return h;
+  }
+
+  // A receipt is created only AFTER the guarded backend's independent checker.
+  // These invocation-local hashes bind artifacts; they do not prove implication
+  // or replace certificate checking. No weakened certificate claims the original game.
+  struct checked_game {
+      uint64_t objective = 0, context = 0, runner_objective = 0, game = 0, proof = 0;
+      uint64_t seal = 0;
+      bool verified = false;
+      uint64_t binding () const noexcept {
+        uint64_t h = objective;
+        for (auto v : {context, runner_objective, game, proof})
+          h = (h ^ v) * 1099511628211ULL;
+        return h;
+      }
+      bool valid () const noexcept {
+        return verified && game && proof && runner_objective && seal == binding ();
+      }
+  };
+  inline thread_local checked_game* checking_candidate = nullptr;
+
   class records {
       worker_record* worker_ = nullptr;
       uint64_t source_ = 0, alphabet_ = 0;
       std::string alphabet_text_;
       phase_stamp entered_;
+      bool extended_ = false;
 
       // Invocation-local artifact binding only, following the existing Spot
       // boundary FNV convention. This digest is never an implication checker.
@@ -78,17 +107,21 @@ namespace acacia::unreal_witnesses {
       void enter (const spot::formula& formula, uint64_t deadline,
                   const std::string& source_sha256, const char* format, const char* semantics,
                   const char* target, const char* effective, bool simplified, size_t inputs,
-                  size_t outputs) noexcept {
+                  size_t outputs, const char* mode = "incumbent") noexcept {
         if (!worker_)
           return;
+        extended_ = std::strcmp (mode, "extended") == 0;
         ++worker_->prepass;
         worker_->run_id = 0;
         worker_->deadline_ns = deadline;
         entered_ = phase_start ();
         char fields[384];
         budget ("weakening_entry");
-        event ("weakening_limits",
-               "\"candidate_limit\":8,\"global_child_threshold\":64,\"local_budget\":null");
+        if (!extended_)
+          event ("weakening_limits",
+                 "\"candidate_limit\":8,\"global_child_threshold\":64,\"local_budget\":null");
+        snprintf (fields, sizeof fields, "\"mode\":\"%s\"", mode);
+        event ("weakening_mode", fields);
         // Metadata values come from the frontend's bounded semantics enums.
         snprintf (fields, sizeof fields,
                   "\"source_fnv1a64\":\"%016llx\",\"alphabet_fnv1a64\":\"%016llx\","
@@ -140,11 +173,100 @@ namespace acacia::unreal_witnesses {
         objective (formula, "candidate");
         char fields[240];
         snprintf (fields, sizeof fields,
-                  "\"candidate_index\":%u,\"derivation\":\"distribute_G_and_select_conjuncts\","
-                  "\"premise\":\"simplified_original\",\"conclusion\":\"candidate\","
+                  "\"candidate_index\":%u,\"derivation\":\"%s\","
+                  "\"premise\":\"%s\",\"conclusion\":\"candidate\","
                   "\"obligation_index\":%u",
-                  index, index);
+                  index,
+                  extended_ ? "exact_AST_positive_conjunct_deletion"
+                            : "distribute_G_and_select_conjuncts",
+                  extended_ ? "exact_original" : "simplified_original", index);
         event ("weakening_candidate_generated", fields);
+      }
+      void extended_limits (uint64_t until, uint64_t per_attempt) const noexcept {
+        event ("weakening_limits",
+               "\"candidate_limit\":8,\"group_limit\":4,\"group_size_limit\":4,"
+               "\"ast_node_limit\":16384,\"ast_edge_limit\":32768,"
+               "\"support_membership_limit\":32768,\"guarantee_limit\":8192,"
+               "\"support_visit_limit\":32768,\"global_child_threshold\":64,\"poll_ns\":1000000");
+        event ("weakening_budget_limits",
+               "\"attempt_fraction\":0.05,\"prepass_fraction\":0.20,\"cleanup_fraction\":0.5,"
+               "\"unbounded_attempt_ns\":250000000,\"unbounded_total_ns\":1000000000,"
+               "\"memory_scope\":\"inherited_invocation\"");
+        char fields[160];
+        snprintf (fields, sizeof fields, "\"prepass_deadline_ns\":%llu,\"attempt_limit_ns\":%llu",
+                  (unsigned long long) until, (unsigned long long) per_attempt);
+        event ("weakening_local_budget", fields);
+      }
+      void attempt_limit (uint64_t deadline) const noexcept {
+        char fields[96];
+        snprintf (fields, sizeof fields, "\"attempt_deadline_ns\":%llu",
+                  (unsigned long long) deadline);
+        event ("weakening_attempt_limit", fields);
+      }
+      void selection (unsigned index, const std::vector<size_t>& kept,
+                      const char* derivation) const noexcept {
+        if (!worker_)
+          return;
+        worker_->run_id = index + 1;
+        char fields[240];
+        snprintf (fields, sizeof fields,
+                  "\"derivation\":\"%s\",\"kept_count\":%zu,"
+                  "\"antecedent_preserved\":true",
+                  derivation, kept.size ());
+        event ("weakening_transformation", fields);
+        for (auto j : kept) {
+          snprintf (fields, sizeof fields, "\"retained_guarantee_index\":%zu", j);
+          event ("weakening_subset", fields);
+        }
+      }
+      void path_step (size_t step, size_t child, bool implication) const noexcept {
+        char fields[160];
+        snprintf (fields, sizeof fields, "\"step\":%zu,\"child\":%zu,\"rule\":\"%s\"", step, child,
+                  implication ? "implication_consequent" : "positive_and_operand");
+        event ("weakening_path", fields);
+      }
+      void checked (const checked_game& proof) const noexcept {
+        if (!worker_)
+          return;
+        char fields[260];
+        snprintf (fields, sizeof fields,
+                  "\"kind\":\"runner_objective\",\"objective_fnv1a64\":\"%016llx\"",
+                  (unsigned long long) proof.runner_objective);
+        event ("weakening_binding", fields);
+        snprintf (fields, sizeof fields,
+                  "\"game_fnv1a64\":\"%016llx\",\"proof_fnv1a64\":\"%016llx\","
+                  "\"context_fnv1a64\":\"%016llx\","
+                  "\"verifier\":\"guarded_independent_winning_certificate\"",
+                  (unsigned long long) proof.game, (unsigned long long) proof.proof,
+                  (unsigned long long) proof.context);
+        event ("weakening_checked_game", fields);
+      }
+      void bounded_end (const char* outcome, const char* reason, uint64_t wall,
+                        const rusage& usage) const noexcept {
+        if (!worker_)
+          return;
+        char fields[360];
+        auto peak = usage.ru_maxrss;
+#ifdef __APPLE__
+        peak /= 1024;
+#endif
+        const uint64_t cpu =
+            uint64_t (usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000000ULL +
+            uint64_t (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec) * 1000;
+        snprintf (fields, sizeof fields,
+                  "\"outcome\":\"%s\",\"reason\":\"%s\",\"observer\":\"worker\","
+                  "\"wall_ns\":%llu,\"cpu_ns\":%llu,\"peak_rss_kb\":%ld,"
+                  "\"memory_reason\":\"reaped_attempt_process_peak\"",
+                  outcome, reason, (unsigned long long) wall, (unsigned long long) cpu, peak);
+        budget ("weakening_attempt_budget");
+        event ("weakening_attempt_end", fields);
+        if (std::strcmp (outcome, "proof") == 0)
+          event ("weakening_proof",
+                 "\"claim\":\"UNREAL(original)\",\"checked_objective\":\"candidate\","
+                 "\"certificate_claim\":\"derived_game_only\","
+                 "\"derivation\":\"exact_AST_positive_conjunct_deletion\","
+                 "\"source_transfer\":\"exact_frontend_normalization_or_raw_AST\"");
+        worker_->run_active = false;
       }
       void reset_outcome () const noexcept {
         worker_record_text (worker_->reason, "none");

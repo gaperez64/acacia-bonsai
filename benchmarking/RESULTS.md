@@ -210,3 +210,14 @@ screened with no 17 s full-corpus leg yet, on a 152-case development screen: 60 
 The current optimization and UNREAL lifting work is tracked in
 [the active sprint record](optimize-20260927/plan.md). Results from selected
 subsets or censored higher-cap observations retain those labels when cited.
+
+## Coverage-first P3 weakening experiment, not admitted
+
+P3 step 2 adds selectable `--weakening incumbent|extended|off`; incumbent remains the default.
+The experimental formula UNREAL route retains exact assume-guarantee antecedents, tries lazy
+singletons and at most four structural dependency groups, and bounds/reaps each candidate before
+original fallback. A checked derived-game proof plus a replayed AST weakening derivation is
+required for an original UNREAL verdict. Strict weak-until contexts decline safely.
+Limits and proof boundaries are in [the decision record](coverage-first/weakening.md).
+The census starvation correction reclassifies the supplied never-started legacy fallback;
+no fresh coverage or performance campaign was run. #201 admission/closure remains pending.

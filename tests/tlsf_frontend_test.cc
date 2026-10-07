@@ -1,9 +1,12 @@
 #include "tlsf_frontend.hh"
+
 #include "solver/symmetry.hh"
+#include "solver/unreal_safety_core_witnesses.hh"
 
 #include <algorithm>
 #include <bddx.h>
 #include <iostream>
+#include <spot/tl/parse.hh>
 #include <spot/twa/twagraph.hh>
 #include <stdexcept>
 #include <string>
@@ -65,14 +68,53 @@ MAIN {
                 strict.formula == "a -> x && y W !b && (G b && c -> z)");
   ok &= expect ("strict metadata", strict.metadata.tlsf_semantics == "Strict,Mealy");
 
+  using namespace acacia::unreal_witnesses;
+  const auto plan_for = [] (const auto& spec) {
+    source_binding source {spec.formula,
+                           spec.metadata.source_format,
+                           spec.metadata.tlsf_semantics,
+                           spec.metadata.tlsf_target,
+                           spec.metadata.tlsf_effective_target,
+                           spec.metadata.tlsf_normalized_objective,
+                           spec.inputs,
+                           spec.outputs};
+    return make_plan (spot::parse_infix_psl (spec.formula).f, source);
+  };
+  ok &= expect ("exact normalization retained",
+                strict.metadata.tlsf_normalized_objective == strict.formula);
+  ok &= expect ("unsupported strict context declined",
+                std::string (plan_for (strict).reason) == "strict_weak_until_context");
+  for (const auto& semantics : {"Mealy", "Moore", "Mealy,Strict", "Moore,Strict"}) {
+    const auto simple = acacia::tlsf_frontend::parse (
+        "INFO { TITLE: \"generated\" SEMANTICS: " + std::string (semantics) +
+        " TARGET: Mealy } MAIN { INPUTS { a; unused_i; } OUTPUTS { b; c; unused_o; } "
+        "ASSUME { G F a; } GUARANTEE { G (a -> F b); G (a -> G !b); G F c; } }");
+    const auto p = plan_for (simple);
+    ok &= expect ("normalized assume guarantee eligible", std::string (p.reason) == "eligible");
+    if (!p.guarantees.empty ()) {
+      const derivation d {p, {0}, derive (p, {0})};
+      ok &= expect ("source timing and normalization bound",
+                    verify_derivation (d, p.original, p.source));
+      auto mutated = p.source;
+      mutated.semantics = "changed";
+      ok &= expect ("semantics mutation rejected", !verify_derivation (d, p.original, mutated));
+    }
+  }
+
+  const auto ambiguous = acacia::tlsf_frontend::parse (
+      "INFO { TITLE: \"generated\" SEMANTICS: Mealy TARGET: Mealy } "
+      "MAIN { INPUTS { a; } OUTPUTS { b; c; } PRESET { b -> c; } "
+      "ASSUME { G F a; } GUARANTEE { G F b; G F c; } }");
+  ok &= expect ("ambiguous normalization retains assumptions by declining",
+                std::string (plan_for (ambiguous).reason) == "ambiguous_normalized_context");
+
   bool finite_rejected = false;
   try {
     (void) acacia::tlsf_frontend::parse (R"TLSF(
 INFO { TITLE: "finite" SEMANTICS: Finite,Mealy TARGET: Mealy }
 MAIN { INPUTS { a; } OUTPUTS { b; } GUARANTEE { a -> b; } }
 )TLSF");
-  }
-  catch (const std::runtime_error&) {
+  } catch (const std::runtime_error&) {
     finite_rejected = true;
   }
   ok &= expect ("finite semantics are rejected", finite_rejected);

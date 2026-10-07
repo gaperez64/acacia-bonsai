@@ -617,13 +617,20 @@ if enable_tlsf_frontend
   )
   test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
 
-  executable (
+  tlsf_frontend_inspect = executable (
     'tlsf-frontend-inspect',
     '../src/tlsf_frontend.cc',
     'tlsf_frontend_inspect.cc',
     include_directories : inc,
     dependencies : tlsf_deps + [spot_dep, bddx_dep],
   )
+  if ltlsynt_exe.found () and get_option ('acacia_spot_guarded_backend')
+    test ('extended-weakening-games', py,
+          args : [files ('check-extended-weakening.py'), ab_exe,
+                  unreal_safety_core_witnesses_test, tlsf_frontend_inspect, ltlsynt_exe,
+                  meson.current_build_dir ()],
+          suite : ['unit', 'tlsf', 'translation'], timeout : 60)
+  endif
 endif
 
 symmetry_blocks_test = executable ('symmetry-blocks-test',

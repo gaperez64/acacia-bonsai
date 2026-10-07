@@ -71,6 +71,10 @@ def census(records, problems=()):
             exact &= all(type(run_id) is int and run_id > 0 for run_id in generated_ids)
             exact &= len(started_ids) == len(starts) and len(ended_ids) == len(ends)
             exact &= started_ids <= generated_ids and started_ids == ended_ids
+            mode = next((r.get("mode") for r in rows
+                         if r.get("event") == "weakening_mode"), "incumbent")
+            requested_mode = next((r.get("mode") for r in worker_rows
+                                   if r.get("event") == "weakening_requested_mode"), mode)
             source = next((r for r in rows if r.get("event") == "weakening_source"), {})
             proofs = [r for r in rows if r.get("event") == "weakening_proof"]
             successful_ids = {r.get("run_id") for r in ends if r.get("outcome") == "proof"}
@@ -85,17 +89,30 @@ def census(records, problems=()):
             cancellations = sum(r.get("outcome") == "cancellation" for r in ends)
             starved = None
             if exact:
-                if not starts:
-                    starved = False
-                elif fallback:
+                if fallback:
                     remaining = fallback.get("remaining_ns")
-                    starved = remaining == 0 if remaining is not None else None
+                    starved = (remaining == 0 if remaining is not None else
+                               False if fallback.get("deadline_ns") == 0 else None)
+                elif successes or terminal.get("reason") == "winner_cancelled":
+                    starved = False
                 else:
-                    starved = terminal.get("reason") == "deadline"
+                    # A closed lifecycle with no proof/fallback used up the
+                    # worker's opportunity to run the original. External timeout
+                    # reaches older binaries as "interrupted", without a local
+                    # deadline; this is still starvation, not an observed fallback.
+                    # Winner cancellation is the explicit exception: another arm
+                    # discharged the invocation. Incomplete telemetry stays UNKNOWN.
+                    exhausted = any(r.get("remaining_ns") == 0 for r in rows)
+                    deadline = next((r.get("deadline_ns") for r in rows
+                                     if r.get("event") == "weakening_entry"), 0)
+                    exhausted |= bool(deadline and terminal.get("mono_ns", 0) >= deadline)
+                    starved = (exhausted or terminal.get("reason") == "deadline" or
+                               bool(starts) and terminal.get("reason") == "interrupted")
             completed = sum(r.get("observer") == "worker" for r in ends)
             cpu_known = all(r.get("cpu_ns") is not None for r in ends)
             result.append({
-                "worker_pid": pid, "prepass": prepass,
+                "worker_pid": pid, "prepass": prepass, "mode": requested_mode,
+                "effective_mode": mode,
                 "source_fnv1a64": source.get("source_fnv1a64"),
                 "eligible": eligibility.get("eligible"), "reason": eligibility.get("reason"),
                 "largest_global_conjunction_size": eligibility.get(

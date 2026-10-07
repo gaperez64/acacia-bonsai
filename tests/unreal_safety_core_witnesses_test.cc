@@ -1,6 +1,6 @@
-#include "acacia_build_config.hh"
 #include "solver/unreal_safety_core_witnesses.hh"
 
+#include "acacia_build_config.hh"
 #include "record_transport_controls.hh"
 
 #include <cassert>
@@ -8,6 +8,9 @@
 #include <spot/tl/parse.hh>
 #include <spot/tl/print.hh>
 #include <spot/tl/simplify.hh>
+#include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/synthesis.hh>
+#include <spot/twaalgos/translate.hh>
 #include <stdexcept>
 #include <string>
 
@@ -25,9 +28,185 @@ namespace {
     return parsed.f;
   }
 
+  void extended_contract_tests () {
+    using namespace acacia::unreal_witnesses;
+    const auto parse = [] (const std::string& text) {
+      auto f = spot::parse_infix_psl (text);
+      assert (f.f && f.errors.empty ());
+      return f.f;
+    };
+    const auto bind = [] (spot::formula f) {
+      return source_binding {
+          spot::str_psl (f),          "ltl", "-", "Mealy", "Mealy", {}, {"a", "unused_input"},
+          {"b", "c", "unused_output"}};
+    };
+    const auto exact = [] (spot::formula f, bool moore) {
+      spot::synthesis_info info;
+      info.moore = moore;
+      info.s = spot::synthesis_info::algo::DPA_SPLIT;
+      return spot::solve_game (spot::ltl_to_game (f, {"b", "c", "unused_output"}, info));
+    };
+    spot::tl_simplifier simplify;
+    const auto a = parse ("GF a");
+    const auto first = parse ("G(a -> F b)"), second = parse ("G(a -> G !b)");
+    for (bool moore : {false, true}) {
+      assert (exact (spot::formula::Implies (a, first), moore));
+      assert (exact (spot::formula::Implies (a, second), moore));
+      assert (!exact (spot::formula::Implies (a, spot::formula::And ({first, second})), moore));
+      const auto safety_first = parse ("G(a <-> X b)");
+      const auto safety_second = parse ("G(!a <-> X b)");
+      assert (exact (spot::formula::Implies (a, safety_first), moore));
+      assert (exact (spot::formula::Implies (a, safety_second), moore));
+      assert (!exact (
+          spot::formula::Implies (a, spot::formula::And ({safety_first, safety_second})), moore));
+    }
+    for (const auto& text : {"GF a -> (G(a -> F b) & G(a -> G !b) & GF c)",
+                             "GF a -> ((a -> b) & G(a -> G !b) & GF c)",
+                             "(GF a & GF !a) -> (G(a <-> X b) & G(!a <-> X b) & GF c)",
+                             "(GF a & GF !a) -> (G(a -> F b) & FG !b & GF c)",
+                             "(G a & G !a) -> (GF b & FG !b & GF c)",
+                             "a -> (b & (GF a -> (G(a -> F b) & FG !b & GF c)))",
+                             "GF a -> G((a -> F b) & (a -> G !b) & F c)"}) {
+      auto original = parse (text);
+      auto source = bind (original);
+      auto p = make_plan (original, source);
+      assert (std::string (p.reason) == "eligible" && p.guarantees.size () >= 2);
+      auto groups = dependency_groups (p);
+      assert (groups && groups->size () <= group_limit);
+      std::vector<std::vector<size_t>> subsets = *groups;
+      for (size_t i = 0; i < p.guarantees.size (); ++i)
+        subsets.push_back ({i});
+      for (auto kept : subsets) {
+        derivation d {p, kept, derive (p, kept)};
+        assert (verify_derivation (d, original, source));
+        for (bool moore : {false, true})
+          if (!exact (d.objective, moore))
+            assert (!exact (original, moore));
+        assert (simplify.implication (original, d.objective));
+        // Exact language emptiness is independent of the structural replay.
+        assert (spot::translator {}
+                    .run (spot::formula::And ({original, spot::formula::Not (d.objective)}))
+                    ->is_empty ());
+        checked_game receipt;
+        receipt.objective = binding_hash (spot::str_psl (d.objective));
+        receipt.runner_objective = receipt.objective;
+        receipt.context = source.hash ();
+        receipt.game = 1;
+        receipt.proof = 2;
+        receipt.verified = true;
+        receipt.seal = receipt.binding ();
+        assert (accept (d, original, source, receipt));
+        auto changed = d;
+        changed.objective = spot::formula::tt ();
+        assert (!accept (changed, original, source, receipt));
+        changed = d;
+        changed.kept.push_back (changed.kept.back ());
+        assert (!accept (changed, original, source, receipt));
+        changed = d;
+        changed.premise.frames[0].parent = parse ("GF !a -> GF b");
+        assert (!accept (changed, original, source, receipt));
+        auto context = source;
+        context.inputs.push_back ("changed_partition");
+        assert (!accept (d, original, context, receipt));
+        context = source;
+        context.semantics = "Moore";
+        assert (!accept (d, original, context, receipt));
+        context = source;
+        context.source_sha256 = "mutated_source_digest";
+        assert (!accept (d, original, context, receipt));
+        context = source;
+        context.effective_target = "Moore";
+        assert (!accept (d, original, context, receipt));
+        context = source;
+        context.source += " & a";
+        assert (!accept (d, original, context, receipt));
+        auto damaged = receipt;
+        damaged.proof ^= 1;
+        assert (!accept (d, original, source, damaged));
+        damaged = receipt;
+        damaged.game ^= 1;
+        assert (!accept (d, original, source, damaged));
+        damaged = receipt;
+        damaged.runner_objective ^= 1;
+        assert (!accept (d, original, source, damaged));
+        damaged = receipt;
+        damaged.verified = false;
+        assert (!accept (d, original, source, damaged));
+      }
+    }
+    for (const auto& text : {"true", "false", "GF a -> true", "GF a -> GF b"}) {
+      const auto f = parse (text);
+      assert (make_plan (f, bind (f)).guarantees.empty ());
+    }
+    const auto formula = parse ("GF a -> (GF b & FG !b & GF c)");
+    auto strict = bind (formula);
+    strict.format = "tlsf";
+    strict.semantics = "Strict,Mealy";
+    assert (std::string (make_plan (formula, strict).reason) == "missing_exact_normalization");
+    strict.normalization = strict.source;
+    assert (!make_plan (formula, strict).guarantees.empty ());
+    const auto until = parse ("a -> ((b W !a) & (GF a -> (GF b & FG !b & GF c)))");
+    strict.source = strict.normalization = spot::str_psl (until);
+    assert (std::string (make_plan (until, strict).reason) == "strict_weak_until_context");
+    const auto twin = parse (
+        "GF renamed_input -> (GF renamed_output & FG !renamed_output & "
+        "GF renamed_other)");
+    const auto p = make_plan (formula, bind (formula));
+    const auto renamed = make_plan (twin, bind (twin));
+    assert (p.guarantees.size () == renamed.guarantees.size ());
+    auto left = dependency_groups (p), right = dependency_groups (renamed);
+    assert (left && right && left->size () == right->size ());
+    for (size_t i = 0; i < left->size (); ++i)
+      assert ((*left)[i].size () == (*right)[i].size ());
+    const derivation d {p, {0}, derive (p, {0})};
+    auto blocked = [] (spot::formula) -> bool {
+      while (true)
+        pause ();
+    };
+    const auto deadline = acacia::phase_clock (CLOCK_MONOTONIC) + 50000000;
+    auto cancelled = bounded_attempt (d, blocked, acacia::phase_clock (CLOCK_MONOTONIC) + 5000000);
+    assert (cancelled.state == attempt_result::cancelled);
+    assert (acacia::phase_clock (CLOCK_MONOTONIC) < deadline);
+    int status;
+    assert (waitpid (-1, &status, WNOHANG) == -1 && errno == ECHILD);
+    auto oversized = [] (spot::formula) -> bool { throw std::length_error ("acceptance limit"); };
+    assert (bounded_attempt (d, oversized, deadline).state == attempt_result::exception);
+    auto unverified = [] (spot::formula) { return true; };
+    assert (bounded_attempt (d, unverified, acacia::phase_clock (CLOCK_MONOTONIC)).state ==
+            attempt_result::cancelled);
+    auto result = bounded_attempt (d, unverified, deadline);
+    assert (result.result && !accept (d, formula, p.source, result.proof));
+    // Both failed attempts are reaped before the original fallback starts.
+    bool full_started = false;
+    auto fallback = [&] (spot::formula f) {
+      full_started = true;
+      return f == formula;
+    };
+    const auto invocation = acacia::phase_clock (CLOCK_MONOTONIC) + 200000000;
+    records silent;
+    assert (!try_extended_witnesses (formula, p.source, true, blocked, silent, invocation));
+    assert (acacia::phase_clock (CLOCK_MONOTONIC) < invocation);
+    assert (fallback (formula) && full_started && !exact (formula, false));
+  }
+
 }  // namespace
 
 int main (int argc, char** argv) {
+  if (argc == 3 && std::string (argv[1]) == "--extended-candidates") {
+    using namespace acacia::unreal_witnesses;
+    const auto f = spot::parse_infix_psl (argv[2]).f;
+    source_binding source {spot::str_psl (f), "ltl", "-", "Mealy", "Mealy", {}, {}, {}};
+    auto p = make_plan (f, source);
+    std::cout << p.reason << '\n';
+    if (std::string (p.reason) != "eligible")
+      return 0;
+    for (size_t i = 0; i < std::min (singleton_limit, p.guarantees.size ()); ++i)
+      std::cout << spot::str_psl (derive (p, {i})) << '\n';
+    if (auto groups = dependency_groups (p))
+      for (const auto& group : *groups)
+        std::cout << spot::str_psl (derive (p, group)) << '\n';
+    return 0;
+  }
   if (argc == 2) {
     const std::string mode = argv[1];
     if (mode == "--solver-arm") {
@@ -134,10 +313,19 @@ int main (int argc, char** argv) {
     acacia::phase_records_summary ("weakening_test");
     return 0;
   }
+  extended_contract_tests ();
   const auto oversized = make_formula (64, true);
   const auto witnesses = acacia::unreal_witnesses::make_safety_core_witnesses (oversized);
   if (witnesses.size () != 8)
     return 1;
+  {
+    using namespace acacia::unreal_witnesses;
+    source_binding source {spot::str_psl (oversized), "ltl", "-", "Mealy", "Mealy", {}, {}, {}};
+    const auto p = make_plan (oversized, source);
+    assert (p.legacy && p.core.size () == 1 && p.guarantees.size () == 65);
+    for (size_t i = 0; i < witnesses.size (); ++i)
+      assert (derive (p, {i}) == witnesses[i]);
+  }
   for (const auto& witness : witnesses)
     if (not witness.is (spot::op::And) or witness.size () != 2)
       return 2;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "solver/spot_worker_record.hh"
-
 #include "actioners/no_ios_precomputation.hh"
 #include "config/component_checks.hh"
 #include "ios_precomputers/delegate.hh"
@@ -11,6 +9,8 @@
 #include "posets/vectors/traits.hh"
 #include "solver/configured_components.hh"
 #include "solver/game_backend.hh"
+#include "solver/spot_worker_record.hh"
+#include "solver/unreal_weakening_records.hh"
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
 # include "solver/equivariant_k_bounded_safety_aut.hh"
 #endif
@@ -208,7 +208,78 @@ namespace acacia::solver_detail {
           size_t nodes, choices, proofs, expansions;
         };
         const auto run = [&] () -> Attempt {
-          const auto summarize = [] (const auto& r) -> Attempt {
+          const auto summarize = [&] (const auto& r) -> Attempt {
+            if (auto* checked = acacia::unreal_witnesses::checking_candidate;
+                checked && r.status == forward_result_status::win_k &&
+                backend == acacia::game_backend::spot_guarded_sparse) {
+              // win_k is returned only after the independent winning checker
+              // rebuilds complete rows, ownership, guards and successor ranks.
+              // Bind its exact derived game/certificate before destroying them.
+              uint64_t game = 14695981039346656037ULL, proof = game;
+              const auto mix = [] (uint64_t& h, uint64_t v) { h = (h ^ v) * 1099511628211ULL; };
+              std::ostringstream acceptance;
+              acceptance << aut->acc ();
+              mix (game, acacia::unreal_witnesses::binding_hash (acceptance.str ()));
+              mix (game, aut->num_sets ());
+              mix (game, aut->num_states ());
+              mix (game, aut->get_init_state_number ());
+              mix (game, k);
+              mix (game, posets::vectors::bool_threshold);
+              if constexpr (requires { r.semantics; }) {
+                mix (game, static_cast<unsigned> (r.semantics.successor_relation));
+                mix (game, static_cast<unsigned> (r.semantics.output_choice));
+              }
+              mix (game, all_inputs.id ());
+              mix (game, all_outputs.id ());
+              for (const auto& ap : aut->ap ())
+                mix (game, acacia::unreal_witnesses::binding_hash (ap.ap_name ()));
+              for (unsigned q = 0; q < aut->num_states (); ++q)
+                for (const auto& edge : aut->out (q)) {
+                  mix (game, q);
+                  mix (game, edge.dst);
+                  mix (game, edge.cond.id ());
+                  for (auto a : edge.acc.sets ())
+                    mix (game, a + 1);
+                  mix (game, 0);
+                }
+              // Sparse ranks carry explicit coordinates, dense ranks a vector.
+              const auto rank = [&] (const auto& values) {
+                if constexpr (requires { values.entries (); }) {
+                  mix (proof, values.entries ().size ());
+                  for (auto [q, v] : values.entries ()) {
+                    mix (proof, q);
+                    mix (proof, v);
+                  }
+                }
+                else {
+                  mix (proof, values.size ());
+                  for (auto v : values)
+                    mix (proof, v);
+                }
+              };
+              mix (proof, r.initial);
+              mix (proof, r.generators.size ());
+              for (const auto& g : r.generators)
+                rank (g);
+              for (const auto& node : r.nodes) {
+                rank (node.rank);
+                mix (proof, node.losing);
+                mix (proof, node.choices.size ());
+                for (const auto& choice : node.choices) {
+                  mix (proof, choice.input_region.id ());
+                  if constexpr (requires { choice.constant_output; })
+                    mix (proof, choice.constant_output ? choice.constant_output->id () : 0);
+                  else
+                    mix (proof, choice.output.id ());
+                  mix (proof, choice.successor);
+                  mix (proof, choice.active);
+                }
+              }
+              checked->game = game;
+              checked->proof = proof;
+              checked->verified = true;
+              checked->seal = checked->binding ();
+            }
             return {r.status, r.failure, r.prep_ms, r.solve_ms, r.verify_ms,
                     r.nodes.size (), r.choices_created, r.proofs.size (), r.expansions};
           };
