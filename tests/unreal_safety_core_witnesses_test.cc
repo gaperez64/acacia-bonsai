@@ -347,9 +347,12 @@ int main (int argc, char** argv) {
     acacia::worker_event (*record, "worker_start");
     if (mode == "flood") {
       constexpr char line[] = "{\"event\":\"flood\"}\n";
+      const auto prior_drops = record->dropped;
       for (int i = 0; i < 20000; ++i)
         acacia::phase_records_send (line, sizeof line - 1);
-      std::cout << "flooded" << std::endl;
+      const auto flood_drops = record->dropped - prior_drops;
+      assert (flood_drops > 0 && flood_drops < 20000);
+      std::cout << "flooded " << 20000 - flood_drops << std::endl;
       std::cin.get ();
     }
     auto formula = make_formula (64, true);

@@ -104,11 +104,16 @@ def main():
                    ACACIA_TEST_RECORD_WRITER_DELAY="1")
         process = subprocess.Popen([binary, "flood"], env=env, stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        assert process.stdout.readline() == "flooded\n"
-        # Recover the independent writer before releasing the real pre-pass.
+        marker, delivered = process.stdout.readline().split()
+        assert marker == "flooded" and 0 < int(delivered) < 20000
+        # A created file can still have a full pipe behind it. Drain every
+        # accepted flood packet before releasing the real pre-pass.
         end = time.monotonic() + 2
-        while not list(directory.glob("*.jsonl")):
-            assert time.monotonic() < end
+        while True:
+            records, problems = reader.read_records(directory)
+            if not problems and sum(r.get("event") == "flood" for r in records) == int(delivered):
+                break
+            assert time.monotonic() < end, (delivered, problems, records)
             time.sleep(.005)
         stdout, stderr = process.communicate("x", timeout=5)
         assert process.returncode == 0 and stdout == "fallback\n" and not stderr
