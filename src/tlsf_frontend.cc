@@ -1,9 +1,11 @@
 #include "tlsf_frontend.hh"
 
+#include <tlsf/structural_order.h>
 #include <unordered_set>
 
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -60,7 +62,7 @@ namespace acacia::tlsf_frontend {
     }
   }  // namespace
 
-  specification parse (std::string_view text) {
+  specification parse (std::string_view text, variable_order order) {
     const std::string owned {text};
     tlsf::Options conversion_options = options ();
     tlsf::Result result = tlsf::decompose (owned, conversion_options);
@@ -80,6 +82,26 @@ namespace acacia::tlsf_frontend {
     stable_signal_order (result.outputs, result.indexed_families, true);
 
     specification value;
+    value.metadata.var_order = order;
+    if (order != variable_order::incumbent) {
+      char** ordered = nullptr;
+      size_t count = 0;
+      if (not tlsf_structural_ap_order_v1 (reinterpret_cast<const uint8_t*> (text.data ()),
+                                           text.size (), static_cast<TlsfStructuralOrder> (order),
+                                           true, &ordered, &count))
+        throw std::runtime_error ("unable to obtain typed AP ordering provenance");
+      struct order_guard {
+          char** names;
+          size_t count;
+          ~order_guard () {
+            for (size_t i = 0; i < count; ++i)
+              std::free (names[i]);
+            std::free (names);
+          }
+      } guard {ordered, count};
+      for (size_t i = 0; i < count; ++i)
+        value.metadata.bdd_ap_order.emplace_back (ordered[i]);
+    }
     value.metadata.source_format = "tlsf";
     value.metadata.tlsf_semantics = result.semantics;
     value.metadata.tlsf_target = source_target;

@@ -5,6 +5,19 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-07 — coverage-first P2a ordering experiment (#204, #212)
+
+`--var-order incumbent|typed-interleaved|role-grouped` is an off-by-default
+experiment using typed, source-bound metadata and supported BDD registration/level
+hooks. The incumbent remains the default. Legacy orders retain MONA's IO blocks;
+native candidate orders preserve logical identifiers and independent checking.
+Generated rename/declaration controls preserve verdicts, and incumbent synthesis
+and native proof artifacts retain their bytes. Mealy controllers pass exact semantic
+checks; Moore checks establish order-independence, with strict semantic xfails for
+the inherited synthesis defect under separate investigation. No performance
+admission or issue closure is claimed. The [P2a decision record](coverage-first/p2a-ordering.md)
+documents the hooks, fallbacks, tests, and prepared 22-input screen controls.
+
 ## 2026-10-06 — coverage-first P0 attribution (#210)
 
 Worker lifecycle events and parent-accepted winners now accompany the existing

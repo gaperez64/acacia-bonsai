@@ -320,7 +320,7 @@ namespace {
                    acacia::automaton_provider provider, acacia::candidate_mode candidate,
                    const std::optional<std::string>& synth_fname, bool synthesize_moore,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints,
-                   std::string target_semantics)
+                   std::string target_semantics, const std::vector<std::string>& bdd_ap_order)
         : dict {dict},
           input_aps {input_aps},
           output_aps {output_aps},
@@ -342,13 +342,30 @@ namespace {
         // them.
         all_inputs = bddtrue;
         all_outputs = bddtrue;
-        for (std::string ap : input_aps) {
-          const unsigned v = dict->register_proposition (spot::formula::ap (ap), this);
-          all_inputs &= bdd_ithvar (v);
+        const auto register_side = [&] (const auto& aps, bdd& cube) {
+          for (const auto& ap : aps) {
+            const unsigned v = dict->register_proposition (spot::formula::ap (ap), this);
+            cube &= bdd_ithvar (v);
+          }
+        };
+        if (bdd_ap_order.empty ()) {
+          register_side (input_aps, all_inputs);
+          register_side (output_aps, all_outputs);
         }
-        for (std::string ap : output_aps) {
-          const unsigned v = dict->register_proposition (spot::formula::ap (ap), this);
-          all_outputs &= bdd_ithvar (v);
+        else {
+          // Registration precedes translation. Preserve MONA's IO blocks and
+          // the original vectors used by decomposition and synthesis exports.
+          const auto ordered_side = [&] (const auto& aps) {
+            std::vector<std::string> ordered;
+            for (const auto& ap : bdd_ap_order)
+              if (std::ranges::find (aps, ap) != aps.end ())
+                ordered.push_back (ap);
+            if (ordered.size () != aps.size ())
+              error (EXIT_CODE_ERROR, "Error: typed AP order inventory differs.\n");
+            return ordered;
+          };
+          register_side (ordered_side (input_aps), all_inputs);
+          register_side (ordered_side (output_aps), all_outputs);
         }
         verb_do (4, dict->dump (utils::vout));
       }
@@ -1158,7 +1175,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
           ((metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-")
                ? "Mealy"
                : metadata.tlsf_effective_target) +
-          (check_unreal ? ";polarity=unreal-formula" : ";polarity=real"));
+          (check_unreal ? ";polarity=unreal-formula" : ";polarity=real"),
+      metadata.bdd_ap_order);
 
   if (auto answer =
           try_unreal_safety_core_witnesses (spot_formula, check_unreal, synth_fname, runner);

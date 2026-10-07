@@ -50,6 +50,7 @@ void show_help (const char* program_name) {
       << "  -V, --version     print program version and configuration\n"
       << "  -f STRING         process the formula STRING\n"
       << "  -F VAL            process formula in file VAL\n"
+      << "  --var-order incumbent|typed-interleaved|role-grouped (default: incumbent)\n"
 #if ACACIA_ENABLE_TLSF_FRONTEND
       << "  -T, --tlsf FILE   process a TLSF specification natively\n"
 #endif
@@ -408,6 +409,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_REAL_PROVIDER = 1005;
   static constexpr int OPT_UNREAL_PROVIDER = 1006;
   static constexpr int OPT_CANDIDATE_MODE = 1007;
+  static constexpr int OPT_VAR_ORDER = 1008;
   bool unreal_translation_pref_specified = false;
   bool real_backend_specified = false;
   bool unreal_backend_specified = false;
@@ -423,6 +425,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
+      {"var-order", required_argument, nullptr, OPT_VAR_ORDER},
 #if ACACIA_ENABLE_TLSF_FRONTEND
       {"tlsf", required_argument, nullptr, 'T'},
 #endif
@@ -534,6 +537,16 @@ arg_parse_result arg_parser (int argc, char** argv) {
         else
           error (EXIT_CODE_ERROR,
                  "Error: --candidate-mode expects only or fallback.\n");
+        break;
+      case OPT_VAR_ORDER:
+        if (std::string_view {optarg} == "incumbent")
+          retval.var_order = acacia::variable_order::incumbent;
+        else if (std::string_view {optarg} == "typed-interleaved")
+          retval.var_order = acacia::variable_order::typed_interleaved;
+        else if (std::string_view {optarg} == "role-grouped")
+          retval.var_order = acacia::variable_order::role_grouped;
+        else
+          error (EXIT_CODE_ERROR, "Error: invalid --var-order '%s'.\n", optarg);
         break;
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
       case OPT_REAL_BACKEND:
@@ -721,7 +734,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       })) {
     acacia::phase_scope conversion_phase ("legacy_parent", "frontend_conversion");
     try {
-      auto spec = acacia::tlsf_frontend::parse (retval.tlsf_source);
+      auto spec = acacia::tlsf_frontend::parse (retval.tlsf_source, retval.var_order);
       retval.formula = std::move (spec.formula);
       retval.inputs = std::move (spec.inputs);
       retval.outputs = std::move (spec.outputs);
@@ -741,6 +754,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
     }
   }
 #endif
+  retval.metadata.var_order = retval.var_order;
+
   if (not retval.tlsf_specified && retval.formula.empty ())
     error (EXIT_CODE_ERROR, "Error: a formula or TLSF specification must be specified (-f, -F, or -T).\n");
   if (not retval.tlsf_specified && not retval.inputs_specified)

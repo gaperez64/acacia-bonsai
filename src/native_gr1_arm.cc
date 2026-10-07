@@ -159,10 +159,12 @@ namespace acacia {
         }
     } artifacts {bytes};
     int solved_unreal = 0;
+    const TlsfGr1OrderV1 order {static_cast<TlsfStructuralOrder> (args.var_order),
+                                reduction.value.provenance_json};
     Aig* game = reduction.value.game;
     reduction.value.game = nullptr;  // the solver takes ownership
     std::unique_ptr<Aig, decltype (&aig_free)> strategy (
-        solve_gr1_oxidd (game, &solved_unreal, &solve_options), aig_free);
+        solve_gr1_oxidd_ordered_v1 (game, &solved_unreal, &solve_options, &order), aig_free);
     solve_phase.finish ();
     if (phase_records_enabled ()) {
       const auto emit = [&] (const char* phase, uint64_t wall, uint64_t cpu, size_t nodes,

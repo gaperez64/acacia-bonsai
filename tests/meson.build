@@ -72,6 +72,17 @@ test ('version-output',
       suite : 'version',
       depends : [ab_exe])
 
+if enable_tlsf_frontend
+  controller_check = executable (
+    'controller-check', 'controller_check.cc', dependencies : [spot_dep, bddx_dep])
+endif
+
+if enable_tlsf_frontend and get_option ('acacia_native_arms')
+  test ('variable-order-controls', py,
+        args : [files ('check-variable-order.py'), ab_exe, '--checker', controller_check],
+        suite : ['unit', 'tlsf'], timeout : 120, depends : [ab_exe, controller_check])
+endif
+
 test ('help-output',
       py,
       args : [files ('check-help.py'), ab_exe],

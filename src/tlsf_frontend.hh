@@ -15,7 +15,7 @@ namespace acacia::tlsf_frontend {
     specification_metadata metadata;
   };
 
-  specification parse (std::string_view text);
+  specification parse (std::string_view text, variable_order order = variable_order::incumbent);
   specification load (const std::string& path);
 
 }  // namespace acacia::tlsf_frontend

@@ -90,8 +90,9 @@ namespace acacia {
     std::unique_ptr<TlsfGr1LiftTarget, decltype (&tlsf_gr1_lift_target_free)> target (
         raw_target, tlsf_gr1_lift_target_free);
     if (lift_status == TLSF_GR1_LIFT_OK)
-      lift_status = tlsf_gr1_lift_from_target_v1 (target.get (), &options, &lifted.value,
-                                                  &lift_error, &failure_status);
+      lift_status = tlsf_gr1_lift_from_target_ordered_v1 (
+          target.get (), &options, static_cast<TlsfStructuralOrder> (args.var_order),
+          &lifted.value, &lift_error, &failure_status);
     lift_phase.finish ();
     const auto& work = stats.work;
     if (phase_records_enabled ()) {

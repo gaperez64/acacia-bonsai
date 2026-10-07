@@ -4,10 +4,10 @@
 #include "solver/game_backend.hh"
 #include "solver/spot_fast_mode.hh"
 #include "solver/symmetry_certificate.hh"
-
-#include <spot/twaalgos/postproc.hh>
+#include "solver/variable_order.hh"
 
 #include <optional>
+#include <spot/twaalgos/postproc.hh>
 #include <string>
 #include <vector>
 
@@ -16,12 +16,14 @@ enum UNREAL_X_T : char { UNREAL_X_FORMULA = 'f', UNREAL_X_AUTOMATON = 'a', UNREA
 using TRANSLATION_PREF_T = spot::postprocessor::output_pref;
 
 struct specification_metadata {
-  std::string source_format = "ltl";
-  std::string tlsf_semantics = "-";
-  std::string tlsf_target = "-";
-  std::string tlsf_effective_target = "-";
-  int tlsf_gr_level = -1;
-  std::vector<symmetry::indexed_family_hint> tlsf_indexed_families;
+    acacia::variable_order var_order = acacia::variable_order::incumbent;
+    std::vector<std::string> bdd_ap_order;
+    std::string source_format = "ltl";
+    std::string tlsf_semantics = "-";
+    std::string tlsf_target = "-";
+    std::string tlsf_effective_target = "-";
+    int tlsf_gr_level = -1;
+    std::vector<symmetry::indexed_family_hint> tlsf_indexed_families;
 };
 
 inline const char* translation_pref_name (TRANSLATION_PREF_T preference) {

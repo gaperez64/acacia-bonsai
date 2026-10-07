@@ -56,6 +56,7 @@ struct arg_parse_result {
     acacia::candidate_mode candidate = ACACIA_DEFAULT_CANDIDATE_MODE;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
+    acacia::variable_order var_order = acacia::variable_order::incumbent;
     specification_metadata metadata;
     bool formula_specified = false;
     bool inputs_specified = false;
