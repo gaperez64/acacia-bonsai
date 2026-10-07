@@ -5,6 +5,24 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-07 — P4a complementary-GR(1) recognition, step 1
+
+An off-by-default `--dual-gr1 recognize` research probe complements the complete
+lowered objective after an original native exact `mp-class` decline, swaps
+ownership and reverses Mealy/Moore timing before reusing the exact reduction.
+Strict reductions are rejected. It records construction/reduction outcomes,
+typed causes and costs through attribution; acceptance remains UNKNOWN and
+produces no strategy or verdict.
+
+The independent oracle passes 192 small games across initial/safety/stability
+objectives, both original move orders and both TLSF targets. The Mealy equality
+sentinel rejects the incorrectly timed environment strategy; round trips,
+provenance, strict and resource/cancellation boundaries are tested. A read-only
+extraction from the fresh guard screen produced 103 observed `mp-class` inputs.
+No recognition screen or performance campaign was run here, and no coverage gain
+is claimed. The [decision and reproduction record](coverage-first/dual-gr1-recognition.md)
+contains the timing proof and exact standalone-native driver command.
+
 ## 2026-10-06 — coverage-first P0 attribution (#210)
 
 Worker lifecycle events and parent-accepted winners now accompany the existing

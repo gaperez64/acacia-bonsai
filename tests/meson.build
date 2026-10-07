@@ -910,3 +910,9 @@ foreach f, _ : synthesis_benchmarks
           depends : [ab_exe])
   endif
 endforeach
+
+if get_option ('acacia_native_arms')
+  test ('dual-gr1-recognition-cli', py,
+        args : [files ('check-dual-gr1-cli.py'), ab_exe, meson.project_build_root ()],
+        suite : ['unit', 'native-gr1'], depends : [ab_exe], timeout : 120)
+endif

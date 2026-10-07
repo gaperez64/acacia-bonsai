@@ -107,6 +107,8 @@ namespace acacia {
           arm, reduction_error.stage, reduced,
           native_budget_message (reduction_error.stage, reduction_error.message, work),
           native_failure (reduction_cause));
+      native_dual_gr1_after_rejection (args, arm, deadline_mono_ns, budget, reduction_error.stage,
+                                       native_failure (reduction_cause));
       return EXIT_CODE_UNKNOWN;
     }
     if (!reduction.value.game || !reduction.value.aag || !reduction.value.aag_size) {

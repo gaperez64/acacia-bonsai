@@ -1,7 +1,9 @@
 #include "native_support.hh"
 
+#include "arg_parser.hh"
 #include "configuration.hh"
 #include "error_msg.hh"
+#include "native_proof_binding.hh"
 #include "phase_records.hh"
 
 #if ACACIA_NATIVE_ARMS
@@ -9,6 +11,7 @@
 # include <cerrno>
 # include <cstdio>
 # include <cstring>
+# include <memory>
 # include <string>
 # include <sys/resource.h>
 # include <unistd.h>
@@ -217,5 +220,125 @@ namespace acacia {
     if (n > 0 && size_t (n) < sizeof line)
       phase_records_send (line, size_t (n));
   }
+  namespace {
+    void dual_record (const char* event, const char* outcome, const char* stage, int status,
+                      const char* cause) noexcept {
+      if (!phase_records_enabled ())
+        return;
+      char line[512];
+      auto* worker = active_worker_record ();
+      const int n =
+          snprintf (line, sizeof line,
+                    "{\"event\":\"dual_gr1_%s\",\"worker\":%u,\"outcome\":\"%s\","
+                    "\"stage\":\"%s\",\"status\":%d,\"cause\":\"%s\",\"mono_ns\":%llu}\n",
+                    event, worker ? worker->index : 0, outcome, stage, status, cause,
+                    static_cast<unsigned long long> (phase_clock (CLOCK_MONOTONIC)));
+      if (n > 0 && size_t (n) < sizeof line)
+        phase_records_send (line, size_t (n));
+      else
+        phase_records_drop ();
+    }
+    struct dual_record_context {
+        const char* arm;
+        phase_stamp construction, reduction;
+        bool constructed = false;
+    };
+    void dual_constructed (void* opaque, const char*, size_t size) {
+      auto& context = *static_cast<dual_record_context*> (opaque);
+      context.constructed = true;
+      phase_finish (context.arm, "dual_construct", context.construction, -1, -1, 0, size);
+      dual_record ("construction", "constructed", "dual-construct", 0, "none");
+      worker_stage ("dual_reduce");
+      context.reduction = phase_start ();
+      if (auto* worker = active_worker_record ())
+        worker_event (*worker, "route_start");
+    }
+  }
+
+  void native_dual_gr1_after_rejection (const arg_parse_result& args, const char* arm,
+                                        uint64_t deadline_mono_ns,
+                                        const TlsfGr1ConstructionBudget& budget,
+                                        std::string_view stage, native_failure_category cause) {
+    if (!args.dual_gr1_recognize || stage != "mp-class" ||
+        cause != native_failure_category::decline)
+      return;
+    dual_record ("original_rejection", "rejected", "mp-class", TLSF_GR1_REDUCE_UNSUPPORTED,
+                 "decline");
+    worker_route ("dual_gr1", "reduction");
+    phase_scope load_phase (arm, "dual_load");
+    TlsfPipelineError load_error {};
+    TlsfPipelineOptions load_options {};
+    load_options.certify = true;
+    load_options.template_mask = TPL_ALL;
+    load_options.source_sha256 = args.tlsf_sha256.c_str ();
+    load_options.require_unambiguous_origin = true;
+    load_options.error = &load_error;
+    std::unique_ptr<TlsfPipeline, decltype (&tlsf_pipeline_free)> pipeline (
+        tlsf_pipeline_load_bytes (reinterpret_cast<const uint8_t*> (args.tlsf_source.data ()),
+                                  args.tlsf_source.size (), &load_options),
+        tlsf_pipeline_free);
+    load_phase.finish ();
+    if (!pipeline) {
+      dual_record ("construction", "rejected", load_error.stage, int (load_error.status),
+                   native_failure_reason (native_failure (load_error.status)));
+      worker_stage (load_error.stage);
+      if (native_failure (load_error.status) == native_failure_category::decline)
+        worker_decline ("dual-construction");
+      else
+        worker_stopped (native_failure_reason (native_failure (load_error.status)));
+      return;
+    }
+    TlsfGr1ReductionOptions options {};
+    options.semantics = TLSF_GR1_EXACT;
+    // Reuse incumbent global structural/state/artifact limits and the absolute
+    // invocation deadline. No deadline reset, seed work, solve or proof API.
+    options.deadline_mono_ns = deadline_mono_ns;
+    options.max_artifact_bytes = 64u * 1024u * 1024u;
+    options.max_monitor_states = 10000;
+    options.budget = budget;
+    TlsfGr1ReductionStats stats {};
+    options.stats = &stats;
+    native_result_owner<TlsfGr1DualRecognitionV1, tlsf_gr1_dual_recognition_clear_v1> result;
+    TlsfGr1ReductionError error {};
+    TlsfGr1ReductionStatus failure = TLSF_GR1_REDUCE_OK;
+    dual_record_context context {arm, phase_start (), {}, false};
+    const TlsfGr1DualObserverV1 observer {dual_constructed, &context};
+    worker_stage ("dual_construct");
+    auto status = tlsf_gr1_recognize_dual_v1 (pipeline.get (), &options, &observer, &result.value,
+                                              &error, &failure);
+    if (context.constructed)
+      phase_finish (arm, "dual_reduce", context.reduction, -1, -1, stats.work.formula_nodes,
+                    result.value.reduction.aag_size, nullptr, stats.monitor_count,
+                    stats.monitor_states);
+    else
+      phase_finish (arm, "dual_construct", context.construction);
+    if (status == TLSF_GR1_REDUCE_OK) {
+      native_json_doc parsed (nullptr, yyjson_doc_free);
+      auto& reduced = result.value.reduction;
+      auto* metadata = native_json_object (reduced.metadata_json, reduced.metadata_size, parsed);
+      if (!context.constructed || !reduced.game || !reduced.aag_size || !metadata ||
+          !native_json_field (metadata, "orientation", "dual") ||
+          !native_json_field (metadata, "semantics", "exact") ||
+          !native_json_field (metadata, "source_sha256", args.tlsf_sha256) ||
+          !native_sha256_matches (metadata, "game_sha256", reduced.aag, reduced.aag_size) ||
+          !native_sha256_matches (metadata, "construction_sha256", result.value.construction_json,
+                                  result.value.construction_size)) {
+        status = failure = TLSF_GR1_REDUCE_ERROR;
+        snprintf (error.stage, sizeof error.stage, "%s", "dual-binding");
+      }
+    }
+    dual_record (
+        context.constructed ? "reduction" : "construction",
+        status == TLSF_GR1_REDUCE_OK ? "accepted" : "rejected", error.stage, int (status),
+        status == TLSF_GR1_REDUCE_OK ? "none" : native_failure_reason (native_failure (failure)));
+    worker_stage (error.stage);
+    if (status == TLSF_GR1_REDUCE_OK)
+      worker_decline ("dual-recognition-only");
+    else if (native_failure (failure) == native_failure_category::decline)
+      worker_decline (error.stage);
+    else
+      worker_stopped (native_failure_reason (native_failure (failure)));
+  }
+
 }
 #endif

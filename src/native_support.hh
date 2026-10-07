@@ -12,6 +12,8 @@
 # include <string>
 # include <tlsf/pipeline.h>
 
+struct arg_parse_result;
+
 namespace acacia {
 # ifdef ACACIA_NATIVE_TEST_HOOKS
   void native_attribution_test_exception ();
@@ -31,6 +33,10 @@ namespace acacia {
   using native_check_owner = native_result_owner<TlsfGr1CheckResult, tlsf_gr1_check_result_clear>;
 
   enum class native_failure_category { decline, resource, deadline, cancelled, error };
+  void native_dual_gr1_after_rejection (const arg_parse_result& args, const char* arm,
+                                        uint64_t deadline_mono_ns,
+                                        const TlsfGr1ConstructionBudget& budget,
+                                        std::string_view stage, native_failure_category cause);
   native_failure_category native_failure (TlsfGr1LiftStatus status);
   native_failure_category native_failure (TlsfGr1ReductionStatus status);
   native_failure_category native_failure (TlsfGr1CheckStatus status, TlsfGr1CheckVerdict verdict);

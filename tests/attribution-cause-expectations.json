@@ -2934,5 +2934,33 @@
   "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"order_apply_mismatch\" | 0": {
     "cause": "OXIDD_FAILURE_CONFIGURATION",
     "telemetry": "STOPPED/error"
+  },
+  "src/native_support.cc | worker_decline | UNKNOWN | worker | \"dual-construction\" | 0": {
+    "cause": "worker_decline",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/native_support.cc | worker_stopped | UNKNOWN | worker | native_failure_reason (native_failure (load_error.status)) | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/native_support.cc | worker_decline | UNKNOWN | worker | \"dual-recognition-only\" | 0": {
+    "cause": "worker_decline",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/native_support.cc | worker_decline | UNKNOWN | worker | error.stage | 0": {
+    "cause": "worker_decline",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/native_support.cc | worker_stopped | UNKNOWN | worker | native_failure_reason (native_failure (failure)) | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"dual-strict\" | \"strict-only dual reduction is forbidden\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_UNSUPPORTED",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"dual-semantics\" | \"finite dual objectives are unsupported\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_UNSUPPORTED",
+    "telemetry": "DECLINE/applicability"
   }
 }

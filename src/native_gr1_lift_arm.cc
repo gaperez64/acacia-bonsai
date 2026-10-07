@@ -94,6 +94,8 @@ namespace acacia {
       native_arm_diagnostic (arm, error.stage, int (status),
                              native_budget_message (error.stage, error.message, stats.work),
                              native_failure (preparation_cause));
+      native_dual_gr1_after_rejection (args, arm, deadline_mono_ns, budget, error.stage,
+                                       native_failure (preparation_cause));
       return EXIT_CODE_UNKNOWN;
     }
 
