@@ -84,6 +84,7 @@ namespace acacia {
     reduction_options.max_artifact_bytes = artifact_cap;
     reduction_options.max_monitor_states = 10000;
     const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
+    const TlsfGr1StructureGuardOptionsV1 structure_guard {args.native_structure_guard_scale};
     TlsfGr1ReductionStats reduction_stats {};
     reduction_options.budget = budget;
     reduction_options.stats = &reduction_stats;
@@ -93,8 +94,8 @@ namespace acacia {
     native_reduction_owner reduction;
     TlsfGr1ReductionError reduction_error {};
     TlsfGr1ReductionStatus reduction_cause = TLSF_GR1_REDUCE_OK;
-    auto reduced = tlsf_gr1_reduce_v1 (pipeline.get (), &reduction_options, &reduction.value,
-                                       &reduction_error, &reduction_cause);
+    auto reduced = tlsf_gr1_reduce_v2 (pipeline.get (), &reduction_options, &structure_guard,
+                                       &reduction.value, &reduction_error, &reduction_cause);
     const auto& work = reduction_stats.work;
     if (reduced != TLSF_GR1_REDUCE_OK) {
       native_budget_record (arm, reduction_error.stage, work, construction_started_ns);

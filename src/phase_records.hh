@@ -67,6 +67,8 @@ namespace acacia {
       char route[24] = "unknown", stage[48] = "startup", reason[64] = "none";
       unsigned long long sequence = 0, dropped = 0;
       bool terminal = false, verified = false, stopped = false;
+      bool native_structure_guard = false;
+      double native_structure_guard_scale = 1;
   };
   inline worker_record*& active_worker_record () noexcept {
     static worker_record* record = nullptr;
@@ -158,21 +160,30 @@ namespace acacia {
     char outcome[64] = "";
     if (exit_code >= 0 || signal > 0 || std::strcmp (event, "parent_terminal") == 0)
       snprintf (outcome, sizeof outcome, "\"exit_code\":%d,\"signal\":%d,", exit_code, signal);
+    char native_options[96] = "";
+    if (record.native_structure_guard) {
+      if (record.native_structure_guard_scale == 0)
+        snprintf (native_options, sizeof native_options,
+                  "\"native_structure_guard_scale\":\"off\",");
+      else
+        snprintf (native_options, sizeof native_options, "\"native_structure_guard_scale\":%.17g,",
+                  record.native_structure_guard_scale);
+    }
     char escaped_reason[384];
     quote (reason, escaped_reason, sizeof escaped_reason);
     char line[1024];
-    const int n =
-        snprintf (line, sizeof line,
-                  "{\"event\":\"%s\",\"worker\":%u,\"worker_pid\":%ld,\"seq\":%llu,"
-                  "\"requested_backend\":\"%s\",\"effective_backend\":\"%s\","
-                  "\"original_polarity\":\"%s\",\"proof_polarity\":\"%s\","
-                  "\"route\":\"%s\",\"stage\":\"%s\",\"reason\":\"%s\","
-                  "%s\"mono_ns\":%llu,"
-                  "\"dropped_records\":%llu,\"telemetry\":\"%s\"}\n",
-                  event, record.index, long (record.pid), record.sequence,
-                  record.requested_backend, record.effective_backend, record.original_polarity,
-                  record.proof_polarity, record.route, record.stage, escaped_reason, outcome,
-                  (unsigned long long) phase_clock (CLOCK_MONOTONIC), record.dropped, telemetry);
+    const int n = snprintf (
+        line, sizeof line,
+        "{\"event\":\"%s\",\"worker\":%u,\"worker_pid\":%ld,\"seq\":%llu,"
+        "\"requested_backend\":\"%s\",\"effective_backend\":\"%s\","
+        "\"original_polarity\":\"%s\",\"proof_polarity\":\"%s\","
+        "\"route\":\"%s\",\"stage\":\"%s\",\"reason\":\"%s\","
+        "%s%s\"mono_ns\":%llu,"
+        "\"dropped_records\":%llu,\"telemetry\":\"%s\"}\n",
+        event, record.index, long (record.pid), record.sequence, record.requested_backend,
+        record.effective_backend, record.original_polarity, record.proof_polarity, record.route,
+        record.stage, escaped_reason, outcome, native_options,
+        (unsigned long long) phase_clock (CLOCK_MONOTONIC), record.dropped, telemetry);
     if (n > 0 && size_t (n) < sizeof line)
       phase_records_send (line, size_t (n));
     else

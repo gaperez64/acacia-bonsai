@@ -164,6 +164,8 @@ namespace acacia {
       std::fclose (membership);
     }
     TlsfGr1ConstructionBudget budget {};
+    // Global structural baselines, independent of names and expected verdicts.
+    // The explicit research scale changes only these six precheck thresholds.
     budget.max_formula_nodes = 4096;
     budget.max_ap_count = 2048;
     budget.max_conjuncts = 1024;

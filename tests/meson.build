@@ -135,6 +135,10 @@ if get_option ('acacia_native_arms')
         args : native_gr1_lift_cli_args,
         suite : ['unit', 'native-gr1'], timeout : 180,
         depends : native_cli_depends)
+  test ('native-structure-guard', py,
+        args : [files ('check-native-structure-guard.py'), ab_exe,
+                meson.project_build_root ()],
+        suite : ['unit', 'native-gr1'], timeout : 180, depends : [ab_exe])
   test ('native-gr1-same-thread', py,
         args : [files ('check-native-gr1-same-thread.py'), ab_exe,
                 meson.project_build_root ()],
@@ -445,6 +449,7 @@ game_backend_integration = executable (
   link_with : closure_buchi_provider_lib,
   include_directories : inc,
   cpp_args : ['-DACACIA_PORTFOLIO_TEST_HOOKS=1',
+              '-DACACIA_FORWARD_SAFETY_SOLVER=1',
               '-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1',
               '-DACACIA_REAL_BACKEND_SELECTOR=1',
               '-DACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT=30'],
@@ -475,7 +480,7 @@ if native_test_hooks
 endif
 test ('game-backend-integration', game_backend_cli,
       args : [game_backend_integration,
-              get_option ('acacia_forward_safety_solver').to_string (), 'true', 'true',
+              'true', 'true', 'true',
               (compiler_profile == 'debug').to_string (),
               get_option ('acacia_default_candidate_mode'),
               get_option ('acacia_spot_taa_max_rank_nodes').to_string (),

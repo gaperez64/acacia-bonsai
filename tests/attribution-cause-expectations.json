@@ -2934,5 +2934,9 @@
   "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"order_apply_mismatch\" | 0": {
     "cause": "OXIDD_FAILURE_CONFIGURATION",
     "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_INVALID | \"arguments\" | \"invalid structure guard scale\" | 0": {
+    "cause": "FailureCause::invalid",
+    "telemetry": "STOPPED/error"
   }
 }

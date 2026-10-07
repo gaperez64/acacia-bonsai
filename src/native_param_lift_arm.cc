@@ -66,6 +66,7 @@ namespace acacia {
     TlsfGr1LiftOptions options {};
     options.deadline_mono_ns = deadline_mono_ns;
     const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
+    const TlsfGr1StructureGuardOptionsV1 structure_guard {args.native_structure_guard_scale};
     TlsfGr1LiftStats stats {};
     options.budget = budget;
     options.proof_order = TLSF_GR1_LIFT_REGION_FIRST;
@@ -84,14 +85,14 @@ namespace acacia {
     const auto* source = reinterpret_cast<const uint8_t*> (args.tlsf_source.data ());
     TlsfGr1LiftTarget* raw_target = nullptr;
     TlsfGr1LiftStatus failure_status = TLSF_GR1_LIFT_OK;
-    auto lift_status =
-        tlsf_gr1_lift_target_prepare_v1 (source, args.tlsf_source.size (), nullptr, 0, &options,
-                                         &raw_target, &lift_error, &failure_status);
+    auto lift_status = tlsf_gr1_lift_target_prepare_v2 (source, args.tlsf_source.size (), nullptr,
+                                                        0, &options, &structure_guard, &raw_target,
+                                                        &lift_error, &failure_status);
     std::unique_ptr<TlsfGr1LiftTarget, decltype (&tlsf_gr1_lift_target_free)> target (
         raw_target, tlsf_gr1_lift_target_free);
     if (lift_status == TLSF_GR1_LIFT_OK)
-      lift_status = tlsf_gr1_lift_from_target_v1 (target.get (), &options, &lifted.value,
-                                                  &lift_error, &failure_status);
+      lift_status = tlsf_gr1_lift_from_target_v2 (target.get (), &options, &structure_guard,
+                                                  &lifted.value, &lift_error, &failure_status);
     lift_phase.finish ();
     const auto& work = stats.work;
     if (phase_records_enabled ()) {

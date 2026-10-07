@@ -276,6 +276,8 @@ namespace {
     if (g_worker_records) {
       auto& record = g_worker_records[g_child_count];
       record = acacia::worker_record {};
+      record.native_structure_guard = !arm.legacy;
+      record.native_structure_guard_scale = arg_values.native_structure_guard_scale;
       record.index = unsigned (g_child_count);
       const char* backend = arm.legacy ? acacia::game_backend_name (arm.legacy->backend) : "oxidd";
       acacia::worker_record_text (record.requested_backend, backend);

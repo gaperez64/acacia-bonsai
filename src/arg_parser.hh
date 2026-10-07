@@ -7,6 +7,7 @@
 #include "solver/solver_invoker.hh"
 #if ACACIA_ENABLE_TLSF_FRONTEND
 # include "tlsf_frontend.hh"
+
 # include <tlsf/pipeline.h>
 #endif
 #include "utils/verbose.hh"
@@ -64,6 +65,7 @@ struct arg_parse_result {
     std::string tlsf_source;
     std::string tlsf_sha256;
     bool legacy_available = true;
+    double native_structure_guard_scale = 1;
 };
 
 arg_parse_result arg_parser (int argc, char** argv);

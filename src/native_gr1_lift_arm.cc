@@ -64,6 +64,7 @@ namespace acacia {
       return EXIT_CODE_UNKNOWN;
     const uint64_t construction_started_ns = phase_clock (CLOCK_MONOTONIC);
     const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
+    const TlsfGr1StructureGuardOptionsV1 structure_guard {args.native_structure_guard_scale};
     TlsfGr1LiftStats stats {};
     TlsfGr1LiftOptions options {};
     options.deadline_mono_ns = deadline_mono_ns;
@@ -83,9 +84,9 @@ namespace acacia {
     worker_route ("trusted_prepare", "oxidd");
     phase_scope prepare_phase (arm, "trusted_prepare");
     TlsfGr1LiftStatus preparation_cause = TLSF_GR1_LIFT_OK;
-    auto status = tlsf_gr1_lift_target_prepare_exact_v1 (
+    auto status = tlsf_gr1_lift_target_prepare_exact_v2 (
         reinterpret_cast<const uint8_t*> (args.tlsf_source.data ()), args.tlsf_source.size (),
-        &prepare_options, &raw_target, &error, &preparation_cause);
+        &prepare_options, &structure_guard, &raw_target, &error, &preparation_cause);
     std::unique_ptr<TlsfGr1LiftTarget, decltype (&tlsf_gr1_lift_target_free)> target (
         raw_target, tlsf_gr1_lift_target_free);
     prepare_phase.finish ();
@@ -104,10 +105,9 @@ namespace acacia {
     } guard {result};
     phase_scope combined_phase (arm, "combined_call");
     const TlsfGr1BothObserverV1 observer {record_combined_event, nullptr};
-    status =
-        phase_records_enabled ()
-            ? tlsf_gr1_both_from_target_v1 (target.get (), &options, &observer, &result, &error)
-            : tlsf_gr1_both_from_target (target.get (), &options, &result, &error);
+    status = tlsf_gr1_both_from_target_v2 (target.get (), &options, &structure_guard,
+                                           phase_records_enabled () ? &observer : nullptr, &result,
+                                           &error);
     combined_phase.finish ();
     if (real_only && result.route == TLSF_GR1_BOTH_ENV_LIFT) {
       native_arm_diagnostic (arm, "route", -1, "R-only arm selected U");
