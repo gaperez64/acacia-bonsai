@@ -5,6 +5,38 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-06 — coverage-first P0 attribution (#210)
+
+Worker lifecycle events and parent-accepted winners now accompany the existing
+nonblocking phase records. A versioned tlsf-tools observer records seed discovery,
+R, U, direct fallback, and checking before their work runs. Parent snapshots identify
+killed workers; producer drops, incomplete lifecycles, and writer delivery failures
+are separate from algorithmic declines. Requested/effective backends and original/
+transformed proof polarity remain separate.
+
+The debugoptimized correctness build passes all 63 unit tests, including complete
+small R/U/direct attribution, interruption at each route/check boundary, cooperative
+checker cancellation, late-answer rejection, winner attribution, synthesis coercion,
+512-byte packets, slow/broken/full destinations, and original preparation/reduction
+contract checks through every native caller. All 182 tlsf-tools functional tests pass;
+the two existing integrated metadata-context tests pass separately in their required
+contexts. FULL pytest passes 1,900 tests, with 31 skips and 23 passing subtests.
+
+Preparation and reduction expose versioned diagnostic causes independently of their
+legacy statuses. Failed alternatives retain integrity causes; trusted-seed and U
+game/policy invariants, invalid checker verdicts and corrupted provider contracts
+stop with error. Genuine structural inapplicability and completed logical certificate
+rejection remain declines. The [generated cause table](coverage-first/decline-causes.md)
+now enumerates 734 checks/failure origins with independent per-origin assertions and
+a fault/corruption-hook census across all attribution layers. Runtime contract and
+cause-conversion panels complement those source assertions; this is not a full
+branch-coverage claim. All 15 diagnostics-off behavior comparisons and 72 legacy API
+comparisons match the saved review evidence, including 64 common-master API cases.
+The charter and owner hardcoding guard remain byte-identical; the generic lifting
+guard and release-hook isolation pass.
+No new performance or coverage measurements are claimed. [Implementation and reproduction notes](coverage-first/attribution.md)
+describe completeness requirements and the cross-repository API change (tlsf-tools#62, merged as `f6b5ecc`).
+
 ## 2026-10-06 — P0 gate and memory implementation
 
 The gate corrections for #211 have regression coverage, including real generated
@@ -18,8 +50,8 @@ errors even with a cgroup path and excludes peak/events from failed or unverifie
 with 20 new regressions. Validation passes 719 pytest tests
 (3 optional skips), 52 unit tests, and ruff on 29 touched Python files. This is
 implementation validation, not a new performance campaign or issue-closure claim. The real Linux
-normal/timeout/child-OOM/invocation-OOM panel still requires the driver to run outside
-the sandbox. Commands, file ownership and limitations are in
+normal/timeout/child-OOM/invocation-OOM panel passed outside the sandbox on 2026-10-06
+(archive `cov20261006-p0exit`). Commands, file ownership and limitations are in
 [the P0 decision record](coverage-first/p0-gates-memory.md). Historical rows below
 retain their original measured/derived meaning, including incomplete memory evidence.
 

@@ -1,23 +1,25 @@
-#include "configuration.hh"
 #include "native_gr1_arm.hh"
+
 #include "arg_parser.hh"
+#include "configuration.hh"
 #include "error_msg.hh"
 #include "native_proof_binding.hh"
 #include "native_support.hh"
 #include "phase_records.hh"
 #ifdef ACACIA_NATIVE_TEST_HOOKS
-#include "native_test_hooks.hh"
+# include "native_test_hooks.hh"
 #endif
 
 #if ACACIA_NATIVE_ARMS
-#include <array>
-#include <cerrno>
-#include <cstdlib>
-#include <memory>
-#include <string>
-#include <tlsf/gr1_check.h>
-#include <tlsf/gr1_oxidd.h>
-#include <tlsf/gr1_reduction.h>
+# include <tlsf/gr1_check.h>
+# include <tlsf/gr1_oxidd.h>
+# include <tlsf/gr1_reduction.h>
+
+# include <array>
+# include <cerrno>
+# include <cstdlib>
+# include <memory>
+# include <string>
 
 namespace acacia {
   struct reduction_record_context {
@@ -26,22 +28,19 @@ namespace acacia {
   };
   static void record_reduction_stage (void* opaque, TlsfGr1ReductionStatsStage stage,
                                       const TlsfGr1ReductionStageStats* row) noexcept {
-    constexpr const char* stages[] = {
-      "reduce_source", "reduce_monitors", "reduce_encode", "reduce_publish"};
+    constexpr const char* stages[] = {"reduce_source", "reduce_monitors", "reduce_encode",
+                                      "reduce_publish"};
     auto& context = *static_cast<reduction_record_context*> (opaque);
-    const phase_memory memory {long (row->rss_kb), long (row->peak_rss_kb),
-                               size_t (row->arena), size_t (row->hblkhd),
+    const phase_memory memory {long (row->rss_kb),     long (row->peak_rss_kb),
+                               size_t (row->arena),    size_t (row->hblkhd),
                                size_t (row->uordblks), size_t (row->fordblks)};
-    phase_finish (context.arm, stages[stage],
-                  {phase_clock (CLOCK_MONOTONIC) - row->wall_ns,
-                   phase_clock (CLOCK_PROCESS_CPUTIME_ID) - row->cpu_ns},
-                  -1, -1, stage == TLSF_GR1_REDUCE_STATS_MONITORS
-                      ? context.stats->monitor_count : 0,
-                  0, &memory,
-                  stage == TLSF_GR1_REDUCE_STATS_MONITORS
-                      ? context.stats->monitor_count : 0,
-                  stage == TLSF_GR1_REDUCE_STATS_MONITORS
-                      ? context.stats->monitor_states : 0);
+    phase_finish (
+        context.arm, stages[stage],
+        {phase_clock (CLOCK_MONOTONIC) - row->wall_ns,
+         phase_clock (CLOCK_PROCESS_CPUTIME_ID) - row->cpu_ns},
+        -1, -1, stage == TLSF_GR1_REDUCE_STATS_MONITORS ? context.stats->monitor_count : 0, 0,
+        &memory, stage == TLSF_GR1_REDUCE_STATS_MONITORS ? context.stats->monitor_count : 0,
+        stage == TLSF_GR1_REDUCE_STATS_MONITORS ? context.stats->monitor_states : 0);
   }
   int run_native_gr1_arm (const arg_parse_result& args, bool unreal, bool both,
                           uint64_t deadline_mono_ns) {
@@ -66,8 +65,8 @@ namespace acacia {
                                   args.tlsf_source.size (), &pipeline_options),
         tlsf_pipeline_free);
     if (!pipeline) {
-      native_diagnostic (arm, pipeline_error.stage, pipeline_error.status,
-                         pipeline_error.message);
+      native_diagnostic (arm, pipeline_error.stage, pipeline_error.status, pipeline_error.message,
+                         native_failure (pipeline_error.status));
       return EXIT_CODE_UNKNOWN;
     }
     pipeline_phase.finish ();
@@ -93,19 +92,21 @@ namespace acacia {
     reduction_options.stats_context = &reduction_context;
     native_reduction_owner reduction;
     TlsfGr1ReductionError reduction_error {};
-    auto reduced = tlsf_gr1_reduce (
-        pipeline.get (), &reduction_options, &reduction.value, &reduction_error);
+    TlsfGr1ReductionStatus reduction_cause = TLSF_GR1_REDUCE_OK;
+    auto reduced = tlsf_gr1_reduce_v1 (pipeline.get (), &reduction_options, &reduction.value,
+                                       &reduction_error, &reduction_cause);
     const auto& work = reduction_stats.work;
     if (reduced != TLSF_GR1_REDUCE_OK) {
       native_budget_record (arm, reduction_error.stage, work, construction_started_ns);
       if (phase_records_enabled ()) {
         const std::string stage = std::string ("reduce_decline_") + reduction_error.stage;
-        phase_finish (arm, stage.c_str (), phase_start (), -1, -1,
-                      work.formula_nodes, 0, nullptr, work.monitors_completed, work.states);
+        phase_finish (arm, stage.c_str (), phase_start (), -1, -1, work.formula_nodes, 0, nullptr,
+                      work.monitors_completed, work.states);
       }
-      native_diagnostic (arm, reduction_error.stage, reduced,
-                         native_budget_message (reduction_error.stage,
-                                                reduction_error.message, work));
+      native_diagnostic (
+          arm, reduction_error.stage, reduced,
+          native_budget_message (reduction_error.stage, reduction_error.message, work),
+          native_failure (reduction_cause));
       return EXIT_CODE_UNKNOWN;
     }
     if (!reduction.value.game || !reduction.value.aag || !reduction.value.aag_size) {
@@ -124,6 +125,7 @@ namespace acacia {
     }
     reduction_phase.finish ();
 
+    worker_route ("direct", "oxidd");
     phase_scope solve_phase (arm, "solve_export_total");
     OxiddFailure failure {};
     Gr1SolveOptions solve_options {};
@@ -163,31 +165,33 @@ namespace acacia {
         solve_gr1_oxidd (game, &solved_unreal, &solve_options), aig_free);
     solve_phase.finish ();
     if (phase_records_enabled ()) {
-      const auto emit = [&] (const char* phase, uint64_t wall, uint64_t cpu,
-                           size_t nodes, size_t bytes_count) {
-        if (!wall) return;
-        phase_finish (arm, phase,
-                      {phase_clock (CLOCK_MONOTONIC) - wall,
-                       phase_clock (CLOCK_PROCESS_CPUTIME_ID) - cpu},
-                      static_cast<long long> (nodes), -1, 0, bytes_count);
+      const auto emit = [&] (const char* phase, uint64_t wall, uint64_t cpu, size_t nodes,
+                             size_t bytes_count) {
+        if (!wall)
+          return;
+        phase_finish (
+            arm, phase,
+            {phase_clock (CLOCK_MONOTONIC) - wall, phase_clock (CLOCK_PROCESS_CPUTIME_ID) - cpu},
+            static_cast<long long> (nodes), -1, 0, bytes_count);
       };
       emit ("solve", solver_stats.solve_wall_ns, solver_stats.solve_cpu_ns,
             solver_stats.nodes_at_export, 0);
-      emit ("certificate_policy_export", solver_stats.export_wall_ns,
-            solver_stats.export_cpu_ns, solver_stats.nodes_before_teardown,
-            sizes[0] + sizes[1] + sizes[2] + sizes[3]);
-      emit ("teardown_bdd_manager", solver_stats.teardown_wall_ns,
-            solver_stats.teardown_cpu_ns, 0, 0);
+      emit ("certificate_policy_export", solver_stats.export_wall_ns, solver_stats.export_cpu_ns,
+            solver_stats.nodes_before_teardown, sizes[0] + sizes[1] + sizes[2] + sizes[3]);
+      emit ("teardown_bdd_manager", solver_stats.teardown_wall_ns, solver_stats.teardown_cpu_ns, 0,
+            0);
     }
     if (failure.kind != OXIDD_FAILURE_NONE || certificate.failed ||
         (!strategy && !solved_unreal)) {
       native_diagnostic (arm, "solve", int (failure.kind),
-                         certificate.failed ? certificate.error : "solver gave no decision");
+                         certificate.failed ? certificate.error : "solver gave no decision",
+                         native_failure (failure.kind));
       return EXIT_CODE_UNKNOWN;
     }
     const bool proof_unreal = bool (solved_unreal);
     if (!both && proof_unreal != unreal) {
-      native_diagnostic (arm, "polarity", 0, "opposite side solved");
+      native_diagnostic (arm, "polarity", 0, "opposite side solved",
+                         native_failure_category::decline);
       return EXIT_CODE_UNKNOWN;
     }
     phase_scope proof_phase (arm, "proof_binding");
@@ -236,15 +240,23 @@ namespace acacia {
     check_options.max_artifact_bytes = artifact_cap;
     check_options.deadline_mono_ns = deadline_mono_ns;
     native_check_owner checked;
+    if (auto* worker = active_worker_record ()) {
+      worker_record_text (worker->original_polarity, proof_unreal ? "UNREAL" : "REAL");
+      worker_record_text (worker->proof_polarity, proof_unreal ? "UNREAL" : "REAL");
+      worker_stage ("target_check");
+      worker_event (*worker, "verification_start");
+    }
     phase_scope check_phase (arm, "independent_check");
     const TlsfGr1CheckStatus status = tlsf_gr1_check (&input, &check_options, &checked.value);
     check_phase.finish (static_cast<long long> (checked.value.peak_nodes));
     if (status != TLSF_GR1_CHECK_OK || checked.value.verdict != TLSF_GR1_CHECK_VERIFIED) {
       native_diagnostic (arm, checked.value.stage[0] ? checked.value.stage : "check",
                          status == TLSF_GR1_CHECK_OK ? int (checked.value.verdict) : int (status),
-                         checked.value.message[0] ? checked.value.message : "proof not verified");
+                         checked.value.message[0] ? checked.value.message : "proof not verified",
+                         native_failure (status, checked.value.verdict));
       return EXIT_CODE_UNKNOWN;
     }
+    worker_verified (proof_unreal ? "UNREAL" : "REAL", proof_unreal ? "UNREAL" : "REAL");
     return proof_unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL;
   }
 }

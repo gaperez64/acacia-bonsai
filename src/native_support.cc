@@ -1,20 +1,99 @@
-#include "configuration.hh"
 #include "native_support.hh"
+
+#include "configuration.hh"
 #include "error_msg.hh"
 #include "phase_records.hh"
 
 #if ACACIA_NATIVE_ARMS
-#include <algorithm>
-#include <cerrno>
-#include <cstdio>
-#include <cstring>
-#include <string>
-#include <sys/resource.h>
-#include <unistd.h>
+# include <algorithm>
+# include <cerrno>
+# include <cstdio>
+# include <cstring>
+# include <string>
+# include <sys/resource.h>
+# include <unistd.h>
 
 namespace acacia {
+  native_failure_category native_failure (TlsfGr1LiftStatus status) {
+    switch (status) {
+      case TLSF_GR1_LIFT_LIMIT: return native_failure_category::resource;
+      case TLSF_GR1_LIFT_UNSUPPORTED:
+      case TLSF_GR1_LIFT_DECLINED: return native_failure_category::decline;
+      case TLSF_GR1_LIFT_DEADLINE: return native_failure_category::deadline;
+      case TLSF_GR1_LIFT_CANCELLED: return native_failure_category::cancelled;
+      default: return native_failure_category::error;
+    }
+  }
+
+  native_failure_category native_failure (TlsfGr1ReductionStatus status) {
+    switch (status) {
+      case TLSF_GR1_REDUCE_LIMIT: return native_failure_category::resource;
+      case TLSF_GR1_REDUCE_UNSUPPORTED:
+      case TLSF_GR1_REDUCE_DECLINED: return native_failure_category::decline;
+      case TLSF_GR1_REDUCE_DEADLINE: return native_failure_category::deadline;
+      case TLSF_GR1_REDUCE_CANCELLED: return native_failure_category::cancelled;
+      default: return native_failure_category::error;
+    }
+  }
+
+  native_failure_category native_failure (TlsfGr1CheckStatus status, TlsfGr1CheckVerdict verdict) {
+    switch (status) {
+      case TLSF_GR1_CHECK_LIMIT: return native_failure_category::resource;
+      case TLSF_GR1_CHECK_OK:
+        return verdict == TLSF_GR1_CHECK_CERT_FAILED || verdict == TLSF_GR1_CHECK_REFUTED
+                   ? native_failure_category::decline
+                   : native_failure_category::error;
+      case TLSF_GR1_CHECK_DEADLINE: return native_failure_category::deadline;
+      case TLSF_GR1_CHECK_CANCELLED: return native_failure_category::cancelled;
+      default: return native_failure_category::error;
+    }
+  }
+
+  native_failure_category native_failure (TlsfPipelineStatus status) {
+    switch (status) {
+      case TLSF_PIPELINE_LIMIT: return native_failure_category::resource;
+      case TLSF_PIPELINE_DECLINED: return native_failure_category::decline;
+      default: return native_failure_category::error;
+    }
+  }
+
+  native_failure_category native_failure (OxiddFailureKind status) {
+    switch (status) {
+      case OXIDD_FAILURE_BDD:
+      case OXIDD_FAILURE_HOST:
+      case OXIDD_FAILURE_ARTIFACT_LIMIT: return native_failure_category::resource;
+      case OXIDD_FAILURE_DEADLINE: return native_failure_category::deadline;
+      case OXIDD_FAILURE_CANCELLED: return native_failure_category::cancelled;
+      default: return native_failure_category::error;
+    }
+  }
+
+  const char* native_failure_reason (native_failure_category category) {
+    switch (category) {
+      case native_failure_category::decline: return "decline";
+      case native_failure_category::resource: return "resource";
+      case native_failure_category::deadline: return "deadline";
+      case native_failure_category::cancelled: return "cancelled";
+      case native_failure_category::error: return "error";
+    }
+    return "error";
+  }
+
   void native_arm_diagnostic (std::string_view arm, std::string_view stage, int status,
-                                     std::string_view message) {
+                              std::string_view message, native_failure_category category) {
+    if (auto* worker = active_worker_record ()) {
+      // Preserve the obstruction even if the child exits before its caller can
+      // publish a terminal packet. Messages remain on the incumbent stderr path.
+      const std::string reason (stage);
+      worker_stage (reason.c_str ());
+      if (category == native_failure_category::decline) {
+        if (!worker->stopped && std::strcmp (worker->reason, reason.c_str ()) != 0)
+          worker_decline (reason.c_str ());
+      }
+      else if (!worker->stopped) {
+        worker_stopped (native_failure_reason (category));
+      }
+    }
     const auto quote = [] (std::string_view value) {
       std::string out = "\"";
       for (unsigned char ch : value) {
@@ -39,8 +118,8 @@ namespace acacia {
   }
 
   void native_diagnostic (std::string_view arm, std::string_view stage, int status,
-                                 std::string_view message) {
-    native_arm_diagnostic (arm, stage, status, message);
+                          std::string_view message, native_failure_category category) {
+    native_arm_diagnostic (arm, stage, status, message, category);
   }
 
   bool native_limit_address_space (std::string_view arm) {
@@ -71,7 +150,8 @@ namespace acacia {
         if (const char* group = std::strstr (line, "::/")) {
           std::string path = "/sys/fs/cgroup";
           path += group + 2;
-          if (!path.empty () && path.back () == '\n') path.pop_back ();
+          if (!path.empty () && path.back () == '\n')
+            path.pop_back ();
           path += "/memory.max";
           if (FILE* file = std::fopen (path.c_str (), "r")) {
             unsigned long long scoped = 0;
@@ -98,45 +178,44 @@ namespace acacia {
 
   std::string native_budget_message (std::string_view stage, std::string_view reason,
                                      const TlsfGr1ConstructionWork& work) {
-    if (stage.substr (0, 7) != "budget-" && stage != "allocation" &&
-        stage != "aag-size" && stage != "publish-size" &&
-        stage != "metadata-size") return std::string (reason);
+    if (stage.substr (0, 7) != "budget-" && stage != "allocation" && stage != "aag-size" &&
+        stage != "publish-size" && stage != "metadata-size")
+      return std::string (reason);
     return std::string (reason) + " formula_nodes=" + std::to_string (work.formula_nodes) +
-        " ap=" + std::to_string (work.ap_count) +
-        " conjuncts=" + std::to_string (work.conjuncts) +
-        " max_conjunct_nodes=" + std::to_string (work.max_conjunct_nodes) +
-        " temporal_depth=" + std::to_string (work.max_temporal_depth) +
-        " predicted_states=" + std::to_string (work.predicted_monitor_states) +
-        " monitors=" + std::to_string (work.monitors_completed) +
-        " states=" + std::to_string (work.states) +
-        " edges=" + std::to_string (work.edges) +
-        " peak_rss_bytes=" + std::to_string (work.peak_rss_bytes);
+           " ap=" + std::to_string (work.ap_count) +
+           " conjuncts=" + std::to_string (work.conjuncts) +
+           " max_conjunct_nodes=" + std::to_string (work.max_conjunct_nodes) +
+           " temporal_depth=" + std::to_string (work.max_temporal_depth) +
+           " predicted_states=" + std::to_string (work.predicted_monitor_states) +
+           " monitors=" + std::to_string (work.monitors_completed) +
+           " states=" + std::to_string (work.states) + " edges=" + std::to_string (work.edges) +
+           " peak_rss_bytes=" + std::to_string (work.peak_rss_bytes);
   }
 
   void native_budget_record (std::string_view arm, std::string_view stage,
-                             const TlsfGr1ConstructionWork& work,
-                             uint64_t started_ns) noexcept {
+                             const TlsfGr1ConstructionWork& work, uint64_t started_ns) noexcept {
     if (!phase_records_enabled () ||
-        (stage.substr (0, 7) != "budget-" && stage != "allocation" &&
-         stage != "aag-size" && stage != "publish-size" &&
-         stage != "metadata-size")) return;
+        (stage.substr (0, 7) != "budget-" && stage != "allocation" && stage != "aag-size" &&
+         stage != "publish-size" && stage != "metadata-size"))
+      return;
     char line[1024];
     const auto value = [] (uint64_t n) { return static_cast<unsigned long long> (n); };
-    const int n = std::snprintf (
-        line, sizeof line,
-        "{\"arm\":\"%.*s\",\"phase\":\"budget_decline\",\"stage\":\"%.*s\","
-        "\"elapsed_ns\":%llu,\"formula_nodes\":%llu,\"ap_count\":%llu,"
-        "\"conjuncts\":%llu,\"max_conjunct_nodes\":%llu,"
-        "\"max_temporal_depth\":%llu,\"predicted_monitor_states\":%llu,"
-        "\"monitors\":%llu,\"states\":%llu,\"edges\":%llu,"
-        "\"peak_rss_bytes\":%llu}\n",
-        int (arm.size ()), arm.data (), int (stage.size ()), stage.data (),
-        value (phase_clock (CLOCK_MONOTONIC) - started_ns),
-        value (work.formula_nodes), value (work.ap_count), value (work.conjuncts),
-        value (work.max_conjunct_nodes), value (work.max_temporal_depth),
-        value (work.predicted_monitor_states), value (work.monitors_completed),
-        value (work.states), value (work.edges), value (work.peak_rss_bytes));
-    if (n > 0 && size_t (n) < sizeof line) phase_records_send (line, size_t (n));
+    const int n =
+        std::snprintf (line, sizeof line,
+                       "{\"arm\":\"%.*s\",\"phase\":\"budget_decline\",\"stage\":\"%.*s\","
+                       "\"elapsed_ns\":%llu,\"formula_nodes\":%llu,\"ap_count\":%llu,"
+                       "\"conjuncts\":%llu,\"max_conjunct_nodes\":%llu,"
+                       "\"max_temporal_depth\":%llu,\"predicted_monitor_states\":%llu,"
+                       "\"monitors\":%llu,\"states\":%llu,\"edges\":%llu,"
+                       "\"peak_rss_bytes\":%llu}\n",
+                       int (arm.size ()), arm.data (), int (stage.size ()), stage.data (),
+                       value (phase_clock (CLOCK_MONOTONIC) - started_ns),
+                       value (work.formula_nodes), value (work.ap_count), value (work.conjuncts),
+                       value (work.max_conjunct_nodes), value (work.max_temporal_depth),
+                       value (work.predicted_monitor_states), value (work.monitors_completed),
+                       value (work.states), value (work.edges), value (work.peak_rss_bytes));
+    if (n > 0 && size_t (n) < sizeof line)
+      phase_records_send (line, size_t (n));
   }
 }
 #endif

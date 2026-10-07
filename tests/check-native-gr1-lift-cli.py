@@ -51,9 +51,9 @@ def main() -> None:
     with tempfile.TemporaryDirectory(dir=build) as temporary:
         root = Path(temporary)
         for name, source, verdict, route, polarity, code in (
-            ("real", REAL, "REALIZABLE", "route_R", "seed_REAL", 0),
-            ("unreal", UNREAL, "UNREALIZABLE", "route_U", "seed_UNREAL", 1),
-            ("plain", PLAIN, "REALIZABLE", "route_direct", "seed_none", 0),
+            ("real", REAL, "REALIZABLE", "R", "seed_REAL", 0),
+            ("unreal", UNREAL, "UNREALIZABLE", "U", "seed_UNREAL", 1),
+            ("plain", PLAIN, "REALIZABLE", "direct", "seed_none", 0),
         ):
             path = root / f"{name}.tlsf"
             path.write_text(source)
@@ -63,7 +63,8 @@ def main() -> None:
             assert result == code and verdict in output, (name, result, output, rows)
             phases = {row.get("phase"): row for row in rows
                       if row.get("arm") == "both:gr1-lift:oxidd"}
-            assert route in phases and polarity in phases, (name, phases)
+            routes = {row.get("route") for row in rows if row.get("event") == "route_start"}
+            assert route in routes and polarity in phases, (name, rows)
             assert phases["final_checks"]["work_count"] == 1, (name, phases)
             assert phases["target_reductions"]["work_count"] == 1, (name, phases)
             direct_records = root / f"{name}-direct-records"
@@ -80,8 +81,10 @@ def main() -> None:
             only_phases = {row.get("phase"): row for row in only_rows
                            if row.get("arm") == real_only_arm}
             assert (only_result, only_output) == (baseline, baseline_output), name
-            assert ("route_R" if name == "real" else "route_direct") in only_phases, only_phases
-            assert "route_U" not in only_phases, only_phases
+            only_routes = {row.get("route") for row in only_rows
+                           if row.get("event") == "route_start"}
+            assert ("R" if name == "real" else "direct") in only_routes, only_rows
+            assert "U" not in only_routes, only_rows
             if name == "unreal":
                 assert "seed_UNREAL" in only_phases, only_phases
             assert only_phases["final_checks"]["work_count"] == 1, only_phases
@@ -95,8 +98,9 @@ def main() -> None:
                 decline_phases = {row.get("phase"): row for row in decline_rows
                                   if row.get("arm") == real_only_arm}
                 assert (decline_result, decline_output) == (baseline, baseline_output)
-                assert "route_direct" in decline_phases, decline_phases
-                assert "route_U" not in decline_phases, decline_phases
+                decline_routes = {row.get("route") for row in decline_rows
+                                  if row.get("event") == "route_start"}
+                assert "direct" in decline_routes and "U" not in decline_routes, decline_rows
                 assert decline_phases["final_checks"]["work_count"] == 1, decline_phases
                 assert decline_phases["target_reductions"]["work_count"] == 1, decline_phases
 
