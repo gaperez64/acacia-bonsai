@@ -12,6 +12,8 @@ from pathlib import Path
 import re
 from statistics import fmean, median
 
+from scope_memory import memory_observation, memory_sidecar, memory_statistic
+
 
 SPEC = importlib.util.spec_from_file_location(
     "paired_coverage", Path(__file__).with_name("run-syntcomp26-coverage.py")
@@ -57,7 +59,9 @@ def load_screen(args):
         for round_number in range(1, args.rounds + 1) for label in labels
         for suffix in (".tsv", "-summary.tsv", "-conflicts.tsv")
     }
-    actual = {p.name for p in args.screen_dir.glob("r*-*.tsv")}
+    memory_files = {memory_sidecar(args.screen_dir / name) for name in expected
+                    if not name.endswith(("-summary.tsv", "-conflicts.tsv"))}
+    actual = {p.name for p in args.screen_dir.glob("r*-*.tsv") if p not in memory_files}
     if actual != expected:
         raise ValueError(f"round files differ; missing: {sorted(expected - actual)}; "
                          f"extra: {sorted(actual - expected)}")
@@ -89,6 +93,8 @@ def load_screen(args):
                 raise ValueError(f"{raw}: solver_label {solver_label!r} has a different screen tag")
             screen_tag = tag
             inputs.extend((raw, summary, conflicts))
+            if memory_sidecar(raw).exists():
+                inputs.append(memory_sidecar(raw))
             done = raw.with_suffix(".tsv.done")
             if done.exists():
                 if done.read_text().strip() != "0":
@@ -127,7 +133,7 @@ def measured_bytes(row, column):
         raise ValueError(f"{row['instance']}: invalid {column}: {value!r}") from None
     if number < 0:
         raise ValueError(f"{row['instance']}: negative {column}")
-    return number
+    return memory_observation(row, column)[0]
 
 
 def add_measurements(result, name, control, treatment):
@@ -163,6 +169,8 @@ def measure_instance(instance, control, treatment, benefit, cap):
     result["faster_rounds"] = [i for i, delta in enumerate(result["paired_delta_seconds"], 1) if delta < 0]
     result["slower_rounds"] = [i for i, delta in enumerate(result["paired_delta_seconds"], 1) if delta > 0]
     for column in ("scope_memory_peak_bytes", "max_process_rss_bytes"):
+        for side, rows in (("control", control), ("treatment", treatment)):
+            result[f"{side}_completeness_{column}"] = memory_statistic(rows, column)
         add_measurements(result, column, *[
             [measured_bytes(row, column) for row in rows] for rows in (control, treatment)
         ])
@@ -310,6 +318,8 @@ def evaluate(rows, rounds):
 def display(value):
     if value is None:
         return UNAVAILABLE
+    if isinstance(value, dict):
+        return json.dumps(value, ensure_ascii=False, sort_keys=True)
     if isinstance(value, list):
         return json.dumps([UNAVAILABLE if item is None else item for item in value], ensure_ascii=False)
     if isinstance(value, bool):
@@ -377,6 +387,14 @@ def write_reports(args, rows, result, inputs):
     if result["no_regression"] == "PASS":
         reasons.append("No validated regression under the stated tests and measurement resolution.")
     lines.extend(f"- {reason}" for reason in reasons)
+    for row in rows:
+        for column in ("scope_memory_peak_bytes", "max_process_rss_bytes"):
+            for side in ("control", "treatment"):
+                value = row[f"{side}_completeness_{column}"]
+                lines.append(f"{row['instance']} {side} {column}: "
+                             f"{value['numerator']}/{value['denominator']} rounds; "
+                             f"missing reasons: {value['missing_reasons']}; "
+                             f"{value['selection_bias']}.")
     lines.extend(["", "Cohort: `" + json.dumps(result["cohort"], ensure_ascii=False) + "`", "",
                   "| Flagged instance | Control solved | Treatment solved | Flags |",
                   "| --- | --- | --- | --- |"])

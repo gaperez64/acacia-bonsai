@@ -17,7 +17,7 @@ def load_summary(path: pathlib.Path) -> dict[tuple[str, str, str], float]:
             if key in medians:
                 raise ValueError(f"duplicate summary row: {'/'.join(key)}")
             value = float(row["median_cycles"])
-            if value <= 0:
+            if not math.isfinite(value) or value <= 0:
                 raise ValueError(f"non-positive cycle count: {'/'.join(key)}")
             medians[key] = value
     if not medians:
@@ -29,9 +29,19 @@ def score(
     medians: dict[tuple[str, str, str], float],
     min_improvement: float,
     max_regression: float,
+    rule: str = "optimization",
 ) -> tuple[bool, list[str]]:
+    if rule not in {"optimization", "membership-default"}:
+        raise ValueError(f"unknown G2s rule: {rule}")
+    if not medians or any(not math.isfinite(value) or value <= 0 for value in medians.values()):
+        raise ValueError("G2s requires finite positive cycle counts")
+    if any(not math.isfinite(value) or value < 0 for value in (min_improvement, max_regression)):
+        raise ValueError("G2s thresholds must be finite and nonnegative")
     targets = sorted({(suite, instance) for _, suite, instance in medians})
-    messages: list[str] = []
+    messages: list[str] = [
+        f"G2s rule={rule} min_improvement={min_improvement:.2f}% "
+        f"max_regression={max_regression:.2f}%"
+    ]
     failures: list[str] = []
     ratios: list[float] = []
     improvements: list[float] = []
@@ -63,6 +73,9 @@ def score(
     if failures:
         messages.extend(f"- {failure}" for failure in failures)
         return False, messages
+    if rule == "membership-default":
+        messages.append("decision=no-regression-pass-to-G3")
+        return True, messages
     if geometric_ratio >= 1.0 + min_improvement / 100.0:
         messages.append(
             f"decision=adoption-candidate: geometric improvement meets "
@@ -87,10 +100,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("summary", type=pathlib.Path)
     parser.add_argument("--min-improvement", type=float, default=5.0)
     parser.add_argument("--max-regression", type=float, default=6.0)
+    parser.add_argument("--rule", choices=("optimization", "membership-default"),
+                        default="optimization")
     args = parser.parse_args(argv)
     try:
         passed, messages = score(
-            load_summary(args.summary), args.min_improvement, args.max_regression
+            load_summary(args.summary), args.min_improvement, args.max_regression, args.rule
         )
     except (OSError, ValueError) as exc:
         print(f"GATE FAIL: {exc}")

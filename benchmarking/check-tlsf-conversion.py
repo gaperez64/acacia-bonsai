@@ -11,7 +11,8 @@ import random
 import subprocess
 import tempfile
 
-from benchlib import read_part
+from benchlib import ROOT, read_part
+from tlsf_pairs import convert_pair
 
 
 def canonicalize_formula(
@@ -83,252 +84,109 @@ def inspect_native(
     return formula, inputs, outputs
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=pathlib.Path)
     parser.add_argument("converted", type=pathlib.Path)
     parser.add_argument("--syfco", default="syfco")
     parser.add_argument("--count", type=int, default=10)
     parser.add_argument("--seed", type=int, default=20260804)
-    parser.add_argument(
-        "--native-inspect",
-        type=pathlib.Path,
-        help="compare native formula semantics, literal serialization, and I/O lists",
-    )
+    parser.add_argument("--native-inspect", type=pathlib.Path)
     parser.add_argument("--ltlfilt", default="ltlfilt")
-    parser.add_argument(
-        "--canonicalizer",
-        type=pathlib.Path,
-        help="Spot-linked helper that canonicalizes commutative Boolean operands",
-    )
-    parser.add_argument(
-        "--stage-timeout",
-        type=float,
-        default=120,
-        help="timeout in seconds for each SyFCo, native, and ltlfilt invocation",
-    )
-    parser.add_argument(
-        "--only",
-        action="append",
-        default=[],
-        metavar="STEM",
-        help="check this instance stem instead of taking a random sample (repeatable)",
-    )
-    parser.add_argument(
-        "--debug-dir",
-        type=pathlib.Path,
-        help="write native/SyFCo values for mismatching instances",
-    )
+    parser.add_argument("--canonicalizer", type=pathlib.Path)
+    parser.add_argument("--target", choices=("Mealy", "Moore"))
+    parser.add_argument("--stage-timeout", type=float, default=120)
+    parser.add_argument("--only", action="append", default=[], metavar="STEM")
+    parser.add_argument("--debug-dir", type=pathlib.Path)
     parser.add_argument("--report", type=pathlib.Path)
     parser.add_argument("--status", type=pathlib.Path)
-    args = parser.parse_args()
-
-    sources = sorted(
-        source
-        for source in args.source.glob("*.tlsf")
-        if (args.converted / f"{source.stem}.ltl").is_file()
-    )
+    args = parser.parse_args(argv)
     if args.stage_timeout <= 0:
         parser.error("--stage-timeout must be positive")
     if args.native_inspect and not args.canonicalizer:
         parser.error("--native-inspect requires --canonicalizer")
+    # Acacia's inspector already adapted the source to Mealy. Ask SyFCo for
+    # that same target; applying a signal delay to either formula again is wrong.
+    target = args.target or ("Mealy" if args.native_inspect else None)
+    if args.native_inspect and target != "Mealy":
+        parser.error("native inspector's effective target is Mealy")
+    sources = sorted(args.source.glob("*.tlsf"))
     if args.only:
         by_stem = {source.stem: source for source in sources}
-        missing = [stem for stem in args.only if stem not in by_stem]
-        if missing:
-            parser.error(f"unknown --only instance(s): {','.join(missing)}")
+        if any(stem not in by_stem for stem in args.only):
+            parser.error("unknown --only instance")
         selected = [by_stem[stem] for stem in dict.fromkeys(args.only)]
     else:
-        if args.count < 1 or args.count > len(sources):
-            raise SystemExit(f"--count must be between 1 and {len(sources)}")
-        selected = random.Random(args.seed).sample(sources, args.count)
-    if args.status:
-        args.status.parent.mkdir(parents=True, exist_ok=True)
-        args.status.write_text(f"RUNNING 0/{len(selected)}\n")
-
-    if args.report and not args.native_inspect:
-        parser.error("--report requires --native-inspect")
-
-    report_handle = None
-    report_writer = None
-    if args.report:
-        args.report.parent.mkdir(parents=True, exist_ok=True)
-        report_handle = args.report.open("w", newline="")
-        report_writer = csv.DictWriter(
-            report_handle,
-            fieldnames=[
-                "instance",
-                "syfco_pair_match",
-                "formula_ast_match",
-                "formula_bytes_match",
-                "inputs_match",
-                "outputs_match",
-                "native_formula_key_sha256",
-                "syfco_formula_key_sha256",
-                "native_formula_bytes_sha256",
-                "syfco_formula_bytes_sha256",
-                "error",
-            ],
-            dialect="excel-tab",
-        )
-        report_writer.writeheader()
-        report_handle.flush()
-
-    failures: list[str] = []
-    with tempfile.TemporaryDirectory(prefix="acacia-syfco-check-") as raw_tmp:
+        if args.count < 1 or not sources:
+            parser.error("--count must be positive and source must contain TLSF files")
+        selected = random.Random(args.seed).sample(sources, min(args.count, len(sources)))
+    rows = []
+    scratch = ROOT / "build_scratch" / "p0-gates"
+    scratch.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="conversion-", dir=scratch) as raw_tmp:
         tmp = pathlib.Path(raw_tmp)
-        for index, source in enumerate(sorted(selected), start=1):
+        for index, source in enumerate(sorted(selected), 1):
+            row = {"instance": source.name, "outcome": "ERROR",
+                   "comparison_target": target or "source target", "error": ""}
+            actual_ltl = args.converted / f"{source.stem}.ltl"
+            actual_part = args.converted / f"{source.stem}.part"
             expected_part = tmp / f"{source.stem}.part"
             try:
-                result = subprocess.run(
-                    [
-                        args.syfco,
-                        "--format",
-                        "ltlxba",
-                        "--mode",
-                        "fully",
-                        "--part-file",
-                        str(expected_part),
-                        str(source),
-                    ],
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                    timeout=args.stage_timeout,
-                )
-            except (subprocess.SubprocessError, OSError) as error:
-                failures.append(f"SyFCo error {source.name}: {error}")
-                if report_writer and report_handle:
-                    report_writer.writerow(
-                        {
-                            "instance": source.name,
-                            "syfco_pair_match": 0,
-                            "formula_ast_match": 0,
-                            "formula_bytes_match": 0,
-                            "inputs_match": 0,
-                            "outputs_match": 0,
-                            "native_formula_key_sha256": "",
-                            "syfco_formula_key_sha256": "",
-                            "native_formula_bytes_sha256": "",
-                            "syfco_formula_bytes_sha256": "",
-                            "error": f"syfco: {error}",
-                        }
-                    )
-                    report_handle.flush()
-                if args.status:
-                    args.status.write_text(f"RUNNING {index}/{len(selected)}\n")
-                continue
-            expected_ltl = result.stdout.rstrip() + "\n"
-            actual_ltl = (args.converted / f"{source.stem}.ltl").read_text()
-            actual_part = (args.converted / f"{source.stem}.part").read_text()
-            expected_part_text = expected_part.read_text()
-            syfco_pair_match = (
-                actual_ltl == expected_ltl and actual_part == expected_part_text
-            )
-            if not syfco_pair_match:
-                failures.append(f"SyFCo pair changed: {source.name}")
-
-            if args.native_inspect:
-                try:
-                    native_formula, native_inputs, native_outputs = inspect_native(
-                        args.native_inspect, source, args.stage_timeout
-                    )
-                    syfco_inputs, syfco_outputs = read_part(expected_part)
-                    native_normal, syfco_normal = formula_keys(
-                        args.ltlfilt,
-                        args.canonicalizer,
-                        native_formula,
-                        expected_ltl,
-                        args.stage_timeout,
-                    )
-                except (subprocess.SubprocessError, OSError, RuntimeError) as error:
-                    failures.append(f"native comparison error {source.name}: {error}")
-                    if report_writer and report_handle:
-                        report_writer.writerow(
-                            {
-                                "instance": source.name,
-                                "syfco_pair_match": int(syfco_pair_match),
-                                "formula_ast_match": 0,
-                                "formula_bytes_match": 0,
-                                "inputs_match": 0,
-                                "outputs_match": 0,
-                                "native_formula_key_sha256": "",
-                                "syfco_formula_key_sha256": "",
-                                "native_formula_bytes_sha256": "",
-                                "syfco_formula_bytes_sha256": "",
-                                "error": f"native comparison: {error}",
-                            }
-                        )
-                        report_handle.flush()
-                    if args.status:
-                        args.status.write_text(f"RUNNING {index}/{len(selected)}\n")
+                if not actual_ltl.is_file() or not actual_part.is_file():
+                    row.update(outcome="MISSING_CONVERSION", error="formula or partition absent")
                     continue
-                native_formula_bytes = (native_formula + "\n").encode()
-                syfco_formula_bytes = expected_ltl.encode()
-                row = {
-                    "instance": source.name,
-                    "syfco_pair_match": int(syfco_pair_match),
-                    "formula_ast_match": int(native_normal == syfco_normal),
-                    "formula_bytes_match": int(
-                        native_formula_bytes == syfco_formula_bytes
-                    ),
-                    "inputs_match": int(native_inputs == syfco_inputs),
-                    "outputs_match": int(native_outputs == syfco_outputs),
-                    "native_formula_key_sha256": hashlib.sha256(native_normal).hexdigest(),
-                    "syfco_formula_key_sha256": hashlib.sha256(syfco_normal).hexdigest(),
-                    "native_formula_bytes_sha256": hashlib.sha256(
-                        native_formula_bytes
-                    ).hexdigest(),
-                    "syfco_formula_bytes_sha256": hashlib.sha256(
-                        syfco_formula_bytes
-                    ).hexdigest(),
-                    "error": "",
-                }
-                if report_writer and report_handle:
-                    report_writer.writerow(row)
-                    report_handle.flush()
-                mismatched = [
-                    key
-                    for key in ("formula_ast_match", "inputs_match", "outputs_match")
-                    if not row[key]
-                ]
-                if mismatched:
-                    failures.append(f"native mismatch {source.name}: {','.join(mismatched)}")
-                    if args.debug_dir:
+                expected_ltl = convert_pair(args.syfco, source, expected_part,
+                                            args.stage_timeout, target, args.canonicalizer)
+                row["syfco_pair_match"] = int(
+                    actual_ltl.read_text() == expected_ltl
+                    and actual_part.read_text() == expected_part.read_text())
+                row["outcome"] = "PASS" if row["syfco_pair_match"] else "FAIL"
+                if args.native_inspect:
+                    native, inputs, outputs = inspect_native(
+                        args.native_inspect, source, args.stage_timeout)
+                    syfco_inputs, syfco_outputs = read_part(expected_part)
+                    native_key, syfco_key = formula_keys(
+                        args.ltlfilt, args.canonicalizer, native, expected_ltl, args.stage_timeout)
+                    row.update(
+                        formula_ast_match=int(native_key == syfco_key),
+                        formula_bytes_match=int(native + "\n" == expected_ltl),
+                        inputs_match=int(set(inputs.split(",")) == set(syfco_inputs.split(","))),
+                        outputs_match=int(set(outputs.split(",")) == set(syfco_outputs.split(","))),
+                        native_formula_key_sha256=hashlib.sha256(native_key).hexdigest(),
+                        syfco_formula_key_sha256=hashlib.sha256(syfco_key).hexdigest(),
+                        native_formula_bytes_sha256=hashlib.sha256(native.encode()).hexdigest(),
+                        syfco_formula_bytes_sha256=hashlib.sha256(expected_ltl.encode()).hexdigest())
+                    if not all(row[key] for key in
+                               ("formula_ast_match", "inputs_match", "outputs_match")):
+                        row["outcome"] = "FAIL"
+                    if row["outcome"] == "FAIL" and args.debug_dir:
                         args.debug_dir.mkdir(parents=True, exist_ok=True)
-                        prefix = args.debug_dir / source.stem
-                        prefix.with_suffix(".native.ltl").write_text(native_formula)
-                        prefix.with_suffix(".syfco.ltl").write_text(expected_ltl)
-                        prefix.with_suffix(".native.inputs").write_text(native_inputs + "\n")
-                        prefix.with_suffix(".syfco.inputs").write_text(syfco_inputs + "\n")
-                        prefix.with_suffix(".native.outputs").write_text(native_outputs + "\n")
-                        prefix.with_suffix(".syfco.outputs").write_text(syfco_outputs + "\n")
-                print(
-                    f"{'OK' if not mismatched and syfco_pair_match else 'FAIL'} "
-                    f"{source.name} native=formula-ast:{row['formula_ast_match']} "
-                    f"formula-bytes:{row['formula_bytes_match']} "
-                    f"inputs:{row['inputs_match']} outputs:{row['outputs_match']}"
-                )
-            else:
-                print(f"{'OK' if syfco_pair_match else 'FAIL'} {source.name}")
-            if args.status:
-                args.status.write_text(f"RUNNING {index}/{len(selected)}\n")
-
-    if report_handle:
-        report_handle.close()
-
-    if failures:
-        for failure in failures:
-            print(f"FAIL: {failure}")
-        if args.status:
-            args.status.write_text("COMPLETE FAIL\n")
-        return 1
-
-    suffix = " and native frontend formula/I/O compatibility" if args.native_inspect else ""
-    print(f"verified {len(selected)} deterministic SyFCo conversions{suffix}")
+                        (args.debug_dir / f"{source.stem}.native.ltl").write_text(native)
+                        (args.debug_dir / f"{source.stem}.syfco.ltl").write_text(expected_ltl)
+            except subprocess.TimeoutExpired as error:
+                row.update(outcome="UNKNOWN", error=f"stage timeout: {error.cmd}")
+            except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+                row.update(outcome="ERROR", error=str(error))
+            finally:
+                rows.append(row)
+                print(f"{row['outcome']} {source.name} {row['error']}")
+                if args.status:
+                    args.status.parent.mkdir(parents=True, exist_ok=True)
+                    args.status.write_text(f"RUNNING {index}/{len(selected)}\n")
+    if args.report:
+        fields = ["instance", "outcome", "comparison_target", "syfco_pair_match",
+                  "formula_ast_match", "formula_bytes_match", "inputs_match", "outputs_match",
+                  "native_formula_key_sha256", "syfco_formula_key_sha256",
+                  "native_formula_bytes_sha256", "syfco_formula_bytes_sha256", "error"]
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        with args.report.open("w", newline="") as stream:
+            writer = csv.DictWriter(stream, fields, dialect="excel-tab")
+            writer.writeheader()
+            writer.writerows(rows)
+    passed = all(row["outcome"] == "PASS" for row in rows)
     if args.status:
-        args.status.write_text("COMPLETE PASS\n")
-    return 0
+        args.status.write_text(f"COMPLETE {'PASS' if passed else 'FAIL'}\n")
+    return 0 if passed else 1
 
 
 if __name__ == "__main__":

@@ -43,6 +43,11 @@ import sys
 import time
 import uuid
 
+from scope_memory import (
+    MEMORY_COLUMNS, append_memory_sidecar, load_memory_sidecar, memory_fields,
+    write_memory_sidecar,
+)
+
 from benchlib import (
     CACTUS_NON_SOLVED_RESULTS,
     TOOL_EXIT_CODES,
@@ -396,7 +401,8 @@ def atomic_write_tsv(
                 stream, fieldnames=columns, delimiter="\t", lineterminator="\n"
             )
             writer.writeheader()
-            writer.writerows(rows)
+            writer.writerows({key: value for key, value in row.items()
+                              if key not in MEMORY_COLUMNS or key in columns} for row in rows)
             stream.flush()
             os.fsync(stream.fileno())
         os.replace(temporary, path)
@@ -419,8 +425,10 @@ def load_output(
         raise CoverageError(f"cannot read resume output {path}: {error}") from error
     with stream:
         reader = csv.DictReader(stream, delimiter="\t")
-        legacy_columns = [column for column in OUTPUT_COLUMNS if column != "scope_unit"]
-        optional = {"max_process_rss_bytes", "scope_memory_peak_bytes"} if allow_missing_memory else set()
+        legacy_columns = [column for column in OUTPUT_COLUMNS if column not in {"scope_unit", *MEMORY_COLUMNS}]
+        optional = set(MEMORY_COLUMNS)
+        if allow_missing_memory:
+            optional |= {"max_process_rss_bytes", "scope_memory_peak_bytes"}
         header = [column for column in (reader.fieldnames or []) if column not in optional]
         expected = [[column for column in columns if column not in optional]
                     for columns in (
@@ -473,12 +481,19 @@ def load_output(
                         f"resume output {path}:{line_number} has incomplete provenance"
                     )
             row.setdefault("scope_unit", "")
+            for column in MEMORY_COLUMNS:
+                row.setdefault(column, "missing legacy observation/provenance"
+                               if column.endswith("missing_reason") else "")
             if has_route_columns:
                 for column in ROUTE_COLUMNS:
                     row.setdefault(column, "")
             for column in optional:
                 row.setdefault(column, "")
             rows.append(dict(row))
+    try:
+        load_memory_sidecar(path, rows)
+    except ValueError as error:
+        raise CoverageError(str(error)) from error
     return rows
 
 
@@ -562,7 +577,8 @@ def append_tsv_row(
         writer = csv.DictWriter(
             stream, fieldnames=columns, delimiter="\t", lineterminator="\n"
         )
-        writer.writerow(row)
+        writer.writerow({key: value for key, value in row.items()
+                         if key not in MEMORY_COLUMNS or key in columns})
         stream.flush()
         os.fsync(stream.fileno())
 
@@ -886,7 +902,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--preset", default="", metavar="S")
     parser.add_argument("--collect-rusage", action="store_true",
-                        help="wrap the solver with GNU time inside the existing scope")
+                        help="collect CPU time and max process RSS (Linux wait4; GNU time elsewhere)")
     parser.add_argument("--worker-records-dir", type=pathlib.Path,
                         help="diagnostic run: capture transformed workers below this directory")
     parser.add_argument("--phase-records-dir", type=pathlib.Path,
@@ -978,10 +994,19 @@ def run(args: argparse.Namespace) -> int:
                 raise CoverageError("resume configuration or binary differs from recorded campaign")
         # Upgrade the older header only after validating the recorded treatment.
         # Empty scope IDs preserve the distinction from a measured identifier.
+        with output.open(newline="") as stream:
+            previous_columns = next(csv.reader(stream, delimiter="\t"))
+        if previous_columns != output_columns:
+            original = output.with_name(f"{output.stem}-legacy.tsv")
+            if original.exists():
+                raise CoverageError(f"refusing to overwrite original observations {original}")
+            original.write_bytes(output.read_bytes())
         atomic_write_tsv(output, output_columns, rows)
     else:
         rows = []
         atomic_write_tsv(output, output_columns, rows)
+
+    write_memory_sidecar(output, rows)
 
     conflicts_path = output.with_name(f"{output.stem}-conflicts.tsv")
     conflict_keys: set[tuple[str, str, int]] = set()
@@ -1050,7 +1075,9 @@ def run(args: argparse.Namespace) -> int:
                     continue
                 tlsf_file, tlsf_path = targets[instance]
                 cmd = [str(binary), *flags, "-T", str(tlsf_path)]
-                if getattr(args, "collect_rusage", False):
+                # Linux collects wait4 counters in the lifecycle owner, so
+                # its child PID is the solver rather than a time wrapper.
+                if getattr(args, "collect_rusage", False) and sys.platform != "linux":
                     cmd = ["/usr/bin/time", "-q", "-f", "ACACIA_RUSAGE %U %S %M", *cmd]
                 run_env = None
                 child_env_overrides: dict[str, str] = {}
@@ -1118,6 +1145,8 @@ def run(args: argparse.Namespace) -> int:
                         scope_env=child_env_overrides,
                     )
                 result, resource_reason = normalize_result(solver_run)
+                cpu_seconds = (solver_run.cpu_seconds
+                               if getattr(args, "collect_rusage", False) else None)
                 usage = re.search(r"^ACACIA_RUSAGE ([0-9.]+) ([0-9.]+) ([0-9]+)$",
                                   solver_run.stderr, re.M)
                 row = {
@@ -1139,18 +1168,25 @@ def run(args: argparse.Namespace) -> int:
                     "preset": args.preset,
                     "timestamp_utc": timestamp_utc(),
                     "flags": args.flags,
-                    "cpu_seconds": format(float(usage[1]) + float(usage[2]), ".6f") if usage else "",
+                    "cpu_seconds": (format(float(usage[1]) + float(usage[2]), ".6f") if usage else
+                                    format(cpu_seconds, ".6f") if cpu_seconds is not None else ""),
                     "max_process_rss_bytes": str(int(usage[3]) * 1024) if usage else "",
                     "scope_memory_peak_bytes": (str(solver_run.memory_peak_bytes)
                                                 if solver_run.memory_peak_bytes is not None else ""),
                     "scope_unit": solver_run.scope_unit,
                     **run_metadata,
+                    **memory_fields(solver_run),
                 }
+                if usage:
+                    row.update(max_process_rss_bytes=str(int(usage[3]) * 1024),
+                               max_process_rss_source="/usr/bin/time.ru_maxrss (not scope peak)",
+                               max_process_rss_missing_reason="")
                 if route_path is not None:
                     row.update(route_record_fields(route_path))
-                writer.writerow(row)
+                writer.writerow({column: row[column] for column in output_columns})
                 stream.flush()
                 os.fsync(stream.fileno())
+                append_memory_sidecar(output, row)
                 rows.append(row)
                 completed_keys.add(completed_key)
                 if result in DECISIVE_RESULTS:

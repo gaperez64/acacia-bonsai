@@ -346,6 +346,9 @@ def _scope_argv(monkeypatch, controllers=frozenset({"cpuset", "cpu", "io", "memo
     systemctl accounting, none of which this is about.
     """
     seen = {}
+    import scope_memory
+    monkeypatch.setattr(scope_memory.MemoryObserver, "cancel", lambda self: self.finished.set())
+    monkeypatch.setattr(benchlib, "_stop_user_scope", lambda unit: None)
 
     def popen(cmd, *a, **kw):
         seen["argv"] = list(cmd)
