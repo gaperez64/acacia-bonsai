@@ -341,18 +341,25 @@ def campaign(tmp_path):
     ])
 
 
-def test_scoped_rusage_and_worker_capture(monkeypatch, campaign, tmp_path):
+@pytest.mark.parametrize("platform", ["linux", "darwin"])
+def test_scoped_rusage_and_worker_capture(monkeypatch, campaign, tmp_path, platform):
+    monkeypatch.setattr(coverage.sys, "platform", platform)
     calls = []
     def scoped(cmd, **kwargs):
         calls.append((cmd, kwargs))
-        return coverage.RunResult("REALIZABLE\n", "ACACIA_RUSAGE 1.23 0.07 2048\n",
-                                  0, 1.5, False, memory_peak_bytes=4096,
-                                  scope_unit="acacia-test.scope")
+        return coverage.RunResult("REALIZABLE\n",
+                                  "ACACIA_RUSAGE 1.23 0.07 2048\n" if platform != "linux" else "",
+                                  0, 1.5, False, memory_peak_bytes=4096, scope_unit="acacia-test.scope",
+                                  cpu_seconds=1.3, max_process_rss_bytes=2048 * 1024)
     monkeypatch.setattr(coverage, "run_systemd_scope", scoped)
     campaign.worker_records_dir = tmp_path / "records"
     assert coverage.run(campaign) == 0
     cmd, options = calls[0]
-    assert cmd[:4] == ["/usr/bin/time", "-q", "-f", "ACACIA_RUSAGE %U %S %M"]
+    if platform == "linux":
+        assert cmd[0] == str(pathlib.Path(campaign.bin).resolve())
+        assert "/usr/bin/time" not in cmd
+    else:
+        assert cmd[:4] == ["/usr/bin/time", "-q", "-f", "ACACIA_RUSAGE %U %S %M"]
     assert options["timeout"] == 17 and options["memory_max"] == "8G"
     assert options["env"]["ACACIA_DIAG_INSTANCE"] == "case.ltl"
     assert pathlib.Path(options["env"]["ACACIA_SPOT_CAPTURE_DIR"]).is_dir()
@@ -476,3 +483,92 @@ def test_empty_status_exceptions_table_is_not_an_error(tmp_path):
     write_status_exceptions(tmp_path / "exceptions.tsv", [])
     assert coverage.read_status_exceptions(
         tmp_path / "exceptions.tsv", tmp_path, required=True) == {}
+
+
+def test_primary_columns_and_rows_remain_compatible_with_master(
+        monkeypatch, campaign, master_benchmark_reader):
+    master = master_benchmark_reader("run-syntcomp26-coverage.py")
+    result = coverage.RunResult(
+        "REALIZABLE\n", "", 0, 0.1, False, scope_unit="acacia-test.scope",
+        memory_peak_bytes=4096, scope_memory_peak_source="cgroup-v2/memory.peak",
+        scope_memory_peak_missing_reason="", memory_cgroup="/invocation")
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *args, **kwargs: result)
+    assert coverage.run(campaign) == 0
+    output = pathlib.Path(campaign.output)
+    with output.open(newline="") as stream:
+        reader = csv.DictReader(stream, delimiter="\t")
+        assert reader.fieldnames == master.OUTPUT_COLUMNS
+        primary = list(reader)
+    assert master.load_output(output) == primary
+    restored = coverage.load_output(output)
+    assert restored[0]["scope_memory_peak_source"] == "cgroup-v2/memory.peak"
+    assert restored[0]["memory_cgroup"] == "/invocation"
+    campaign.resume = True
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *args, **kwargs: pytest.fail("rerun"))
+    assert coverage.run(campaign) == 0
+    assert coverage.load_output(output) == restored
+
+
+def test_expanded_primary_is_preserved_when_moved_to_sidecar(monkeypatch, campaign):
+    result = coverage.RunResult(
+        "REALIZABLE\n", "", 0, 0.1, False, scope_unit="acacia-test.scope",
+        memory_peak_bytes=4096, scope_memory_peak_source="cgroup-v2/memory.peak",
+        scope_memory_peak_missing_reason="", memory_cgroup="/invocation")
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *args, **kwargs: result)
+    assert coverage.run(campaign) == 0
+    output = pathlib.Path(campaign.output)
+    rows = coverage.load_output(output)
+    coverage.atomic_write_tsv(output, coverage.OUTPUT_COLUMNS + coverage.MEMORY_COLUMNS, rows)
+    output.with_name(output.name + ".memory.tsv").unlink()
+    original = output.read_bytes()
+    campaign.resume = True
+    assert coverage.run(campaign) == 0
+    assert output.with_name(f"{output.stem}-legacy.tsv").read_bytes() == original
+    assert coverage.load_output(output) == rows
+
+
+@pytest.mark.parametrize("capture", ["all", "filter", "consumer"])
+def test_late_answer_during_timeout_cleanup_is_never_solved(tmp_path, capture):
+    import os
+    import signal
+    import sys
+    import benchlib
+    script = tmp_path / "late.py"
+    script.write_text("""import signal, time
+
+def finish(signum, frame):
+    time.sleep(.05)
+    print('REALIZABLE', flush=True)
+    raise SystemExit(0)
+
+signal.signal(signal.SIGTERM, finish)
+print('ready', flush=True)
+while True:
+    signal.pause()
+""")
+    kwargs = {}
+    consumed = []
+    if capture == "filter":
+        kwargs["capture_filter"] = lambda line: True
+    if capture == "consumer":
+        kwargs["capture_consumer"] = consumed.append
+    # The scoped timeout handler runs before the launcher is signalled.
+    def stop_parent():
+        os.kill(process[0].pid, signal.SIGTERM)
+        process[0].wait(timeout=.5)
+    process = []
+    popen = benchlib.subprocess.Popen
+    def start(*args, **kwargs):
+        child = popen(*args, **kwargs)
+        process.append(child)
+        return child
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(benchlib.subprocess, "Popen", start)
+        run = benchlib.run_process_group([sys.executable, str(script)], .2,
+                                        timeout_handler=stop_parent, **kwargs)
+    output = "".join(consumed) if capture == "consumer" else run.stdout
+    assert "REALIZABLE" in output
+    assert run.timed_out and run.returncode == 124
+    assert run.seconds >= .25
+    assert coverage.normalize_result(run) == ("TIMEOUT", "timeout")
+    assert benchlib.par2(0, 1, .2) == .4

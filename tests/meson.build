@@ -621,6 +621,13 @@ if enable_tlsf_frontend
   )
   test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
 
+  test ('moore-synthesis-semantics',
+        py,
+        args : [files ('check-moore-synthesis.py'), ab_exe],
+        suite : ['unit', 'tlsf', 'synthesis'],
+        timeout : 60,
+        depends : [ab_exe])
+
   executable (
     'tlsf-frontend-inspect',
     '../src/tlsf_frontend.cc',

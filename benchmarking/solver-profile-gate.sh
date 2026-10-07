@@ -13,6 +13,7 @@ Profile the fixed ten-instance solver panel with perf under strict per-run
 observed cycle spread without applying a performance threshold.
 
 Options:
+  --rule RULE             optimization (default) or membership-default; select before running
   --calibrate             measure the baseline noise floor
   --output DIR            output directory (default: timestamped directory in /tmp)
   --targets FILE          target TSV (default: frozen solver-profile.tsv)
@@ -36,9 +37,15 @@ output=""
 min_improvement=${SOLVER_PROFILE_MIN_IMPROVEMENT_PERCENT:-5.0}
 max_regression=${SOLVER_PROFILE_MAX_REGRESSION_PERCENT:-6.0}
 tlsf_corpus=""
+rule=optimization
 
 while (($#)); do
   case $1 in
+    --rule)
+      [[ $# -ge 2 && ( $2 == optimization || $2 == membership-default ) ]] || usage
+      rule=$2
+      shift 2
+      ;;
     --calibrate)
       calibrate=1
       shift
@@ -141,6 +148,8 @@ timestamp=$(date -u +%Y%m%dT%H%M%SZ)
 output=${output:-/tmp/acacia-solver-profile.$timestamp}
 mkdir -p "$output"
 output=$(realpath "$output")
+printf 'rule=%s\nmin_improvement=%s\nmax_regression=%s\n' \
+  "$rule" "$min_improvement" "$max_regression" >"$output/g2s-rule.txt"
 samples="$output/samples.tsv"
 summary="$output/summary.tsv"
 calibration_summary="$output/calibration.tsv"
@@ -376,7 +385,7 @@ if ((calibrate == 0)); then
   set +e
   python3 "$repo_root/benchmarking/solver-profile-score.py" "$summary" \
     --min-improvement "$min_improvement" \
-    --max-regression "$max_regression"
+    --max-regression "$max_regression" --rule "$rule" | tee "$output/decision.txt"
   score_status=$?
   set -e
   if ((score_status != 0)); then

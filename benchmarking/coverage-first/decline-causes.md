@@ -213,9 +213,9 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 | src/solver/spot_guarded_forward_safety.hh:254 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
 | src/solver/spot_guarded_forward_safety.hh:324 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
 | src/solver/spot_guarded_forward_safety.hh:447 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
-| src/solver/solver_invoker.cc:111 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"resource"` |
-| src/solver/solver_invoker.cc:115 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `message.find ("Too many acceptance sets") != std::string_view::npos ? "resource" : "error"` |
-| src/solver/solver_invoker.cc:124 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"error"` |
+| src/solver/solver_invoker.cc:121 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"resource"` |
+| src/solver/solver_invoker.cc:125 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `message.find ("Too many acceptance sets") != std::string_view::npos ? "resource" : "error"` |
+| src/solver/solver_invoker.cc:134 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"error"` |
 | src/solver/spot_lazy_buchi_view.hh:65 | `UNKNOWN` | `resource` | STOPPED/resource | `provider` | `"lazy Buchi BDD budget exceeded"` |
 | src/solver/spot_lazy_buchi_view.hh:86 | `UNKNOWN` | `resource` | STOPPED/resource | `provider` | `"lazy Buchi acceptance budget exceeded"` |
 | src/solver/spot_lazy_buchi_view.hh:91 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `provider` | `"lazy Buchi requires a conjunction of all Inf sets or false"` |
