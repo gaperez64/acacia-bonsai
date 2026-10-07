@@ -5,6 +5,44 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-07 — coverage-first P1: matched R × equivariance ablation (#207)
+
+Fresh 17 s races on all 1,524 SYNTCOMP26 instances, serial and rotated, 8 GiB no-swap
+scopes, one binary for the four switch legs (COVP1B, `319ee65a`) plus the frozen
+`d9d3fd43` incumbent (COVBASE). Zero verdict conflicts and zero invocation errors.
+Archive `cov20261006-p1ablation`; P0 exit panels `cov20261006-p0exit`.
+
+| Leg | R pre-pass | Equivariance | REAL | UNREAL | Solved | PAR-2 (s) |
+|---|---|---|---:|---:|---:|---:|
+| A | off | off | 556 | 648 | 1,204 | 11,752 |
+| B | off | on | 555 | 648 | 1,203 | 11,777 |
+| C | on | off | 559 | 647 | 1,206 | 11,701 |
+| D (shipping) | on | on | 558 | 647 | 1,205 | 11,729 |
+| INC (frozen) | on | on | 559 | 647 | 1,206 | 11,711 |
+
+Three-repetition 17 s adjudication reruns (with a 70 °C cooldown before each run;
+the host reached 100 °C and throttled heavily during the primary campaign):
+
+- **R stays on.** It adds three REAL solves that never occur with R off (9/9 vs 0/6),
+  and costs one near-cap UNREAL solve where seed discovery (~0.8 s) pushes the direct
+  route past the cap.
+- **Equivariance gives no marginal solve at 17 s** and loses one REAL input in both
+  contrasts (ordinary backward ~6 s; equivariance-on 0/9). Paired PAR-2 +24.9 s and
+  +27.4 s, above the 12.1 s noise floor. Pursued as a bounded pre-pass budget, not by
+  disabling the feature. Removing the backward worker loses one solve on the original
+  22-instance activation set.
+- **D matches the incumbent.** Its single primary loss was a coin flip at the cap in
+  every leg on rerun; the R × equivariance interaction (+2.5 s) is below the noise floor.
+
+Attribution delivery is complete on 1,517–1,519 of 1,524 rows per leg and scope
+memory peaks on 7,664/7,664 observations. The refreshed #207 sets equal the closing
+campaign's: 136 ltlsynt-only (54 REAL, 82 UNREAL), 76 Acacia-only, against the
+historical ltlsynt 2.16 rows (a different session, not a matched comparison). In
+fresh D, 138 of 319 unsolved inputs stop first at a native structure-budget guard
+(92 of the 136 ltlsynt-only). The safety-core weakening pre-pass is ineligible on
+81 of the 82 UNREAL ltlsynt-only inputs because their objective is an implication,
+not a top-level conjunction.
+
 ## 2026-10-06 — coverage-first P0 attribution (#210)
 
 Worker lifecycle events and parent-accepted winners now accompany the existing

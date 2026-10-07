@@ -90,6 +90,11 @@ test ('config-transition-acceptance',
       suite : ['unit', 'config-frontends'])
 
 if get_option ('acacia_native_arms')
+  if get_option ('acacia_enable_equivariant_solver') and get_option ('acacia_forward_safety_solver')
+    test ('p1-ablation', py,
+          args : [files ('check-p1-ablation.py'), ab_exe, meson.project_build_root ()],
+          suite : ['unit', 'attribution', 'native-gr1'], depends : [ab_exe], timeout : 90)
+  endif
   worker_record_transport = executable (
     'worker-record-transport', 'worker_record_transport.cc')
   test ('record-transport', py,

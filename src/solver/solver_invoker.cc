@@ -308,6 +308,7 @@ namespace {
       const acacia::game_backend backend;
       const acacia::automaton_provider provider;
       const acacia::candidate_mode candidate;
+      const bool equivariance;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
       const controller_conversion conversion;
@@ -328,7 +329,8 @@ namespace {
                    std::optional<UNREAL_X_T> check_unreal, TRANSLATION_PREF_T translation_pref,
                    SPOT_FAST_T spot_fast, acacia::game_backend backend,
                    acacia::automaton_provider provider, acacia::candidate_mode candidate,
-                   const std::optional<std::string>& synth_fname, controller_conversion conversion,
+                   bool equivariance, const std::optional<std::string>& synth_fname,
+                   controller_conversion conversion,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints,
                    std::string target_semantics)
         : dict {dict},
@@ -343,6 +345,7 @@ namespace {
           backend {backend},
           provider {provider},
           candidate {candidate},
+          equivariance {equivariance},
           synth_fname {synth_fname},
           conversion {conversion},
           target_semantics {std::move (target_semantics)},
@@ -798,7 +801,7 @@ namespace {
                           bdd_exist (aut->ap_vars (), all_outputs),
                           // same for the outputs
                           bdd_exist (aut->ap_vars (), all_inputs), synth_fname.has_value (),
-                          indexed_family_hints, effective_backend, candidate);
+                          indexed_family_hints, effective_backend, candidate, equivariance);
         }
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())
@@ -1055,7 +1058,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
               acacia::game_backend backend, const std::optional<std::string>& synth_fname,
               const specification_metadata& metadata, acacia::automaton_provider provider,
-              acacia::candidate_mode candidate) {
+              acacia::candidate_mode candidate, bool equivariance) {
   // Protect internal callers as well as the CLI synthesis route.
   if (synth_fname.has_value ()) {
     backend = acacia::synthesis_backend (backend, true);
@@ -1168,7 +1171,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (
       dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal, translation_pref,
-      spot_fast, backend, provider, candidate, synth_fname, conversion, indexed_family_hints,
+      spot_fast, backend, provider, candidate, equivariance, synth_fname, conversion,
+      indexed_family_hints,
       metadata.source_format + ";semantics=" + metadata.tlsf_semantics +
           ";target=" + metadata.tlsf_target + ";effective=" +
           ((metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-")
