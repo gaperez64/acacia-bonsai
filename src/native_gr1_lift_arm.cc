@@ -104,10 +104,9 @@ namespace acacia {
     } guard {result};
     phase_scope combined_phase (arm, "combined_call");
     const TlsfGr1BothObserverV1 observer {record_combined_event, nullptr};
-    status =
-        phase_records_enabled ()
-            ? tlsf_gr1_both_from_target_v1 (target.get (), &options, &observer, &result, &error)
-            : tlsf_gr1_both_from_target (target.get (), &options, &result, &error);
+    const TlsfGr1BothOptionsV2 routing {&options, phase_records_enabled () ? &observer : nullptr,
+                                        !args.r_prepass};
+    status = tlsf_gr1_both_from_target_v2 (target.get (), &routing, &result, &error);
     combined_phase.finish ();
     if (real_only && result.route == TLSF_GR1_BOTH_ENV_LIFT) {
       native_arm_diagnostic (arm, "route", -1, "R-only arm selected U");
