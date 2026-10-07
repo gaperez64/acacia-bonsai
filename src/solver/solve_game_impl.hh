@@ -178,11 +178,23 @@ namespace acacia::solver_detail {
     // forward configuration excluded it, so this preserves both measured
     // configurations when both solvers are compiled in.
     if (equivariance and backend == acacia::game_backend::backward and not do_synthesis) {
+      // Opt-in global experiment: F=0.25 reserves three quarters of the time
+      // left at first route entry for ordinary backward, including its construction.
+      // The incumbent remains unbounded. No input identity selects this rule.
+      const auto limits = acacia::equivariance_budget::invocation;
+      const uint64_t now = limits.fraction || acacia::phase_records_enabled ()
+                               ? acacia::phase_clock (CLOCK_MONOTONIC) : 0;
+      // Decomposed subgames share cumulative optional-phase consumption. Each
+      // entry also respects the unchanged outer deadline; backward time is excluded.
+      auto& saved_budget = acacia::equivariance_budget::invocation_allowance;
+      if (not saved_budget)
+        saved_budget.emplace (limits, now);
+      const auto& budget = *saved_budget;
       acacia::worker_route ("equivariance", "backward");
       auto eq = acacia::solver_detail::equivariant::try_solve<SpecializedDownset> (
           aut, kmax, kmin, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
-          ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints);
-      if (eq.attempted)
+          ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints, budget);
+      if (eq.outcome == acacia::solver_detail::equivariant::status::completed)
         return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut, all_inputs,
                                               all_outputs);
     }

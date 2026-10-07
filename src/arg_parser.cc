@@ -1,5 +1,7 @@
 #include "arg_parser.hh"
 
+#include <cmath>
+
 #include "phase_records.hh"
 
 /**
@@ -107,6 +109,8 @@ void show_help (const char* program_name) {
       << "  --equivariance VAL [on|off] exact pre-pass in backward decision workers (default "
       << (ACACIA_ENABLE_EQUIVARIANT_SOLVER ? "on" : "off") << ")\n"
       << "                    off keeps ordinary backward solving; on requires compiled support\n"
+      << "  --equivariance-budget F|unbounded (default unbounded); 0 <= F < 1 of remaining\n"
+      << "                    invocation budget; a supplied deadline is required\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
@@ -423,6 +427,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_CANDIDATE_MODE = 1007;
   static constexpr int OPT_R_PREPASS = 1008;
   static constexpr int OPT_EQUIVARIANCE = 1009;
+  static constexpr int OPT_EQUIVARIANCE_BUDGET = 1010;
   bool unreal_translation_pref_specified = false;
   bool real_backend_specified = false;
   bool unreal_backend_specified = false;
@@ -439,6 +444,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
       {"r-prepass", required_argument, nullptr, OPT_R_PREPASS},
       {"equivariance", required_argument, nullptr, OPT_EQUIVARIANCE},
+      {"equivariance-budget", required_argument, nullptr, OPT_EQUIVARIANCE_BUDGET},
 #if ACACIA_ENABLE_TLSF_FRONTEND
       {"tlsf", required_argument, nullptr, 'T'},
 #endif
@@ -549,6 +555,21 @@ arg_parse_result arg_parser (int argc, char** argv) {
         else
           error (EXIT_CODE_ERROR, "Error: --candidate-mode expects only or fallback.\n");
         break;
+      case OPT_EQUIVARIANCE_BUDGET: {
+        if (case_insensitive_equals (optarg, "unbounded"))
+          retval.equivariance_budget.reset ();
+        else {
+          char* end = nullptr;
+          errno = 0;
+          const double fraction = std::strtod (optarg, &end);
+          if (errno || end == optarg || *end || !std::isfinite (fraction) ||
+              fraction < 0 || fraction >= 1)
+            error (EXIT_CODE_ERROR,
+                   "Error: --equivariance-budget expects 0 <= F < 1 or unbounded.\n");
+          retval.equivariance_budget = fraction;
+        }
+        break;
+      }
       case OPT_R_PREPASS:
       case OPT_EQUIVARIANCE: {
         const bool enabled = case_insensitive_equals (optarg, "on");

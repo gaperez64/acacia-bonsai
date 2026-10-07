@@ -4,6 +4,7 @@
 #include "error_msg.hh"
 #include "portfolio_arm.hh"
 #include "solver/game_backend.hh"
+#include "solver/equivariance_budget.hh"
 #include "solver/solver_invoker.hh"
 #if ACACIA_ENABLE_TLSF_FRONTEND
 # include "tlsf_frontend.hh"
@@ -57,6 +58,7 @@ struct arg_parse_result {
     acacia::candidate_mode candidate = ACACIA_DEFAULT_CANDIDATE_MODE;
     bool r_prepass = true;
     bool equivariance = ACACIA_ENABLE_EQUIVARIANT_SOLVER;
+    std::optional<double> equivariance_budget;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     specification_metadata metadata;
