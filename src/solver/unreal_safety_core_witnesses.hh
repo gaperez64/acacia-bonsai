@@ -223,8 +223,11 @@ namespace acacia::unreal_witnesses {
       return p;
     }
     auto f = original;
+    bool scoped_guarantees = false;
     // Only positive contexts: keep implication antecedents and every sibling
-    // verbatim. No traversal through negation, temporal context or antecedents.
+    // verbatim. G and F are monotone; keep their scope around the selected
+    // conjunction. Only G distributes over AND, never F.
+    // Never traverse negation, disjunction, X/U or implication antecedents.
     while (true) {
       if (deadline && phase_clock (CLOCK_MONOTONIC) >= deadline) {
         p.reason = "planning_budget";
@@ -235,11 +238,19 @@ namespace acacia::unreal_witnesses {
         f = f[1];
         continue;
       }
+      if ((f.is (spot::op::G) && !f[0].is (spot::op::And)) || f.is (spot::op::F)) {
+        p.frames.push_back ({f, 0});
+        scoped_guarantees = true;
+        f = f[0];
+        continue;
+      }
       if (!f.is (spot::op::And))
         break;
       // Without TLSF normalization provenance, delete direct conjuncts at
       // this boundary; retain/delete a conditional guarantee as a whole.
-      if (source.format != "tlsf")
+      // Inside G/F the terms are scoped guarantees, including conditional
+      // guarantees kept/deleted as a whole. The enclosing antecedents stay exact.
+      if (source.format != "tlsf" || scoped_guarantees)
         break;
       size_t implications = 0, index = 0;
       for (size_t i = 0; i < f.size (); ++i)
@@ -345,12 +356,18 @@ namespace acacia::unreal_witnesses {
         return {};
       if (it->parent.is (spot::op::Implies))
         result = spot::formula::Implies (it->parent[0], result);
-      else {
+      else if (it->parent.is (spot::op::G))
+        result = spot::formula::G (result);
+      else if (it->parent.is (spot::op::F))
+        result = spot::formula::F (result);
+      else if (it->parent.is (spot::op::And)) {
         std::vector<spot::formula> children;
         for (size_t i = 0; i < it->parent.size (); ++i)
           children.push_back (i == it->child ? result : it->parent[i]);
         result = spot::formula::And (std::move (children));
       }
+      else
+        return {};
     }
     return result;
   }
@@ -533,14 +550,16 @@ namespace acacia::unreal_witnesses {
   template <typename Runner>
   std::optional<bool> try_extended_witnesses (spot::formula original, const source_binding& source,
                                               bool enabled, Runner& runner,
-                                              const records& observed, uint64_t deadline) {
+                                              const records& observed, uint64_t deadline,
+                                              const allowances& options = {}) {
     const auto entry = phase_clock (CLOCK_MONOTONIC);
-    // Fixed global budgets: 5% of entry remainder per attempt, 20% total.
-    // With no invocation deadline use 250 ms/1 s, never an unbounded pre-pass.
-    const auto remaining = deadline ? (deadline > entry ? deadline - entry : 0) : 5000000000ULL;
-    const auto until = entry + remaining / 5;
-    const auto per_attempt = remaining / 20;
-    observed.extended_limits (until, per_attempt);
+    const auto [until, per_attempt] = make_budget (entry, deadline, options);
+    observed.extended_limits (until, per_attempt, options);
+    if (options.attempt_ms == 0 || options.total_ms == 0) {
+      observed.eligibility ("zero_allowance", 0, 0, 0, 0, 0);
+      observed.finish ("ineligible");
+      return std::nullopt;
+    }
     auto p = enabled ? make_plan (original, source, until) : plan {};
     if (!enabled)
       p.reason = "unsupported_verified_route";
@@ -568,13 +587,17 @@ namespace acacia::unreal_witnesses {
           p.legacy ? "distribute_G_select_positive_terms" : "positive_guarantee_deletion");
       for (size_t step = 0; step < p.frames.size (); ++step)
         observed.path_step (step, p.frames[step].child,
-                            p.frames[step].parent.is (spot::op::Implies));
+                            p.frames[step].parent.is (spot::op::Implies) ? "implication_consequent"
+                            : p.frames[step].parent.is (spot::op::G) ? "positive_global_operand"
+                            : p.frames[step].parent.is (spot::op::F)
+                                ? "positive_eventually_operand"
+                                : "positive_and_operand");
       const auto start = phase_clock (CLOCK_MONOTONIC);
       if (start >= until)
         return false;
       observed.begin (index);
       // Reserve half the remaining pre-pass slice for reaping and proof replay.
-      const auto attempt_deadline = std::min (start + (until - start) / 2, start + per_attempt);
+      const auto attempt_deadline = start + std::min ((until - start) / 2, per_attempt);
       observed.attempt_limit (attempt_deadline);
       const auto result = bounded_attempt (d, runner, attempt_deadline);
       const bool proof = result.result && accept (d, original, source, result.proof, until);

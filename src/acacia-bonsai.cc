@@ -255,7 +255,8 @@ namespace {
                                   ? std::nullopt
                                   : arg_values.synth_fname,
                               arg_values.metadata, provider, arg_values.candidate,
-                              deadline_mono_ns, arg_values.tlsf_sha256, arg_values.weakening);
+                              deadline_mono_ns, arg_values.tlsf_sha256, arg_values.weakening,
+                              arg_values.weakening_allowances);
     verb_do (1, vout << "returning " << res << "\n");
 
     if (!res && acacia::active_worker_record () &&

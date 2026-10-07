@@ -1043,7 +1043,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               acacia::game_backend backend, const std::optional<std::string>& synth_fname,
               const specification_metadata& metadata, acacia::automaton_provider provider,
               acacia::candidate_mode candidate, uint64_t diagnostic_deadline_ns,
-              const std::string& diagnostic_source_sha256, weakening_mode weakening) {
+              const std::string& diagnostic_source_sha256, weakening_mode weakening,
+              const acacia::unreal_witnesses::allowances& weakening_allowances) {
   // Protect internal callers as well as the CLI synthesis route.
   if (synth_fname.has_value ()) {
     backend = acacia::synthesis_backend (backend, true);
@@ -1197,7 +1198,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
                            provider == acacia::automaton_provider::frozen_graph;
     weakened_answer = acacia::unreal_witnesses::try_extended_witnesses (
         exact_original, *weakening_source, supported, runner, weakening_records,
-        diagnostic_deadline_ns);
+        diagnostic_deadline_ns, weakening_allowances);
   }
   else if (weakening == weakening_mode::off) {
     weakening_records.eligibility ("disabled", 0, 0, 0, 0, 0);

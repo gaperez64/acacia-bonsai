@@ -1,6 +1,8 @@
 #include "arg_parser.hh"
 #include "phase_records.hh"
 
+#include <charconv>
+
 /**
  * Process the specified input (-i) argument. This is a comma-separated list uncontrollable
  * atomic propositions.
@@ -81,6 +83,9 @@ void show_help (const char* program_name) {
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
          "requires frozen-graph\n"
       << "  --weakening VAL          [incumbent|extended|off] (default incumbent)\n"
+      << "  --weakening-attempt-ms N   absolute extended-attempt allowance (default 250 ms)\n"
+      << "  --weakening-total-ms N     absolute extended pre-pass allowance (default 1000 ms)\n"
+      << "                            invocation deadline bounds still apply; 0 skips work\n"
       << "  --candidate-mode VAL     [only|fallback] on candidate resource limits (default "
       << acacia::candidate_mode_name (ACACIA_DEFAULT_CANDIDATE_MODE) << ")\n"
       << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] "
@@ -417,6 +422,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_UNREAL_PROVIDER = 1006;
   static constexpr int OPT_CANDIDATE_MODE = 1007;
   static constexpr int OPT_WEAKENING = 1008;
+  static constexpr int OPT_WEAKENING_ATTEMPT_MS = 1009;
+  static constexpr int OPT_WEAKENING_TOTAL_MS = 1010;
   bool unreal_translation_pref_specified = false;
   bool real_backend_specified = false;
   bool unreal_backend_specified = false;
@@ -432,6 +439,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
       {"weakening", required_argument, nullptr, OPT_WEAKENING},
+      {"weakening-attempt-ms", required_argument, nullptr, OPT_WEAKENING_ATTEMPT_MS},
+      {"weakening-total-ms", required_argument, nullptr, OPT_WEAKENING_TOTAL_MS},
 #if ACACIA_ENABLE_TLSF_FRONTEND
       {"tlsf", required_argument, nullptr, 'T'},
 #endif
@@ -537,6 +546,20 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case OPT_UNREAL_PROVIDER:
         process_arg_provider (optarg, retval.unreal_provider, "unreal-provider");
         break;
+      case OPT_WEAKENING_ATTEMPT_MS:
+      case OPT_WEAKENING_TOTAL_MS: {
+        const std::string_view text {optarg};
+        uint64_t value = 0;
+        const auto parsed = std::from_chars (text.data (), text.data () + text.size (), value);
+        if (parsed.ec != std::errc {} || parsed.ptr != text.data () + text.size () ||
+            value > std::numeric_limits<uint64_t>::max () / acacia::unreal_witnesses::ns_per_ms)
+          error (EXIT_CODE_ERROR,
+                 "Error: --%s expects a nonnegative integer millisecond allowance.\n",
+                 opt == OPT_WEAKENING_ATTEMPT_MS ? "weakening-attempt-ms" : "weakening-total-ms");
+        (opt == OPT_WEAKENING_ATTEMPT_MS ? retval.weakening_allowances.attempt_ms
+                                        : retval.weakening_allowances.total_ms) = value;
+        break;
+      }
       case OPT_WEAKENING:
         if (std::string_view {optarg} == "incumbent")
           retval.weakening = weakening_mode::incumbent;

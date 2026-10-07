@@ -34,6 +34,11 @@ def main():
             ("G(b <-> X a) & GF c", False),
             ("true", True),
             ("GF a -> true", True),
+            ("GF a -> G(a -> (F b & G !b & F c))", False),
+            ("G((a & X a) -> (X b & X !b & F c))", False),
+            ("GF a -> GF(b & c & X !b)", True),
+            ("GF a -> F G((a -> b) & (a -> !b) & c)", False),
+            ("GF a -> F(b & c & X !b)", True),
         ]
         for index, (formula, expected) in enumerate(cases):
             exact = run([oracle, "-f", formula, "--ins=a,unused_i", "--outs=b,c,unused_o",
@@ -108,6 +113,38 @@ def main():
         assert row["observed_started"] > 0, records
         limits = next(r for r in records if r.get("event") == "weakening_budget_limits")
         assert limits["attempt_fraction"] == .05 and limits["prepass_fraction"] == .20
+        for deadline in (None, time.monotonic() + 2):
+            for attempt_ms, total_ms in ((2000, 8000), (0, 0), (5, 20),
+                                         (18_446_744_073_709, 18_446_744_073_709)):
+                directory = root / f"allowance-{deadline is None}-{attempt_ms}"
+                directory.mkdir()
+                env = dict(os.environ, ACACIA_PHASE_RECORDS=str(directory))
+                env.pop("ACACIA_OUTER_DEADLINE_MONOTONIC", None)
+                if deadline is not None:
+                    env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + 2)
+                actual = run(command + ["--weakening-attempt-ms", str(attempt_ms),
+                                        "--weakening-total-ms", str(total_ms)], env=env)
+                assert actual.returncode == 2, actual
+                records, problems = reader.read_records(directory)
+                assert not problems
+                row, = reader.census(records)
+                assert row["full_solver_started"] and row["full_solver_starved"] is False
+                limits = next(r for r in records if r.get("event") == "weakening_budget_limits")
+                assert limits["attempt_ms"] == attempt_ms and limits["total_ms"] == total_ms
+                assert limits["unbounded_attempt_ns"] == attempt_ms * 1_000_000
+                assert limits["unbounded_total_ns"] == total_ms * 1_000_000
+                assert limits["attempt_override"] and limits["total_override"]
+                effective = next(r for r in records if r.get("event") == "weakening_local_budget")
+                if deadline is None:
+                    assert effective["attempt_limit_ns"] == attempt_ms * 1_000_000
+                else:
+                    entry = next(r for r in records if r.get("event") == "weakening_entry")
+                    assert effective["attempt_limit_ns"] <= entry["remaining_ns"] // 20
+                    assert row["full_solver_remaining_ns"] > 0
+        for option in ("--weakening-attempt-ms", "--weakening-total-ms"):
+            for invalid in ("-1", "1.5", "1ms", "", "+2", "18446744073710"):
+                actual = run([solver, "-f", "true", option, invalid])
+                assert actual.returncode == 3 and option in actual.stderr, actual
         # Native TLSF normalization supplies the oracle's effective Mealy formula;
         # compare Mealy, Moore, strict, inconsistent and absent assumptions.
         for semantics in ("Mealy", "Moore", "Mealy,Strict", "Moore,Strict"):
@@ -127,6 +164,40 @@ def main():
                 for mode in ("incumbent", "extended", "off"):
                     actual = run([solver, "-T", path, "--weakening", mode])
                     assert actual.returncode == exact.returncode, (semantics, assumption, actual)
+        # Generated positive G/consequent shapes use exact native normalization,
+        # including strict initial framing and both timing conventions.
+        for semantics in ("Mealy", "Moore", "Mealy,Strict", "Moore,Strict"):
+            path.write_text(f'INFO {{ TITLE: "generated global scope" SEMANTICS: {semantics} '
+                            'TARGET: Mealy } MAIN { INPUTS { a; unused_i; } '
+                            'OUTPUTS { b; c; unused_o; } INITIALLY { !a; } '
+                            'ASSUME { G F a; } '
+                            'GUARANTEE { G(a -> (F b && G !b && F c)); } }')
+            frontend = run([inspect, path])
+            assert frontend.returncode == 0, frontend
+            normalized, inputs, outputs, *_ = frontend.stdout.split("\0")
+            exact = run([oracle, "-f", normalized, f"--ins={inputs}", f"--outs={outputs}",
+                         "--realizability", "--bypass=no", "--decompose=no"])
+            assert exact.returncode in (0, 1), exact
+            for mode in ("incumbent", "extended", "off"):
+                actual = run([solver, "-T", path, "--weakening", mode])
+                assert actual.returncode == exact.returncode, (semantics, actual)
+        for semantics in ("Mealy", "Moore", "Mealy,Strict", "Moore,Strict"):
+            for guarantee in ("G F(b && c && X !b)", "F G(b && c && X !b)",
+                              "F(b && c && X !b)",
+                              "G((a && X a) -> ((a -> F b) && (!a -> G !b) && F c))"):
+                path.write_text(f'INFO {{ TITLE: "generated future scope" SEMANTICS: {semantics} '
+                                'TARGET: Mealy } MAIN { INPUTS { a; unused_i; } '
+                                'OUTPUTS { b; c; unused_o; } ASSUME { G F a; } '
+                                f'GUARANTEE {{ {guarantee}; }} }}')
+                frontend = run([inspect, path])
+                assert frontend.returncode == 0, frontend
+                normalized, inputs, outputs, *_ = frontend.stdout.split("\0")
+                exact = run([oracle, "-f", normalized, f"--ins={inputs}", f"--outs={outputs}",
+                             "--realizability", "--bypass=no", "--decompose=no"])
+                assert exact.returncode in (0, 1), exact
+                for mode in ("incumbent", "extended", "off"):
+                    actual = run([solver, "-T", path, "--weakening", mode])
+                    assert actual.returncode == exact.returncode, (semantics, guarantee, actual)
         # A strict weak-until context is declined, while the original exact
         # normalized objective still decides with both modes.
         path.write_text('INFO { TITLE: "generated strict" SEMANTICS: Mealy,Strict TARGET: Mealy } '
@@ -139,12 +210,13 @@ def main():
         invalid = run([solver, "-f", "true", "--weakening", "invalid"])
         assert invalid.returncode == 3 and "--weakening expects" in invalid.stderr
         # A renamed generated pair must give the same verdict in every mode.
-        twin = cases[0][0].replace("a", "renamed_i").replace("b", "renamed_o").replace(
-            "c", "renamed_other")
-        for mode in ("incumbent", "extended", "off"):
-            actual = run([solver, "-f", twin, "-i", "renamed_i,unused_i",
-                          "-o", "renamed_o,renamed_other,unused_o", "--weakening", mode])
-            assert actual.returncode == 1, actual
+        for formula, expected in (cases[0], cases[8], cases[10]):
+            twin = formula.replace("a", "renamed_i").replace("b", "renamed_o").replace(
+                "c", "renamed_other")
+            for mode in ("incumbent", "extended", "off"):
+                actual = run([solver, "-f", twin, "-i", "renamed_i,unused_i",
+                              "-o", "renamed_o,renamed_other,unused_o", "--weakening", mode])
+                assert actual.returncode == (0 if expected else 1), actual
         # Synthesis remains a direct original-game operation in extended mode.
         controller = root / "controller.aag"
         actual = run([solver, "-f", "G(a <-> b)", "-i", "a", "-o", "b", "--weakening",

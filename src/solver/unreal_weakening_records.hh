@@ -2,6 +2,7 @@
 
 #include "phase_records.hh"
 #include "solver/diagnostics.hh"
+#include "solver/unreal_weakening_budget.hh"
 #include <string_view>
 
 #include <exception>
@@ -182,17 +183,28 @@ namespace acacia::unreal_witnesses {
                   extended_ ? "exact_original" : "simplified_original", index);
         event ("weakening_candidate_generated", fields);
       }
-      void extended_limits (uint64_t until, uint64_t per_attempt) const noexcept {
+      void extended_limits (uint64_t until, uint64_t per_attempt,
+                            const allowances& options) const noexcept {
         event ("weakening_limits",
                "\"candidate_limit\":8,\"group_limit\":4,\"group_size_limit\":4,"
                "\"ast_node_limit\":16384,\"ast_edge_limit\":32768,"
                "\"support_membership_limit\":32768,\"guarantee_limit\":8192,"
                "\"support_visit_limit\":32768,\"global_child_threshold\":64,\"poll_ns\":1000000");
-        event ("weakening_budget_limits",
-               "\"attempt_fraction\":0.05,\"prepass_fraction\":0.20,\"cleanup_fraction\":0.5,"
-               "\"unbounded_attempt_ns\":250000000,\"unbounded_total_ns\":1000000000,"
-               "\"memory_scope\":\"inherited_invocation\"");
-        char fields[160];
+        char fields[384];
+        snprintf (
+            fields, sizeof fields,
+            "\"attempt_fraction\":0.05,\"prepass_fraction\":0.20,\"cleanup_fraction\":0.5,"
+            "\"attempt_ms\":%llu,\"total_ms\":%llu,"
+            "\"attempt_override\":%s,\"total_override\":%s,"
+            "\"unbounded_attempt_ns\":%llu,\"unbounded_total_ns\":%llu,"
+            "\"memory_scope\":\"inherited_invocation\"",
+            (unsigned long long) options.attempt_ms.value_or (default_attempt_ms),
+            (unsigned long long) options.total_ms.value_or (default_total_ms),
+            options.attempt_ms ? "true" : "false", options.total_ms ? "true" : "false",
+            (unsigned long long) milliseconds_ns (
+                options.attempt_ms.value_or (default_attempt_ms)),
+            (unsigned long long) milliseconds_ns (options.total_ms.value_or (default_total_ms)));
+        event ("weakening_budget_limits", fields);
         snprintf (fields, sizeof fields, "\"prepass_deadline_ns\":%llu,\"attempt_limit_ns\":%llu",
                   (unsigned long long) until, (unsigned long long) per_attempt);
         event ("weakening_local_budget", fields);
@@ -219,10 +231,10 @@ namespace acacia::unreal_witnesses {
           event ("weakening_subset", fields);
         }
       }
-      void path_step (size_t step, size_t child, bool implication) const noexcept {
+      void path_step (size_t step, size_t child, const char* rule) const noexcept {
         char fields[160];
         snprintf (fields, sizeof fields, "\"step\":%zu,\"child\":%zu,\"rule\":\"%s\"", step, child,
-                  implication ? "implication_consequent" : "positive_and_operand");
+                  rule);
         event ("weakening_path", fields);
       }
       void checked (const checked_game& proof) const noexcept {

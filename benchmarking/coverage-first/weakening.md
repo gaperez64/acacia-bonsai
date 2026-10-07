@@ -1,4 +1,4 @@
-# P3 step 2: experimental UNREAL weakening
+# P3: experimental UNREAL weakening
 
 `--weakening incumbent|extended|off` is a runtime switch; `incumbent` remains the default.
 No compile-time option or portfolio member/order changed. The extended route uses the existing
@@ -7,10 +7,13 @@ Requested and effective modes are recorded separately, including early bypasses.
 
 The extended pre-pass starts from the exact parsed objective, before realizability
 simplification. In positive conjunction/implication-consequent contexts it retains antecedents
-and siblings verbatim, distributes `G` over conjunction, and deletes guarantee conjuncts.
+and siblings verbatim, distributes `G` over conjunction, and deletes guarantee conjuncts. Positive `G` frames also expose conjunctions in
+`G(A -> AND g_i)` without changing `A`; reconstruction keeps the scope as `G(A -> AND kept_i)`.
+Positive `F` frames expose `GF(AND ...)`, `FG(AND ...)`, and `F(AND ...)` by monotonicity;
+`F` stays around the entire selected conjunction, preserving its shared future witness.
 A replay against the original AST/source context proves the implication. TLSF supplies its
 exact linked-frontend normalized formula and original source digest; strict weak-until contexts
-are conservatively declined. TLSF conjunctions with multiple conditional children also decline
+are conservatively declined. At the outer TLSF normalization boundary, conjunctions with multiple conditional children decline
 rather than choosing a normalization spine that could remove an assumption scope. All original signals, including unused signals, remain registered
 in the derived game. Ownership and the incumbent timing adaptation are retained.
 
@@ -46,8 +49,18 @@ Global experimental limits are frozen independently of corpus verdicts:
 | Supervisor polling | At most 1 ms, shortened at deadline | Bound cancellation latency |
 | Incumbent nested-global threshold | More than 64 children, unchanged | Preserve legacy eligibility |
 
-The no-deadline allowances are computed from a fixed 5 s reference remainder, solely to derive
-the disclosed 250 ms/1 s caps. Attempts run serially in killable children in the invocation's
+`--weakening-attempt-ms N` and `--weakening-total-ms N` are absolute research allowances for
+`extended`, in nonnegative integer milliseconds. Their no-deadline defaults remain 250/1000;
+for example, `--weakening extended --weakening-attempt-ms 2000 --weakening-total-ms 8000`
+allows at most 2 s per attempt and 8 s for the entire pre-pass, including planning and replay.
+Zero skips candidate work. The options do not affect `incumbent` or `off`.
+
+When an invocation deadline is supplied, omitted options retain the original 5%/20% budgets;
+explicit allowances are capped by those same fractions. The cleanup/replay reservation still
+caps a child at half the remaining pre-pass slice, so its actual allowance can be smaller.
+`weakening_budget_limits` records requested milliseconds, whether each option was supplied,
+and absolute no-deadline caps. `weakening_local_budget` and `weakening_attempt_limit` record
+actual limits. Arithmetic saturates before adding absolute deadlines. Attempts run serially in killable children in the invocation's
 existing process group/resource scope, with Linux parent-death cleanup. No additional memory
 cap is introduced; inherited invocation limits and existing guarded-backend work limits apply.
 Late child results are rejected; children are reaped before fallback. Planning checks the same
@@ -66,3 +79,19 @@ attempts followed by the original fallback. This is engineering evidence, not ne
 coverage. #201 remains open pending fresh standalone and actual-portfolio admission measurements.
 The two requested 17 s screens use one optimized binary and the existing coverage runner;
 commands and the charter report are under `build_scratch/p3-extended/`.
+
+
+P3 step 3 read the supplied 17 s, no-deadline screen: 29 eligible inputs, 149 attempts,
+136 cancellations, 13 inconclusive attempts and zero proofs/gains. Absolute research allowances
+address that observed resource limit without changing defaults. A read-only exact-source
+analysis of the 52 `no_guarantee_conjunction` declines found 32 conjunctions under U, 7 under
+negation, 7 under GF, 3 under F, 1 under equivalence, and 2 under G/implication consequents.
+The last shape and the 10 F contexts are broadened. The rules follow direct monotonicity of
+G, F and implication consequents, with unchanged antecedents and replay verification. F is never
+distributed over conjunction. The planner never traverses negation, disjunction, X, U, equivalence
+or assumptions. Generated language-emptiness and exact-game
+checks cover both timing conventions and exact strict normalization. Strict weak-until and
+ambiguous outer TLSF scopes still decline. Inside positive G/F scopes, conditional guarantees
+are kept/deleted as whole conjuncts rather than interpreted as a normalization spine. The diagnostic with source identities is confined to
+`build_scratch/p3-step3/shapes.md`. No new screen or admission measurement ran in this worktree;
+#201 remains open and extended weakening remains opt-in.

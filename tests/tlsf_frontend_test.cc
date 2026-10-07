@@ -8,6 +8,7 @@
 #include <iostream>
 #include <spot/tl/parse.hh>
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/translate.hh>
 #include <stdexcept>
 #include <string>
 
@@ -100,6 +101,66 @@ MAIN {
       ok &= expect ("semantics mutation rejected", !verify_derivation (d, p.original, mutated));
     }
   }
+
+  for (const auto& semantics : {"Mealy", "Moore", "Mealy,Strict", "Moore,Strict"}) {
+    const auto scoped = acacia::tlsf_frontend::parse (
+        "INFO { TITLE: \"generated global scope\" SEMANTICS: " + std::string (semantics) +
+        " TARGET: Mealy } MAIN { INPUTS { a; unused_i; } OUTPUTS { b; c; unused_o; } "
+        "INITIALLY { !a; } ASSUME { G F a; } "
+        "GUARANTEE { G(a -> (F b && G !b && F c)); } }");
+    const auto p = plan_for (scoped);
+    ok &= expect ("normalized global consequent eligible", std::string (p.reason) == "eligible");
+    ok &= expect ("global frame exposed", std::ranges::any_of (p.frames, [] (const auto& frame) {
+                    return frame.parent.is (spot::op::G);
+                  }));
+    for (size_t i = 0; i < p.guarantees.size (); ++i) {
+      const derivation d {p, {i}, derive (p, {i})};
+      ok &= expect ("normalized global replay", verify_derivation (d, p.original, p.source));
+      ok &= expect ("normalized global implication",
+                    spot::translator {}
+                        .run (spot::formula::And ({p.original, spot::formula::Not (d.objective)}))
+                        ->is_empty ());
+    }
+  }
+
+  for (const auto& semantics : {"Mealy", "Moore", "Mealy,Strict", "Moore,Strict"})
+    for (const auto& guarantee : {"G F(b && c && X !b)", "F G(b && c && X !b)",
+                                  "F(b && c && X !b)"}) {
+      const auto scoped = acacia::tlsf_frontend::parse (
+          "INFO { TITLE: \"generated future scope\" SEMANTICS: " + std::string (semantics) +
+          " TARGET: Mealy } MAIN { INPUTS { a; unused_i; } OUTPUTS { b; c; unused_o; } "
+          "ASSUME { G F a; } GUARANTEE { " + std::string (guarantee) + "; } }");
+      const auto p = plan_for (scoped);
+      ok &= expect ("normalized future conjunction eligible", std::string (p.reason) == "eligible");
+      for (size_t i = 0; i < p.guarantees.size (); ++i) {
+        const derivation d {p, {i}, derive (p, {i})};
+        ok &= expect ("normalized future replay", verify_derivation (d, p.original, p.source));
+        ok &= expect ("normalized future implication",
+                      spot::translator {}
+                          .run (spot::formula::And ({p.original, spot::formula::Not (d.objective)}))
+                          ->is_empty ());
+      }
+    }
+
+  for (const auto& semantics : {"Mealy", "Moore", "Mealy,Strict", "Moore,Strict"})
+    for (const auto& scope : {"G", "F", "G F"}) {
+      const auto conditional = acacia::tlsf_frontend::parse (
+          "INFO { TITLE: \"generated conditional scope\" SEMANTICS: " + std::string (semantics) +
+          " TARGET: Mealy } MAIN { INPUTS { a; unused_i; } OUTPUTS { b; c; unused_o; } "
+          "ASSUME { G F a; } GUARANTEE { " + std::string (scope) +
+          "((a && X a) -> ((a -> F b) && (!a -> G !b) && F c)); } }");
+      const auto p = plan_for (conditional);
+      ok &= expect ("scoped conditionals are whole guarantees", std::string (p.reason) == "eligible");
+      ok &= expect ("scoped conditional guarantee count", p.guarantees.size () == 3);
+      for (size_t i = 0; i < p.guarantees.size (); ++i) {
+        const derivation d {p, {i}, derive (p, {i})};
+        ok &= expect ("scoped conditional replay", verify_derivation (d, p.original, p.source));
+        ok &= expect ("scoped conditional implication",
+                      spot::translator {}
+                          .run (spot::formula::And ({p.original, spot::formula::Not (d.objective)}))
+                          ->is_empty ());
+      }
+    }
 
   const auto ambiguous = acacia::tlsf_frontend::parse (
       "INFO { TITLE: \"generated\" SEMANTICS: Mealy TARGET: Mealy } "

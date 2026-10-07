@@ -28,6 +28,33 @@ namespace {
     return parsed.f;
   }
 
+  void allowance_tests () {
+    using namespace acacia::unreal_witnesses;
+    constexpr uint64_t second = 1000000000;
+    auto b = make_budget (second, 0, {});
+    assert (b.until == 2 * second && b.per_attempt == second / 4);
+    b = make_budget (second, 21 * second, {});
+    assert (b.until == 5 * second && b.per_attempt == second);
+    const allowances research {2000, 8000};
+    b = make_budget (second, 0, research);
+    assert (b.until == 9 * second && b.per_attempt == 2 * second);
+    b = make_budget (second, 21 * second, research);
+    assert (b.until == 5 * second && b.per_attempt == second);
+    b = make_budget (second, 101 * second, research);
+    assert (b.until == 9 * second && b.per_attempt == 2 * second);
+    b = make_budget (second, second - 1, research);
+    assert (b.until == second && b.per_attempt == 0);
+    b = make_budget (second, 0, {0, 0});
+    assert (b.until == second && b.per_attempt == 0);
+    b = make_budget (second, 0, {2000, std::nullopt});
+    assert (b.until == 2 * second && b.per_attempt == 2 * second);
+    b = make_budget (second, 0, {std::nullopt, 8000});
+    assert (b.until == 9 * second && b.per_attempt == second / 4);
+    const auto maximum = std::numeric_limits<uint64_t>::max ();
+    b = make_budget (maximum - 1, 0, {maximum, maximum});
+    assert (b.until == maximum && b.per_attempt <= maximum);
+  }
+
   void extended_contract_tests () {
     using namespace acacia::unreal_witnesses;
     const auto parse = [] (const std::string& text) {
@@ -60,13 +87,17 @@ namespace {
       assert (!exact (
           spot::formula::Implies (a, spot::formula::And ({safety_first, safety_second})), moore));
     }
-    for (const auto& text : {"GF a -> (G(a -> F b) & G(a -> G !b) & GF c)",
-                             "GF a -> ((a -> b) & G(a -> G !b) & GF c)",
-                             "(GF a & GF !a) -> (G(a <-> X b) & G(!a <-> X b) & GF c)",
-                             "(GF a & GF !a) -> (G(a -> F b) & FG !b & GF c)",
-                             "(G a & G !a) -> (GF b & FG !b & GF c)",
-                             "a -> (b & (GF a -> (G(a -> F b) & FG !b & GF c)))",
-                             "GF a -> G((a -> F b) & (a -> G !b) & F c)"}) {
+    for (const auto& text :
+         {"GF a -> (G(a -> F b) & G(a -> G !b) & GF c)",
+          "GF a -> ((a -> b) & G(a -> G !b) & GF c)",
+          "(GF a & GF !a) -> (G(a <-> X b) & G(!a <-> X b) & GF c)",
+          "(GF a & GF !a) -> (G(a -> F b) & FG !b & GF c)",
+          "(G a & G !a) -> (GF b & FG !b & GF c)",
+          "a -> (b & (GF a -> (G(a -> F b) & FG !b & GF c)))",
+          "GF a -> G((a -> F b) & (a -> G !b) & F c)", "GF a -> G(a -> (F b & G !b & F c))",
+          "G(a -> (X b & X !b & F c))", "GF a -> G(a -> G(b & c & X !b))",
+          "GF a -> GF(b & c & X !b)", "GF a -> F(G((a -> b) & (a -> !b) & c))",
+          "GF a -> F(b & c & X !b)", "G(a -> F(b & c))"}) {
       auto original = parse (text);
       auto source = bind (original);
       auto p = make_plan (original, source);
@@ -103,6 +134,12 @@ namespace {
         changed.kept.push_back (changed.kept.back ());
         assert (!accept (changed, original, source, receipt));
         changed = d;
+        changed.premise.guarantees[0] = parse ("X a");
+        assert (!accept (changed, original, source, receipt));
+        changed = d;
+        changed.premise.frames[0].child ^= 1;
+        assert (!accept (changed, original, source, receipt));
+        changed = d;
         changed.premise.frames[0].parent = parse ("GF !a -> GF b");
         assert (!accept (changed, original, source, receipt));
         auto context = source;
@@ -137,6 +174,62 @@ namespace {
     for (const auto& text : {"true", "false", "GF a -> true", "GF a -> GF b"}) {
       const auto f = parse (text);
       assert (make_plan (f, bind (f)).guarantees.empty ());
+    }
+    for (const auto& text : {"!G(a -> (b & c))", "(b & c) | a", "G(a -> X(b & c))",
+                             "G(a -> (b U (b & c)))", "F(!(b & c))", "F((b & c) | a)",
+                             "G(a -> !(b & c))", "G((a & X a) -> F b)", "(b & c) <-> a"}) {
+      const auto f = parse (text);
+      assert (std::string (make_plan (f, bind (f)).reason) == "no_guarantee_conjunction");
+    }
+    // Generated controls exercise the proof rule independently of replay.
+    for (bool eventually : {false, true})
+      for (const auto& antecedent : {"a", "GF a", "a & X a"})
+        for (const auto& guarantees : {"F b & G !b & F c", "X b & X !b & F c", "b & c & X !b"}) {
+          const auto consequent = spot::formula::Implies (parse (antecedent), parse (guarantees));
+          const auto f = spot::formula::Implies (
+              a, eventually ? spot::formula::F (consequent) : spot::formula::G (consequent));
+          const auto source = bind (f);
+          const auto p = make_plan (f, source);
+          assert (std::string (p.reason) == "eligible" && p.guarantees.size () == 3);
+          for (const auto& kept :
+               std::vector<std::vector<size_t>> {{0}, {1}, {2}, {0, 1}, {1, 2}}) {
+            const derivation d {p, kept, derive (p, kept)};
+            assert (verify_derivation (d, f, source));
+            assert (spot::translator {}
+                        .run (spot::formula::And ({f, spot::formula::Not (d.objective)}))
+                        ->is_empty ());
+          }
+        }
+    const auto shared_future = parse ("F(b & c & X !b)");
+    const auto future_source = bind (shared_future);
+    const auto future_plan = make_plan (shared_future, future_source);
+    assert (std::string (future_plan.reason) == "eligible");
+    derivation future {future_plan, {0, 1}, derive (future_plan, {0, 1})};
+    assert (future.objective.is (spot::op::F) && future.objective[0].is (spot::op::And));
+    assert (verify_derivation (future, shared_future, future_source));
+    future.objective = spot::formula::And ({spot::formula::F (future_plan.guarantees[0]),
+                                            spot::formula::F (future_plan.guarantees[1])});
+    assert (!verify_derivation (future, shared_future, future_source));
+    // Only consequents are exposed; a conjunction inside an antecedent remains exact.
+    const auto scoped = parse ("GF a -> G((a & X a) -> (F b & G !b & F c))");
+    auto scoped_source = bind (scoped);
+    auto scoped_plan = make_plan (scoped, scoped_source);
+    assert (scoped_plan.frames.size () == 3 && scoped_plan.guarantees.size () == 3);
+    for (const auto& semantics : {"Mealy", "Moore", "Mealy,Strict", "Moore,Strict"}) {
+      auto source = scoped_source;
+      source.format = "tlsf";
+      source.semantics = semantics;
+      source.normalization = source.source;
+      source.effective_target = semantics;
+      const auto p = make_plan (scoped, source);
+      const derivation d {p, {0}, derive (p, {0})};
+      assert (verify_derivation (d, scoped, source));
+      assert (spot::translator {}
+                  .run (spot::formula::And ({scoped, spot::formula::Not (d.objective)}))
+                  ->is_empty ());
+      auto mutated = d;
+      mutated.premise.frames.back ().parent = parse ("!a -> (F b & G !b & F c)");
+      assert (!verify_derivation (mutated, scoped, source));
     }
     const auto formula = parse ("GF a -> (GF b & FG !b & GF c)");
     auto strict = bind (formula);
@@ -184,9 +277,15 @@ namespace {
     };
     const auto invocation = acacia::phase_clock (CLOCK_MONOTONIC) + 200000000;
     records silent;
-    assert (!try_extended_witnesses (formula, p.source, true, blocked, silent, invocation));
+    assert (!try_extended_witnesses (formula, p.source, true, blocked, silent, invocation,
+                                     {2000, 8000}));
     assert (acacia::phase_clock (CLOCK_MONOTONIC) < invocation);
     assert (fallback (formula) && full_started && !exact (formula, false));
+    const auto short_entry = acacia::phase_clock (CLOCK_MONOTONIC);
+    assert (!try_extended_witnesses (formula, p.source, true, blocked, silent, 0, {5, 20}));
+    assert (acacia::phase_clock (CLOCK_MONOTONIC) - short_entry < 200000000);
+    assert (waitpid (-1, &status, WNOHANG) == -1 && errno == ECHILD);
+    assert (fallback (formula));
   }
 
 }  // namespace
@@ -211,8 +310,7 @@ int main (int argc, char** argv) {
     const std::string mode = argv[1];
     if (mode == "--solver-arm") {
       std::cout << "unreal:formula:"
-                << (ACACIA_SPOT_GUARDED_BACKEND ? "spot-guarded-sparse" : "backward")
-                << std::endl;
+                << (ACACIA_SPOT_GUARDED_BACKEND ? "spot-guarded-sparse" : "backward") << std::endl;
       return 0;
     }
     acacia::record_transport_test_start ();
@@ -313,6 +411,7 @@ int main (int argc, char** argv) {
     acacia::phase_records_summary ("weakening_test");
     return 0;
   }
+  allowance_tests ();
   extended_contract_tests ();
   const auto oversized = make_formula (64, true);
   const auto witnesses = acacia::unreal_witnesses::make_safety_core_witnesses (oversized);

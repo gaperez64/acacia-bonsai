@@ -221,3 +221,13 @@ required for an original UNREAL verdict. Strict weak-until contexts decline safe
 Limits and proof boundaries are in [the decision record](coverage-first/weakening.md).
 The census starvation correction reclassifies the supplied never-started legacy fallback;
 no fresh coverage or performance campaign was run. #201 admission/closure remains pending.
+
+
+P3 step 3 adds absolute research allowances (`--weakening-attempt-ms`, `--weakening-total-ms`),
+retaining the 250 ms/1 s no-deadline defaults and existing invocation deadline reservations.
+The supplied 82-input, 17 s no-deadline screen produced zero gains: 136 of 149 extended attempts
+were cancelled and none proved UNREAL. Read-only source diagnosis of 52 conjunction declines
+found two positive `G(A -> conjunction)` shapes and 10 positive F contexts; the planner now
+exposes them by direct monotonicity with exact replay, retaining the scope of F. The other 40
+remain declined. These are structural and
+engineering results; effectiveness and admission still require the driver's fresh matched screen.
