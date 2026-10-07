@@ -258,11 +258,25 @@ def test_instance_scopes_survive_a_solver_oom(tmp_path, monkeypatch):
     bin_dir.mkdir()
     monkeypatch.setenv("PATH", f"{bin_dir}:{os.environ['PATH']}")
     fake_systemd_run = bin_dir / "systemd-run"
-    fake_systemd_run.write_text('''#!/usr/bin/env bash
-set -eu
-printf '%s\\n' "$@" >> "$SCOPE_TEST_DIR/scope-argv"
-while [[ $1 == --* ]]; do shift; done
-exec "$@"
+    fake_systemd_run.write_text('''#!/usr/bin/env python3
+import json, os, pathlib, subprocess, sys, time
+args = sys.argv[1:]
+with (pathlib.Path(os.environ["SCOPE_TEST_DIR"]) / "scope-argv").open("a") as stream:
+    stream.write("\\n".join(args) + "\\n")
+state = pathlib.Path(args[args.index("--state") + 1])
+command = args[args.index("--") + 1:]
+run = subprocess.run(command, check=False)
+cgroup = state / "fake-cgroup"
+cgroup.mkdir()
+(cgroup / "memory.peak").write_text("8589934592")
+(cgroup / "cgroup.events").write_text("populated 0\\n")
+(cgroup / "memory.events").write_text("oom 1\\noom_kill 1\\n" if run.returncode == 137
+                                     else "oom 0\\noom_kill 0\\n")
+(state / "ready.json").write_text(json.dumps({"cgroup": str(cgroup),
+                                             "max_process_rss_bytes": 4096}))
+while not (state / "ack").exists():
+    time.sleep(0.01)
+sys.exit(run.returncode)
 ''')
     fake_systemd_run.chmod(0o755)
     fake_systemctl = bin_dir / "systemctl"
@@ -306,5 +320,8 @@ esac
     units = [arg for arg in scope_args if arg.startswith("--unit=")]
     assert len(units) == len(set(units)) == 4
     assert all(unit.startswith("--unit=acacia-subset-") for unit in units)
-    assert scope_args.count("--property=MemoryMax=8G") == 4
-    assert scope_args.count("--property=MemorySwapMax=0") == 4
+    assert scope_args.count("--property=MemoryMax=infinity") == 4
+    assert scope_args.count("--memory-max") == 4
+    assert scope_args.count("8G") == 4
+    assert scope_args.count("--property=MemorySwapMax=infinity") == 4
+    assert scope_args.count("--swap-max") == 4

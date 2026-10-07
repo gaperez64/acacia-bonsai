@@ -15,10 +15,13 @@ import json
 import pathlib
 import shlex
 
+from scope_memory import MEMORY_COLUMNS, load_memory_sidecar, write_memory_sidecar
+
 DECISIVE = {"REALIZABLE", "UNREALIZABLE"}
 EXTRA = ["scope_unit", "scope_accounting_source", "scope_cpu_seconds",
          "scope_memory_peak_bytes", "scope_memory_swap_peak_bytes",
-         "scope_oom_kill", "original_result", "original_resource_reason"]
+         "scope_oom_kill", "original_result", "original_resource_reason",
+         "parent_scope_memory_peak_bytes", "parent_scope_memory_swap_peak_bytes"]
 
 
 def read_journal(path):
@@ -92,9 +95,9 @@ def annotate(row, unit, source):
     if unit["cpu"] is not None:
         out["scope_cpu_seconds"] = f"{unit['cpu'] / 1e9:.9f}"
     if unit["memory"] is not None:
-        out["scope_memory_peak_bytes"] = str(unit["memory"])
+        out["parent_scope_memory_peak_bytes"] = str(unit["memory"])
     if unit["swap"] is not None:
-        out["scope_memory_swap_peak_bytes"] = str(unit["swap"])
+        out["parent_scope_memory_swap_peak_bytes"] = str(unit["swap"])
     if (unit["oom"] and row["result"] not in DECISIVE | {"TIMEOUT"} and
             row.get("timed_out", "false") not in ("true", "1")):
         out["result"], out["resource_reason"] = "MEMOUT", "memory"
@@ -116,6 +119,7 @@ def main():
         reader = csv.DictReader(stream, delimiter="\t")
         fields = list(reader.fieldnames or [])
         rows = list(reader)
+    load_memory_sidecar(args.input, rows)
     used = set()
     annotated = []
     for row in rows:
@@ -130,7 +134,9 @@ def main():
     with args.output.open("w", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=fields, delimiter="\t")
         writer.writeheader()
-        writer.writerows(annotated)
+        writer.writerows({key: value for key, value in row.items()
+                          if key not in MEMORY_COLUMNS or key in fields} for row in annotated)
+    write_memory_sidecar(args.output, annotated)
     changed = sum(a["result"] != r["result"] for a, r in zip(annotated, rows))
     print(f"matched {len(used)}/{len(rows)} scopes; {changed} OOM classifications corrected; wrote {args.output}")
 

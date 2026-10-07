@@ -90,9 +90,18 @@ test ('config-transition-acceptance',
       suite : ['unit', 'config-frontends'])
 
 if get_option ('acacia_native_arms')
+  worker_record_transport = executable (
+    'worker-record-transport', 'worker_record_transport.cc')
+  test ('record-transport', py,
+        args : [files ('check-record-transport.py'), worker_record_transport,
+                meson.project_build_root ()],
+        suite : ['unit', 'attribution'], depends : [worker_record_transport])
+  native_attribution_api = executable (
+    'native-attribution-api', 'native_attribution_api.cc', dependencies : tlsf_deps)
+  test ('native-attribution-api', native_attribution_api,
+        suite : ['unit', 'attribution', 'native-gr1'])
   phase_record_failure_worker = executable (
-    'phase-record-failure-worker', 'phase-record-failure-worker.cc',
-    cpp_args : ['-DACACIA_PHASE_RECORDS_TEST_HOOKS'])
+    'phase-record-failure-worker', 'phase-record-failure-worker.cc')
   native_json_binding_test = executable (
     'native-json-binding-test',
     ['native_json_binding_test.cc', '../src/native_proof_binding.cc'],
@@ -134,11 +143,9 @@ if get_option ('acacia_native_arms')
         args : native_lift_cli_args,
         suite : ['unit', 'native-param-lift'], timeout : 180,
         depends : native_cli_depends)
-  if get_option ('buildtype') == 'release'
-    test ('native-release-no-hooks', py,
-          args : [files ('check-native-release-no-hooks.py'), ab_exe],
-          suite : ['unit', 'native-gr1', 'native-param-lift'], depends : [ab_exe])
-  endif
+  test ('native-release-no-hooks', py,
+        args : [files ('check-native-release-no-hooks.py'), ab_exe],
+        suite : ['unit', 'native-gr1', 'native-param-lift'], depends : [ab_exe])
 endif
 
 if get_option ('build_research_tools') and get_option ('acacia_enable_diagnostics')
@@ -218,7 +225,7 @@ spot_lazy_buchi_view_test = executable (
   'spot-lazy-buchi-view-test',
   'spot_lazy_buchi_view_test.cc',
   include_directories : inc,
-  dependencies : [spot_dep, bddx_dep],
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
 )
 test ('spot-lazy-buchi-view', spot_lazy_buchi_view_test,
       suite : ['unit', 'spot-lazy'])
@@ -453,6 +460,18 @@ if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release
   test ('portfolio-deadline', py,
         args : portfolio_deadline_args,
         suite : ['unit', 'portfolio'], depends : [game_backend_integration])
+endif
+if native_test_hooks
+  test ('attribution-contracts', py,
+        args : [files ('check-attribution-contracts.py'), native_test_exe,
+                tlsf_native.get_variable ('native_contract_api_exe'),
+                meson.current_build_dir ()],
+        suite : ['unit', 'attribution'], timeout : 180)
+  test ('attribution', py,
+        args : [files ('check-attribution.py'), ab_exe, native_test_exe,
+                game_backend_integration, meson.project_build_root ()],
+        suite : ['unit', 'attribution', 'portfolio'], timeout : 180,
+        depends : [ab_exe, native_test_exe, game_backend_integration])
 endif
 test ('game-backend-integration', game_backend_cli,
       args : [game_backend_integration,

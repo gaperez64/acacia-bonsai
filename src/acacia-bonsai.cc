@@ -7,6 +7,7 @@
 #include "native_support.hh"
 #include "phase_records.hh"
 #include "solver/solver_invoker.hh"
+#include <string_view>
 #include <unordered_map>
 
 #include <algorithm>
@@ -16,10 +17,10 @@
 #include <csignal>
 #include <cstring>
 #include <memory>
+#include <new>
 #include <optional>
 #include <sstream>
 #include <string>
-#include <string_view>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -40,8 +41,27 @@ namespace {
   volatile sig_atomic_t g_child_count = 0;
   volatile sig_atomic_t g_interrupted = 0;
   pid_t g_main_pid = 0;
+  acacia::worker_record* g_worker_records = nullptr;
+  bool g_worker_records_shared = false;
+
+  void record_parent_terminal (sig_atomic_t index, int status, const char* reason, pid_t pid) {
+    if (!g_worker_records)
+      return;
+    auto& record = g_worker_records[index];
+    record.pid = pid;
+    const char* telemetry = !g_worker_records_shared ? "unavailable"
+                            : record.dropped         ? "dropped"
+                            : record.terminal        ? "complete"
+                                                     : "incomplete";
+    acacia::worker_event (record, "parent_terminal", reason,
+                          WIFEXITED (status) ? WEXITSTATUS (status) : -1,
+                          WIFSIGNALED (status) ? WTERMSIG (status) : 0, telemetry);
+  }
 
   void terminate ([[maybe_unused]] int signum) {
+    const int saved_errno = errno;
+    // Keep the handler async-signal-safe; reaping, records and writer closure
+    // run on the ordinary parent path after the interruption flag is seen.
     if (getpid () == g_main_pid) {  // Main process
       g_interrupted = 1;
       for (sig_atomic_t i = 0; i < g_child_count; ++i)
@@ -52,6 +72,7 @@ namespace {
     }
     else
       _exit (EXIT_CODE_UNKNOWN);  // child procs avoid cleaning on exit
+    errno = saved_errno;
   }
 
   void kill_child_groups () {
@@ -63,29 +84,34 @@ namespace {
       }
   }
 
-  void reap_remaining_children () {
+  void reap_remaining_children (const char* reason) {
     // SIGKILL cannot be ignored, but a child may not be scheduled immediately.
     // Poll each known PID so cleanup never waits in a blocking waitpid call.
     while (true) {
       bool remaining = false;
       for (sig_atomic_t i = 0; i < g_child_count; ++i) {
         const pid_t pid = g_child_pids[i];
-        if (pid <= 0) continue;
-        const pid_t reaped = waitpid (pid, nullptr, WNOHANG);
-        if (reaped == pid || (reaped == -1 && errno == ECHILD))
+        if (pid <= 0)
+          continue;
+        int status = 0;
+        const pid_t reaped = waitpid (pid, &status, WNOHANG);
+        if (reaped == pid || (reaped == -1 && errno == ECHILD)) {
+          record_parent_terminal (i, reaped == pid ? status : 0xffff, reason, pid);
           g_child_pids[i] = 0;
+        }
         else
           remaining = true;
       }
-      if (!remaining) return;
-      timespec pause{0, 1000000};
+      if (!remaining)
+        return;
+      timespec pause {0, 1000000};
       nanosleep (&pause, nullptr);
     }
   }
 
-  void stop_children () {
+  void stop_children (const char* reason) {
     kill_child_groups ();
-    reap_remaining_children ();
+    reap_remaining_children (reason);
   }
 
   const char* unreal_strategy_name (UNREAL_X_T strategy) {
@@ -97,14 +123,16 @@ namespace {
   }
 
   uint64_t monotonic_ns () {
-    timespec now{};
-    if (clock_gettime (CLOCK_MONOTONIC, &now) != 0) return 0;
+    timespec now {};
+    if (clock_gettime (CLOCK_MONOTONIC, &now) != 0)
+      return 0;
     return uint64_t (now.tv_sec) * 1000000000ULL + now.tv_nsec;
   }
 
   uint64_t outer_deadline_ns () {
     const char* value = std::getenv ("ACACIA_OUTER_DEADLINE_MONOTONIC");
-    if (!value || !*value) return 0;
+    if (!value || !*value)
+      return 0;
     char* end = nullptr;
     errno = 0;
     const long double seconds = std::strtold (value, &end);
@@ -118,61 +146,73 @@ namespace {
   // Test-only fake children exercise the parent without invoking a solver.
   void test_child_behavior (sig_atomic_t index, uint64_t deadline_mono_ns) {
     const char* value = std::getenv ("ACACIA_TEST_CHILD_MODES");
-    if (!value) return;
-    std::string_view mode{value};
+    if (!value)
+      return;
+    std::string_view mode {value};
     for (sig_atomic_t i = 0; i < index; ++i) {
       const auto comma = mode.find (',');
-      if (comma == std::string_view::npos) return;
+      if (comma == std::string_view::npos)
+        return;
       mode.remove_prefix (comma + 1);
     }
     mode = mode.substr (0, mode.find (','));
     if (mode == "stall") {
       signal (SIGTERM, SIG_IGN);
-      while (true) pause ();
+      while (true)
+        pause ();
     }
     if (mode == "real-delayed") {
-      timespec delay{0, 100000000};
+      timespec delay {0, 100000000};
       nanosleep (&delay, nullptr);
       _exit (EXIT_CODE_REAL);
     }
     if (mode == "real-late" && deadline_mono_ns) {
       while (monotonic_ns () < deadline_mono_ns + 20000000ULL) {
-        timespec delay{0, 1000000};
+        timespec delay {0, 1000000};
         nanosleep (&delay, nullptr);
       }
       _exit (EXIT_CODE_REAL);
     }
-    if (mode == "real") _exit (EXIT_CODE_REAL);
+    if (mode == "real")
+      _exit (EXIT_CODE_REAL);
   }
 #endif
 
-  [[noreturn]] void dispatch_child (const portfolio_arm& arm,
-                                    const arg_parse_result& arg_values,
+  [[noreturn]] void dispatch_child (const portfolio_arm& arm, const arg_parse_result& arg_values,
                                     uint64_t deadline_mono_ns) {
     if (arm.kind != portfolio_arm_kind::legacy) {
 #if ACACIA_NATIVE_ARMS
       try {
-        const int result = arm.kind == portfolio_arm_kind::gr1
-            ? acacia::run_native_gr1_arm (arg_values, arm.unreal, arm.both, deadline_mono_ns)
+# ifdef ACACIA_NATIVE_TEST_HOOKS
+        acacia::native_attribution_test_exception ();
+# endif
+        const int result =
+            arm.kind == portfolio_arm_kind::gr1
+                ? acacia::run_native_gr1_arm (arg_values, arm.unreal, arm.both, deadline_mono_ns)
             : arm.kind == portfolio_arm_kind::gr1_lift ||
-                      arm.kind == portfolio_arm_kind::gr1_real_lift
-                ? acacia::run_native_gr1_lift_arm (
-                      arg_values, deadline_mono_ns,
-                      arm.kind == portfolio_arm_kind::gr1_real_lift)
-            : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns);
+                    arm.kind == portfolio_arm_kind::gr1_real_lift
+                ? acacia::run_native_gr1_lift_arm (arg_values, deadline_mono_ns,
+                                                   arm.kind == portfolio_arm_kind::gr1_real_lift)
+                : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns);
+        if (result != EXIT_CODE_REAL && result != EXIT_CODE_UNREAL &&
+            acacia::active_worker_record () &&
+            std::strcmp (acacia::active_worker_record ()->reason, "none") == 0)
+          acacia::worker_stopped ("inconclusive");
+        acacia::worker_terminal (result);
         acacia::phase_records_summary (arm.native_name ());
         _exit (result);
+      } catch (const std::bad_alloc& exception) {
+        acacia::native_arm_diagnostic (arm.native_name (), "native_exception", -1,
+                                       exception.what (),
+                                       acacia::native_failure_category::resource);
+      } catch (const std::exception& exception) {
+        acacia::native_arm_diagnostic (arm.native_name (), "native_exception", -1,
+                                       exception.what ());
+      } catch (...) {
+        acacia::native_arm_diagnostic (arm.native_name (), "native_exception", -1,
+                                       "unknown exception");
       }
-      catch (const std::exception& exception) {
-        acacia::native_arm_diagnostic (
-            arm.native_name (),
-            "native_exception", -1, exception.what ());
-      }
-      catch (...) {
-        acacia::native_arm_diagnostic (
-            arm.native_name (),
-            "native_exception", -1, "unknown exception");
-      }
+      acacia::worker_terminal (EXIT_CODE_UNKNOWN);
       acacia::phase_records_summary ("native");
       _exit (EXIT_CODE_UNKNOWN);
 #else
@@ -187,33 +227,40 @@ namespace {
       backend = acacia::synthesis_backend (backend, true);
       provider = acacia::synthesis_provider (provider, true);
     }
-    const auto unreal_x = arm.unreal ? std::make_optional<UNREAL_X_T> (arm.legacy->unreal_x)
-                                     : std::nullopt;
+    acacia::worker_route (
+        arm.unreal
+            ? (arm.legacy->unreal_x == UNREAL_X_FORMULA ? "unreal_formula" : "unreal_automaton")
+            : "real",
+        acacia::game_backend_name (backend), "REAL");
+    const auto unreal_x =
+        arm.unreal ? std::make_optional<UNREAL_X_T> (arm.legacy->unreal_x) : std::nullopt;
     const auto translation_pref = arm.legacy->translation_pref;
     // we check one thing at a time here
     assert (not unreal_x.has_value () or *unreal_x != UNREAL_X_BOTH);
-    utils::vout.set_prefix (
-        std::string {"["} +
-        (not unreal_x.has_value ()
-             ? std::string {"real="} + translation_pref_name (translation_pref)
-             : std::string {"unreal="} + unreal_strategy_name (*unreal_x) +
-                   ",pref=" + translation_pref_name (translation_pref)) +
-        ",backend=" + acacia::game_backend_name (backend) +
-        "] ");
-    verb_do (1, vout << "Starting solver child provider="
-                      << acacia::automaton_provider_name (provider)
-                      << " candidate_mode=" << acacia::candidate_mode_name (arg_values.candidate)
-                      << "\n" << std::flush);
+    utils::vout.set_prefix (std::string {"["} +
+                            (not unreal_x.has_value ()
+                                 ? std::string {"real="} + translation_pref_name (translation_pref)
+                                 : std::string {"unreal="} + unreal_strategy_name (*unreal_x) +
+                                       ",pref=" + translation_pref_name (translation_pref)) +
+                            ",backend=" + acacia::game_backend_name (backend) + "] ");
+    verb_do (
+        1, vout << "Starting solver child provider=" << acacia::automaton_provider_name (provider)
+                << " candidate_mode=" << acacia::candidate_mode_name (arg_values.candidate) << "\n"
+                << std::flush);
     const bool res = run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k,
                               arg_values.opt_kmin, arg_values.opt_kinc, arg_values.formula,
-                              unreal_x, translation_pref, arg_values.spot_fast,
-                              backend,
+                              unreal_x, translation_pref, arg_values.spot_fast, backend,
                               (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA)
                                   ? std::nullopt
                                   : arg_values.synth_fname,
                               arg_values.metadata, provider, arg_values.candidate);
     verb_do (1, vout << "returning " << res << "\n");
 
+    if (!res && acacia::active_worker_record () &&
+        std::strcmp (acacia::active_worker_record ()->reason, "none") == 0)
+      acacia::worker_stopped ("inconclusive");
+    acacia::worker_terminal (res ? (arm.unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL)
+                                 : EXIT_CODE_UNKNOWN);
     acacia::phase_records_summary ("legacy");
     if (unreal_x.has_value ())
       exit (res ? EXIT_CODE_UNREAL : EXIT_CODE_UNKNOWN);
@@ -226,15 +273,36 @@ namespace {
     // Publish the child PID before a termination handler can run.
     sigset_t old_mask;
     sigprocmask (SIG_BLOCK, &block_set, &old_mask);
+    if (g_worker_records) {
+      auto& record = g_worker_records[g_child_count];
+      record = acacia::worker_record {};
+      record.index = unsigned (g_child_count);
+      const char* backend = arm.legacy ? acacia::game_backend_name (arm.legacy->backend) : "oxidd";
+      acacia::worker_record_text (record.requested_backend, backend);
+      acacia::worker_record_text (record.effective_backend, backend);
+      acacia::worker_record_text (record.original_polarity, arm.both     ? "both"
+                                                            : arm.unreal ? "UNREAL"
+                                                                         : "REAL");
+      acacia::worker_record_text (record.proof_polarity, arm.legacy ? "REAL" : "unknown");
+    }
     const acacia::phase_stamp fork_start = acacia::phase_start ();
+    const auto parent_context =
+        g_worker_records ? g_worker_records[g_child_count] : acacia::worker_record {};
     const pid_t pid = fork ();
     if (pid == 0) {
       acacia::phase_records_init ();
-      const acacia::phase_stamp child_start = fork_start.wall
-          ? acacia::phase_stamp {fork_start.wall,
-                                 acacia::phase_clock (CLOCK_PROCESS_CPUTIME_ID)}
-          : acacia::phase_stamp {};
-      if (setpgid (0, 0) != 0) _exit (EXIT_CODE_ERROR);
+      if (g_worker_records) {
+        acacia::active_worker_record () = &g_worker_records[g_child_count];
+        acacia::active_worker_record ()->pid = getpid ();
+        acacia::worker_event (*acacia::active_worker_record (), "worker_start");
+        acacia::worker_route ("dispatch");
+      }
+      const acacia::phase_stamp child_start =
+          fork_start.wall ? acacia::phase_stamp {fork_start.wall,
+                                                 acacia::phase_clock (CLOCK_PROCESS_CPUTIME_ID)}
+                          : acacia::phase_stamp {};
+      if (setpgid (0, 0) != 0)
+        _exit (EXIT_CODE_ERROR);
       sigprocmask (SIG_SETMASK, &old_mask, nullptr);
       if (child_start.wall) {
         const char* name = arm.kind == portfolio_arm_kind::legacy ? "legacy" : arm.native_name ();
@@ -249,9 +317,32 @@ namespace {
       if (pid > 0) {
         // Also close the fork-to-setpgid window in the parent.
         setpgid (pid, pid);
+        if (g_worker_records) {
+          // Use the pre-fork context; the child owns the live snapshot.
+          auto spawned = parent_context;
+          spawned.pid = pid;
+          acacia::worker_event (spawned, "worker_spawn");
+          char specification[512];
+          const int length = snprintf (
+              specification, sizeof specification,
+              "{\"event\":\"worker_spec\",\"worker\":%u,\"worker_pid\":%ld,"
+              "\"kind\":\"%s\",\"requested_polarity\":\"%s\","
+              "\"translation\":\"%s\",\"transform\":\"%s\",\"provider\":\"%s\"}\n",
+              spawned.index, long (pid), arm.legacy ? "legacy" : arm.native_name (),
+              spawned.original_polarity,
+              arm.legacy ? translation_pref_name (arm.legacy->translation_pref) : "native",
+              arm.legacy ? (arm.unreal ? unreal_strategy_name (arm.legacy->unreal_x) : "real")
+                         : "exact",
+              arm.legacy ? acacia::automaton_provider_name (arm.legacy->provider) : "native");
+          if (length > 0 && size_t (length) < sizeof specification)
+            acacia::phase_records_send (specification, size_t (length));
+        }
         g_child_pids[g_child_count] = pid;
         g_child_count = g_child_count + 1;
       }
+      if (pid < 0 && g_worker_records)
+        acacia::worker_event (g_worker_records[g_child_count], "parent_terminal", "fork_failed",
+                              -1, 0, "unavailable");
       sigprocmask (SIG_SETMASK, &old_mask, nullptr);
     }
   }
@@ -263,8 +354,8 @@ namespace {
     setpgid (0, 0);
     assert (getpgid (0) == getpid ());
 
-    [[maybe_unused]] const size_t child_count = std::ranges::count_if (
-        *arg_values.arms, [&] (const auto& arm) {
+    [[maybe_unused]] const size_t child_count =
+        std::ranges::count_if (*arg_values.arms, [&] (const auto& arm) {
           return arm.kind != portfolio_arm_kind::legacy || arg_values.legacy_available;
         });
     verb_do (1, vout << "Starting " << child_count << " solver children\n" << std::flush);
@@ -274,11 +365,11 @@ namespace {
         continue;
       if (deadline_mono_ns && monotonic_ns () >= deadline_mono_ns) {
         std::cerr << "{\"stage\":\"deadline\",\"status\":\"expired\"}\n";
-        stop_children ();
+        stop_children ("deadline");
         error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
       }
       if (g_interrupted) {
-        stop_children ();
+        stop_children ("interrupted");
         error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
       }
       launch_child (arm, arg_values, deadline_mono_ns, block_set);
@@ -289,9 +380,13 @@ namespace {
     while (true) {  // wait only for solver arms; the record writer is separate
       bool live_arm = false;
       for (sig_atomic_t i = 0; i < g_child_count; ++i)
-        if (g_child_pids[i] > 0) { live_arm = true; break; }
-      if (!live_arm) break;
-      siginfo_t finished{};
+        if (g_child_pids[i] > 0) {
+          live_arm = true;
+          break;
+        }
+      if (!live_arm)
+        break;
+      siginfo_t finished {};
       const int observed = waitid (P_ALL, 0, &finished, WEXITED | WNOHANG | WNOWAIT);
       pid_t reaped = observed == -1 ? -1 : 0;
       int wait_error = errno;
@@ -307,10 +402,12 @@ namespace {
         reaped = waitpid (finished.si_pid, &status, WNOHANG);
         wait_error = errno;
       }
+      sig_atomic_t reaped_index = -1;
       if (reaped > 0) {
         for (sig_atomic_t i = 0; i < g_child_count; ++i)
           if (g_child_pids[i] == reaped) {
             g_child_pids[i] = 0;
+            reaped_index = i;
             break;
           }
       }
@@ -318,32 +415,40 @@ namespace {
       if (reaped > 0 && std::getenv ("ACACIA_TEST_DELAY_AFTER_REAP")) {
         std::cerr << "{\"stage\":\"test_reaped\",\"before_deadline\":"
                   << (monotonic_ns () < deadline_mono_ns ? "true" : "false") << "}\n";
-        timespec delay{0, 500000000};
+        timespec delay {0, 500000000};
         nanosleep (&delay, nullptr);
       }
 #endif
       const uint64_t now_ns = deadline_mono_ns ? monotonic_ns () : 0;
       if (deadline_mono_ns && now_ns >= deadline_mono_ns) {
         std::cerr << "{\"stage\":\"deadline\",\"status\":\"expired\"}\n";
-        stop_children ();
+        if (reaped_index >= 0)
+          record_parent_terminal (reaped_index, status, "deadline_rejected", reaped);
+        stop_children ("deadline");
         error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
       }
       if (g_interrupted) {
-        stop_children ();
+        if (reaped_index >= 0)
+          record_parent_terminal (reaped_index, status, "interrupted_rejected", reaped);
+        stop_children ("interrupted");
         error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
       }
       if (reaped == 0) {
-        const uint64_t pause_ns = deadline_mono_ns
-            ? std::min<uint64_t> (10000000, deadline_mono_ns - now_ns)
-            : 10000000;
-        timespec pause{0, static_cast<long> (pause_ns)};
+        const uint64_t pause_ns =
+            deadline_mono_ns ? std::min<uint64_t> (10000000, deadline_mono_ns - now_ns) : 10000000;
+        timespec pause {0, static_cast<long> (pause_ns)};
         nanosleep (&pause, nullptr);
         continue;
       }
       if (reaped == -1) {
-        if (wait_error == EINTR) continue;
+        if (wait_error == EINTR)
+          continue;
         break;
       }
+
+      if (reaped_index >= 0)
+        record_parent_terminal (reaped_index, status, WIFSIGNALED (status) ? "signal" : "exit",
+                                reaped);
 
       // A child killed by a signal (SIGSEGV, SIGABRT, ...) has WIFEXITED
       // false; WEXITSTATUS would then return 0, which equals EXIT_CODE_REAL
@@ -352,8 +457,7 @@ namespace {
       // through to UNKNOWN below.
       if (not WIFEXITED (status)) {
         if (WIFSIGNALED (status))
-          std::cerr << "{\"stage\":\"child_signal\",\"status\":"
-                    << WTERMSIG (status) << "}\n";
+          std::cerr << "{\"stage\":\"child_signal\",\"status\":" << WTERMSIG (status) << "}\n";
         continue;
       }
       int ret = WEXITSTATUS (status);
@@ -362,13 +466,22 @@ namespace {
         continue;
       }
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
+        if (g_worker_records && reaped_index >= 0) {
+          auto& winner = g_worker_records[reaped_index];
+          acacia::worker_record_text (winner.original_polarity,
+                                      ret == EXIT_CODE_REAL ? "REAL" : "UNREAL");
+          acacia::worker_event (winner, "parent_winner", "accepted", ret, 0,
+                                winner.dropped    ? "dropped"
+                                : winner.terminal ? "complete"
+                                                  : "incomplete");
+        }
         // Publish the definitive answer before terminating the other children.
         if (ret == EXIT_CODE_REAL)
           std::cout << "REALIZABLE\n";
         else
           std::cout << "UNREALIZABLE\n";
         std::cout << std::flush;
-        stop_children ();
+        stop_children ("winner_cancelled");
         return ret;
       }
     }
@@ -376,9 +489,7 @@ namespace {
       error (EXIT_CODE_ERROR, "ERROR\n");
     error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
     return EXIT_CODE_UNKNOWN;
-
   }
-
 
 }
 
@@ -395,6 +506,20 @@ int main (int argc, char** argv) {
   assert (arg_values.arms.has_value ());
   g_child_pids = new pid_t[arg_values.arms->size ()];
   g_main_pid = getpid ();
+  if (acacia::phase_records_enabled ()) {
+    const size_t bytes = arg_values.arms->size () * sizeof (acacia::worker_record);
+    void* shared =
+        mmap (nullptr, bytes, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    g_worker_records_shared = shared != MAP_FAILED;
+    g_worker_records = g_worker_records_shared
+                           ? static_cast<acacia::worker_record*> (shared)
+                           : new (std::nothrow) acacia::worker_record[arg_values.arms->size ()];
+    if (!g_worker_records) {
+      constexpr char unavailable[] =
+          "{\"event\":\"attribution_unavailable\",\"reason\":\"allocation\"}\n";
+      acacia::phase_records_send (unavailable, sizeof unavailable - 1);
+    }
+  }
 
   sigset_t block_set;
   sigemptyset (&block_set);
@@ -416,8 +541,10 @@ int main (int argc, char** argv) {
   try {
     return run_portfolio (arg_values, deadline_mono_ns, block_set);
   } catch (const std::exception& e) {
+    acacia::worker_terminal (EXIT_CODE_ERROR, "exception");
     error (EXIT_CODE_ERROR, "Exception caught: %s\n", e.what ());
   } catch (...) {
+    acacia::worker_terminal (EXIT_CODE_ERROR, "exception");
     error (EXIT_CODE_ERROR, "Unknown exception\n");
   }
 }

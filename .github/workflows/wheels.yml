@@ -17,7 +17,9 @@ env:
   SPOT_VERSION: 2.16
 
 jobs:
+  # Evidence archives are data-only releases, so skip package builds and publishing.
   build_wheels:
+    if: github.event_name != 'release' || !startsWith(github.event.release.tag_name, 'evidence-')
     name: Wheels ${{ matrix.arch }}
     strategy:
       fail-fast: false
@@ -44,7 +46,7 @@ jobs:
           submodules: recursive
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.4
+        uses: pypa/cibuildwheel@v4.3
         env:
           CIBW_BUILD: ${{ matrix.cibw_build }}
           CIBW_ARCHS_LINUX: ${{ matrix.cibw_arch }}
@@ -96,6 +98,7 @@ jobs:
           retention-days: 7
 
   build_sdist:
+    if: github.event_name != 'release' || !startsWith(github.event.release.tag_name, 'evidence-')
     name: Source distribution
     runs-on: ubuntu-latest
     steps:
@@ -106,7 +109,7 @@ jobs:
           submodules: recursive
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -122,7 +125,7 @@ jobs:
 
       - name: Restore Spot cache
         id: spot-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             /usr/local/lib/libspot*
@@ -160,7 +163,10 @@ jobs:
 
   publish:
     name: Publish to PyPI
-    if: github.event_name == 'release'
+    if: >-
+      github.event_name == 'release' &&
+      !startsWith(github.event.release.tag_name, 'evidence-') &&
+      !github.event.release.prerelease
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     environment:

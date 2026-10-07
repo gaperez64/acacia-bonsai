@@ -79,6 +79,66 @@ exclude incomplete sets. `loss-set.py`, `ltlsynt_ablation_report.py`,
 and phase stalls. `speedup-scatter.py` provides a paired per-instance view.
 These tools read explicit input paths and write to an ignored output directory.
 
+## Memory collection
+
+`benchlib.run_systemd_scope` remains the shared invocation runner. On Linux it
+creates a fresh delegated systemd scope for each invocation, with an owner and a
+workload in sibling cgroups. The requested memory/swap limits apply to the workload;
+the small owner remains outside that limit, holds the empty workload cgroup after
+normal exit, timeout or OOM, and waits for the external driver's acknowledgement.
+The driver reads `memory.peak` and `memory.events` before deletion and requires an
+empty `cgroup.events` populated state before and after those reads. Any owner error
+invalidates both observations even when the cgroup path and numeric files are present;
+the original error is retained as both missing reasons. A still-populated cgroup or
+unreadable/invalid drain state also withholds peak/events. Valid reaped-process RSS
+remains independently available. Group OOM stays
+disabled by default, preserving the prior child-OOM behavior; its explicit setting
+is recorded. CPU properties still bound the complete scope. This collector changes
+measurement overhead and scope layout: use fresh matched runs, not old timings.
+
+`scope_memory_peak_bytes` retains its schema name and means the concurrent workload
+cgroup peak, including all solver children. `max_process_rss_bytes` is the Linux
+`wait4.ru_maxrss` maximum for the reaped process tree, recorded by default; descendants
+that the solver did not reap may not contribute to this RSS statistic. RSS is never
+the concurrent scope peak. GNU time remains an optional CPU/RSS diagnostic. A missing
+peak, zero/sentinel read, unsupported platform or failed collector carries a reason;
+virtual reservations and OOM-only observations cannot replace a peak. Non-Linux
+runs report unsupported cgroup/RSS fields and cannot supply the Linux memory gate.
+Unscoped/campaign-shared runs carry explicit missing reasons; G3's instance mode
+is required for per-invocation memory evidence.
+
+Native coverage, portfolio-pair and `run-subset.py --raw-tsv FILE` keep their existing
+primary columns and write sources, cgroup path, OOM setting and missing reasons to
+`FILE.memory.tsv`. Current readers join this sidecar by observation identity and
+measurements; master readers can still read the primary TSV. `run-subset.py --csv FILE`
+also writes `FILE.memory.tsv` by default. Resuming an expanded primary TSV preserves
+its original bytes in `*-legacy.tsv` before moving provenance into the sidecar.
+Journal annotation records parent accounting in `parent_scope_memory_peak_bytes`
+and `parent_scope_memory_swap_peak_bytes`, separately from workload collection.
+
+Joins and paired reports give numerator/denominator and missing reasons separately
+for scope peak and process RSS. Explicit missing reasons and absent/invalid collection
+provenance exclude even numeric observations. A cohort median requires 100% coverage (a global,
+predeclared rule); otherwise it is suppressed and selection by outcome, including
+MEMOUT, is disclosed. Join denominators include every campaign row, including
+nonexecuted conversions; maxima describe only the observed subset.
+
+Run the real Linux lifecycle panel **outside the sandbox**, from this worktree:
+
+```sh
+set -o pipefail
+mkdir -p _bm-logs.p0-memory-validation
+/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python3 -u tests/check-scope-memory.py \
+  | tee _bm-logs.p0-memory-validation/lifecycle.jsonl
+```
+
+It uses the shared runner at 64 MiB/no swap for normal exit, timeout, child OOM and
+explicit group/invocation OOM. It asserts four distinct cgroups, positive authoritative
+peaks, retained OOM events, correct classifications and RSS or an explicit reason.
+The host needs a delegated Linux v2 memory controller, `memory.peak`, `cgroup.kill`
+and a functioning user systemd manager. Failure remains visible; there is no fallback
+memory estimate. The fake panel is `tests/pytest/test_scope_memory.py`.
+
 ## Corpus and panel selection
 
 For TLSF-backed SYNTCOMP25/26 suites, `syntcomp-corpus.py materialize` creates
@@ -105,7 +165,11 @@ both candidates. A stratified panel is a screen, not a full-corpus result.
   The binary serves near-cap remeasurement only.
 - **G2, Posets proxy:** `benchmarking/posets-microbench.sh` (advisory).
 - **G2s, solver-profile proxy:**
-  `benchmarking/solver-profile-gate.sh BASELINE-BIN CANDIDATE-BIN`.
+  `benchmarking/solver-profile-gate.sh --rule optimization BASELINE-BIN CANDIDATE-BIN`.
+  Select the rule before measuring: `optimization` applies the existing 5% improvement
+  proxy (or the existing single-target pass to G3); `membership-default` requires
+  no target beyond the same 6% regression ceiling and passes to G3 without a speedup
+  requirement. Both record the rule and thresholds in `g2s-rule.txt` and `decision.txt`.
   The SYNTCOMP25 `mixed` target is `evasion0.ltl`.
 - **G3, landing bar:** `benchmarking/landing-campaign.sh` compares paired
   binaries, suite lists and a 17 s timeout using `landing-bar.py`; every suite
@@ -114,11 +178,23 @@ both candidates. A stratified panel is a screen, not a full-corpus result.
   mode shares the scope. A mode change needs a fresh output directory and
   matched remeasurement of both binaries.
 - **G4, corpus correctness:**
-  `meson test -C build --num-processes 1 --suite=ab/realizable
-  --suite=ab/unrealizable`; timeouts are allowed, but `Fail: 0` and no false
-  verdict marker are required.
+  `python3 benchmarking/corpus-correctness-gate.py build` runs Meson's
+  realizable/unrealizable suites and reads their JSON records. Timeouts are allowed;
+  failed tests, false-verdict markers (including in timed-out tests), missing records
+  and unexplained launcher exits fail. Meson's exit status alone is insufficient.
 - **G5, native TLSF parity:** run `tlsf-verdict-parity.py` and
-  `check-tlsf-conversion.py` against the selected TLSF corpus.
+  `check-tlsf-conversion.py` against the selected TLSF corpus. Use
+  `tlsf-verdict-parity.py --prepare --native-inspect build/tests/tlsf-frontend-inspect
+  --canonicalizer build/tests/ltl-formula-canonicalize` with its usual required
+  arguments. Preparation and spot-check failures do not skip parity on available
+  pairs; the summary reports those exits and missing conversions separately, and
+  any unresolved failure keeps the gate failed. No implicit known-instance waiver.
+  Raw-LTL pairs must use the effective Mealy target: `convert-tlsf-corpus.py
+  SOURCE PAIRS --target Mealy --canonicalizer build/tests/ltl-formula-canonicalize`.
+  This adapts SyFCo's plain formula once using its declared source semantics;
+  the native inspector already adapted its formula. Normalization timeout is UNKNOWN,
+  never evidence of equivalence. Plain pairs remain appropriate for tools taking
+  their own semantics flag.
 
 The frozen G1 shipping-preset twin is
 `best_decomp_rank_bucketed_mona_eq_min_blocks_2`, whose binary SHA-256 is

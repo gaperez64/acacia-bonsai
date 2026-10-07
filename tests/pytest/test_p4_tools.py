@@ -335,7 +335,10 @@ def test_sampler_rejects_changed_work_count_on_same_outcome(tmp_path):
 @pytest.mark.parametrize("result", ["REALIZABLE", "TIMEOUT"])
 def test_merge_handles_empty_side_of_recycling(tmp_path, result):
     short = tmp_path / "short.tsv"
-    write_observations(short, [observation("a", result)])
+    row = {**observation("a", result), "scope_memory_peak_bytes": "4096",
+           "scope_memory_peak_source": "cgroup-v2/memory.peak", "memory_cgroup": "/invocation"}
+    write_observations(short, [row])
+    coverage.write_memory_sidecar(short, [row])
     prefix = tmp_path / "plan"
     short_records, long_records = tmp_path / "short-records", tmp_path / "long-records"
     events = [{"arm": "synthetic", "phase": "lift_method_x", "work_count": 3},
@@ -368,6 +371,10 @@ def test_merge_handles_empty_side_of_recycling(tmp_path, result):
                                            validation=validation, output=output)) == 0
     assert coverage.load_output(output)[0]["source_cap_s"] == \
         ("17" if result == "REALIZABLE" else "60")
+    if result == "REALIZABLE":
+        assert coverage.load_output(output)[0]["memory_cgroup"] == "/invocation"
+        assert threeway.load_series("candidate", output, 60, ["a"])["rows"]["a"][
+            "scope_memory_peak_source"] == "cgroup-v2/memory.peak"
     if result == "REALIZABLE":
         forged = json.loads(validation.read_text())
         forged["notes"].append("forged pass detail")

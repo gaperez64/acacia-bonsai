@@ -117,12 +117,21 @@ namespace {
                                                   TRANSLATION_PREF_T preference) {
     try {
       return create_automaton (formula, translator, preference);
+    } catch (const std::bad_alloc&) {
+      acacia::worker_stopped ("resource");
+      throw;
     } catch (const std::exception& exception) {
       const std::string_view message {exception.what ()};
+      acacia::worker_stopped (message.find ("Too many acceptance sets") != std::string_view::npos
+                                  ? "resource"
+                                  : "error");
       acacia::diagnostics::set_final_reason (message.find ("Too many acceptance sets") !=
                                                      std::string_view::npos
                                                  ? "translation-acceptance-set-limit"
                                                  : "translation-exception");
+      throw;
+    } catch (...) {
+      acacia::worker_stopped ("error");
       throw;
     }
   }
@@ -455,7 +464,10 @@ namespace {
                                     : "real");
           capture.put ("translation_pref", translation_pref_name (translation_pref));
           capture.put ("requested_provider", acacia::automaton_provider_name (provider));
-          capture.put ("requested_backend", acacia::game_backend_name (backend));
+          capture.put ("requested_backend",
+                       acacia::active_worker_record ()
+                           ? acacia::active_worker_record ()->requested_backend
+                           : acacia::game_backend_name (backend));
           capture.put ("candidate_mode", acacia::candidate_mode_name (candidate));
           capture.put ("kmin", std::to_string (opt_kmin));
           capture.put ("kmax", std::to_string (opt_k));
@@ -483,6 +495,8 @@ namespace {
                 acacia::spot_lazy_game::Reporter {[] (const auto& key, const auto& value) {
                   acacia::spot_records::put (key, value);
                 }});
+          acacia::spot_records::route (acacia::automaton_provider_name (provider),
+                                       acacia::game_backend_name (effective_backend));
           const auto result = acacia::spot_lazy_worker::solve (
               spot_formula, dict, all_inputs, all_outputs, opt_kmin, opt_k, opt_kinc,
               acacia::is_closure_provider (provider) ? acacia::spot_candidate_limits ()
@@ -502,6 +516,7 @@ namespace {
                        "rebuilding translation and preprocessing from captured worker formula; "
                        "lazy_materialization=none\n";
           effective_backend = acacia::game_backend::backward;
+          acacia::spot_records::route ("frozen_fallback", "backward");
           acacia::spot_records::put ("fallback", "frozen-graph:backward");
           acacia::spot_records::phase ("fallback-translation");
           acacia::diagnostics::set_support_backend ("backward");
@@ -772,6 +787,7 @@ namespace {
                                      std::to_string (rb_rule.max_boolean_percent));
         }
 #endif
+        acacia::spot_records::route ("solve_game", acacia::game_backend_name (effective_backend));
         std::optional<spot::twa_graph_ptr> maybe_strat;
         {
           ACACIA_DIAG_SCOPED_TIMER (solve_ms);

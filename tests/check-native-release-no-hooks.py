@@ -4,5 +4,8 @@ from pathlib import Path
 import sys
 
 binary = Path(sys.argv[1]).read_bytes()
-assert b"ACACIA_NATIVE_TEST_" not in binary
+for marker in (b"ACACIA_NATIVE_TEST_", b"ACACIA_TEST_", b"tlsf_gr1_lift_test_",
+               b"tlsf_gr1_both_test_", b"tlsf_gr1_env_test_", b"tlsf_gr1_env_rank_test_", b"reduction_test_",
+               b"contract_original_validate_game"):
+    assert marker not in binary, marker
 print("release binary contains no native test hook")

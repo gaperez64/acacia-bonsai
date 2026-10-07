@@ -1,15 +1,16 @@
 #pragma once
 
-#include "solver/game_backend.hh"
 #include "solver/closure_buchi_provider.hh"
-#include "solver/spot_worker_record.hh"
+#include "solver/game_backend.hh"
 #include "solver/k_schedule.hh"
 #include "solver/spot_candidate_limits.hh"
 #include "solver/spot_lazy_game.hh"
+#include "solver/spot_worker_record.hh"
 #include "utils/verbose.hh"
+
+#include <iomanip>
 #include <spot/tl/print.hh>
 #include <sys/resource.h>
-#include <iomanip>
 
 namespace acacia::spot_lazy_worker {
   enum class Outcome { win, kmax, unknown };
@@ -32,19 +33,68 @@ namespace acacia::spot_lazy_worker {
     return "unexpected";
   }
   inline std::string failure_reason (std::exception_ptr error, const char* otherwise) {
-    if (error) try { std::rethrow_exception (error); }
-    catch (const closure_buchi::AdapterFailure& e) {
-      return std::string ("closure-buchi:") + closure_failure_name (e.failure ().kind);
-    }
-    catch (...) {}
+    if (error)
+      try {
+        std::rethrow_exception (error);
+      } catch (const closure_buchi::AdapterFailure& e) {
+        return std::string ("closure-buchi:") + closure_failure_name (e.failure ().kind);
+      } catch (...) {
+      }
     return otherwise;
+  }
+
+  inline void record_failure (std::exception_ptr error,
+                              spot_letters::Unknown why = spot_letters::Unknown::row_failure) {
+    if (error)
+      try {
+        std::rethrow_exception (error);
+      } catch (const closure_buchi::AdapterFailure& e) {
+        using F = closure_buchi::FailureKind;
+        switch (e.failure ().kind) {
+          case F::unsupported_operator: worker_decline ("unsupported_operator"); return;
+          case F::normalization_limit:
+          case F::branch_limit:
+          case F::guard_limit:
+          case F::state_limit:
+          case F::row_limit:
+          case F::memory_limit: worker_stopped ("resource"); return;
+          case F::cancelled: worker_stopped ("cancelled"); return;
+          default: worker_stopped ("error"); return;
+        }
+      } catch (const spot_lazy::Declined& e) {
+        if (e.cause == spot_lazy::FailureCause::applicability)
+          worker_decline ("provider_not_applicable");
+        else
+          worker_stopped ("error");
+        return;
+      } catch (const std::bad_alloc&) {
+        worker_stopped ("resource");
+        return;
+      } catch (const std::length_error&) {
+        worker_stopped ("resource");
+        return;
+      } catch (const std::exception& e) {
+        worker_stopped (std::string_view (e.what ()).find ("Too many acceptance sets") !=
+                                std::string_view::npos
+                            ? "resource"
+                            : "error");
+        return;
+      } catch (...) {
+        worker_stopped ("error");
+        return;
+      }
+    using U = spot_letters::Unknown;
+    worker_stopped (why == U::resource_limit ? "resource"
+                    : why == U::aborted      ? "cancelled"
+                    : why == U::none         ? "inconclusive"
+                                             : "error");
   }
 
   // Exact, length-delimited worker identity; FNV-1a-64 is a reproducible identity
   // checksum, not a security hash. Include interface APs absent from the formula.
   inline void capture_boundary (spot::formula f, const std::vector<std::string>& inputs,
-                                 const std::vector<std::string>& outputs,
-                                 const std::string& target, spot_lazy_game::Reporter report) {
+                                const std::vector<std::string>& outputs, const std::string& target,
+                                spot_lazy_game::Reporter report) {
     std::string identity;
     auto append = [&] (const std::string& value) {
       identity += std::to_string (value.size ()) + ':' + value;
@@ -54,10 +104,14 @@ namespace acacia::spot_lazy_worker {
     append ("infinite-word;forall-input-exists-output;avoid-transition-buchi;cursor=0;rank=0");
     for (const auto* aps : {&inputs, &outputs}) {
       append (std::to_string (aps->size ()));
-      for (const auto& ap : *aps) append (ap);
+      for (const auto& ap : *aps)
+        append (ap);
     }
     std::uint64_t hash = 14695981039346656037ULL;
-    for (unsigned char c : identity) { hash ^= c; hash *= 1099511628211ULL; }
+    for (unsigned char c : identity) {
+      hash ^= c;
+      hash *= 1099511628211ULL;
+    }
     std::ostringstream hex;
     hex << std::hex << std::setfill ('0') << std::setw (16) << hash;
     report.put ("worker_boundary", identity);
@@ -87,7 +141,8 @@ namespace acacia::spot_lazy_worker {
       r.ms ("closure_normalization_ms", c.normalization_ns / 1e6);
       r.ms ("closure_raw_row_ms", c.raw_row_ns / 1e6);
       r.ms ("closure_cursor_row_ms", c.cursor_row_ns / 1e6);
-      if (c.complete_rows) r.ms ("first_row_ms", c.first_row_ns / 1e6);
+      if (c.complete_rows)
+        r.ms ("first_row_ms", c.first_row_ns / 1e6);
       r.count ("closure_branches_considered", c.branches_considered);
       r.count ("closure_branches_pruned", c.branches_pruned);
       r.count ("closure_guards_generated", c.guards_generated);
@@ -103,8 +158,8 @@ namespace acacia::spot_lazy_worker {
       r.count ("boolean_conversion_calls", c.boolean_conversion_calls);
       r.count ("boolean_complete_entries", c.boolean_complete_entries);
     };
-    auto store = std::make_unique<game::RowStore> (
-        game::FixedBuchi {{provider}, snapshot, {}}, rows, report);
+    auto store = std::make_unique<game::RowStore> (game::FixedBuchi {{provider}, snapshot, {}},
+                                                   rows, report);
     store->factory_started = started;
     game::require (provider->complete_rows () == 0 && provider->discovered_states () == 1);
     store->snapshot ();
@@ -114,9 +169,9 @@ namespace acacia::spot_lazy_worker {
   // Decision only: no graph/guard/constant-output certificate can escape to
   // controller synthesis. The caller supplies the existing transformed job.
   inline Outcome solve (spot::formula worker_formula, const spot::bdd_dict_ptr& dict,
-                         bdd all_inputs, bdd all_outputs, int kmin, int kmax, int kinc,
-                         spot_guarded::Limits limits = spot_taa_candidate_limits (),
-                         automaton_provider selected = automaton_provider::spot_lazy) {
+                        bdd all_inputs, bdd all_outputs, int kmin, int kmax, int kinc,
+                        spot_guarded::Limits limits = spot_taa_candidate_limits (),
+                        automaton_provider selected = automaton_provider::spot_lazy) {
     namespace game = spot_lazy_game;
     const auto started = game::Clock::now ();
     game::Reporter report;
@@ -129,7 +184,8 @@ namespace acacia::spot_lazy_worker {
         std::cerr << provider_name << " UNKNOWN: " << value << '\n';
       verb_do (1, utils::vout << provider_name << ' ' << key << '=' << value << std::endl);
     };
-    if (closure || spot_records::active) report.sink = sink;
+    if (closure || spot_records::active)
+      report.sink = sink;
     verb_do (1, report.sink = sink);
     struct Accounting {
         game::Reporter report;
@@ -140,7 +196,7 @@ namespace acacia::spot_lazy_worker {
           report.ms ("end_to_end_ms", game::elapsed (start));
           report.count ("peak_rss_bytes", size_t (usage.ru_maxrss) * 1024);
         }
-    } accounting {report, started}; // includes provider destruction
+    } accounting {report, started};  // includes provider destruction
     if (report.sink) {
       std::ostringstream text;
       text << worker_formula;
@@ -148,8 +204,9 @@ namespace acacia::spot_lazy_worker {
     }
     report.put ("provider", provider_name);
     report.put ("backend", closure ? "spot-guarded-sparse" : "spot-guarded");
-    report.put ("construction", closure ? "closure-buchi,cursor=one-obligation,initial_rank=0"
-                                        : "ltl_to_taa,refined_rules=false,cursor=P5,initial_rank=0");
+    report.put ("construction", closure
+                                    ? "closure-buchi,cursor=one-obligation,initial_rank=0"
+                                    : "ltl_to_taa,refined_rules=false,cursor=P5,initial_rank=0");
     report.count ("max_expansions", limits.max_expansions);
     report.count ("max_rows", limits.rows.max_rows);
     report.count ("max_rank_nodes", limits.max_rank_nodes);
@@ -157,8 +214,8 @@ namespace acacia::spot_lazy_worker {
     try {
       spot_lazy::Limits provider_limits;
       provider_limits.rows = limits.rows;
-      provider_limits.max_states = diagnostics::env_size (
-          "ACACIA_SPOT_MAX_PROVIDER_STATES", provider_limits.max_states, true);
+      provider_limits.max_states = diagnostics::env_size ("ACACIA_SPOT_MAX_PROVIDER_STATES",
+                                                          provider_limits.max_states, true);
       report.count ("max_provider_states", provider_limits.max_states);
       const auto factory_started = game::Clock::now ();
       report.put ("stage", "factory");
@@ -170,15 +227,20 @@ namespace acacia::spot_lazy_worker {
         owned_store = make_closure_store (worker_formula, dict, limits.rows, report, options);
       }
       else {
-        auto built = spot_lazy::make_view ([&] () -> spot::const_twa_ptr {
-          if (not worker_formula.is_ltl_formula ())
-            throw spot_lazy::Declined ("TAA route requires LTL");
-          return std::make_shared<game::ObservedProvider> (
-              spot::ltl_to_taa (worker_formula, dict, false), report);
-        }, provider_limits);
+        auto built = spot_lazy::make_view (
+            [&] () -> spot::const_twa_ptr {
+              if (not worker_formula.is_ltl_formula ())
+                throw spot_lazy::Declined (spot_lazy::FailureCause::applicability,
+                                           "TAA route requires LTL");
+              return std::make_shared<game::ObservedProvider> (
+                  spot::ltl_to_taa (worker_formula, dict, false), report);
+            },
+            provider_limits);
         if (not built.value) {
           report.put ("status", "UNKNOWN");
-          if (built.error) std::rethrow_exception (built.error);
+          if (built.error)
+            std::rethrow_exception (built.error);
+          record_failure ({}, spot_letters::Unknown::row_failure);
           return Outcome::unknown;
         }
         owned_store = std::make_unique<game::RowStore> (*built.value, limits.rows, report);
@@ -186,9 +248,10 @@ namespace acacia::spot_lazy_worker {
       report.ms ("factory_ms", game::elapsed (factory_started));
       auto& store = *owned_store;
       const auto& view = store.provider;
-      spot_letters::WorkerAlphabet alphabet {
-          view->ap_vars (), bdd_exist (view->ap_vars (), all_outputs),
-          bdd_exist (view->ap_vars (), all_inputs), {}};
+      spot_letters::WorkerAlphabet alphabet {view->ap_vars (),
+                                             bdd_exist (view->ap_vars (), all_outputs),
+                                             bdd_exist (view->ap_vars (), all_inputs),
+                                             {}};
       std::string partition, order;
       for (const auto& ap : view->ap ()) {
         const int var = dict->varnum (ap);
@@ -224,28 +287,40 @@ namespace acacia::spot_lazy_worker {
         report.count ("game_states", result.nodes.size ());
         report.count ("guarded_choices", result.choices_created);
         report.put ("status", solver_detail::forward_result_name (result.status));
-        report.put ("reason", failure_reason (store.row_error, spot_letters::unknown_name (result.failure)));
+        report.put ("reason",
+                    failure_reason (store.row_error, spot_letters::unknown_name (result.failure)));
         spot_records::phase ("verified-attempt");
         if (result.status == solver_detail::forward_result_status::win_k)
           return Outcome::win;
-        if (result.status != solver_detail::forward_result_status::lose_k)
+        if (result.status != solver_detail::forward_result_status::lose_k) {
+          record_failure (store.row_error, result.failure);
           return Outcome::unknown;
-        const auto next = k_schedule::next (
-            ACACIA_K_SCHEDULE, k, kmin, kmax, kinc,
-            {static_cast<long long> (result.solve_ms), result.proofs.size (), result.expansions, true});
-        if (not next) return Outcome::kmax;
+        }
+        const auto next = k_schedule::next (ACACIA_K_SCHEDULE, k, kmin, kmax, kinc,
+                                            {static_cast<long long> (result.solve_ms),
+                                             result.proofs.size (), result.expansions, true});
+        if (not next) {
+          worker_stage ("k_bound");
+          worker_stopped ("resource");
+          return Outcome::kmax;
+        }
         k = *next;
       }
     } catch (const closure_buchi::AdapterFailure& e) {
-      report.put ("reason", std::string ("closure-buchi:") + closure_failure_name (e.failure ().kind));
+      record_failure (std::current_exception ());
+      report.put ("reason",
+                  std::string ("closure-buchi:") + closure_failure_name (e.failure ().kind));
     } catch (const spot_letters::detail::Failure& e) {
+      record_failure (e.error, e.why);
       report.put ("reason", failure_reason (e.error, spot_letters::unknown_name (e.why)));
     } catch (const std::exception& e) {
+      record_failure (std::current_exception ());
       report.put ("reason", e.what ());
     } catch (...) {
+      record_failure (std::current_exception ());
       report.put ("reason", "provider-or-query-failure");
     }
     report.put ("status", "UNKNOWN");
     return Outcome::unknown;
   }
-} // namespace acacia::spot_lazy_worker
+}  // namespace acacia::spot_lazy_worker

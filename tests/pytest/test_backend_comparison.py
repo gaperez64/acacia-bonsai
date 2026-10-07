@@ -30,7 +30,8 @@ def test_fast_unknown_and_memory_limit_pay_full_par2_penalty():
     rows = {
         "answered": dict(result="REALIZABLE", seconds=1.0, scope_cpu_seconds="0"),
         "declined": dict(result="UNKNOWN", seconds=0.01),
-        "censored": dict(result="MEMOUT", seconds=2.0, scope_memory_peak_bytes="8589934592"),
+        "censored": dict(result="MEMOUT", seconds=2.0, scope_memory_peak_bytes="8589934592",
+                         scope_memory_peak_source="cgroup-v2/memory.peak", memory_cgroup="/invocation"),
     }
     score = comparison.score(rows, 17)
     assert (score["answered"], score["real"], score["unreal"]) == (1, 1, 0)
@@ -85,3 +86,14 @@ def test_comparison_refuses_different_cohorts(tmp_path, monkeypatch):
     with pytest.raises(SystemExit) as error:
         comparison.main()
     assert error.value.code == 2
+
+
+@pytest.mark.parametrize("provenance", [{}, {"scope_memory_peak_source": "cgroup-v2/memory.peak",
+                                           "memory_cgroup": "/invocation",
+                                           "scope_memory_peak_missing_reason": "collector failed"}])
+def test_uncollected_peaks_are_excluded_from_observations_and_maxima(provenance):
+    score = comparison.score({"case": {"result": "MEMOUT", "seconds": 1,
+                                      "scope_memory_peak_bytes": "4096", **provenance}}, 17)
+    assert score["scope_memory_peak_bytes_observations"] == 0
+    assert score["scope_memory_peak_bytes_max"] is None
+    assert score["memory_completeness"]["scope_memory_peak_bytes"]["numerator"] == 0
