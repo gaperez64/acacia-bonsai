@@ -449,6 +449,14 @@ namespace acacia::spot_lazy_game {
       }
   };
 
+  // Bound memo storage by the configured graph-header allowance. This global
+  // structural policy uses no input identity or expected outcome. BDD nodes,
+  // prepared edge groups and allocator overhead are outside this byte estimate.
+  inline size_t default_oracle_memo_budget (const guarded::Limits& limits = {}) {
+    return limits.max_rank_nodes * sizeof (guarded::GuardedRankNode) +
+           limits.max_choices * sizeof (guarded::GuardedChoice);
+  }
+
   // P3 predicates specialized to P5's sparse keys. The BDD boundary, budgets,
   // deterministic valuation picker and quantifiers are the existing P3 ones.
   // D(r) union support(target), never the discovered arena, defines a query.
@@ -486,6 +494,40 @@ namespace acacia::spot_lazy_game {
       size_t preimage_calls_ = 0, preimage_misses_ = 0;
       size_t threshold_levels_scanned_ = 0, prepared_edges_ = 0, prepared_levels_ = 0;
       size_t target_intern_misses_ = 0, preimage_key_entries_copied_ = 0;
+      size_t memo_bytes_ = 0, peak_memo_bytes_ = 0, cache_evictions_ = 0;
+      const size_t memo_budget_;
+      // Charge container payload, rank capacity, buckets and node links. BDD
+      // references are included; manager-owned BDD nodes are shared, not charged.
+      static constexpr size_t tree_links = 4 * sizeof (void*);
+      static constexpr size_t hash_links = 2 * sizeof (void*);
+      template <typename T>
+      static size_t buckets (const T& table) {
+        return table.bucket_count () > 1 ? table.bucket_count () * sizeof (void*) : 0;
+      }
+      static size_t identity_bytes (const Rank& rank) {
+        return rank_bytes (rank) + sizeof (size_t) + hash_links;
+      }
+      void enforce_memo_budget () {
+        peak_memo_bytes_ = std::max (peak_memo_bytes_, memo_bytes_);
+        if (memo_bytes_ <= memo_budget_)
+          return;
+        // Prepared groups stay valid, including the current query's references.
+        // No memo iterator or target identity is used after this checkpoint.
+        for (auto& [rank, p] : prepared_) {
+          (void) rank;
+          p.thresholds.clear ();
+          p.preimages.clear ();
+          if (p.compact) {
+            for (auto& dest : p.compact->destinations)
+              decltype (dest.thresholds) {}.swap (dest.thresholds);
+            for (auto& memo : p.compact->preimages)
+              decltype (p.compact->preimages)::value_type {}.swap (memo);
+          }
+        }
+        decltype (target_ranks_) {}.swap (target_ranks_);
+        memo_bytes_ = 0;
+        ++cache_evictions_;
+      }
       Prepared& prepare (const Rank& r, letters::detail::Letters& b) {
         used_rank_ = true;
         (void) r.is_safe (K_);
@@ -574,6 +616,8 @@ namespace acacia::spot_lazy_game {
               ++threshold_misses_;
             b.nodes (bddfalse);
             p.thresholds.emplace (std::make_pair (q, h), bddfalse);
+            memo_bytes_ += sizeof (decltype (p.thresholds)::value_type) + tree_links;
+            enforce_memo_budget ();
             return bddfalse;
           }
           auto& memo = dest->thresholds;
@@ -598,7 +642,10 @@ namespace acacia::spot_lazy_game {
           }
           b.nodes (result);
           // Publish only this requested suffix, after every checked OR finishes.
+          const auto capacity = memo.capacity ();
           memo.insert (cached, {h, result});
+          memo_bytes_ += (memo.capacity () - capacity) * sizeof (LevelGuard);
+          enforce_memo_budget ();
           return result;
         }
         if (auto it = p.thresholds.find ({q, h}); it != p.thresholds.end ()) {
@@ -618,6 +665,8 @@ namespace acacia::spot_lazy_game {
           }
         b.nodes (result);
         p.thresholds.emplace (std::make_pair (q, h), result);
+        memo_bytes_ += sizeof (decltype (p.thresholds)::value_type) + tree_links;
+        enforce_memo_budget ();
         return result;
       }
       // kind: 0 upward, 1 downward, 2 equality (P3's exact same boundaries).
@@ -626,18 +675,12 @@ namespace acacia::spot_lazy_game {
           ++preimage_calls_;
         (void) target.is_safe (K_);
         if (layout_ == OracleLayout::grouped) {
-          auto identity = target_ranks_.find (target);
-          if (identity == target_ranks_.end ()) {
-            identity = target_ranks_.emplace (target, 0).first;
-            if (store_.report.sink)
-              ++target_intern_misses_;
-          }
-          const auto id = &identity->first;
           auto& memo = p.compact->preimages.at (kind);
-          if (const auto found = memo.find (id); found != memo.end ()) {
-            ++preimage_hits_;
-            return found->second;
-          }
+          if (const auto identity = target_ranks_.find (target); identity != target_ranks_.end ())
+            if (const auto found = memo.find (&identity->first); found != memo.end ()) {
+              ++preimage_hits_;
+              return found->second;
+            }
           if (store_.report.sink)
             ++preimage_misses_;
           bdd result = bddtrue;
@@ -672,8 +715,23 @@ namespace acacia::spot_lazy_game {
             result = b.land (result, term);
           }
           b.nodes (result);
-          memo.emplace (id, result);
+          // Threshold publication can evict all identities. Intern only after
+          // computation, and never keep an iterator across a budget checkpoint.
+          auto identity = target_ranks_.find (target);
+          if (identity == target_ranks_.end ()) {
+            const auto old_buckets = buckets (target_ranks_);
+            identity = target_ranks_.emplace (target, 0).first;
+            memo_bytes_ +=
+                identity_bytes (identity->first) + buckets (target_ranks_) - old_buckets;
+            if (store_.report.sink)
+              ++target_intern_misses_;
+          }
+          const auto old_buckets = buckets (memo);
+          memo.emplace (&identity->first, result);
+          memo_bytes_ += sizeof (std::decay_t<decltype (memo)>::value_type) + hash_links +
+                         buckets (memo) - old_buckets;
           ++identity->second;
+          enforce_memo_budget ();
           return result;
         }
         if (store_.report.sink)
@@ -712,7 +770,10 @@ namespace acacia::spot_lazy_game {
           result = b.land (result, term);
         }
         b.nodes (result);
-        p.preimages.emplace (key, result);
+        const auto entry = p.preimages.emplace (key, result).first;
+        memo_bytes_ += sizeof (decltype (p.preimages)::value_type) + tree_links +
+                       entry->first.second.capacity () * sizeof (Rank::Entry);
+        enforce_memo_budget ();
         return result;
       }
       bdd aggregate (const Rank& r, const std::vector<Rank>& targets, bool bad,
@@ -737,15 +798,25 @@ namespace acacia::spot_lazy_game {
       }
 
       void clear_preimages (Prepared& p) {
+        for (const auto& [key, predicate] : p.preimages) {
+          (void) predicate;
+          memo_bytes_ -= sizeof (decltype (p.preimages)::value_type) + tree_links +
+                         key.second.capacity () * sizeof (Rank::Entry);
+        }
         p.preimages.clear ();
         if (p.compact)
           for (auto& memo : p.compact->preimages) {
+            memo_bytes_ -=
+                memo.size () * (sizeof (std::decay_t<decltype (memo)>::value_type) + hash_links) +
+                buckets (memo);
             while (!memo.empty ()) {
               const auto entry = memo.begin ();
               const auto identity = target_ranks_.find (*entry->first);
               memo.erase (entry);
-              if (--identity->second == 0)
+              if (--identity->second == 0) {
+                memo_bytes_ -= identity_bytes (identity->first);
                 target_ranks_.erase (identity);
+              }
             }
             decltype (p.compact->preimages)::value_type {}.swap (memo);
           }
@@ -753,35 +824,40 @@ namespace acacia::spot_lazy_game {
       void reclaim_target_buckets () {
         if (layout_ != OracleLayout::grouped)
           return;
+        const auto old_buckets = buckets (target_ranks_);
         if (target_ranks_.empty ())
           decltype (target_ranks_) {}.swap (target_ranks_);
         // Shrink below quarter occupancy to bound retained buckets by live
         // identities without rehashing after every individual eviction.
         else if (target_ranks_.size () < target_ranks_.bucket_count () / 4)
           target_ranks_.rehash (target_ranks_.size ());
+        memo_bytes_ -= old_buckets - buckets (target_ranks_);
       }
 
     public:
       Oracle (Reader& r, RowStore& store, letters::WorkerAlphabet a, int K,
-              OracleLayout layout = selected_oracle_layout)
+              OracleLayout layout = selected_oracle_layout,
+              size_t memo_budget = default_oracle_memo_budget ())
         : rows_ (r),
           store_ (store),
           boundary_ (store.cache, std::move (a), K),
           K_ (K),
-          layout_ (layout) {}
+          layout_ (layout),
+          memo_budget_ (memo_budget) {}
+      void release_caches () {
+        // Destroy pointer-keyed preimages before their owned target ranks.
+        decltype (prepared_) {}.swap (prepared_);
+        decltype (target_ranks_) {}.swap (target_ranks_);
+        memo_bytes_ = 0;
+      }
       void set_limits (letters::QueryLimits l) { boundary_.set_limits (l); }
       template <typename T, typename F>
       letters::Result<T> query (F&& f) {
         ++queries_;
         used_rank_ = false;
         auto result = boundary_.query<T> (std::forward<F> (f));
-        if (!result.value) {
-          prepared_.clear ();
-          if (layout_ == OracleLayout::grouped)
-            decltype (target_ranks_) {}.swap (target_ranks_);
-          else
-            target_ranks_.clear ();
-        }
+        if (!result.value)
+          release_caches ();
         else if (used_rank_)
           store_.useful_query ();
         return result;
@@ -995,6 +1071,10 @@ namespace acacia::spot_lazy_game {
         out.count (prefix + "cached_preimages", preimages);
         out.count (prefix + "interned_targets", target_ranks_.size ());
         out.count (prefix + "cache_rank_bytes", bytes);
+        out.count (prefix + "cache_evictions", cache_evictions_);
+        out.count (prefix + "oracle_memo_bytes_estimate", memo_bytes_);
+        out.count (prefix + "peak_oracle_memo_bytes_estimate", peak_memo_bytes_);
+        out.count (prefix + "oracle_memo_budget_bytes", memo_budget_);
         out.count (prefix + "oracle_payload_bytes_estimate", storage_bytes_estimate ());
       }
   };
@@ -1200,7 +1280,12 @@ namespace acacia::spot_lazy_game {
       // Row-independent UNSAFE/SUBSUMPTION rules have no row obligations.
       std::vector<RowIdentity> rows;
   };
-  using Limits = guarded::Limits;
+  struct Limits : guarded::Limits {
+      size_t max_oracle_memo_bytes;
+      Limits (guarded::Limits limits = {})
+        : guarded::Limits (limits),
+          max_oracle_memo_bytes (default_oracle_memo_budget (limits)) {}
+  };
   struct SolveResult {
       // Certificates contain BDD guards; retain their AP registrations until
       // after every guard is destroyed (members are destroyed in reverse).
@@ -1275,7 +1360,7 @@ namespace acacia::spot_lazy_game {
     return detail::checked<std::vector<Rank>> ([&] {
       detail::validate_semantics (certificate, requested);
       auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows);
-      Oracle oracle {*rows, view, alphabet, K, layout};
+      Oracle oracle {*rows, view, alphabet, K, layout, limits.max_oracle_memo_bytes};
       MetricReport metrics {oracle, view.report, "verify_"};
       VerifierMetricReport phases {oracle, view.report, "traversal"};
       oracle.set_limits (limits.verifier_queries);
@@ -1366,7 +1451,7 @@ namespace acacia::spot_lazy_game {
     return detail::checked<bool> ([&] {
       detail::validate_semantics (certificate, requested);
       auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows);
-      Oracle oracle {*rows, view, alphabet, K, layout};
+      Oracle oracle {*rows, view, alphabet, K, layout, limits.max_oracle_memo_bytes};
       MetricReport metrics {oracle, view.report, "verify_"};
       // Includes chronology, rebuilt rows and input restriction around each
       // Bad obligation, as well as the row-independent proof rules.
@@ -1443,7 +1528,7 @@ namespace acacia::spot_lazy_game {
           lean_verifier_ (lean_verifier),
           oracle_layout_ (layout),
           rows_ (std::make_shared<Reader> (view_, false, limits.rows)),
-          oracle_ (*rows_, view_, alphabet_, K, layout) {
+          oracle_ (*rows_, view_, alphabet_, K, layout, limits.max_oracle_memo_bytes) {
         result_.provider = view_.provider;
         result_.semantics = semantics_;
         oracle_.set_limits (limits_.queries);
@@ -1576,7 +1661,6 @@ namespace acacia::spot_lazy_game {
         acacia::legacy_bdd_gc gc;
         view_.phase = Phase::search;
         view_.report.ms ("stage_started_clock_ms", clock_ms ());
-        MetricReport metrics {oracle_, view_.report, "search_"};
         const auto started = std::chrono::steady_clock::now ();
         const auto search = detail::checked<bool> ([&] {
           detail::require (semantics_.valid ());
@@ -1619,6 +1703,9 @@ namespace acacia::spot_lazy_game {
                                : forward_result_status::unknown;
           return std::move (result_);
         }
+        // Search predicates are never read by the independent verifier. Keep
+        // the certificate and canonical rows, but release every oracle cache.
+        oracle_.release_caches ();
         view_.phase = Phase::verify;
         view_.report.put ("stage", "verification");
         view_.report.ms ("stage_started_clock_ms", clock_ms ());

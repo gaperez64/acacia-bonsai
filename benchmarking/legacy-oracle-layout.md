@@ -3,7 +3,7 @@
 `--oracle-layout scan|grouped` compares two exact representations in one executable. `scan`
 remains the runtime default. This option applies to sparse guarded search and its independent
 verifier; it does not change worker membership, translation, K scheduling, or the dense oracle's
-aggregate cache. There is no new compile-time option or structural tuning threshold.
+aggregate cache. There is no new compile-time option.
 
 The grouped layout combines guards at equal destination/level once, stores destinations and
 levels in sorted vectors, and memoizes only requested threshold suffixes. Thresholds are true
@@ -20,8 +20,29 @@ interner bucket arrays are released; nonempty interner buckets shrink below one-
 a global storage policy based only on live entries. Failed checked queries clear prepared
 predicates before destroying the interner. Identities and BDD answers never cross oracles, K
 attempts, or managers. The verifier reconstructs its reader, rows, rank interner and oracle
-independently. Complete groups, suffixes and preimages publish only after checked work; resource
-exhaustion remains inconclusive. The optional aggregate-cache experiment is deferred.
+independently. After recording search counters, both layouts release all search-oracle prepared
+ranks, predicates, target identities and bucket arrays before constructing the verifier. The
+canonical row store and certificate graph remain live for independent replay and source binding.
+Complete groups, suffixes and preimages publish only after checked work; resource exhaustion
+remains inconclusive. The optional aggregate-cache experiment is deferred.
+
+Both layouts have the same memo byte budget for preimages, thresholds and target identities.
+The default is the configured rank-node ceiling times the guarded node header size, plus the
+choice ceiling times the guarded choice header size. This is a global structural allowance,
+independent of input identity. Internal callers may override `Limits::max_oracle_memo_bytes`;
+zero disables retention. Accounting includes rank vector capacity, memo vector capacity,
+container values, node links and allocated hash buckets. BDD manager nodes, prepared edge groups
+and allocator metadata are outside this estimate.
+
+A completed memo insertion that exceeds the allowance clears all predicate memos and target
+identities, including threshold vector capacity and hash buckets. Prepared groups remain stable
+so a query can continue safely; every cache miss recomputes the exact predicate. One insertion
+(including any container growth) may transiently exceed the allowance. Target identities are
+interned after threshold computation, so an eviction cannot invalidate an in-progress preimage.
+The existing reporter exposes `search_` and `verify_` versions of `cache_evictions`,
+`oracle_memo_bytes_estimate`, `peak_oracle_memo_bytes_estimate` and `oracle_memo_budget_bytes`.
+Search retained-cache observations describe search completion, before release; the existing
+`retained_search_payload_bytes_estimate` describes what remains at verification entry.
 
 Existing threshold/preimage call, miss and hit counters remain available. Additional observed
 fields count prepared edges/levels, threshold levels visited, target interner misses, per-call

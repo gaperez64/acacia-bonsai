@@ -141,43 +141,43 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 | src/solver/spot_lazy_game.hh:398 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `q < store_.cache->state_count ()` |
 | src/solver/spot_lazy_game.hh:420 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `result.row != nullptr` |
 | src/solver/spot_lazy_game.hh:434 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `result.row != nullptr` |
-| src/solver/spot_lazy_game.hh:827 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `b.lor (kept, suffix[0]) == bddtrue` |
-| src/solver/spot_lazy_game.hh:841 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `kept == bddtrue` |
-| src/solver/spot_lazy_game.hh:1243 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `requested.valid () && certificate.semantics.valid () && certificate.semantics == requested` |
-| src/solver/spot_lazy_game.hh:1247 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `choice.constant_output.has_value () == (certificate.semantics.output_choice == OutputChoice::constant)` |
-| src/solver/spot_lazy_game.hh:1282 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `certificate.failure == Unknown::none && not certificate.pending_loss && not certificate.pending_expansion && certificate.initial < certificate.nodes.size ()` |
-| src/solver/spot_lazy_game.hh:1285 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `certificate.nodes[certificate.initial].rank == rows->initial_rank ()` |
-| src/solver/spot_lazy_game.hh:1296 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `not node.losing && not node.queued && node.active_rows_complete && rows->is_safe (node.rank, K)` |
-| src/solver/spot_lazy_game.hh:1303 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `choice.successor < certificate.nodes.size ()` |
-| src/solver/spot_lazy_game.hh:1305 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `not target.losing && rows->is_safe (target.rank, K)` |
-| src/solver/spot_lazy_game.hh:1321 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `b.satisfiable (choice.input_region)` |
-| src/solver/spot_lazy_game.hh:1322 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `b.land (choice.input_region, b.negate (projection)) == bddfalse` |
-| src/solver/spot_lazy_game.hh:1327 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `covered == bddtrue && covered == node.covered_inputs` |
-| src/solver/spot_lazy_game.hh:1354 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `detail::take (oracle.invariant (rows->initial_rank (), generators, 0)) == letters::Invariant::verified` |
-| src/solver/spot_lazy_game.hh:1375 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `certificate.failure == Unknown::none && not certificate.pending_loss && certificate.initial_proof && *certificate.initial_proof < certificate.proofs.size ()` |
-| src/solver/spot_lazy_game.hh:1382 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `record.id == id && record.node < certificate.nodes.size () && proof.rank == certificate.nodes[record.node].rank` |
-| src/solver/spot_lazy_game.hh:1386 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `dep < id` |
-| src/solver/spot_lazy_game.hh:1394 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `not safe && record.dependencies.empty () && proof.rows.empty () && not proof.input` |
-| src/solver/spot_lazy_game.hh:1398 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `record.dependencies.size () == 1 && proof.rows.empty () && not proof.input` |
-| src/solver/spot_lazy_game.hh:1400 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `Oracle::leq (certificate.proofs[record.dependencies[0]].rank, proof.rank)` |
-| src/solver/spot_lazy_game.hh:1404 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `safe && proof.input.has_value ()` |
-| src/solver/spot_lazy_game.hh:1405 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `detail::complete_rows (*rows, oracle, proof.rank) == proof.rows` |
-| src/solver/spot_lazy_game.hh:1412 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `all_outputs == bddtrue` |
-| src/solver/spot_lazy_game.hh:1415 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `false` |
-| src/solver/spot_lazy_game.hh:1421 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `root.record.node == certificate.initial && root.rank == rows->initial_rank ()` |
-| src/solver/spot_lazy_game.hh:1582 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `semantics_.valid ()` |
-| src/solver/spot_lazy_game.hh:1721 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `dep < proof_id` |
-| src/solver/spot_lazy_game.hh:1848 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `input.has_value ()` |
-| src/solver/spot_lazy_game.hh:1856 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `input.has_value ()` |
-| src/solver/spot_lazy_game.hh:1879 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `output.has_value ()` |
-| src/solver/spot_lazy_game.hh:1883 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `rows_->is_safe (successor, K_) && not losing_.subsumes (successor)` |
-| src/solver/spot_lazy_game.hh:1904 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `b.restrict_total (C, *input, Variables::inputs) == bddtrue` |
-| src/solver/spot_lazy_game.hh:1906 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `b.satisfiable (C) && b.land (C, result_.nodes[id].covered_inputs) == bddfalse` |
-| src/solver/spot_lazy_game.hh:1913 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `not result_.nodes[sid].losing` |
+| src/solver/spot_lazy_game.hh:903 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `b.lor (kept, suffix[0]) == bddtrue` |
+| src/solver/spot_lazy_game.hh:917 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `kept == bddtrue` |
+| src/solver/spot_lazy_game.hh:1328 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `requested.valid () && certificate.semantics.valid () && certificate.semantics == requested` |
+| src/solver/spot_lazy_game.hh:1332 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `choice.constant_output.has_value () == (certificate.semantics.output_choice == OutputChoice::constant)` |
+| src/solver/spot_lazy_game.hh:1367 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `certificate.failure == Unknown::none && not certificate.pending_loss && not certificate.pending_expansion && certificate.initial < certificate.nodes.size ()` |
+| src/solver/spot_lazy_game.hh:1370 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `certificate.nodes[certificate.initial].rank == rows->initial_rank ()` |
+| src/solver/spot_lazy_game.hh:1381 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `not node.losing && not node.queued && node.active_rows_complete && rows->is_safe (node.rank, K)` |
+| src/solver/spot_lazy_game.hh:1388 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `choice.successor < certificate.nodes.size ()` |
+| src/solver/spot_lazy_game.hh:1390 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `not target.losing && rows->is_safe (target.rank, K)` |
+| src/solver/spot_lazy_game.hh:1406 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `b.satisfiable (choice.input_region)` |
+| src/solver/spot_lazy_game.hh:1407 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `b.land (choice.input_region, b.negate (projection)) == bddfalse` |
+| src/solver/spot_lazy_game.hh:1412 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `covered == bddtrue && covered == node.covered_inputs` |
+| src/solver/spot_lazy_game.hh:1439 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `detail::take (oracle.invariant (rows->initial_rank (), generators, 0)) == letters::Invariant::verified` |
+| src/solver/spot_lazy_game.hh:1460 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `certificate.failure == Unknown::none && not certificate.pending_loss && certificate.initial_proof && *certificate.initial_proof < certificate.proofs.size ()` |
+| src/solver/spot_lazy_game.hh:1467 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `record.id == id && record.node < certificate.nodes.size () && proof.rank == certificate.nodes[record.node].rank` |
+| src/solver/spot_lazy_game.hh:1471 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `dep < id` |
+| src/solver/spot_lazy_game.hh:1479 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `not safe && record.dependencies.empty () && proof.rows.empty () && not proof.input` |
+| src/solver/spot_lazy_game.hh:1483 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `record.dependencies.size () == 1 && proof.rows.empty () && not proof.input` |
+| src/solver/spot_lazy_game.hh:1485 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `Oracle::leq (certificate.proofs[record.dependencies[0]].rank, proof.rank)` |
+| src/solver/spot_lazy_game.hh:1489 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `safe && proof.input.has_value ()` |
+| src/solver/spot_lazy_game.hh:1490 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `detail::complete_rows (*rows, oracle, proof.rank) == proof.rows` |
+| src/solver/spot_lazy_game.hh:1497 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `all_outputs == bddtrue` |
+| src/solver/spot_lazy_game.hh:1500 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `false` |
+| src/solver/spot_lazy_game.hh:1506 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `root.record.node == certificate.initial && root.rank == rows->initial_rank ()` |
+| src/solver/spot_lazy_game.hh:1666 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `semantics_.valid ()` |
+| src/solver/spot_lazy_game.hh:1808 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `dep < proof_id` |
+| src/solver/spot_lazy_game.hh:1935 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `input.has_value ()` |
+| src/solver/spot_lazy_game.hh:1943 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `input.has_value ()` |
+| src/solver/spot_lazy_game.hh:1966 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `output.has_value ()` |
+| src/solver/spot_lazy_game.hh:1970 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `rows_->is_safe (successor, K_) && not losing_.subsumes (successor)` |
+| src/solver/spot_lazy_game.hh:1991 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `b.restrict_total (C, *input, Variables::inputs) == bddtrue` |
+| src/solver/spot_lazy_game.hh:1993 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `b.satisfiable (C) && b.land (C, result_.nodes[id].covered_inputs) == bddfalse` |
+| src/solver/spot_lazy_game.hh:2000 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `not result_.nodes[sid].losing` |
 | src/solver/spot_lazy_game.hh:41 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"spot-lazy: " + s` |
-| src/solver/spot_lazy_game.hh:1589 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
-| src/solver/spot_lazy_game.hh:1703 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
-| src/solver/spot_lazy_game.hh:1911 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
+| src/solver/spot_lazy_game.hh:1673 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
+| src/solver/spot_lazy_game.hh:1790 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
+| src/solver/spot_lazy_game.hh:1998 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
 | src/solver/spot_guarded_forward_safety.hh:103 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `row.row != nullptr` |
 | src/solver/spot_guarded_forward_safety.hh:136 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `certificate.failure == Unknown::none && not certificate.pending_loss && not certificate.pending_expansion && certificate.initial < certificate.nodes.size ()` |
 | src/solver/spot_guarded_forward_safety.hh:138 | `UNKNOWN` | `invalid_query` | STOPPED/error | `verifier` | `certificate.nodes[certificate.initial].rank == rows->initial_rank ()` |

@@ -1,3 +1,4 @@
+#define ACACIA_PROVIDER_REPLAY_TESTING
 #include "research/explicit_forward_game.hh"
 #include "solver/spot_lazy_game.hh"
 #include "tiny_spot_game.hh"
@@ -14,13 +15,21 @@ namespace posets::vectors {
   size_t bool_threshold = 0;
 }
 
+namespace acacia::spot_lazy_game {
+  struct SearchTestAccess {
+      static void report_oracle (Search& search, const Reporter& report) {
+        search.oracle_.report (report, "released_");
+      }
+  };
+}
+
 namespace {
   using namespace acacia::spot_lazy_game;
   namespace games = acacia::testing::spot_games;
   namespace reference = acacia::research;
   using acacia::OracleLayout;
   using Fields = std::map<std::string, std::string>;
-  size_t predicates = 0, outcomes = 0, rejected = 0, interrupted = 0;
+  size_t predicates = 0, outcomes = 0, rejected = 0, interrupted = 0, evictions = 0;
 
   void expect (bool value, const char* message) {
     if (!value)
@@ -79,6 +88,8 @@ namespace {
     Reader reader {store, false, {}};
     Oracle scan {reader, store, a, K, OracleLayout::scan};
     Oracle grouped {reader, store, a, K, OracleLayout::grouped};
+    Oracle bounded_scan {reader, store, a, K, OracleLayout::scan, 128};
+    Oracle bounded_grouped {reader, store, a, K, OracleLayout::grouped, 128};
     const auto domain = ranks (store.cache->state_count (), K);
     const auto letters = games::letters (a, Variables::all);
     const auto count = exhaustive ? domain.size () : size_t (8);
@@ -88,7 +99,9 @@ namespace {
         for (int h = -3; h <= K + 2; ++h) {
           const auto expected = expected_threshold (store, source, q, h, K);
           expect (take (scan.threshold (source, q, h)) == expected &&
-                      take (grouped.threshold (source, q, h)) == expected,
+                      take (grouped.threshold (source, q, h)) == expected &&
+                      take (bounded_scan.threshold (source, q, h)) == expected &&
+                      take (bounded_grouped.threshold (source, q, h)) == expected,
                   "threshold layouts agree with the active-edge OR, including boundaries");
           ++predicates;
         }
@@ -107,24 +120,74 @@ namespace {
           if (next == target)
             eq |= letter;
           expect (take (scan.evaluate (source, letter)) == next &&
-                      take (grouped.evaluate (source, letter)) == next,
+                      take (grouped.evaluate (source, letter)) == next &&
+                      take (bounded_scan.evaluate (source, letter)) == next &&
+                      take (bounded_grouped.evaluate (source, letter)) == next,
                   "evaluation preserves bottom, increments and saturation");
         }
         for (int repeat = 0; repeat < 2; ++repeat) {
-          expect (
-              take (scan.up (source, target)) == up && take (grouped.up (source, target)) == up,
-              "upward preimage matches enumerated arithmetic");
+          expect (take (scan.up (source, target)) == up &&
+                      take (grouped.up (source, target)) == up &&
+                      take (bounded_scan.up (source, target)) == up &&
+                      take (bounded_grouped.up (source, target)) == up,
+                  "upward preimage matches enumerated arithmetic");
           expect (take (scan.down (source, target)) == down &&
-                      take (grouped.down (source, target)) == down,
+                      take (grouped.down (source, target)) == down &&
+                      take (bounded_scan.down (source, target)) == down &&
+                      take (bounded_grouped.down (source, target)) == down,
                   "downward preimage matches enumerated arithmetic");
-          expect (
-              take (scan.eq (source, target)) == eq && take (grouped.eq (source, target)) == eq,
-              "equality preimage matches enumerated arithmetic");
+          expect (take (scan.eq (source, target)) == eq &&
+                      take (grouped.eq (source, target)) == eq &&
+                      take (bounded_scan.eq (source, target)) == eq &&
+                      take (bounded_grouped.eq (source, target)) == eq,
+                  "equality preimage matches enumerated arithmetic");
           predicates += 3;
         }
       }
     }
   }
+  void same_certificate (const SolveResult& expected, const SolveResult& actual) {
+    expect (expected.status == actual.status && expected.failure == actual.failure &&
+                expected.initial == actual.initial &&
+                expected.initial_proof == actual.initial_proof &&
+                expected.pending_loss == actual.pending_loss &&
+                expected.pending_expansion == actual.pending_expansion &&
+                expected.generators == actual.generators &&
+                expected.nodes.size () == actual.nodes.size () &&
+                expected.proofs.size () == actual.proofs.size () &&
+                expected.expansions == actual.expansions &&
+                expected.choices_created == actual.choices_created,
+            "eviction preserves fixed-K results and certificate shape");
+    for (size_t i = 0; i < expected.nodes.size (); ++i) {
+      const auto& x = expected.nodes[i];
+      const auto& y = actual.nodes[i];
+      expect (x.rank == y.rank && x.active_rows_complete == y.active_rows_complete &&
+                  x.losing == y.losing && x.covered_inputs == y.covered_inputs &&
+                  x.choices.size () == y.choices.size () && x.queued == y.queued &&
+                  x.incoming.size () == y.incoming.size (),
+              "eviction preserves ranks, row completion and coverage");
+      for (size_t j = 0; j < x.incoming.size (); ++j)
+        expect (x.incoming[j].source == y.incoming[j].source &&
+                    x.incoming[j].choice == y.incoming[j].choice,
+                "eviction preserves incoming dependency records");
+      for (size_t j = 0; j < x.choices.size (); ++j)
+        expect (x.choices[j].input_region == y.choices[j].input_region &&
+                    x.choices[j].constant_output == y.choices[j].constant_output &&
+                    x.choices[j].successor == y.choices[j].successor &&
+                    x.choices[j].active == y.choices[j].active,
+                "eviction preserves every certificate choice");
+    }
+    for (size_t i = 0; i < expected.proofs.size (); ++i) {
+      const auto& x = expected.proofs[i];
+      const auto& y = actual.proofs[i];
+      expect (x.rank == y.rank && x.input == y.input && x.rows == y.rows &&
+                  x.record.id == y.record.id && x.record.reason == y.record.reason &&
+                  x.record.node == y.record.node && x.record.witness == y.record.witness &&
+                  x.record.dependencies == y.record.dependencies,
+              "eviction preserves every proof and row obligation");
+    }
+  }
+
   void compare_outcomes (RowStore& store, const letters::WorkerAlphabet& a, int K,
                          size_t bool_threshold) {
     std::vector<std::vector<reference::action_vec>> actions;
@@ -186,25 +249,66 @@ namespace {
                       x.choices[j].active == y.choices[j].active,
                   "choice traces are preserved");
       }
-      for (auto layout : {OracleLayout::scan, OracleLayout::grouped}) {
-        auto corrupt = grouped;
-        if (grouped.status == solver_detail::forward_result_status::win_k) {
-          corrupt.nodes.at (corrupt.initial).covered_inputs = bddfalse;
-          expect (!verify_winning_certificate (store, a, K, corrupt, {}, semantics,
-                                               LeanVerifier::off, layout)
-                       .value,
-                  "fresh verifier rejects corrupted coverage after warm search");
+      for (const auto layout : {OracleLayout::scan, OracleLayout::grouped})
+        for (const auto budget : {size_t (0), size_t (128), size_t (4096)}) {
+          Fields fields;
+          Search* active_search = nullptr;
+          bool saw_verification = false;
+          Reporter reporter {[&] (const auto& k, const auto& v) { fields[k] = v; },
+                             [&] {
+                               if (fields["stage"] != "verification" || saw_verification)
+                                 return;
+                               saw_verification = true;
+                               SearchTestAccess::report_oracle (*active_search, store.report);
+                               expect (fields.at ("released_cached_preimages") == "0" &&
+                                           fields.at ("released_cached_thresholds") == "0" &&
+                                           fields.at ("released_interned_targets") == "0",
+                                       "search answers are gone at entry to fresh verification");
+                             }};
+          const auto saved_report = store.report;
+          store.report = reporter;
+          Limits limits;
+          limits.max_oracle_memo_bytes = budget;
+          Search search {store, a, K, limits, semantics, LosingInputSearch::off, LeanVerifier::off,
+                         layout};
+          active_search = &search;
+          const auto bounded = search.solve ();
+          expect (saw_verification, "completed searches reach independent verification");
+          same_certificate (scan, bounded);
+          SearchTestAccess::report_oracle (search, reporter);
+          expect (fields.at ("released_cached_preimages") == "0" &&
+                      fields.at ("released_cached_thresholds") == "0" &&
+                      fields.at ("released_interned_targets") == "0" &&
+                      fields.at ("released_oracle_memo_bytes_estimate") == "0",
+                  "both layouts release all search predicates before verification");
+          expect (std::stoull (fields.at ("verify_oracle_memo_bytes_estimate")) <= budget,
+                  "independent verification also respects the byte budget");
+          evictions += std::stoull (fields.at ("search_cache_evictions"));
+          store.report = saved_report;
+          ++outcomes;
         }
-        else {
-          corrupt.proofs.at (*corrupt.initial_proof)
-              .record.dependencies.push_back (*corrupt.initial_proof);
-          expect (
-              !verify_losing_proof (store, a, K, corrupt, {}, semantics, LeanVerifier::off, layout)
-                   .value,
-              "fresh verifier rejects corrupted chronology after warm search");
+      for (auto layout : {OracleLayout::scan, OracleLayout::grouped})
+        for (const auto budget : {size_t (0), size_t (128), default_oracle_memo_budget ()}) {
+          Limits verifier_limits;
+          verifier_limits.max_oracle_memo_bytes = budget;
+          auto corrupt = grouped;
+          if (grouped.status == solver_detail::forward_result_status::win_k) {
+            corrupt.nodes.at (corrupt.initial).covered_inputs = bddfalse;
+            expect (!verify_winning_certificate (store, a, K, corrupt, verifier_limits, semantics,
+                                                 LeanVerifier::off, layout)
+                         .value,
+                    "fresh verifier rejects corrupted coverage after warm search");
+          }
+          else {
+            corrupt.proofs.at (*corrupt.initial_proof)
+                .record.dependencies.push_back (*corrupt.initial_proof);
+            expect (!verify_losing_proof (store, a, K, corrupt, verifier_limits, semantics,
+                                          LeanVerifier::off, layout)
+                         .value,
+                    "fresh verifier rejects corrupted chronology after warm search");
+          }
+          ++rejected;
         }
-        ++rejected;
-      }
       ++outcomes;
     }
   }
@@ -388,6 +492,127 @@ namespace {
     std::cout << "18000 distinct generated targets; 12000 bounded churn cycles\n";
   }
 
+  void generated_eviction_search () {
+    auto g = games::graph (6, false);
+    const auto a = games::alphabet (g, true, true);
+    g->new_edge (0, 0, bddtrue);
+    g->new_edge (0, 1, a.inputs);
+    for (unsigned q = 1; q < 5; ++q)
+      g->new_edge (q, q + 1, bddtrue);
+    RowStore store {FixedBuchi {{g}, {}, {}}, {}};
+    store.enumerate_and_freeze ();
+    std::vector<rows::CompleteRankRow> original;
+    for (unsigned q = 0; q < 6; ++q)
+      original.push_back (store.get (q));
+    Limits unlimited;
+    unlimited.max_oracle_memo_bytes = std::numeric_limits<size_t>::max ();
+    const auto baseline = Search {store, a, 2, unlimited}.solve ();
+    expect (baseline.nodes.size () == 32 &&
+                baseline.status == solver_detail::forward_result_status::win_k,
+            "generated shift game explores all input-history ranks");
+    for (const auto layout : {OracleLayout::scan, OracleLayout::grouped}) {
+      Fields fields;
+      store.report = Reporter {[&] (const auto& k, const auto& v) { fields[k] = v; }};
+      Limits bounded;
+      bounded.max_oracle_memo_bytes = 2048;
+      const auto result = Search {store,
+                                  a,
+                                  2,
+                                  bounded,
+                                  default_choice_semantics,
+                                  LosingInputSearch::off,
+                                  LeanVerifier::off,
+                                  layout}
+                              .solve ();
+      same_certificate (baseline, result);
+      expect (std::stoull (fields.at ("search_cache_evictions")) > 1 &&
+                  std::stoull (fields.at ("verify_cache_evictions")) > 1,
+              "generated search and independent check both force repeated eviction");
+      evictions += std::stoull (fields.at ("search_cache_evictions"));
+      for (unsigned q = 0; q < 6; ++q) {
+        const auto& before = original[q];
+        const auto& after = store.get (q);
+        expect (before.digest == after.digest && before.edges.size () == after.edges.size () &&
+                    before.spot_edges.size () == after.spot_edges.size (),
+                "eviction preserves normalized rows and original edge counts");
+        for (size_t e = 0; e < before.edges.size (); ++e)
+          expect (before.edges[e].destination == after.edges[e].destination &&
+                      before.edges[e].condition == after.edges[e].condition &&
+                      before.edges[e].increment == after.edges[e].increment,
+                  "eviction preserves each complete row edge");
+      }
+      ++outcomes;
+    }
+    store.report = {};
+  }
+
+  void eviction_and_interruption () {
+    auto g = games::graph (3, false);
+    const auto a = games::alphabet (g, true, true);
+    for (unsigned q = 0; q < 3; ++q) {
+      g->new_edge (q, (q + 1) % 3, a.inputs, {0});
+      g->new_edge (q, q, a.outputs);
+    }
+    RowStore store {FixedBuchi {{g}, {}, {}}, {}};
+    store.enumerate_and_freeze ();
+    const auto complete_rows = store.cache->complete_rows ();
+    const Rank source {{{0, 1}, {1, 2}}, 3}, target {{{0, 2}, {2, 2}}, 3};
+    Reader reader {store, false, {}};
+    for (const auto layout : {OracleLayout::scan, OracleLayout::grouped}) {
+      Oracle reference {reader, store, a, 3, layout};
+      const auto expected = take (reference.bad (source, {target, source}, 0));
+      for (const auto bytes : {size_t (0), size_t (128), size_t (512)}) {
+        Fields fields;
+        Reporter report {[&] (const auto& k, const auto& v) { fields[k] = v; }};
+        Oracle completed {reader, store, a, 3, layout, bytes};
+        expect (take (completed.bad (source, {target, source}, 0)) == expected,
+                "eviction inside an aggregate recomputes exact predicates");
+        completed.report (report, "");
+        expect (std::stoull (fields.at ("oracle_memo_bytes_estimate")) <= bytes &&
+                    std::stoull (fields.at ("cache_evictions")) > 0,
+                "the small aggregate forces mid-query eviction in both layouts");
+        const auto steps = completed.work_metrics ().steps;
+        for (size_t stop = 0; stop < steps; ++stop)
+          for (const bool cancel : {false, true}) {
+            Oracle interrupted_query {reader, store, a, 3, layout, bytes};
+            letters::QueryLimits limits;
+            size_t remaining = stop;
+            if (cancel) {
+              limits.aborted = [] (void* data) {
+                auto& count = *static_cast<size_t*> (data);
+                return count == 0 ? true : (--count, false);
+              };
+              limits.abort_data = &remaining;
+            }
+            else
+              limits.max_steps = stop;
+            interrupted_query.set_limits (limits);
+            const auto failed = interrupted_query.bad (source, {target, source}, 0);
+            expect (!failed.value &&
+                        failed.unknown == (cancel ? Unknown::aborted : Unknown::resource_limit),
+                    "every eviction-query interruption remains inconclusive");
+            interrupted_query.report (report, "failed_");
+            expect (fields.at ("failed_cached_thresholds") == "0" &&
+                        fields.at ("failed_cached_preimages") == "0" &&
+                        fields.at ("failed_interned_targets") == "0" &&
+                        fields.at ("failed_oracle_memo_bytes_estimate") == "0",
+                    "cancellation and interruption never retain partial entries");
+            interrupted_query.set_limits ({});
+            expect (take (interrupted_query.bad (source, {target, source}, 0)) == expected,
+                    "restarting an interrupted eviction query is exact");
+            ++interrupted;
+          }
+        completed.clear_preimages (source);
+        completed.retain_preimages ({});
+        completed.report (report, "cleared_");
+        expect (std::stoull (fields.at ("cleared_oracle_memo_bytes_estimate")) <= bytes,
+                "partial preimage eviction maintains byte accounting");
+      }
+    }
+    expect (store.cache->complete_rows () == complete_rows,
+            "predicate eviction does not change complete row storage");
+  }
+
   void failures_and_counters () {
     auto g = games::graph (3, false);
     const auto a = games::alphabet (g, true, true);
@@ -509,6 +734,8 @@ int main () {
     identity_and_lazy_suffixes ();
     identity_retention ();
     failures_and_counters ();
+    eviction_and_interruption ();
+    generated_eviction_search ();
     for (unsigned game = 0; game < 160; ++game) {
       const bool frozen = game % 2 == 0;
       const auto fixture = games::random_game (rng, game, frozen);
@@ -521,9 +748,11 @@ int main () {
       compare_predicates (*store, fixture.alphabet, fixture.K, game < 16, rng);
       compare_outcomes (*store, fixture.alphabet, fixture.K, fixture.bool_threshold);
     }
+    expect (evictions > 0, "generated fixed-K searches force memo eviction");
     std::cout << predicates << " threshold/preimage comparisons; " << outcomes
               << " fixed-K matches; " << rejected << " corrupt certificates rejected; "
-              << interrupted << " inconclusive stops; seed=" << games::seed << '\n';
+              << interrupted << " inconclusive stops; " << evictions
+              << " forced search evictions; seed=" << games::seed << '\n';
   } catch (const std::exception& e) {
     std::cerr << e.what () << '\n';
     return 1;
