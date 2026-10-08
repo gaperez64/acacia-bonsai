@@ -117,7 +117,7 @@ void show_help (const char* program_name) {
       << "  --equivariance-budget F|DURATION|unbounded (default 3s); 0 <= F < 1\n"
       << "                    of remaining invocation budget, or a fixed 5 s reference without\n"
       << "                    a deadline; duration uses s or ms (e.g. 3s, 3000ms); cumulative\n"
-      << "  --oracle-layout VAL  sparse guard storage from [scan|grouped] (default: scan)\n"
+      << "  --oracle-layout VAL  sparse guard storage from [scan|grouped] (default: grouped)\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"

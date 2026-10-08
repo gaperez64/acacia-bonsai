@@ -259,8 +259,10 @@ foreach variant : spot_provider_replay_variants
   )
   test(variant[0], spot_provider_replay_test,
        suite: ['unit', 'spot-provider-replay'])
-  test(variant[0] + '-grouped', spot_provider_replay_test,
-       args: ['--oracle-layout', 'grouped'], suite: ['unit', 'spot-provider-replay'])
+  foreach layout : ['scan', 'grouped']
+    test(variant[0] + '-' + layout, spot_provider_replay_test,
+         args: ['--oracle-layout', layout], suite: ['unit', 'spot-provider-replay'])
+  endforeach
 endforeach
 
 sparse_forward_rank_test = executable (

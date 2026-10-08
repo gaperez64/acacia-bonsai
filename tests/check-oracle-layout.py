@@ -48,23 +48,27 @@ MAIN {{ INPUTS {{ req; }} OUTPUTS {{ grant; }}
         args = ["--tlsf", str(source), "--arms", "real:small:spot-guarded-sparse",
                 "--spot-fast", "off", "--weakening", "off", "--equivariance", "off",
                 "-M", "2", "-K", "2"]
-        assert run([*args, "--oracle-layout", "scan"]) == run([
-            *args, "--oracle-layout", "grouped"])
+        baseline = run(args)
+        assert baseline == run([*args, "--oracle-layout", "scan"])
+        assert baseline == run([*args, "--oracle-layout", "grouped"])
     # Observation stays opt-in, and both independent oracle instances record
     # the chosen layout. No solver-known deadline is supplied.
-    captures = scratch / "captures"
-    captures.mkdir()
     args = ["-f", "G(req <-> X(grant))", "-i", "req", "-o", "grant",
             "--arms", "real:small:spot-guarded-sparse", "--spot-fast", "off",
-            "--weakening", "off", "--equivariance", "off", "-M", "2", "-K", "2",
-            "--oracle-layout", "grouped"]
-    plain = run(args)
-    observed = run(args, {"ACACIA_SPOT_CAPTURE_DIR": str(captures)})
-    assert plain == observed
-    rows = [json.loads(p.read_text()) for p in captures.glob("*.json")]
-    assert rows
-    assert all(row["search_oracle_layout"] == row["verify_oracle_layout"] == "grouped"
-               for row in rows)
+            "--weakening", "off", "--equivariance", "off", "-M", "2", "-K", "2"]
+    baseline = run(args)
+    for layout in (None, "scan", "grouped"):
+        captures = scratch / (layout or "default")
+        captures.mkdir()
+        selected = args if layout is None else [*args, "--oracle-layout", layout]
+        plain = run(selected)
+        observed = run(selected, {"ACACIA_SPOT_CAPTURE_DIR": str(captures)})
+        assert baseline == plain == observed
+        rows = [json.loads(p.read_text()) for p in captures.glob("*.json")]
+        assert rows
+        expected = layout or "grouped"
+        assert all(row["search_oracle_layout"] == row["verify_oracle_layout"] == expected
+                   for row in rows)
     output = scratch / "controller.aag"
     args = ["-f", "G(grant)", "-i", "req", "-o", "grant",
             "--arms", "real:small:spot-guarded-sparse", "--equivariance", "off",
@@ -72,6 +76,7 @@ MAIN {{ INPUTS {{ req; }} OUTPUTS {{ grant; }}
     scan = run([*args, "--oracle-layout", "scan"])
     assert scan[0] == 0 and output.is_file()
     first = output.read_bytes()
-    assert scan == run([*args, "--oracle-layout", "grouped"])
-    assert output.read_bytes() == first
+    for selection in ([], ["--oracle-layout", "grouped"]):
+        assert scan == run([*args, *selection])
+        assert output.read_bytes() == first
 print("oracle-layout: generated LTL/TLSF decision, observation and synthesis parity passed")

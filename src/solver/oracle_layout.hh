@@ -6,8 +6,8 @@
 
 namespace acacia {
   enum class OracleLayout { scan, grouped };
-  // Runtime comparison switch; admission is required before changing this default.
-  inline OracleLayout selected_oracle_layout = OracleLayout::scan;
+  // Runtime sparse guard storage selection.
+  inline OracleLayout selected_oracle_layout = OracleLayout::grouped;
   inline const char* oracle_layout_name (OracleLayout layout) {
     return layout == OracleLayout::grouped ? "grouped" : "scan";
   }

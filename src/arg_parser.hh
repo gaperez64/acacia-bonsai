@@ -65,7 +65,7 @@ struct arg_parse_result {
     // Global 3 s optional-work allowance; explicit unbounded restores the previous unbounded
     // behaviour.
     std::optional<uint64_t> equivariance_budget_ns = 3000000000ULL;
-    acacia::OracleLayout oracle_layout = acacia::OracleLayout::scan;
+    acacia::OracleLayout oracle_layout = acacia::OracleLayout::grouped;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     specification_metadata metadata;

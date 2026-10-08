@@ -363,13 +363,24 @@ separation. Generated release comparisons retain exact stdout, stderr and exit
 codes with records off/on and against the pre-binding executable; records-off
 PID/clock/resource-call counts also agree. These remain correctness observations.
 
-## Sparse guarded oracle representation experiment
+## 2026-10-08 — grouped sparse guarded oracle becomes the default
 
-`--oracle-layout grouped` groups equal-level guards, lazily caches requested suffixes and uses
-exact oracle-local target-rank identities and compact coordinate traversal in both sparse search
-and fresh independent verification. `scan` remains the default; the dense oracle's aggregate
-cache and the shipping portfolio are unchanged. Generated arithmetic/fixed-K, interruption,
-collision and corruption checks pass, together with full pytest and checked unit tests.
-Short profiles show lower level scanning and copied-key/tree work on three sparse targets;
-these are diagnostic observations, not ordinary paired coverage or memory admission. The
-[layout notes and exact external screen commands](legacy-oracle-layout.md) define the next gate.
+`--oracle-layout grouped` is now the runtime default. It groups equal-level guards, lazily
+caches requested suffixes and uses exact oracle-local target-rank identities and compact
+coordinate traversal in sparse search and fresh independent verification. `--oracle-layout scan`
+remains available as the explicit alternative. There is no compile-time option for this choice.
+
+The driver admitted the change after paired, rotated, cooled screens of the frozen release
+build of `325a90d3` against the master binary on the 28-input legacy panel: standalone
+formula-UNREAL at 60 s, and the shipping race at 17 s and 60 s. There was no lost solve, no
+memory stop and no solved input slower by more than 1 s. Same-K search plus independent-check
+cost was 0.54–0.67 times master's on the three primary targets and 0.71 on the secondary
+collector control. The reproduced 60 s race
+PAR-2 change was −14.7 s (−10.8 s for grouped against scan in an earlier session), with far lower peak memory.
+
+Frozen release binary SHA-256:
+`9a774cbf87abd0433803c8a0f5f9e7056eea70c1f50663fca2c2ac3235f41fbc`.
+Raw rows are in the ignored `_bm-logs.legacy/p1a2-*` directories and will be archived at
+campaign close. Generated arithmetic/fixed-K, interruption,
+collision and corruption tests cover both layouts. The [layout notes](legacy-oracle-layout.md)
+record the storage policy, correctness checks and driver-supplied decision evidence.

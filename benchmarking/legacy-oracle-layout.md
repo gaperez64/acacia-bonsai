@@ -1,9 +1,9 @@
 # Sparse guarded oracle layouts
 
-`--oracle-layout scan|grouped` compares two exact representations in one executable. `scan`
-remains the runtime default. This option applies to sparse guarded search and its independent
-verifier; it does not change worker membership, translation, K scheduling, or the dense oracle's
-aggregate cache. There is no new compile-time option.
+`--oracle-layout scan|grouped` selects between two exact representations in one executable.
+`grouped` is the runtime default; `--oracle-layout scan` selects the alternative. This option
+applies to sparse guarded search and its independent verifier. There is no compile-time option
+for this choice.
 
 The grouped layout combines guards at equal destination/level once, stores destinations and
 levels in sorted vectors, and memoizes only requested threshold suffixes. Thresholds are true
@@ -58,39 +58,26 @@ shared identities across source/kind memos, partial and complete eviction, long 
 all checked-query resource checkpoints and independent corrupted-certificate rejection. The
 existing provider replay suites run both layouts in all five compiled test configurations.
 
-The implementation is an unadmitted experiment. Short diagnostic profiles show less level
-scanning and copied-key/tree traffic, including independent verification. They do not establish
-shipping coverage, PAR-2, or the cgroup memory gate. Ordinary rotated paired screens must decide
-admission; keep `scan` as default until that decision.
+## 2026-10-08 — grouped becomes the default
 
-The local implementation report, dependency and binary hashes, correctness logs, profile command
-manifests, captures and raw perf data are in `build_scratch/legacy-p1a/`. These local diagnostics
-are not an archived campaign or an evidence-index admission row.
+The driver admitted `grouped` after paired, rotated, cooled screens of the frozen release
+build of `325a90d3` against the master binary on the 28-input legacy panel. The screens ran
+standalone formula-UNREAL at 60 s and the shipping race at 17 s and 60 s. They showed no lost
+solve, no memory stop and no solved input slower by more than 1 s. Same-K search plus independent-check
+cost was 0.54–0.67 times master's on the three primary targets and 0.71 on the secondary
+collector control. The reproduced
+60 s race PAR-2 change was −14.7 s (−10.8 s for grouped against scan in an earlier session), with far lower peak memory.
+These driver-supplied measurements support the default change; `scan` remains explicitly
+selectable for comparisons.
 
-Run the following commands **outside the sandbox**, with no other campaign running. They use the
-existing runner, 8 GiB/no swap, captured worker records, rotated treatments and an external cap.
-No invocation deadline is supplied. The binary remains the uncommitted implementation on base
-`54ddfb83`; the runner additionally records its SHA-256 (currently
-`9bd189cabc4f46a44ae0a2231412b127cd88eb466223b35023a73156e2d30ba0`).
+The measured frozen release binary's SHA-256 is
+`9a774cbf87abd0433803c8a0f5f9e7056eea70c1f50663fca2c2ac3235f41fbc`.
+Raw screen rows remain in the ignored `_bm-logs.legacy/p1a2-*` directories and will be archived
+at campaign close. The archive reference will follow publication and verification.
+The earlier local implementation report,
+correctness logs and diagnostic profiles in `build_scratch/legacy-p1a/` describe implementation
+validation; the default decision uses the paired screens above.
 
-```bash
-R=/home/gperez/GIT-repos/acacia-bonsai
-PY="$R/.venv/bin/python3"
-SCREEN="$R/_bm-logs.cov-20261006/screen.py"
-BIN="$R/build_scratch/cov/wt-legacy-p1a/build_scratch/legacy-p1a/release/src/acacia-bonsai"
-LIST="$R/_bm-logs.legacy/panel.list"
-unset ACACIA_OUTER_DEADLINE_MONOTONIC
-export SCREEN_CAPTURE=1
-
-STANDALONE="[[\"scan\",\"$BIN\",\"54ddfb83+uncommitted\",\"--arms unreal:formula:spot-guarded-sparse --oracle-layout scan\"],[\"grouped\",\"$BIN\",\"54ddfb83+uncommitted\",\"--arms unreal:formula:spot-guarded-sparse --oracle-layout grouped\"]]"
-RACE="[[\"scan\",\"$BIN\",\"54ddfb83+uncommitted\",\"--oracle-layout scan\"],[\"grouped\",\"$BIN\",\"54ddfb83+uncommitted\",\"--oracle-layout grouped\"]]"
-
-"$PY" "$SCREEN" "$R/_bm-logs.legacy/p1a-standalone60" "$LIST" 60 "$STANDALONE"
-"$PY" "$SCREEN" "$R/_bm-logs.legacy/p1a-race17" "$LIST" 17 "$RACE"
-"$PY" "$SCREEN" "$R/_bm-logs.legacy/p1a-race60" "$LIST" 60 "$RACE"
-```
-
-Keep default R, disabled U, the 3-second equivariance allowance, native worker, weakening and
-worker order intact. Investigate every loss with cooled alternating repetitions. Admission needs
-exact outcomes, complete memory observations and coverage or PAR-2 improvement beyond local
-noise in the actual race. Profiling and cache byte estimates do not replace those gates.
+Follow-up layout comparisons can select either value explicitly
+with `--oracle-layout scan` or `--oracle-layout grouped`. Keep the measured frozen executable
+and its digest with the original rows; rebuilding this revision produces a different binary.
