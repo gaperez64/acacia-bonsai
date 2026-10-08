@@ -7,7 +7,7 @@ The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
 ## 2026-10-08 — coverage-first P2b: admit the 3 s equivariance default (#224)
 
-Evidence campaign `cov20261007-eqfull` (to be archived): fresh, matched, rotated
+Evidence campaign `cov20261007-eqfull` (archived): fresh, matched, rotated
 17 s races over all 1,524 SYNTCOMP26 inputs, no invocation deadline, with one
 binary for both explicit treatments. `--equivariance-budget 3s` solves **1,206**
 versus **1,205** for `unbounded`. The sole gain is `collector_v3_pb_9` at **9.76 s**;
@@ -20,6 +20,34 @@ in the CLI state rather than adding a compile-time registry option. See the
 [allowance protocol](coverage-first/equivariance-budget.md) and
 [decision record](coverage-first/decisions.md). These are driver-supplied measured
 results; this default change does not rerun the campaign.
+
+## 2026-10-07 — coverage-first screens: negative results (#201, #202, #204, #206, #209)
+
+Screens without a deadline (shipping mode), serial, one frozen binary per comparison,
+CPU cooled to 70 °C before each run. Archive `cov20261007-screens`.
+
+- **Native structure guard (P2b).** With the precheck off, the native arm solved none
+  of the 138 inputs it stops in the full-corpus race (60 s). Their first stop moved to
+  the exact reducer's `mp-class` rejection (103), 60 s timeouts (17) or preparation
+  stops; the precheck is a correct, cheap early exit, not the bottleneck.
+- **Complementary GR(1) (P4a).** For all 103 `mp-class` inputs the dual game was
+  built with move order preserved and the exact reducer rejected it as well; these
+  specifications are outside exact GR(1) in both orientations.
+- **U lifting (P5).** On the 7 parameterized UNREAL frontier inputs, 4 stop at
+  reduction preparation before U and only one enters U.
+- **Weakening (P3).** Extending the safety-core pre-pass to assume–guarantee objectives
+  and positive G/F scopes makes 41 of the 82 UNREAL frontier inputs eligible, but no
+  candidate proves UNREAL at 17 s even with 2 s per attempt and 8 s in total: 181 of
+  215 attempts exhaust their allowance and the rest are inconclusive.
+- **Variable order (P2a).** On 22 targets the incumbent, typed-interleaved and
+  role-grouped orders solve 0/1/1 at 17 s and 1/0/0 with shuffled declarations (the
+  same input flipping), and 4/4/4 at 60 s: runtime is order-sensitive, but no
+  structural order is a robust improvement.
+- **Typed roles in R (P2c).** No change on the 7 targets (0/0 at 17 s, 1/1 at 60 s)
+  or on the 20 R-preservation inputs (19/19).
+
+Most of the 136 instances that ltlsynt solves and Acacia misses are not GR(1) in
+either orientation, so the remaining gap lies with the Spot-based legacy routes.
 
 ## 2026-10-07 — coverage-first P1: matched R × equivariance ablation (#207)
 
