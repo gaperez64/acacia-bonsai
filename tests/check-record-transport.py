@@ -34,6 +34,12 @@ def main():
             assert any(row.get("event") == "parent_terminal"
                        and row["telemetry"] == "complete" for row in records), records
             assert all(row.get("dropped_records", 0) == 0 for row in records), records
+            entry = next(row for row in records if row.get("event") == "stage_entry")
+            end = next(row for row in records if row.get("event") == "stage_completion")
+            metric = next(row for row in records if row.get("event") == "stage_metric")
+            assert entry["subjob"] == 1 and entry["subjobs"] == 2 and entry["k"] == 3
+            assert entry["stage_id"] == end["stage_id"] == metric["stage_id"]
+            assert metric["key"] == "states" and metric["value"] == "7"
         directory = root / "full"
         directory.mkdir()
         env["ACACIA_PHASE_RECORDS"] = str(directory)

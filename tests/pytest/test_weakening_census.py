@@ -253,3 +253,11 @@ def test_requested_mode_is_distinct_from_basic_automaton_route():
     row, = reader().census(rows)
     assert row["census"] == "complete"
     assert row["mode"] == "extended" and row["effective_mode"] == "basic"
+
+
+def test_parent_stage_snapshot_is_not_a_child_sequence():
+    rows = lifecycle()
+    rows.append(dict(event='stage_censored', worker_pid=123, seq=999, emitter='10',
+                     dropped_records=0, stage_id=3, entry_ns=100, mono_ns=140))
+    summary, = reader().census(rows)
+    assert summary['census'] == 'complete'

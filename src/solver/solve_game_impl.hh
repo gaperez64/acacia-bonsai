@@ -214,7 +214,15 @@ namespace acacia::solver_detail {
       const spot_rows::FrozenAcacia view {aut, posets::vectors::bool_threshold};
       // This branch precedes ALL semantic-action-table construction. Each K
       // owns fresh search, row and oracle instances, including its verification.
+      acacia::legacy_inapplicable ("action-construction", "inapplicable-frozen-sparse");
+      const bool observed = acacia::phase_records_enabled ();
+      size_t attempts_started = 0, attempts_completed = 0;
       for (long long k = kmin;;) {
+        if (auto* w = acacia::active_worker_record (); w && observed)
+          w->k = k;
+        acacia::legacy_phase attempt ("k-attempt");
+        if (observed)
+          acacia::legacy_count ("k_attempts_started", ++attempts_started);
         acacia::diagnostics::set_support_k (static_cast<int> (k));
         struct Attempt {
             forward_result_status status;
@@ -299,8 +307,29 @@ namespace acacia::solver_detail {
                     r.nodes.size (), r.choices_created, r.proofs.size (), r.expansions};
           };
           if (backend == acacia::game_backend::spot_guarded_sparse) {
+            std::map<std::string, std::string> observations;
             spot_lazy_game::Reporter report;
-            if (spot_records::active)
+            if (observed) {
+              report.sink = [&] (const auto& key, const auto& value) {
+                observations[key] = value;
+                if (spot_records::active)
+                  spot_records::put (key, value);
+              };
+              report.milestone = [&] {
+                for (const auto& [key, value] : observations) {
+                  bool observed = true;
+                  for (const auto* part : {"traversal", "invariant", "proof_bad"}) {
+                    const auto prefix = std::string ("verify_") + part + "_";
+                    if (key.starts_with (prefix) && !observations.contains (prefix + "observed"))
+                      observed = false;
+                  }
+                  if (observed)
+                    acacia::legacy_metric (key.c_str (), value.c_str ());
+                }
+                observations.clear ();
+              };
+            }
+            else if (spot_records::active)
               report.sink = [] (const auto& key, const auto& value) {
                 spot_records::put (key, value);
               };
@@ -325,6 +354,13 @@ namespace acacia::solver_detail {
           spot_records::phase ("search");
         }
         const auto result = run ();
+        if (observed) {
+          acacia::legacy_count ("k_attempts_completed", ++attempts_completed);
+          acacia::legacy_metric ("status", forward_result_name (result.status));
+        }
+        attempt.finish (spot_letters::unknown_name (result.failure),
+                        result.status != forward_result_status::win_k &&
+                            result.status != forward_result_status::lose_k);
         if (spot_records::active) {
           spot_records::put ("status", forward_result_name (result.status));
           spot_records::put ("prep_ms", std::to_string (result.prep_ms));

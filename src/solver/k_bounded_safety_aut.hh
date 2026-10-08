@@ -2,14 +2,13 @@
 
 #include "actioners/direction.hh"
 #include "configuration.hh"
-#include "utils/bdd_helper.hh"
 #include "solver/antichain_snapshot.hh"
+#include "solver/diagnostics.hh"
 #include "solver/k_schedule.hh"
 #include "solver/local_certificate.hh"
-
-#include <sstream>
-#include "solver/diagnostics.hh"
+#include "solver/phase_observation.hh"
 #include "solver/symmetry_profile.hh"
+#include "utils/bdd_helper.hh"
 #include "utils/typeinfo.hh"
 
 #include <algorithm>
@@ -24,6 +23,7 @@
 #include <random>
 #include <spot/twa/formula2bdd.hh>
 #include <spot/twa/twagraph.hh>
+#include <sstream>
 #include <utils/verbose.hh>
 
 #include <posets/utils/vector_mm.hh>
@@ -99,14 +99,13 @@ namespace acacia::solver_detail {
   }
 
   inline unsigned long long configured_local_certificate_forward_application_budget () {
-    static const unsigned long long value = acacia::diagnostics::env_size (
-        "ACACIA_LOCAL_CERTIFICATE_FORWARD_APPS",
-        default_local_certificate_forward_application_budget, true);
+    static const unsigned long long value =
+        acacia::diagnostics::env_size ("ACACIA_LOCAL_CERTIFICATE_FORWARD_APPS",
+                                       default_local_certificate_forward_application_budget, true);
     return value;
   }
 
-  inline unsigned long long
-  configured_local_certificate_cumulative_forward_application_budget () {
+  inline unsigned long long configured_local_certificate_cumulative_forward_application_budget () {
     static const unsigned long long value = acacia::diagnostics::env_size (
         "ACACIA_LOCAL_CERTIFICATE_CUMULATIVE_FORWARD_APPS", 400000, true);
     return value;
@@ -177,7 +176,9 @@ class k_bounded_safety_aut_detail {
 #endif
 
       // Precompute the input and output actions.
+      acacia::legacy_phase preparing ("io-preparation");
       auto inputs_to_ios = get_inputs_to_ios ();
+      preparing.finish ();
       // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>,
       // vector<pair<int, int>>>
       verb_do (1, vout << "Make actions..." << std::endl);
@@ -206,7 +207,21 @@ class k_bounded_safety_aut_detail {
         safe_vector[i] = 0;
       SetOfStates f = SetOfStates (state (safe_vector));
 
+      acacia::legacy_phase picking ("picker-preparation");
       auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner);
+      picking.finish ();
+      acacia::legacy_inapplicable ("verification", "inapplicable-fixed-point");
+      std::optional<acacia::legacy_phase> searching;
+      if (acacia::phase_records_enabled ()) {
+        if (auto* w = acacia::active_worker_record ())
+          w->k = k;
+        searching.emplace ("search");
+      }
+      struct SearchObservation {
+          std::optional<acacia::legacy_phase>*& slot;
+          ~SearchObservation () { slot = nullptr; }
+      } observation {search_observation};
+      search_observation = &searching;
       int loopcount = 0;
 #if ACACIA_LOCAL_CERTIFICATE
       local_probe_schedule.restart ();
@@ -239,8 +254,8 @@ class k_bounded_safety_aut_detail {
               acacia::solver_detail::
                   configured_local_certificate_cumulative_forward_application_budget ()) {
             acacia::diagnostics::set_local_probe_skipped_over_budget ();
-            acacia::diagnostics::trace_local_probe (
-                (int) k, loopcount, f.size (), "skipped-over-budget", 0, 0);
+            acacia::diagnostics::trace_local_probe ((int) k, loopcount, f.size (),
+                                                    "skipped-over-budget", 0, 0);
           }
           else {
             auto local = acacia::solver_detail::find_local_certificate (
@@ -249,12 +264,11 @@ class k_bounded_safety_aut_detail {
                 acacia::solver_detail::configured_local_certificate_node_budget (),
                 acacia::solver_detail::configured_local_certificate_forward_application_budget ());
             local_probe_bound_forward_applications += local.forward_applications;
-            if (local.status ==
-                acacia::solver_detail::local_certificate_status::win_certificate) {
-              acacia::diagnostics::trace_local_probe (
-                  (int) k, loopcount, f.size (), "win", local.forward_applications, local.nodes);
-              acacia::diagnostics::set_local_probe (
-                  "win", local.forward_applications, local.nodes, true, false);
+            if (local.status == acacia::solver_detail::local_certificate_status::win_certificate) {
+              acacia::diagnostics::trace_local_probe ((int) k, loopcount, f.size (), "win",
+                                                      local.forward_applications, local.nodes);
+              acacia::diagnostics::set_local_probe ("win", local.forward_applications, local.nodes,
+                                                    true, false);
               acacia::diagnostics::set_final_reason ("local-win-certificate");
               return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
                   std::make_pair (k, std::move (*local.win)));
@@ -264,35 +278,34 @@ class k_bounded_safety_aut_detail {
                                                       "root-refuted", local.forward_applications,
                                                       local.nodes);
               const bool bound_raised = raise_bound_or_give_up (f, k, actioner);
-              acacia::diagnostics::set_local_probe (
-                  "root-refuted", local.forward_applications, local.nodes, true, bound_raised);
+              acacia::diagnostics::set_local_probe ("root-refuted", local.forward_applications,
+                                                    local.nodes, true, bound_raised);
               if (not bound_raised)
                 return std::nullopt;
               continue;
             }
             if (local.status ==
                 acacia::solver_detail::local_certificate_status::budget_exhausted) {
-              acacia::diagnostics::trace_local_probe (
-                  (int) k, loopcount, f.size (), "budget-exhausted",
-                  local.forward_applications, local.nodes);
-              acacia::diagnostics::set_local_probe (
-                  "budget-exhausted", local.forward_applications, local.nodes, false, false);
+              acacia::diagnostics::trace_local_probe ((int) k, loopcount, f.size (),
+                                                      "budget-exhausted",
+                                                      local.forward_applications, local.nodes);
+              acacia::diagnostics::set_local_probe ("budget-exhausted", local.forward_applications,
+                                                    local.nodes, false, false);
             }
             else {
               acacia::diagnostics::trace_local_probe ((int) k, loopcount, f.size (), "unknown",
                                                       local.forward_applications, local.nodes);
-              acacia::diagnostics::set_local_probe (
-                  "unknown", local.forward_applications, local.nodes, false, false);
+              acacia::diagnostics::set_local_probe ("unknown", local.forward_applications,
+                                                    local.nodes, false, false);
             }
           }
         }
 #endif
 
         auto input = [&] {
-          acacia::diagnostics::scoped_fine_timer timer {
-              acacia::diagnostics::fine_metric::picker};
+          acacia::diagnostics::scoped_fine_timer timer {acacia::diagnostics::fine_metric::picker};
           return input_picker (f);
-        } ();
+        }();
         acacia::diagnostics::snapshot_loop_progress ("classic-after-picker");
         if (not input.has_value ())  // No more inputs, and we just tested that init was present
         {
@@ -340,6 +353,7 @@ class k_bounded_safety_aut_detail {
 #endif
     std::chrono::steady_clock::time_point bound_started {};
     std::size_t bound_peak_frontier = 0;
+    std::optional<acacia::legacy_phase>* search_observation = nullptr;
     std::size_t bound_loops = 0;
 
     void reset_bound_evidence (std::size_t initial_frontier) {
@@ -365,9 +379,8 @@ class k_bounded_safety_aut_detail {
     template <typename Actioner>
     bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner) {
       const auto next_k = acacia::k_schedule::next (
-          ACACIA_K_SCHEDULE, static_cast<long long> (k),
-          static_cast<long long> (kfrom), static_cast<long long> (kto),
-          static_cast<long long> (kinc), bound_loss_evidence ());
+          ACACIA_K_SCHEDULE, static_cast<long long> (k), static_cast<long long> (kfrom),
+          static_cast<long long> (kto), static_cast<long long> (kinc), bound_loss_evidence ());
       if (not next_k.has_value ()) {
         verb_do (2, vout << "Early exit because the initial state is out\n");
         acacia::diagnostics::set_final_reason ("kmax-initial-out");
@@ -378,15 +391,21 @@ class k_bounded_safety_aut_detail {
     }
 
     template <typename Actioner>
-    bool raise_bound_to_or_give_up (SetOfStates& f, VECTOR_ELT_T& k,
-                                    Actioner& actioner, long long next_k) {
+    bool raise_bound_to_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner,
+                                    long long next_k) {
       const long long current_k = static_cast<long long> (k);
       const long long delta = next_k - current_k;
       assert (delta > 0);
       assert (next_k >= static_cast<long long> (std::numeric_limits<VECTOR_ELT_T>::lowest ()));
       assert (next_k <= static_cast<long long> (std::numeric_limits<VECTOR_ELT_T>::max ()));
-      verb_do (1, vout << "Incrementing k from " << (int) k << " to " << next_k
-                       << std::endl);
+      verb_do (1, vout << "Incrementing k from " << (int) k << " to " << next_k << std::endl);
+      if (search_observation && *search_observation) {
+        (*search_observation)->finish ("bound-refuted");
+        search_observation->reset ();
+        if (auto* w = acacia::active_worker_record ())
+          w->k = next_k;
+        search_observation->emplace ("search");
+      }
       k = static_cast<VECTOR_ELT_T> (next_k);
       actioner.setK (k);
       acacia::diagnostics::set_support_k (static_cast<int> (k));
@@ -406,10 +425,9 @@ class k_bounded_safety_aut_detail {
         auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
         for (size_t i = 0; i < posets::vectors::bool_threshold; ++i) {
           const long long widened = static_cast<long long> (s[i]) + delta;
-          assert (widened
-                  >= static_cast<long long> (std::numeric_limits<VECTOR_ELT_T>::lowest ()));
-          assert (widened
-                  <= static_cast<long long> (std::numeric_limits<VECTOR_ELT_T>::max ()));
+          assert (widened >=
+                  static_cast<long long> (std::numeric_limits<VECTOR_ELT_T>::lowest ()));
+          assert (widened <= static_cast<long long> (std::numeric_limits<VECTOR_ELT_T>::max ()));
           vec[i] = static_cast<VECTOR_ELT_T> (widened);
         }
         // Other entries are set to 0 by initialization, since they are bool.
@@ -432,8 +450,7 @@ class k_bounded_safety_aut_detail {
     template <typename Action, typename Actioner>
     void cpre_inplace (SetOfStates& f, const Action& io_action, Actioner& actioner,
                        [[maybe_unused]] int k = -1, [[maybe_unused]] int loop = -1) {
-      acacia::diagnostics::scoped_fine_timer cpre_timer {
-          acacia::diagnostics::fine_metric::cpre};
+      acacia::diagnostics::scoped_fine_timer cpre_timer {acacia::diagnostics::fine_metric::cpre};
       verb_do (2, vout << "Computing cpre(f) with f = " << std::endl << f);
 
       const auto& [input, actions] = io_action.get ();
@@ -445,7 +462,7 @@ class k_bounded_safety_aut_detail {
         std::ostringstream cube;
         cube << bdd_to_formula (input);
         return acacia::antichain_snapshot::record_cpre_before (f, k, loop, cube.str (), actions);
-      } ();
+      }();
 #endif
 #if CPRE_AVOID_UNIONS == 0
       posets::utils::vector_mm<VECTOR_ELT_T> v (aut->num_states (), -1);
@@ -468,7 +485,7 @@ class k_bounded_safety_aut_detail {
               verb_do (3, vout << "  " << m << " -> " << ret << std::endl);
               return ret;
             });
-          } ();
+          }();
 
           if (first_turn) {
             f1i = std::move (f1io);

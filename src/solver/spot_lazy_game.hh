@@ -2,14 +2,16 @@
 
 // Shared P6 sparse guarded search and independent certificate replay. The
 // eager replay and real worker use exactly the same construction and engine.
+#include "solver/phase_observation.hh"
 #include "solver/sparse_forward_rank.hh"
 #include "solver/spot_guarded_forward_safety.hh"
 #include "solver/spot_lazy_buchi_view.hh"
+#include <unordered_map>
+#include <unordered_set>
+
 #include <functional>
 #include <iomanip>
 #include <sstream>
-#include <unordered_map>
-#include <unordered_set>
 
 namespace acacia::spot_lazy_game {
   namespace rows = acacia::spot_rows;
@@ -50,11 +52,23 @@ namespace acacia::spot_lazy_game {
   // or output stream is created by the shared search/verifier implementation.
   struct Reporter {
       std::function<void (const std::string&, const std::string&)> sink;
-      void put (const std::string& k, const std::string& v) const {
-        if (sink) sink (k, v);
+      std::function<void ()> milestone;
+      void flush () const {
+        if (milestone)
+          milestone ();
       }
-      void count (const std::string& k, size_t v) const { if (sink) put (k, std::to_string (v)); }
-      void ms (const std::string& k, double v) const { if (sink) put (k, decimal (v)); }
+      void put (const std::string& k, const std::string& v) const {
+        if (sink)
+          sink (k, v);
+      }
+      void count (const std::string& k, size_t v) const {
+        if (sink)
+          put (k, std::to_string (v));
+      }
+      void ms (const std::string& k, double v) const {
+        if (sink)
+          put (k, decimal (v));
+      }
   };
 
   enum class Phase { eager, search, verify };
@@ -133,6 +147,8 @@ namespace acacia::spot_lazy_game {
       Phase phase = Phase::eager;
       std::set<StateId> search_sources, verifier_sources;
       size_t requests = 0, generated_edges = 0, verifier_rebuilt = 0;
+      size_t row_calls = 0, failed_rows = 0, row_payload_bytes = 0, verifier_payload_bytes = 0;
+      double verifier_row_ms = 0;
       size_t eager_generated = 0, search_generated = 0, verify_generated = 0;
       double generation_ms = 0;
       bool frozen = false;
@@ -145,7 +161,9 @@ namespace acacia::spot_lazy_game {
       RowStore (FixedBuchi v, rows::RowLimits l, Reporter r = {})
         : provider (std::move (v.rows.provider)),
           cache (std::make_shared<rows::SpotRows> (rows::GenericTransitionBuchi {provider}, l)),
-          report (r), provider_snapshot (std::move (v.snapshot)), provider_check (std::move (v.check)) {
+          report (r),
+          provider_snapshot (std::move (v.snapshot)),
+          provider_check (std::move (v.check)) {
         discover ();
       }
       void useful_query () {
@@ -164,17 +182,25 @@ namespace acacia::spot_lazy_game {
       }
 
       RowStore (rows::FrozenAcacia v, rows::RowLimits l, Reporter r = {})
-        : provider (v.graph), frozen_view (v),
-          cache (std::make_shared<rows::SpotRows> (v, l)), report (r) { discover (); }
+        : provider (v.graph),
+          frozen_view (v),
+          cache (std::make_shared<rows::SpotRows> (v, l)),
+          report (r) {
+        discover ();
+      }
       void check_contract () const {
-        if (view) view->check_contract ();
-        if (provider_check) provider_check ();
+        if (view)
+          view->check_contract ();
+        if (provider_check)
+          provider_check ();
       }
       int safe_cap (StateId q, int K) const {
         return frozen_view && q >= frozen_view->bool_threshold ? 0 : K - 1;
       }
       const rows::CompleteRankRow& get (StateId source) {
         check_contract ();
+        if (report.sink)
+          ++row_calls;
         if (report.sink && phase == Phase::search)
           search_sources.insert (source);
         if (report.sink && phase == Phase::verify)
@@ -197,6 +223,12 @@ namespace acacia::spot_lazy_game {
         discover ();
         if (missing && row.row) {
           generated_edges += row.row->edges.size ();
+          if (report.sink)
+            row_payload_bytes +=
+                sizeof (rows::CompleteRankRow) +
+                row.row->edges.capacity () * sizeof (decltype (row.row->edges)::value_type) +
+                row.row->spot_edges.capacity () *
+                    sizeof (decltype (row.row->spot_edges)::value_type);
           ++(phase == Phase::eager    ? eager_generated
              : phase == Phase::search ? search_generated
                                       : verify_generated);
@@ -204,6 +236,8 @@ namespace acacia::spot_lazy_game {
         if (missing)
           snapshot ();
         if (row.status != rows::Status::complete || !row.row) {
+          if (report.sink)
+            ++failed_rows;
           row_error = row.error;
           throw letters::detail::Failure {row.status == rows::Status::resource_limit
                                               ? Unknown::resource_limit
@@ -219,18 +253,33 @@ namespace acacia::spot_lazy_game {
         frozen = true;
       }
       void snapshot () const {
-        if (useful_query_ms) report.ms ("first_useful_rank_query_ms", *useful_query_ms);
+        if (useful_query_ms)
+          report.ms ("first_useful_rank_query_ms", *useful_query_ms);
         // Stored counters only; no provider traversal.
-        if (!report.sink) return;
+        if (!report.sink)
+          return;
+        report.count ("row_calls", row_calls);
+        report.count ("failed_rows", failed_rows);
+        report.count ("wrapper_rows_requested", requests);
+        report.count ("search_rows_requested", search_sources.size ());
+        if (phase == Phase::verify) {
+          report.count ("verification_rows_requested", verifier_sources.size ());
+          report.ms ("verification_row_ms", verifier_row_ms);
+        }
+        report.count ("row_cache_payload_bytes_estimate", row_payload_bytes);
+        if (phase == Phase::verify)
+          report.count ("verification_row_payload_bytes_estimate", verifier_payload_bytes);
         if (frozen_view) {
           report.count ("wrapper_rows_generated", cache->complete_rows ());
           report.count ("wrapper_states_discovered", cache->state_count ());
           report.count ("wrapper_edges_generated", generated_edges);
-          report.count ("verification_rows_rebuilt", verifier_rebuilt);
+          if (phase == Phase::verify)
+            report.count ("verification_rows_rebuilt", verifier_rebuilt);
           report.ms ("row_generation_ms", generation_ms);
           return;
         }
-        if (provider_snapshot) provider_snapshot (report);
+        if (provider_snapshot)
+          provider_snapshot (report);
         if (view) {
           const auto* init = dynamic_cast<const lazy::detail::CursorState*> (
               cache->canonical_state (cache->initial_id ()));
@@ -344,7 +393,8 @@ namespace acacia::spot_lazy_game {
         (void) r.is_safe (K);
         for (auto [q, value] : r.entries ()) {
           require (q < store_.cache->state_count ());
-          if (value > store_.safe_cap (q, K)) return false;
+          if (value > store_.safe_cap (q, K))
+            return false;
         }
         return true;
       }
@@ -357,10 +407,20 @@ namespace acacia::spot_lazy_game {
         if (rebuilt_.size () >= limits_.max_rows)
           throw letters::detail::Failure {Unknown::resource_limit};
         if (store_.frozen_view) {
-          (void) store_.get (q); // account verification demand independently
+          if (store_.report.sink)
+            (void) store_.get (q);  // account verification demand independently
+          const auto started = store_.report.sink ? Clock::now () : Clock::time_point {};
           const auto result = frozen_verifier_->row (q);
+          if (store_.report.sink)
+            store_.verifier_row_ms += elapsed (started);
           row_ok (result.status);
           require (result.row != nullptr);
+          if (store_.report.sink)
+            store_.verifier_payload_bytes +=
+                sizeof (rows::CompleteRankRow) +
+                result.row->edges.capacity () * sizeof (decltype (result.row->edges)::value_type) +
+                result.row->spot_edges.capacity () *
+                    sizeof (decltype (result.row->spot_edges)::value_type);
           ++store_.verifier_rebuilt;
           return rebuilt_.emplace (q, *result.row).first->second;
         }
@@ -402,6 +462,8 @@ namespace acacia::spot_lazy_game {
       int K_;
       std::unordered_map<Rank, Prepared> prepared_;
       size_t queries_ = 0, threshold_hits_ = 0, preimage_hits_ = 0;
+      size_t threshold_calls_ = 0, threshold_misses_ = 0, threshold_shortcuts_ = 0;
+      size_t preimage_calls_ = 0, preimage_misses_ = 0;
       Prepared& prepare (const Rank& r, letters::detail::Letters& b) {
         used_rank_ = true;
         (void) r.is_safe (K_);
@@ -423,15 +485,25 @@ namespace acacia::spot_lazy_game {
         return prepared_.emplace (r, std::move (p)).first->second;
       }
       bdd threshold (Prepared& p, StateId q, int64_t h, letters::detail::Letters& b) {
+        if (store_.report.sink)
+          ++threshold_calls_;
         b.step ();
-        if (h <= -1)
+        if (h <= -1) {
+          if (store_.report.sink)
+            ++threshold_shortcuts_;
           return bddtrue;
-        if (h > K_)
+        }
+        if (h > K_) {
+          if (store_.report.sink)
+            ++threshold_shortcuts_;
           return bddfalse;
+        }
         if (auto it = p.thresholds.find ({q, h}); it != p.thresholds.end ()) {
           ++threshold_hits_;
           return it->second;
         }
+        if (store_.report.sink)
+          ++threshold_misses_;
         bdd result = bddfalse;
         if (auto it = p.destinations.find (q); it != p.destinations.end ())
           for (const auto& [level, guard] : it->second) {
@@ -445,12 +517,16 @@ namespace acacia::spot_lazy_game {
       }
       // kind: 0 upward, 1 downward, 2 equality (P3's exact same boundaries).
       bdd preimage (Prepared& p, const Rank& target, int kind, letters::detail::Letters& b) {
+        if (store_.report.sink)
+          ++preimage_calls_;
         (void) target.is_safe (K_);
         const auto key = std::make_pair (kind, target.entries ());
         if (auto it = p.preimages.find (key); it != p.preimages.end ()) {
           ++preimage_hits_;
           return it->second;
         }
+        if (store_.report.sink)
+          ++preimage_misses_;
         std::set<StateId> coordinates;
         for (auto [q, v] : target.entries ()) {
           (void) v;
@@ -500,7 +576,8 @@ namespace acacia::spot_lazy_game {
 
     public:
       Oracle (Reader& r, RowStore& store, letters::WorkerAlphabet a, int K)
-        : rows_ (r), store_ (store),
+        : rows_ (r),
+          store_ (store),
           boundary_ (store.cache, std::move (a), K),
           K_ (K) {}
       void set_limits (letters::QueryLimits l) { boundary_.set_limits (l); }
@@ -541,8 +618,8 @@ namespace acacia::spot_lazy_game {
           std::vector<bdd> terms;
           for (const auto& target : targets) {
             b.step ();
-            terms.push_back (b.restrict_total (preimage (p, target, 0, b), input,
-                                              Variables::inputs));
+            terms.push_back (
+                b.restrict_total (preimage (p, target, 0, b), input, Variables::inputs));
           }
           std::vector<bdd> suffix (terms.size () + 1, bddfalse);
           for (std::size_t i = terms.size (); i > 0; --i)
@@ -580,7 +657,7 @@ namespace acacia::spot_lazy_game {
       // Return Bad and its uncovered losing inputs in the same checked query.
       // The projection is only a search region; proofs still need a total cube.
       letters::Result<std::pair<bdd, bdd>> bad (const Rank& r, const std::vector<Rank>& L,
-                                               uint64_t, bdd missing) {
+                                                uint64_t, bdd missing) {
         return query<std::pair<bdd, bdd>> ([&] (auto& b) {
           const bdd predicate = aggregate (r, L, true, b);
           const bdd H = b.forall (predicate, b.vars (Variables::outputs));
@@ -633,14 +710,37 @@ namespace acacia::spot_lazy_game {
         const auto& m = boundary_.metrics ();
         return {queries_, m.steps, m.bdd_operations};
       }
+      size_t storage_bytes_estimate () const {
+        size_t bytes = sizeof (*this);
+        for (const auto& [rank, p] : prepared_) {
+          bytes += rank_bytes (rank) + sizeof (Prepared);
+          for (const auto& [q, entries] : p.destinations) {
+            (void) q;
+            bytes += sizeof (entries) +
+                     entries.capacity () * sizeof (std::decay_t<decltype (entries)>::value_type);
+          }
+          bytes += p.thresholds.size () * sizeof (decltype (p.thresholds)::value_type);
+          for (const auto& [key, predicate] : p.preimages) {
+            (void) predicate;
+            bytes += sizeof (key) + sizeof (bdd) + key.second.capacity () * sizeof (Rank::Entry);
+          }
+        }
+        return bytes;
+      }
       void report (Reporter out, const std::string& prefix) const {
-        if (!out.sink) return;
+        if (!out.sink)
+          return;
         const auto& m = boundary_.metrics ();
         out.count (prefix + "queries", queries_);
         out.count (prefix + "steps", m.steps);
         out.count (prefix + "bdd_operations", m.bdd_operations);
         out.count (prefix + "peak_live_nodes", m.peak_live_nodes);
         out.count (prefix + "peak_result_nodes", m.peak_result_nodes);
+        out.count (prefix + "threshold_calls", threshold_calls_);
+        out.count (prefix + "threshold_misses", threshold_misses_);
+        out.count (prefix + "threshold_shortcuts", threshold_shortcuts_);
+        out.count (prefix + "preimage_calls", preimage_calls_);
+        out.count (prefix + "preimage_misses", preimage_misses_);
         out.count (prefix + "threshold_hits", threshold_hits_);
         out.count (prefix + "preimage_hits", preimage_hits_);
         size_t bytes = 0;
@@ -652,6 +752,7 @@ namespace acacia::spot_lazy_game {
           }
         }
         out.count (prefix + "cache_rank_bytes", bytes);
+        out.count (prefix + "oracle_payload_bytes_estimate", storage_bytes_estimate ());
       }
   };
 }  // namespace acacia::spot_lazy_game
@@ -744,14 +845,22 @@ namespace acacia::spot_lazy_game {
       std::string phase;
       Oracle::WorkMetrics before;
       VerifierMetricReport (Oracle& oracle, Reporter out, std::string phase)
-        : oracle (oracle), out (out), phase (std::move (phase)), before (oracle.work_metrics ()) {
+        : oracle (oracle),
+          out (out),
+          phase (std::move (phase)),
+          before (oracle.work_metrics ()) {
+        if (!this->out.sink)
+          return;
         for (const auto* part : {"traversal", "invariant", "proof_bad"})
           for (const auto* key : {"queries", "steps", "bdd_operations"})
             out.count (std::string ("verify_") + part + "_" + key, 0);
       }
       void finish_phase () {
+        if (!out.sink)
+          return;
         const auto after = oracle.work_metrics ();
         const auto prefix = "verify_" + phase + "_";
+        out.put (prefix + "observed", "true");
         out.count (prefix + "queries", after.queries - before.queries);
         out.count (prefix + "steps", after.steps - before.steps);
         out.count (prefix + "bdd_operations", after.bdd_operations - before.bdd_operations);
@@ -828,7 +937,9 @@ namespace acacia::spot_lazy_game {
     private:
       // Named factories prevent old aggregate initializers changing meaning.
       SparseChoice (bdd region, std::optional<bdd> output, RankNodeId target)
-        : input_region (region), constant_output (output), successor (target) {}
+        : input_region (region),
+          constant_output (output),
+          successor (target) {}
   };
   struct GuardedRankNode {
       Rank rank;
@@ -951,9 +1062,10 @@ namespace acacia::spot_lazy_game {
           // Rebuilt here from the fresh Reader and Oracle above, never taken
           // from the search: a choice that claims too much input space must
           // fail this. The validated certificate tag selects the obligation.
-          const bdd reaches = detail::take (
-              certificate.semantics.successor_relation == SuccessorRelation::downward
-                  ? oracle.down (node.rank, target.rank) : oracle.eq (node.rank, target.rank));
+          const bdd reaches =
+              detail::take (certificate.semantics.successor_relation == SuccessorRelation::downward
+                                ? oracle.down (node.rank, target.rank)
+                                : oracle.eq (node.rank, target.rank));
           const bdd projection = detail::take (
               certificate.semantics.output_choice == OutputChoice::constant
                   ? oracle.restrict_total (reaches, *choice.constant_output, Variables::outputs)
@@ -1089,14 +1201,21 @@ namespace acacia::spot_lazy_game {
         result_.semantics = semantics_;
         oracle_.set_limits (limits_.queries);
       }
-      ~Search () {
-        if (!view_.report.sink) return;
+      ~Search () { report_counters (); }
+      void report_counters () const {
+        if (!view_.report.sink)
+          return;
         size_t bytes = 0;
         for (const auto& [rank, id] : interned_) {
           (void) id;
           bytes += rank_bytes (rank);
         }
         view_.report.count ("rank_interner_bytes", bytes);
+        view_.report.count ("queue_pushes", queue_pushes_);
+        view_.report.count ("queue_pops", queue_pops_);
+        view_.report.count ("queue_peak", queue_peak_);
+        view_.report.count ("loss_queue_peak", loss_queue_peak_);
+        view_.report.count ("dependency_peak", dependency_peak_);
         view_.report.count ("losing_antichain_rank_bytes", losing_.bytes ());
         // Emitted from the live counters, not from result_, which solve() has
         // moved from by the time this runs.  publish_counters() copies these
@@ -1134,8 +1253,8 @@ namespace acacia::spot_lazy_game {
           }
           std::string distribution;
           for (const auto [n, count] : histogram)
-            distribution += (distribution.empty () ? "" : ",") + std::to_string (n) +
-                            ":" + std::to_string (count);
+            distribution += (distribution.empty () ? "" : ",") + std::to_string (n) + ":" +
+                            std::to_string (count);
           view_.report.put ("rank_support_distribution", distribution);
           view_.report.count ("rank_support_sum", sum);
           view_.report.count ("rank_support_max", maximum);
@@ -1184,7 +1303,30 @@ namespace acacia::spot_lazy_game {
         result_.dependency_list_len_sum = dependency_list_len_sum_;
         result_.dependency_list_len_max = dependency_list_len_max_;
       }
+      size_t retained_bytes_estimate () const {
+        size_t bytes =
+            sizeof (*this) + oracle_.storage_bytes_estimate () + losing_.bytes () +
+            (open_.size () + losses_.size ()) * sizeof (RankNodeId) +
+            view_.cache->complete_rows () * sizeof (rows::CompleteRankRow) +
+            view_.generated_edges * (sizeof (decltype (rows::CompleteRankRow::edges)::value_type));
+        for (const auto& [rank, id] : interned_) {
+          (void) id;
+          bytes += rank_bytes (rank);
+        }
+        bytes += result_.nodes.capacity () * sizeof (GuardedRankNode);
+        bytes += result_.proofs.capacity () * sizeof (GuardedLosingProof);
+        for (const auto& node : result_.nodes)
+          bytes += rank_bytes (node.rank) + node.choices.capacity () * sizeof (SparseChoice) +
+                   node.incoming.capacity () * sizeof (ChoiceRef);
+        for (const auto& proof : result_.proofs)
+          bytes += rank_bytes (proof.rank) +
+                   proof.record.dependencies.capacity () * sizeof (size_t) +
+                   proof.rows.capacity () * sizeof (RowIdentity);
+        return bytes;
+      }
       SolveResult solve () {
+        acacia::legacy_phase searching ("search");
+        acacia::legacy_bdd_gc gc;
         view_.phase = Phase::search;
         view_.report.ms ("stage_started_clock_ms", clock_ms ());
         MetricReport metrics {oracle_, view_.report, "search_"};
@@ -1200,6 +1342,8 @@ namespace acacia::spot_lazy_game {
               throw detail::Failure {Unknown::resource_limit};
             const auto id = open_.front ();
             open_.pop_front ();
+            if (view_.report.sink)
+              ++queue_pops_;
             result_.nodes[id].queued = false;
             ++result_.expansions;
             expand (id);
@@ -1209,6 +1353,18 @@ namespace acacia::spot_lazy_game {
         result_.pending_loss = not losses_.empty ();
         result_.pending_expansion = not open_.empty ();
         publish_counters ();  // before both returns below, and before verification
+        view_.report.count ("search_generated_rows",
+                            view_.cache->complete_rows () - before_search_);
+        view_.report.count ("expansions", result_.expansions);
+        view_.report.count ("game_states", result_.nodes.size ());
+        view_.report.count ("guarded_choices", result_.choices_created);
+        report_counters ();
+        oracle_.report (view_.report, "search_");
+        view_.snapshot ();
+        view_.report.flush ();
+        gc.publish ();
+        searching.finish (search.value ? "none" : letters::unknown_name (search.unknown),
+                          !search.value);
         if (not search.value) {
           result_.failure = search.unknown;
           result_.status = search.unknown == Unknown::resource_limit
@@ -1216,13 +1372,16 @@ namespace acacia::spot_lazy_game {
                                : forward_result_status::unknown;
           return std::move (result_);
         }
-        view_.snapshot ();
-        view_.report.count ("search_generated_rows",
-                            view_.cache->complete_rows () - before_search_);
-        oracle_.report (view_.report, "search_");
         view_.phase = Phase::verify;
         view_.report.put ("stage", "verification");
         view_.report.ms ("stage_started_clock_ms", clock_ms ());
+        acacia::legacy_phase checking ("verification");
+        gc.reset ();
+        if (view_.report.sink) {
+          view_.report.count ("retained_search_payload_bytes_estimate",
+                              retained_bytes_estimate ());
+          view_.report.flush ();
+        }
         const auto verifying = std::chrono::steady_clock::now ();
         if (result_.nodes[result_.initial].losing) {
           const auto verified = verify_losing_proof (view_, alphabet_, K_, result_, limits_,
@@ -1233,7 +1392,7 @@ namespace acacia::spot_lazy_game {
         }
         else {
           auto verified = verify_winning_certificate (view_, alphabet_, K_, result_, limits_,
-                                                       semantics_, lean_verifier_);
+                                                      semantics_, lean_verifier_);
           if (verified.value) {
             result_.generators = std::move (*verified.value);
             result_.status = forward_result_status::win_k;
@@ -1245,6 +1404,12 @@ namespace acacia::spot_lazy_game {
           }
         }
         result_.verify_ms = detail::elapsed (verifying);
+        view_.snapshot ();  // Independent replay has now updated rebuilt-row demand.
+        report_counters ();
+        view_.report.flush ();
+        gc.publish ();
+        checking.finish (letters::unknown_name (result_.failure),
+                         result_.status == forward_result_status::unknown);
         return std::move (result_);
       }
 
@@ -1269,10 +1434,16 @@ namespace acacia::spot_lazy_game {
       std::size_t proofs_total_ = 0, proofs_in_initial_cone_ = 0;
       std::size_t dependency_list_len_sum_ = 0, dependency_list_len_max_ = 0;
       std::size_t reopen_enqueues_ = 0;
+      size_t queue_pushes_ = 0, queue_pops_ = 0, queue_peak_ = 0, loss_queue_peak_ = 0;
+      size_t dependency_peak_ = 0;
       void enqueue (RankNodeId id) {
         auto& node = result_.nodes[id];
         if (not node.losing && not node.queued) {
           open_.push_back (id);
+          if (view_.report.sink) {
+            ++queue_pushes_;
+            queue_peak_ = std::max (queue_peak_, open_.size ());
+          }
           node.queued = true;
         }
       }
@@ -1288,9 +1459,7 @@ namespace acacia::spot_lazy_game {
         enqueue (id);
         return id;
       }
-      std::optional<std::size_t> subsumer (const Rank& r) const {
-        return losing_.subsumer (r);
-      }
+      std::optional<std::size_t> subsumer (const Rank& r) const { return losing_.subsumer (r); }
       void enqueue_loss (RankNodeId id, losing_reason reason, std::vector<std::size_t> deps = {},
                          std::optional<bdd> input = {}, std::vector<RowIdentity> rows = {}) {
         auto& node = result_.nodes[id];
@@ -1308,6 +1477,8 @@ namespace acacia::spot_lazy_game {
         if (id == result_.initial)
           result_.initial_proof = proof_id;
         losses_.push_back (id);
+        if (view_.report.sink)
+          loss_queue_peak_ = std::max (loss_queue_peak_, losses_.size ());
         if (not losing_.insert (rank, proof_id))
           return;  // rank was already inside the region: nothing new is implied
         // The region grew, so broadcast the one generator that grew it.  Only
@@ -1392,6 +1563,8 @@ namespace acacia::spot_lazy_game {
           // generator, in enqueue_loss, where the region is what grows.  This
           // drain no longer appends to its own queue.
           losses_.pop_front ();
+          if (view_.report.sink)
+            ++queue_pops_;
         }
       }
       void expand (RankNodeId id) {
@@ -1419,8 +1592,8 @@ namespace acacia::spot_lazy_game {
         std::optional<bdd> input;
         bdd bad, bad_c;
         if (losing_input_search_ == LosingInputSearch::on) {
-          const auto [predicate, D] = detail::take (
-              oracle_.bad (rank, losing_.ranks (), result_.proofs.size (), missing));
+          const auto [predicate, D] =
+              detail::take (oracle_.bad (rank, losing_.ranks (), result_.proofs.size (), missing));
           bad = predicate;
           if (D != bddfalse) {
             input = detail::take (oracle_.model (D, Variables::inputs));
@@ -1442,8 +1615,8 @@ namespace acacia::spot_lazy_game {
           // the order and chronological IDs, checked again by enqueue_loss.
           auto deps = losing_.proof_ids ();
           if (lean_verifier_ == LeanVerifier::on) {
-            const auto kept = detail::take (
-                oracle_.minimal_bad_targets (rank, losing_.ranks (), *input));
+            const auto kept =
+                detail::take (oracle_.minimal_bad_targets (rank, losing_.ranks (), *input));
             for (std::size_t i = 0; i < kept.size (); ++i)
               deps[i] = deps[kept[i]];
             deps.resize (kept.size ());
@@ -1464,18 +1637,19 @@ namespace acacia::spot_lazy_game {
         // below it" lets one choice claim more of the missing input space. The
         // successor itself is unchanged, so the target is still a rank the
         // search reached and verified, not a synthesized upper bound.
-        const bdd reaches = detail::take (semantics_.successor_relation == SuccessorRelation::downward
-                                             ? oracle_.down (rank, successor)
-                                             : oracle_.eq (rank, successor));
+        const bdd reaches =
+            detail::take (semantics_.successor_relation == SuccessorRelation::downward
+                              ? oracle_.down (rank, successor)
+                              : oracle_.eq (rank, successor));
         // The sampled total output selected the target. Existential covering
         // may use a different output at each input while retaining that target;
         // quantify only the worker outputs, inside the checked query scope.
-        const bdd projection = detail::take (
-            semantics_.output_choice == OutputChoice::constant
-                ? oracle_.restrict_total (reaches, *output, Variables::outputs)
-                : oracle_.query<bdd> ([&] (auto& b) {
-                    return b.exists (reaches, b.vars (Variables::outputs));
-                  }));
+        const bdd projection =
+            detail::take (semantics_.output_choice == OutputChoice::constant
+                              ? oracle_.restrict_total (reaches, *output, Variables::outputs)
+                              : oracle_.query<bdd> ([&] (auto& b) {
+                                  return b.exists (reaches, b.vars (Variables::outputs));
+                                }));
         const bdd region = detail::take (oracle_.query<bdd> ([&] (auto& b) {
           const bdd C = b.land (missing, projection);
           b.require_support (C, alphabet_.inputs);
@@ -1492,9 +1666,11 @@ namespace acacia::spot_lazy_game {
         auto& source = result_.nodes[id];
         const auto choice_id = source.choices.size ();
         source.choices.push_back (semantics_.output_choice == OutputChoice::constant
-                                     ? SparseChoice::constant (region, *output, sid)
-                                     : SparseChoice::existential (region, sid));
+                                      ? SparseChoice::constant (region, *output, sid)
+                                      : SparseChoice::existential (region, sid));
         result_.nodes[sid].incoming.push_back ({id, choice_id});
+        if (view_.report.sink)
+          dependency_peak_ = std::max (dependency_peak_, result_.nodes[sid].incoming.size ());
         ++result_.choices_created;
         source.covered_inputs = detail::take (
             oracle_.query<bdd> ([&] (auto& b) { return b.lor (source.covered_inputs, region); }));

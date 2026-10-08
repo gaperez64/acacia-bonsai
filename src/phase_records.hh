@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/mman.h>
@@ -73,6 +74,11 @@ namespace acacia {
       bool run_active = false, run_weakening = false;
       phase_stamp run_start;
       uint64_t deadline_ns = 0;
+      unsigned subjob = 0, subjobs = 0, subjobs_executed = 0;
+      long long k = -1;
+      unsigned long long stage_id = 0, next_stage_id = 0;
+      uint64_t stage_start_ns = 0;
+      char observed_stage[48] = "unknown";
   };
   inline worker_record*& active_worker_record () noexcept {
     static worker_record* record = nullptr;
@@ -100,6 +106,8 @@ namespace acacia {
   }
   inline void phase_records_init () noexcept {
     auto& state = phase_record_process_state ();
+    if (state.write_fd < 0)
+      return;
     const pid_t pid = getpid ();
     if (state.pid == pid)
       return;
@@ -108,6 +116,8 @@ namespace acacia {
     state.enabled = state.write_fd >= 0;
   }
   inline bool phase_records_enabled () noexcept {
+    if (phase_record_process_state ().write_fd < 0)
+      return false;
     phase_records_init ();
     return phase_record_process_state ().enabled;
   }
@@ -143,6 +153,27 @@ namespace acacia {
                             const char* telemetry = "pending") noexcept {
     if (!phase_records_enabled ())
       return;
+    if (std::strcmp (event, "parent_terminal") == 0 && record.stage_id && record.stage_start_ns) {
+      char snapshot[512], total[24] = "null", bound[32] = "null";
+      if (record.subjobs)
+        snprintf (total, sizeof total, "%u", record.subjobs);
+      if (record.k >= 0)
+        snprintf (bound, sizeof bound, "%lld", record.k);
+      const int length =
+          snprintf (snapshot, sizeof snapshot,
+                    "{\"event\":\"stage_censored\",\"worker\":%u,\"worker_pid\":%ld,\"seq\":%llu,"
+                    "\"subjob\":%u,\"subjobs\":%s,\"run_id\":%u,\"k\":%s,\"stage_id\":%llu,"
+                    "\"stage\":\"%s\",\"entry_ns\":%llu,\"mono_ns\":%llu,\"signal\":%d,"
+                    "\"dropped_records\":%llu}\n",
+                    record.index, long (record.pid), ++record.sequence, record.subjob, total,
+                    record.run_id, bound, record.stage_id, record.observed_stage,
+                    (unsigned long long) record.stage_start_ns,
+                    (unsigned long long) phase_clock (CLOCK_MONOTONIC), signal, record.dropped);
+      if (length > 0 && size_t (length) < sizeof snapshot)
+        phase_records_send (snapshot, size_t (length));
+      else
+        phase_records_drop ();
+    }
     ++record.sequence;
     // All text is bounded metadata, never source formulas or input paths.
     // Escape it before placing it in the compact wire record.
@@ -513,6 +544,137 @@ namespace acacia {
       return;
     }
     phase_records_send (line, size_t (n));
+  }
+
+  inline void legacy_stage_event (const char* event, const char* stage, phase_stamp start = {},
+                                  const char* reason = "none") noexcept {
+    if (!phase_records_enabled ())
+      return;
+    auto* w = active_worker_record ();
+    if (!w)
+      return;
+    char line[1024], total[24] = "null", k[32] = "null", timing[192] = "";
+    if (w->subjobs)
+      snprintf (total, sizeof total, "%u", w->subjobs);
+    if (w->k >= 0)
+      snprintf (k, sizeof k, "%lld", w->k);
+    const auto now = phase_clock (CLOCK_MONOTONIC);
+    if (start.wall) {
+      rusage usage {};
+      const bool sampled = getrusage (RUSAGE_SELF, &usage) == 0;
+      snprintf (timing, sizeof timing, ",\"wall_ns\":%llu,\"cpu_ns\":%llu",
+                (unsigned long long) (now - start.wall),
+                (unsigned long long) (phase_clock (CLOCK_PROCESS_CPUTIME_ID) - start.cpu));
+      if (sampled) {
+        const auto used = strlen (timing);
+        snprintf (timing + used, sizeof timing - used, ",\"peak_rss_kb\":%ld", usage.ru_maxrss);
+      }
+    }
+    const int n = snprintf (
+        line, sizeof line,
+        "{\"event\":\"%s\",\"worker\":%u,\"worker_pid\":%ld,\"seq\":%llu,"
+        "\"subjob\":%u,\"subjobs\":%s,\"run_id\":%u,\"k\":%s,\"stage_id\":%llu,"
+        "\"stage\":\"%s\",\"mono_ns\":%llu,\"dropped_records\":%llu,\"reason\":\"%s\"%s}\n",
+        event, w->index, long (w->pid), ++w->sequence, w->subjob, total, w->run_id, k, w->stage_id,
+        stage, (unsigned long long) now, w->dropped, reason, timing);
+    if (n > 0 && size_t (n) < sizeof line)
+      phase_records_send (line, size_t (n));
+    else
+      phase_records_drop ();
+  }
+
+  inline void legacy_metric (const char* key, const char* value) noexcept {
+    if (!phase_records_enabled ())
+      return;
+    auto* w = active_worker_record ();
+    if (!w)
+      return;
+    char escaped[384];
+    size_t used = 0;
+    for (const unsigned char* p = reinterpret_cast<const unsigned char*> (value); *p; ++p) {
+      if (used + 7 >= sizeof escaped) {
+        phase_records_drop ();
+        return;
+      }
+      if (*p < 32)
+        used += size_t (snprintf (escaped + used, sizeof escaped - used, "\\u%04x", *p));
+      else {
+        if (*p == '"' || *p == '\\')
+          escaped[used++] = '\\';
+        escaped[used++] = char (*p);
+      }
+    }
+    escaped[used] = 0;
+    char line[1024];
+    const int n =
+        snprintf (line, sizeof line,
+                  "{\"event\":\"stage_metric\",\"worker_pid\":%ld,\"seq\":%llu,"
+                  "\"stage_id\":%llu,\"mono_ns\":%llu,\"dropped_records\":%llu,"
+                  "\"key\":\"%s\",\"value\":\"%s\"}\n",
+                  long (w->pid), ++w->sequence, w->stage_id,
+                  (unsigned long long) phase_clock (CLOCK_MONOTONIC), w->dropped, key, escaped);
+    if (n > 0 && size_t (n) < sizeof line)
+      phase_records_send (line, size_t (n));
+    else
+      phase_records_drop ();
+  }
+  inline void legacy_count (const char* key, unsigned long long value) noexcept {
+    if (!phase_records_enabled ())
+      return;
+    char text[32];
+    snprintf (text, sizeof text, "%llu", value);
+    legacy_metric (key, text);
+  }
+
+  class legacy_phase {
+      const char* name_;
+      phase_stamp start_;
+      unsigned long long previous_id_ = 0;
+      uint64_t previous_start_ = 0;
+      char previous_stage_[48] {}, previous_observed_stage_[48] {};
+      int exceptions_ = 0;
+      bool finished_ = false;
+
+    public:
+      explicit legacy_phase (const char* name) : name_ (name), start_ (phase_start ()) {
+        if (!start_.wall)
+          return;
+        exceptions_ = std::uncaught_exceptions ();
+        if (auto* w = active_worker_record ()) {
+          previous_id_ = w->stage_id;
+          previous_start_ = w->stage_start_ns;
+          worker_record_text (previous_stage_, w->stage);
+          worker_record_text (previous_observed_stage_, w->observed_stage);
+          worker_record_text (w->observed_stage, name);
+          w->stage_id = ++w->next_stage_id;
+          w->stage_start_ns = start_.wall;
+          worker_stage (name);
+          legacy_stage_event ("stage_entry", name);
+        }
+      }
+      legacy_phase (const legacy_phase&) = delete;
+      void finish (const char* reason = "none", bool stopped = false) noexcept {
+        if (finished_ || !start_.wall)
+          return;
+        legacy_stage_event (stopped ? "stage_stopped" : "stage_completion", name_, start_, reason);
+        finished_ = true;
+        if (auto* w = active_worker_record ()) {
+          w->stage_id = previous_id_;
+          w->stage_start_ns = previous_start_;
+          worker_record_text (w->stage, previous_stage_);
+          worker_record_text (w->observed_stage, previous_observed_stage_);
+        }
+      }
+      ~legacy_phase () {
+        if (!start_.wall || finished_)
+          return;
+        const bool failed = std::uncaught_exceptions () > exceptions_;
+        finish (failed ? "exception" : "none", failed);
+      }
+  };
+  inline void legacy_inapplicable (const char* stage, const char* reason) noexcept {
+    legacy_phase phase (stage);
+    phase.finish (reason);
   }
 
   class phase_scope {

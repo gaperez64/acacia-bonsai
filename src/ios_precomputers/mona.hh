@@ -1,20 +1,19 @@
 #pragma once
 
+#include "ios_precomputers/alphabet_census.hh"
+#include "solver/diagnostics.hh"
 #include "solver/equivariance_budget.hh"
+#include "utils/transition_enumerator.hh"
+#include <type_traits>
+#include <unordered_set>
 
-#include <bit>
 #include <bddx.h>
+#include <bit>
 #include <chrono>
 #include <list>
 #include <numeric>
-#include <unordered_set>
 #include <spot/twa/bdddict.hh>
-#include <type_traits>
 #include <vector>
-
-#include "ios_precomputers/alphabet_census.hh"
-#include "solver/diagnostics.hh"
-#include "utils/transition_enumerator.hh"
 
 namespace ios_precomputers {
   namespace detail {
@@ -35,13 +34,11 @@ namespace ios_precomputers {
         mona (Aut aut, bdd input_support, bdd output_support)
           : aut {aut},
             input_support {input_support},
-            output_support {output_support}
-        {}
+            output_support {output_support} {}
 
         using input_to_ios_t = typename std::list<std::pair<bdd, std::list<TransSet>>>;
 
         auto operator() () const {
-
           // States are binary encoded using extra variables.
           // We allocate them via spot's bdd_dict (rather than calling
           // bdd_extvarnum directly) so the dict's internal var_refs
@@ -59,18 +56,15 @@ namespace ios_precomputers {
           int owner_tag = 0;
           auto base_var = dict->register_anonymous_variables (2 * log_states, &owner_tag);
           struct anon_guard {
-            spot::bdd_dict_ptr dict;
-            const void* owner;
-            ~anon_guard () { dict->unregister_all_my_variables (owner); }
+              spot::bdd_dict_ptr dict;
+              const void* owner;
+              ~anon_guard () { dict->unregister_all_my_variables (owner); }
           } guard {dict, &owner_tag};
-          auto first_src_var = base_var,
-            first_dst_var = base_var + log_states;
+          auto first_src_var = base_var, first_dst_var = base_var + log_states;
           // Projection removes declared APs that do not occur in the
           // automaton. If every output is unused, output_support is true and
           // has no root variable; the output segment is then simply empty.
-          auto first_output = output_support == bddtrue
-                                ? first_src_var
-                                : bdd_var (output_support);
+          auto first_output = output_support == bddtrue ? first_src_var : bdd_var (output_support);
 
           std::vector<int> state_vars (2 * log_states);
           std::iota (state_vars.begin (), state_vars.end (), base_var);
@@ -91,8 +85,7 @@ namespace ios_precomputers {
           for (const auto& [formula, trans] :
                transition_enumerator (aut, transition_formater::src_and_dst (aut))) {
             acacia::equivariance_budget::checkpoint ();
-            bdd_iopq = bdd_iopq |
-              (formula & encode_src (trans.first) & encode_dst (trans.second));
+            bdd_iopq = bdd_iopq | (formula & encode_src (trans.first) & encode_dst (trans.second));
           }
 
           // When the pq part of the BDD is reached, iterate through all its
@@ -119,8 +112,7 @@ namespace ios_precomputers {
           // decodes covered, per input class.  A quotient must decode exactly
           // the second number, so the pair is what validates stage A1.
           unsigned long long decoded = 0, unique_decoded = 0;
-          const bool count_residuals =
-              quotient or acacia::diagnostics::semantic_decode_census ();
+          const bool count_residuals = quotient or acacia::diagnostics::semantic_decode_census ();
 #endif
 
           // Residual roots already decoded for the input class being expanded.
@@ -129,7 +121,7 @@ namespace ios_precomputers {
           std::unordered_set<int> residual_roots;
 
           auto recurse_outputs = [&] (this const auto& self, auto& tss, bdd bdd_opq) {
-          acacia::equivariance_budget::checkpoint ();
+            acacia::equivariance_budget::checkpoint ();
             if (bdd_opq == bddfalse)
               return;
             if (bdd_opq == bddtrue or bdd_var (bdd_opq) >= first_src_var) {
@@ -154,8 +146,9 @@ namespace ios_precomputers {
             }
           };
 
-          auto recurse_inputs = [&] (this const auto& self, auto& i_to_tss, bdd bdd_iopq, bdd bdd_input) {
-          acacia::equivariance_budget::checkpoint ();
+          auto recurse_inputs = [&] (this const auto& self, auto& i_to_tss, bdd bdd_iopq,
+                                     bdd bdd_input) {
+            acacia::equivariance_budget::checkpoint ();
             if (bdd_iopq == bddfalse)
               return;
             if (bdd_iopq == bddtrue or bdd_var (bdd_iopq) >= first_output) {
@@ -191,6 +184,7 @@ namespace ios_precomputers {
           }
 #endif
 
+          acacia::legacy_phase decoding ("io-decoding");
           input_to_ios_t i_to_tss;
 #if ACACIA_ENABLE_DIAGNOSTICS
           const auto decode_started = acacia::diagnostics::clock::now ();
@@ -203,6 +197,24 @@ namespace ios_precomputers {
                   acacia::diagnostics::clock::now () - decode_started)
                   .count ());
 #endif
+          if (acacia::phase_records_enabled ()) {
+            size_t bytes = sizeof (i_to_tss), sets = 0, endpoints = 0;
+            for (const auto& [input, outputs] : i_to_tss) {
+              (void) input;
+              bytes += sizeof (typename input_to_ios_t::value_type);
+              sets += outputs.size ();
+              for (const auto& transitions : outputs) {
+                bytes += sizeof (transitions) +
+                         transitions.capacity () * sizeof (typename TransSet::value_type);
+                endpoints += transitions.size ();
+              }
+            }
+            // Append-only decoded containers: accounted payload peaks at retention.
+            acacia::legacy_count ("decoded_set_peak_payload_bytes_estimate", bytes);
+            acacia::legacy_count ("decoded_set_payload_bytes_estimate", bytes);
+            acacia::legacy_count ("decoded_sets", sets);
+            acacia::legacy_count ("decoded_endpoints", endpoints);
+          }
           return i_to_tss;
         }
 

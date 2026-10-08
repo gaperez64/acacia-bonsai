@@ -39,7 +39,7 @@ def census(records, problems=()):
     producer_sequences = defaultdict(list)
     for row in records:
         if "seq" in row and row.get("observer") != "parent" and row.get("event") not in {
-            "worker_spawn", "parent_terminal", "parent_winner"
+            "worker_spawn", "parent_terminal", "parent_winner", "stage_censored"
         }:
             producer_sequences[(row.get("emitter"), row.get("worker_pid"))].append(row["seq"])
     for sequences in producer_sequences.values():

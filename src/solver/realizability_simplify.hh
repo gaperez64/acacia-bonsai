@@ -1,5 +1,6 @@
 #pragma once
 
+#include "phase_records.hh"
 #include "solver/diagnostics.hh"
 
 #include <spot/tl/apcollect.hh>
@@ -11,6 +12,7 @@ namespace acacia::realizability {
 
   inline bool apply_simplifier (spot::formula& formula,
                                 const std::vector<std::string>& input_aps) {
+    acacia::legacy_phase simplifying ("simplification");
     spot::formula before_simplification = formula;
     {
 #if ACACIA_ENABLE_DIAGNOSTICS

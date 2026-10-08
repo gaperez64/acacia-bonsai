@@ -435,6 +435,11 @@ namespace {
       }
 
       bool operator() (spot::formula spot_formula) {
+        if (auto* w = acacia::active_worker_record (); w && acacia::phase_records_enabled ()) {
+          w->subjob = ++w->subjobs_executed;
+          w->k = -1;
+        }
+        acacia::legacy_phase job ("subjob");
         // NOTE: realizability-preserving simplification (spot::realizability_
         // simplifier) is applied ONCE up front in run_ltl, on the original
         // spec in the standard (Mealy) frame, before the input/output swap --
@@ -556,14 +561,26 @@ namespace {
         // If unreal but we haven't pushed inputs yet using X on formula.
         if (check_unreal.has_value () and *check_unreal == UNREAL_X_AUTOMATON) {
           verb_do (2, vout << "Pushing the inputs in the automaton\n");
-          aut = push_aps (aut, all_inputs, all_outputs);
+          acacia::legacy_phase pushing ("input-push");
+          acacia::legacy_graph (aut, "input_");
+          utils::push_aps_observation observation;
+          aut = push_aps (aut, all_inputs, all_outputs, utils::push_aps_max_states,
+                          utils::push_aps_max_edges,
+                          acacia::phase_records_enabled () ? &observation : nullptr);
+          if (acacia::phase_records_enabled ())
+            observation.publish ();
+          acacia::legacy_graph (aut, "output_");
+          pushing.finish (observation.limit_reason, aut == nullptr);
           if (aut == nullptr) {
             verb_do (1, vout << "Input-push expansion limit reached; inconclusive\n");
             return acacia::diagnostics::finish (false, "input-push-limit");
           }
           if (aut->num_states () > 0 and not aut->prop_state_acc ().is_true ()) {
             [[maybe_unused]] const auto old_states = aut->num_states ();
+            acacia::legacy_phase lowering ("input-push-lowering");
+            acacia::legacy_graph (aut, "input_");
             aut = spot::sbacc (aut);
+            acacia::legacy_graph (aut, "output_");
             verb_do (1,
                      vout << "Converted pushed automaton to state-based acceptance: " << old_states
                           << " -> " << aut->num_states () << " states." << std::endl);
@@ -645,7 +662,10 @@ namespace {
           }
           acacia::diagnostics::scoped_timer timer (diag ? &diag->preproc_ms : nullptr);
 #endif
+          acacia::legacy_phase preprocessing ("preprocessing");
+          acacia::legacy_graph (aut, "input_");
           AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
+          acacia::legacy_graph (aut, "output_");
 #if ACACIA_ENABLE_DIAGNOSTICS
           if (diag != nullptr) {
             diag->preproc_states_after = aut->num_states ();
@@ -702,7 +722,14 @@ namespace {
           return acacia::diagnostics::finish (false, "empty-after-preprocessing");
         }
 
-        posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
+        {
+          acacia::legacy_phase booleanizing ("booleanization");
+          posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
+          acacia::legacy_graph (aut);
+          acacia::legacy_count ("numeric_dimensions", posets::vectors::bool_threshold);
+          acacia::legacy_count ("boolean_dimensions",
+                                aut->num_states () - posets::vectors::bool_threshold);
+        }
         // Boolean-state discovery can renumber the graph. Out-degrees must
         // use the same final source coordinates as the ranks and actions.
         acacia::diagnostics::set_support_graph (aut);
@@ -971,15 +998,26 @@ namespace {
     // NOTE: we may have flipped inputs and outputs already, so we need to
     // provide inputs to the split function in that case.
     std::vector<std::vector<std::string>> out_part;
+    acacia::legacy_phase decomposing ("decomposition");
     auto [forms, outs] = spot::split_independent_formulas (
         spot_formula, check_unreal.has_value () ? input_aps : output_aps);
+    if (auto* w = acacia::active_worker_record (); w && acacia::phase_records_enabled ()) {
+      w->subjobs = std::max (size_t {1}, forms.size ());
+      w->subjobs_executed = 0;
+      w->subjob = 0;
+    }
+    acacia::legacy_count ("subjobs_planned", std::max (size_t {1}, forms.size ()));
+    decomposing.finish ();
     acacia::diagnostics::snapshot ("after-decomposition");
     verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
 
     if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER and forms.size () > 1 and
         not check_unreal.has_value () and not synth_fname.has_value ()) {
       bool any_component_simplified = false;
+      size_t ordinal = 0;
       for (auto& sub_formula : forms) {
+        if (auto* w = acacia::active_worker_record (); w && acacia::phase_records_enabled ())
+          w->subjob = ++ordinal;
         const bool component_simplified =
             acacia::realizability::apply_simplifier (sub_formula, input_aps);
         any_component_simplified = any_component_simplified or component_simplified;
@@ -988,6 +1026,8 @@ namespace {
       if (auto* diag = acacia::diagnostics::current ())
         diag->rsimp_changed = diag->rsimp_changed or any_component_simplified;
 # endif
+      if (auto* w = acacia::active_worker_record (); w && acacia::phase_records_enabled ())
+        w->subjob = 0;
       acacia::diagnostics::snapshot ("after-decomposition-rsimp");
       verb_do (2, vout << "Simplified decomposed subformulas: "
                        << (any_component_simplified ? "changed" : "unchanged") << std::endl);
@@ -1023,6 +1063,15 @@ namespace {
       verb_do (3, vout << "Result of sub-calls to runner " << result << std::endl);
     }
 
+    {
+      if (auto* w = acacia::active_worker_record (); w && acacia::phase_records_enabled ()) {
+        w->subjob = 0;
+        w->k = -1;
+      }
+      acacia::legacy_phase accounting ("subjob-summary");
+      if (auto* w = acacia::active_worker_record ())
+        acacia::legacy_count ("subjobs_executed", w->subjobs_executed);
+    }
     if (result) {
       if (synth_fname.has_value ())
         runner.synthesis (spot_formula, out_part);
@@ -1149,6 +1198,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   }
 
   if (!acacia::is_closure_provider (provider)) {
+    acacia::legacy_phase bypass ("direct-checks");
     if (auto answer = try_degenerate_io (input_aps, output_aps, spot_formula, check_unreal,
                                          translation_pref, synth_fname, conversion);
         answer.has_value ())
@@ -1197,6 +1247,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
           (check_unreal ? ";polarity=unreal-formula" : ";polarity=real"),
       weakening_records);
 
+  acacia::legacy_phase prepass ("pre-pass");
   weakening_records.enter (
       spot_formula, diagnostic_deadline_ns, diagnostic_source_sha256,
       metadata.source_format.c_str (), metadata.tlsf_semantics.c_str (),
@@ -1228,6 +1279,15 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     weakened_answer = acacia::unreal_witnesses::try_safety_core_witnesses (
         spot_formula, check_unreal.has_value (), synth_fname.has_value (), runner,
         weakening_records);
+  if (auto* w = acacia::active_worker_record ())
+    acacia::legacy_count ("subjobs_executed", w->subjobs_executed);
+  prepass.finish ();
+  if (auto* w = acacia::active_worker_record (); w && acacia::phase_records_enabled ()) {
+    w->subjob = 0;
+    w->k = -1;
+    w->subjobs = 1;
+    w->subjobs_executed = 0;
+  }
   if (weakened_answer.has_value ()) {
     acacia::diagnostics::set_final_reason ("unreal-safety-core-witness");
     return acacia::diagnostics::finish (*weakened_answer, "unreal-safety-core-witness");

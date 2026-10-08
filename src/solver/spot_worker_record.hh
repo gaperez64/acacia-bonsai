@@ -50,9 +50,16 @@ namespace acacia::spot_records {
           const char* history = std::getenv ("ACACIA_SPOT_CAPTURE_HISTORY");
           history_ = history && std::string (history) == "1";
           put ("worker_pid", std::to_string (getpid ()));
+          if (const char* invocation = std::getenv ("ACACIA_PHASE_INVOCATION");
+              invocation && *invocation)
+            put ("invocation", invocation);
           if (const char* instance = std::getenv ("ACACIA_DIAG_INSTANCE"))
             put ("instance", instance);
           if (auto* worker = active_worker_record ()) {
+            put ("subjob", std::to_string (worker->subjob));
+            if (worker->subjobs)
+              put ("subjobs", std::to_string (worker->subjobs));
+            put ("run_id", std::to_string (worker->run_id));
             put ("requested_backend", worker->requested_backend);
             put ("effective_backend", worker->effective_backend);
             put ("original_polarity", worker->original_polarity);
