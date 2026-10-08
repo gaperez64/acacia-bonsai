@@ -2,6 +2,7 @@
 
 #include "solver/phase_observation.hh"
 #include "solver/transition_payload.hh"
+#include "solver/translator_options.hh"
 #include "utils/verbose.hh"
 
 #include <iostream>
@@ -18,7 +19,8 @@
 
 spot::twa_graph_ptr create_automaton (
     spot::formula& f, spot::translator& trans,
-    spot::postprocessor::output_pref preference = ACACIA_TRANSLATION_PREF) {
+    spot::postprocessor::output_pref preference = ACACIA_TRANSLATION_PREF,
+    acacia::translation::level level = acacia::translation::default_level) {
   verb_do (1, vout << "Formula: " << f << std::endl);
 
 #if ACACIA_TRANSITION_ACCEPTANCE
@@ -31,6 +33,13 @@ spot::twa_graph_ptr create_automaton (
   trans.set_type (spot::postprocessor::Buchi);
   trans.set_pref (preference);
   acacia::legacy_phase translating ("translation");
+  acacia::legacy_metric ("translation_level", acacia::translation::level_name (level));
+  acacia::legacy_metric ("translation_type", "buchi");
+  acacia::legacy_count ("translation_preference", preference);
+  acacia::legacy_metric ("translation_settings", acacia::translation::scalar_settings);
+  acacia::legacy_metric ("translation_gf_guarantee",
+                         level == spot::postprocessor::Low ? "off" : "on");
+  acacia::translation::configure_level (trans, level);
   auto aut = trans.run (f);
   acacia::legacy_graph (aut);
   return aut;
@@ -44,6 +53,13 @@ spot::twa_graph_ptr create_automaton (
       // spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
       spot::postprocessor::SBAcc);  // state-based acceptacen
   acacia::legacy_phase translating ("translation");
+  acacia::legacy_metric ("translation_level", acacia::translation::level_name (level));
+  acacia::legacy_metric ("translation_type", "ba");
+  acacia::legacy_count ("translation_preference", preference | spot::postprocessor::SBAcc);
+  acacia::legacy_metric ("translation_settings", acacia::translation::scalar_settings);
+  acacia::legacy_metric ("translation_gf_guarantee",
+                         level == spot::postprocessor::Low ? "off" : "on");
+  acacia::translation::configure_level (trans, level);
   auto aut = trans.run (f);
   acacia::legacy_graph (aut);
   translating.finish ();

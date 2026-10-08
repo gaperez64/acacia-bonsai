@@ -186,10 +186,18 @@ test ('spot-nba-fastpath-classification',
 translator_options_test = executable ('translator-options-test',
                                       'translator_options_test.cc',
                                       include_directories : inc,
-                                      dependencies : [spot_dep, bddx_dep])
+                                      dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
 test ('translator-options',
       translator_options_test,
       suite : ['unit', 'translator-options'])
+if get_option ('acacia_native_arms') and get_option ('acacia_spot_guarded_backend') and \
+   get_option ('acacia_forward_safety_solver') and \
+   get_option ('acacia_translation_pref') == 'small' and \
+   not get_option ('acacia_transition_acceptance')
+  test ('translation-level-games', py,
+        args : [files ('check-translation-level.py'), ab_exe, meson.project_build_root ()],
+        suite : ['unit', 'translation'], depends : [ab_exe], timeout : 180)
+endif
 
 game_backend_test = executable ('game-backend-test',
                                 ['game_backend_test.cc', '../src/portfolio_arm.cc'],

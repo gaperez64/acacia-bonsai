@@ -248,15 +248,15 @@ namespace {
         1, vout << "Starting solver child provider=" << acacia::automaton_provider_name (provider)
                 << " candidate_mode=" << acacia::candidate_mode_name (arg_values.candidate) << "\n"
                 << std::flush);
-    const bool res = run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k,
-                              arg_values.opt_kmin, arg_values.opt_kinc, arg_values.formula,
-                              unreal_x, translation_pref, arg_values.spot_fast, backend,
-                              (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA)
-                                  ? std::nullopt
-                                  : arg_values.synth_fname,
-                              arg_values.metadata, provider, arg_values.candidate,
-                              arg_values.equivariance, deadline_mono_ns, arg_values.tlsf_sha256,
-                              arg_values.weakening, arg_values.weakening_allowances);
+    const bool res = run_ltl (
+        arg_values.inputs, arg_values.outputs, arg_values.opt_k, arg_values.opt_kmin,
+        arg_values.opt_kinc, arg_values.formula, unreal_x, translation_pref, arg_values.spot_fast,
+        backend,
+        (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA) ? std::nullopt
+                                                                  : arg_values.synth_fname,
+        arg_values.metadata, provider, arg_values.candidate, arg_values.equivariance,
+        deadline_mono_ns, arg_values.tlsf_sha256, arg_values.weakening,
+        arg_values.weakening_allowances, arg_values.translation_level);
     verb_do (1, vout << "returning " << res << "\n");
 
     if (!res && acacia::active_worker_record () &&

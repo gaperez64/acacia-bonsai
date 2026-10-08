@@ -362,3 +362,13 @@ at K=2 and K=5, rejects a foreign invocation, and checks search/verifier metric
 separation. Generated release comparisons retain exact stdout, stderr and exit
 codes with records off/on and against the pre-binding executable; records-off
 PID/clock/resource-call counts also agree. These remain correctness observations.
+
+An explicit runtime `--translation-level high|medium|low` now controls the
+existing legacy Spot translator. High remains the default, with the same
+Small/BA/SBAcc preferences and five scalar settings. Generated language-inclusion,
+exact Mealy/Moore safety-game, independent replay and synthesis checks cover the
+alternate levels; native workers are unaffected. This is an unmeasured opt-in
+translation-level treatment, with no performance admission or default change.
+The [legacy decision record](legacy-route/decisions.md) documents Spot 2.16's
+simplifier rebuild, GF-guarantee default and retained overrides, and preserves
+the earlier rejected translator experiments.

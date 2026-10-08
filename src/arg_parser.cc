@@ -73,6 +73,7 @@ void show_help (const char* program_name) {
       << "                    by unrealizability checks; -s truncates -r to its head\n"
       << "                    migration: legacy bare -r and -U now fail; bare -u LIST\n"
       << "                    now selects unrealizability only\n"
+      << "  --translation-level VAL  [high|medium|low] (default high)\n"
       << "  --unreal-translation-pref VAL\n"
       << "                    set the unrealizability translator preference to\n"
       << "                    [small|any] without also selecting a realizability\n"
@@ -434,6 +435,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_WEAKENING = 1011;
   static constexpr int OPT_WEAKENING_ATTEMPT_MS = 1012;
   static constexpr int OPT_WEAKENING_TOTAL_MS = 1013;
+  static constexpr int OPT_TRANSLATION_LEVEL = 1014;
   static constexpr int OPT_R_PREPASS = 1008;
   static constexpr int OPT_EQUIVARIANCE = 1009;
   static constexpr int OPT_EQUIVARIANCE_BUDGET = 1010;
@@ -444,6 +446,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"version", no_argument, nullptr, 'V'},
       {"help", no_argument, nullptr, 'h'},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
+      {"translation-level", required_argument, nullptr, OPT_TRANSLATION_LEVEL},
       {"unreal-translation-pref", required_argument, nullptr, OPT_UNREAL_TRANSLATION_PREF},
       {"real-backend", required_argument, nullptr, OPT_REAL_BACKEND},
       {"unreal-backend", required_argument, nullptr, OPT_UNREAL_BACKEND},
@@ -640,6 +643,12 @@ arg_parse_result arg_parser (int argc, char** argv) {
         (opt == OPT_R_PREPASS ? retval.r_prepass : retval.equivariance) = enabled;
         break;
       }
+      case OPT_TRANSLATION_LEVEL:
+        if (auto level = acacia::translation::parse_level (optarg))
+          retval.translation_level = *level;
+        else
+          error (EXIT_CODE_ERROR, "Error: --translation-level expects high, medium or low.\n");
+        break;
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
       case OPT_REAL_BACKEND:
         if (retval.arms.has_value ())
