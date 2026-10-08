@@ -1,5 +1,7 @@
 #pragma once
 
+#include "solver/equivariance_budget.hh"
+
 #include "actioners/direction.hh"
 #include "configuration.hh"
 #include "posets/utils/vector_mm.hh"
@@ -77,10 +79,12 @@ namespace actioners {
           std::map<action_vecs, bdd> ioset;
           bdd input_letters = bddtrue;
           while (input_letters != bddfalse) {
+            acacia::equivariance_budget::checkpoint ();
             bdd one_input_letter = pick_one_letter (input_letters, supports.first);
             action_vecs fwd_actions;
             bdd output_letters = bddtrue;
             while (output_letters != bddfalse) {
+              acacia::equivariance_budget::checkpoint ();
               bdd one_output_letter = pick_one_letter (output_letters, supports.second);
               const auto& fwd = compute_action (one_input_letter, one_output_letter);
               fwd_actions.push_back (std::move (fwd));
@@ -103,6 +107,7 @@ namespace actioners {
 
         State apply (const State& m, const action_vec& avec,
                      direction dir) /* __attribute__((pure)) */ {
+                       acacia::equivariance_budget::checkpoint ();
           if (dir == direction::forward)
             apply_out.assign (m.size (), (VECTOR_ELT_T) -1);
           else {

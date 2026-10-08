@@ -7,6 +7,21 @@ worker snapshot, event formatting, or native observer callback. The tlsf-tools
 worktree remains based on `404963544436013d11ca232f4721d6da4499681f`; its uncommitted
 changes must accompany the Acacia changes. Existing public C struct layouts stay unchanged; the new observer carries a typed failure status.
 
+## P1 runtime ablation states
+
+`--r-prepass on|off` and `--equivariance on|off` preserve incumbent defaults.
+Each worker lifecycle event includes boolean `r_prepass` and `equivariance`, also
+retained by parent spawn/terminal/winner records after child cancellation.
+These are invocation settings, independent of whether a worker reaches the hook.
+The native worker now calls `tlsf_gr1_both_from_target_v2` with versioned routing
+options; its observer and the legacy v1 entry point remain supported. R-off with
+U-off skips seed and candidate work inside the same combined context and retains
+its direct solver settings. Backward decision workers emit `equivariance` before
+recognition when enabled and `backward` on ordinary solving after decline or with
+it disabled. Entry into recognition does not imply an admitted symmetry.
+See [the matched ablation protocol](p1-ablation-protocol.md) for all four legs,
+resource controls and the separate backward-worker membership comparison.
+
 ## Reading events
 
 Each invocation needs a fresh, existing diagnostic directory. Files are named for
@@ -68,6 +83,50 @@ full, broken, or killed writer never changes the solver verdict; an unusable
 destination cannot itself carry a reliable loss report. Never turn its silence
 into an algorithmic obstruction. Ignore incomplete trailing lines, flag them,
 and keep the confirmed prefix.
+
+Audit an existing coverage-runner campaign without executing the solver:
+
+```sh
+python3 benchmarking/attribution-completeness.py RUNS.tsv \
+  --phase-records-dir PHASES \
+  --output OUTPUT/rows.tsv --report OUTPUT/completeness.md --summary OUTPUT/summary.json
+```
+
+The reader reuses `summarize-worker-phases.py` for TSV validation, numeric parsing,
+and report tables, and `summarize-diag-phases.py` for any captured checkpoints.
+It joins every invocation by the runner's sanitized label/cap/instance/run-index
+layout, rather than merging repeated instances or selecting the largest cap.
+Inventories use explicit `--arms` or the current preset registry when available;
+otherwise the reader checks all observed identities and contiguous launch indices.
+The expected inventory is retained in `expected_worker_specs` in each output row;
+worker kind, requested polarity, translation, transform and provider are checked
+against the corresponding launch index, together with requested backend and
+runtime settings. Requested context is independent of effective backend coercion
+and the combined worker's later proof polarity. Both `r_prepass` and `equivariance`
+are mandatory JSON booleans in every lifecycle and worker-spec record; missing,
+invalid or conflicting values make delivery incomplete.
+
+Only regular JSONL destinations are read. `lstat`, a nonblocking open without
+following symlinks, and a descriptor check reject FIFOs, symlinks, devices and
+files replaced during inspection. A global 64 MiB per-file limit also bounds reads
+when a file grows after inspection. Rejected destinations have explicit delivery
+reasons; the reader continues auditing the other confirmed records. This is a
+reader resource bound, independent of solver thresholds or campaign outcomes.
+The registry is an inventory check, not proof that an older binary has the same
+configuration. Each row carries separate delivery/producer states, all reasons
+with path:line evidence, accepted winners, route events, declines, and stops.
+Parent terminal cancellation/deadline records remain distinct from child route
+stops. Reason counts count rows once per reason and may overlap.
+
+Producer incompleteness from a documented kill is retained even when delivery of
+the observed prefix and parent metadata is complete. A worker known only from
+parent metadata remains in the inventory with an unknown last route; its missing
+start is flagged under the delivery rule above. Selection without start at the
+end of a killed worker's contiguous prefix can precede the kill, so it does not
+by itself prove a missing delivered event. The pre-fork parent spawn sequence is
+independent of the child; the parent terminal sequence resumes the reaped shared
+snapshot, followed by the winner sequence. Large jumps between spawn and terminal
+in the parent file are therefore not delivery gaps.
 
 For cap recycling, additionally require the same binary/configuration/input and
 resource regime, an accepted winner before the smaller cap, and compatible route

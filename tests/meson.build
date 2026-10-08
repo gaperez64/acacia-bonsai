@@ -90,6 +90,14 @@ test ('config-transition-acceptance',
       suite : ['unit', 'config-frontends'])
 
 if get_option ('acacia_native_arms')
+  if get_option ('acacia_enable_equivariant_solver') and get_option ('acacia_forward_safety_solver')
+    test ('equivariance-budget', py,
+          args : [files ('check-equivariance-budget.py'), ab_exe, meson.project_build_root ()],
+          suite : ['unit', 'attribution'], depends : [ab_exe], timeout : 90)
+    test ('p1-ablation', py,
+          args : [files ('check-p1-ablation.py'), ab_exe, meson.project_build_root ()],
+          suite : ['unit', 'attribution', 'native-gr1'], depends : [ab_exe], timeout : 90)
+  endif
   worker_record_transport = executable (
     'worker-record-transport', 'worker_record_transport.cc')
   test ('record-transport', py,
@@ -617,6 +625,13 @@ if enable_tlsf_frontend
   )
   test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
 
+  test ('moore-synthesis-semantics',
+        py,
+        args : [files ('check-moore-synthesis.py'), ab_exe],
+        suite : ['unit', 'tlsf', 'synthesis'],
+        timeout : 60,
+        depends : [ab_exe])
+
   tlsf_frontend_inspect = executable (
     'tlsf-frontend-inspect',
     '../src/tlsf_frontend.cc',
@@ -640,6 +655,10 @@ symmetry_blocks_test = executable ('symmetry-blocks-test',
 test ('symmetry-blocks',
       symmetry_blocks_test,
       suite : ['unit', 'symmetry'])
+
+test ('equivariance-backends', py,
+      args : [files ('check-equivariance-backends.py'), meson.project_build_root ()],
+      suite : ['unit', 'symmetry'], timeout : 120)
 
 equivariant_pre_test = executable ('equivariant-pre-test',
                                    'equivariant_pre_test.cc',

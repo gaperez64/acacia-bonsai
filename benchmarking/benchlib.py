@@ -11,12 +11,13 @@ import re
 import signal
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import uuid
 from collections.abc import Mapping
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable
 
 
@@ -142,6 +143,17 @@ class RunResult:
     resource_limited: bool = False
     memory_peak_bytes: int | None = None
     scope_unit: str = ""
+    max_process_rss_bytes: int | None = None
+    scope_memory_peak_source: str = ""
+    scope_memory_peak_missing_reason: str = "unscoped invocation: no cgroup peak collected"
+    scope_memory_events: str = ""
+    scope_memory_events_source: str = ""
+    scope_memory_events_missing_reason: str = "unscoped invocation: no cgroup events collected"
+    memory_cgroup: str = ""
+    memory_oom_group: str = ""
+    max_process_rss_source: str = ""
+    max_process_rss_missing_reason: str = "unscoped invocation: process RSS not collected"
+    cpu_seconds: float | None = None
 
 
 def _terminate_process_group(proc: subprocess.Popen, grace: float = 2.0) -> None:
@@ -397,6 +409,7 @@ def run_process_group(
     env: dict[str, str] | None = None,
     capture_filter: Callable[[str], bool] | None = None,
     capture_consumer: Callable[[str], None] | None = None,
+    timeout_handler: Callable[[], None] | None = None,
 ) -> RunResult:
     """Run cmd in a new process group and kill the whole group on timeout."""
     started = time.monotonic()
@@ -415,6 +428,8 @@ def run_process_group(
                 stdout, stderr = proc.communicate(timeout=timeout)
             except subprocess.TimeoutExpired:
                 timed_out = True
+                if timeout_handler is not None:
+                    timeout_handler()
                 try:
                     os.killpg(proc.pid, signal.SIGTERM)
                 except ProcessLookupError:
@@ -455,6 +470,8 @@ def run_process_group(
                 proc.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
                 timed_out = True
+                if timeout_handler is not None:
+                    timeout_handler()
                 try:
                     os.killpg(proc.pid, signal.SIGTERM)
                 except ProcessLookupError:
@@ -522,224 +539,86 @@ def run_systemd_scope(
     allowed_cpus: str | None = None,
     cpu_quota: str | None = None,
     scope_env: Mapping[str, str] | None = None,
+    oom_group: bool = False,
 ) -> RunResult:
-    """Run cmd in a resource-limited user scope and stop the scope on timeout.
+    """Run one workload in a fresh limited cgroup with an external observer.
 
-    A process-group timeout alone is insufficient here: systemd migrates the
-    solver out of the systemd-run client's process group.  Naming the scope
-    lets the timeout path stop the solver and all decomposed children before
-    collecting the client's pipes.
-
-    A portfolio invocation races several children inside this one scope, so
-    every limit here is a whole-race budget rather than a per-child one.  That
-    is what makes `allowed_cpus` and `cpu_quota` necessary for comparing worker
-    counts: without them a race of eight children is handed eight times the CPU
-    of a race of one, and the comparison measures the extra hardware rather
-    than the portfolio.  Both are left unset by default, which keeps existing
-    single-invocation campaigns byte-identical to before.
+    A small lifecycle owner in a sibling cgroup holds the delegated scope
+    alive, including after group OOM. The driver reads the workload's v2 files
+    before acknowledging deletion. Timeout first requests parent-only TERM
+    with a global 500 ms cleanup allowance, then kills the invocation cgroup.
+    CPU budgets still apply to the whole scope; seconds includes teardown.
     """
+    from scope_memory import MemoryObserver
+
     if not unit_prefix.startswith("acacia-"):
         raise ValueError("unit_prefix must start with 'acacia-' so campaign sweeps can find it")
+    if sys.platform != "linux":
+        result = run_process_group(cmd, timeout, env, capture_filter, capture_consumer)
+        return replace(result,
+                       scope_memory_peak_missing_reason="unsupported: cgroup v2 requires Linux",
+                       scope_memory_events_missing_reason="unsupported: cgroup v2 requires Linux",
+                       max_process_rss_missing_reason="unsupported: Linux wait4 collector")
     if allowed_cpus is not None:
-        # systemd accepts AllowedCPUs on a user scope whether or not it can
-        # apply it.  Without the cpuset controller delegated to the user
-        # manager the property is dropped: the scope gets no cpuset.cpus, its
-        # processes keep the full affinity mask, and a campaign labelled as a
-        # fixed-core comparison silently runs on every core.  CPUQuota rides
-        # the cpu controller, which user managers normally do have.
         controllers = user_manager_controllers()
         if controllers is None or "cpuset" not in controllers:
             found = "unreadable" if controllers is None else " ".join(sorted(controllers))
             raise ScopeConstraintError(
                 f"allowed_cpus={allowed_cpus!r} cannot be enforced: the user systemd "
                 f"manager's delegated controllers are [{found}], without cpuset, so "
-                f"AllowedCPUs would be silently ignored. Use cpu_quota for a fixed CPU "
-                f"budget, or delegate cpuset to user@.service."
-            )
+                "AllowedCPUs would be silently ignored. Use cpu_quota for a fixed CPU "
+                "budget, or delegate cpuset to user@.service.")
     unit = f"{unit_prefix}-{os.getpid()}-{uuid.uuid4().hex[:12]}"
-    scoped_cmd = [
-        "systemd-run",
-        "--user",
-        "--scope",
-        "--quiet",
-        f"--unit={unit}",
-        "--property=KillMode=control-group",
-        f"--property=MemoryMax={memory_max}",
-        f"--property=MemorySwapMax={memory_swap_max}",
-    ]
-    # Only appended when asked for: an unset property and a property set to the
-    # machine's full width are not the same thing to systemd, and campaigns
-    # already recorded were run with neither.
+    scoped_cmd = ["systemd-run", "--user", "--scope", "--quiet", f"--unit={unit}",
+                  "--property=KillMode=control-group", "--property=Delegate=yes",
+                  "--property=MemoryMax=infinity", "--property=MemorySwapMax=infinity"]
     if allowed_cpus is not None:
         scoped_cmd.append(f"--property=AllowedCPUs={allowed_cpus}")
     if cpu_quota is not None:
         scoped_cmd.append(f"--property=CPUQuota={cpu_quota}")
-    # A transient scope receives the user manager's environment, not arbitrary
-    # additions made to the systemd-run client's environment.  Keep this
-    # opt-in so every existing campaign argv stays unchanged, while callers
-    # which need child-only metadata can explicitly propagate it through the
-    # manager boundary.
     if scope_env is not None:
-        scoped_cmd.extend(
-            f"--setenv={name}={value}" for name, value in sorted(scope_env.items())
-        )
-    scoped_cmd += [*cmd]
-    started = time.monotonic()
-    proc = subprocess.Popen(
-        scoped_cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        env=env,
-        start_new_session=True,
-    )
-    previous_handlers: dict[signal.Signals, object] = {}
-    if threading.current_thread() is threading.main_thread():
-        for handled_signal in (signal.SIGTERM, signal.SIGHUP):
-            previous_handlers[handled_signal] = signal.getsignal(handled_signal)
-
-        def cleanup_on_signal(signum, frame) -> None:
-            # systemd may signal the benchmark driver while its solver lives in
-            # a sibling transient scope.  Clean that scope synchronously before
-            # delegating to the caller's handler or terminating the driver.
-            for handled_signal in previous_handlers:
-                signal.signal(handled_signal, signal.SIG_IGN)
-            _stop_user_scope(unit)
-            _terminate_process_group(proc)
-            previous = previous_handlers[signal.Signals(signum)]
-            if callable(previous):
-                previous(signum, frame)
-            raise SystemExit(128 + signum)
-
-        for handled_signal in previous_handlers:
-            signal.signal(handled_signal, cleanup_on_signal)
-    try:
-        timed_out = False
-        if capture_filter is None and capture_consumer is None:
-            try:
-                stdout, stderr = proc.communicate(timeout=timeout)
-            except subprocess.TimeoutExpired:
-                timed_out = True
+        scoped_cmd.extend(f"--setenv={name}={value}" for name, value in sorted(scope_env.items()))
+    scratch = ROOT / "build_scratch" / "scope-memory"
+    scratch.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=unit + "-", dir=scratch) as raw_state:
+        state = pathlib.Path(raw_state)
+        scoped_cmd += [sys.executable, str(ROOT / "benchmarking/scope_memory.py"),
+                       "--state", str(state), "--memory-max", memory_max,
+                       "--swap-max", memory_swap_max,
+                       *(["--oom-group"] if oom_group else []), "--", *cmd]
+        observer = MemoryObserver(state)
+        previous_handlers = {}
+        if threading.current_thread() is threading.main_thread():
+            def cleanup_on_signal(signum, frame):
+                observer.cancel()
                 _stop_user_scope(unit)
-                if proc.poll() is None:
-                    try:
-                        os.killpg(proc.pid, signal.SIGTERM)
-                    except ProcessLookupError:
-                        pass
-                try:
-                    stdout, stderr = proc.communicate(timeout=2)
-                except subprocess.TimeoutExpired:
-                    try:
-                        os.killpg(proc.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-                    stdout, stderr = proc.communicate()
-            stdout_bytes = len(stdout.encode())
-            stderr_bytes = len(stderr.encode())
-        else:
-            # communicate() retains all raw output in RAM.  Drain both pipes as
-            # the child runs and keep only diagnostic lines, so even a worker that
-            # emits gigabytes of non-diagnostic text has bounded runner memory.
-            retained_lines: list[list[str]] = [[], []]
-            raw_sizes = [0, 0]
-            consumer_lock = threading.Lock()
-
-            def drain(stream, index: int) -> None:
-                if capture_consumer is None:
-                    assert capture_filter is not None
-                    retained_lines[index], raw_sizes[index] = filter_stream(stream, capture_filter)
-                    return
-                for line in stream:
-                    raw_sizes[index] += len(line)
-                    with consumer_lock:
-                        capture_consumer(line)
-
-            assert proc.stdout is not None and proc.stderr is not None
-            readers = [
-                threading.Thread(target=drain, args=(proc.stdout, 0), daemon=True),
-                threading.Thread(target=drain, args=(proc.stderr, 1), daemon=True),
-            ]
-            for reader in readers:
-                reader.start()
-            try:
-                proc.wait(timeout=timeout)
-            except subprocess.TimeoutExpired:
-                timed_out = True
-                _stop_user_scope(unit)
-                if proc.poll() is None:
-                    try:
-                        os.killpg(proc.pid, signal.SIGTERM)
-                    except ProcessLookupError:
-                        pass
-                try:
-                    proc.wait(timeout=2)
-                except subprocess.TimeoutExpired:
-                    try:
-                        os.killpg(proc.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-                    proc.wait()
-            for reader in readers:
-                reader.join()
-            stdout = "".join(retained_lines[0])
-            stderr = "".join(retained_lines[1])
-            stdout_bytes, stderr_bytes = raw_sizes
-        finished = time.monotonic()
-        resource_limited = False
-        memory_peak_bytes = None
+                previous = previous_handlers[signal.Signals(signum)]
+                if callable(previous):
+                    previous(signum, frame)
+                raise SystemExit(128 + signum)
+            for handled in (signal.SIGTERM, signal.SIGHUP):
+                previous_handlers[handled] = signal.getsignal(handled)
+                signal.signal(handled, cleanup_on_signal)
         try:
-            unit_result = subprocess.run(
-                [
-                    "systemctl",
-                    "--user",
-                    "show",
-                    f"{unit}.scope",
-                    "--property=Result,MemoryPeak",
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-            properties = dict(
-                line.split("=", 1)
-                for line in unit_result.stdout.splitlines()
-                if "=" in line
-            )
-            peak = properties.get("MemoryPeak", "")
-            if peak.isdigit() and int(peak) < (1 << 64) - 1:
-                memory_peak_bytes = int(peak)
-            resource_limited = (
-                not timed_out
-                and proc.returncode != 0
-                and properties.get("Result") == "oom-kill"
-            )
-        except subprocess.TimeoutExpired:
-            pass
-        seconds = finished - started
-        result = RunResult(
-            stdout,
-            stderr,
-            124 if timed_out else proc.returncode,
-            seconds,
-            timed_out,
-            stdout_bytes,
-            stderr_bytes,
-            resource_limited,
-            memory_peak_bytes,
-            f"{unit}.scope",
-        )
-        return result
-    finally:
-        # systemd-run can finish after the command's group leader while other
-        # processes remain in the scope.  Always stop the named scope, then
-        # clean up any descendants still attached to the client's process
-        # group.
-        _stop_user_scope(unit)
-        _terminate_process_group(proc)
-        for handled_signal, previous in previous_handlers.items():
-            signal.signal(handled_signal, previous)
+            run = run_process_group(scoped_cmd, timeout, env, capture_filter,
+                                    capture_consumer, timeout_handler=observer.cancel)
+            observer.finished.wait(1)
+            snapshot = dict(observer.snapshot)
+            workload_returncode = snapshot.pop("workload_returncode", run.returncode)
+            returncode = run.returncode if run.timed_out else workload_returncode
+            events = json.loads(snapshot.get("scope_memory_events") or "{}")
+            return replace(run, returncode=returncode, scope_unit=f"{unit}.scope", **snapshot,
+                           resource_limited=bool(events.get("oom_kill", 0))
+                           and returncode != 0 and not run.timed_out)
+        finally:
+            # The observer has read before ack/normal deletion or timeout stop.
+            # If the owner failed to publish, leave explicit missing reasons.
+            if not observer.finished.is_set():
+                observer.cancel()
+            observer.close()
+            _stop_user_scope(unit)
+            for handled, previous in previous_handlers.items():
+                signal.signal(handled, previous)
 
 
 #: The two verdicts that count as an answer. Every other outcome -- a timeout,

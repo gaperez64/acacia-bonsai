@@ -25,6 +25,7 @@ import argparse
 import csv
 import json
 import math
+from scope_memory import load_memory_sidecar, memory_observation, memory_statistic
 from benchlib import par2 as par2_score
 
 import pathlib
@@ -54,7 +55,9 @@ def load_campaign(path: pathlib.Path, cap: float) -> dict[str, dict]:
     """Accept coverage rows or their summaries; retain every inconclusive row."""
     rows = {}
     with path.open(newline="", encoding="utf-8") as stream:
-        for row in csv.DictReader(stream, delimiter="\t"):
+        observations = list(csv.DictReader(stream, delimiter="\t"))
+        load_memory_sidecar(path, observations)
+        for row in observations:
             if row.get("cap_s") and float(row["cap_s"]) != cap:
                 continue
             name = row["instance"]
@@ -85,10 +88,16 @@ def score(rows: dict[str, dict], cap: float) -> dict:
         values = [float(r[column]) for r in rows.values() if r.get(column) not in (None, "")]
         if any(not math.isfinite(v) or v < 0 for v in values):
             raise ValueError(f"invalid resource measurement in {column}")
+        if column.endswith("_bytes"):
+            values = [value for row in rows.values()
+                      if (value := memory_observation(row, column)[0]) is not None]
         metrics[column + "_observations"] = len(values)
         # Missing/censored measurements are never fabricated as zero.
         metrics[column + ("_sum" if column.endswith("cpu_seconds") else "_max")] = (
             (sum(values) if column.endswith("cpu_seconds") else max(values)) if values else None)
+    metrics["memory_completeness"] = {
+        column: memory_statistic(list(rows.values()), column)
+        for column in ("scope_memory_peak_bytes", "max_process_rss_bytes")}
     return metrics
 
 

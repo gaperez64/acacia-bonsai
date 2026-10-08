@@ -7,7 +7,6 @@ import os
 import pathlib
 import subprocess
 import sys
-import tempfile
 
 import pytest
 
@@ -55,7 +54,7 @@ pairs = load()
 
 
 @pytest.fixture
-def legacy_pairs():
+def legacy_pairs(tmp_path):
     try:
         source = subprocess.run(
             ["git", "show", LEGACY_SCRIPT_REF],
@@ -68,11 +67,11 @@ def legacy_pairs():
         )
     if b"--error-policy" in source:
         pytest.fail(f"Pinned driver {LEGACY_SCRIPT_REF} contains --error-policy and is not legacy")
-    # Keep the real historical source inside the worktree so ROOT resolves correctly.
-    with tempfile.TemporaryDirectory(prefix=".pytest-legacy-pairs-", dir=BENCHMARKING.parent) as temp:
-        script = pathlib.Path(temp) / SCRIPT.name
-        script.write_bytes(source)
-        yield load(script)
+    script = tmp_path / SCRIPT.name
+    script.write_bytes(source)
+    module = load(script)
+    module.ROOT = BENCHMARKING.parent
+    yield module
 
 
 @pytest.fixture
@@ -303,10 +302,10 @@ def test_resume_collect_from_real_legacy_preserves_tsv_prefix(
     assert run_main(
         monkeypatch, campaign, "--resume", "--error-policy", "collect", "--repetitions", "2",
     ) == 2
-    assert output.read_bytes()[:len(original)] == original
+    assert output.read_bytes().startswith(original)
     assert json.loads(log.read_text()) == expected_calls
     rows = read_tsv(output)
-    assert rows[:3] == original_rows
+    assert [{key: row[key] for key in original_rows[0]} for row in rows[:3]] == original_rows
     assert [
         (int(row["repetition_id"]), row["instance"], row["pair_id"]) for row in rows
     ] == INTERLEAVED_COORDINATES
@@ -418,3 +417,51 @@ def test_error_policy_collect_still_stops_on_verdict_conflicts(
     assert len(calls) == 2
     assert "verdict conflict: error.ltl" in capsys.readouterr().err
     assert len(read_tsv(tmp_path / "out-conflicts.tsv")) == 2
+
+
+def test_primary_columns_and_rows_remain_compatible_with_master(
+        monkeypatch, campaign, tmp_path, master_benchmark_reader):
+    master = master_benchmark_reader("run-portfolio-pairs.py")
+    from benchlib import RunResult
+    result = RunResult(
+        "REALIZABLE\n", "", 0, 0.1, False, scope_unit="acacia-test.scope",
+        memory_peak_bytes=4096, scope_memory_peak_source="cgroup-v2/memory.peak",
+        scope_memory_peak_missing_reason="", memory_cgroup="/invocation")
+    monkeypatch.setattr(pairs, "run_systemd_scope", lambda *args, **kwargs: result)
+    assert run_main(monkeypatch, campaign) == 0
+    output = tmp_path / "out.tsv"
+    with output.open(newline="") as stream:
+        reader = csv.DictReader(stream, delimiter="\t")
+        assert reader.fieldnames == master.OUTPUT_COLUMNS
+        rows = list(reader)
+    metadata = {column: rows[0][column] for column in (
+        "acacia_sha", "binary_sha256", "preset", "cap_s", "memory_max", "memory_swap_max",
+        "allowed_cpus", "cpu_quota", "collect_rusage", "worker_records_dir")}
+    targets = {f"{instance}.ltl": tmp_path / f"{instance}.tlsf" for instance in INSTANCES}
+    plan = list(master.schedule(PAIRS, targets, 1, "interleaved"))
+    assert master.load_output(output, metadata, PAIRS, targets, plan) == rows
+    restored = pairs.load_output(output, metadata, PAIRS, targets, plan)
+    assert all(row["scope_memory_peak_source"] == "cgroup-v2/memory.peak" for row in restored)
+    monkeypatch.setattr(pairs, "run_systemd_scope", lambda *args, **kwargs: pytest.fail("rerun"))
+    assert run_main(monkeypatch, campaign, "--resume") == 0
+    assert pairs.load_output(output, metadata, PAIRS, targets, plan) == restored
+
+
+def test_expanded_primary_is_preserved_when_moved_to_sidecar(monkeypatch, campaign, tmp_path):
+    mock_invocations(monkeypatch, ["REALIZABLE"] * 6)
+    assert run_main(monkeypatch, campaign) == 0
+    output = tmp_path / "out.tsv"
+    rows = read_tsv(output)
+    from scope_memory import MEMORY_COLUMNS
+    expanded = pairs.OUTPUT_COLUMNS[:-len(pairs.PAIR_COLUMNS)] + MEMORY_COLUMNS + pairs.PAIR_COLUMNS
+    for row in rows:
+        row.update(dict.fromkeys(MEMORY_COLUMNS, ""))
+        row.update(scope_memory_peak_source="cgroup-v2/memory.peak", memory_cgroup="/invocation")
+    pairs.write_tsv(output, expanded, rows)
+    output.with_name(output.name + ".memory.tsv").unlink()
+    original = output.read_bytes()
+    mock_invocations(monkeypatch, [])
+    assert run_main(monkeypatch, campaign, "--resume") == 0
+    assert output.with_name("out-legacy.tsv").read_bytes() == original
+    sidecar = read_tsv(output.with_name(output.name + ".memory.tsv"))
+    assert [row["memory_cgroup"] for row in sidecar] == ["/invocation"] * 6

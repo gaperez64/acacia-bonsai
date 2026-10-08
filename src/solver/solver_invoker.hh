@@ -46,7 +46,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               const specification_metadata& metadata = {},
               acacia::automaton_provider provider = acacia::automaton_provider::frozen_graph,
               acacia::candidate_mode candidate = acacia::candidate_mode::only,
-              uint64_t diagnostic_deadline_ns = 0,
+              bool equivariance = true, uint64_t diagnostic_deadline_ns = 0,
               const std::string& diagnostic_source_sha256 = {},
               weakening_mode weakening = weakening_mode::incumbent,
               const acacia::unreal_witnesses::allowances& weakening_allowances = {});

@@ -5,6 +5,109 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-08 — coverage-first P2b: admit the 3 s equivariance default (#224)
+
+Evidence campaign `cov20261007-eqfull` (archived): fresh, matched, rotated
+17 s races over all 1,524 SYNTCOMP26 inputs, no invocation deadline, with one
+binary for both explicit treatments. `--equivariance-budget 3s` solves **1,206**
+versus **1,205** for `unbounded`. The sole gain is `collector_v3_pb_9` at **9.76 s**;
+there are **zero losses**, **zero verdict conflicts**, and **identical memory
+outcomes**. Paired PAR-2 changes by **−23.3 s**, beyond the **12.1 s** noise floor.
+
+Admit `3s` as the runtime default. Explicit `unbounded` retains the incumbent
+behavior; fractions and durations remain selectable. The global allowance stays
+in the CLI state rather than adding a compile-time registry option. See the
+[allowance protocol](coverage-first/equivariance-budget.md) and
+[decision record](coverage-first/decisions.md). These are driver-supplied measured
+results; this default change does not rerun the campaign.
+
+## 2026-10-07 — coverage-first screens: negative results (#201, #202, #204, #206, #209)
+
+Screens without a deadline (shipping mode), serial, one frozen binary per comparison,
+CPU cooled to 70 °C before each run. Archive `cov20261007-screens`.
+
+- **Native structure guard (P2b).** With the precheck off, the native arm solved none
+  of the 138 inputs it stops in the full-corpus race (60 s). Their first stop moved to
+  the exact reducer's `mp-class` rejection (103), 60 s timeouts (17) or preparation
+  stops; the precheck is a correct, cheap early exit, not the bottleneck.
+- **Complementary GR(1) (P4a).** For all 103 `mp-class` inputs the dual game was
+  built with move order preserved and the exact reducer rejected it as well; these
+  specifications are outside exact GR(1) in both orientations.
+- **U lifting (P5).** On the 7 parameterized UNREAL frontier inputs, 4 stop at
+  reduction preparation before U and only one enters U.
+- **Weakening (P3).** Extending the safety-core pre-pass to assume–guarantee objectives
+  and positive G/F scopes makes 41 of the 82 UNREAL frontier inputs eligible, but no
+  candidate proves UNREAL at 17 s even with 2 s per attempt and 8 s in total: 181 of
+  215 attempts exhaust their allowance and the rest are inconclusive.
+- **Variable order (P2a).** On 22 targets the incumbent, typed-interleaved and
+  role-grouped orders solve 0/1/1 at 17 s and 1/0/0 with shuffled declarations (the
+  same input flipping), and 4/4/4 at 60 s: runtime is order-sensitive, but no
+  structural order is a robust improvement.
+- **Typed roles in R (P2c).** No change on the 7 targets (0/0 at 17 s, 1/1 at 60 s)
+  or on the 20 R-preservation inputs (19/19).
+
+Most of the 136 instances that ltlsynt solves and Acacia misses are not GR(1) in
+either orientation, so the remaining gap lies with the Spot-based legacy routes.
+
+## 2026-10-07 — coverage-first P1: matched R × equivariance ablation (#207)
+
+Fresh 17 s races on all 1,524 SYNTCOMP26 instances, serial and rotated, 8 GiB no-swap
+scopes, one binary for the four switch legs (COVP1B, `319ee65a`) plus the frozen
+`d9d3fd43` incumbent (COVBASE). Zero verdict conflicts and zero invocation errors.
+Archive `cov20261006-p1ablation`; P0 exit panels `cov20261006-p0exit`.
+
+| Leg | R pre-pass | Equivariance | REAL | UNREAL | Solved | PAR-2 (s) |
+|---|---|---|---:|---:|---:|---:|
+| A | off | off | 556 | 648 | 1,204 | 11,752 |
+| B | off | on | 555 | 648 | 1,203 | 11,777 |
+| C | on | off | 559 | 647 | 1,206 | 11,701 |
+| D (shipping) | on | on | 558 | 647 | 1,205 | 11,729 |
+| INC (frozen) | on | on | 559 | 647 | 1,206 | 11,711 |
+
+Three-repetition 17 s adjudication reruns (with a 70 °C cooldown before each run;
+the host reached 100 °C and throttled heavily during the primary campaign):
+
+- **R stays on.** It adds three REAL solves that never occur with R off (9/9 vs 0/6),
+  and costs one near-cap UNREAL solve where seed discovery (~0.8 s) pushes the direct
+  route past the cap.
+- **Equivariance gives no marginal solve at 17 s** and loses one REAL input in both
+  contrasts (ordinary backward ~6 s; equivariance-on 0/9). Paired PAR-2 +24.9 s and
+  +27.4 s, above the 12.1 s noise floor. Pursued as a bounded pre-pass budget, not by
+  disabling the feature. Removing the backward worker loses one solve on the original
+  22-instance activation set.
+- **D matches the incumbent.** Its single primary loss was a coin flip at the cap in
+  every leg on rerun; the R × equivariance interaction (+2.5 s) is below the noise floor.
+
+Attribution delivery is complete on 1,517–1,519 of 1,524 rows per leg and scope
+memory peaks on 7,664/7,664 observations. The refreshed #207 sets equal the closing
+campaign's: 136 ltlsynt-only (54 REAL, 82 UNREAL), 76 Acacia-only, against the
+historical ltlsynt 2.16 rows (a different session, not a matched comparison). In
+fresh D, 138 of 319 unsolved inputs stop first at a native structure-budget guard
+(92 of the 136 ltlsynt-only). The safety-core weakening pre-pass is ineligible on
+81 of the 82 UNREAL ltlsynt-only inputs because their objective is an implication,
+not a top-level conjunction.
+
+## Coverage-first P3 weakening experiment, not admitted
+
+P3 step 2 adds selectable `--weakening incumbent|extended|off`; incumbent remains the default.
+The experimental formula UNREAL route retains exact assume-guarantee antecedents, tries lazy
+singletons and at most four structural dependency groups, and bounds/reaps each candidate before
+original fallback. A checked derived-game proof plus a replayed AST weakening derivation is
+required for an original UNREAL verdict. Strict weak-until contexts decline safely.
+Limits and proof boundaries are in [the decision record](coverage-first/weakening.md).
+The census starvation correction reclassifies the supplied never-started legacy fallback;
+no fresh coverage or performance campaign was run. #201 admission/closure remains pending.
+
+
+P3 step 3 adds absolute research allowances (`--weakening-attempt-ms`, `--weakening-total-ms`),
+retaining the 250 ms/1 s no-deadline defaults and existing invocation deadline reservations.
+The supplied 82-input, 17 s no-deadline screen produced zero gains: 136 of 149 extended attempts
+were cancelled and none proved UNREAL. Read-only source diagnosis of 52 conjunction declines
+found two positive `G(A -> conjunction)` shapes and 10 positive F contexts; the planner now
+exposes them by direct monotonicity with exact replay, retaining the scope of F. The other 40
+remain declined. These are structural and
+engineering results; effectiveness and admission still require the driver's fresh matched screen.
+
 ## 2026-10-06 — P3 step 1: incumbent weakening instrumentation
 
 The existing UNREAL safety-core pre-pass now records structural eligibility,
@@ -52,7 +155,25 @@ comparisons match the saved review evidence, including 64 common-master API case
 The charter and owner hardcoding guard remain byte-identical; the generic lifting
 guard and release-hook isolation pass.
 No new performance or coverage measurements are claimed. [Implementation and reproduction notes](coverage-first/attribution.md)
-describe completeness requirements and the uncommitted cross-repository API change.
+describe completeness requirements and the cross-repository API change (tlsf-tools#62, merged as `f6b5ecc`).
+
+## 2026-10-06 — P0 gate and memory implementation
+
+The gate corrections for #211 have regression coverage, including real generated
+Mealy, Moore and strict-semantics conversions. #214 now uses the existing runners
+with an external v2 memory observer and a retained invocation cgroup; reports state
+per-statistic completeness and suppress partial medians. Reviewer follow-up keeps
+parent journal peaks separate, validates collection provenance, retains master's
+primary TSV columns with memory sidecars, preserves signal crashes, and restores
+the previous OOM rule for every nonzero exit. The second re-review preserves owner
+errors even with a cgroup path and excludes peak/events from failed or unverified drains,
+with 20 new regressions. Validation passes 719 pytest tests
+(3 optional skips), 52 unit tests, and ruff on 29 touched Python files. This is
+implementation validation, not a new performance campaign or issue-closure claim. The real Linux
+normal/timeout/child-OOM/invocation-OOM panel passed outside the sandbox on 2026-10-06
+(archive `cov20261006-p0exit`). Commands, file ownership and limitations are in
+[the P0 decision record](coverage-first/p0-gates-memory.md). Historical rows below
+retain their original measured/derived meaning, including incomplete memory evidence.
 
 ## 2026-10-04 — P4 closing campaign and shipping default
 
@@ -210,24 +331,3 @@ screened with no 17 s full-corpus leg yet, on a 152-case development screen: 60 
 The current optimization and UNREAL lifting work is tracked in
 [the active sprint record](optimize-20260927/plan.md). Results from selected
 subsets or censored higher-cap observations retain those labels when cited.
-
-## Coverage-first P3 weakening experiment, not admitted
-
-P3 step 2 adds selectable `--weakening incumbent|extended|off`; incumbent remains the default.
-The experimental formula UNREAL route retains exact assume-guarantee antecedents, tries lazy
-singletons and at most four structural dependency groups, and bounds/reaps each candidate before
-original fallback. A checked derived-game proof plus a replayed AST weakening derivation is
-required for an original UNREAL verdict. Strict weak-until contexts decline safely.
-Limits and proof boundaries are in [the decision record](coverage-first/weakening.md).
-The census starvation correction reclassifies the supplied never-started legacy fallback;
-no fresh coverage or performance campaign was run. #201 admission/closure remains pending.
-
-
-P3 step 3 adds absolute research allowances (`--weakening-attempt-ms`, `--weakening-total-ms`),
-retaining the 250 ms/1 s no-deadline defaults and existing invocation deadline reservations.
-The supplied 82-input, 17 s no-deadline screen produced zero gains: 136 of 149 extended attempts
-were cancelled and none proved UNREAL. Read-only source diagnosis of 52 conjunction declines
-found two positive `G(A -> conjunction)` shapes and 10 positive F contexts; the planner now
-exposes them by direct monotonicity with exact replay, retaining the scope of F. The other 40
-remain declined. These are structural and
-engineering results; effectiveness and admission still require the driver's fresh matched screen.

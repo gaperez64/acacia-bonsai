@@ -5,16 +5,19 @@
 #include "ios_precomputers/mona.hh"
 #include "ios_precomputers/standard.hh"
 #include "solver/equivariant_k_bounded_safety_aut.hh"
+#include "solver/k_bounded_safety_aut.hh"
 #include "utils/verbose.hh"
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <iostream>
 #include <numeric>
 #include <random>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <posets/downsets.hh>
@@ -322,16 +325,18 @@ namespace {
     auto standard_result = eq::try_solve<SetOfStates> (
         fx.aut, solve_kmax, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::standard (),
         actioners::standard<state> (), input_pickers::critical ());
-    ok &= expect ("new solver attempted synthetic arbiter", result.attempted);
+    ok &=
+        expect ("new solver attempted synthetic arbiter", result.outcome == eq::status::completed);
     ok &= expect ("new solver wins synthetic arbiter", result.win.has_value ());
     ok &= expect ("standard-precomputer solver attempted synthetic arbiter",
-                  standard_result.attempted);
+                  standard_result.outcome == eq::status::completed);
     ok &= expect ("standard-precomputer solver wins synthetic arbiter",
                   standard_result.win.has_value ());
     auto production_sweep =
         eq::solve_orbit_sweep<SetOfStates> (fx.aut, solve_kmax, 2, 1, fx.all_inputs,
                                             fx.all_outputs, G, L, actioners::standard<state> ());
-    ok &= expect ("production sweep attempted synthetic arbiter", production_sweep.attempted);
+    ok &= expect ("production sweep attempted synthetic arbiter",
+                  production_sweep.outcome == eq::status::completed);
     ok &= expect ("production sweep wins synthetic arbiter", production_sweep.win.has_value ());
     auto reference = reference_sweep (fx, L, orbits, 2, solve_kmax, 1);
     ok &= expect ("reference sweep wins synthetic arbiter", reference.has_value ());
@@ -487,6 +492,299 @@ namespace {
     return ok;
   }
 
+  struct slow_actioner {
+      template <typename Aut, typename Inputs>
+      static auto make (const Aut& aut, const Inputs& inputs, VECTOR_ELT_T k) {
+        auto actioner = actioners::standard<state>::make (aut, inputs, k);
+        // Test-only delay in a real construction, with no release mutation hook.
+        while (acacia::phase_clock (CLOCK_MONOTONIC) <
+               acacia::equivariance_budget::active->deadline_ns ())
+          std::this_thread::sleep_for (std::chrono::milliseconds (1));
+        return actioner;
+      }
+  };
+
+  template <typename Picker>
+  struct delayed_final_picker {
+      Picker picker;
+      template <typename Downset>
+      auto operator() (const Downset& f) {
+        auto input = picker (f);
+        if (not input)
+          while (acacia::phase_clock (CLOCK_MONOTONIC) <
+                 acacia::equivariance_budget::active->deadline_ns ())
+            std::this_thread::sleep_for (std::chrono::milliseconds (1));
+        return input;
+      }
+  };
+
+  struct delayed_final_picker_maker {
+      template <typename Actions, typename Actioner>
+      static auto make (Actions& actions, Actioner& actioner) {
+        return delayed_final_picker {input_pickers::critical::make (actions, actioner)};
+      }
+  };
+
+  struct filter_delay {
+      size_t visits = 0;
+      uint64_t primitive_end = 0;
+      uint64_t cleanup_end = 0;
+  };
+
+  struct delayed_letter {
+      bdd letter;
+      filter_delay* delay;
+      operator bdd () const { return letter; }
+      bdd operator& (bdd other) const {
+        if (++delay->visits == 1) {
+          // Stand in for one uninterruptible BDD operation that crosses the allowance.
+          const auto end = acacia::equivariance_budget::active->deadline_ns () + 20000000ULL;
+          while (acacia::phase_clock (CLOCK_MONOTONIC) < end)
+            std::this_thread::sleep_for (std::chrono::milliseconds (1));
+          delay->primitive_end = acacia::phase_clock (CLOCK_MONOTONIC);
+        }
+        return letter & other;
+      }
+  };
+
+  template <typename TransSets>
+  struct delayed_table : std::list<std::pair<delayed_letter, TransSets>> {
+      filter_delay* delay;
+      explicit delayed_table (filter_delay* d) : delay {d} {}
+      delayed_table (delayed_table&& other)
+        : std::list<std::pair<delayed_letter, TransSets>> {std::move (other)},
+          delay {std::exchange (other.delay, nullptr)} {}
+      ~delayed_table () {
+        if (delay) {
+          // Model nonpreemptible cleanup of the materialized IO table during unwinding.
+          std::this_thread::sleep_for (std::chrono::milliseconds (20));
+          delay->cleanup_end = acacia::phase_clock (CLOCK_MONOTONIC);
+        }
+      }
+  };
+
+  struct delayed_filter_precomputer {
+      filter_delay* delay;
+      template <typename Aut>
+      auto make (const Aut& aut, bdd inputs, bdd outputs) const {
+        return [=, delay = delay] {
+          auto source = ios_precomputers::mona::make (aut, inputs, outputs) ();
+          using transsets = typename decltype (source)::value_type::second_type;
+          delayed_table<transsets> result {delay};
+          for (auto& entry : source)
+            result.emplace_back (delayed_letter {entry.first, delay}, std::move (entry.second));
+          return result;
+        };
+      }
+  };
+
+  bool run_budget_cases () {
+    namespace budget = acacia::equivariance_budget;
+    const uint64_t now = acacia::phase_clock (CLOCK_MONOTONIC);
+    const budget::allowance quarter {{0.25, now + 4000000000ULL}, now};
+    bool ok = expect ("one quarter of remaining invocation budget",
+                      quarter.deadline_ns () == now + 1000000000ULL);
+    const budget::allowance reference {{0.25, 0}, now};
+    ok &= expect ("no-deadline fraction uses the fixed 5 s reference",
+                  reference.bounded () and reference.initial_remaining_ns () == 5000000000ULL and
+                      reference.total_ns () == 1250000000ULL and
+                      reference.deadline_ns () == now + 1250000000ULL);
+    const budget::allowance absolute {{std::nullopt, 0, 3000000000ULL}, now};
+    ok &= expect ("absolute allowance works without an outer deadline",
+                  absolute.bounded () and absolute.total_ns () == 3000000000ULL and
+                      absolute.deadline_ns () == now + 3000000000ULL);
+    absolute.consume (1000000000ULL);
+    absolute.enter (now + 2000000000ULL);
+    ok &= expect ("absolute allowance charges cumulative pre-pass time only",
+                  absolute.consumed_ns () == 1000000000ULL and
+                      absolute.deadline_ns () == now + 4000000000ULL);
+    const budget::allowance clipped {{std::nullopt, now + 1000000000ULL, 3000000000ULL}, now};
+    ok &= expect ("outer deadline clips an absolute allowance",
+                  clipped.deadline_ns () == now + 1000000000ULL);
+    clipped.enter (now + 2000000000ULL);
+    ok &= expect ("expired outer deadline gives no additional optional time",
+                  clipped.deadline_ns () == now + 2000000000ULL);
+    const budget::allowance incumbent {{std::nullopt, now + 1}, now};
+    ok &= expect ("unbounded default ignores pre-pass deadlines",
+                  not incumbent.bounded () and incumbent.deadline_ns () == 0);
+    const budget::allowance expired {{0.0, now + 4000000000ULL}, now};
+    for (unsigned n : {3U, 4U}) {
+      posets::vectors::bool_threshold = 1 + 2 * n;
+      const fixture fx = make_aut (n);
+      auto bounded = eq::try_solve<SetOfStates> (
+          fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+          actioners::standard<state> (), input_pickers::critical (), {}, quarter);
+      ok &= expect ("generated symmetry completes within budget",
+                    bounded.outcome == eq::status::completed and bounded.win.has_value ());
+      auto stopped = eq::try_solve<SetOfStates> (
+          fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+          actioners::standard<state> (), input_pickers::critical (), {}, expired);
+      ok &= expect ("exhaustion is typed stopped, not decline",
+                    stopped.outcome == eq::status::stopped and not stopped.win);
+      const budget::allowance zero {{std::nullopt, 0, 0}, now};
+      auto no_deadline = eq::try_solve<SetOfStates> (
+          fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+          actioners::standard<state> (), input_pickers::critical (), {}, zero);
+      ok &= expect ("no-deadline zero absolute allowance is typed stopped",
+                    no_deadline.outcome == eq::status::stopped and not no_deadline.win);
+    }
+    posets::vectors::bool_threshold = 7;
+    const fixture fx = make_aut (3);
+    const uint64_t start = acacia::phase_clock (CLOCK_MONOTONIC);
+    const uint64_t outer = start + 4000000000ULL;
+    const budget::allowance small {{0.25, outer}, start};
+    auto stopped = eq::try_solve<SetOfStates> (fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs,
+                                               ios_precomputers::mona (), slow_actioner (),
+                                               input_pickers::critical (), {}, small);
+    ok &= expect ("forced slow construction stops", stopped.outcome == eq::status::stopped);
+    ok &= expect ("cancellation scope unwinds before backward", budget::active == nullptr);
+    auto ordinary =
+        k_bounded_safety_aut_detail<SetOfStates, ios_precomputers::mona,
+                                    actioners::standard<state>, input_pickers::critical> (
+            fx.aut, 2, 3, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+            actioners::standard<state> (), input_pickers::critical ());
+    ok &= expect ("same process solves with ordinary backward", ordinary.solve ().has_value ());
+    ok &= expect ("ordinary solve completes with invocation time left",
+                  acacia::phase_clock (CLOCK_MONOTONIC) < outer);
+    for (unsigned mode : {0U, 1U, 2U}) {
+      const uint64_t entry = acacia::phase_clock (CLOCK_MONOTONIC);
+      const budget::invocation_limits limits =
+          mode == 2 ? budget::invocation_limits {0.002, 0}
+                    : budget::invocation_limits {std::nullopt, mode ? entry + 4000000000ULL : 0,
+                                                 10000000ULL};
+      const budget::allowance timed {limits, entry};
+      auto cancelled = eq::try_solve<SetOfStates> (fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs,
+                                                   ios_precomputers::mona (), slow_actioner (),
+                                                   input_pickers::critical (), {}, timed);
+      ok &= expect ("positive finite allowance stops slow construction in every regime",
+                    cancelled.outcome == eq::status::stopped and not cancelled.win and
+                        timed.consumed_ns () == timed.total_ns () and budget::active == nullptr);
+      auto next = eq::try_solve<SetOfStates> (
+          fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+          actioners::standard<state> (), input_pickers::critical (), {}, timed);
+      ok &= expect ("finite allowance stays exhausted in the next subgame",
+                    next.outcome == eq::status::stopped and not next.win);
+      auto fallback =
+          k_bounded_safety_aut_detail<SetOfStates, ios_precomputers::mona,
+                                      actioners::standard<state>, input_pickers::critical> (
+              fx.aut, 2, 3, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+              actioners::standard<state> (), input_pickers::critical ());
+      ok &= expect ("finite exhaustion permits same-process ordinary backward solving",
+                    fallback.solve ().has_value () and budget::active == nullptr);
+    }
+    const uint64_t final_start = acacia::phase_clock (CLOCK_MONOTONIC);
+    const budget::allowance final_budget {{0.25, final_start + 4000000000ULL}, final_start};
+    auto proven = eq::try_solve<SetOfStates> (
+        fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+        actioners::standard<state> (), delayed_final_picker_maker (), {}, final_budget);
+    ok &= expect ("completed exact fixed point survives deadline crossing",
+                  proven.outcome == eq::status::completed and proven.win.has_value ());
+    auto indexed = symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
+    auto group = symmetry::detect_full_symmetric_generators (fx.aut, indexed);
+    auto layout = symmetry::compute_block_layout (group, fx.aut->num_states ());
+    const uint64_t oracle_start = acacia::phase_clock (CLOCK_MONOTONIC);
+    const budget::allowance oracle_budget {{0.25, oracle_start + 4000000000ULL}, oracle_start};
+    {
+      budget::scope scope {oracle_budget};
+      std::mt19937 rng (31);
+      ok &= check_closure_oracle (rng, group, *layout, fx.aut->num_states ());
+      auto sweep =
+          eq::solve_orbit_sweep<SetOfStates> (fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs,
+                                              group, *layout, actioners::standard<state> ());
+      ok &= expect ("generated orbit sweep completes within budget",
+                    sweep.outcome == eq::status::completed and sweep.win.has_value ());
+    }
+    // A cheap recognition decline must not charge ordinary work to later subgames.
+    for (unsigned mode : {0U, 1U, 2U}) {
+      const uint64_t shared_start = acacia::phase_clock (CLOCK_MONOTONIC);
+      const uint64_t shared_outer = mode == 0 ? shared_start + 4000000000ULL : 0;
+      const budget::invocation_limits limits =
+          mode == 2 ? budget::invocation_limits {std::nullopt, 0, 1250000000ULL}
+                    : budget::invocation_limits {0.25, shared_outer};
+      budget::invocation_allowance.emplace (limits, shared_start);
+      const auto& shared = *budget::invocation_allowance;
+      auto unindexed = make_aut (1);
+      posets::vectors::bool_threshold = unindexed.aut->num_states ();
+      auto declined = eq::try_solve<SetOfStates> (unindexed.aut, 3, 2, 1, unindexed.all_inputs,
+                                                  unindexed.all_outputs, ios_precomputers::mona (),
+                                                  actioners::standard<state> (),
+                                                  input_pickers::critical (), {}, shared);
+      ok &= expect ("first subgame cheaply declines", declined.outcome == eq::status::declined);
+      const uint64_t consumed = shared.consumed_ns ();
+      // Model a slow ordinary construction, then run the real backward fixed point.
+      std::this_thread::sleep_for (std::chrono::milliseconds (1100));
+      auto first_backward =
+          k_bounded_safety_aut_detail<SetOfStates, ios_precomputers::mona,
+                                      actioners::standard<state>, input_pickers::critical> (
+              unindexed.aut, 2, 3, 1, unindexed.all_inputs, unindexed.all_outputs,
+              ios_precomputers::mona (), actioners::standard<state> (),
+              input_pickers::critical ());
+      ok &= expect ("declined subgame solves with ordinary backward",
+                    first_backward.solve ().has_value () and shared.consumed_ns () == consumed);
+      posets::vectors::bool_threshold = fx.aut->num_states ();
+      auto later = eq::try_solve<SetOfStates> (
+          fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+          actioners::standard<state> (), input_pickers::critical (), {}, shared);
+      ok &= expect ("later symmetric subgame retains unused allowance in every regime",
+                    later.outcome == eq::status::completed and later.win.has_value () and
+                        shared.consumed_ns () >= consumed);
+      ok &= expect ("later symmetric subgame respects a supplied invocation deadline",
+                    not shared_outer or acacia::phase_clock (CLOCK_MONOTONIC) < shared_outer);
+      budget::invocation_allowance.reset ();
+    }
+
+    bool filter_stopped = false;
+    std::list<std::pair<bdd, int>> inputs {{bddtrue, 1}, {bddtrue, 2}, {bddtrue, 3}};
+    {
+      budget::scope scope {expired};
+      try {
+        eq::filter_to_representative_inputs (inputs, {bddtrue});
+      } catch (const budget::stopped&) {
+        filter_stopped = true;
+      }
+    }
+    ok &= expect ("expired representative filter stops", filter_stopped);
+    bool letters_stopped = false;
+    {
+      budget::scope scope {expired};
+      try {
+        eq::build_representative_letters (fx.aut, fx.all_inputs, group, *layout);
+      } catch (const budget::stopped&) {
+        letters_stopped = true;
+      }
+    }
+    ok &= expect ("expired representative letter construction stops", letters_stopped);
+    const uint64_t filter_start = acacia::phase_clock (CLOCK_MONOTONIC);
+    const uint64_t filter_outer = filter_start + 4000000000ULL;
+    const budget::allowance filter_budget {{0.25, filter_outer}, filter_start};
+    filter_delay delay;
+    auto filtered = eq::try_solve<SetOfStates> (
+        fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, delayed_filter_precomputer {&delay},
+        actioners::standard<state> (), input_pickers::critical (), {}, filter_budget);
+    const uint64_t handed_off = acacia::phase_clock (CLOCK_MONOTONIC);
+    ok &= expect ("filter expiry returns production STOPPED",
+                  filtered.outcome == eq::status::stopped);
+    ok &= expect ("expired filtering executes only one table primitive", delay.visits == 1);
+    ok &= expect ("delayed primitive and cleanup finish before handoff",
+                  delay.primitive_end >= filter_budget.deadline_ns () and
+                      delay.cleanup_end > delay.primitive_end and handed_off >= delay.cleanup_end);
+    // One completed primitive, cleanup, and scheduling slack; no remaining table traversal.
+    ok &= expect ("filter handoff bounded by primitive plus cleanup and test slack",
+                  handed_off - delay.cleanup_end < 250000000ULL and
+                      handed_off - filter_budget.deadline_ns () < 500000000ULL);
+    ok &= expect ("production scope clears before delayed backward handoff",
+                  budget::active == nullptr);
+    auto recovered =
+        k_bounded_safety_aut_detail<SetOfStates, ios_precomputers::mona,
+                                    actioners::standard<state>, input_pickers::critical> (
+            fx.aut, 2, 3, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+            actioners::standard<state> (), input_pickers::critical ());
+    ok &= expect (
+        "delayed filter hands off to ordinary backward before outer deadline",
+        recovered.solve ().has_value () and acacia::phase_clock (CLOCK_MONOTONIC) < filter_outer);
+    return ok;
+  }
+
   bool run_unreal_case () {
     constexpr unsigned n = 3;
     posets::vectors::bool_threshold = 1 + 2 * n;
@@ -506,9 +804,11 @@ namespace {
     auto production_sweep = eq::solve_orbit_sweep<SetOfStates> (
         fx.aut, 2, 2, 1, fx.all_inputs, fx.all_outputs, G, *L, actioners::standard<state> ());
     auto reference = reference_sweep (fx, *L, *orbits, 2, 2, 1);
-    return expect ("new solver attempted unreal fixture", result.attempted) and
+    return expect ("new solver attempted unreal fixture",
+                   result.outcome == eq::status::completed) and
            expect ("new solver rejects unreal fixture", not result.win.has_value ()) and
-           expect ("production sweep attempted unreal fixture", production_sweep.attempted) and
+           expect ("production sweep attempted unreal fixture",
+                   production_sweep.outcome == eq::status::completed) and
            expect ("production sweep rejects unreal fixture",
                    not production_sweep.win.has_value ()) and
            expect ("reference sweep rejects unreal fixture", not reference.has_value ());
@@ -527,6 +827,7 @@ int main () {
   ok &= run_partial_symmetry_case ();
   ok &= run_syntax_hint_case ();
   ok &= run_unreal_case ();
+  ok &= run_budget_cases ();
 
   posets::vectors::bool_threshold = old_bool_threshold;
 

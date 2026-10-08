@@ -613,23 +613,31 @@ class CoverageHookTests(unittest.TestCase):
 class SystemdEnvironmentTests(unittest.TestCase):
     def test_explicit_child_environment_becomes_systemd_setenv_options(self):
         benchlib = load_module("benchlib_scope_env_for_test", BENCHMARKING / "benchlib.py")
-        seen = {}
+        launches = []
 
         class Captured(RuntimeError):
             pass
 
+        interrupted = Captured("launch interrupted")
+
         def popen(command, *args, **kwargs):
-            seen["command"] = command
-            raise Captured
+            launches.append(command)
+            raise interrupted
 
         with (
+            mock.patch.object(sys, "path", [str(BENCHMARKING), *sys.path]),
             mock.patch.object(benchlib.subprocess, "Popen", side_effect=popen),
+            mock.patch.object(
+                benchlib.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess([], 5, "LoadState=not-found\n"),
+            ) as manager,
             mock.patch.object(
                 benchlib,
                 "user_manager_controllers",
                 return_value={"cpuset", "cpu", "memory"},
             ),
-            self.assertRaises(Captured),
+            self.assertRaises(Captured) as raised,
         ):
             benchlib.run_systemd_scope(
                 ["solver"],
@@ -641,12 +649,25 @@ class SystemdEnvironmentTests(unittest.TestCase):
                     "ACACIA_OUTER_DEADLINE_MONOTONIC": "123.5",
                 },
             )
-        command = seen["command"]
+        self.assertIs(raised.exception, interrupted)
+        command, = launches
+        self.assertEqual(command[0], "systemd-run")
+        unit = next(option.removeprefix("--unit=") for option in command
+                    if option.startswith("--unit=")) + ".scope"
+        self.assertEqual(
+            [call.args[0] for call in manager.call_args_list],
+            [
+                ["systemctl", "--user", "stop", unit],
+                ["systemctl", "--user", "show", unit,
+                 "--property=LoadState,ActiveState,SubState"],
+            ],
+        )
         record_option = "--setenv=ACACIA_ROUTE_RECORD=/tmp/record with space.json"
         deadline_option = "--setenv=ACACIA_OUTER_DEADLINE_MONOTONIC=123.5"
         self.assertIn(record_option, command)
         self.assertIn(deadline_option, command)
         self.assertLess(command.index(record_option), command.index("solver"))
+        self.assertLess(command.index(deadline_option), command.index("solver"))
 
 
 if __name__ == "__main__":

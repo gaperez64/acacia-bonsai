@@ -66,6 +66,7 @@ namespace acacia {
       char original_polarity[8] = "unknown", proof_polarity[8] = "unknown";
       char route[24] = "unknown", stage[48] = "startup", reason[64] = "none";
       unsigned long long sequence = 0, dropped = 0;
+      bool r_prepass = true, equivariance = true;
       bool terminal = false, verified = false, stopped = false;
       unsigned long long prepass = 0, declines = 0, stops = 0;
       unsigned run_id = 0;
@@ -176,11 +177,12 @@ namespace acacia {
         "\"requested_backend\":\"%s\",\"effective_backend\":\"%s\","
         "\"original_polarity\":\"%s\",\"proof_polarity\":\"%s\","
         "\"route\":\"%s\",\"stage\":\"%s\",\"reason\":\"%s\","
-        "%s%s\"mono_ns\":%llu,"
+        "\"r_prepass\":%s,\"equivariance\":%s,%s%s\"mono_ns\":%llu,"
         "\"dropped_records\":%llu,\"telemetry\":\"%s\"}\n",
         event, record.index, long (record.pid), record.sequence, record.requested_backend,
         record.effective_backend, record.original_polarity, record.proof_polarity, record.route,
-        record.stage, escaped_reason, outcome, context,
+        record.stage, escaped_reason, record.r_prepass ? "true" : "false",
+        record.equivariance ? "true" : "false", outcome, context,
         (unsigned long long) phase_clock (CLOCK_MONOTONIC), record.dropped, telemetry);
     if (n > 0 && size_t (n) < sizeof line)
       phase_records_send (line, size_t (n));

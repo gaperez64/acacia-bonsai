@@ -255,8 +255,8 @@ namespace {
                                   ? std::nullopt
                                   : arg_values.synth_fname,
                               arg_values.metadata, provider, arg_values.candidate,
-                              deadline_mono_ns, arg_values.tlsf_sha256, arg_values.weakening,
-                              arg_values.weakening_allowances);
+                              arg_values.equivariance, deadline_mono_ns, arg_values.tlsf_sha256,
+                              arg_values.weakening, arg_values.weakening_allowances);
     verb_do (1, vout << "returning " << res << "\n");
 
     if (!res && acacia::active_worker_record () &&
@@ -280,6 +280,8 @@ namespace {
       auto& record = g_worker_records[g_child_count];
       record = acacia::worker_record {};
       record.index = unsigned (g_child_count);
+      record.r_prepass = arg_values.r_prepass;
+      record.equivariance = arg_values.equivariance;
       const char* backend = arm.legacy ? acacia::game_backend_name (arm.legacy->backend) : "oxidd";
       acacia::worker_record_text (record.requested_backend, backend);
       acacia::worker_record_text (record.effective_backend, backend);
@@ -330,13 +332,15 @@ namespace {
               specification, sizeof specification,
               "{\"event\":\"worker_spec\",\"worker\":%u,\"worker_pid\":%ld,"
               "\"kind\":\"%s\",\"requested_polarity\":\"%s\","
-              "\"translation\":\"%s\",\"transform\":\"%s\",\"provider\":\"%s\"}\n",
+              "\"translation\":\"%s\",\"transform\":\"%s\",\"provider\":\"%s\","
+              "\"r_prepass\":%s,\"equivariance\":%s}\n",
               spawned.index, long (pid), arm.legacy ? "legacy" : arm.native_name (),
               spawned.original_polarity,
               arm.legacy ? translation_pref_name (arm.legacy->translation_pref) : "native",
               arm.legacy ? (arm.unreal ? unreal_strategy_name (arm.legacy->unreal_x) : "real")
                          : "exact",
-              arm.legacy ? acacia::automaton_provider_name (arm.legacy->provider) : "native");
+              arm.legacy ? acacia::automaton_provider_name (arm.legacy->provider) : "native",
+              spawned.r_prepass ? "true" : "false", spawned.equivariance ? "true" : "false");
           if (length > 0 && size_t (length) < sizeof specification)
             acacia::phase_records_send (specification, size_t (length));
         }
@@ -503,6 +507,9 @@ int main (int argc, char** argv) {
   auto arg_values = arg_parser (argc, argv);
   argument_phase.finish ();
   const uint64_t deadline_mono_ns = outer_deadline_ns ();
+  acacia::equivariance_budget::invocation = {arg_values.equivariance_budget, deadline_mono_ns,
+                                             arg_values.equivariance_budget_ns};
+  acacia::equivariance_budget::invocation_allowance.reset ();
   // set the global verbose level
   utils::verbose = arg_values.verbose_level;
 

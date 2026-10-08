@@ -13,9 +13,10 @@
 #include "actioners/standard.hh"
 #include "configuration.hh"
 #include "solver/diagnostics.hh"
+#include "solver/equivariance_budget.hh"
+#include "solver/symmetry.hh"
 #include "solver/symmetry_blocks.hh"
 #include "solver/symmetry_profile.hh"
-#include "solver/symmetry.hh"
 #include "utils/verbose.hh"
 
 #include <algorithm>
@@ -58,6 +59,7 @@ namespace acacia::solver_detail::equivariant {
       std::vector<bdd> letters;
       bdd remaining = bddtrue;
       while (remaining != bddfalse) {
+        acacia::equivariance_budget::checkpoint ();
         if (letters.size () >= cap)
           return {};
         bdd letter = bdd_satoneset (remaining, support, bddtrue);
@@ -70,6 +72,7 @@ namespace acacia::solver_detail::equivariant {
     inline transset compute_transset (const spot::twa_graph_ptr& aut, bdd letter) {
       transset ts;
       for (size_t p = 0; p < aut->num_states (); ++p) {
+        acacia::equivariance_budget::checkpoint ();
         for (const auto& e : aut->out (p))
           if ((e.cond & letter) != bddfalse)
             ts.push_back (std::pair ((int) p, (int) e.dst));
@@ -83,10 +86,12 @@ namespace acacia::solver_detail::equivariant {
                                           std::set<int>& indexed_input_vars) {
       auto dict = aut->get_dict ();
       for (const auto& [prefix, fam] : G.families) {
+        acacia::equivariance_budget::checkpoint ();
         if (fam.is_input != want_input)
           continue;
         std::vector<int> slot_vars (L.num_clients, -1);
         for (unsigned slot = 0; slot < L.num_clients; ++slot) {
+          acacia::equivariance_budget::checkpoint ();
           const long idx = L.slot_to_index[slot];
           auto it = fam.idx2ap.find (idx);
           if (it == fam.idx2ap.end ())
@@ -105,6 +110,7 @@ namespace acacia::solver_detail::equivariant {
       std::vector<int> vars;
       auto dict = aut->get_dict ();
       for (const spot::formula& ap : aut->ap ()) {
+        acacia::equivariance_budget::checkpoint ();
         const int var = dict->varnum (ap);
         if (indexed_vars.contains (var))
           continue;
@@ -118,6 +124,7 @@ namespace acacia::solver_detail::equivariant {
     inline void enumerate_type_counts_rec (unsigned type, unsigned num_types, unsigned remaining,
                                            std::vector<unsigned>& counts,
                                            std::vector<std::vector<unsigned>>& out, size_t cap) {
+      acacia::equivariance_budget::checkpoint ();
       if (out.size () >= cap)
         return;
       if (type + 1 == num_types) {
@@ -149,14 +156,17 @@ namespace acacia::solver_detail::equivariant {
       bdd letter = bddtrue;
       unsigned slot = 0;
       for (unsigned type = 0; type < type_counts.size (); ++type) {
+        acacia::equivariance_budget::checkpoint ();
         for (unsigned n = 0; n < type_counts[type]; ++n, ++slot) {
           for (unsigned fam = 0; fam < family_slot_vars.size (); ++fam) {
+            acacia::equivariance_budget::checkpoint ();
             const bdd v = bdd_ithvar (family_slot_vars[fam][slot]);
             letter &= ((type >> fam) & 1U) ? v : !v;
           }
         }
       }
       for (unsigned i = 0; i < shared_vars_.size (); ++i) {
+        acacia::equivariance_budget::checkpoint ();
         const bdd v = bdd_ithvar (shared_vars_[i]);
         letter &= ((shared_mask >> i) & 1U) ? v : !v;
       }
@@ -172,10 +182,12 @@ namespace acacia::solver_detail::equivariant {
       bdd letter = bddtrue;
       for (unsigned slot = 0; slot < slot_types.size (); ++slot)
         for (unsigned fam = 0; fam < family_slot_vars.size (); ++fam) {
+          acacia::equivariance_budget::checkpoint ();
           const bdd v = bdd_ithvar (family_slot_vars[fam][slot]);
           letter &= ((slot_types[slot] >> fam) & 1U) ? v : !v;
         }
       for (unsigned i = 0; i < shared_vars_.size (); ++i) {
+        acacia::equivariance_budget::checkpoint ();
         const bdd v = bdd_ithvar (shared_vars_[i]);
         letter &= ((shared_mask >> i) & 1U) ? v : !v;
       }
@@ -239,7 +251,9 @@ namespace acacia::solver_detail::equivariant {
     std::vector<input_orbit> orbits;
     orbits.reserve (shared_assignments * type_counts.size ());
     for (unsigned shared_mask = 0; shared_mask < shared_assignments; ++shared_mask) {
+      acacia::equivariance_budget::checkpoint ();
       for (const auto& counts : type_counts) {
+        acacia::equivariance_budget::checkpoint ();
         bdd input = detail::input_letter_from_counts (family_slot_vars, shared_input_vars, counts,
                                                       shared_mask);
         input_orbit orbit;
@@ -304,10 +318,15 @@ namespace acacia::solver_detail::equivariant {
 
     std::vector<bdd> representatives;
     representatives.reserve (shared_assignments * type_counts.size ());
-    for (unsigned shared_mask = 0; shared_mask < shared_assignments; ++shared_mask)
-      for (const auto& counts : type_counts)
+    for (unsigned shared_mask = 0; shared_mask < shared_assignments; ++shared_mask) {
+      acacia::equivariance_budget::checkpoint ();
+      for (const auto& counts : type_counts) {
+        acacia::equivariance_budget::checkpoint ();
         representatives.push_back (detail::input_letter_from_counts (
             family_slot_vars, shared_input_vars, counts, shared_mask));
+      }
+    }
+    acacia::equivariance_budget::checkpoint ();
     return {std::move (representatives), nullptr};
   }
 
@@ -315,14 +334,18 @@ namespace acacia::solver_detail::equivariant {
   void filter_to_representative_inputs (InputsToIOs& inputs_to_ios,
                                         const std::vector<bdd>& representatives) {
     bdd representative_inputs = bddfalse;
-    for (bdd representative : representatives)
+    for (bdd representative : representatives) {
+      acacia::equivariance_budget::checkpoint ();
       representative_inputs |= representative;
+    }
+    acacia::equivariance_budget::checkpoint ();
 
     if constexpr (requires { inputs_to_ios.restrict_inputs (representative_inputs); }) {
       inputs_to_ios.restrict_inputs (representative_inputs);
     }
     else {
       for (auto it = inputs_to_ios.begin (); it != inputs_to_ios.end ();) {
+        acacia::equivariance_budget::checkpoint ();
         const bool covers_representative = (it->first & representative_inputs) != bddfalse;
         if (covers_representative)
           ++it;
@@ -330,6 +353,9 @@ namespace acacia::solver_detail::equivariant {
           it = inputs_to_ios.erase (it);
       }
     }
+    // At most one BDD/table operation since the preceding checkpoint. Unwinding
+    // may destroy the retained table; neither library calls nor cleanup is preemptible.
+    acacia::equivariance_budget::checkpoint ();
   }
 
   // sigma[j] = the member slot that receives the client sitting at
@@ -378,6 +404,7 @@ namespace acacia::solver_detail::equivariant {
       std::vector<state> elements;
       elements.reserve (T.size ());
       for (const auto& s : T) {
+        acacia::equivariance_budget::checkpoint ();
         assert (s.size () == phi.size ());
         s.to_vector (std::span (scratch_in.data (), phi.size ()));
         for (size_t q = 0; q < phi.size (); ++q)
@@ -388,6 +415,7 @@ namespace acacia::solver_detail::equivariant {
     }
     else {
       return T.apply ([&phi] (const auto& s) {
+        acacia::equivariance_budget::checkpoint ();
         posets::utils::vector_mm<VECTOR_ELT_T> out (s.size (), 0);
         for (size_t q = 0; q < s.size (); ++q)
           out[phi[q]] = s[q];
@@ -403,6 +431,9 @@ namespace acacia::solver_detail::equivariant {
     return permute (T, phi, scratch_in, scratch_out);
   }
 
+  template <typename SetOfStates>
+  void unite (SetOfStates& f, SetOfStates&& other);
+
   // Exact T = union over ALL outputs of the backward step.
   template <typename SetOfStates, typename Actioner>
   SetOfStates compute_T (const SetOfStates& f, const std::vector<action_vec>& actions,
@@ -412,6 +443,7 @@ namespace acacia::solver_detail::equivariant {
     SetOfStates T {typename SetOfStates::value_type (bot)};
     bool first = true;
     for (const auto& avec : actions) {
+      acacia::equivariance_budget::checkpoint ();
       acacia::diagnostics::observe_action ();
       SetOfStates Tio = [&] {
         acacia::diagnostics::scoped_downset_timer downset_timer;
@@ -420,26 +452,69 @@ namespace acacia::solver_detail::equivariant {
               acacia::diagnostics::fine_metric::apply};
           return actioner.apply (m, avec, actioners::direction::backward);
         });
-      } ();
+      }();
       if (first) {
         T = std::move (Tio);
         first = false;
       }
       else {
         acacia::diagnostics::scoped_downset_timer downset_timer;
-        T.union_with (std::move (Tio));
+        unite (T, std::move (Tio));
       }
       acacia::diagnostics::snapshot_action_progress ();
     }
     return T;
   }
 
+  template <typename SetOfStates>
+  void add_maximum (SetOfStates& f, typename SetOfStates::value_type&& value) {
+    if constexpr (requires { f.insert (std::move (value)); })
+      f.insert (std::move (value));
+    else
+      f.union_with (SetOfStates {std::move (value)});
+  }
+
+  template <typename SetOfStates>
+  void intersect (SetOfStates& f, const SetOfStates& other) {
+    if (not acacia::equivariance_budget::active) {
+      f.intersect_with (other);
+      return;
+    }
+    auto first = f.begin ()->meet (*other.begin ());
+    SetOfStates intersection {std::move (first)};
+    for (const auto& x : f) {
+      for (const auto& y : other) {
+        acacia::equivariance_budget::checkpoint ();
+        auto v = x.meet (y);
+        const bool dominated = (v == x);
+        add_maximum (intersection, std::move (v));
+        if (dominated)
+          break;
+      }
+    }
+    f = std::move (intersection);
+  }
+
+  template <typename SetOfStates>
+  void unite (SetOfStates& f, SetOfStates&& other) {
+    if (not acacia::equivariance_budget::active) {
+      f.union_with (std::move (other));
+      return;
+    }
+    for (const auto& x : other) {
+      acacia::equivariance_budget::checkpoint ();
+      add_maximum (f, x.copy ());
+    }
+  }
+
   // f is a subset of the downset T iff every maximal element of f is in T.
   template <typename SetOfStates>
   bool subset_of (const SetOfStates& f, const SetOfStates& T) {
-    for (const auto& m : f)
+    for (const auto& m : f) {
+      acacia::equivariance_budget::checkpoint ();
       if (not T.contains (m))
         return false;
+    }
     return true;
   }
 
@@ -454,14 +529,16 @@ namespace acacia::solver_detail::equivariant {
                                posets::utils::vector_mm<VECTOR_ELT_T>& scratch_in,
                                posets::utils::vector_mm<VECTOR_ELT_T>& scratch_out) {
     ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_closure);
+    acacia::equivariance_budget::phase ("equivariance_closure");
     bool any_changed = false;
     bool pass_changed;
     do {
       pass_changed = false;
       for (const auto& phi : G.gens) {
+        acacia::equivariance_budget::checkpoint ();
         SetOfStates image = permute (f, phi, scratch_in, scratch_out);
         if (not subset_of (f, image)) {
-          f.intersect_with (std::move (image));
+          intersect (f, image);
           pass_changed = true;
           any_changed = true;
         }
@@ -482,14 +559,14 @@ namespace acacia::solver_detail::equivariant {
   void cpre_inplace (SetOfStates& f, const PickedInput& picked_input, Actioner& actioner,
                      unsigned num_states) {
     ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_cpre);
-    acacia::diagnostics::scoped_fine_timer cpre_timer {
-        acacia::diagnostics::fine_metric::cpre};
+    acacia::diagnostics::scoped_fine_timer cpre_timer {acacia::diagnostics::fine_metric::cpre};
     const auto& [input, actions] = picked_input.get ();
     (void) input;
     posets::utils::vector_mm<VECTOR_ELT_T> bottom (num_states, -1);
     SetOfStates predecessors {typename SetOfStates::value_type (bottom)};
     bool first = true;
     for (const auto& action_vec : actions) {
+      acacia::equivariance_budget::checkpoint ();
       acacia::diagnostics::observe_action ();
       SetOfStates for_output = [&] {
         acacia::diagnostics::scoped_downset_timer downset_timer;
@@ -498,26 +575,28 @@ namespace acacia::solver_detail::equivariant {
               acacia::diagnostics::fine_metric::apply};
           return actioner.apply (maximal, action_vec, actioners::direction::backward);
         });
-      } ();
+      }();
       if (first) {
         predecessors = std::move (for_output);
         first = false;
       }
       else {
         acacia::diagnostics::scoped_downset_timer downset_timer;
-        predecessors.union_with (std::move (for_output));
+        unite (predecessors, std::move (for_output));
       }
       acacia::diagnostics::snapshot_action_progress ();
     }
     acacia::diagnostics::observe_meets (f.size (), predecessors.size ());
     acacia::diagnostics::snapshot_intersection_progress ();
     acacia::diagnostics::scoped_downset_timer downset_timer;
-    f.intersect_with (std::move (predecessors));
+    intersect (f, predecessors);
   }
+
+  enum class status { declined, completed, stopped };
 
   template <typename SetOfStates>
   struct result {
-      bool attempted = false;
+      status outcome = status::declined;
       std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> win;
   };
 
@@ -552,20 +631,24 @@ namespace acacia::solver_detail::equivariant {
 
     orbit_build_result orbits;
     {
+      acacia::equivariance_budget::phase ("equivariance_orbit_build");
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_orbit_build);
       orbits = build_orbits (aut, all_inputs, all_outputs, G, L);
     }
+    acacia::equivariance_budget::checkpoint ();
     if (not orbits.has_value () or orbits->empty ()) {
       const char* reason =
           orbits.decline_reason ? orbits.decline_reason : "empty input orbit universe";
       acacia::diagnostics::set_equivariant_decline (reason);
-      return {false, std::nullopt};
+      acacia::worker_decline (reason);
+      return {status::declined, std::nullopt};
     }
 
     const unsigned num_types = orbit_type_count (*orbits);
     if (num_types == 0) {
       acacia::diagnostics::set_equivariant_decline ("empty input type universe");
-      return {false, std::nullopt};
+      acacia::worker_decline ("empty input type universe");
+      return {status::declined, std::nullopt};
     }
 
     acacia::diagnostics::set_equivariant_attempt (L.num_clients, L.num_blocks, orbits->size ());
@@ -582,6 +665,7 @@ namespace acacia::solver_detail::equivariant {
       acacia::diagnostics::snapshot ("support-before-action-construction");
     }
 #endif
+    acacia::equivariance_budget::phase ("equivariance_action_construction");
     auto actioner = actioner_maker.make (aut, empty_itoios, k);
 #if ACACIA_ENABLE_DIAGNOSTICS
     construction_timer.reset ();
@@ -600,18 +684,21 @@ namespace acacia::solver_detail::equivariant {
     posets::utils::vector_mm<VECTOR_ELT_T> permute_out (num_states, 0);
 
     acacia::diagnostics::snapshot ("after-action-construction");
+    acacia::equivariance_budget::phase ("equivariance_sweep_solve");
     ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_solve_loop);
     while (true) {
+      acacia::equivariance_budget::checkpoint ();
       acacia::diagnostics::observe_loop (f.size (), k);
       bool changed = false;
       bool incremented = false;
 
       for (const auto& orbit : *orbits) {
-        acacia::diagnostics::scoped_fine_timer cpre_timer {
-            acacia::diagnostics::fine_metric::cpre};
+        acacia::equivariance_budget::checkpoint ();
+        acacia::diagnostics::scoped_fine_timer cpre_timer {acacia::diagnostics::fine_metric::cpre};
         SetOfStates representative = compute_T (f, orbit.actions, actioner, num_states);
         std::vector<unsigned> sequence = orbit.canonical_types;
         do {
+          acacia::equivariance_budget::checkpoint ();
           const auto sigma = match_slots (orbit.canonical_types, sequence, num_types);
           SetOfStates member =
               permute (representative, phi_from_sigma (L, sigma), permute_in, permute_out);
@@ -619,7 +706,7 @@ namespace acacia::solver_detail::equivariant {
             acacia::diagnostics::observe_meets (f.size (), member.size ());
             acacia::diagnostics::snapshot_intersection_progress ();
             acacia::diagnostics::scoped_downset_timer downset_timer;
-            f.intersect_with (std::move (member));
+            intersect (f, member);
             changed = true;
           }
         } while (std::next_permutation (sequence.begin (), sequence.end ()));
@@ -627,12 +714,13 @@ namespace acacia::solver_detail::equivariant {
         if (not f.contains (state (init))) {
           if (k >= kmax) {
             acacia::diagnostics::set_final_reason ("kmax-initial-out");
-            return {true, std::nullopt};
+            return {status::completed, std::nullopt};
           }
           k += kinc;
           actioner.setK (k);
           acacia::diagnostics::set_support_k (static_cast<int> (k));
           f = f.apply ([&] (const state& maximal) {
+            acacia::equivariance_budget::checkpoint ();
             posets::utils::vector_mm<VECTOR_ELT_T> bumped (maximal.size (), 0);
             for (size_t q = 0; q < posets::vectors::bool_threshold; ++q)
               bumped[q] = maximal[q] + kinc;
@@ -649,19 +737,19 @@ namespace acacia::solver_detail::equivariant {
         acacia::diagnostics::set_final_reason ("fixedpoint");
         std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> win;
         win.emplace (k, std::move (f));
-        return {true, std::move (win)};
+        return {status::completed, std::move (win)};
       }
     }
   }
 
   template <typename SetOfStates, typename IOsPrecomputerMaker, typename ActionerMaker,
             typename InputPickerMaker>
-  result<SetOfStates> try_solve (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin,
-                                 VECTOR_ELT_T kinc, const bdd& all_inputs, const bdd& all_outputs,
-                                 const IOsPrecomputerMaker& ios_precomputer_maker,
-                                 const ActionerMaker& actioner_maker,
-                                 const InputPickerMaker& input_picker_maker,
-                                 const std::vector<symmetry::indexed_family_hint>& hints = {}) {
+  result<SetOfStates> try_solve_impl (
+      spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
+      const bdd& all_inputs, const bdd& all_outputs,
+      const IOsPrecomputerMaker& ios_precomputer_maker, const ActionerMaker& actioner_maker,
+      const InputPickerMaker& input_picker_maker,
+      const std::vector<symmetry::indexed_family_hint>& hints = {}) {
     using state = typename SetOfStates::value_type;
     const unsigned num_states = aut->num_states ();
 
@@ -677,17 +765,20 @@ namespace acacia::solver_detail::equivariant {
     auto decline = [] (const char* reason) {
       verb_do (1, vout << "[equivariant] declining: " << reason << "\n");
       acacia::diagnostics::set_equivariant_decline (reason);
-      return result<SetOfStates> {false, std::nullopt};
+      acacia::worker_decline (reason);
+      return result<SetOfStates> {status::declined, std::nullopt};
     };
 
     if (num_states > ACACIA_EQUIVARIANT_MAX_STATES and hints.empty ())
       return decline ("too many automaton states");
 
+    acacia::equivariance_budget::checkpoint ();
     symmetry::indexed_ap_analysis indexed;
     {
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_ap_scan);
       indexed = symmetry::analyze_indexed_aps (aut, all_inputs, all_outputs, hints);
     }
+    acacia::equivariance_budget::checkpoint ();
     if (num_states > ACACIA_EQUIVARIANT_MAX_STATES and not indexed.syntax_hinted)
       return decline ("too many automaton states without a matching TLSF indexed-family hint");
     if (indexed.empty ())
@@ -702,6 +793,7 @@ namespace acacia::solver_detail::equivariant {
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_detect);
       G = symmetry::detect_full_symmetric_generators (aut, indexed);
     }
+    acacia::equivariance_budget::checkpoint ();
     if (not G.full_symmetric) {
       std::string reason = "not a verified full symmetric group (";
       reason += std::to_string (G.gens.size ());
@@ -710,7 +802,8 @@ namespace acacia::solver_detail::equivariant {
       reason += " star gens)";
       verb_do (1, vout << "[equivariant] declining: " << reason << "\n");
       acacia::diagnostics::set_equivariant_decline (reason);
-      return {false, std::nullopt};
+      acacia::worker_decline (reason.c_str ());
+      return {status::declined, std::nullopt};
     }
 
     std::optional<symmetry::block_layout> L;
@@ -718,6 +811,7 @@ namespace acacia::solver_detail::equivariant {
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_block_layout);
       L = symmetry::compute_block_layout (G, num_states);
     }
+    acacia::equivariance_budget::checkpoint ();
     if (not L.has_value ())
       return decline ("no usable block layout");
 
@@ -734,6 +828,7 @@ namespace acacia::solver_detail::equivariant {
         return decline ("generators do not match block layout");
     }
 
+    acacia::equivariance_budget::checkpoint ();
     if (not boolean_side_consistent (G))
       return decline ("generator crosses boolean/counting threshold");
 
@@ -744,9 +839,11 @@ namespace acacia::solver_detail::equivariant {
 
     representative_build_result representatives;
     {
+      acacia::equivariance_budget::phase ("equivariance_orbit_build");
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_orbit_build);
       representatives = build_representative_letters (aut, all_inputs, G, *L);
     }
+    acacia::equivariance_budget::checkpoint ();
     if (not representatives.has_value () or representatives->empty ())
       return decline (representatives.decline_reason ? representatives.decline_reason
                                                      : "empty input orbit universe");
@@ -768,6 +865,7 @@ namespace acacia::solver_detail::equivariant {
       acacia::diagnostics::snapshot ("support-before-action-construction");
     }
 #endif
+    acacia::equivariance_budget::phase ("equivariance_action_construction");
     auto inputs_to_ios = (ios_precomputer_maker.make (aut, all_inputs, all_outputs)) ();
     {
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_representative_filter);
@@ -804,16 +902,17 @@ namespace acacia::solver_detail::equivariant {
     acacia::diagnostics::snapshot ("after-action-construction");
     ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_solve_loop);
     while (true) {
+      acacia::equivariance_budget::checkpoint ();
       ++loopcount;
       acacia::diagnostics::observe_loop (f.size (), k);
       verb_do (1, vout << "[equivariant] Loop# " << loopcount << ", f of size " << f.size ()
                        << ", representative inputs=" << fwd_actions.size () << "\n");
 
+      acacia::equivariance_budget::phase ("equivariance_representative_solve");
       auto input = [&] {
-        acacia::diagnostics::scoped_fine_timer timer {
-            acacia::diagnostics::fine_metric::picker};
+        acacia::diagnostics::scoped_fine_timer timer {acacia::diagnostics::fine_metric::picker};
         return input_picker (f);
-      } ();
+      }();
       acacia::diagnostics::snapshot_loop_progress ("equivariant-after-picker");
       if (not input.has_value ()) {
         verb_do (1, vout << "[equivariant] fixed point reached at K=" << (int) k << ", f of size "
@@ -821,9 +920,10 @@ namespace acacia::solver_detail::equivariant {
         acacia::diagnostics::set_final_reason ("fixedpoint");
         std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> win;
         win.emplace (k, std::move (f));
-        return {true, std::move (win)};
+        return {status::completed, std::move (win)};
       }
 
+      acacia::equivariance_budget::checkpoint ();
       cpre_inplace (f, *input, actioner, num_states);
       acacia::diagnostics::snapshot_loop_progress ("equivariant-after-cpre");
       close_under_generators (f, G, permute_in, permute_out);
@@ -833,7 +933,7 @@ namespace acacia::solver_detail::equivariant {
         if (k >= kmax) {
           verb_do (1, vout << "[equivariant] initial state out at max K\n");
           acacia::diagnostics::set_final_reason ("kmax-initial-out");
-          return {true, std::nullopt};
+          return {status::completed, std::nullopt};
         }
         verb_do (1, vout << "[equivariant] Incrementing k from " << (int) k << " to "
                          << (int) (k + kinc) << "\n");
@@ -841,6 +941,7 @@ namespace acacia::solver_detail::equivariant {
         actioner.setK (k);
         acacia::diagnostics::set_support_k (static_cast<int> (k));
         f = f.apply ([&] (const state& s) {
+          acacia::equivariance_budget::checkpoint ();
           auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
           for (size_t i = 0; i < posets::vectors::bool_threshold; ++i)
             vec[i] = s[i] + kinc;
@@ -853,6 +954,36 @@ namespace acacia::solver_detail::equivariant {
         assert (not close_under_generators (f, G, permute_in, permute_out));
 #endif
       }
+    }
+  }
+
+  template <typename SetOfStates, typename IOsPrecomputerMaker, typename ActionerMaker,
+            typename InputPickerMaker>
+  result<SetOfStates> try_solve (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin,
+                                 VECTOR_ELT_T kinc, const bdd& all_inputs, const bdd& all_outputs,
+                                 const IOsPrecomputerMaker& ios_precomputer_maker,
+                                 const ActionerMaker& actioner_maker,
+                                 const InputPickerMaker& input_picker_maker,
+                                 const std::vector<symmetry::indexed_family_hint>& hints = {},
+                                 const acacia::equivariance_budget::allowance& budget = {}) {
+    acacia::equivariance_budget::scope scope {budget};
+    acacia::equivariance_budget::record (acacia::equivariance_budget::invocation,
+                                         scope.entered_ns (), budget);
+    try {
+      acacia::equivariance_budget::phase ("equivariance_recognition");
+      acacia::equivariance_budget::checkpoint ();
+      auto answer = try_solve_impl<SetOfStates> (aut, kmax, kmin, kinc, all_inputs, all_outputs,
+                                                 ios_precomputer_maker, actioner_maker,
+                                                 input_picker_maker, hints);
+      if (answer.outcome == status::completed) {
+        if (auto* worker = acacia::active_worker_record ())
+          acacia::worker_event (*worker, "equivariance_complete",
+                                answer.win ? "fixedpoint" : "kmax-initial-out");
+      }
+      return answer;
+    } catch (const acacia::equivariance_budget::stopped&) {
+      acacia::worker_stopped ("equivariance_budget");
+      return {status::stopped, std::nullopt};
     }
   }
 
