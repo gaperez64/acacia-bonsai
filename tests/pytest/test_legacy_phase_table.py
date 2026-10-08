@@ -115,6 +115,24 @@ def test_dropped_translation_completion_before_search_kill(tmp_path):
     assert rows[1]['censored_lower_ns'] == 80
 
 
+def test_snapshot_and_entry_packet_have_distinct_clocks(tmp_path):
+    translation = event('stage_entry', 1, 100)
+    search = {**event('stage_entry', 2, 130, stage_id=2), 'stage': 'search', 'k': 2}
+    snapshot = {**event('stage_censored', 3, 210, stage_id=2, signal=9, entry_ns=125),
+                'stage': 'search', 'k': 2}
+    terminal = dict(event='parent_terminal', worker_pid=10, worker=2, seq=4,
+                    mono_ns=215, signal=9, reason='interrupted', dropped_records=0)
+    rows = module().build_rows('run', records(tmp_path, [translation, search, snapshot,
+                                                       terminal]))
+    assert rows[0]['state'] == 'unknown-completion'
+    assert 'censored_lower_ns' not in rows[0]
+    assert rows[1]['state'] == 'censored'
+    assert rows[1]['entry_ns'] == 130
+    assert 'entry_source' not in rows[1]
+    assert rows[1]['censored_lower_ns'] == 85
+    assert rows[1]['delivery'] == 'unconfirmed'
+
+
 def test_limited_capture_never_supplies_unentered_verification():
     tool = module()
     row = dict(invocation='run', worker_pid='10', subjob=1, run_id=0, k=2,

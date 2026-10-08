@@ -65,8 +65,9 @@ def build_rows(invocation, records, captures=()):
         row['invocation'] = invocation
         row['worker_pid'] = pid
         if kind == 'stage_censored':
-            row.setdefault('entry_ns', event['entry_ns'])
-            row['entry_source'] = 'parent_snapshot'
+            if 'entry_ns' not in row:
+                row['entry_ns'] = event['entry_ns']
+                row['entry_source'] = 'parent_snapshot'
         elif kind == 'stage_entry':
             row['entry_ns'] = event['mono_ns']
         elif kind in {'stage_completion', 'stage_stopped'}:
@@ -99,9 +100,9 @@ def build_rows(invocation, records, captures=()):
             row['state'] = 'unknown-entry'
         elif 'completion_ns' not in row:
             end = terminal.get(pid, {})
-            active = (end.get('stage_id') == row['stage_id']
-                      and end.get('entry_ns', end.get('stage_start_ns', row['entry_ns']))
-                      == row['entry_ns'])
+            # Occurrence IDs are unique within a worker. The shared snapshot
+            # starts before the entry packet samples its own clock.
+            active = end.get('stage_id') == row['stage_id']
             censored = active and end.get('signal', 0) > 0
             row['state'] = 'censored' if censored else 'unknown-completion'
             if censored and end.get('mono_ns', 0) >= row['entry_ns']:
