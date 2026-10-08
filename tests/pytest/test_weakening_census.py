@@ -54,6 +54,7 @@ def lifecycle(outcome="proof", *, fallback=False):
 def test_success_counts_generated_separately_from_started():
     row, = reader().census(lifecycle())
     assert row["census"] == "complete"
+    assert row["mode"] == row["effective_mode"] == "basic"
     assert (row["generated"], row["started"], row["completed"], row["successes"]) == (2, 1, 1, 1)
     assert row["attempt_wall_ns"] == 12 and row["attempt_cpu_ns"] == 8
     assert row["full_solver_started"] is False
@@ -243,7 +244,7 @@ def test_exhausted_budget_starves_even_before_any_attempt():
     assert row["full_solver_starved"] is True
 
 
-def test_requested_mode_is_distinct_from_incumbent_automaton_route():
+def test_requested_mode_is_distinct_from_basic_automaton_route():
     rows = lifecycle("inconclusive", fallback=True)
     rows.insert(1, {"event": "weakening_requested_mode", "worker_pid": 123, "prepass": 0,
                     "mode": "extended", "emitter": "123", "seq": 2, "dropped_records": 0})
@@ -251,4 +252,4 @@ def test_requested_mode_is_distinct_from_incumbent_automaton_route():
         r["seq"] = i + 1
     row, = reader().census(rows)
     assert row["census"] == "complete"
-    assert row["mode"] == "extended" and row["effective_mode"] == "incumbent"
+    assert row["mode"] == "extended" and row["effective_mode"] == "basic"

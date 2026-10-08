@@ -1,8 +1,10 @@
 # P3: experimental UNREAL weakening
 
-`--weakening incumbent|extended|off` is a runtime switch; `incumbent` remains the default.
+`--weakening basic|extended|off` is a runtime switch; `basic` is the default.
+`basic` runs the existing safety-core pre-pass; `extended` adds assume-guarantee and
+positive G/F-scope weakening; `off` skips the pre-pass.
 No compile-time option or portfolio member/order changed. The extended route uses the existing
-frozen-graph sparse formula UNREAL worker; the automaton worker retains the incumbent route.
+frozen-graph sparse formula UNREAL worker; the automaton worker retains the basic route.
 Requested and effective modes are recorded separately, including early bypasses.
 
 The extended pre-pass starts from the exact parsed objective, before realizability
@@ -15,7 +17,7 @@ A replay against the original AST/source context proves the implication. TLSF su
 exact linked-frontend normalized formula and original source digest; strict weak-until contexts
 are conservatively declined. At the outer TLSF normalization boundary, conjunctions with multiple conditional children decline
 rather than choosing a normalization spine that could remove an assumption scope. All original signals, including unused signals, remain registered
-in the derived game. Ownership and the incumbent timing adaptation are retained.
+in the derived game. Ownership and the existing timing adaptation are retained.
 
 Only the existing guarded backend's independently checked winning certificate can create a
 proof receipt. The receipt binds the derived objective, runner objective, source/normalization,
@@ -24,7 +26,7 @@ weakening derivation after reaping the attempt. A candidate Boolean, REAL/inconc
 exception or cancellation cannot transfer a verdict. Certificate telemetry claims the derived
 game only; the implication plus the checked derived result proves UNREAL of the original.
 
-Singletons follow the incumbent order. Groups use bounded AP-support neighborhoods: each
+Singletons follow the existing order. Groups use bounded AP-support neighborhoods: each
 anchor retains the first following guarantees sharing any AP, in guarantee order. There is no
 pair enumeration or AP-name ranking. Safety-only groups participate on assume-guarantee/plain
 conjunction inputs when an earlier contradiction path has not already discharged them.
@@ -33,7 +35,7 @@ Global experimental limits are frozen independently of corpus verdicts:
 
 | Limit | Value | Reason |
 |---|---:|---|
-| Singleton attempts | 8 | Preserve the incumbent allowance/order |
+| Singleton attempts | 8 | Preserve the existing allowance/order |
 | Concurrent attempt children | 1 | Reclaim each attempt before fallback |
 | Additional dependency groups | 4 | Bound search breadth |
 | Guarantees per dependency group | 4 | Keep group translation small |
@@ -47,13 +49,13 @@ Global experimental limits are frozen independently of corpus verdicts:
 | Child cleanup/replay reserve | Half the currently remaining pre-pass slice | Stop a late attempt early |
 | No-deadline allowance | 250 ms/attempt, 1 s total | Prevent unbounded interactive pre-passes |
 | Supervisor polling | At most 1 ms, shortened at deadline | Bound cancellation latency |
-| Incumbent nested-global threshold | More than 64 children, unchanged | Preserve legacy eligibility |
+| Basic nested-global threshold | More than 64 children, unchanged | Preserve legacy eligibility |
 
 `--weakening-attempt-ms N` and `--weakening-total-ms N` are absolute research allowances for
 `extended`, in nonnegative integer milliseconds. Their no-deadline defaults remain 250/1000;
 for example, `--weakening extended --weakening-attempt-ms 2000 --weakening-total-ms 8000`
 allows at most 2 s per attempt and 8 s for the entire pre-pass, including planning and replay.
-Zero skips candidate work. The options do not affect `incumbent` or `off`.
+Zero skips candidate work. The options do not affect `basic` or `off`.
 
 When an invocation deadline is supplied, omitted options retain the original 5%/20% budgets;
 explicit allowances are capped by those same fractions. The cleanup/replay reservation still

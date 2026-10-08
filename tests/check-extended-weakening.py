@@ -21,6 +21,8 @@ def main():
     solver, helper, inspect, oracle = [p.resolve() for p in (solver, helper, inspect, oracle)]
     spec = importlib.util.spec_from_file_location(
         "census", Path(__file__).resolve().parents[1] / "benchmarking/weakening-census.py")
+    help_text = run([solver, "--help"]).stdout
+    assert "[basic|extended|off] (default basic)" in help_text
     reader = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(reader)
     with tempfile.TemporaryDirectory(dir=scratch) as temporary:
@@ -55,7 +57,7 @@ def main():
                 assert verdict.returncode in (0, 1)
                 if verdict.returncode == 1:
                     assert not expected, (formula, candidate)
-            for mode in ("incumbent", "extended", "off"):
+            for mode in ("basic", "extended", "off"):
                 directory = root / f"raw-{index}-{mode}"
                 directory.mkdir()
                 command = [solver, "-f", formula, "-i", "a,unused_i", "-o", "b,c,unused_o",
@@ -107,7 +109,8 @@ def main():
         records, problems = reader.read_records(directory)
         assert not problems
         row, = reader.census(records)
-        assert row["mode"] == "extended" and row["census"] == "complete", (row, records)
+        assert row["mode"] == row["effective_mode"] == "extended", (row, records)
+        assert row["census"] == "complete", (row, records)
         assert row["full_solver_started"] and row["full_solver_remaining_ns"] > 0
         assert row["full_solver_starved"] is False
         assert row["observed_started"] > 0, records
@@ -161,7 +164,7 @@ def main():
                 exact = run([oracle, "-f", normalized, f"--ins={inputs}", f"--outs={outputs}",
                              "--realizability", "--bypass=no", "--decompose=no"])
                 assert exact.returncode in (0, 1), exact
-                for mode in ("incumbent", "extended", "off"):
+                for mode in ("basic", "extended", "off"):
                     actual = run([solver, "-T", path, "--weakening", mode])
                     assert actual.returncode == exact.returncode, (semantics, assumption, actual)
         # Generated positive G/consequent shapes use exact native normalization,
@@ -178,7 +181,7 @@ def main():
             exact = run([oracle, "-f", normalized, f"--ins={inputs}", f"--outs={outputs}",
                          "--realizability", "--bypass=no", "--decompose=no"])
             assert exact.returncode in (0, 1), exact
-            for mode in ("incumbent", "extended", "off"):
+            for mode in ("basic", "extended", "off"):
                 actual = run([solver, "-T", path, "--weakening", mode])
                 assert actual.returncode == exact.returncode, (semantics, actual)
         for semantics in ("Mealy", "Moore", "Mealy,Strict", "Moore,Strict"):
@@ -195,7 +198,7 @@ def main():
                 exact = run([oracle, "-f", normalized, f"--ins={inputs}", f"--outs={outputs}",
                              "--realizability", "--bypass=no", "--decompose=no"])
                 assert exact.returncode in (0, 1), exact
-                for mode in ("incumbent", "extended", "off"):
+                for mode in ("basic", "extended", "off"):
                     actual = run([solver, "-T", path, "--weakening", mode])
                     assert actual.returncode == exact.returncode, (semantics, guarantee, actual)
         # A strict weak-until context is declined, while the original exact
@@ -208,12 +211,13 @@ def main():
                      "--realizability", "--bypass=no", "--decompose=no"])
         assert run([solver, "-T", path, "--weakening", "extended"]).returncode == exact.returncode
         invalid = run([solver, "-f", "true", "--weakening", "invalid"])
-        assert invalid.returncode == 3 and "--weakening expects" in invalid.stderr
+        assert invalid.returncode == 3
+        assert invalid.stderr == "Error: --weakening expects basic, extended or off.\n"
         # A renamed generated pair must give the same verdict in every mode.
         for formula, expected in (cases[0], cases[8], cases[10]):
             twin = formula.replace("a", "renamed_i").replace("b", "renamed_o").replace(
                 "c", "renamed_other")
-            for mode in ("incumbent", "extended", "off"):
+            for mode in ("basic", "extended", "off"):
                 actual = run([solver, "-f", twin, "-i", "renamed_i,unused_i",
                               "-o", "renamed_o,renamed_other,unused_o", "--weakening", mode])
                 assert actual.returncode == (0 if expected else 1), actual

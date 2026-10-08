@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise the incumbent loop and wire records with generated ASTs and test-only runners."""
+"""Exercise the basic loop and wire records with generated ASTs and test-only runners."""
 
 import importlib.util
 import os
@@ -47,6 +47,7 @@ def main():
                 assert all(r.get("dropped_records", 0) == 0 for r in records), (mode, records)
                 summary, = reader.census(records)
                 assert summary["census"] == "complete", (mode, summary, records)
+                assert summary["mode"] == summary["effective_mode"] == "basic"
                 eligible = mode in modes[:6]
                 assert summary["eligible"] == eligible, (mode, summary)
                 assert summary["generated"] == (8 if eligible else 0)
@@ -158,6 +159,7 @@ def main():
                 assert not problems
                 summary, = reader.census(records)
                 assert summary["census"] == "complete", (name, summary, records)
+                assert summary["mode"] == summary["effective_mode"] == "basic"
                 assert summary["eligible"] and summary["generated"] == 8
                 assert summary["started"] == (1 if proof else 8)
                 assert summary["successes"] == int(proof)

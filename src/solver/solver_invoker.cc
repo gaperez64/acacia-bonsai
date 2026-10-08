@@ -1118,7 +1118,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   weakening_records.event ("weakening_requested_mode",
                            weakening == weakening_mode::extended ? "\"mode\":\"extended\""
                            : weakening == weakening_mode::off    ? "\"mode\":\"off\""
-                                                                 : "\"mode\":\"incumbent\"");
+                                                                 : "\"mode\":\"basic\"");
   const size_t original_inputs = input_aps.size (), original_outputs = output_aps.size ();
   bool rsimp_changed = false;
 
@@ -1207,7 +1207,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
       rsimp_changed, original_inputs, original_outputs,
       extension_route                    ? "extended"
       : weakening == weakening_mode::off ? "off"
-                                         : "incumbent");
+                                         : "basic");
   std::optional<bool> weakened_answer;
   if (extension_route) {
     weakening_records.objective (exact_original, "exact_original");

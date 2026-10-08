@@ -108,7 +108,7 @@ namespace acacia::unreal_witnesses {
       void enter (const spot::formula& formula, uint64_t deadline,
                   const std::string& source_sha256, const char* format, const char* semantics,
                   const char* target, const char* effective, bool simplified, size_t inputs,
-                  size_t outputs, const char* mode = "incumbent") noexcept {
+                  size_t outputs, const char* mode = "basic") noexcept {
         if (!worker_)
           return;
         extended_ = std::strcmp (mode, "extended") == 0;
@@ -335,7 +335,7 @@ namespace acacia::unreal_witnesses {
                  "\"claim\":\"UNREAL(original)\",\"checked_objective\":\"candidate\","
                  "\"proof_objective\":\"runner_objective\","
                  "\"derivation\":\"distribute_G_and_select_conjuncts\","
-                 "\"proof_kind\":\"incumbent_UNREAL_runner\","
+                 "\"proof_kind\":\"UNREAL_runner\","
                  "\"source_transfer\":\"realizability_preserving_simplification\"");
         worker_->run_active = false;
       }
@@ -347,7 +347,7 @@ namespace acacia::unreal_witnesses {
         worker_->run_weakening = false;
         worker_->run_active = true;
         worker_->run_start = phase_start ();
-        objective (original, "incumbent_objective");
+        objective (original, "original_objective");
         budget ("weakening_fallback_start");
       }
       void finish (const char* outcome) const noexcept {

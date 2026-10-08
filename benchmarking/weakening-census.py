@@ -72,7 +72,7 @@ def census(records, problems=()):
             exact &= len(started_ids) == len(starts) and len(ended_ids) == len(ends)
             exact &= started_ids <= generated_ids and started_ids == ended_ids
             mode = next((r.get("mode") for r in rows
-                         if r.get("event") == "weakening_mode"), "incumbent")
+                         if r.get("event") == "weakening_mode"), "basic")
             requested_mode = next((r.get("mode") for r in worker_rows
                                    if r.get("event") == "weakening_requested_mode"), mode)
             source = next((r for r in rows if r.get("event") == "weakening_source"), {})

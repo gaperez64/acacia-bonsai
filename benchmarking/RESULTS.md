@@ -89,7 +89,9 @@ not a top-level conjunction.
 
 ## Coverage-first P3 weakening experiment, not admitted
 
-P3 step 2 adds selectable `--weakening incumbent|extended|off`; incumbent remains the default.
+P3 step 2 adds selectable `--weakening basic|extended|off`; basic remains the default.
+Basic runs the existing safety-core pre-pass; extended adds assume-guarantee and positive
+G/F-scope weakening; off skips the pre-pass. The option rename preserves solver behavior.
 The experimental formula UNREAL route retains exact assume-guarantee antecedents, tries lazy
 singletons and at most four structural dependency groups, and bounds/reaps each candidate before
 original fallback. A checked derived-game proof plus a replayed AST weakening derivation is

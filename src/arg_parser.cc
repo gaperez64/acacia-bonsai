@@ -84,7 +84,7 @@ void show_help (const char* program_name) {
          "provider (default frozen-graph)\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
          "requires frozen-graph\n"
-      << "  --weakening VAL          [incumbent|extended|off] (default incumbent)\n"
+      << "  --weakening VAL          [basic|extended|off] (default basic)\n"
       << "  --weakening-attempt-ms N   absolute extended-attempt allowance (default 250 ms)\n"
       << "  --weakening-total-ms N     absolute extended pre-pass allowance (default 1000 ms)\n"
       << "                            invocation deadline bounds still apply; 0 skips work\n"
@@ -576,14 +576,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
         break;
       }
       case OPT_WEAKENING:
-        if (std::string_view {optarg} == "incumbent")
-          retval.weakening = weakening_mode::incumbent;
+        if (std::string_view {optarg} == "basic")
+          retval.weakening = weakening_mode::basic;
         else if (std::string_view {optarg} == "extended")
           retval.weakening = weakening_mode::extended;
         else if (std::string_view {optarg} == "off")
           retval.weakening = weakening_mode::off;
         else
-          error (EXIT_CODE_ERROR, "Error: --weakening expects incumbent, extended or off.\n");
+          error (EXIT_CODE_ERROR, "Error: --weakening expects basic, extended or off.\n");
         break;
       case OPT_CANDIDATE_MODE:
         if (auto mode = acacia::parse_candidate_mode (optarg))

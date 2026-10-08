@@ -136,7 +136,10 @@ a solve. This package does not run or claim a benchmark or recycling campaign.
 
 ## Existing UNREAL safety-core pre-pass (P3 step 1)
 
-The incumbent pre-pass now uses the same nonblocking #210 packet transport. No
+The basic pre-pass now uses the same nonblocking #210 packet transport.
+`weakening_requested_mode` records the selected value; `weakening_mode` records
+the effective value. Both use `basic`, `extended`, or `off`; an automaton UNREAL
+worker requested as `extended` records `basic` as its effective mode. No
 eligibility, candidate order, allowance, deadline, proof, or fallback policy changes.
 The existing structural thresholds remain **more than 64 immediate children** of
 an immediate `G(AND(...))` inside a top-level AND, and **at most eight** singleton
@@ -179,11 +182,11 @@ checksum convention and only bind artifacts of this invocation. They do not
 prove implication and never select solver work.
 
 Bindings distinguish `simplified_original`, `candidate`, `runner_objective`
-(after the incumbent UNREAL timing transformation), and `incumbent_objective`.
+(after the incumbent UNREAL timing transformation), and `original_objective`.
 A `weakening_proof` links its run to the candidate, transformed runner objective,
 source and structural derivation. The incumbent simplifier transfers
 realizability; the logical implication starts at the **simplified** original.
-The record describes the incumbent runner's UNREAL proof and this derivation,
+The record describes the existing runner's UNREAL proof (`UNREAL_runner`) and this derivation,
 without presenting it as a certificate for the original exact game. No new
 checker or proof artifact is introduced.
 

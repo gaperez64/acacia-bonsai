@@ -13,7 +13,7 @@
 #include <vector>
 
 // These are the valid ways of treating unrealizability.
-enum class weakening_mode { incumbent, extended, off };
+enum class weakening_mode { basic, extended, off };
 
 enum UNREAL_X_T : char { UNREAL_X_FORMULA = 'f', UNREAL_X_AUTOMATON = 'a', UNREAL_X_BOTH };
 using TRANSLATION_PREF_T = spot::postprocessor::output_pref;
@@ -48,5 +48,5 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               acacia::candidate_mode candidate = acacia::candidate_mode::only,
               bool equivariance = true, uint64_t diagnostic_deadline_ns = 0,
               const std::string& diagnostic_source_sha256 = {},
-              weakening_mode weakening = weakening_mode::incumbent,
+              weakening_mode weakening = weakening_mode::basic,
               const acacia::unreal_witnesses::allowances& weakening_allowances = {});
