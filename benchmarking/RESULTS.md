@@ -5,6 +5,22 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-08 — coverage-first P2b: admit the 3 s equivariance default (#224)
+
+Evidence campaign `cov20261007-eqfull` (to be archived): fresh, matched, rotated
+17 s races over all 1,524 SYNTCOMP26 inputs, no invocation deadline, with one
+binary for both explicit treatments. `--equivariance-budget 3s` solves **1,206**
+versus **1,205** for `unbounded`. The sole gain is `collector_v3_pb_9` at **9.76 s**;
+there are **zero losses**, **zero verdict conflicts**, and **identical memory
+outcomes**. Paired PAR-2 changes by **−23.3 s**, beyond the **12.1 s** noise floor.
+
+Admit `3s` as the runtime default. Explicit `unbounded` retains the incumbent
+behavior; fractions and durations remain selectable. The global allowance stays
+in the CLI state rather than adding a compile-time registry option. See the
+[allowance protocol](coverage-first/equivariance-budget.md) and
+[decision record](coverage-first/decisions.md). These are driver-supplied measured
+results; this default change does not rerun the campaign.
+
 ## 2026-10-07 — coverage-first P1: matched R × equivariance ablation (#207)
 
 Fresh 17 s races on all 1,524 SYNTCOMP26 instances, serial and rotated, 8 GiB no-swap

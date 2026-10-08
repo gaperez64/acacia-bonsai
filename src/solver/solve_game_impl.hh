@@ -179,7 +179,7 @@ namespace acacia::solver_detail {
     // configurations when both solvers are compiled in.
     if (equivariance and backend == acacia::game_backend::backward and not do_synthesis) {
       // Fractions use time left at first entry, or the global no-deadline reference;
-      // absolute times work in either regime. The incumbent remains unbounded.
+      // absolute times work in either regime. Explicit unbounded retains the incumbent.
       const auto limits = acacia::equivariance_budget::invocation;
       const uint64_t now = limits.bounded () || acacia::phase_records_enabled ()
                                ? acacia::phase_clock (CLOCK_MONOTONIC) : 0;

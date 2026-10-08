@@ -59,7 +59,8 @@ struct arg_parse_result {
     bool r_prepass = true;
     bool equivariance = ACACIA_ENABLE_EQUIVARIANT_SOLVER;
     std::optional<double> equivariance_budget;
-    std::optional<uint64_t> equivariance_budget_ns;
+    // Global 3 s optional-work allowance; explicit unbounded restores the incumbent.
+    std::optional<uint64_t> equivariance_budget_ns = 3000000000ULL;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     specification_metadata metadata;

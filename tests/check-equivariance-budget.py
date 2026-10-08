@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check allowances with/without a deadline, cumulative handoff, and incumbent defaults."""
+"""Check allowances, cumulative handoff, the 3s default, and explicit incumbent mode."""
 
 from __future__ import annotations
 
@@ -67,9 +67,10 @@ def main() -> None:
             regime = root / ("deadline" if deadline else "no-deadline")
             regime.mkdir()
             route_histories = {}
-            defaults = []
+            outputs = {}
+            unbounded_outputs = []
             for label, value, fraction, absolute in (
-                ("default", None, None, None),
+                ("default", None, None, 3_000_000_000),
                 ("unbounded", "unbounded", None, None),
                 ("quarter", "0.25", 0.25, None),
                 ("zero", "0", 0.0, None),
@@ -98,6 +99,7 @@ def main() -> None:
                 plain = execute(binary, args + switches, None, deadline)
                 assert result.returncode == plain.returncode == 0, (result, plain)
                 assert result.stdout == plain.stdout and result.stderr == plain.stderr
+                outputs[label] = (plain.returncode, plain.stdout, plain.stderr)
                 records = attribution.rows(directory)
                 attribution.complete_records(records)
                 route_histories[label] = [(r["route"], r["effective_backend"])
@@ -110,7 +112,7 @@ def main() -> None:
                     assert budget["consumed_ns"] == 0, budget
                 else:
                     assert not limits and budget["deadline_ns"] == 0, records
-                    defaults.append((plain.returncode, plain.stdout, plain.stderr))
+                    unbounded_outputs.append(outputs[label])
                 if label in ("zero", "decimal-zero", "fraction-tiny", "absolute-zero",
                              "absolute-zero-seconds", "absolute-tiny", "seconds-tiny",
                              "seconds-truncated"):
@@ -126,12 +128,15 @@ def main() -> None:
                         assert backward["mono_ns"] < budget["outer_deadline_ns"]
                     terminal, = [r for r in records if r.get("event") == "terminal_result"]
                     assert terminal["exit_code"] == 0 and terminal["reason"] == "none", terminal
-            assert defaults == [defaults[0]] * len(defaults), defaults
+            assert unbounded_outputs == [unbounded_outputs[0]] * len(unbounded_outputs)
             if incumbent is not None:
                 original = execute(incumbent, args, None, deadline)
-                assert defaults[0] == (original.returncode, original.stdout, original.stderr)
-            assert route_histories["default"] == route_histories["unbounded"]
-            assert route_histories["default"] == route_histories["reset-unbounded"]
+                assert outputs["unbounded"] == (original.returncode, original.stdout,
+                                                original.stderr)
+            for label in ("seconds", "milliseconds"):
+                assert outputs["default"] == outputs[label]
+                assert route_histories["default"] == route_histories[label]
+            assert route_histories["unbounded"] == route_histories["reset-unbounded"]
             for value, fraction, absolute in (("0.25", 0.25, None), ("3000ms", None, 3_000_000_000),
                                               ("0ms", None, 0)):
                 directory = regime / f"decomposed-{value}"
