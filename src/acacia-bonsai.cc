@@ -504,6 +504,9 @@ int main (int argc, char** argv) {
   auto arg_values = arg_parser (argc, argv);
   argument_phase.finish ();
   const uint64_t deadline_mono_ns = outer_deadline_ns ();
+  acacia::equivariance_budget::invocation = {
+      arg_values.equivariance_budget, deadline_mono_ns, arg_values.equivariance_budget_ns};
+  acacia::equivariance_budget::invocation_allowance.reset ();
   // set the global verbose level
   utils::verbose = arg_values.verbose_level;
 

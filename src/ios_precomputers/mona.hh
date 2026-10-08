@@ -1,5 +1,6 @@
 #pragma once
 
+#include "solver/equivariance_budget.hh"
 
 #include <bit>
 #include <bddx.h>
@@ -87,14 +88,18 @@ namespace ios_precomputers {
           // Create the mona BDD.
           bdd bdd_iopq = bddfalse;
 
-          for (const auto& [formula, trans] : transition_enumerator (aut, transition_formater::src_and_dst (aut)))
+          for (const auto& [formula, trans] :
+               transition_enumerator (aut, transition_formater::src_and_dst (aut))) {
+            acacia::equivariance_budget::checkpoint ();
             bdd_iopq = bdd_iopq |
               (formula & encode_src (trans.first) & encode_dst (trans.second));
+          }
 
           // When the pq part of the BDD is reached, iterate through all its
           // satisfying valuations, decode the src and dst.
           auto add_src_dst = [&] (this const auto& self, TransSet& ts, bdd src_dsts) {
             for (auto mt : minterms_of (src_dsts, bdd_state_vars)) {
+              acacia::equivariance_budget::checkpoint ();
               unsigned from = 0, to = 0;
               while (mt != bddtrue) {
                 bool true_lit = (bdd_low (mt) == bddfalse);
@@ -124,6 +129,7 @@ namespace ios_precomputers {
           std::unordered_set<int> residual_roots;
 
           auto recurse_outputs = [&] (this const auto& self, auto& tss, bdd bdd_opq) {
+          acacia::equivariance_budget::checkpoint ();
             if (bdd_opq == bddfalse)
               return;
             if (bdd_opq == bddtrue or bdd_var (bdd_opq) >= first_src_var) {
@@ -149,6 +155,7 @@ namespace ios_precomputers {
           };
 
           auto recurse_inputs = [&] (this const auto& self, auto& i_to_tss, bdd bdd_iopq, bdd bdd_input) {
+          acacia::equivariance_budget::checkpoint ();
             if (bdd_iopq == bddfalse)
               return;
             if (bdd_iopq == bddtrue or bdd_var (bdd_iopq) >= first_output) {

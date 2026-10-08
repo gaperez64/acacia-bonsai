@@ -1,5 +1,7 @@
 #pragma once
 
+#include "solver/equivariance_budget.hh"
+
 #include "actioners/direction.hh"
 #include "actioners/profile_dominance.hh"
 #include "configuration.hh"
@@ -57,11 +59,13 @@ namespace actioners {
           // corresponds to an i-compatible IO x and contains every transition
           // p -> q compatible with x.  The IO's BDD is stored alongside it.
           for (const auto& [input, ios] : inputs_to_ios) {
+            acacia::equivariance_budget::checkpoint ();
             // input: bdd
             // ios: transition sets and their IOs
             std::list<action_vec> fwd_actions;
             // action_vec : vector<vector<pair<unsigned int, bool>>>
             for (const auto& transset : ios) {
+              acacia::equivariance_budget::checkpoint ();
               // transset: transitions compatible with one IO
               // Turn this into a vector that maps q to a list of tuples
               // (p, increment).  The increment comes from the edge when
@@ -115,6 +119,7 @@ namespace actioners {
 
         State apply (const State& m, const action_vec& avec,
                      direction dir) /* __attribute__((pure)) */ {
+                       acacia::equivariance_budget::checkpoint ();
           if (dir == direction::forward)
             apply_out.assign (m.size (), (VECTOR_ELT_T) -1);
           else

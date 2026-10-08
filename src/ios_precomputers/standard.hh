@@ -1,5 +1,7 @@
 #pragma once
 
+#include "solver/equivariance_budget.hh"
+
 #include "solver/transition_payload.hh"
 
 #include <bddx.h>
@@ -47,6 +49,7 @@ namespace ios_precomputers {
 
           protected:
             virtual void get_next_letter () {
+              acacia::equivariance_budget::checkpoint ();
               if (letter_set == bddfalse)
                 support = bddfalse;
               else {
@@ -75,6 +78,7 @@ namespace ios_precomputers {
 
           private:
             virtual void get_next_letter () {
+              acacia::equivariance_budget::checkpoint ();
               bdd_it::get_next_letter ();
               update_transset ();
             }
@@ -84,6 +88,7 @@ namespace ios_precomputers {
               letter = input & bdd_it::current_letter;
               current_io.clear ();
               for (size_t p = 0; p < aut->num_states (); ++p) {
+                acacia::equivariance_budget::checkpoint ();
                 for (const auto& e : aut->out (p)) {
                   unsigned q = e.dst;
                   if ((e.cond & letter) != bddfalse)
@@ -138,6 +143,7 @@ namespace ios_precomputers {
 
           private:
             virtual void get_next_letter () {
+              acacia::equivariance_budget::checkpoint ();
               bdd_it::get_next_letter ();
               auto theios =
                   std::pair (bdd_it::current_letter,
