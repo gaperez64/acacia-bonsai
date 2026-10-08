@@ -1,5 +1,7 @@
 #pragma once
 
+#include "solver/equivariance_budget.hh"
+
 // Detection of client-index permutation symmetries of the (final) UcB automaton,
 // verified structurally so that canonicalizing the K-bounded game's counter
 // vectors under the induced state-permutation group is SOUND.
@@ -198,6 +200,7 @@ namespace symmetry {
         }
 
         bool search () {
+          acacia::equivariance_budget::checkpoint ();
           // pick unassigned A-state with fewest candidates (MRV)
           unsigned pick = -1U;
           size_t best = SIZE_MAX;
@@ -212,6 +215,7 @@ namespace symmetry {
           if (pick == -1U)
             return verify_full ();
           for (unsigned q2 = 0; q2 < n; ++q2) {
+            acacia::equivariance_budget::checkpoint ();
             if (inv[q2] != -1U or sigB[q2] != sigA[pick]) continue;
             if (not consistent (pick, q2)) continue;
             assign (pick, q2);
@@ -222,6 +226,7 @@ namespace symmetry {
         }
 
         bool verify_full () {
+          acacia::equivariance_budget::checkpoint ();
           // Every A-edge (q,c,acc,dst) must have B-edge (phi q, c, acc, phi dst).
           for (unsigned q = 0; q < n; ++q) {
             for (const auto& e : A[q]) {
@@ -534,10 +539,12 @@ namespace symmetry {
     // Try every possible root after a failed edge and keep the largest star;
     // indices outside that star remain ordinary shared AP/state structure.
     for (long root : base.indices) {
+      acacia::equivariance_budget::checkpoint ();
       group candidate;
       candidate.families = base.families;
       candidate.indices.push_back (root);
       for (long other : base.indices) {
+        acacia::equivariance_budget::checkpoint ();
         if (other == root)
           continue;
         const auto& phi = oracle.verify (root, other);

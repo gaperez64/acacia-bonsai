@@ -62,7 +62,7 @@ def main() -> None:
             assert ("equivariance" in names) == eq, routes
             assert "backward" in names, routes
             assert all(row["effective_backend"] == "backward" for row in routes), routes
-        # Omitted switches must select the exact explicit incumbent routes.
+        # Omitted on/off switches must select the explicit on routes.
         for name, args in (("native", native), ("backward", backward)):
             default = check(binary, args, root / f"{name}-default", True, True)
             explicit = attribution.rows(root / f"{name}-D")

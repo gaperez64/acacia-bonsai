@@ -24,6 +24,7 @@ with tempfile.TemporaryDirectory(dir=Path.cwd(), prefix="check-help-") as direct
             assert result.returncode == 0, (option, invalid_deadline, result)
             assert result.stdout.startswith("Usage:"), (option, invalid_deadline, result)
             assert "--arms LIST" in result.stdout, (option, invalid_deadline, result)
+            assert "--equivariance-budget F|DURATION|unbounded (default 3s)" in result.stdout
             assert result.stderr == "", (option, invalid_deadline, result)
             assert list(cwd.iterdir()) == [], (option, invalid_deadline)
 
