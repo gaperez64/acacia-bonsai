@@ -333,3 +333,32 @@ screened with no 17 s full-corpus leg yet, on a 152-case development screen: 60 
 The current optimization and UNREAL lifting work is tracked in
 [the active sprint record](optimize-20260927/plan.md). Results from selected
 subsets or censored higher-cap observations retain those labels when cited.
+
+## Legacy worker phase observation
+
+The legacy routes now expose entry, completion and stopped observations through
+`ACACIA_PHASE_RECORDS`, including per-subjob/K search and independent verification.
+Frozen sparse rebuilt-row demand is sampled after checking. Payload byte estimates
+remain distinct from measured process/cgroup memory. The schema and offline readers
+are documented in [legacy-phase-records.md](legacy-phase-records.md).
+
+The seeded panel builder refreshes membership from explicit fresh Acacia rows and
+historical comparator rows, preserving their different provenance. Instrumentation
+and generated-spec correctness checks do not establish a bottleneck, speedup or
+performance admission; panel measurements remain the next external-driver step.
+
+The review follow-up caches observation outside action/K loops and returns before
+PID, clock, resource or exception sampling when records are disabled. Regression
+probes assert zero observation samples. The panel ranks structural/evidence keys
+with source-token digest ties, and merged chronology and delivery checks preserve
+uncertainty. Censor bounds apply only to the active stage occurrence; captures
+require complete invocation identities and matching completed-stage evidence.
+
+Fresh Spot captures can now bind `invocation` through `ACACIA_PHASE_INVOCATION`,
+using the same label supplied to the phase table's `--invocation`. The existing
+capture snapshot/history path emits the label without additional file operations.
+The release producer/CLI regression joins both decomposed frozen sparse subjobs
+at K=2 and K=5, rejects a foreign invocation, and checks search/verifier metric
+separation. Generated release comparisons retain exact stdout, stderr and exit
+codes with records off/on and against the pre-binding executable; records-off
+PID/clock/resource-call counts also agree. These remain correctness observations.

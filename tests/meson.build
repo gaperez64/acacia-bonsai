@@ -615,6 +615,16 @@ push_aps_test = executable ('push-aps-test',
                             dependencies : [spot_dep, bddx_dep])
 test ('push-aps', push_aps_test, suite : ['unit', 'push-aps'])
 
+if host_machine.system () == 'linux'
+  phase_observation_off = executable (
+    'phase-observation-off', 'phase_observation_off.cc',
+    include_directories : inc,
+    dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+    link_args : ['-Wl,--wrap=getpid', '-Wl,--wrap=clock_gettime', '-Wl,--wrap=getrusage',
+                 '-Wl,--wrap=_ZSt19uncaught_exceptionsv'])
+  test ('phase-observation-off', phase_observation_off, suite : ['unit', 'attribution'])
+endif
+
 if enable_tlsf_frontend
   tlsf_frontend_test = executable (
     'tlsf-frontend-test',

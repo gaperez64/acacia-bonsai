@@ -32,7 +32,8 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKER = load_module("attribution_worker_phases", ROOT / "benchmarking/summarize-worker-phases.py")
 DIAG = load_module("attribution_diag_phases", ROOT / "benchmarking/summarize-diag-phases.py")
 CONFIG = load_module("attribution_config", ROOT / "scripts/acacia-config.py")
-PARENT_EVENTS = {"worker_spawn", "worker_spec", "parent_terminal", "parent_winner"}
+PARENT_EVENTS = {"worker_spawn", "worker_spec", "parent_terminal", "parent_winner",
+                 "stage_censored"}
 CONTEXT = ("requested_backend", "effective_backend", "original_polarity", "proof_polarity",
            "route", "stage", "reason", "r_prepass", "equivariance")
 SOLVED = {"REALIZABLE": 0, "UNREALIZABLE": 1}
@@ -225,6 +226,8 @@ def audit_row(row, directory, expected_workers=None):
                   f"confirmed={len(records)-len(writers)}")
 
     workers = defaultdict(list)
+    worker_indices = {r['worker_pid']: r['worker'] for r in records
+                      if nonnegative_int(r.get('worker_pid')) and nonnegative_int(r.get('worker'))}
     parents = set()
     lifecycle = []
     for record in records:
@@ -234,18 +237,41 @@ def audit_row(row, directory, expected_workers=None):
         if not isinstance(event, str):
             issue("delivery", "invalid_event", location(record))
             continue
+        stage_record = event in {'stage_entry', 'stage_completion', 'stage_stopped',
+                                 'stage_metric', 'stage_censored'}
+        supplemental = stage_record or event.startswith('weakening_')
+        if supplemental and 'worker' not in record:
+            record['worker'] = worker_indices.get(record.get('worker_pid'))
         pid, index = record.get("worker_pid"), record.get("worker")
         if not nonnegative_int(pid) or pid == 0 or not nonnegative_int(index):
             issue("delivery", "invalid_worker_identity", location(record))
             continue
         workers[pid].append(record)
         lifecycle.append(record)
-        if event in PARENT_EVENTS:
+        parent_observation = event in PARENT_EVENTS or (
+            event.startswith('weakening_') and record.get('observer') == 'parent')
+        if parent_observation:
             parents.add(record["_emitter_pid"])
             if record["_emitter_pid"] == pid:
                 issue("delivery", "wrong_parent_emitter", location(record))
         elif record["_emitter_pid"] != pid:
             issue("delivery", "wrong_child_emitter", location(record))
+        if supplemental:
+            if not nonnegative_int(record.get("seq")) or record["seq"] == 0:
+                issue("delivery", "invalid_sequence", location(record))
+            if not nonnegative_int(record.get("mono_ns")):
+                issue("delivery", "invalid_event_context", location(record))
+            if not nonnegative_int(record.get("dropped_records")):
+                issue("delivery", "invalid_drop_count", location(record))
+            if stage_record:
+                valid = nonnegative_int(record.get('stage_id')) and record.get('stage_id', 0) > 0
+                if event == 'stage_metric':
+                    valid &= all(isinstance(record.get(k), str) for k in ('key', 'value'))
+                else:
+                    valid &= isinstance(record.get('stage'), str)
+                if not valid:
+                    issue('delivery', 'invalid_stage_record', location(record))
+            continue
         if event != "worker_spec":
             if not nonnegative_int(record.get("seq")) or record["seq"] == 0:
                 issue("delivery", "invalid_sequence", location(record))
@@ -305,7 +331,8 @@ def audit_row(row, directory, expected_workers=None):
         by_event = defaultdict(list)
         for record in group:
             by_event[record["event"]].append(record)
-        child = [r for r in group if r["_emitter_pid"] == pid and r["event"] not in PARENT_EVENTS]
+        child = [r for r in group if r["_emitter_pid"] == pid and r["event"] not in PARENT_EVENTS
+                 and r.get('observer') != 'parent']
         child.sort(key=lambda r: r["_line"])
         terminals = by_event["parent_terminal"]
         terminal = terminals[0] if len(terminals) == 1 else None
@@ -342,7 +369,13 @@ def audit_row(row, directory, expected_workers=None):
         # sequence; comparing adjacent parent-file records would invent gaps.
         if terminal and terminal.get("telemetry") != "unavailable":
             last = sequences[-1] if sequences and nonnegative_int(sequences[-1]) else 0
-            if terminal.get("seq") != last + 1:
+            snapshots = [r for r in group if r['event'] == 'stage_censored' or
+                         r['event'].startswith('weakening_') and r.get('observer') == 'parent']
+            snapshots.sort(key=lambda r: r['_line'])
+            for offset, snapshot in enumerate(snapshots, 1):
+                if snapshot.get('seq') != last + offset:
+                    issue('delivery', 'sequence_gap', location(snapshot))
+            if terminal.get("seq") != last + len(snapshots) + 1:
                 issue("delivery", "sequence_gap",
                       f"{source}: parent seq={terminal.get('seq')}, last child seq={last}")
         for winner in by_event["parent_winner"]:

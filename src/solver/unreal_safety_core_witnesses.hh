@@ -106,6 +106,10 @@ namespace acacia::unreal_witnesses {
       return std::nullopt;
     }
     auto witnesses = make_safety_core_witnesses (formula, 8, observed ? &info : nullptr);
+    if (auto* worker = active_worker_record (); worker && phase_records_enabled ()) {
+      worker->subjobs = witnesses.size ();
+      legacy_count ("subjobs_planned", witnesses.size ());
+    }
     observed.eligibility (info.reason, info.oversized_globals,
                           info.largest_global_conjunction_size, info.safety_conjuncts,
                           info.obligations, witnesses.size ());

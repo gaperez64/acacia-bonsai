@@ -1,10 +1,9 @@
 #include "utils/push_aps.hh"
 
-#include <iostream>
-#include <string>
-
 #include <bddx.h>
+#include <iostream>
 #include <spot/twa/twagraph.hh>
+#include <string>
 
 namespace {
 
@@ -42,6 +41,28 @@ namespace {
            expect ("second call state count", second->num_states () == 3);
   }
 
+  bool observations_preserve_graph () {
+    const auto aut = make_chain (3);
+    utils::push_aps_observation observed;
+    const auto plain = utils::push_aps (aut, bddtrue, bddtrue);
+    const auto counted = utils::push_aps (aut, bddtrue, bddtrue, 10, 10, &observed);
+    bool ok = expect ("observed graph size", plain->num_states () == counted->num_states ());
+    for (unsigned q = 0; q < plain->num_states (); ++q) {
+      const auto& a = *plain->out (q).begin ();
+      const auto& b = *counted->out (q).begin ();
+      ok &= expect ("observed graph transition",
+                    a.dst == b.dst && a.cond == b.cond && a.acc == b.acc);
+    }
+    ok &= expect ("key and partition counts",
+                  observed.interned_keys == 3 && observed.expanded_keys == 3 &&
+                      observed.partition_computations == 3 && observed.sources.size () == 3 &&
+                      observed.emitted_tuples == 3);
+    utils::push_aps_observation limited;
+    ok &= expect ("observed limit", !utils::push_aps (aut, bddtrue, bddtrue, 2, 10, &limited) &&
+                                        std::string (limited.limit_reason) == "states");
+    return ok;
+  }
+
   bool reports_expansion_limit () {
     const auto pushed = utils::push_aps (make_chain (3), bddtrue, bddtrue, 2, 10);
     return expect ("state budget returns no automaton", pushed == nullptr);
@@ -54,5 +75,6 @@ int main () {
   ok &= handles_deep_graph_without_recursion ();
   ok &= calls_are_independent ();
   ok &= reports_expansion_limit ();
+  ok &= observations_preserve_graph ();
   return ok ? 0 : 1;
 }

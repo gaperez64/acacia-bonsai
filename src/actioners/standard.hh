@@ -1,13 +1,13 @@
 #pragma once
 
-#include "solver/equivariance_budget.hh"
-
 #include "actioners/direction.hh"
 #include "actioners/profile_dominance.hh"
 #include "configuration.hh"
 #include "posets/utils/vector_mm.hh"
 #include "posets/vectors/traits.hh"
 #include "solver/diagnostics.hh"
+#include "solver/equivariance_budget.hh"
+#include "solver/phase_observation.hh"
 #include "solver/transition_payload.hh"
 
 #include <algorithm>
@@ -46,6 +46,8 @@ namespace actioners {
             K {(VECTOR_ELT_T) K},
             apply_out (aut->num_states ()),
             backward_reset (aut->num_states ()) {
+          const bool observed = acacia::phase_records_enabled ();
+          acacia::legacy_phase constructing ("action-construction");
           // Non boolean
           std::fill_n (backward_reset.begin (), posets::vectors::bool_threshold,
                        (VECTOR_ELT_T) (K - 1));
@@ -54,6 +56,7 @@ namespace actioners {
                        aut->num_states () - posets::vectors::bool_threshold, (VECTOR_ELT_T) 0);
 
           std::set<input_and_actions, compare_actions> ioset;
+          size_t observed_retained = 0, observed_peak = 0;
 
           // inputs_to_ios maps each input i to transition sets.  Each set
           // corresponds to an i-compatible IO x and contains every transition
@@ -77,7 +80,20 @@ namespace actioners {
             // per input: list (one element per compatible IO) of actions
             // what is being inserted = pair<bdd, action_vec> with current configuration.hh at the
             // time of writing
-            ioset.insert (std::pair (input, std::move (fwd_actions)));
+            size_t pending_bytes = 0;
+            if (observed) {
+              pending_bytes = sizeof (input_and_actions);
+              for (const auto& action : fwd_actions) {
+                pending_bytes += sizeof (action) +
+                                 action.capacity () * sizeof (typename action_vec::value_type);
+                for (const auto& row : action)
+                  pending_bytes += row.capacity () * sizeof (typename action::value_type);
+              }
+              observed_peak = std::max (observed_peak, observed_retained + pending_bytes);
+            }
+            const auto inserted = ioset.insert (std::pair (input, std::move (fwd_actions)));
+            if (observed && inserted.second)
+              observed_retained += pending_bytes;
           }
 
           for (auto it = ioset.begin (); it != ioset.end ();) {
@@ -107,6 +123,22 @@ namespace actioners {
 # endif
           }
 #endif
+          if (observed) {
+            acacia::legacy_count ("action_construction_peak_payload_bytes_estimate",
+                                  observed_peak);
+            acacia::legacy_count ("action_table_payload_bytes_estimate",
+                                  acacia::legacy_action_bytes (input_output_fwd_actions));
+            size_t payloads = 0, endpoints = 0;
+            for (const auto& [input, actions] : input_output_fwd_actions) {
+              (void) input;
+              payloads += actions.size ();
+              for (const auto& action : actions)
+                for (const auto& row : action)
+                  endpoints += row.size ();
+            }
+            acacia::legacy_count ("action_payloads", payloads);
+            acacia::legacy_count ("action_endpoints", endpoints);
+          }
         }
 
         void setK (VECTOR_ELT_T newK) {
@@ -119,7 +151,7 @@ namespace actioners {
 
         State apply (const State& m, const action_vec& avec,
                      direction dir) /* __attribute__((pure)) */ {
-                       acacia::equivariance_budget::checkpoint ();
+          acacia::equivariance_budget::checkpoint ();
           if (dir == direction::forward)
             apply_out.assign (m.size (), (VECTOR_ELT_T) -1);
           else
@@ -167,9 +199,8 @@ namespace actioners {
           // first index = state q, map each state q to a list of tuples (p, increment)
 
           for (const auto& t : transset)
-            ret_fwd[acacia::transitions::dest (t)].push_back (
-                std::make_pair (acacia::transitions::source (t),
-                                acacia::transitions::increment (t, aut)));
+            ret_fwd[acacia::transitions::dest (t)].push_back (std::make_pair (
+                acacia::transitions::source (t), acacia::transitions::increment (t, aut)));
 
           return ret_fwd;
         }

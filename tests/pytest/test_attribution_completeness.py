@@ -488,3 +488,21 @@ def test_record_size_limit_covers_growth_after_fstat(tmp_path, lifecycle, monkey
     result = reader.audit_row(row(), tmp_path)
     assert "record_file_too_large" in reasons(result, "delivery")
     assert result["delivery"] == "incomplete"
+
+
+def test_compact_stage_records_reuse_physical_identity(tmp_path, lifecycle):
+    child = lifecycle[20]
+    child.insert(-1, dict(event='stage_entry', worker=0, worker_pid=20, seq=5,
+                          mono_ns=110, dropped_records=0, stage_id=1, stage='verification'))
+    child.insert(-1, dict(event='stage_metric', worker_pid=20, seq=6,
+                          mono_ns=115, dropped_records=0, stage_id=1, key='rows', value='3'))
+    snapshot = dict(event='stage_censored', worker=0, worker_pid=20, seq=7,
+                    mono_ns=120, dropped_records=0, stage_id=1, stage='verification', entry_ns=110)
+    lifecycle[10].insert(2, snapshot)
+    terminal = next(r for r in lifecycle[10] if r.get('event') == 'parent_terminal')
+    terminal['seq'] = 8
+    winner = next(r for r in lifecycle[10] if r.get('event') == 'parent_winner')
+    winner['seq'] = 9
+    write_records(tmp_path, lifecycle)
+    result = reader.audit_row(row(), tmp_path)
+    assert result['delivery'] == 'complete', result['issues']

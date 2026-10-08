@@ -15,6 +15,13 @@ int main () {
   acacia::worker_record_text (record.proof_polarity, "REAL");
   acacia::worker_event (record, "worker_start");
   acacia::worker_route ("unreal_automaton");
+  record.subjob = 1;
+  record.subjobs = 2;
+  record.k = 3;
+  {
+    acacia::legacy_phase translating ("translation");
+    acacia::legacy_count ("states", 7);
+  }
   const int command = std::getchar ();
   if (command == 'f') {
     constexpr char flood[] = "{\"phase\":\"flood\"}\n";

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "solver/phase_observation.hh"
 #include "solver/transition_payload.hh"
 #include "utils/verbose.hh"
 
@@ -12,7 +13,7 @@
 // baseline inherited from main; faster preferences such as `Any` are exposed as
 // Meson presets for ablation because they can change solver conclusiveness.
 #ifndef ACACIA_TRANSLATION_PREF
-#  define ACACIA_TRANSLATION_PREF spot::postprocessor::Small
+# define ACACIA_TRANSLATION_PREF spot::postprocessor::Small
 #endif
 
 spot::twa_graph_ptr create_automaton (
@@ -29,7 +30,10 @@ spot::twa_graph_ptr create_automaton (
   // `boolean_states::transition_core` is the smaller one.
   trans.set_type (spot::postprocessor::Buchi);
   trans.set_pref (preference);
-  return trans.run (f);
+  acacia::legacy_phase translating ("translation");
+  auto aut = trans.run (f);
+  acacia::legacy_graph (aut);
+  return aut;
 #else
   // To Universal co-Büchi Automaton
   trans.set_type (spot::postprocessor::BA);
@@ -39,13 +43,18 @@ spot::twa_graph_ptr create_automaton (
       preference |
       // spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
       spot::postprocessor::SBAcc);  // state-based acceptacen
+  acacia::legacy_phase translating ("translation");
   auto aut = trans.run (f);
+  acacia::legacy_graph (aut);
+  translating.finish ();
   if (aut->num_states () > 0 and not aut->prop_state_acc ().is_true ()) {
     [[maybe_unused]] const auto old_states = aut->num_states ();
+    acacia::legacy_phase lowering ("translation-lowering");
+    acacia::legacy_graph (aut, "input_");
     aut = spot::sbacc (aut);
-    verb_do (1, vout << "Converted automaton to state-based acceptance: "
-                     << old_states << " -> " << aut->num_states ()
-                     << " states." << std::endl);
+    acacia::legacy_graph (aut, "output_");
+    verb_do (1, vout << "Converted automaton to state-based acceptance: " << old_states << " -> "
+                     << aut->num_states () << " states." << std::endl);
   }
   return aut;
 #endif
