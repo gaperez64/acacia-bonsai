@@ -315,6 +315,7 @@ namespace {
       const std::string target_semantics;
       const std::vector<symmetry::indexed_family_hint>& indexed_family_hints;
       std::vector<spot::const_twa_graph_ptr> strats;
+      const acacia::unreal_witnesses::records& weakening_records;
 
     public:
       /**
@@ -332,7 +333,8 @@ namespace {
                    bool equivariance, const std::optional<std::string>& synth_fname,
                    controller_conversion conversion,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints,
-                   std::string target_semantics)
+                   std::string target_semantics,
+                   const acacia::unreal_witnesses::records& weakening_records)
         : dict {dict},
           input_aps {input_aps},
           output_aps {output_aps},
@@ -349,7 +351,8 @@ namespace {
           synth_fname {synth_fname},
           conversion {conversion},
           target_semantics {std::move (target_semantics)},
-          indexed_family_hints {indexed_family_hints} {
+          indexed_family_hints {indexed_family_hints},
+          weakening_records {weakening_records} {
         // Create BDD "cubes" that represent the sets of inputs and outputs,
         // respectively. We associate them with this object when registering
         // them.
@@ -454,6 +457,10 @@ namespace {
         if (not check_unreal.has_value ())
           spot_formula = spot::formula::Not (spot_formula);
 
+        weakening_records.objective (spot_formula, "runner_objective");
+        if (auto* checked = acacia::unreal_witnesses::checking_candidate)
+          checked->runner_objective =
+              acacia::unreal_witnesses::binding_hash (spot::str_psl (spot_formula));
         acacia::spot_records::Record capture;
         if (capture) {
           std::ostringstream text;
@@ -597,7 +604,8 @@ namespace {
         // deterministic fast path or the existing Acacia solver.
         const bool allow_gfg_decision = not check_unreal.has_value ();
         auto fast = acacia::spot_fastpath::try_spot_nba_fast_path (
-            aut, all_inputs, all_outputs, want_controller_strategy, allow_gfg_decision, spot_fast);
+            aut, all_inputs, all_outputs, want_controller_strategy, allow_gfg_decision,
+            acacia::unreal_witnesses::checking_candidate ? SPOT_FAST_OFF : spot_fast);
 #if ACACIA_ENABLE_DIAGNOSTICS
         if (auto* diag = acacia::diagnostics::current ()) {
           if (fast.classification_ran) {
@@ -790,6 +798,14 @@ namespace {
                                      std::to_string (rb_rule.max_boolean_percent));
         }
 #endif
+        if (acacia::unreal_witnesses::checking_candidate) {
+          // Keep every original signal, even if deletion/translation removed
+          // its last occurrence. The derived game uses the same legal letters.
+          for (const auto& ap : input_aps)
+            aut->register_ap (ap);
+          for (const auto& ap : output_aps)
+            aut->register_ap (ap);
+        }
         acacia::spot_records::route ("solve_game", acacia::game_backend_name (effective_backend));
         std::optional<spot::twa_graph_ptr> maybe_strat;
         {
@@ -936,26 +952,6 @@ namespace {
     return std::nullopt;
   }
 
-  std::optional<bool> try_unreal_safety_core_witnesses (
-      const spot::formula& spot_formula, std::optional<UNREAL_X_T> check_unreal,
-      const std::optional<std::string>& synth_fname, run_one_ltl& runner) {
-    if (synth_fname.has_value ())
-      return std::nullopt;
-    if (check_unreal.has_value ()) {
-      auto witnesses = acacia::unreal_witnesses::make_safety_core_witnesses (spot_formula);
-      for (const spot::formula& witness : witnesses) {
-        acacia::diagnostics::scoped_attempt diag_attempt;
-        if (runner (witness)) {
-          diag_attempt.commit ();
-          acacia::diagnostics::set_final_reason ("unreal-safety-core-witness");
-          return std::optional<bool> {
-              acacia::diagnostics::finish (true, "unreal-safety-core-witness")};
-        }
-      }
-    }
-    return std::nullopt;
-  }
-
 #if DECOMPOSE_SPEC == 1
   bool solve_decomposed (const spot::formula& spot_formula,
                          const std::vector<std::string>& input_aps,
@@ -1058,7 +1054,9 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
               acacia::game_backend backend, const std::optional<std::string>& synth_fname,
               const specification_metadata& metadata, acacia::automaton_provider provider,
-              acacia::candidate_mode candidate, bool equivariance) {
+              acacia::candidate_mode candidate, bool equivariance, uint64_t diagnostic_deadline_ns,
+              const std::string& diagnostic_source_sha256, weakening_mode weakening,
+              const acacia::unreal_witnesses::allowances& weakening_allowances) {
   // Protect internal callers as well as the CLI synthesis route.
   if (synth_fname.has_value ()) {
     backend = acacia::synthesis_backend (backend, true);
@@ -1106,6 +1104,23 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
   validate_ltl_partition (input_aps, output_aps);
   spot::formula spot_formula = parse_ltl_string (formula);
+  const bool extension_route =
+      weakening == weakening_mode::extended && check_unreal && *check_unreal == UNREAL_X_FORMULA;
+  const auto exact_original = extension_route ? spot_formula : spot::formula {};
+  std::optional<acacia::unreal_witnesses::source_binding> weakening_source;
+  if (extension_route)
+    weakening_source.emplace (acacia::unreal_witnesses::source_binding {
+        formula, metadata.source_format, metadata.tlsf_semantics, metadata.tlsf_target,
+        metadata.tlsf_effective_target, metadata.tlsf_normalized_objective, input_aps, output_aps,
+        diagnostic_source_sha256});
+  acacia::unreal_witnesses::records weakening_records;
+  weakening_records.bind_source (formula, input_aps, output_aps);
+  weakening_records.event ("weakening_requested_mode",
+                           weakening == weakening_mode::extended ? "\"mode\":\"extended\""
+                           : weakening == weakening_mode::off    ? "\"mode\":\"off\""
+                                                                 : "\"mode\":\"basic\"");
+  const size_t original_inputs = input_aps.size (), original_outputs = output_aps.size ();
+  bool rsimp_changed = false;
 
   // Realizability-preserving simplification (spot::realizability_simplifier):
   // force/remove input APs whose value cannot affect the verdict (e.g.
@@ -1122,8 +1137,9 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // synthesizing a controller (-s): the removed APs would need
   // patch_mealy/patch_game on the emitted strategy, which is not wired up here.
   if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER and not synth_fname.has_value ()) {
-    [[maybe_unused]] const bool formula_simplified =
+    const bool formula_simplified =
         acacia::realizability::apply_simplifier (spot_formula, input_aps);
+    rsimp_changed = formula_simplified;
 #if ACACIA_ENABLE_DIAGNOSTICS
     if (auto* diag = acacia::diagnostics::current ())
       diag->rsimp_changed = formula_simplified;
@@ -1178,12 +1194,46 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
           ((metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-")
                ? "Mealy"
                : metadata.tlsf_effective_target) +
-          (check_unreal ? ";polarity=unreal-formula" : ";polarity=real"));
+          (check_unreal ? ";polarity=unreal-formula" : ";polarity=real"),
+      weakening_records);
 
-  if (auto answer =
-          try_unreal_safety_core_witnesses (spot_formula, check_unreal, synth_fname, runner);
-      answer.has_value ())
-    return *answer;
+  weakening_records.enter (
+      spot_formula, diagnostic_deadline_ns, diagnostic_source_sha256,
+      metadata.source_format.c_str (), metadata.tlsf_semantics.c_str (),
+      metadata.tlsf_target.c_str (),
+      (metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-")
+          ? "Mealy"
+          : metadata.tlsf_effective_target.c_str (),
+      rsimp_changed, original_inputs, original_outputs,
+      extension_route                    ? "extended"
+      : weakening == weakening_mode::off ? "off"
+                                         : "basic");
+  std::optional<bool> weakened_answer;
+  if (extension_route) {
+    weakening_records.objective (exact_original, "exact_original");
+    // Extend only the existing frozen-graph, independently verified sparse
+    // formula UNREAL route. Keep the automaton route and full fallback intact.
+    const bool supported = check_unreal && *check_unreal == UNREAL_X_FORMULA && !synth_fname &&
+                           backend == acacia::game_backend::spot_guarded_sparse &&
+                           provider == acacia::automaton_provider::frozen_graph;
+    weakened_answer = acacia::unreal_witnesses::try_extended_witnesses (
+        exact_original, *weakening_source, supported, runner, weakening_records,
+        diagnostic_deadline_ns, weakening_allowances);
+  }
+  else if (weakening == weakening_mode::off) {
+    weakening_records.eligibility ("disabled", 0, 0, 0, 0, 0);
+    weakening_records.finish ("ineligible");
+  }
+  else
+    weakened_answer = acacia::unreal_witnesses::try_safety_core_witnesses (
+        spot_formula, check_unreal.has_value (), synth_fname.has_value (), runner,
+        weakening_records);
+  if (weakened_answer.has_value ()) {
+    acacia::diagnostics::set_final_reason ("unreal-safety-core-witness");
+    return acacia::diagnostics::finish (*weakened_answer, "unreal-safety-core-witness");
+  }
+
+  weakening_records.fallback (spot_formula);
 
 #if DECOMPOSE_SPEC == 0
   // Just launch a monolithic runner.

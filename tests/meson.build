@@ -352,6 +352,10 @@ unreal_safety_core_witnesses_test = executable (
 test ('unreal-safety-core-witnesses',
       unreal_safety_core_witnesses_test,
       suite : ['unit', 'translation'])
+test ('unreal-weakening-records', py,
+      args : [files ('check-weakening-records.py'), unreal_safety_core_witnesses_test,
+              meson.current_build_dir (), ab_exe],
+      suite : ['unit', 'attribution'], timeout : 60)
 
 diagnostics_attempt_test = executable (
   'diagnostics-attempt-test',
@@ -628,13 +632,20 @@ if enable_tlsf_frontend
         timeout : 60,
         depends : [ab_exe])
 
-  executable (
+  tlsf_frontend_inspect = executable (
     'tlsf-frontend-inspect',
     '../src/tlsf_frontend.cc',
     'tlsf_frontend_inspect.cc',
     include_directories : inc,
     dependencies : tlsf_deps + [spot_dep, bddx_dep],
   )
+  if ltlsynt_exe.found () and get_option ('acacia_spot_guarded_backend')
+    test ('extended-weakening-games', py,
+          args : [files ('check-extended-weakening.py'), ab_exe,
+                  unreal_safety_core_witnesses_test, tlsf_frontend_inspect, ltlsynt_exe,
+                  meson.current_build_dir ()],
+          suite : ['unit', 'tlsf', 'translation'], timeout : 60)
+  endif
 endif
 
 symmetry_blocks_test = executable ('symmetry-blocks-test',

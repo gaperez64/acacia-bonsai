@@ -98,6 +98,7 @@ namespace acacia::tlsf_frontend {
     }
 
     value.formula = std::move (result.preprocessed_ltl);
+    value.metadata.tlsf_normalized_objective = value.formula;
     value.inputs = std::move (result.inputs);
     value.outputs = std::move (result.outputs);
     // Stable serialization convention only; TLSF does not define a total AP

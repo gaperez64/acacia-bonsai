@@ -53,6 +53,7 @@ namespace {
                             : record.dropped         ? "dropped"
                             : record.terminal        ? "complete"
                                                      : "incomplete";
+    acacia::weakening_cancelled (record, reason);
     acacia::worker_event (record, "parent_terminal", reason,
                           WIFEXITED (status) ? WEXITSTATUS (status) : -1,
                           WIFSIGNALED (status) ? WTERMSIG (status) : 0, telemetry);
@@ -247,13 +248,15 @@ namespace {
         1, vout << "Starting solver child provider=" << acacia::automaton_provider_name (provider)
                 << " candidate_mode=" << acacia::candidate_mode_name (arg_values.candidate) << "\n"
                 << std::flush);
-    const bool res = run_ltl (
-        arg_values.inputs, arg_values.outputs, arg_values.opt_k, arg_values.opt_kmin,
-        arg_values.opt_kinc, arg_values.formula, unreal_x, translation_pref, arg_values.spot_fast,
-        backend,
-        (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA) ? std::nullopt
-                                                                  : arg_values.synth_fname,
-        arg_values.metadata, provider, arg_values.candidate, arg_values.equivariance);
+    const bool res = run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k,
+                              arg_values.opt_kmin, arg_values.opt_kinc, arg_values.formula,
+                              unreal_x, translation_pref, arg_values.spot_fast, backend,
+                              (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA)
+                                  ? std::nullopt
+                                  : arg_values.synth_fname,
+                              arg_values.metadata, provider, arg_values.candidate,
+                              arg_values.equivariance, deadline_mono_ns, arg_values.tlsf_sha256,
+                              arg_values.weakening, arg_values.weakening_allowances);
     verb_do (1, vout << "returning " << res << "\n");
 
     if (!res && acacia::active_worker_record () &&
@@ -504,8 +507,8 @@ int main (int argc, char** argv) {
   auto arg_values = arg_parser (argc, argv);
   argument_phase.finish ();
   const uint64_t deadline_mono_ns = outer_deadline_ns ();
-  acacia::equivariance_budget::invocation = {
-      arg_values.equivariance_budget, deadline_mono_ns, arg_values.equivariance_budget_ns};
+  acacia::equivariance_budget::invocation = {arg_values.equivariance_budget, deadline_mono_ns,
+                                             arg_values.equivariance_budget_ns};
   acacia::equivariance_budget::invocation_allowance.reset ();
   // set the global verbose level
   utils::verbose = arg_values.verbose_level;

@@ -87,6 +87,46 @@ fresh D, 138 of 319 unsolved inputs stop first at a native structure-budget guar
 81 of the 82 UNREAL ltlsynt-only inputs because their objective is an implication,
 not a top-level conjunction.
 
+## Coverage-first P3 weakening experiment, not admitted
+
+P3 step 2 adds selectable `--weakening basic|extended|off`; basic remains the default.
+Basic runs the existing safety-core pre-pass; extended adds assume-guarantee and positive
+G/F-scope weakening; off skips the pre-pass. The option rename preserves solver behavior.
+The experimental formula UNREAL route retains exact assume-guarantee antecedents, tries lazy
+singletons and at most four structural dependency groups, and bounds/reaps each candidate before
+original fallback. A checked derived-game proof plus a replayed AST weakening derivation is
+required for an original UNREAL verdict. Strict weak-until contexts decline safely.
+Limits and proof boundaries are in [the decision record](coverage-first/weakening.md).
+The census starvation correction reclassifies the supplied never-started legacy fallback;
+no fresh coverage or performance campaign was run. #201 admission/closure remains pending.
+
+
+P3 step 3 adds absolute research allowances (`--weakening-attempt-ms`, `--weakening-total-ms`),
+retaining the 250 ms/1 s no-deadline defaults and existing invocation deadline reservations.
+The supplied 82-input, 17 s no-deadline screen produced zero gains: 136 of 149 extended attempts
+were cancelled and none proved UNREAL. Read-only source diagnosis of 52 conjunction declines
+found two positive `G(A -> conjunction)` shapes and 10 positive F contexts; the planner now
+exposes them by direct monotonicity with exact replay, retaining the scope of F. The other 40
+remain declined. These are structural and
+engineering results; effectiveness and admission still require the driver's fresh matched screen.
+
+## 2026-10-06 — P3 step 1: incumbent weakening instrumentation
+
+The existing UNREAL safety-core pre-pass now records structural eligibility,
+generated/started/completed candidates, proof binding, failed-attempt cost,
+exception/cancellation, and full-original fallback budget through the #210
+transport. Candidate selection/order, the existing 64-child/eight-candidate
+thresholds, solver verdicts and deadline behavior are unchanged. The
+[attribution notes](coverage-first/attribution.md#existing-unreal-safety-core-pre-pass-p3-step-1)
+describe the events and `benchmarking/weakening-census.py`, which retains UNKNOWN
+for incomplete telemetry. Review fixes distinguish absent global conjunctions from
+threshold rejection, record the largest conjunction size, join proof IDs to actual
+attempts, and classify fallback starvation from available budget. Exact cancellation
+and generation counts stay UNKNOWN for incomplete census rows, with confirmed
+observations reported separately. Generated correctness tests cover the loop and real
+CLI proof/fallback behavior. No coverage campaign or performance gain is claimed;
+#201's eligibility/budget changes remain future work.
+
 ## 2026-10-06 — coverage-first P0 attribution (#210)
 
 Worker lifecycle events and parent-accepted winners now accompany the existing

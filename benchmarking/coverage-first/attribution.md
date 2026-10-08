@@ -134,6 +134,114 @@ choices and route budgets. Complete attribution is necessary, not sufficient to
 establish cap independence. A result rejected by the parent cannot be recycled as
 a solve. This package does not run or claim a benchmark or recycling campaign.
 
+## Existing UNREAL safety-core pre-pass (P3 step 1)
+
+The basic pre-pass now uses the same nonblocking #210 packet transport.
+`weakening_requested_mode` records the selected value; `weakening_mode` records
+the effective value. Both use `basic`, `extended`, or `off`; an automaton UNREAL
+worker requested as `extended` records `basic` as its effective mode. No
+eligibility, candidate order, allowance, deadline, proof, or fallback policy changes.
+The existing structural thresholds remain **more than 64 immediate children** of
+an immediate `G(AND(...))` inside a top-level AND, and **at most eight** singleton
+obligations in Spot's existing order. Candidates remain eagerly generated. There
+is still no per-candidate time budget: each runner shares the absolute invocation
+deadline. These constants were neither added nor tuned in this package.
+
+`weakening_entry` records actual pre-pass entry after the realizability simplifier
+and incumbent early bypasses. A worker decided by an earlier bypass has no entry;
+its eligibility stays UNKNOWN. `weakening_limits` records the incumbent limits.
+`weakening_eligibility` records the decision, generated count, oversized globals,
+largest immediate global-conjunction child count, flattened safety conjuncts and
+non-safety obligations. `largest_global_conjunction_size` is zero when no immediate
+`G(AND(...))` was observed. Reasons are `eligible`,
+`not_unreal_worker`, `synthesis_requested`, `not_top_level_and`,
+`no_global_conjunction`, `global_conjunction_threshold_not_met`,
+`absent_safety_conjuncts`, and `no_non_safety_obligations`. The generator's public zero allowance also reports
+`zero_allowance`; the production caller continues to use eight. Counts for a
+worker/synthesis gate describe the unentered generator, rather than an AST census.
+
+IDs are scoped by invocation directory, `worker_pid`, and `prepass`. `run_id` is
+one plus the zero-based candidate index; zero identifies the full incumbent
+objective. Worker lifecycle events retain this context, including parent terminal
+and winner events. `weakening_candidate_generated` is distinct from
+`weakening_attempt_start`. Every generated candidate has a structural length
+(number of AP/operator occurrences, counting n-ary operators as binary) in its
+`weakening_binding` record. `obligation_index` refers to the incumbent flattened
+non-safety vector; safety conjuncts are all retained. The recorded derivation is
+positive conjunct selection after distributing G over AND.
+
+`weakening_source` binds the unsimplified formula supplied to `run_ltl`, the
+original ordered input/output partition (including unused signals), original TLSF
+semantics/target and effective target. `weakening_source_digest` additionally
+retains the original TLSF SHA-256 when available. `weakening_alphabet` contains
+hex chunks of the exact length-prefixed partition: input count, input strings,
+output count, output strings; each number has a colon, and each string has its
+UTF-8 byte length followed by a colon. Chunk counts make partial delivery explicit.
+The source/alphabet/objective FNV-1a-64 values follow the existing Spot boundary
+checksum convention and only bind artifacts of this invocation. They do not
+prove implication and never select solver work.
+
+Bindings distinguish `simplified_original`, `candidate`, `runner_objective`
+(after the incumbent UNREAL timing transformation), and `original_objective`.
+A `weakening_proof` links its run to the candidate, transformed runner objective,
+source and structural derivation. The incumbent simplifier transfers
+realizability; the logical implication starts at the **simplified** original.
+The record describes the existing runner's UNREAL proof (`UNREAL_runner`) and this derivation,
+without presenting it as a certificate for the original exact game. No new
+checker or proof artifact is introduced.
+
+`weakening_attempt_end` outcomes are `proof`, `inconclusive`, `decline`,
+`exception`, and `cancellation`. Attempt entry and full fallback clear only the opt-in worker outcome snapshot;
+stop/decline counters distinguish observations within that attempt. A prior
+resource stop cannot suppress the next attempt's decline or taint the full result.
+Worker ends include wall/CPU nanoseconds and process-lifetime peak RSS from
+`getrusage` (KiB, with macOS unit conversion). Current RSS is unavailable; this
+is neither per-attempt peak memory nor concurrent scope peak. Attempt starts,
+`weakening_attempt_budget`, entry and `weakening_fallback_start` record the
+absolute monotonic `deadline_ns` and observed `remaining_ns`. Zero deadline and
+null remaining time mean no invocation deadline, never a zero-second allowance.
+`weakening_end` includes total pre-pass wall/CPU time. The fallback event is at
+entry to the existing full-objective path, including decomposition when enabled.
+
+A killed active candidate cannot emit a worker end. After reaping, the existing
+parent lifecycle owner emits a cancellation end from the shared attempt snapshot.
+It records elapsed wall time and the parent stop reason; CPU and memory remain
+null. A parent-observed cancellation is terminal but not a completed worker
+attempt. Exceptions still unwind before fallback, and cooperative cancellations
+still follow the incumbent runner return value. Diagnostics off performs no
+extra AST traversal, checksum, clock sampling or event formatting.
+
+Read a fresh invocation directory with:
+
+```
+python3 benchmarking/weakening-census.py DIAGNOSTIC_DIRECTORY --output census.tsv
+```
+
+The reader reports eligibility, generated/started/completed candidates, successes,
+per-attempt and pre-pass time, cancellation, full-path entry and its remaining
+budget, deadline starvation and delivery completeness. It retains confirmed
+observations as separate lower counts, including `observed_generated` and
+`observed_cancellations`; every exact count is UNKNOWN when the census is incomplete.
+Generated, started, terminal and proof run IDs must join, and successful runs must
+have their own candidate and runner-objective bindings. After an attempted weakening,
+a known zero fallback budget establishes starvation; positive budget does not, and
+missing/null budget leaves starvation UNKNOWN. A deadline termination before fallback
+also establishes starvation in a complete census. Missing starts, ends, proof bindings,
+producer prefixes/sequence gaps, terminal metadata, writer summaries, malformed
+lines, or nonzero drops prevent exact counts: UNKNOWN is not zero or decline.
+A pre-pass closed by a parent cancellation can have a complete census even though
+its worker lifecycle is interrupted. A killed full fallback does not invalidate
+an already closed pre-pass census. No cross-cap reuse is inferred.
+
+Generated tests exercise each reason, candidate order and formula implication,
+proof/inconclusive/decline/exception/cancellation paths, SIGKILL inside a candidate,
+512-byte packets with realistic worker metadata, and recovered pipe drops. Real
+CLI tests use three active APs or fewer: future-input prediction proves a weakened
+objective; request/response obligations run eight inconclusive attempts then enter
+the full path. Both compare records on/off, and the same panel also matched the
+saved #210 incumbent. Test controls exist only in the unit executable. The reader
+has pytest coverage for missing telemetry, cancellation, truncation and TSV output.
+
 ## Correctness checks
 
 `check-attribution.py` uses the existing small native CLI fixtures: repeated
