@@ -362,3 +362,14 @@ at K=2 and K=5, rejects a foreign invocation, and checks search/verifier metric
 separation. Generated release comparisons retain exact stdout, stderr and exit
 codes with records off/on and against the pre-binding executable; records-off
 PID/clock/resource-call counts also agree. These remain correctness observations.
+
+## Sparse guarded oracle representation experiment
+
+`--oracle-layout grouped` groups equal-level guards, lazily caches requested suffixes and uses
+exact oracle-local target-rank identities and compact coordinate traversal in both sparse search
+and fresh independent verification. `scan` remains the default; the dense oracle's aggregate
+cache and the shipping portfolio are unchanged. Generated arithmetic/fixed-K, interruption,
+collision and corruption checks pass, together with full pytest and checked unit tests.
+Short profiles show lower level scanning and copied-key/tree work on three sparse targets;
+these are diagnostic observations, not ordinary paired coverage or memory admission. The
+[layout notes and exact external screen commands](legacy-oracle-layout.md) define the next gate.

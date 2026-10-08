@@ -1,0 +1,67 @@
+# Sparse guarded oracle layouts
+
+`--oracle-layout scan|grouped` compares two exact representations in one executable. `scan`
+remains the runtime default. This option applies to sparse guarded search and its independent
+verifier; it does not change worker membership, translation, K scheduling, or the dense oracle's
+aggregate cache. There is no new compile-time option or structural tuning threshold.
+
+The grouped layout combines guards at equal destination/level once, stores destinations and
+levels in sorted vectors, and memoizes only requested threshold suffixes. Thresholds are true
+for h <= -1, false for h > K, and otherwise OR active-source edge guards whose unsaturated
+source value plus increment reaches h. Frozen increments still come from accepting destinations.
+Equality uses !T(q,0) at bottom and T(q,K) at saturation. Boolean safety caps remain zero.
+
+Preimage keys use IDs in an oracle-owned exact rank interner. It owns immutable rank values,
+resolves hash collisions with full equality, and lives for the oracle's cache generation. Failed
+checked queries clear prepared predicates before clearing IDs. IDs and BDD answers never cross
+oracles, K attempts, or managers. The verifier reconstructs its reader, rows, rank interner and
+oracle independently. Complete groups, suffixes and preimages publish only after checked work;
+resource exhaustion remains inconclusive. The optional aggregate-cache experiment is deferred.
+
+Existing threshold/preimage call, miss and hit counters remain available. Additional observed
+fields count prepared edges/levels, threshold levels visited, target interner misses, per-call
+lookup-key entries copied, and retained memo sizes. Payload estimates omit allocator/node
+headers and BDD ownership; they are not process or cgroup memory measurements.
+
+Generated tests compare both layouts with independently enumerated arithmetic and an explicit
+fixed-K game, including bottom/saturation, absent coordinates, parallel accepting/nonaccepting
+edges, Boolean caps, empty AP sets, real rank-hash collisions, target reassignment, lazy suffixes,
+all checked-query resource checkpoints and independent corrupted-certificate rejection. The
+existing provider replay suites run both layouts in all five compiled test configurations.
+
+The implementation is an unadmitted experiment. Short diagnostic profiles show less level
+scanning and copied-key/tree traffic, including independent verification. They do not establish
+shipping coverage, PAR-2, or the cgroup memory gate. Ordinary rotated paired screens must decide
+admission; keep `scan` as default until that decision.
+
+The local implementation report, dependency and binary hashes, correctness logs, profile command
+manifests, captures and raw perf data are in `build_scratch/legacy-p1a/`. These local diagnostics
+are not an archived campaign or an evidence-index admission row.
+
+Run the following commands **outside the sandbox**, with no other campaign running. They use the
+existing runner, 8 GiB/no swap, captured worker records, rotated treatments and an external cap.
+No invocation deadline is supplied. The binary remains the uncommitted implementation on base
+`54ddfb83`; the runner additionally records its SHA-256 (currently
+`9bd189cabc4f46a44ae0a2231412b127cd88eb466223b35023a73156e2d30ba0`).
+
+```bash
+R=/home/gperez/GIT-repos/acacia-bonsai
+PY="$R/.venv/bin/python3"
+SCREEN="$R/_bm-logs.cov-20261006/screen.py"
+BIN="$R/build_scratch/cov/wt-legacy-p1a/build_scratch/legacy-p1a/release/src/acacia-bonsai"
+LIST="$R/_bm-logs.legacy/panel.list"
+unset ACACIA_OUTER_DEADLINE_MONOTONIC
+export SCREEN_CAPTURE=1
+
+STANDALONE="[[\"scan\",\"$BIN\",\"54ddfb83+uncommitted\",\"--arms unreal:formula:spot-guarded-sparse --oracle-layout scan\"],[\"grouped\",\"$BIN\",\"54ddfb83+uncommitted\",\"--arms unreal:formula:spot-guarded-sparse --oracle-layout grouped\"]]"
+RACE="[[\"scan\",\"$BIN\",\"54ddfb83+uncommitted\",\"--oracle-layout scan\"],[\"grouped\",\"$BIN\",\"54ddfb83+uncommitted\",\"--oracle-layout grouped\"]]"
+
+"$PY" "$SCREEN" "$R/_bm-logs.legacy/p1a-standalone60" "$LIST" 60 "$STANDALONE"
+"$PY" "$SCREEN" "$R/_bm-logs.legacy/p1a-race17" "$LIST" 17 "$RACE"
+"$PY" "$SCREEN" "$R/_bm-logs.legacy/p1a-race60" "$LIST" 60 "$RACE"
+```
+
+Keep default R, disabled U, the 3-second equivariance allowance, native worker, weakening and
+worker order intact. Investigate every loss with cooled alternating repetitions. Admission needs
+exact outcomes, complete memory observations and coverage or PAR-2 improvement beyond local
+noise in the actual race. Profiling and cache byte estimates do not replace those gates.
