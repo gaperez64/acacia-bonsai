@@ -11,21 +11,29 @@ for h <= -1, false for h > K, and otherwise OR active-source edge guards whose u
 source value plus increment reaches h. Frozen increments still come from accepting destinations.
 Equality uses !T(q,0) at bottom and T(q,K) at saturation. Boolean safety caps remain zero.
 
-Preimage keys use IDs in an oracle-owned exact rank interner. It owns immutable rank values,
-resolves hash collisions with full equality, and lives for the oracle's cache generation. Failed
-checked queries clear prepared predicates before clearing IDs. IDs and BDD answers never cross
-oracles, K attempts, or managers. The verifier reconstructs its reader, rows, rank interner and
-oracle independently. Complete groups, suffixes and preimages publish only after checked work;
-resource exhaustion remains inconclusive. The optional aggregate-cache experiment is deferred.
+Preimage keys name immutable rank nodes in an oracle-owned exact interner. Full rank equality
+resolves hash collisions; node addresses survive rehash and never refer to caller-owned ranks.
+Reference counts span every source and preimage kind. Eviction erases each memo entry before
+releasing its reference and reclaims a rank when its last reference disappears. Threshold entries
+name only coordinates and levels, so they remain warm without retaining targets. Empty memo and
+interner bucket arrays are released; nonempty interner buckets shrink below one-quarter occupancy,
+a global storage policy based only on live entries. Failed checked queries clear prepared
+predicates before destroying the interner. Identities and BDD answers never cross oracles, K
+attempts, or managers. The verifier reconstructs its reader, rows, rank interner and oracle
+independently. Complete groups, suffixes and preimages publish only after checked work; resource
+exhaustion remains inconclusive. The optional aggregate-cache experiment is deferred.
 
 Existing threshold/preimage call, miss and hit counters remain available. Additional observed
 fields count prepared edges/levels, threshold levels visited, target interner misses, per-call
-lookup-key entries copied, and retained memo sizes. Payload estimates omit allocator/node
+lookup-key entries copied, and retained memo sizes. `interned_targets` counts currently referenced
+identities; `cache_rank_bytes` includes their owned ranks, and `oracle_payload_bytes_estimate`
+includes reference counts and retained bucket arrays. Payload estimates omit allocator/node
 headers and BDD ownership; they are not process or cgroup memory measurements.
 
 Generated tests compare both layouts with independently enumerated arithmetic and an explicit
 fixed-K game, including bottom/saturation, absent coordinates, parallel accepting/nonaccepting
 edges, Boolean caps, empty AP sets, real rank-hash collisions, target reassignment, lazy suffixes,
+shared identities across source/kind memos, partial and complete eviction, long generated churn,
 all checked-query resource checkpoints and independent corrupted-certificate rejection. The
 existing provider replay suites run both layouts in all five compiled test configurations.
 

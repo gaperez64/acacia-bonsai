@@ -261,9 +261,131 @@ namespace {
             "assignment at the same rank address cannot alias its previous identity");
     oracle.report (report, "");
     expect (fields.at ("interned_targets") == "2", "interner owns exactly two immutable values");
+    const auto thresholds = fields.at ("cached_thresholds");
     oracle.clear_preimages (source);
-    expect (take (oracle.up (source, collision)) == bddfalse,
-            "preimage eviction retains exact identities");
+    oracle.report (report, "");
+    expect (fields.at ("interned_targets") == "0" && fields.at ("cached_preimages") == "0" &&
+                fields.at ("cached_thresholds") == thresholds,
+            "eviction reclaims every unreferenced target while retaining thresholds");
+    expect (take (oracle.up (source, collision)) == bddfalse &&
+                take (oracle.up (source, source)) == a.inputs,
+            "reinterning colliding ranks after eviction remains exact");
+  }
+
+  void identity_retention () {
+    auto g = games::graph (3, false);
+    const auto a = games::alphabet (g, true, true);
+    for (unsigned q = 0; q < 3; ++q) {
+      g->new_edge (q, q, a.inputs, {0});
+      g->new_edge (q, (q + 1) % 3, a.outputs);
+    }
+    RowStore store {FixedBuchi {{g}, {}, {}}, {}};
+    store.enumerate_and_freeze ();
+    Reader reader {store, false, {}};
+    Oracle scan {reader, store, a, 64, OracleLayout::scan};
+    Oracle grouped {reader, store, a, 64, OracleLayout::grouped};
+    const Rank source {{{0, 61}}, 64}, other {{{1, 0}}, 64}, third {{{2, 1}}, 64};
+    Fields fields;
+    Reporter report {[&] (const auto& k, const auto& v) { fields[k] = v; }};
+    const auto compare = [&] (const Rank& r, const Rank& target) {
+      expect (take (grouped.up (r, target)) == take (scan.up (r, target)) &&
+                  take (grouped.down (r, target)) == take (scan.down (r, target)) &&
+                  take (grouped.eq (r, target)) == take (scan.eq (r, target)),
+              "retained and reinterned targets agree with scan for every preimage kind");
+      predicates += 3;
+    };
+    compare (source, source);
+    compare (source, other);
+    compare (other, source);
+    grouped.report (report, "");
+    const auto warm_thresholds = fields.at ("cached_thresholds");
+    expect (fields.at ("interned_targets") == "2" && fields.at ("cached_preimages") == "9",
+            "identities are shared across source ranks and all three preimage kinds");
+    grouped.clear_preimages (source);
+    scan.clear_preimages (source);
+    grouped.report (report, "");
+    expect (fields.at ("interned_targets") == "1" && fields.at ("cached_preimages") == "3" &&
+                fields.at ("cached_thresholds") == warm_thresholds,
+            "clearing one source reclaims only targets with no remaining memo references");
+    compare (source, third);
+    compare (other, source);
+    grouped.report (report, "");
+    expect (fields.at ("interned_targets") == "2" && fields.at ("cached_preimages") == "6",
+            "new identities cannot alias a surviving source's preimages");
+    grouped.retain_preimages ({other});
+    scan.retain_preimages ({other});
+    grouped.report (report, "");
+    expect (fields.at ("interned_targets") == "1" && fields.at ("cached_preimages") == "3",
+            "retaining a source reclaims targets referenced only by evicted sources");
+
+    expect (take (grouped.evaluate (third, a.inputs & a.outputs)) ==
+                take (scan.evaluate (third, a.inputs & a.outputs)),
+            "preparing the churn source preserves exact evaluation");
+    // A fully warm threshold cache bounds payload independently of churn history.
+    Oracle warm {reader, store, a, 64, OracleLayout::grouped};
+    for (const auto& r : {source, other, third})
+      for (unsigned q = 0; q < 3; ++q)
+        for (int h = 0; h <= 64; ++h)
+          (void) take (warm.threshold (r, q, h));
+    (void) take (warm.up (other, source));
+    (void) take (warm.down (other, source));
+    (void) take (warm.eq (other, source));
+    const auto retained_payload_bound = warm.storage_bytes_estimate ();
+
+    // Grow beyond several interner rehashes, then retain just the warm source.
+    for (int i = 0; i < 6000; ++i)
+      compare (source, Rank {{{0, i % 65}, {1, (i / 65) % 65}, {2, i / (65 * 65)}}, 64});
+    grouped.report (report, "");
+    expect (fields.at ("interned_targets") == "6001", "growth keeps distinct identities exact");
+    const auto peak_bytes = std::stoull (fields.at ("oracle_payload_bytes_estimate"));
+    const auto peak_rank_bytes = std::stoull (fields.at ("cache_rank_bytes"));
+    grouped.clear_preimages (source);
+    scan.clear_preimages (source);
+    grouped.report (report, "");
+    expect (
+        fields.at ("interned_targets") == "1" && fields.at ("cached_preimages") == "3" &&
+            std::stoull (fields.at ("oracle_payload_bytes_estimate")) < peak_bytes &&
+            std::stoull (fields.at ("oracle_payload_bytes_estimate")) <= retained_payload_bound &&
+            std::stoull (fields.at ("cache_rank_bytes")) < peak_rank_bytes,
+        "eviction releases target ranks and excess buckets in existing byte reports");
+    compare (other, source);
+    const auto retained_bytes = std::stoull (fields.at ("cache_rank_bytes"));
+    // Unique generated targets keep one source warm while two others churn.
+    for (int i = 6000; i < 18000; ++i) {
+      const Rank target {{{0, i % 65}, {1, (i / 65) % 65}, {2, i / (65 * 65)}}, 64};
+      compare (source, target);
+      compare (third, target);
+      grouped.clear_preimages (source);
+      scan.clear_preimages (source);
+      grouped.report (report, "");
+      expect (fields.at ("interned_targets") == "2" && fields.at ("cached_preimages") == "6",
+              "a shared churn target remains live until its last source is evicted");
+      if (i % 2 == 0) {
+        grouped.clear_preimages (third);
+        scan.clear_preimages (third);
+      }
+      else {
+        grouped.retain_preimages ({other});
+        scan.retain_preimages ({other});
+      }
+      grouped.report (report, "");
+      expect (
+          fields.at ("interned_targets") == "1" && fields.at ("cached_preimages") == "3" &&
+              std::stoull (fields.at ("cache_rank_bytes")) == retained_bytes &&
+              std::stoull (fields.at ("oracle_payload_bytes_estimate")) <= retained_payload_bound,
+          "long successful churn retains exactly the warm source's identity");
+      compare (other, source);
+    }
+    const auto warm_bytes = std::stoull (fields.at ("oracle_payload_bytes_estimate"));
+    grouped.retain_preimages ({});
+    scan.retain_preimages ({});
+    grouped.report (report, "");
+    expect (fields.at ("interned_targets") == "0" && fields.at ("cached_preimages") == "0" &&
+                std::stoull (fields.at ("oracle_payload_bytes_estimate")) < warm_bytes,
+            "evicting the last source releases the entire interner and its buckets");
+    compare (source, other);
+    compare (source, source);
+    std::cout << "18000 distinct generated targets; 12000 bounded churn cycles\n";
   }
 
   void failures_and_counters () {
@@ -385,6 +507,7 @@ int main () {
     std::mt19937 rng {games::seed};
     frozen_destination_acceptance ();
     identity_and_lazy_suffixes ();
+    identity_retention ();
     failures_and_counters ();
     for (unsigned game = 0; game < 160; ++game) {
       const bool frozen = game % 2 == 0;

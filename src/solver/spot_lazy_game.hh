@@ -461,7 +461,7 @@ namespace acacia::spot_lazy_game {
       };
       struct Grouped {
           std::vector<Destination> destinations;
-          std::array<std::unordered_map<size_t, bdd>, 3> preimages;
+          std::array<std::unordered_map<const Rank*, bdd>, 3> preimages;
       };
       struct Prepared {
           std::unique_ptr<Grouped> compact;
@@ -476,10 +476,10 @@ namespace acacia::spot_lazy_game {
       int K_;
       const OracleLayout layout_;
       std::unordered_map<Rank, Prepared> prepared_;
-      // IDs are private to this oracle's cache generation. The interner owns
-      // immutable ranks and unordered_map checks full equality on collisions.
-      // Clearing prepared predicates before the interner permits ID reuse; no
-      // rank address or BDD ID can survive a generation or cross an oracle.
+      // Identities point to owned immutable ranks, never caller addresses.
+      // Rehash preserves these pointers; full equality resolves collisions.
+      // Counts cover all source/kind memos, so an identity can be reclaimed
+      // only after its last memo entry is erased. Thresholds name no targets.
       std::unordered_map<Rank, size_t> target_ranks_;
       size_t queries_ = 0, threshold_hits_ = 0, preimage_hits_ = 0;
       size_t threshold_calls_ = 0, threshold_misses_ = 0, threshold_shortcuts_ = 0;
@@ -628,11 +628,11 @@ namespace acacia::spot_lazy_game {
         if (layout_ == OracleLayout::grouped) {
           auto identity = target_ranks_.find (target);
           if (identity == target_ranks_.end ()) {
-            identity = target_ranks_.emplace (target, target_ranks_.size ()).first;
+            identity = target_ranks_.emplace (target, 0).first;
             if (store_.report.sink)
               ++target_intern_misses_;
           }
-          const auto id = identity->second;
+          const auto id = &identity->first;
           auto& memo = p.compact->preimages.at (kind);
           if (const auto found = memo.find (id); found != memo.end ()) {
             ++preimage_hits_;
@@ -673,6 +673,7 @@ namespace acacia::spot_lazy_game {
           }
           b.nodes (result);
           memo.emplace (id, result);
+          ++identity->second;
           return result;
         }
         if (store_.report.sink)
@@ -735,6 +736,31 @@ namespace acacia::spot_lazy_game {
         return result;
       }
 
+      void clear_preimages (Prepared& p) {
+        p.preimages.clear ();
+        if (p.compact)
+          for (auto& memo : p.compact->preimages) {
+            while (!memo.empty ()) {
+              const auto entry = memo.begin ();
+              const auto identity = target_ranks_.find (*entry->first);
+              memo.erase (entry);
+              if (--identity->second == 0)
+                target_ranks_.erase (identity);
+            }
+            decltype (p.compact->preimages)::value_type {}.swap (memo);
+          }
+      }
+      void reclaim_target_buckets () {
+        if (layout_ != OracleLayout::grouped)
+          return;
+        if (target_ranks_.empty ())
+          decltype (target_ranks_) {}.swap (target_ranks_);
+        // Shrink below quarter occupancy to bound retained buckets by live
+        // identities without rehashing after every individual eviction.
+        else if (target_ranks_.size () < target_ranks_.bucket_count () / 4)
+          target_ranks_.rehash (target_ranks_.size ());
+      }
+
     public:
       Oracle (Reader& r, RowStore& store, letters::WorkerAlphabet a, int K,
               OracleLayout layout = selected_oracle_layout)
@@ -751,7 +777,10 @@ namespace acacia::spot_lazy_game {
         auto result = boundary_.query<T> (std::forward<F> (f));
         if (!result.value) {
           prepared_.clear ();
-          target_ranks_.clear ();
+          if (layout_ == OracleLayout::grouped)
+            decltype (target_ranks_) {}.swap (target_ranks_);
+          else
+            target_ranks_.clear ();
         }
         else if (used_rank_)
           store_.useful_query ();
@@ -817,21 +846,16 @@ namespace acacia::spot_lazy_game {
       // threshold memo remain warm. These calls are verifier policy only.
       void clear_preimages (const Rank& r) {
         if (auto it = prepared_.find (r); it != prepared_.end ()) {
-          it->second.preimages.clear ();
-          if (it->second.compact)
-            for (auto& memo : it->second.compact->preimages)
-              memo.clear ();
+          clear_preimages (it->second);
+          reclaim_target_buckets ();
         }
       }
       void retain_preimages (const std::vector<Rank>& ranks) {
         const std::unordered_set<Rank> keep {ranks.begin (), ranks.end ()};
         for (auto& [rank, p] : prepared_)
-          if (not keep.contains (rank)) {
-            p.preimages.clear ();
-            if (p.compact)
-              for (auto& memo : p.compact->preimages)
-                memo.clear ();
-          }
+          if (not keep.contains (rank))
+            clear_preimages (p);
+        reclaim_target_buckets ();
       }
       // Return Bad and its uncovered losing inputs in the same checked query.
       // The projection is only a search region; proofs still need a total cube.
