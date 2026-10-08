@@ -167,20 +167,20 @@ namespace acacia::unreal_witnesses {
                   largest, safety, obligations, generated);
         event ("weakening_eligibility", fields);
       }
-      void generated (const spot::formula& formula, unsigned index) const noexcept {
+      void generated (const spot::formula& formula, unsigned candidate_index) const noexcept {
         if (!worker_)
           return;
-        worker_->run_id = index + 1;
+        worker_->run_id = candidate_index + 1;
         objective (formula, "candidate");
         char fields[240];
         snprintf (fields, sizeof fields,
                   "\"candidate_index\":%u,\"derivation\":\"%s\","
                   "\"premise\":\"%s\",\"conclusion\":\"candidate\","
                   "\"obligation_index\":%u",
-                  index,
+                  candidate_index,
                   extended_ ? "exact_AST_positive_conjunct_deletion"
                             : "distribute_G_and_select_conjuncts",
-                  extended_ ? "exact_original" : "simplified_original", index);
+                  extended_ ? "exact_original" : "simplified_original", candidate_index);
         event ("weakening_candidate_generated", fields);
       }
       void extended_limits (uint64_t until, uint64_t per_attempt,

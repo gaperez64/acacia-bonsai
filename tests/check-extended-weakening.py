@@ -89,6 +89,10 @@ def main():
             row, = reader.census(records)
             assert row["census"] == "complete" and row["started"] == 4 and row["successes"] == 1
             assert not row["full_solver_started"] and not row["full_solver_starved"]
+            generated = [r for r in records
+                         if r.get("event") == "weakening_candidate_generated"]
+            assert [(r["candidate_index"], r["obligation_index"], r["run_id"])
+                    for r in generated] == [(i, i, i + 1) for i in range(4)], generated
             checked = next(r for r in records if r.get("event") == "weakening_checked_game")
             assert checked["game_fnv1a64"] and checked["proof_fnv1a64"]
             proof = next(r for r in records if r.get("event") == "weakening_proof")

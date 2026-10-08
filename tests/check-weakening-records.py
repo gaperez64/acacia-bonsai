@@ -51,6 +51,11 @@ def main():
                 eligible = mode in modes[:6]
                 assert summary["eligible"] == eligible, (mode, summary)
                 assert summary["generated"] == (8 if eligible else 0)
+                generated = [r for r in records
+                             if r.get("event") == "weakening_candidate_generated"]
+                expected = [(i, i, i + 1) for i in range(8 if eligible else 0)]
+                assert [(r["candidate_index"], r["obligation_index"], r["run_id"])
+                        for r in generated] == expected, (mode, generated)
                 assert summary["started"] == (1 if mode in {"success", "exception"} else
                                               8 if eligible else 0)
                 assert summary["successes"] == (1 if mode == "success" else 0)
