@@ -518,6 +518,45 @@ namespace acacia::solver_detail::equivariant {
     return true;
   }
 
+#ifndef NDEBUG
+  // A finite-order coordinate permutation preserves f iff every permuted
+  // maximum lies in f. Compare private coordinates so backend membership
+  // caches, counters, budgets and profiling state remain untouched.
+  template <typename SetOfStates>
+  bool is_closed_under_generators (const SetOfStates& f, const symmetry::group& G) {
+    if (G.gens.empty ())
+      return true;
+    std::vector<std::vector<VECTOR_ELT_T>> maxima;
+    for (const auto& maximal : f) {
+      maxima.emplace_back (maximal.size ());
+      maximal.to_vector (std::span (maxima.back ()));
+    }
+    for (const auto& phi : G.gens) {
+      std::vector<VECTOR_ELT_T> output (phi.size ());
+      for (const auto& input : maxima) {
+        for (size_t q = 0; q < phi.size (); ++q)
+          output[phi[q]] = input[q];
+        bool contained = false;
+        for (const auto& maximal : maxima) {
+          bool dominated = true;
+          for (size_t q = 0; q < phi.size (); ++q)
+            if (output[q] > maximal[q]) {
+              dominated = false;
+              break;
+            }
+          if (dominated) {
+            contained = true;
+            break;
+          }
+        }
+        if (not contained)
+          return false;
+      }
+    }
+    return true;
+  }
+#endif
+
   // Sound GFP tightening.  If f contains the winning region W, then every
   // verified automorphism phi also has phi(f) containing phi(W)=W.  Thus
   // intersecting f with generator images cannot remove W.  At a fixpoint for
@@ -895,7 +934,8 @@ namespace acacia::solver_detail::equivariant {
     posets::utils::vector_mm<VECTOR_ELT_T> permute_in (num_states, 0);
     posets::utils::vector_mm<VECTOR_ELT_T> permute_out (num_states, 0);
 #ifndef NDEBUG
-    assert (not close_under_generators (f, G, permute_in, permute_out));
+    const bool closed = is_closed_under_generators (f, G);
+    assert (closed);
 #endif
 
     int loopcount = 0;
@@ -951,7 +991,8 @@ namespace acacia::solver_detail::equivariant {
 #ifndef NDEBUG
         // The K-bump is uniform on every counting coordinate and generators
         // do not cross bool_threshold, so it commutes with every generator.
-        assert (not close_under_generators (f, G, permute_in, permute_out));
+        const bool closed = is_closed_under_generators (f, G);
+        assert (closed);
 #endif
       }
     }

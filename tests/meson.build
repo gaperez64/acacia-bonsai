@@ -670,8 +670,17 @@ test ('equivariance-backends', py,
       args : [files ('check-equivariance-backends.py'), meson.project_build_root ()],
       suite : ['unit', 'symmetry'], timeout : 120)
 
+# Only the debug predicate's test helper keeps assertions in the release profile.
+equivariant_invariant_test_helper = static_library (
+  'equivariant-invariant-test-helper',
+  'equivariant_invariant_test.cc',
+  cpp_args : ['-UNDEBUG'],
+  include_directories : inc,
+  dependencies : [spot_dep, bddx_dep, posets_dep],
+)
 equivariant_pre_test = executable ('equivariant-pre-test',
                                    'equivariant_pre_test.cc',
+                                   link_with : equivariant_invariant_test_helper,
                                    include_directories : inc,
                                    dependencies : [spot_dep, bddx_dep, posets_dep])
 test ('equivariant-pre',
