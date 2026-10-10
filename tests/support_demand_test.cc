@@ -209,6 +209,40 @@ namespace {
     expect ("even median averages middle samples", even.median () == 1.5);
   }
 
+  void check_scalar_certificate () {
+    struct scalar_set {
+        using value_type = int;
+        std::vector<int> values {0};
+        bool contains (int value) const { return value == 0; }
+        auto begin () const { return values.begin (); }
+        auto end () const { return values.end (); }
+    };
+    struct scalar_actioner {
+        int apply (int value, int step, actioners::direction) { return value + step; }
+    };
+    scalar_set candidate;
+    scalar_actioner actioner;
+    std::vector<std::pair<int, std::vector<int>>> actions {{0, {0}}};
+    diag::scoped_child child {"scalar-certificate"};
+    diag::set_support_graph (graph ());
+    diag::set_support_actions (actions);
+    unsigned long long applications = 0;
+    expect ("scalar certificate replay accepts a closed candidate",
+            verify_winning_certificate (candidate, candidate, 0, actions, actioner,
+                                         &applications) and applications == 1);
+    actions.front ().second.front () = 1;
+    expect ("scalar certificate replay rejects an escaping action",
+            not verify_winning_certificate (candidate, candidate, 0, actions, actioner,
+                                             &applications) and applications == 2);
+    diag::observe_support_demand (0, actions.front ().second.front ());
+    const auto& d = diag::current ()->support_demand;
+    expect ("scalar states produce no vector support samples",
+            d.search_applications == 0 and d.verification_applications == 0
+            and d.union_rows == 0 and d.union_edges == 0
+            and d.support_histogram == std::vector<unsigned long long> (5, 0)
+            and d.rows == std::vector<unsigned char> (4, 0) and d.used_ids () == "-");
+  }
+
   void check_renumbered_graph () {
     diag::scoped_child child {"renumbered-graph"};
     const auto aut = graph (true);
@@ -229,6 +263,7 @@ int main () {
   const auto measured = run_gate_child (true);
   expect ("C0/C1 verdicts and all decision counters identical", baseline == measured);
   check_metrics ();
+  check_scalar_certificate ();
   check_renumbered_graph ();
   return failures == 0 ? 0 : 1;
 }
