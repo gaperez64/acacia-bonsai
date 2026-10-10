@@ -72,8 +72,10 @@ selectable for comparisons.
 
 The measured frozen release binary's SHA-256 is
 `9a774cbf87abd0433803c8a0f5f9e7056eea70c1f50663fca2c2ac3235f41fbc`.
-Raw screen rows remain in the ignored `_bm-logs.legacy/p1a2-*` directories and will be archived
-at campaign close. The archive reference will follow publication and verification.
+The screen rows and reviews are archived in `legacy20261008-screens`, registered in
+[evidence-index.tsv](evidence-index.tsv). The full-corpus closing campaign subsequently
+admitted PR #235 at `4a26e57c`; its observations and driver adjudications are archived in
+`legacy20261008-closing`. [RESULTS.md](RESULTS.md) records the closing totals and paired gains.
 The earlier local implementation report,
 correctness logs and diagnostic profiles in `build_scratch/legacy-p1a/` describe implementation
 validation; the default decision uses the paired screens above.
