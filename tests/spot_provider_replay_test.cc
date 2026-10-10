@@ -1214,7 +1214,7 @@ void last_losing_input () {
   const bdd u = k.ap ("u", true), c = k.ap ("c", false);
   const bdd v = k.ap ("v", true), d = k.ap ("d", false);
   const bdd last = u & v;
-  const bdd legal = !last & bdd_biimp (u, c) & bdd_biimp (v, d);
+  const bdd legal = (!last) & bdd_biimp (u, c) & bdd_biimp (v, d);
   k.graph->new_edge (0, 0, legal);
   k.graph->new_edge (0, 1, !legal, {0});
   k.graph->new_edge (1, 1, bddtrue, {0});
