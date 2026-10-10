@@ -5,6 +5,36 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-10 — native startup cache change (#213), admission pending
+
+The combined native worker's seed solver and checker defaulted to an apply
+cache of 2^23 entries. The pinned OxiDD backend initializes every 20-byte entry
+before use, making 160 MiB resident per such manager. Manager creation was
+already deferred until solving, checking, or schema learning; trusted target
+preparation creates no manager. The five-worker race also pays for TLSF
+preparation, Spot/BuDDy initialization, process creation, and its existing parent
+wait loop. Reducing cache initialization addresses one part of startup.
+
+Default lifting caches now request
+`min(previous ceiling, 2^clamp(ceil(log2(s)) + 6, 10, 23))`, where
+`s = inputs + latches + AND gates + justice roots + fairness roots + 1`.
+This budgets 64 entries per retained graph element, rounded up to a power of
+two. The six extra bits and 2^10 floor retain the existing solver's headroom
+factor and minimum allocation. Counting the full valuation space of generated
+monitor variables saturated the cache ceiling even for simple games, so that
+experiment was rejected. Schema learning retains the variable-based exponent
+rule with its initial variable count and previous cache ceiling. Nonzero lifting
+cache requests are preserved; node caps, proof checks, worker membership, and
+routing are unchanged. Direct native caches use the graph rule with their
+previous 2^20 ceiling. OxiDD rounds requests to powers of two; caches evict
+rather than grow. This is a structural rule, with no input identities or
+verdict-based selection.
+
+Serial single-instance startup profiles are diagnostic only. The driver must
+still run the requested ten-run trivial/medium race and lift-arm summaries,
+then paired coverage and admission screens. No campaign medians or admission
+claim are supplied by this change.
+
 ## 2026-10-08 — coverage-first P2b: admit the 3 s equivariance default (#224)
 
 Evidence campaign `cov20261007-eqfull` (archived): fresh, matched, rotated

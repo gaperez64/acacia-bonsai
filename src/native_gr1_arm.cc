@@ -132,7 +132,8 @@ namespace acacia {
     solve_options.oxidd = oxidd_solve_options_default ();
     solve_options.oxidd.failure = &failure;
     solve_options.oxidd.node_cap = solver_nodes;
-    solve_options.oxidd.cache_cap = 1u << 20;
+    solve_options.oxidd.cache_cap = tlsf_gr1_cache_capacity (reduction.value.game, 1u << 20);
+    const size_t checker_cache = solve_options.oxidd.cache_cap;
     solve_options.oxidd.deadline_mono_ns = deadline_mono_ns;
     solve_options.oxidd.max_artifact_bytes = artifact_cap;
     std::array<char*, 4> bytes {};
@@ -236,7 +237,7 @@ namespace acacia {
     TlsfGr1CheckOptions check_options {};
     check_options.method = TLSF_GR1_CHECK_CERTIFICATE;
     check_options.node_cap = checker_nodes;
-    check_options.cache_cap = 1u << 20;
+    check_options.cache_cap = checker_cache;
     check_options.max_artifact_bytes = artifact_cap;
     check_options.deadline_mono_ns = deadline_mono_ns;
     native_check_owner checked;
