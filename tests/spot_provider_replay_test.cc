@@ -725,9 +725,9 @@ void lean_verifier_dependencies () {
       const auto cached = observed;
       detail::take (verify_losing_proof (store, k.alphabet, 1, full, {}, semantics, LeanVerifier::on));
       expect (cached.at ("verify_preimage_hits") == "0" &&
-              observed.at ("verify_preimage_hits") == "0" &&
-              std::stoull (observed.at ("verify_cache_rank_bytes")) <
-                  std::stoull (cached.at ("verify_cache_rank_bytes")),
+                  observed.at ("verify_preimage_hits") == "0" &&
+                  std::stoull (observed.at ("verify_cached_preimages")) <
+                      std::stoull (cached.at ("verify_cached_preimages")),
               "losing replay releases preimages that have no reuse");
       for (const auto* key : {"verify_queries", "verify_steps", "verify_bdd_operations",
                              "verify_threshold_hits"})
@@ -765,9 +765,9 @@ void lean_verifier_winning_cache () {
   detail::take (verify_winning_certificate (store, k.alphabet, 1, result, {}, semantics,
                                           LeanVerifier::on));
   expect (std::stoull (observed.at ("verify_preimage_hits")) > 0 &&
-          observed.at ("verify_preimage_hits") == cached.at ("verify_preimage_hits") &&
-          std::stoull (observed.at ("verify_cache_rank_bytes")) <
-              std::stoull (cached.at ("verify_cache_rank_bytes")),
+              observed.at ("verify_preimage_hits") == cached.at ("verify_preimage_hits") &&
+              std::stoull (observed.at ("verify_cached_preimages")) <
+                  std::stoull (cached.at ("verify_cached_preimages")),
           "winning replay evicts nonmaximal preimages and retains invariant reuse at G");
   expect (observed.at ("verify_invariant_bdd_operations") ==
               cached.at ("verify_invariant_bdd_operations"), "invariant keeps its warm-cache work");
@@ -1826,7 +1826,15 @@ void cli_flags () {
   std::cout << "cli_flags: PASS\n";
 }
 
-int main () {
+int main (int argc, char** argv) {
+  if (argc == 3 && std::string (argv[1]) == "--oracle-layout") {
+    const auto layout = acacia::parse_oracle_layout (argv[2]);
+    if (!layout)
+      return 1;
+    acacia::selected_oracle_layout = *layout;
+  }
+  else if (argc != 1)
+    return 1;
   const int report_fd = open ("/dev/null", O_WRONLY);
   const auto report = pipe_reporter (report_fd);
   try {

@@ -362,3 +362,64 @@ at K=2 and K=5, rejects a foreign invocation, and checks search/verifier metric
 separation. Generated release comparisons retain exact stdout, stderr and exit
 codes with records off/on and against the pre-binding executable; records-off
 PID/clock/resource-call counts also agree. These remain correctness observations.
+
+## 2026-10-10 — grouped sparse guarded oracle admitted at campaign close (#235)
+
+`--oracle-layout grouped` is now the runtime default. It groups equal-level guards, lazily
+caches requested suffixes and uses exact oracle-local target-rank identities and compact
+coordinate traversal in sparse search and fresh independent verification. `--oracle-layout scan`
+remains available as the explicit alternative. There is no compile-time option for this choice.
+
+The driver admitted the change after paired, rotated, cooled screens of the frozen release
+build of `325a90d3` against the master binary on the 28-input legacy panel: standalone
+formula-UNREAL at 60 s, and the shipping race at 17 s and 60 s. There was no lost solve, no
+memory stop and no solved input slower by more than 1 s. Same-K search plus independent-check
+cost was 0.54–0.67 times master's on the three primary targets and 0.71 on the secondary
+collector control. The reproduced 60 s race
+PAR-2 change was −14.7 s (−10.8 s for grouped against scan in an earlier session), with far lower peak memory.
+
+Frozen release binary SHA-256:
+`9a774cbf87abd0433803c8a0f5f9e7056eea70c1f50663fca2c2ac3235f41fbc`.
+The screens and independent reviews are archived in `legacy20261008-screens`, indexed in
+[evidence-index.tsv](evidence-index.tsv). Generated arithmetic/fixed-K, interruption,
+collision and corruption tests cover both layouts. The [layout notes](legacy-oracle-layout.md)
+record the storage policy, correctness checks and driver-supplied decision evidence.
+
+The closing campaign admitted PR #235 on the full 1,524-input list. All four 17 s series
+are fresh and rotated in one session; each 60 s series is a validated derived view of its
+own fresh 17 s rows and fresh 60 s tail. Validation and cooled repetitions supplement the
+primary observations without replacing them. Both Acacia binaries use Spot 2.16 and the
+frozen shipping defaults: candidate `LEGFINAL` at `4a26e57c`, incumbent `LEGP0` at
+`54ddfb83` (master-equivalent). Source caps, paths, hashes, phase records, comparisons and
+adjudications are archived in `legacy20261008-closing`.
+
+| Cap and provenance | Grouped candidate REAL / UNREAL / total | Incumbent total | Candidate / incumbent PAR-2 (s) | Candidate / incumbent resource limits | ltlsynt 2.16 total | TACAS23 total |
+|---|---:|---:|---:|---:|---:|---:|
+| 17 s, fresh measured | 559 / 648 / **1,207** | 1,205 | 11,624.2 / 11,730.2 | 1 / 1 | 1,263 | 812 |
+| 60 s, validated derived | 570 / 674 / **1,244** | 1,240 | 35,538.3 / 36,073.7 | 1 / 2 | 1,286 | 854 |
+
+Paired coverage has no incumbent losses at either cap and no new resource-limit failures.
+The 17 s gains are `GF-G-contradiction7` and `g-unreal-310`. The 60 s gains are
+`robot-to-target-charging13` (42.3 s), `g-unreal-311`, `g-unreal-118` and `g-unreal-119`.
+The last three reproduced 3/3 in cooled repetitions, while the incumbent timed out 3/3
+on each. Among inputs solved by both at 60 s, 34 are faster by more than 1 s and five are
+slower by more than 1 s; the worst slowdown is +3.4 s. The candidate still trails ltlsynt
+in coverage at both caps.
+
+Six recycling mismatches were explicitly driver-adjudicated: three telemetry drops and
+three same-verdict winner/lifecycle variations. Amendment `legacy20261008-closing-amend1`
+adds the exact candidate 60 s validation transport finding and regenerated validation/report
+outputs; the published `legacy20261008-closing` archive remains immutable. The evidence lists
+each exact mismatch,
+decision, rationale and hash-bound evidence. Recorded outcomes agree; missing telemetry
+remains incomplete for attribution. The approved comparison/adjudication tools preserve
+strict outcome and work checks and replay evidence before producing derived rows; see
+[phase-record-comparison.md](tools/phase-record-comparison.md).
+
+Native Acacia wall time includes TLSF parsing; the ltlsynt and TACAS23 clocks exclude
+preconversion, with the historical SyFCo Strict-semantics limitation retained. TACAS23
+totals use the archived audit rescoring; its killed-child signal-handling limitation still
+makes apparent solves an upper bound. PAR-2 changes are descriptive, and no 60 s noise
+floor is assumed. [baselines.tsv](baselines.tsv) pins the three frozen binaries and their
+archive IDs; `LEGFINAL` is the next G1 baseline once this PR merges. The sprint decisions
+and rejected routes are recorded in [legacy-route/decisions.md](legacy-route/decisions.md).

@@ -220,6 +220,7 @@ namespace {
       _exit (EXIT_CODE_ERROR);
 #endif
     }
+    acacia::selected_oracle_layout = arg_values.oracle_layout;
     auto backend = arm.legacy->backend;
     auto provider = arm.legacy->provider;
     if (arg_values.synth_fname.has_value () and not arm.unreal and
