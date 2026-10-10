@@ -39,6 +39,19 @@ namespace ios_precomputers {
         using input_to_ios_t = typename std::list<std::pair<bdd, std::list<TransSet>>>;
 
         auto operator() () const {
+          input_to_ios_t result;
+          for_each_input ([&] (bdd input, auto& outputs) {
+            result.emplace_back (input, std::move (outputs));
+          });
+          return result;
+        }
+
+        void restrict_inputs (bdd selected) { selected_inputs &= selected; }
+
+        // The consumer sees a complete input class in traversal order. Its decoded
+        // sets live only until the callback returns, independently of alphabet size.
+        template <typename Consumer>
+        void for_each_input (Consumer&& consume) const {
           // States are binary encoded using extra variables.
           // We allocate them via spot's bdd_dict (rather than calling
           // bdd_extvarnum directly) so the dict's internal var_refs
@@ -146,14 +159,16 @@ namespace ios_precomputers {
             }
           };
 
-          auto recurse_inputs = [&] (this const auto& self, auto& i_to_tss, bdd bdd_iopq,
-                                     bdd bdd_input) {
+          const bool observed = acacia::phase_records_enabled ();
+          size_t peak_bytes = 0, sets = 0, endpoints = 0, inputs = 0;
+          auto recurse_inputs = [&] (this const auto& self, bdd bdd_iopq, bdd bdd_input) {
             acacia::equivariance_budget::checkpoint ();
             if (bdd_iopq == bddfalse)
               return;
             if (bdd_iopq == bddtrue or bdd_var (bdd_iopq) >= first_output) {
-              using vt = typename std::remove_cvref_t<decltype (i_to_tss)>::value_type;
-              i_to_tss.emplace_back (vt (bdd_input, {}));
+              if ((bdd_input & selected_inputs) == bddfalse)
+                return;
+              std::list<TransSet> outputs;
               // Per input class: two inputs reaching the same residual root
               // each decode it, because each input owns its own action list.
               // Guarded so the shipping build, which neither quotients nor
@@ -164,11 +179,28 @@ namespace ios_precomputers {
               else if (count_residuals)
                 residual_roots.clear ();
 #endif
-              recurse_outputs (i_to_tss.back ().second, bdd_iopq);
+              recurse_outputs (outputs, bdd_iopq);
+              if (observed) {
+                size_t bytes = sizeof (outputs) + sizeof (bdd_input);
+                sets += outputs.size ();
+                ++inputs;
+                for (const auto& transitions : outputs) {
+                  bytes += sizeof (transitions) +
+                           transitions.capacity () * sizeof (typename TransSet::value_type);
+                  endpoints += transitions.size ();
+                }
+                peak_bytes = std::max (peak_bytes, bytes);
+                acacia::legacy_count ("decoded_set_peak_payload_bytes_estimate", peak_bytes);
+                acacia::legacy_count ("decoded_set_payload_bytes_estimate", bytes);
+                acacia::legacy_count ("decoded_sets", sets);
+                acacia::legacy_count ("decoded_endpoints", endpoints);
+                acacia::legacy_count ("decoded_inputs", inputs);
+              }
+              consume (bdd_input, outputs);
             }
             else {
-              self (i_to_tss, bdd_low (bdd_iopq), bdd_input & !bdd_ithvar (bdd_var (bdd_iopq)));
-              self (i_to_tss, bdd_high (bdd_iopq), bdd_input & bdd_ithvar (bdd_var (bdd_iopq)));
+              self (bdd_low (bdd_iopq), bdd_input & !bdd_ithvar (bdd_var (bdd_iopq)));
+              self (bdd_high (bdd_iopq), bdd_input & bdd_ithvar (bdd_var (bdd_iopq)));
             }
           };
 
@@ -180,16 +212,15 @@ namespace ios_precomputers {
             // leaves the decisive census checkpoint behind.
             record_alphabet_census (bdd_iopq, first_output, first_src_var);
             if (acacia::diagnostics::alphabet_census_only ())
-              return input_to_ios_t {};
+              return;
           }
 #endif
 
           acacia::legacy_phase decoding ("io-decoding");
-          input_to_ios_t i_to_tss;
 #if ACACIA_ENABLE_DIAGNOSTICS
           const auto decode_started = acacia::diagnostics::clock::now ();
 #endif
-          recurse_inputs (i_to_tss, bdd_iopq, bddtrue);
+          recurse_inputs (bdd_iopq, bddtrue);
 #if ACACIA_ENABLE_DIAGNOSTICS
           acacia::diagnostics::set_decode_census (
               decoded, unique_decoded,
@@ -197,30 +228,14 @@ namespace ios_precomputers {
                   acacia::diagnostics::clock::now () - decode_started)
                   .count ());
 #endif
-          if (acacia::phase_records_enabled ()) {
-            size_t bytes = sizeof (i_to_tss), sets = 0, endpoints = 0;
-            for (const auto& [input, outputs] : i_to_tss) {
-              (void) input;
-              bytes += sizeof (typename input_to_ios_t::value_type);
-              sets += outputs.size ();
-              for (const auto& transitions : outputs) {
-                bytes += sizeof (transitions) +
-                         transitions.capacity () * sizeof (typename TransSet::value_type);
-                endpoints += transitions.size ();
-              }
-            }
-            // Append-only decoded containers: accounted payload peaks at retention.
-            acacia::legacy_count ("decoded_set_peak_payload_bytes_estimate", bytes);
-            acacia::legacy_count ("decoded_set_payload_bytes_estimate", bytes);
-            acacia::legacy_count ("decoded_sets", sets);
-            acacia::legacy_count ("decoded_endpoints", endpoints);
-          }
-          return i_to_tss;
+          if (observed)
+            acacia::legacy_count ("decoded_set_payload_bytes_estimate", 0);
         }
 
       private:
         Aut aut;
         const bdd input_support, output_support;
+        bdd selected_inputs = bddtrue;
     };
 
   }

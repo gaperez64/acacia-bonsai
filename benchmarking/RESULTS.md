@@ -362,3 +362,25 @@ at K=2 and K=5, rejects a foreign invocation, and checks search/verifier metric
 separation. Generated release comparisons retain exact stdout, stderr and exit
 codes with records off/on and against the pre-binding executable; records-off
 PID/clock/resource-call counts also agree. These remain correctness observations.
+
+## 2026-10-10 — MONA input streaming (#200, pending admission)
+
+MONA now feeds complete input classes into the unchanged sorted action-table
+construction and releases decoded sets after each class. Frozen old-code tests
+compare tables, action IDs, picker/application traces, RNG state and generated
+forward/backward solve results byte-for-byte. Unit tests: 58 passed. Full pytest:
+2,210 passed, 40 skipped, 23 subtests passed. The hardcoding guard passed.
+
+Serial 8 GiB/no-swap generated memory diagnostics reduced worker peak RSS from
+218.3 to 18.2 MiB (1,024 input paths) and 820.9 to 18.1 MiB (4,096 paths).
+Decoded endpoints peaked at 196 KiB in both streaming runs; final action payload
+remained 413.3 KiB. The single-arm corpus diagnostic still hit 8 GiB: action
+construction stopped at input class 1,320, with 7.914 GiB of retained action
+payload and only 2,820 bytes of peak decoded payload estimated. Its complete
+table was not built. One incomplete telemetry capture required a corrective
+repeat. No timed campaign or admission claim was made.
+
+The implementation, measurement definitions, capture limitation, checks and
+reproduction details are in [mona-streaming.md](mona-streaming.md). Raw observations
+remain locally under `build_scratch/i200/_bm-logs.memory/`; the driver owns paired
+admission and durable publication. No commits were made.

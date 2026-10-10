@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ios_precomputers/prepare.hh"
+
 // Exact equivariant helpers for the K-bounded safety solver.
 //
 // This path keeps the classic raw antichain representation and uses verified
@@ -866,13 +868,16 @@ namespace acacia::solver_detail::equivariant {
     }
 #endif
     acacia::equivariance_budget::phase ("equivariance_action_construction");
-    auto inputs_to_ios = (ios_precomputer_maker.make (aut, all_inputs, all_outputs)) ();
+    auto inputs_to_ios = ios_precomputers::prepare (
+        ios_precomputer_maker.make (aut, all_inputs, all_outputs));
     {
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_representative_filter);
       filter_to_representative_inputs (inputs_to_ios, *representatives);
     }
-    if (inputs_to_ios.empty ())
-      return decline ("no precomputed representative inputs");
+    if constexpr (requires { inputs_to_ios.empty (); }) {
+      if (inputs_to_ios.empty ())
+        return decline ("no precomputed representative inputs");
+    }
     auto actioner = actioner_maker.make (aut, inputs_to_ios, k);
     auto& fwd_actions = actioner.actions ();
     acacia::diagnostics::set_support_actions (fwd_actions);

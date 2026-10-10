@@ -710,6 +710,12 @@ test ('semantic-mona',
       semantic_mona_test,
       suite : ['unit', 'ios-precomputer'])
 
+mona_streaming_test = executable ('mona-streaming-test',
+                                  'mona_streaming_test.cc',
+                                  include_directories : inc,
+                                  dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('mona-streaming', mona_streaming_test, suite : ['unit', 'ios-precomputer'])
+
 component_concepts_test = executable ('component-concepts-test',
                                       'component_concepts_test.cc',
                                       include_directories : inc,

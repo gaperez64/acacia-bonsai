@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ios_precomputers/prepare.hh"
+
 #include "configuration.hh"
 #include "posets/utils/vector_mm.hh"
 #include "posets/vectors/traits.hh"
@@ -72,7 +74,8 @@ namespace acacia::solver_detail {
         };
 
         acacia::legacy_phase preparing ("io-preparation");
-        auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support)) ();
+        auto inputs_to_ios = ios_precomputers::prepare (
+          ios_precomputer_maker.make (aut, input_support, output_support));
         preparing.finish ();
         auto actioner = actioner_maker.make (aut, inputs_to_ios, kfrom);
         auto& input_output_fwd_actions = actioner.actions ();

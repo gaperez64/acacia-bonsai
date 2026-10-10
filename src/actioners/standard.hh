@@ -61,7 +61,10 @@ namespace actioners {
           // inputs_to_ios maps each input i to transition sets.  Each set
           // corresponds to an i-compatible IO x and contains every transition
           // p -> q compatible with x.  The IO's BDD is stored alongside it.
-          for (const auto& [input, ios] : inputs_to_ios) {
+          auto add_input = [&] (bdd input, const auto& ios) {
+            // In the streaming path this identifies construction separately from
+            // the surrounding BDD descent, including an interrupted input class.
+            acacia::legacy_phase input_construction ("action-construction");
             acacia::equivariance_budget::checkpoint ();
             // input: bdd
             // ios: transition sets and their IOs
@@ -92,9 +95,19 @@ namespace actioners {
               observed_peak = std::max (observed_peak, observed_retained + pending_bytes);
             }
             const auto inserted = ioset.insert (std::pair (input, std::move (fwd_actions)));
-            if (observed && inserted.second)
-              observed_retained += pending_bytes;
-          }
+            if (observed) {
+              if (inserted.second)
+                observed_retained += pending_bytes;
+              acacia::legacy_count ("action_construction_peak_payload_bytes_estimate",
+                                    observed_peak);
+              acacia::legacy_count ("action_table_payload_bytes_estimate", observed_retained);
+            }
+          };
+          if constexpr (requires { inputs_to_ios.for_each_input (add_input); })
+            inputs_to_ios.for_each_input (add_input);
+          else
+            for (const auto& [input, ios] : inputs_to_ios)
+              add_input (input, ios);
 
           for (auto it = ioset.begin (); it != ioset.end ();) {
             // what is being inserted:

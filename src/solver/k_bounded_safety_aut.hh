@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ios_precomputers/prepare.hh"
+
 #include "actioners/direction.hh"
 #include "configuration.hh"
 #include "solver/antichain_snapshot.hh"
@@ -143,7 +145,8 @@ class k_bounded_safety_aut_detail {
     }
 
     auto get_inputs_to_ios () {
-      return (ios_precomputer_maker.make (aut, input_support, output_support)) ();
+      return ios_precomputers::prepare (
+          ios_precomputer_maker.make (aut, input_support, output_support));
     }
 
     std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> solve () {
