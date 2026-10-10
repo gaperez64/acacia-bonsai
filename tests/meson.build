@@ -191,6 +191,36 @@ test ('translator-options',
       translator_options_test,
       suite : ['unit', 'translator-options'])
 
+guarded_event_univ_test = executable ('guarded-event-univ-test',
+                                      'guarded_event_univ_test.cc',
+                                      include_directories : inc,
+                                      dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
+test ('guarded-event-univ', guarded_event_univ_test,
+      suite : ['unit', 'translator-options'], timeout : 180)
+test ('guarded-event-univ-identity', py,
+      args : [files ('guarded-event-univ-identity.py'), guarded_event_univ_test],
+      suite : ['unit', 'translator-options'], timeout : 180)
+
+guarded_event_univ_transition_test = executable (
+    'guarded-event-univ-transition-test', 'guarded_event_univ_test.cc',
+    cpp_args : ['-DACACIA_TRANSITION_ACCEPTANCE=1'],
+    include_directories : inc,
+    dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
+test ('guarded-event-univ-transition', guarded_event_univ_transition_test,
+      suite : ['unit', 'translator-options'], timeout : 180)
+test ('guarded-event-univ-transition-identity', py,
+      args : [files ('guarded-event-univ-identity.py'), guarded_event_univ_transition_test],
+      suite : ['unit', 'translator-options'], timeout : 180)
+
+if enable_tlsf_frontend
+  event_univ_census = executable ('event-univ-census',
+                                 ['event_univ_census.cc', '../src/tlsf_frontend.cc'],
+                                 include_directories : inc,
+                                 dependencies : tlsf_deps + [spot_dep, bddx_dep])
+  test ('event-univ-census', event_univ_census, args : ['--self-test'],
+        suite : ['unit', 'translator-options'])
+endif
+
 game_backend_test = executable ('game-backend-test',
                                 ['game_backend_test.cc', '../src/portfolio_arm.cc'],
                                 link_with : closure_buchi_provider_lib,
