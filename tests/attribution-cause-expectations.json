@@ -1416,8 +1416,8 @@
     "telemetry": "DECLINE/applicability"
   },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"schema_abi\" | \"multi-member justice\" | 1": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
   },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"certificate_export\" | \"cannot allocate AIG\" | 0": {
     "cause": "FailureCause::resource",
@@ -1492,8 +1492,8 @@
     "telemetry": "STOPPED/error"
   },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"target_check\" | \"unverified candidate\" | 0": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
   },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"publish\" | \"artifact hash failed\" | 0": {
     "cause": "FailureCause::error",
@@ -1568,8 +1568,8 @@
     "telemetry": "STOPPED/error"
   },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"target_check\" | \"environment proof did not verify\" | 0": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
   },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | e.stage | \"worker deadline exceeded\" | 0": {
     "cause": "FailureCause::deadline",

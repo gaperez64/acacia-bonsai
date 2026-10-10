@@ -7,6 +7,8 @@
 | `lift_test_fault` 2,4 | STOPPED/resource | `native_failure_census`: checker capacity/allowance, verified direct fallback |
 | `lift_test_fault` 3 | DECLINE/applicability | `native_failure_census`: CHECK_OK/CERT_FAILED, verified direct fallback |
 | `lift_test_fault` 5 | VERIFIED, no failure | `native_failure_census`: recovered game mutation with matching binding, one final check |
+| `lift_test_fault` 6,8 | STOPPED/error | `native_failure_census`, `native_corruption_guards`: corrupt R justice metadata or verified U verdict; verified direct fallback with unchanged proof |
+| `lift_test_fault` 7 | STOPPED/error | `native_failure_census`, `native_lift_api`: corrupt verified R verdict; legacy DECLINED, no published proof, both proof orders |
 | `both_test_seed_fault` 1 | DECLINE/applicability | `native_failure_census`: mixed seed polarity, verified direct fallback |
 | `both_test_seed_fault` 2 | STOPPED/error | `native_failure_census`: unknown seed, verified direct fallback |
 | `both_test_seed_fault` 3 | STOPPED/resource | `native_failure_census`: U schema capacity, verified direct fallback |
