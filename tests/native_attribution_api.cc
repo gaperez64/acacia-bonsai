@@ -1,10 +1,17 @@
 #include <tlsf/gr1_lift.h>
 
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
 #include <vector>
 
 namespace {
+  void check (bool condition) {
+    assert (condition);
+    if (!condition)
+      std::abort ();
+  }
+
   struct observation {
       std::vector<TlsfGr1BothEventKind> events;
       TlsfGr1LiftStatus failure = TLSF_GR1_LIFT_OK;
@@ -22,7 +29,7 @@ namespace {
     if (kind == TLSF_GR1_BOTH_EVENT_STOPPED)
       state.failure = failure;
     if (kind == TLSF_GR1_BOTH_EVENT_CHECK_START) {
-      assert (route == TLSF_GR1_BOTH_EVENT_DIRECT && side == 0);
+      check (route == TLSF_GR1_BOTH_EVENT_DIRECT && side == 0);
       state.in_check = true;
     }
   }
@@ -37,9 +44,9 @@ int main () {
   options.solver_cache = options.checker_cache = 1u << 18;
   TlsfGr1LiftTarget* target = nullptr;
   TlsfGr1LiftError error {};
-  assert (tlsf_gr1_lift_target_prepare_exact (reinterpret_cast<const uint8_t*> (source),
-                                              sizeof source - 1, &options, &target,
-                                              &error) == TLSF_GR1_LIFT_OK);
+  const auto prepared = tlsf_gr1_lift_target_prepare_exact (
+      reinterpret_cast<const uint8_t*> (source), sizeof source - 1, &options, &target, &error);
+  check (prepared == TLSF_GR1_LIFT_OK && target);
   for (unsigned cancel_after : {0u, 1u, 2u}) {
     const bool cancel = cancel_after != 0;
     observation state;
@@ -58,20 +65,20 @@ int main () {
         TLSF_GR1_BOTH_EVENT_START,
         TLSF_GR1_BOTH_EVENT_CHECK_START,
         cancel ? TLSF_GR1_BOTH_EVENT_STOPPED : TLSF_GR1_BOTH_EVENT_VERIFIED};
-    assert (state.events == expected);
+    check (state.events == expected);
     if (cancel_after == 2)
-      assert (state.check_polls >= 2);
-    assert (status == (cancel_after == 1   ? TLSF_GR1_LIFT_CANCELLED
+      check (state.check_polls >= 2);
+    check (status == (cancel_after == 1   ? TLSF_GR1_LIFT_CANCELLED
                        : cancel_after == 2 ? TLSF_GR1_LIFT_DECLINED
                                            : TLSF_GR1_LIFT_OK));
-    assert (result.target_checks == (cancel_after == 1 ? 0 : 1));
+    check (result.target_checks == (cancel_after == 1 ? 0 : 1));
     if (cancel) {
-      assert (state.failure == TLSF_GR1_LIFT_CANCELLED);
-      assert (!result.proof.game_aag && !result.proof.certificate_aag);
-      assert (std::strcmp (error.stage, "target_check") == 0);
+      check (state.failure == TLSF_GR1_LIFT_CANCELLED);
+      check (!result.proof.game_aag && !result.proof.certificate_aag);
+      check (std::strcmp (error.stage, "target_check") == 0);
     }
     else {
-      assert (tlsf_gr1_lift_target_matches (target, &result.proof));
+      check (tlsf_gr1_lift_target_matches (target, &result.proof));
     }
     tlsf_gr1_both_result_clear (&result);
   }
@@ -84,10 +91,10 @@ int main () {
     TlsfGr1BothResult result {};
     const auto status = tlsf_gr1_both_from_target_v1 (invalid ? nullptr : target, &options,
                                                       &observer, &result, &error);
-    assert (status == (invalid ? TLSF_GR1_LIFT_INVALID : TLSF_GR1_LIFT_DEADLINE));
-    assert (state.events.back () == TLSF_GR1_BOTH_EVENT_STOPPED);
-    assert (state.failure == status);
-    assert (!result.target_checks && !result.proof.game_aag && !result.proof.certificate_aag);
+    check (status == (invalid ? TLSF_GR1_LIFT_INVALID : TLSF_GR1_LIFT_DEADLINE));
+    check (!state.events.empty () && state.events.back () == TLSF_GR1_BOTH_EVENT_STOPPED);
+    check (state.failure == status);
+    check (!result.target_checks && !result.proof.game_aag && !result.proof.certificate_aag);
     tlsf_gr1_both_result_clear (&result);
   }
   tlsf_gr1_lift_target_free (target);

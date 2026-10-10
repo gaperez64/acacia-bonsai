@@ -1,3 +1,6 @@
+#define POSETS_BBOX_STATS
+#define POSETS_RANK_STATS
+#define ACACIA_SYMMETRY_PROFILE 1
 #define ACACIA_EQUIVARIANT_MIN_BLOCKS 0
 #define ACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS 0
 
@@ -32,6 +35,13 @@ namespace utils {
 namespace posets::vectors {
   size_t bool_threshold = 0;
 }
+
+// The guarded predicate is compiled in a separate checked test translation unit.
+bool equivariant_invariant_for_test (
+    const posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
+        posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>>& f,
+    const symmetry::group& G);
+bool check_equivariant_invariant_backends ();
 
 namespace {
 
@@ -239,7 +249,11 @@ namespace {
     for (unsigned trial = 0; trial < 8; ++trial) {
       SetOfStates original = random_downset (rng, N);
       SetOfStates closed = clone_downset (original);
+      const bool invariant = equivariant_invariant_for_test (original, G);
       const bool changed = eq::close_under_generators (closed, G);
+      ok &= expect ("read-only invariant check agrees with closure", invariant == !changed);
+      ok &= expect ("closed downset passes the invariant check",
+                    equivariant_invariant_for_test (closed, G));
 
       const auto sigmas = all_slot_permutations (L.num_clients);
       SetOfStates brute = eq::permute (original, eq::phi_from_sigma (L, sigmas.front ()));
@@ -256,6 +270,8 @@ namespace {
     }
 
     SetOfStates invariant = random_invariant_downset (rng, L, N);
+    ok &= expect ("invariant downset passes the read-only check",
+                  equivariant_invariant_for_test (invariant, G));
     ok &= expect ("invariant closure is a no-op", not eq::close_under_generators (invariant, G));
     return ok;
   }
@@ -733,6 +749,53 @@ namespace {
       budget::invocation_allowance.reset ();
     }
 
+    {
+      SetOfStates invariant = safe_downset (fx.aut->num_states ());
+      SetOfStates before = clone_downset (invariant);
+      posets::utils::vector_mm<VECTOR_ELT_T> asymmetric_vector (fx.aut->num_states (), 0);
+      const auto& generator = group.gens.front ();
+      for (unsigned q = 0; q < generator.size (); ++q)
+        if (generator[q] != q) {
+          asymmetric_vector[q] = -1;
+          break;
+        }
+      SetOfStates asymmetric {state (asymmetric_vector)};
+      SetOfStates asymmetric_before = clone_downset (asymmetric);
+      auto& profile = acacia::solver_detail::symmetric::profile::global ();
+      const auto prior_profile = profile;
+      acacia::worker_record record {};
+      acacia::worker_record_text (record.stage, "invariant-check");
+      auto* prior_record = acacia::active_worker_record ();
+      acacia::active_worker_record () = &record;
+      bool closed = false;
+      bool asymmetric_closed = true;
+      bool stopped = false;
+      const auto prior_consumed = expired.consumed_ns ();
+      {
+        budget::scope scope {expired};
+        try {
+          closed = equivariant_invariant_for_test (invariant, group);
+          asymmetric_closed = equivariant_invariant_for_test (asymmetric, group);
+        } catch (const budget::stopped&) {
+          stopped = true;
+        }
+        ok &= expect ("invariant check leaves the active budget intact",
+                      budget::active == &expired);
+      }
+      acacia::active_worker_record () = prior_record;
+      ok &= expect ("invariant check ignores an expired budget", closed and not stopped);
+      ok &= expect ("invariant check detects asymmetry", not asymmetric_closed);
+      ok &= expect ("invariant check preserves the downsets",
+                    same_downset (invariant, before) and
+                        same_downset (asymmetric, asymmetric_before));
+      ok &= expect ("invariant check preserves the worker phase",
+                    std::string (record.stage) == "invariant-check");
+      ok &= expect ("invariant check has no profiling effects",
+                    profile.calls == prior_profile.calls and profile.ns == prior_profile.ns);
+      ok &= expect ("invariant check does not consume budget",
+                    expired.consumed_ns () == prior_consumed);
+    }
+
     bool filter_stopped = false;
     std::list<std::pair<bdd, int>> inputs {{bddtrue, 1}, {bddtrue, 2}, {bddtrue, 3}};
     {
@@ -828,6 +891,7 @@ int main () {
   ok &= run_syntax_hint_case ();
   ok &= run_unreal_case ();
   ok &= run_budget_cases ();
+  ok &= check_equivariant_invariant_backends ();
 
   posets::vectors::bool_threshold = old_bool_threshold;
 

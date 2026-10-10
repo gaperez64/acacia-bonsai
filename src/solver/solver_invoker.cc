@@ -428,8 +428,10 @@ namespace {
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("synthesis-check-after-translation");
-        assert (check_unreal.has_value () ? aut->intersects (mealy_aig->as_automaton (false))
-                                          : not aut->intersects (mealy_aig->as_automaton (false)));
+        const auto checked_controller = mealy_aig->as_automaton (false);
+        const bool intersects = aut->intersects (checked_controller);
+        const bool valid = check_unreal.has_value () ? intersects : not intersects;
+        assert (valid);
 
 #endif
       }

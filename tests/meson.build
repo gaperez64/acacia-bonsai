@@ -259,6 +259,10 @@ foreach variant : spot_provider_replay_variants
   )
   test(variant[0], spot_provider_replay_test,
        suite: ['unit', 'spot-provider-replay'])
+  foreach layout : ['scan', 'grouped']
+    test(variant[0] + '-' + layout, spot_provider_replay_test,
+         args: ['--oracle-layout', layout], suite: ['unit', 'spot-provider-replay'])
+  endforeach
 endforeach
 
 sparse_forward_rank_test = executable (
@@ -278,6 +282,19 @@ spot_letter_oracle_test = executable (
 )
 test ('spot-letter-oracle', spot_letter_oracle_test,
       suite : ['unit', 'spot-letter-oracle'])
+
+spot_lazy_oracle_test = executable (
+  'spot-lazy-oracle-test',
+  'spot_lazy_oracle_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test ('spot-lazy-oracle', spot_lazy_oracle_test, suite : ['unit', 'spot-lazy-oracle'])
+if get_option ('acacia_spot_guarded_backend') and enable_tlsf_frontend
+  test ('oracle-layout-cli', py,
+        args : [files ('check-oracle-layout.py'), ab_exe, meson.project_build_root ()],
+        suite : ['unit', 'cli'], depends : [ab_exe], timeout : 90)
+endif
 
 # Not gated on acacia_spot_guarded_backend: the engine header compiles without
 # it, only the backend dispatch is gated, so the test runs in every build --
@@ -670,8 +687,17 @@ test ('equivariance-backends', py,
       args : [files ('check-equivariance-backends.py'), meson.project_build_root ()],
       suite : ['unit', 'symmetry'], timeout : 120)
 
+# Only the debug predicate's test helper keeps assertions in the release profile.
+equivariant_invariant_test_helper = static_library (
+  'equivariant-invariant-test-helper',
+  'equivariant_invariant_test.cc',
+  cpp_args : ['-UNDEBUG'],
+  include_directories : inc,
+  dependencies : [spot_dep, bddx_dep, posets_dep],
+)
 equivariant_pre_test = executable ('equivariant-pre-test',
                                    'equivariant_pre_test.cc',
+                                   link_with : equivariant_invariant_test_helper,
                                    include_directories : inc,
                                    dependencies : [spot_dep, bddx_dep, posets_dep])
 test ('equivariant-pre',

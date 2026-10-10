@@ -68,6 +68,8 @@ def main():
                 if mode == "mixed":
                     assert [r["outcome"] for r in ends] == ["inconclusive", "decline"] + [
                         "inconclusive"] * 6, ends
+                    assert [r["reason"] for r in ends] == ["resource", "not_applicable"] + [
+                        "none"] * 6, ends
                     terminal = next(r for r in records if r.get("event") == "terminal_result")
                     assert terminal["reason"] == "none", terminal
                 else:

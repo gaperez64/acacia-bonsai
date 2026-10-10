@@ -117,6 +117,7 @@ void show_help (const char* program_name) {
       << "  --equivariance-budget F|DURATION|unbounded (default 3s); 0 <= F < 1\n"
       << "                    of remaining invocation budget, or a fixed 5 s reference without\n"
       << "                    a deadline; duration uses s or ms (e.g. 3s, 3000ms); cumulative\n"
+      << "  --oracle-layout VAL  sparse guard storage from [scan|grouped] (default: grouped)\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
@@ -423,6 +424,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   int opt;
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
+  static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
   static constexpr int OPT_REAL_BACKEND = 1002;
@@ -443,6 +445,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static option long_options[] = {
       {"version", no_argument, nullptr, 'V'},
       {"help", no_argument, nullptr, 'h'},
+      {"oracle-layout", required_argument, nullptr, OPT_ORACLE_LAYOUT},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
       {"unreal-translation-pref", required_argument, nullptr, OPT_UNREAL_TRANSLATION_PREF},
       {"real-backend", required_argument, nullptr, OPT_REAL_BACKEND},
@@ -638,6 +641,13 @@ arg_parse_result arg_parser (int argc, char** argv) {
                  "-Dacacia_enable_equivariant_solver=true.\n");
 #endif
         (opt == OPT_R_PREPASS ? retval.r_prepass : retval.equivariance) = enabled;
+        break;
+      }
+      case OPT_ORACLE_LAYOUT: {
+        const auto layout = acacia::parse_oracle_layout (optarg);
+        if (!layout)
+          error (EXIT_CODE_ERROR, "Error: --oracle-layout expects scan or grouped.\n");
+        retval.oracle_layout = *layout;
         break;
       }
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;

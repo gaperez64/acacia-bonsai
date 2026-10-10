@@ -50,8 +50,9 @@ Validation normally compares outcome, and per arm every non-volatile
 phase-record field (decision, decline stage, work counts), with
 check-cap-independence.py.  Explicit --outcome-only validation compares only
 outcome and failure class when per-arm records are unavailable.  Any mismatch
-invalidates recycling for the whole series, which must then be rerun in full
-at the long cap.
+invalidates recycling for the whole series unless an explicit driver adjudication
+exactly matches the finding, verifies every evidence hash, and preserves the
+recorded outcome. Unadjudicated failures require a full long-cap rerun.
 """
 
 from __future__ import annotations
@@ -72,6 +73,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "benchmarking"))
 from benchlib import load_phase_records, phase_record_dir  # noqa: E402
+from recycle_adjudication import adjudicate, paired_evidence, section  # noqa: E402
 
 
 def _load(name, path):
@@ -655,21 +657,23 @@ def evaluate_validation(args):
             if name not in sampled_long:
                 continue
             try:
-                one = load_phase_records(phase_record_dir(
+                one = capcheck.comparison_records(phase_record_dir(
                     short_records, short[name]["solver_label"], short[name]["cap_s"],
                     name, short[name]["run_index"]))
-                two = load_phase_records(phase_record_dir(
+                two = capcheck.comparison_records(phase_record_dir(
                     args.long_records, long[name]["solver_label"], long[name]["cap_s"],
                     name, long[name]["run_index"]))
             except (OSError, ValueError) as error:
-                failures.append({"instance": name, "arm": None, "kind": "records",
-                                 "message": f"{name}: {error}"})
+                if not any(f["instance"] == name and f["kind"] == "records" for f in failures):
+                    failures.append({"instance": name, "arm": None, "kind": "records",
+                                     "message": f"{name}: {error}"})
                 continue
             expected_arms = set(manifest["arms"])
             if not (one.arms() and two.arms() and
-                    set(one.arms()) <= expected_arms and
-                    set(two.arms()) <= expected_arms and
-                    any(one.arm_finished(arm) and two.arm_finished(arm)
+                    capcheck.solver_arms(one) <= expected_arms and
+                    capcheck.solver_arms(two) <= expected_arms and
+                    any(one.arm_finished(arm) and two.arm_finished(arm) and
+                        not any(p.dropped for p in one.arm_processes(arm) + two.arm_processes(arm))
                         for arm in expected_arms)):
                 failures.append({"instance": name, "arm": None, "kind": "records",
                                  "message": f"{name}: no shared completed arm records for "
@@ -680,6 +684,15 @@ def evaluate_validation(args):
     failures += [{"instance": name, "arm": None, "kind": "panel",
                   "message": f"{name}: long-cap row is outside the disclosed sample"}
                  for name in extra]
+    adjudications = getattr(args, "adjudications", None)
+    try:
+        failures, adjudicated = adjudicate(
+            adjudications, manifest["series"], failures, sampled_short, sampled_long,
+            required_evidence=paired_evidence(manifest["short_run"], args.long,
+                                              sampled_short, sampled_long,
+                                              short_records, args.long_records))
+    except (OSError, ValueError) as error:
+        raise RecycleError(f"adjudication rejected: {error}") from error
     arms = {failure["arm"] for failure in failures if failure["arm"]}
     if not outcome_only and any(failure["arm"] is None for failure in failures):
         arms.update(manifest["arms"] or [manifest["series"]])
@@ -695,6 +708,9 @@ def evaluate_validation(args):
         if args.long_records else "",
         "checked": checked, "sample_size": len(chosen),
         "failures": failures, "notes": notes, "mismatched_arms": arms,
+        "adjudications": str(pathlib.Path(adjudications).resolve()) if adjudications else "",
+        "adjudications_sha256": sha256_file(adjudications) if adjudications else "",
+        "adjudicated_mismatches": adjudicated,
         "verification": ("outcome-only" if outcome_only else
                          "sample and phase records replayed; solver outcomes unverified"),
     }
@@ -715,6 +731,7 @@ def validate(args):
         print(f"note: {note}")
     for failure in failures:
         print(f"MISMATCH [{failure['kind']}] {failure['message']}")
+    print(section(verdict["adjudicated_mismatches"]))
     if failures:
         arms = verdict["mismatched_arms"]
         where = (f"; phase records differ on arm(s) {', '.join(arms)}" if arms else "")
@@ -760,7 +777,9 @@ def merge(args):
             long=pathlib.Path(verdict["long_run"]),
             long_records=pathlib.Path(verdict["long_records"])
             if verdict.get("long_records") else None,
-            outcome_only=outcome_only, reason=verdict.get("reason")))
+            outcome_only=outcome_only, reason=verdict.get("reason"),
+            adjudications=pathlib.Path(verdict["adjudications"])
+            if verdict.get("adjudications") else None))
         if replay != verdict:
             raise RecycleError(f"{args.validation}: validation verdict differs from replay")
     elif args.validation is not None:
@@ -816,7 +835,9 @@ def merge(args):
     write_json(output.with_name(f"{output.stem}-provenance.json"), {
         "kind": "recycle-merge", "statement": statement, "series": manifest["series"],
         "plan_sha256": manifest["plan_sha256"],
+        "validation": str(pathlib.Path(args.validation).resolve()) if args.validation else "",
         "validation_sha256": sha256_file(args.validation) if args.validation else "",
+        "adjudicated_mismatches": verdict.get("adjudicated_mismatches", []) if verdict else [],
         "validation_mode": validation_mode,
         "limitation": verdict.get("limitation", "") if verdict else "",
         "row_validation_modes": {
@@ -872,6 +893,8 @@ def build_parser():
     p.add_argument("--sample", required=True, type=pathlib.Path, help="the -sample.json file")
     p.add_argument("--long", required=True, type=pathlib.Path, help="long-cap coverage TSV")
     p.add_argument("--long-records", type=pathlib.Path)
+    p.add_argument("--adjudications", type=pathlib.Path,
+                   help="driver decisions bound to exact mismatches and SHA-256 evidence")
     p.add_argument("--outcome-only", action="store_true",
                    help="compare sampled outcomes and failure classes without phase records")
     p.add_argument("--reason", help="why per-arm validation is unavailable; required with "
