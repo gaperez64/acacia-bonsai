@@ -384,3 +384,13 @@ The implementation, measurement definitions, capture limitation, checks and
 reproduction details are in [mona-streaming.md](mona-streaming.md). Raw observations
 remain locally under `build_scratch/i200/_bm-logs.memory/`; the driver owns paired
 admission and durable publication. No commits were made.
+
+Offline follow-up on the three cooled Morning2s repetitions identifies a real
+60 s preparation-phase peak increase from earlier allocation of the required
+final action table, while decoding continues. The affected 348-state forward
+worker never starts search in either binary; no decoded-buffer leak or table
+copy was found. Streaming retains 0.919–1.071 GB of action payload with at most
+53.3 MB of decoded payload. Old interrupted decode counts and final per-worker
+RSS are unrecorded, so no measured equal-progress RSS claim is made. Details
+and same-prefix payload projections are in [mona-streaming.md](mona-streaming.md).
+No solver changes or new diagnostic runs were made; admission remains pending.

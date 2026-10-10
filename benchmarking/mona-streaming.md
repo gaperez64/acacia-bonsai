@@ -118,3 +118,106 @@ After validation, 700.4 MiB of scratch objects and unused test targets were remo
 Validation logs/configuration metadata, the diagnostic executables, the new test
 executable and the checked Python bindings remain available. Recompile with
 `meson compile -C build_scratch/i200/checked -j 3` before rerunning the entire unit suite.
+
+
+## Morning2s timeout peak investigation
+
+Offline comparison of `i200-adj-r{1,2,3}` and the earlier 80-instance `i200-60`
+screen identifies earlier allocation of the final action table during decoding.
+This is a real increase in the memory needed at the 60 s cutoff, not evidence
+of additional search. No unintended decoded-buffer retention, duplicate final
+table, or lazy-precomputer buffer was found. No solver change was made.
+
+The frozen executables are LEGP0 (`54ddfb83`, SHA-256 `cdb3e51f5bd274a1137033eed8640dc38b54522d36135af9e750e29f867aba75`)
+and LEGI200 (`ff2caea8`, SHA-256 `48d5d3e9ed0b77c40f87cb47254fb537e86828e28361d88becf55b7907902005`).
+Memory sidecars agree with primary rows; all six repeated invocations time out
+without OOM. GiB below means bytes / 2^30.
+
+| Repetition | Scope peak, old / streamed (GiB) | Streamed complete input classes | Streamed decoded endpoints | Retained action payload (bytes) | Forward worker last sampled peak RSS (KiB) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 2.739 / 3.582 | 19 | 32,372,556 | 1,070,716,352 | 1,270,548 |
+| 2 | 2.686 / 3.342 | 18 | 27,776,268 | 918,890,400 | 1,110,248 |
+| 3 | 2.734 / 3.576 | 19 | 32,372,556 | 1,070,716,352 | 1,270,584 |
+
+In both binaries, REAL backward/forward workers remain in translation; native
+OxiDD remains in trusted preparation. Formula-UNREAL sparse search reaches K=2
+on the same 352-state/8,004-edge graph, with 339 numeric and 13 Boolean dimensions.
+Its interrupted search publishes no rows/query/game-state totals: they are
+unknown, not zero. The affected automaton-UNREAL forward worker has exactly
+348 states, 8,000 edges, 335 numeric and 13 Boolean dimensions in every run.
+Neither binary reaches picker preparation, a K attempt, or search in that worker.
+
+The maximum recorded per-worker high-water marks are below (r1/r2/r3, KiB).
+They are checkpoint observations, not terminal peaks; the two REAL translators
+and OxiDD publish only early samples. Blank graph/count fields in the raw table
+remain unknown. No search occurred in workers 0, 1, 3 or 4.
+
+| Worker | Route | Terminal phase, both | Old sampled peak RSS | Streamed sampled peak RSS |
+| --- | --- | --- | ---: | ---: |
+| 0 | REAL backward | translation | 16,124 / 16,108 / 16,116 | 16,124 / 16,112 / 16,128 |
+| 1 | REAL forward | translation | 16,124 / 16,044 / 16,116 | 16,124 / 16,112 / 16,128 |
+| 2 | formula-UNREAL sparse | search, K=2 | 26,492 / 26,540 / 26,484 | 26,620 / 26,544 / 26,624 |
+| 3 | automaton-UNREAL forward | IO decoding | 177,904 / 177,780 / 177,856 | 1,270,548 / 1,110,248 / 1,270,584 |
+| 4 | native OxiDD | trusted preparation | 1,812 / 1,812 / 1,812 | 1,816 / 1,812 / 1,816 |
+
+The sparse worker's translation takes 8.482/9.310, 9.571/9.881 and
+9.304/10.263 s (old/streamed); preprocessing and Booleanization finish within
+another 0.008 s. Its started K remains 2. Extra progress within that censored K
+cannot be measured from the available packets and must not be inferred from
+its startup RSS sample.
+
+Forward translation takes 30.348/30.182, 31.604/31.699 and 31.081/31.088 s
+(old/streamed). IO decoding begins at elapsed 40.077/38.924, 40.833/40.723 and
+40.306/39.846 s. Master has no completed decode and no action construction at
+termination. Streaming interleaves action construction with decoding. Its
+maximum one-class decoded payload is 53,297,180 bytes in all repetitions.
+Retained action payload and RSS grow together at classes 4, 5, 7, 11, 12, 14
+and 19. Repeated classes leave retained payload unchanged; pending duplicate
+actions are released normally. The screen reaches class 20 and retains
+1,222,611,936 action bytes, consistent with the same mechanism.
+
+The action representation allocates a vector for every state for every decoded
+output set, even when that state's row is empty. Each large unique input has
+12,288 output sets: its 348-state row-vector arrays alone occupy 102,629,376
+bytes, before endpoints, versus roughly 53 MB for its compact decoded sets.
+At class 19, eight retained input lists (one small and seven large) contain
+86,881 output actions; their row-vector arrays account for 725,630,112 bytes,
+about 68% of the estimated action payload. This representation predates
+streaming; streaming makes those arrays resident earlier.
+
+The current input's decoded list dies on return from its callback. The actioner
+retains only the sorted, deduplicated table, which the old constructor would
+also retain; extraction moves its contents without copying nested vectors.
+`prepare.hh` holds an automaton shared pointer and three BDD handles, not a
+materialized range. MONA's residual-root set is untouched in the plain,
+diagnostics-disabled build. The MONA BDD also remains live until streaming
+finishes; previously its lifetime ended before action construction began.
+
+At the identical decoded prefix of 19 classes, summing recorded per-class
+capacities projects the old decoded payload to 374,460,408 bytes. Streaming has
+1,070,716,352 action bytes plus the current 53,166,108 decoded bytes before its
+callback returns: 749,422,052 more accounted live bytes at that checkpoint.
+At class 18 the corresponding difference is 597,764,356 bytes. These are
+source-based payload projections with verified LP64 object sizes, not measured
+old RSS or evidence of the old binary's exact cutoff prefix. Both omit allocator
+nodes, BDD manager allocations and other workers. The projections explain the
+direction and scale of the scope increase without assuming additional search.
+
+Recorded phase RSS is a high-water mark sampled on stage completion. SIGKILL
+prevents final samples in censored stages; per-worker final peaks and interrupted
+search counts cannot be reconstructed from the scope maximum. In particular,
+master's 177,904/177,780/177,856 KiB forward checkpoints precede decoding and
+must not be compared as if they were final peaks. No measured equal-progress
+Morning2s RSS comparison is claimed.
+
+Classification: preparation-phase overlap / earlier final-table allocation,
+with a real fixed-deadline peak regression, rather than a decoded-buffer leak
+or extra search progress. This diagnosis does not establish performance admission
+or justify closing the remaining large-action-table problem. Zero new diagnostic
+solver runs were needed. Revalidated: 58 unit tests; full pytest 2,210 passed,
+40 skipped, 23 subtests passed; hardcoding guard 96 passed, one skip.
+
+Raw offline tables, input digests, source-layout check, reproduction script and
+validation logs are in `build_scratch/i200-investigation/_bm-logs.analysis/`
+and `build_scratch/i200-investigation/analyze.py`. Original rows and phases stay
+unchanged in `/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.legacy/`.
