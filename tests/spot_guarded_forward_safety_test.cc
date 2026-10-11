@@ -72,7 +72,12 @@ namespace {
       auto make (const spot::twa_graph_ptr& aut, int, VECTOR_ELT_T K) const {
         std::list<std::pair<bdd, std::list<std::vector<std::pair<unsigned, unsigned>>>>> empty;
         auto actioner = actioners::standard<State>::make (aut, empty, K);
-        actioner.actions () = table;
+        for (const auto& [input, actions] : table) {
+          auto& outputs =
+              actioner.actions ().emplace_back (input, decltype (actioner)::action_vecs {}).second;
+          for (const auto& rows : actions)
+            outputs.push_back (actioners::compact_payload::from_rows (rows));
+        }
         return actioner;
       }
   };

@@ -5,6 +5,26 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-11 — compact action payloads (#208, #200), development measurements
+
+Six inputs selected structurally from long-search closing rows were profiled with
+both standalone REAL arms, serially in fresh 8 GiB no-swap scopes. Backward
+predecessor share is **0.59–18.47% of search cycles**, below 7% on five of six;
+nonempty-row density is **0.46–28.28%**. A sparse destination/offset payload with
+ordered contiguous endpoints reduces the six action tables by **65.4–98.3%**,
+retaining the existing list/splice order and handle size.
+
+The robot input moves from 8 GiB construction OOM to a complete **14.10 MB** table,
+**403 MB** scope peak and search (still capped at 60 s). Morning2s's complete
+UNREAL-forward table falls **5.48 → 1.73 GB**, scope peak **7.93 → 3.76 GB**,
+with both runs capped at 180 s. The small-table input has higher search peaks;
+these are single observations, with no corpus solve or admission claim.
+Generated games have byte-identical picker/RNG, predecessor, solver and strategy
+traces against the frozen dense actioner. Unit 70/70, full pytest 2,299 tests and
+the anti-hardcoding guard pass. The native-enabled build and admission screens
+remain with the driver. See the [measurements and decision](coverage-first/action-payload-layout.md)
+for every input, arm, payload density, bytes/state/row, time, peak and limitations.
+
 ## 2026-10-08 — coverage-first P2b: admit the 3 s equivariance default (#224)
 
 Evidence campaign `cov20261007-eqfull` (archived): fresh, matched, rotated

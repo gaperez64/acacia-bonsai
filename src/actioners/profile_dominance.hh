@@ -37,7 +37,8 @@ namespace actioners::profile_dominance {
   /// Sort each destination's endpoints by source and merge parallel entries.
   /// A parallel accepting endpoint subsumes a non-accepting one, so merging
   /// retains the maximum increment.
-  inline normalized_action normalize (const action_vec& value) {
+  template <typename Action>
+  inline normalized_action normalize (const Action& value) {
     normalized_action result (value.size ());
     for (std::size_t destination = 0; destination < value.size (); ++destination) {
       auto& normalized = result[destination];
@@ -167,7 +168,8 @@ namespace actioners::profile_dominance {
   /// Stably remove redundant actions.  On budget exhaustion, only positions
   /// for which a completed comparison has already proved redundancy are
   /// removed; the current candidate and every unvisited action are retained.
-  inline stats prune (action_vecs& actions, const budget& limits = {}) {
+  template <typename Actions>
+  inline stats prune (Actions& actions, const budget& limits = {}) {
     using clock = std::chrono::steady_clock;
     const auto started = clock::now ();
 
@@ -176,7 +178,7 @@ namespace actioners::profile_dominance {
 
     struct indexed_action {
         std::size_t position;
-        action_vecs::iterator iterator;
+        typename Actions::iterator iterator;
         std::optional<normalized_action> normalized;
     };
 
@@ -254,7 +256,7 @@ namespace actioners::profile_dominance {
         surviving_positions.push_back (indexed[i].position);
     std::sort (surviving_positions.begin (), surviving_positions.end ());
 
-    action_vecs filtered;
+    Actions filtered;
     for (const std::size_t survivor : surviving_positions)
       filtered.splice (filtered.end (), actions, indexed[survivor].iterator);
     actions.swap (filtered);

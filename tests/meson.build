@@ -976,3 +976,9 @@ foreach f, _ : synthesis_benchmarks
           depends : [ab_exe])
   endif
 endforeach
+
+action_payload_test = executable ('action-payload-test', 'action_payload_test.cc',
+                                  include_directories : inc,
+                                  dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep],
+                                  cpp_args : ['-UNO_VERBOSE'])
+test ('action-payload', action_payload_test, suite : ['unit', 'action-payload'], timeout : 120)
