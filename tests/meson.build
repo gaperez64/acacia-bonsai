@@ -443,6 +443,10 @@ test ('degenerate-io-cli',
       suite : ['unit', 'degenerate-io'],
       depends : [ab_exe])
 
+stage_scheduler_test = executable (
+  'stage-scheduler-test', 'stage_scheduler_test.cc', include_directories : inc)
+test ('stage-scheduler', stage_scheduler_test, suite : ['unit', 'portfolio'])
+
 game_backend_cli = find_program ('check-game-backend-cli.sh')
 # Exercise the real worker boundary even in docker_default CI. This test-only
 # binary uses the same sources; no installed binary, preset or arm is changed.
@@ -486,6 +490,10 @@ if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release
   if get_option ('acacia_native_arms')
     portfolio_deadline_args += ['--native']
   endif
+  test ('stage-scheduling', py,
+        args : [files ('check-stage-scheduling.py'), game_backend_integration, ab_exe,
+                meson.project_build_root ()],
+        suite : ['unit', 'portfolio'], depends : [game_backend_integration, ab_exe], timeout : 90)
   test ('portfolio-deadline', py,
         args : portfolio_deadline_args,
         suite : ['unit', 'portfolio'], depends : [game_backend_integration])

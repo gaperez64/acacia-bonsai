@@ -21,6 +21,8 @@ namespace acacia {
     void record_combined_event (void*, TlsfGr1BothEventKind kind, TlsfGr1BothEventRoute route,
                                 int proof_unreal, const char* stage, const char*,
                                 TlsfGr1LiftStatus failure) {
+      if (kind == TLSF_GR1_BOTH_EVENT_VERIFIED)
+        schedule_stage (stage_kind::memory);
       auto* worker = active_worker_record ();
       if (!worker)
         return;
@@ -45,11 +47,11 @@ namespace acacia {
         worker_event (*worker, "check_complete");
       }
       else if (kind == TLSF_GR1_BOTH_EVENT_DECLINE) {
-        worker_stage (stage);
+        worker_record_text (worker->stage, stage);
         worker_decline (stage);
       }
       else if (kind == TLSF_GR1_BOTH_EVENT_STOPPED) {
-        worker_stage (stage);
+        worker_record_text (worker->stage, stage);
         worker_stopped (native_failure_reason (native_failure (failure)));
       }
 # ifdef ACACIA_NATIVE_TEST_HOOKS
@@ -104,8 +106,8 @@ namespace acacia {
     } guard {result};
     phase_scope combined_phase (arm, "combined_call");
     const TlsfGr1BothObserverV1 observer {record_combined_event, nullptr};
-    const TlsfGr1BothOptionsV2 routing {&options, phase_records_enabled () ? &observer : nullptr,
-                                        !args.r_prepass};
+    const bool observe = phase_records_enabled () || stage_scheduling_enabled ();
+    const TlsfGr1BothOptionsV2 routing {&options, observe ? &observer : nullptr, !args.r_prepass};
     status = tlsf_gr1_both_from_target_v2 (target.get (), &routing, &result, &error);
     combined_phase.finish ();
     if (real_only && result.route == TLSF_GR1_BOTH_ENV_LIFT) {

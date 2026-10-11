@@ -727,6 +727,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         "-DACACIA_COMPILE_ALL_COMPONENTS=1",
         "-DACACIA_ENABLE_DIAGNOSTICS=1",
         r'-DACACIA_DEFAULT_ARMS=\"real:identity:backward,unreal:identity:forward\"',
+        "-DACACIA_STAGE_CONCURRENCY=0",
         "-DACACIA_DEFAULT_CANDIDATE_MODE=acacia::candidate_mode::only",
         "-DACACIA_SPOT_TAA_MAX_RANK_NODES=200000",
         "-DACACIA_LOCAL_CERTIFICATE=1",

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "stage_scheduler.hh"
+
 #include <algorithm>
 #include <cerrno>
 #include <climits>
@@ -256,11 +258,13 @@ namespace acacia {
   }
 
   inline void worker_stage (const char* stage) noexcept {
+    schedule_stage (stage);
     if (auto* worker = active_worker_record ())
       worker_record_text (worker->stage, stage);
   }
   inline void worker_select_route (const char* route, const char* effective_backend = nullptr,
                                    const char* proof_polarity = nullptr) noexcept {
+    schedule_stage (route);
     if (auto* worker = active_worker_record ()) {
       worker_record_text (worker->route, route);
       worker_record_text (worker->stage, route);
@@ -280,6 +284,7 @@ namespace acacia {
       worker_event (*worker, "route_start");
   }
   inline void worker_decline (const char* reason) noexcept {
+    schedule_stage (stage_kind::unrestricted);
     if (auto* worker = active_worker_record (); worker && !worker->stopped) {
       ++worker->declines;
       worker_record_text (worker->reason, reason);
@@ -287,6 +292,7 @@ namespace acacia {
     }
   }
   inline void worker_stopped (const char* reason) noexcept {
+    schedule_stage (stage_kind::unrestricted);
     if (auto* worker = active_worker_record ()) {
       ++worker->stops;
       worker_record_text (worker->reason, reason);
@@ -295,6 +301,7 @@ namespace acacia {
     }
   }
   inline void worker_verified (const char* original, const char* proof) noexcept {
+    schedule_stage (stage_kind::unrestricted);
     if (auto* worker = active_worker_record ()) {
       worker->verified = true;
       worker_record_text (worker->original_polarity, original);
@@ -304,6 +311,7 @@ namespace acacia {
     }
   }
   inline void worker_terminal (int result, const char* reason = "none") noexcept {
+    schedule_stage (stage_kind::unrestricted);
     if (auto* worker = active_worker_record ()) {
       const char* final_reason =
           worker->stopped || std::strcmp (reason, "none") == 0 ? worker->reason : reason;
@@ -627,6 +635,7 @@ namespace acacia {
   }
 
   class legacy_phase {
+      scheduling_phase scheduling_;
       const char* name_;
       phase_stamp start_;
       unsigned long long previous_id_ = 0;
@@ -636,7 +645,8 @@ namespace acacia {
       bool finished_ = false;
 
     public:
-      explicit legacy_phase (const char* name) : name_ (name), start_ (phase_start ()) {
+      explicit legacy_phase (const char* name, bool applicable = true)
+        : scheduling_ (name, applicable), name_ (name), start_ (phase_start ()) {
         if (!start_.wall)
           return;
         exceptions_ = std::uncaught_exceptions ();
@@ -648,14 +658,16 @@ namespace acacia {
           worker_record_text (w->observed_stage, name);
           w->stage_id = ++w->next_stage_id;
           w->stage_start_ns = start_.wall;
-          worker_stage (name);
+          worker_record_text (w->stage, name);
           legacy_stage_event ("stage_entry", name);
         }
       }
       legacy_phase (const legacy_phase&) = delete;
       void finish (const char* reason = "none", bool stopped = false) noexcept {
-        if (finished_ || !start_.wall)
+        if (finished_ || !start_.wall) {
+          scheduling_.finish ();
           return;
+        }
         legacy_stage_event (stopped ? "stage_stopped" : "stage_completion", name_, start_, reason);
         finished_ = true;
         if (auto* w = active_worker_record ()) {
@@ -664,6 +676,7 @@ namespace acacia {
           worker_record_text (w->stage, previous_stage_);
           worker_record_text (w->observed_stage, previous_observed_stage_);
         }
+        scheduling_.finish ();
       }
       ~legacy_phase () {
         if (!start_.wall || finished_)
@@ -673,18 +686,20 @@ namespace acacia {
       }
   };
   inline void legacy_inapplicable (const char* stage, const char* reason) noexcept {
-    legacy_phase phase (stage);
+    legacy_phase phase (stage, false);
     phase.finish (reason);
   }
 
   class phase_scope {
+      scheduling_phase scheduling_;
       const char* arm_;
       const char* phase_;
       phase_stamp start_;
 
     public:
       phase_scope (const char* arm, const char* phase) noexcept
-        : arm_ (arm),
+        : scheduling_ (phase),
+          arm_ (arm),
           phase_ (phase),
           start_ (phase_start ()) {
         worker_stage (phase);
@@ -696,6 +711,7 @@ namespace acacia {
         if (start_.wall)
           phase_finish (arm_, phase_, start_, bdd_nodes, bdd_cache);
         start_ = {};
+        scheduling_.finish ();
       }
   };
 }

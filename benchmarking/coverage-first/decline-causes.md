@@ -69,13 +69,13 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 | src/native_gr1_arm.cc:200 | `-1` | `error` | STOPPED/error | `"certificate"` | `"certificate or policy missing"` |
 | src/native_gr1_arm.cc:213 | `-1` | `error` | STOPPED/error | `"metadata"` | `"proof side or semantics mismatch"` |
 | src/native_gr1_arm.cc:253 | `status == TLSF_GR1_CHECK_OK ? int (checked.value.verdict) : int (status)` | `native_failure (status, checked.value.verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `checked.value.stage[0] ? checked.value.stage : "check"` | `checked.value.message[0] ? checked.value.message : "proof not verified"` |
-| src/native_gr1_lift_arm.cc:49 | `UNKNOWN` | `worker_decline` | DECLINE/applicability | `worker` | `stage` |
-| src/native_gr1_lift_arm.cc:53 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `native_failure_reason (native_failure (failure))` |
-| src/native_gr1_lift_arm.cc:94 | `int (status)` | `native_failure (preparation_cause)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `error.stage` | `native_budget_message (error.stage, error.message, stats.work)` |
-| src/native_gr1_lift_arm.cc:112 | `-1` | `error` | STOPPED/error | `"route"` | `"R-only arm selected U"` |
-| src/native_gr1_lift_arm.cc:130 | `int (status)` | `native_failure (status)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `error.stage` | `native_budget_message (error.stage, error.message, stats.work)` |
-| src/native_gr1_lift_arm.cc:151 | `-1` | `error` | STOPPED/error | `"artifact"` | `"incomplete checked proof"` |
-| src/native_gr1_lift_arm.cc:189 | `-1` | `error` | STOPPED/error | `"binding"` | `"checked proof binding mismatch"` |
+| src/native_gr1_lift_arm.cc:51 | `UNKNOWN` | `worker_decline` | DECLINE/applicability | `worker` | `stage` |
+| src/native_gr1_lift_arm.cc:55 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `native_failure_reason (native_failure (failure))` |
+| src/native_gr1_lift_arm.cc:96 | `int (status)` | `native_failure (preparation_cause)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `error.stage` | `native_budget_message (error.stage, error.message, stats.work)` |
+| src/native_gr1_lift_arm.cc:114 | `-1` | `error` | STOPPED/error | `"route"` | `"R-only arm selected U"` |
+| src/native_gr1_lift_arm.cc:132 | `int (status)` | `native_failure (status)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `error.stage` | `native_budget_message (error.stage, error.message, stats.work)` |
+| src/native_gr1_lift_arm.cc:153 | `-1` | `error` | STOPPED/error | `"artifact"` | `"incomplete checked proof"` |
+| src/native_gr1_lift_arm.cc:191 | `-1` | `error` | STOPPED/error | `"binding"` | `"checked proof binding mismatch"` |
 | src/native_param_lift_arm.cc:107 | `int (lift_status)` | `native_failure (failure_status)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `lift_error.stage` | `native_budget_message (lift_error.stage, lift_error.message, work)` |
 | src/native_param_lift_arm.cc:129 | `-1` | `error` | STOPPED/error | `"artifact"` | `"incomplete or unverified system proof"` |
 | src/native_param_lift_arm.cc:139 | `-1` | `error` | STOPPED/error | `"evidence"` | `"invalid lift evidence JSON"` |

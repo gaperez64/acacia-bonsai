@@ -6,6 +6,7 @@ used only to select and evaluate measurements, never in solver logic.
 
 | Date | Decision | Evidence |
 |---|---|---|
+| 2026-10-11 | Keep stage scheduling off by default. The implemented two-slot/three-second policy is fair and preserves proof/deadline paths but recovers zero of the three requested 60 s race losses; driver admission and any different global allowance remain outstanding. | Local unarchived `_bm-logs.i202-scheduling/report.md`; [policy](race-contention.md); 84/84 unit, 2307 pytest, 96 hardcoding checks pass |
 | 2026-10-06 | Measurement infrastructure first (P0): route attribution with typed stop causes, cgroup peaks collected before teardown, corrected gates. A decline means only a genuine applicability decline. | `cov20261006-p0exit` |
 | 2026-10-06 | Timeouts get a fixed global 500 ms cleanup window after SIGTERM; answers inside it remain TIMEOUT. | `cov20261006-p0exit` (delivery 144/180 → 180/180) |
 | 2026-10-07 | Keep R on (three confirmed REAL gains, one near-cap UNREAL loss). | `cov20261006-p1ablation` |

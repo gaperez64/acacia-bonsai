@@ -85,7 +85,7 @@ namespace acacia {
       // Preserve the obstruction even if the child exits before its caller can
       // publish a terminal packet. Messages remain on the incumbent stderr path.
       const std::string reason (stage);
-      worker_stage (reason.c_str ());
+      worker_record_text (worker->stage, reason.c_str ());
       if (category == native_failure_category::decline) {
         if (!worker->stopped && std::strcmp (worker->reason, reason.c_str ()) != 0)
           worker_decline (reason.c_str ());

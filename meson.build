@@ -81,6 +81,7 @@ if get_option ('acacia_preset') != ''
   build_conf.set_quoted ('ACACIA_PRESET', get_option ('acacia_preset'))
 endif
 build_conf.set_quoted ('ACACIA_DEFAULT_ARMS', get_option ('acacia_default_arms'))
+build_conf.set ('ACACIA_STAGE_CONCURRENCY', get_option ('acacia_stage_concurrency'))
 build_conf.set ('ACACIA_DEFAULT_CANDIDATE_MODE',
                 'acacia::candidate_mode::' + get_option ('acacia_default_candidate_mode'))
 build_conf.set ('ACACIA_SPOT_TAA_MAX_RANK_NODES',

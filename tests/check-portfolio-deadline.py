@@ -56,7 +56,7 @@ def check(binary: Path, args: list[str], modes: str, seconds: float,
             time.sleep(0.001)
         else:
             raise AssertionError(("child lacks its own process group", pid, group))
-    stdout, stderr = process.communicate(timeout=3)
+    stdout, stderr = process.communicate(timeout=max(3, max_elapsed))
     elapsed = time.monotonic() - started
     if len(children) < expected_children:
         raise AssertionError(("missing fake children", modes, children, stdout, stderr))

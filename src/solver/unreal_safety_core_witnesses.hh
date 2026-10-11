@@ -491,6 +491,8 @@ namespace acacia::unreal_witnesses {
       phase_record_process_state ().write_fd = -1;
       phase_record_process_state ().enabled = false;
       active_worker_record () = nullptr;
+      // The supervisor holds the stage lease for this entire process group.
+      active_stage_slot = nullptr;
       checked_game proof;
       proof.objective = binding_hash (spot::str_psl (d.objective));
       proof.context = d.premise.source.hash ();

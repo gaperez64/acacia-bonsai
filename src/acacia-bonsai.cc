@@ -43,6 +43,76 @@ namespace {
   pid_t g_main_pid = 0;
   acacia::worker_record* g_worker_records = nullptr;
   bool g_worker_records_shared = false;
+  acacia::stage_slot* g_stage_slots = nullptr;
+  std::vector<bool> g_stage_stopped, g_stage_stop_pending;
+
+  void scheduling_event (sig_atomic_t index, const char* event, uint64_t request) {
+    if (!acacia::phase_records_enabled ())
+      return;
+    char line[256];
+    const int length = snprintf (
+        line, sizeof line,
+        "{\"event\":\"%s\",\"worker\":%u,\"worker_pid\":%ld,\"kind\":%llu,"
+        "\"generation\":%llu,\"mono_ns\":%llu}\n",
+        event, unsigned (index), long (g_child_pids[index]),
+        (unsigned long long) (request & acacia::stage_slot::kind_mask),
+        (unsigned long long) (request >> 3),
+        (unsigned long long) acacia::phase_clock (CLOCK_MONOTONIC));
+    if (length > 0 && size_t (length) < sizeof line)
+      acacia::phase_records_send (line, size_t (length));
+  }
+
+  void schedule_children (acacia::stage_scheduler& scheduler, uint64_t now) {
+    std::vector<uint64_t> requests (g_child_count);
+    for (sig_atomic_t i = 0; i < g_child_count; ++i) {
+      requests[i] = g_stage_slots[i].request.load (std::memory_order_acquire);
+      scheduler.update (i, g_child_pids[i] > 0,
+                        acacia::stage_kind (requests[i] & acacia::stage_slot::kind_mask), now);
+    }
+    const auto selected = scheduler.choose (now);
+    bool stopping = false;
+    // Revoke and acknowledge every old lease before admitting a new group.
+    for (sig_atomic_t i = 0; i < g_child_count; ++i) {
+      const pid_t pid = g_child_pids[i];
+      if (pid <= 0)
+        continue;
+      if (!selected[i] && !g_stage_stopped[i] && !g_stage_stop_pending[i]) {
+        g_stage_slots[i].request.fetch_and (~acacia::stage_slot::granted,
+                                           std::memory_order_acq_rel);
+        if (kill (-pid, SIGSTOP) == 0) {
+          g_stage_stop_pending[i] = true;
+          scheduling_event (i, "scheduler_pause", requests[i]);
+        }
+      }
+      if (g_stage_stop_pending[i]) {
+        siginfo_t stopped {};
+        if (waitid (P_PID, pid, &stopped, WSTOPPED | WNOHANG) == 0 && stopped.si_pid == pid) {
+          g_stage_stop_pending[i] = false;
+          g_stage_stopped[i] = true;
+        }
+        else
+          stopping = true;
+      }
+    }
+    if (stopping)
+      return;
+    for (sig_atomic_t i = 0; i < g_child_count; ++i) {
+      const pid_t pid = g_child_pids[i];
+      if (pid <= 0 || !selected[i])
+        continue;
+      auto request = requests[i];
+      if (!g_stage_slots[i].request.compare_exchange_strong (
+              request, request | acacia::stage_slot::granted, std::memory_order_acq_rel))
+        continue;
+      if (!(requests[i] & acacia::stage_slot::granted))
+        scheduling_event (i, "scheduler_admit", requests[i]);
+      if (g_stage_stopped[i]) {
+        scheduling_event (i, "scheduler_resume", requests[i]);
+        kill (-pid, SIGCONT);
+        g_stage_stopped[i] = false;
+      }
+    }
+  }
 
   void record_parent_terminal (sig_atomic_t index, int status, const char* reason, pid_t pid) {
     if (!g_worker_records)
@@ -157,6 +227,24 @@ namespace {
       mode.remove_prefix (comma + 1);
     }
     mode = mode.substr (0, mode.find (','));
+    if (mode.starts_with ("memory-")) {
+      acacia::worker_stage ("translation");
+      mode.remove_prefix (7);
+    }
+    else if (mode.starts_with ("checking-")) {
+      timespec delay {0, 50000000};
+      nanosleep (&delay, nullptr);
+      acacia::worker_stage ("target_check");
+      mode.remove_prefix (9);
+    }
+    if (mode == "decline-delayed") {
+      acacia::worker_decline ("inconclusive");
+      timespec delay {0, 300000000};
+      nanosleep (&delay, nullptr);
+      _exit (EXIT_CODE_UNKNOWN);
+    }
+    if (mode == "unknown")
+      _exit (EXIT_CODE_UNKNOWN);
     if (mode == "stall") {
       signal (SIGTERM, SIG_IGN);
       while (true)
@@ -310,6 +398,8 @@ namespace {
       if (setpgid (0, 0) != 0)
         _exit (EXIT_CODE_ERROR);
       sigprocmask (SIG_SETMASK, &old_mask, nullptr);
+      if (g_stage_slots)
+        acacia::active_stage_slot = &g_stage_slots[g_child_count];
       if (child_start.wall) {
         const char* name = arm.kind == portfolio_arm_kind::legacy ? "legacy" : arm.native_name ();
         acacia::phase_finish (name, "child_startup", child_start);
@@ -383,6 +473,9 @@ namespace {
       launch_child (arm, arg_values, deadline_mono_ns, block_set);
     }
 
+    std::optional<acacia::stage_scheduler> scheduler;
+    if (g_stage_slots)
+      scheduler.emplace (g_child_count, arg_values.stage_concurrency);
     int status;
     bool child_reported_error = false;
     while (true) {  // wait only for solver arms; the record writer is separate
@@ -441,6 +534,8 @@ namespace {
         stop_children ("interrupted");
         error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
       }
+      if (g_stage_slots)
+        schedule_children (*scheduler, monotonic_ns ());
       if (reaped == 0) {
         const uint64_t pause_ns =
             deadline_mono_ns ? std::min<uint64_t> (10000000, deadline_mono_ns - now_ns) : 10000000;
@@ -517,7 +612,18 @@ int main (int argc, char** argv) {
   assert (arg_values.arms.has_value ());
   g_child_pids = new pid_t[arg_values.arms->size ()];
   g_main_pid = getpid ();
-  if (acacia::phase_records_enabled ()) {
+  if (arg_values.stage_concurrency) {
+    const size_t bytes = arg_values.arms->size () * sizeof (acacia::stage_slot);
+    void* shared = mmap (nullptr, bytes, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    if (shared == MAP_FAILED)
+      error (EXIT_CODE_ERROR, "Error: cannot allocate stage scheduling state.\n");
+    g_stage_slots = static_cast<acacia::stage_slot*> (shared);
+    for (size_t i = 0; i < arg_values.arms->size (); ++i)
+      new (&g_stage_slots[i]) acacia::stage_slot {};
+    g_stage_stopped.resize (arg_values.arms->size (), false);
+    g_stage_stop_pending.resize (arg_values.arms->size (), false);
+  }
+  if (acacia::phase_records_enabled () || arg_values.stage_concurrency) {
     const size_t bytes = arg_values.arms->size () * sizeof (acacia::worker_record);
     void* shared =
         mmap (nullptr, bytes, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -525,6 +631,8 @@ int main (int argc, char** argv) {
     g_worker_records = g_worker_records_shared
                            ? static_cast<acacia::worker_record*> (shared)
                            : new (std::nothrow) acacia::worker_record[arg_values.arms->size ()];
+    if (!g_worker_records && arg_values.stage_concurrency)
+      error (EXIT_CODE_ERROR, "Error: cannot allocate stage observer state.\n");
     if (!g_worker_records) {
       constexpr char unavailable[] =
           "{\"event\":\"attribution_unavailable\",\"reason\":\"allocation\"}\n";
@@ -552,9 +660,13 @@ int main (int argc, char** argv) {
   try {
     return run_portfolio (arg_values, deadline_mono_ns, block_set);
   } catch (const std::exception& e) {
+    if (g_stage_slots)
+      stop_children ("exception");
     acacia::worker_terminal (EXIT_CODE_ERROR, "exception");
     error (EXIT_CODE_ERROR, "Exception caught: %s\n", e.what ());
   } catch (...) {
+    if (g_stage_slots)
+      stop_children ("exception");
     acacia::worker_terminal (EXIT_CODE_ERROR, "exception");
     error (EXIT_CODE_ERROR, "Unknown exception\n");
   }

@@ -92,6 +92,10 @@ void show_help (const char* program_name) {
       << acacia::candidate_mode_name (ACACIA_DEFAULT_CANDIDATE_MODE) << ")\n"
       << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] "
          "game backend for unreal arms\n"
+      << "  --stage-concurrency VAL  off or a positive count of concurrent memory-heavy stages\n"
+      << "                           three-second slices, temporary independent-check priority\n"
+      << "                           default "
+      << (ACACIA_STAGE_CONCURRENCY ? std::to_string (ACACIA_STAGE_CONCURRENCY) : "off") << "\n"
       << "  --arms LIST       run exactly the comma-separated portfolio arms\n"
       << "                    polarity:transform:backend[:provider], where polarity is real or\n"
       << "                    unreal for legacy arms; real transforms are small or any; unreal\n"
@@ -424,6 +428,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   int opt;
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
+  static constexpr int OPT_STAGE_CONCURRENCY = 1015;
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
@@ -445,6 +450,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static option long_options[] = {
       {"version", no_argument, nullptr, 'V'},
       {"help", no_argument, nullptr, 'h'},
+      {"stage-concurrency", required_argument, nullptr, OPT_STAGE_CONCURRENCY},
       {"oracle-layout", required_argument, nullptr, OPT_ORACLE_LAYOUT},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
       {"unreal-translation-pref", required_argument, nullptr, OPT_UNREAL_TRANSLATION_PREF},
@@ -564,6 +570,19 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case OPT_UNREAL_PROVIDER:
         process_arg_provider (optarg, retval.unreal_provider, "unreal-provider");
         break;
+      case OPT_STAGE_CONCURRENCY: {
+        const std::string_view text {optarg};
+        if (text == "off") {
+          retval.stage_concurrency = 0;
+          break;
+        }
+        unsigned value = 0;
+        const auto parsed = std::from_chars (text.data (), text.data () + text.size (), value);
+        if (parsed.ec != std::errc {} || parsed.ptr != text.data () + text.size () || !value)
+          error (EXIT_CODE_ERROR, "Error: --stage-concurrency expects off or a positive count.\n");
+        retval.stage_concurrency = value;
+        break;
+      }
       case OPT_WEAKENING_ATTEMPT_MS:
       case OPT_WEAKENING_TOTAL_MS: {
         const std::string_view text {optarg};

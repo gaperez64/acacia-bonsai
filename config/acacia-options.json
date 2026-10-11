@@ -608,6 +608,17 @@
         }
       ]
     },
+    "stage_concurrency": {
+      "meson": "acacia_stage_concurrency",
+      "type": "integer",
+      "default": 0,
+      "min": 0,
+      "max": 4294967295,
+      "description": "Concurrent memory-heavy stages; 0 disables stage scheduling",
+      "macros": [
+        {"name": "ACACIA_STAGE_CONCURRENCY", "emit": "always", "encoding": "value"}
+      ]
+    },
     "default_candidate_mode": {
       "meson": "acacia_default_candidate_mode",
       "type": "combo",

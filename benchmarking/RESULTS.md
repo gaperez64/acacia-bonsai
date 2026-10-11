@@ -423,3 +423,28 @@ makes apparent solves an upper bound. PAR-2 changes are descriptive, and no 60 s
 floor is assumed. [baselines.tsv](baselines.tsv) pins the three frozen binaries and their
 archive IDs; `LEGFINAL` is the next G1 baseline once this PR merges. The sprint decisions
 and rejected routes are recorded in [legacy-route/decisions.md](legacy-route/decisions.md).
+
+
+## Opt-in stage scheduling diagnostic — 11 October 2026
+
+`--stage-concurrency off|COUNT` now bounds memory-heavy stage admission with fair
+three-second leases and temporary exclusive priority for independent checks. The
+normal build and every shipping preset keep it **off**. The policy uses only stage
+kind, live-arm count and its global limits; worker membership and proof/deadline
+handling are retained. See [the policy](coverage-first/race-contention.md).
+
+Three sequential single-input 60 s diagnostics used `COUNT=2` and fresh 8 GiB
+no-swap scopes. Charging, Repair and Arbiter all timed out at 60.067, 60.076 and
+60.087 s, respectively. Their affected translation/translation/target-check stages
+remained unfinished after 56.945, 56.959 and 44.720 s. Those censored durations are
+not speedups against the attribution's completed 92.417, 118.910 and 65.073 s stages
+(or its rivals-paused 34.576, 34.955 and 21.197 s controls). No solve was recovered.
+All 3/3 have complete authoritative memory records, zero observer errors and zero
+memory-limit/OOM events; peaks were 1546.54, 2130.77 and 1725.51 MiB.
+
+This allowance is not admitted. #202 remains open for the driver's matched
+coverage/memory screens and choice of a useful global scheduling allowance.
+Local, unarchived evidence is `_bm-logs.i202-scheduling/report.md`; the source base
+is `5e065b64`, tlsf-tools remains `c31109e`, and no commit or campaign was made.
+Validation: 84/84 checked unit tests; full pytest 2307 passed, 40 skipped,
+23 subtests passed; separate hardcoding guard 96 passed and one skipped.
