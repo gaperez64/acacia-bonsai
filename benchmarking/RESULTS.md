@@ -5,6 +5,84 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-10 — mechanism attribution for three large #202 losses
+
+Thirteen controlled single invocations of frozen LEGFINAL (SHA-256 `2e0deb94b4c35de838ba053e9a83b8bea07f57b5af81ed706e96cf4dd5f05896`)
+attribute the large charging/repair/round-robin losses to memory-hierarchy interference
+from active BDD-heavy rivals. A full core remains occupied while instruction throughput
+falls and L3-miss execution stalls rise. Charging translation is 31.73 s alone vs 92.42 s
+in the race; separate physical-core affinity leaves 92.07 s. Suspending rivals at 8 s
+with their pages resident gives 34.58 s. Fresh pinned repair translation is 46.01 vs
+118.91 s, falling to 34.96 s with rivals suspended. Native direct checking is 21.06 vs
+65.07 s, returning to 21.20 s with rivals suspended under the same five-arm configuration.
+Pausing only its two UNREAL translators gives 33.68 s with REAL searches still active.
+
+The native RSS share is fixed from **configured**, not surviving, arm count: 4 GiB solo
+vs 819.2 MiB with five arms, with no redistribution on exit. Legacy translators do not
+receive it. Native target RSS remains about 177 MiB; direct BDD/cache/GC settings are
+identical. Captured robot translation requests match, and each completed translation
+retires roughly the same instruction count. Private process-global BDD state is not
+shared between arms. All 13 fresh 8 GiB/no-swap scopes have valid peaks/events, zero
+memory PSI/major faults and no memory-limit events. An explicit eight-core CPU quota
+records zero throttling and leaves native checking at 64.65 s. These controls reject
+quota, SMT placement, scope reclamation and share-derived BDD limits as the explanation.
+The PMU evidence locates L3-miss memory stalls but does not uniquely divide LLC eviction
+from DRAM service contention. Native checker instruction work also varies and is disclosed.
+
+The smallest generic proposal is bounded phase concurrency with temporary independent
+checker priority; translation admission must remain bounded/fair so an unsuccessful
+first arm cannot starve the others. No solver change or scheduling admission is claimed.
+Higher-cap (up to 120 s) diagnostics do not revise the original 60 s coverage rows.
+`_bm-logs.i202/report.md` contains the factor/time/RSS/verdict table, complete frozen
+source audit, raw-counter interpretation, reproduction and validation. Evidence is local
+and unarchived; the previous census report is preserved. No commit was made.
+
+## 2026-10-10 — complete P4 contention-loss attribution (#202), no solver change
+
+The [single-input attribution harness](coverage-first/race-contention.md) was applied to
+all historical contention losses from verified archive `opt20260927-p4race`, replacing the
+earlier incomplete three-input selection. Its `virtual-only.tsv` lists 11/13/12 losses at
+60 s for O5/1234G/1234G7 and 9/9/9 in the derived 17 s view. The four requested MEMOUT
+observations add collector and robot grid. In total, these are 67 historical rows and
+25 distinct inputs. Best-arm times were checked against verified archives
+`opt20260927-p4legs` and `opt20260927-p4aug`.
+
+The current configuration uses the frozen LEGFINAL release binary, SHA-256
+`2e0deb94b4c35de838ba053e9a83b8bea07f57b5af81ed706e96cf4dd5f05896`. The exact-binary
+closing rows solve 15 inputs at 60 s. The other ten received one fresh race and all five
+shipping arms standalone: 60 invocations, strictly sequential, 60 s, fresh 8 GiB no-swap
+scopes, no CPU quota or affinity override. All 60 retain authoritative cgroup peaks/events
+and have no observer errors.
+
+| Current standalone-solvable race loss | Fastest shipping arm | Standalone s | Race last stage |
+|---|---|---:|---|
+| Morning_88c5c1c3 | real:small:backward | 55.233 | translation |
+| Morning_9cac58d3 | real:small:forward | 56.452 | translation |
+| robot-to-target-charging-unreal0 | unreal:formula:spot-guarded-sparse | 25.659 | translation |
+| robot_repair0 | unreal:formula:spot-guarded-sparse | 36.444 | translation |
+| round_robin_arbiter_unreal1_pb_3_9_pe_ | both:gr1-real-lift:oxidd, direct route | 36.823 | target_check |
+
+All five races time out; none has an OOM or CPU quota. Live legacy workers consume about
+one core, and the native worker about 1.06 cores with three threads in both modes. The
+records locate concurrency-associated throughput/deadline obstructions in translation or
+native direct target checking; they do not isolate frequency, cache, bandwidth or thermal
+causes. The two Morning solves are near the cap, and every comparison has one observation
+per mode. These are attribution diagnostics, not repeatability or admission evidence.
+
+Five inputs are unsolved by every shipping arm at 60 s: load_balancer_unreal1_pb_4_8_pe_,
+ltl2dba_theta_pb_16_pe_, robot-to-target-charging-unreal1, robot_grid_pb_8_8_pe_, and
+round_robin_arbiter_unreal1_pb_4_8_pe_. They are not current contention losses. Robot grid
+OOMs both in the race and each REAL standalone at 8 GiB during action construction; its
+UNREAL arms hit Spot's acceptance-set limit, and the native arm declines on structure.
+Collector's old 1234G7-only MEMOUT is resolved by the current closing race in 8.205 s.
+
+The complete table, exact sources, reproduction commands and per-arm resource observations
+are in `_bm-logs.i202/report.md` and `_bm-logs.i202/historical-losses/`. Original rows remain
+unchanged; fresh diagnostic RESOURCE_LIMIT denotes the confirmed OOMs called MEMOUT in the
+campaign. No solver code, budgets, membership, binary or submodule pin changed. Attribution
+is complete; #202's measured-improvement closure still requires a fix and matched admission.
+The new raw evidence is local and unarchived; no commit was made.
+
 ## 2026-10-10 — native startup cache change (#213), admission pending
 
 The combined native worker's seed solver and checker defaulted to an apply
