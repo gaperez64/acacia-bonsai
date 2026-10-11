@@ -81,12 +81,16 @@ namespace acacia {
       (void) input;
       bytes += sizeof (typename Table::value_type);
       for (const auto& action : actions) {
-        bytes +=
-            sizeof (action) +
-            action.capacity () * sizeof (typename std::decay_t<decltype (action)>::value_type);
-        for (const auto& endpoints : action)
-          bytes += endpoints.capacity () *
-                   sizeof (typename std::decay_t<decltype (endpoints)>::value_type);
+        if constexpr (requires { action.payload_bytes (); })
+          bytes += action.payload_bytes ();
+        else {
+          bytes +=
+              sizeof (action) +
+              action.capacity () * sizeof (typename std::decay_t<decltype (action)>::value_type);
+          for (const auto& endpoints : action)
+            bytes += endpoints.capacity () *
+                     sizeof (typename std::decay_t<decltype (endpoints)>::value_type);
+        }
       }
     }
     return bytes;
