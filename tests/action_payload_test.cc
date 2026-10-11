@@ -200,12 +200,19 @@ namespace {
   template <typename Maker, bool Forward>
   auto solve_trace (const game& g) {
     using factory = traced_factory<Maker>;
+    using backward_solver =
+        k_bounded_safety_aut_detail<downset, ios_precomputers::mona, factory,
+                                    input_pickers::critical_fullrnd>;
+#if ACACIA_FORWARD_SAFETY_SOLVER
     using solver_type = std::conditional_t<
         Forward,
         acacia::solver_detail::forward_k_bounded_safety_aut_detail<
             downset, ios_precomputers::mona, factory, input_pickers::critical_fullrnd>,
-        k_bounded_safety_aut_detail<downset, ios_precomputers::mona, factory,
-                                    input_pickers::critical_fullrnd>>;
+        backward_solver>;
+#else
+    static_assert (not Forward);
+    using solver_type = backward_solver;
+#endif
     std::string bytes;
     active_trace = &bytes;
     ios_precomputers::mona precomputer;
@@ -294,11 +301,19 @@ int main () {
       using compact = actioners::standard<state>;
       check (solve_trace<old, false> (g) == solve_trace<compact, false> (g),
              "backward predecessor/region/strategy trace differs");
+#if ACACIA_FORWARD_SAFETY_SOLVER
       check (solve_trace<old, true> (g) == solve_trace<compact, true> (g),
              "forward result/certificate/strategy trace differs");
+#endif
     }
     std::cout << "action-payload: byte-identical tables, four picker/RNG traces, "
-                 "predecessors, forward/backward results and strategies on 64 games\n";
+                 "predecessors, backward results and strategies on 64 games"
+#if ACACIA_FORWARD_SAFETY_SOLVER
+                 ", plus forward results and strategies"
+#else
+                 " (forward solver disabled)"
+#endif
+                 "\n";
   } catch (const std::exception& error) {
     std::cerr << error.what () << '\n';
     return 1;
