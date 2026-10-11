@@ -92,6 +92,31 @@ jobs:
         if: always()
         with: {name: logs-debug, path: _bm-logs/}
 
+  # Build every default target with diagnostics as well as the debug job's
+  # diagnostics-off configuration. Generic test states must compile in both.
+  diagnostics:
+    needs: registry
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0, submodules: true}
+      - uses: ./.github/actions/setup-packages
+      - uses: ./.github/actions/setup-spot
+      - uses: hendrikmuhs/ccache-action@v1
+        with: {key: ci-diagnostics, max-size: 500M}
+      - name: Compile all targets and run units with diagnostics
+        run: |
+          meson setup build_diagnostics_ci --buildtype=debug \
+            -Dacacia_enable_diagnostics=true
+          meson compile -C build_diagnostics_ci -j 3
+          meson test -C build_diagnostics_ci --suite unit \
+            --num-processes 3 --print-errorlogs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: logs-diagnostics
+          path: build_diagnostics_ci/meson-logs/
+
   # The optimized arms. buildtype is not 'release', so the project's
   # b_ndebug=if-release leaves assert() and _GLIBCXX_ASSERTIONS enabled: these
   # run the same instances with the same checks, just not at -O0.

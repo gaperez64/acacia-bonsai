@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <concepts>
 #include <cstdlib>
 #include <cstdint>
 #include <iostream>
@@ -800,7 +801,17 @@ namespace acacia::diagnostics {
     }
   }
 
+  // Support demand maps dense rank coordinates to automaton source rows.
+  // Generic certificate states without those coordinates (such as scalar
+  // state IDs) have no row-support interpretation and produce no samples.
   template <typename Rank, typename Action>
+  inline void observe_support_demand (const Rank&, const Action&, bool = false) {}
+
+  template <typename Rank, typename Action>
+    requires requires (const Rank& rank, size_t q) {
+      { rank.size () } -> std::convertible_to<size_t>;
+      { rank[q] == -1 } -> std::convertible_to<bool>;
+    }
   inline void observe_support_demand (const Rank& rank, const Action& action,
                                       bool verification = false) {
     if (not support_demand_enabled ())
