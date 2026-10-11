@@ -1,6 +1,7 @@
 #pragma once
 
 #include "actioners/direction.hh"
+#include "actioners/compact_payload.hh"
 #include "actioners/profile_dominance.hh"
 #include "configuration.hh"
 #include "posets/utils/vector_mm.hh"
@@ -24,7 +25,7 @@ namespace actioners {
       public:  // types
         using action =
             std::vector<std::pair<unsigned, bool>>;  // All these pairs are unique by construction.
-        using action_vec = std::vector<action>;      // Vector indexed by state number
+        using action_vec = compact_payload;
         using action_vecs = std::list<action_vec>;
         using input_and_actions = std::pair<bdd, action_vecs>;
         /**
@@ -57,6 +58,17 @@ namespace actioners {
 
           std::set<input_and_actions, compare_actions> ioset;
           size_t observed_retained = 0, observed_peak = 0;
+          size_t observed_rows = 0, observed_nonempty = 0, observed_payloads = 0;
+          size_t observed_endpoints = 0, observed_endpoint_bytes = 0;
+          size_t next_observation = 1;
+          const auto publish_density = [&] () {
+            acacia::legacy_count ("action_prefix_payloads", observed_payloads);
+            acacia::legacy_count ("action_prefix_rows", observed_rows);
+            acacia::legacy_count ("action_prefix_nonempty_rows", observed_nonempty);
+            acacia::legacy_count ("action_prefix_endpoints", observed_endpoints);
+            acacia::legacy_count ("action_prefix_endpoint_bytes", observed_endpoint_bytes);
+            acacia::legacy_count ("action_prefix_payload_bytes", observed_retained);
+          };
 
           // inputs_to_ios maps each input i to transition sets.  Each set
           // corresponds to an i-compatible IO x and contains every transition
@@ -66,7 +78,6 @@ namespace actioners {
             // input: bdd
             // ios: transition sets and their IOs
             std::list<action_vec> fwd_actions;
-            // action_vec : vector<vector<pair<unsigned int, bool>>>
             for (const auto& transset : ios) {
               acacia::equivariance_budget::checkpoint ();
               // transset: transitions compatible with one IO
@@ -74,31 +85,37 @@ namespace actioners {
               // (p, increment).  The increment comes from the edge when
               // transition acceptance is enabled, and from q otherwise.
               fwd_actions.push_back (compute_action_vec (transset));
-              // type that is being inserted: action_vec (ios_precomputers/standard.hh)
-              // with current configuration.hh at the time of writing
             }
             // per input: list (one element per compatible IO) of actions
-            // what is being inserted = pair<bdd, action_vec> with current configuration.hh at the
-            // time of writing
-            size_t pending_bytes = 0;
+            size_t pending_bytes = 0, pending_rows = 0, pending_nonempty = 0;
+            size_t pending_endpoints = 0, pending_endpoint_bytes = 0;
             if (observed) {
               pending_bytes = sizeof (input_and_actions);
               for (const auto& action : fwd_actions) {
-                pending_bytes += sizeof (action) +
-                                 action.capacity () * sizeof (typename action_vec::value_type);
-                for (const auto& row : action)
-                  pending_bytes += row.capacity () * sizeof (typename action::value_type);
+                pending_bytes += action.payload_bytes ();
+                pending_rows += action.size ();
+                pending_nonempty += action.nonempty_size ();
+                pending_endpoints += action.endpoint_count ();
+                pending_endpoint_bytes += action.endpoint_bytes ();
               }
               observed_peak = std::max (observed_peak, observed_retained + pending_bytes);
             }
             const auto inserted = ioset.insert (std::pair (input, std::move (fwd_actions)));
-            if (observed && inserted.second)
+            if (observed && inserted.second) {
               observed_retained += pending_bytes;
+              observed_rows += pending_rows;
+              observed_nonempty += pending_nonempty;
+              observed_endpoints += pending_endpoints;
+              observed_endpoint_bytes += pending_endpoint_bytes;
+              observed_payloads += inserted.first->second.size ();
+              if (observed_payloads >= next_observation) {
+                publish_density ();
+                next_observation = observed_payloads * 2;
+              }
+            }
           }
 
           for (auto it = ioset.begin (); it != ioset.end ();) {
-            // what is being inserted:
-            // pair<bdd, list<vector<vector<pair<unsigned int, bool>>>>>
             // -> for every input, a list (one per compatible IO) of actions
             // where an action maps each state q to a list of (p, increment) tuples
             input_output_fwd_actions.push_back (std::move (ioset.extract (it++).value ()));
@@ -124,6 +141,7 @@ namespace actioners {
           }
 #endif
           if (observed) {
+            publish_density ();
             acacia::legacy_count ("action_construction_peak_payload_bytes_estimate",
                                   observed_peak);
             acacia::legacy_count ("action_table_payload_bytes_estimate",
@@ -133,8 +151,7 @@ namespace actioners {
               (void) input;
               payloads += actions.size ();
               for (const auto& action : actions)
-                for (const auto& row : action)
-                  endpoints += row.size ();
+                endpoints += action.endpoint_count ();
             }
             acacia::legacy_count ("action_payloads", payloads);
             acacia::legacy_count ("action_endpoints", endpoints);
@@ -149,7 +166,8 @@ namespace actioners {
 
         auto& actions () { return input_output_fwd_actions; }
 
-        State apply (const State& m, const action_vec& avec,
+        template <typename Payload>
+        State apply (const State& m, const Payload& avec,
                      direction dir) /* __attribute__((pure)) */ {
           acacia::equivariance_budget::checkpoint ();
           if (dir == direction::forward)
@@ -157,8 +175,8 @@ namespace actioners {
           else
             apply_out = backward_reset;
 
-          for (size_t p = 0; p < m.size (); ++p) {
-            for (const auto& [q, p_final] : avec[p]) {
+          const auto apply_row = [&] (size_t p, const auto& endpoints) {
+            for (const auto& [q, p_final] : endpoints) {
               if (dir == direction::forward) {
                 if (m[q] != -1)
                   apply_out[p] = std::max (
@@ -175,6 +193,15 @@ namespace actioners {
               if (dir == direction::forward && apply_out[p] == K)
                 break;
             }
+          };
+
+          if constexpr (requires { avec.nonempty_size (); }) {
+            for (size_t row = 0; row < avec.nonempty_size (); ++row)
+              apply_row (avec.destination (row), avec.nonempty_row (row));
+          }
+          else {
+            for (size_t p = 0; p < m.size (); ++p)
+              apply_row (p, avec[p]);
           }
 
           return State (apply_out);
@@ -188,21 +215,7 @@ namespace actioners {
 
         template <typename Set>
         auto compute_action_vec (const Set& transset) {
-          // create action_vec and include transset.second = the IO if needed
-          action_vec ret_fwd (aut->num_states ());
-
-          TODO (
-              "We have two representations of the same thing here; "
-              "see if we can narrow it down to one.");
-
-          // ret_fwd: vector<vector<pair<unsigned int, bool>>>
-          // first index = state q, map each state q to a list of tuples (p, increment)
-
-          for (const auto& t : transset)
-            ret_fwd[acacia::transitions::dest (t)].push_back (std::make_pair (
-                acacia::transitions::source (t), acacia::transitions::increment (t, aut)));
-
-          return ret_fwd;
+          return compact_payload::make (aut->num_states (), transset, aut);
         }
     };
   }
