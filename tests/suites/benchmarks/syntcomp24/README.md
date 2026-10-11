@@ -11,7 +11,7 @@ but cannot claim archive-level provenance.
 `panel.list` is the deterministic panel generated in commit `87e9b391` from a
 complete paired reference campaign at repository commit
 `5c589692a84480f7267b0efcabde66afc21d5f8e`. The reference is retained outside
-the tree under `_bm-logs.gap-plan-20260804/syntcomp24-reference` and compared
+the tree in evidence campaign `gap-plan-20260804-localrest` and compared
 `best_decomp_mona` with Spot 2.15.1.dev's default `ltlsynt` at a 17-second cap,
 one test at a time, with 8 GiB of memory and no swap.
 
@@ -27,9 +27,13 @@ seed `20260804`.
 stratum, reference times, verdict, normalized family, and source campaign.
 The generating command was equivalent to:
 
+Restore `gap-plan-20260804-localrest` into `restore/gap-plan` after publication;
+see [consolidation status](../../../../benchmarking/local-evidence-consolidation.md).
+The archive retains the original campaign paths.
+
 ```sh
 python3 benchmarking/make-panel.py \
-  --reference _bm-logs.gap-plan-20260804/syntcomp24-reference \
+  --reference restore/gap-plan/_bm-logs.gap-plan-20260804/syntcomp24-reference \
   --acacia best_decomp_mona --ltlsynt ltlsynt \
   --source-map tests/suites/benchmarks/syntcomp24/sources.tsv \
   --output tests/suites/benchmarks/syntcomp24/panel \

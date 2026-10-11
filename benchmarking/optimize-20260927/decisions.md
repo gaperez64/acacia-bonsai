@@ -2,7 +2,9 @@
 
 This is the single active record for the sprint whose plan is `plan.md`. It supersedes the
 follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds are kept outside Git
-(`build_scratch/optimize-20260927/`); only decisions and their evidence pointers are recorded here.
+(evidence campaign `opt20260927-briefs-localrest`; see
+[consolidation status](../local-evidence-consolidation.md)); only decisions and their evidence
+pointers are recorded here.
 
 ## 2026-09-27 — Kickoff facts
 
@@ -14,7 +16,7 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
 - **E5 (evaluation invocation, not a shipped default).**
   - Arms, in this order: `real:small:backward`, `real:small:forward`,
     `unreal:formula:spot-guarded-sparse`, `unreal:automaton:forward`, `real:gr1:oxidd`.
-  - Frozen binary `build_final_f74ad9d1/src/acacia-bonsai`, SHA-256 `65530fb4…c462`.
+  - Frozen binary archive `binary-E5-65530fb4`, SHA-256 `65530fb4…c462`.
   - No completed full-corpus E5 result exists. The 1,238 figure is a virtual best of isolated
     60 s legs.
 - **S4.** The shipping `docker_default` group, unchanged.
@@ -23,14 +25,15 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
 
 ## 2026-09-27 — P0a audit, and the sealed mapping was never sealed
 
-- **Audit results** (full report outside Git, `build_scratch/optimize-20260927/p0a-audit/`):
+- **Audit results** (full report outside Git; retained summaries in the indexed
+  optimization campaigns, with remaining briefs in `opt20260927-briefs-localrest`):
   - **Tracked at the stack head:** 100.2 MB, of which `benchmarking/` is 84.6 MB and
     `gr1-par2-20260923` 59.3 MB.
   - **Stack history (master..#192):** 3,069 new objects, 83.5 MB raw, but only about 7.0 MB as a
     standalone pack. Checkout clutter and continued growth are the problem, not clone size.
   - **Candidate evidence bundles:** 58 tracked bundles, 81.5 MB of member bytes, 10.9 MB as
     deterministic .tar.gz.
-  - **Local-only cited material:** the 1.26 GB `_bm-logs.20260916-demand-sparse` splits into
+  - **Local-only cited material:** the original 1.26 GB demand-sparse local material splits into
     traces, rows/logs and binaries, about 87 MB compressed. There are 12 of 58 local binaries
     whose SHA-256 is cited in committed records.
 - **Protocol breach, found by the audit.** The obfuscation "sealed" mapping
@@ -159,7 +162,7 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
     children are all preserved.
   - Proof binding and hook isolation are unchanged; release `nm` and `strings` confirm the hooks
     are absent.
-  - Fixes applied: the four tracked `build_scratch/stageC` files, including two review notes found
+  - Fixes applied: the four Stage C files retained in `gr1-par2-20260923-stagec-scratch`, including two review notes found
     in no archive, were published as the new asset `gr1-par2-20260923-stagec-scratch` (index row,
     read back byte-identical) before removal, and the Spot decision is kept out of the source
     commit.
@@ -496,9 +499,9 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
 
 ## 2026-09-29 — O5 accepted; binaries published
 
-- **O5** (`build_o5_4ab02725`, SHA-256 `1b216a40…`) is E5's five arms in order, with the
+- **O5** (archive `binary-O5-1b216a40`, SHA-256 `1b216a40…`) is E5's five arms in order, with the
   admitted P1/P2 packages, built against Spot 2.16.
-- **C5s216** (`build_c5s216_1b9e4b5f`, `1c3b09ff…`) is C5's source tree rebuilt against Spot
+- **C5s216** (archive `binary-C5s216-1c3b09ff`, `1c3b09ff…`) is C5's source tree rebuilt against Spot
   2.16, serving as the same-Spot reference.
 - **Gates:**
   - G0: 56/52 and posets 18.
@@ -783,7 +786,7 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   - derived 17 s: +3/−0;
   - no additional MEMOUT;
   - **the four N4 near-cap flips do not persist** in three alternating reruns each.
-  - **Admitted. 1234G-R is the final candidate**, and the N6 binary (build_p4n6_54032834) is
+  - **Admitted. 1234G-R is the final candidate**, and the N6 binary (archive `binary-FINAL-2d29aa8c`) is
     frozen for the gates and the closing campaign.
 - **Also fixed on the way:**
   - the U test scripts carried the local run-marker protocol, writing to the checkout's

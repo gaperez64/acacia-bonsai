@@ -1097,7 +1097,8 @@ differences reverse direction across the two targets; they do not show a
 zero-tail advantage. The full-panel classification difference was caused by
 the newer per-invocation resource isolation and strict OOM detection, not by
 collapsing the wrapper to its underlying vector. Raw samples and hashes live
-under `_bm-logs.final-v1-current-1d48a15f-20260825/tail-memory-5x20`.
+in evidence campaign `plots-final-v1-current-20260825-localrest`
+(`tail-memory-5x20`; see the [consolidation record](local-evidence-consolidation.md)).
 
 ### Profile and disassembly
 

@@ -36,6 +36,11 @@ must use the matching old configuration's executable. The read-only/default
 artifacts. Do not prune active, unpublished, unadjudicated, or sole-copy local
 evidence before archive verification.
 
+The [local consolidation record](local-evidence-consolidation.md) maps historical
+local evidence to archive IDs and records the pending publication step. The
+`archive` column of `baselines.tsv` identifies each frozen executable; `path` is
+historical provenance and is relative to an explicit restore root after pruning.
+
 CI runs `scripts/check-evidence-growth.py` to reject new generated rows, logs,
 proof bundles, thermal data and compressed archives in Git. Its small fixture
 exceptions are explicit in [evidence-growth-allowlist.tsv](evidence-growth-allowlist.tsv).

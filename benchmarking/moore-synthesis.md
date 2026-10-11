@@ -200,7 +200,7 @@ dummy round leaves their internal state unchanged can still convert correctly. T
 correctness sample, not an estimate of corpus prevalence. All 516 controls
 outside Moore-source/Moore-target conversion emit byte-identical AIGs before and
 after the fix. The frozen S4 executable is
-/home/gperez/GIT-repos/acacia-bonsai/build_s4_50384cf6/src/acacia-bonsai,
+in archive `binary-S4-2e10b4fe`,
 SHA-256 2e10b4feb2e455ce13d32007cbcc1e5cccbee4024d3291c2473409c8450cf535,
 matching benchmarking/baselines.tsv.
 
