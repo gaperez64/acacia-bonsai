@@ -1,4 +1,4 @@
-# Frozen from _bm-logs.gap-plan-20260804/syntcomp24-rebaseline/
+# Frozen from campaign gap-plan-20260804-localrest, syntcomp24-rebaseline/
 # best_decomp_mona_small.json.  The first five are the 10--16 s sentinels;
 # the remainder are solved in under 2 s.  Do not resample this list.
 full_arbiter_unreal13_7.ltl

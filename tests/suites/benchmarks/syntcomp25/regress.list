@@ -1,4 +1,4 @@
-# Frozen from _bm-logs.gap-plan-20260804/syntcomp25-reference/
+# Frozen from campaign gap-plan-20260804-localrest, syntcomp25-reference/
 # best_decomp_mona.json.  The first five are the 10--16 s sentinels; the
 # remainder are solved in under 2 s.  Do not resample this list.
 09.ltl

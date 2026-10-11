@@ -1,5 +1,10 @@
 # BuDDy simultaneous-compose adapter
 
+The historical local adapter and its provenance are captured by
+`gr1-par2-20260923-buddy-adapter-localrest`; see
+[consolidation status](../../../../local-evidence-consolidation.md). The paths
+below describe a fresh explicit build.
+
 Build the optional adapter explicitly, before a benchmark run:
 
 ```sh

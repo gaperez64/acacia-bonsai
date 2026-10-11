@@ -34,7 +34,7 @@ unreal:automaton:forward
 real:gr1:oxidd
 ```
 
-Call this invocation **E5**, not an already-shipped new default. The smoke driver passes the mix explicitly with `--arms`; its recorded frozen binary is `build_final_f74ad9d1/src/acacia-bonsai`, SHA-256:
+Call this invocation **E5**, not an already-shipped new default. The smoke driver passes the mix explicitly with `--arms`; its recorded frozen binary is archive `binary-E5-65530fb4`, SHA-256:
 
 ```text
 65530fb4ab03245c2f8d9d63f09b6a1bf22bde1599b118755098ed14495c5e96

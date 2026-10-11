@@ -24,8 +24,9 @@ candidate binary's build (`BUILD/src/acacia-bonsai`); G2s calibration uses the
 baseline build.
 
 `panel.list` is a deterministic 180-instance subset of the 1,579-instance
-selection. Its reference data is the full, paired, serialized campaign retained under
-`_bm-logs.gap-plan-20260804/syntcomp25-reference`, run from repository commit
+selection. Its reference data is the full, paired, serialized campaign retained in
+`gap-plan-20260804-localrest` (original member directory `syntcomp25-reference`),
+run from repository commit
 `5c589692a84480f7267b0efcabde66afc21d5f8e`. It compared the
 `best_decomp_mona` Acacia configuration with the default `ltlsynt` from Spot
 2.15.1.dev at a 17-second cap, one test job at a time, with an 8 GiB memory
@@ -89,7 +90,8 @@ Acacia's native frontend, so moving this suite to `-T` is a real basis change.
 It was measured free on the 180-instance panel: Acacia solved 111 instances
 under both bases across four arms, with zero differing instances, matching the
 published figure. The campaign is archived at
-`_bm-logs.syntcomp25-basis-20260828`.
+`syntcomp25-basis-20260828-localrest`; see
+[consolidation status](../../../../benchmarking/local-evidence-consolidation.md).
 
 `ltlsynt` is no longer fed pairs produced by Acacia's frontend. With `-T`, the
 wrapper converts the TLSF with SyFCo itself and passes an explicit

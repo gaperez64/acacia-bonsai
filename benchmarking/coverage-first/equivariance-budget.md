@@ -81,11 +81,17 @@ be replaced by the final revision if the driver later commits it.
 
 The paired 17 s full-manifest screen command is:
 
+The historical screen inputs belong to `cov20261007-screens-localrest` and
+the indexed coverage campaigns. Reconstruct their original paths under
+`restore/cov-local` using the [consolidation audit](../local-evidence-consolidation.md)
+after publication. The frozen worktree executable named below is outside the
+consolidation scope.
+
 ```bash
 env -u ACACIA_OUTER_DEADLINE_MONOTONIC \
   /home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python3 \
-  /home/gperez/GIT-repos/acacia-bonsai/_bm-logs.cov-20261006/screen.py \
-  /home/gperez/GIT-repos/acacia-bonsai/_bm-logs.cov-20261006/p2b-eq-absolute-screen17 \
+  restore/cov-local/_bm-logs.cov-20261006/screen.py \
+  restore/cov-local/_bm-logs.cov-20261006/p2b-eq-absolute-screen17 \
   /home/gperez/GIT-repos/acacia-bonsai/tests/suites/benchmarks/syntcomp26/all.list \
   17 \
   '[["EQ-inc","/home/gperez/GIT-repos/acacia-bonsai/build_scratch/cov/wt-p2b-eq/build_scratch/p2b-eq-zero/frozen/src/acacia-bonsai","0bc8d9f17199ddff329ec5d45496537e8c3846d0+eq-absolute-zero-dirty","--equivariance-budget unbounded"],["EQ-3s","/home/gperez/GIT-repos/acacia-bonsai/build_scratch/cov/wt-p2b-eq/build_scratch/p2b-eq-zero/frozen/src/acacia-bonsai","0bc8d9f17199ddff329ec5d45496537e8c3846d0+eq-absolute-zero-dirty","--equivariance-budget 3s"]]'
