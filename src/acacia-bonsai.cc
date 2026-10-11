@@ -257,7 +257,8 @@ namespace {
                                   : arg_values.synth_fname,
                               arg_values.metadata, provider, arg_values.candidate,
                               arg_values.equivariance, deadline_mono_ns, arg_values.tlsf_sha256,
-                              arg_values.weakening, arg_values.weakening_allowances);
+                              arg_values.weakening, arg_values.weakening_allowances,
+                              arg_values.event_univ);
     verb_do (1, vout << "returning " << res << "\n");
 
     if (!res && acacia::active_worker_record () &&

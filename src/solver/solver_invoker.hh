@@ -2,6 +2,7 @@
 
 #include "configuration.hh"
 #include "solver/game_backend.hh"
+#include "solver/translator_options.hh"
 #include "solver/spot_fast_mode.hh"
 #include "solver/symmetry_certificate.hh"
 #include "solver/unreal_weakening_budget.hh"
@@ -49,4 +50,6 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               bool equivariance = true, uint64_t diagnostic_deadline_ns = 0,
               const std::string& diagnostic_source_sha256 = {},
               weakening_mode weakening = weakening_mode::basic,
-              const acacia::unreal_witnesses::allowances& weakening_allowances = {});
+              const acacia::unreal_witnesses::allowances& weakening_allowances = {},
+              acacia::translation::event_univ_policy event_univ =
+                  acacia::translation::event_univ_policy::guarded);

@@ -1,0 +1,3 @@
+#!/bin/zsh -f
+# Only the test harness reads AB_OPTS; the solver has no environment policy override.
+exec @SOLVER@ ${=AB_OPTS} "$@"

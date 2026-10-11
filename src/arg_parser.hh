@@ -57,6 +57,8 @@ struct arg_parse_result {
     acacia::automaton_provider real_provider = acacia::automaton_provider::frozen_graph;
     acacia::automaton_provider unreal_provider = acacia::automaton_provider::frozen_graph;
     acacia::candidate_mode candidate = ACACIA_DEFAULT_CANDIDATE_MODE;
+    acacia::translation::event_univ_policy event_univ =
+        acacia::translation::event_univ_policy::guarded;
     weakening_mode weakening = weakening_mode::basic;
     acacia::unreal_witnesses::allowances weakening_allowances;
     bool r_prepass = true;

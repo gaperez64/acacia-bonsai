@@ -13,6 +13,7 @@ def main():
     executable = sys.argv[1]
     rng = random.Random(7241)
     formulas = [
+        "1", "0", "G F (a | G b)", "(F a) & X (F a) & G (F a)",
         "F a", "G F a", "F G a", "a U b", "a M b", "a W b", "a R b",
         "(F a) <-> (F b)", "!(a W (b U c))", "G (a -> F b)",
         "(G F a) -> ((G !b) & (G F (a & b)))",
@@ -25,6 +26,8 @@ def main():
                         f"({rng.choice(['F', 'G', 'X'])} ({right}))")
     width = int(subprocess.check_output([executable, "--width"], text=True))
     terms = ["F (" + "X " * index + "request)" for index in range(width - 1)]
+    formulas.append("(G F response) & (" + " | ".join(terms) + ")")
+    terms = ["F (" + "X " * index + "request)" for index in range(width + 1)]
     formulas.append("(G F response) & (" + " | ".join(terms) + ")")
     comparisons = 0
     # Spot's public Small, Any and Deterministic preference bits.
@@ -54,6 +57,29 @@ def main():
         metrics = {row.get("key"): row.get("value") for row in records
                    if row.get("event") == "stage_metric"}
         assert int(metrics["distinct_promises"]) > int(metrics["acceptance_set_width"])
+        assert metrics["event_univ_policy"] == "guarded"
+        for formula, changed in (("G F (a | G b)", "1"), ("G a", "0")):
+            for deadline in (None, "1"):
+                target = Path(directory).resolve() / f"expanded-{changed}-{deadline}"
+                target.mkdir()
+                probe_env = dict(os.environ, ACACIA_PHASE_RECORDS=str(target))
+                if deadline is not None:
+                    probe_env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = deadline
+                result = subprocess.run([executable, "--expanded", formula, "1"], env=probe_env,
+                                        check=True, capture_output=True, timeout=15)
+                if deadline is None:
+                    reference = result.stdout
+                else:
+                    assert reference == result.stdout
+                rows = [json.loads(line) for path in target.rglob("*.jsonl")
+                        for line in path.read_text().splitlines()]
+                values = {row.get("key"): row.get("value") for row in rows
+                          if row.get("event") == "stage_metric"}
+                assert values["event_univ_policy"] == "expanded"
+                assert values["changed"] == changed
+                assert "formula_dag_before" in values and "formula_dag_after" in values
+                assert any(row.get("event") == "stage_completion" and
+                           row.get("stage") == "translation-event-univ" for row in rows)
     print("guard firing has phase entry/completion and promise/width metrics")
 
 

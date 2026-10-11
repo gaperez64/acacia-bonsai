@@ -79,6 +79,10 @@ void show_help (const char* program_name) {
       << "                    check; mutually exclusive with -r\n"
       << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] "
          "game backend for real arms\n"
+      << "  --event-univ-policy VAL  [guarded|expanded] (default guarded)\n"
+      << "                          guarded: rewrite only formulas whose eventualities exceed\n"
+      << "                          the acceptance-set width; expanded: also rewrite smaller\n"
+      << "                          formulas when the rewrite changes them\n"
       << "  --real-provider VAL      use "
          "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager] automaton "
          "provider (default frozen-graph)\n"
@@ -424,6 +428,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   int opt;
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
+  static constexpr int OPT_EVENT_UNIV_POLICY = 1015;
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
@@ -445,6 +450,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static option long_options[] = {
       {"version", no_argument, nullptr, 'V'},
       {"help", no_argument, nullptr, 'h'},
+      {"event-univ-policy", required_argument, nullptr, OPT_EVENT_UNIV_POLICY},
       {"oracle-layout", required_argument, nullptr, OPT_ORACLE_LAYOUT},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
       {"unreal-translation-pref", required_argument, nullptr, OPT_UNREAL_TRANSLATION_PREF},
@@ -558,6 +564,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
         process_arg_unreal (optarg, retval);
         break;
       case 's': retval.synth_fname = optarg; break;
+      case OPT_EVENT_UNIV_POLICY:
+        if (std::string_view {optarg} == "guarded")
+          retval.event_univ = acacia::translation::event_univ_policy::guarded;
+        else if (std::string_view {optarg} == "expanded")
+          retval.event_univ = acacia::translation::event_univ_policy::expanded;
+        else
+          error (EXIT_CODE_ERROR, "Error: --event-univ-policy expects guarded or expanded.\n");
+        break;
       case OPT_REAL_PROVIDER:
         process_arg_provider (optarg, retval.real_provider, "real-provider");
         break;

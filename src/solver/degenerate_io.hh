@@ -17,7 +17,9 @@ namespace acacia::degenerate_io {
   inline verdict try_direct (spot::formula formula,
                              const std::vector<std::string>& input_aps,
                              const std::vector<std::string>& output_aps,
-                             spot::postprocessor::output_pref translation_pref) {
+                             spot::postprocessor::output_pref translation_pref,
+                             translation::event_univ_policy policy =
+                                 translation::event_univ_policy::guarded) {
     if (not input_aps.empty () and not output_aps.empty ())
       return verdict::unknown;
 
@@ -34,7 +36,7 @@ namespace acacia::degenerate_io {
     auto options = translation::make_options ();
     spot::translator trans (dict, &options);
     translation::validate_options (options);
-    auto aut = create_automaton (formula, trans, translation_pref);
+    auto aut = create_automaton (formula, trans, translation_pref, policy);
     const bool language_nonempty = aut->num_states () != 0 and not aut->is_empty ();
     const bool realizable = universality ? not language_nonempty : language_nonempty;
     return realizable ? verdict::realizable : verdict::unrealizable;

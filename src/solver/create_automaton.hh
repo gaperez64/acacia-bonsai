@@ -19,19 +19,34 @@
 
 spot::twa_graph_ptr create_automaton (
     spot::formula& f, spot::translator& trans,
-    spot::postprocessor::output_pref preference = ACACIA_TRANSLATION_PREF) {
+    spot::postprocessor::output_pref preference = ACACIA_TRANSLATION_PREF,
+    acacia::translation::event_univ_policy policy =
+        acacia::translation::event_univ_policy::guarded) {
   verb_do (1, vout << "Formula: " << f << std::endl);
 
   auto translation_formula = f;
   const auto promises = acacia::translation::distinct_promises (f);
-  if (acacia::translation::needs_event_univ (promises)) {
+  if (acacia::translation::needs_event_univ (promises) ||
+      policy == acacia::translation::event_univ_policy::expanded) {
     acacia::legacy_phase simplifying ("translation-event-univ");
     acacia::legacy_count ("distinct_promises", promises);
     acacia::legacy_count ("acceptance_set_width", acacia::translation::acceptance_set_width ());
-    translation_formula = acacia::translation::favor_event_univ (f);
-    if (acacia::phase_records_enabled ())
+    acacia::legacy_metric ("event_univ_policy",
+                           acacia::translation::event_univ_policy_name (policy));
+    if (policy == acacia::translation::event_univ_policy::expanded &&
+        acacia::phase_records_enabled ())
+      acacia::legacy_count ("formula_dag_before", acacia::translation::formula_dag_size (f));
+    const auto rewritten = acacia::translation::event_univ_input (f, promises, policy);
+    translation_formula = rewritten.formula;
+    if (acacia::phase_records_enabled ()) {
       acacia::legacy_count ("simplified_promises",
                             acacia::translation::distinct_promises (translation_formula));
+      if (policy == acacia::translation::event_univ_policy::expanded) {
+        acacia::legacy_count ("changed", rewritten.changed);
+        acacia::legacy_count ("formula_dag_after",
+                              acacia::translation::formula_dag_size (translation_formula));
+      }
+    }
   }
 
 #if ACACIA_TRANSITION_ACCEPTANCE

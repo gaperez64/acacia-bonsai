@@ -1,4 +1,5 @@
 #include "solver/create_automaton.hh"
+#include "guarded_event_univ_master.hh"
 
 #include <iostream>
 #include <spot/tl/parse.hh>
@@ -33,10 +34,12 @@ namespace {
   }
 
   spot::twa_graph_ptr baseline (spot::formula f, const spot::bdd_dict_ptr& dict,
-                                spot::postprocessor::output_pref preference) {
+                                spot::postprocessor::output_pref preference, bool master = false) {
     auto options = acacia::translation::make_options ();
     spot::translator translator (dict, &options);
     acacia::translation::validate_options (options);
+    if (master)
+      return master_create_automaton (f, translator, preference);
 #if ACACIA_TRANSITION_ACCEPTANCE
     translator.set_type (spot::postprocessor::Buchi);
     translator.set_pref (preference);
@@ -101,12 +104,15 @@ int main (int argc, char** argv) {
       const auto dict = spot::make_bdd_dict ();
       const auto preference = static_cast<spot::postprocessor::output_pref> (std::stoi (argv[3]));
       if (std::string_view {argv[1]} == "--master")
-        std::cout << hoa (baseline (f, dict, preference));
+        std::cout << hoa (baseline (f, dict, preference, true));
       else {
         auto options = make_options ();
         spot::translator translator (dict, &options);
         validate_options (options);
-        std::cout << hoa (create_automaton (f, translator, preference));
+        std::cout << hoa (create_automaton (
+            f, translator, preference, std::string_view {argv[1]} == "--expanded"
+                                          ? event_univ_policy::expanded
+                                          : event_univ_policy::guarded));
       }
       acacia::phase_records_close ();
       acacia::active_worker_record () = nullptr;
@@ -125,7 +131,7 @@ int main (int argc, char** argv) {
     require (distinct_promises (parse ("(F a) <-> (F b)")) == 2,
              "abbreviated Boolean operators were not normalized");
 
-    unsigned cases = 0, below = 0, above = 0, real = 0, unreal = 0;
+    unsigned cases = 0, below = 0, above = 0, real = 0, unreal = 0, expanded_only = 0;
     for (const auto count : {1U, width - 2, width - 1, width, width + 1})
       for (unsigned kind = 0; kind < 4; ++kind)
         for (const bool renamed : {false, true}) {
@@ -136,7 +142,15 @@ int main (int argc, char** argv) {
           const bool guarded = needs_event_univ (promises);
           guarded ? ++above : ++below;
           const auto old = baseline (f, dict, spot::postprocessor::Small);
-          const auto favored = baseline (favor_event_univ (f), dict, spot::postprocessor::Small);
+          const auto input = event_univ_input (f, promises, event_univ_policy::expanded);
+          if (!guarded && input.changed)
+            ++expanded_only;
+          // Direct formula equivalence uses Spot's own default translator, whose
+          // acceptance width is also finite. Keep those generated checks bounded;
+          // all boundary sizes below are checked via the explicit BA translations.
+          if (count == 1)
+            require (spot::are_equivalent (f, input.formula), "rewrite changed formula language");
+          const auto favored = baseline (input.formula, dict, spot::postprocessor::Small);
           require (spot::are_equivalent (old, favored), "option changed the automaton language");
           const auto output = renamed ? "actuator" : "response";
           const bool verdict = realizable (old, output);
@@ -151,15 +165,51 @@ int main (int argc, char** argv) {
             const auto before = f;
             const auto current = create_automaton (f, translator, preference);
             require (f == before, "translation mutated the bound worker formula");
-            const auto expected = baseline (guarded ? favor_event_univ (f) : f, dict, preference);
+            const auto expected = baseline (f, dict, preference, true);
             require (hoa (current) == hoa (expected),
                      "guarded translation differs from reference");
+            const auto expanded = create_automaton (f, translator, preference,
+                                                     event_univ_policy::expanded);
+            require (f == before, "expanded translation mutated the bound worker formula");
+            require (spot::are_equivalent (current, expanded),
+                     "expanded automaton changed language");
+            require (hoa (expanded) == hoa (baseline (input.formula, dict, preference)),
+                     "expanded translation differs from selected input");
+            if (preference == spot::postprocessor::Small) {
+              require (realizable (current, output) == verdict, "guarded verdict changed");
+              require (realizable (expanded, output) == verdict, "expanded verdict changed");
+            }
             if (!guarded)
               require (hoa (current) == hoa (baseline (f, dict, preference)),
                        "below-guard automaton is not byte-identical to master");
           }
           ++cases;
         }
+    require (expanded_only > 0, "no below-width changed cases were checked");
+    for (const auto text : {"1", "0", "G a", "F a", "(F a) & X (F a) & G (F a)",
+                            "(a U b) & (c M d) & F e", "!((a W b) & (c R d) & G e)",
+                            "(F a) <-> (F b)", "G F (a | G b)", "F (a U b) | G (c M d)"}) {
+      auto f = parse (text);
+      const auto before = f;
+      const auto input = event_univ_input (f, distinct_promises (f), event_univ_policy::expanded);
+      require (spot::are_equivalent (f, input.formula), "boundary formula language changed");
+      if (favor_event_univ (f) == favor_event_univ (f, false))
+        require (input.formula == f, "unchanged probe replaced the original formula");
+      const auto dict = spot::make_bdd_dict ();
+      int owner = 0;
+      dict->register_proposition (spot::formula::ap ("unused_input"), &owner);
+      dict->register_proposition (spot::formula::ap ("unused_output"), &owner);
+      {
+        auto options = make_options ();
+        spot::translator translator (dict, &options);
+        validate_options (options);
+        const auto aut = create_automaton (f, translator, spot::postprocessor::Small,
+                                           event_univ_policy::expanded);
+        require (spot::are_equivalent (aut, before), "boundary automaton language changed");
+        require (f == before, "boundary translation mutated formula");
+      }
+      dict->unregister_all_my_variables (&owner);
+    }
     {
       const auto dict = spot::make_bdd_dict ();
       auto options = make_options ();
@@ -167,13 +217,21 @@ int main (int argc, char** argv) {
       validate_options (options);
       auto high = generated (width + 1, 1, "sensor", "actuator");
       create_automaton (high, translator);
+      create_automaton (high, translator, ACACIA_TRANSLATION_PREF, event_univ_policy::expanded);
       auto low = parse ("G (sensor -> F actuator)");
       const auto current = create_automaton (low, translator);
       require (hoa (current) == hoa (baseline (low, dict, ACACIA_TRANSLATION_PREF)),
                "guard leaked into a later below-width translation");
+      const auto input =
+          event_univ_input (low, distinct_promises (low), event_univ_policy::expanded);
+      const auto expanded = create_automaton (low, translator, ACACIA_TRANSLATION_PREF,
+                                               event_univ_policy::expanded);
+      require (hoa (expanded) == hoa (baseline (input.formula, dict, ACACIA_TRANSLATION_PREF)),
+               "expanded options leaked into a later ordinary translation");
     }
     std::cout << cases << " paired language/verdict cases; " << below << " below/on guard, "
-              << above << " above; " << real << " REAL, " << unreal << " UNREAL\n";
+              << above << " above, " << expanded_only << " expanded-only changed; "
+              << real << " REAL, " << unreal << " UNREAL\n";
     return 0;
   } catch (const std::exception& error) {
     std::cerr << error.what () << '\n';
