@@ -80,6 +80,13 @@ namespace acacia {
     if (std::getenv ("ACACIA_NATIVE_TEST_CORRUPT_PROOF"))
       artifact[0] = 'X';
   }
+  void native_lift_test_routing (TlsfGr1BothOptionsV3& options) {
+    // Fault and interruption tests must still enter the requested lift route.
+    if (std::getenv ("ACACIA_NATIVE_TEST_LIFT_FAULT") ||
+        std::getenv ("ACACIA_NATIVE_TEST_CONTRACT") ||
+        std::getenv ("ACACIA_TEST_ATTRIBUTION_PAUSE"))
+      options.direct_first_ns = 0;
+  }
   void native_lift_test_options (TlsfGr1LiftOptions& options) {
     if (const char* fault = std::getenv ("ACACIA_NATIVE_TEST_LIFT_FAULT")) {
       if (std::strcmp (fault, "r-decline") == 0) {

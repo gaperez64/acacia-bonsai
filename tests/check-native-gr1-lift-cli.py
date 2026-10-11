@@ -51,8 +51,8 @@ def main() -> None:
     with tempfile.TemporaryDirectory(dir=build) as temporary:
         root = Path(temporary)
         for name, source, verdict, route, polarity, code in (
-            ("real", REAL, "REALIZABLE", "R", "seed_REAL", 0),
-            ("unreal", UNREAL, "UNREALIZABLE", "U", "seed_UNREAL", 1),
+            ("real", REAL, "REALIZABLE", "direct", "seed_none", 0),
+            ("unreal", UNREAL, "UNREALIZABLE", "direct", "seed_none", 1),
             ("plain", PLAIN, "REALIZABLE", "direct", "seed_none", 0),
         ):
             path = root / f"{name}.tlsf"
@@ -65,6 +65,8 @@ def main() -> None:
                       if row.get("arm") == "both:gr1-lift:oxidd"}
             routes = {row.get("route") for row in rows if row.get("event") == "route_start"}
             assert route in routes and polarity in phases, (name, rows)
+            assert not ({"seed_discovery", "R", "U"} & routes), (name, rows)
+            assert phases["seed_cache"]["work_count"] == 0, (name, phases)
             assert phases["final_checks"]["work_count"] == 1, (name, phases)
             assert phases["target_reductions"]["work_count"] == 1, (name, phases)
             direct_records = root / f"{name}-direct-records"

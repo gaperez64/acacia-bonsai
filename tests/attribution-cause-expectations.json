@@ -1507,10 +1507,6 @@
     "cause": "FailureCause::invalid",
     "telemetry": "STOPPED/error"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | \"direct_solve\" | \"deadline exceeded\" | 0": {
-    "cause": "FailureCause::deadline",
-    "telemetry": "STOPPED/deadline"
-  },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DECLINED | \"direct_solve\" | \"direct exact proof unavailable\" | 0": {
     "cause": "solver_failure_cause(failure.kind)",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
@@ -1518,10 +1514,6 @@
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"target_binding\" | \"prepared game changed before verification\" | 0": {
     "cause": "FailureCause::error",
     "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | \"target_check\" | \"deadline exceeded\" | 0": {
-    "cause": "FailureCause::deadline",
-    "telemetry": "STOPPED/deadline"
   },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DECLINED | \"target_check\" | \"candidate proof did not verify\" | 0": {
     "cause": "cause",
@@ -2934,5 +2926,25 @@
   "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"order_apply_mismatch\" | 0": {
     "cause": "OXIDD_FAILURE_CONFIGURATION",
     "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"policy_capacity\" | \"structural policy apply budget exhausted at \" + context | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"policy_capacity\" | \"structural policy node budget exhausted at \" + context | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_env_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"schema_capacity\" | \"target variable inventory exceeds node cap\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_CANCELLED | \"direct_solve\" | \"solver cancelled\" | 0": {
+    "cause": "FailureCause::cancelled",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_CANCELLED | e.stage | e.what() | 0": {
+    "cause": "e.cause",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
   }
 }

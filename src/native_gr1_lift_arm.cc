@@ -106,7 +106,13 @@ namespace acacia {
     const TlsfGr1BothObserverV1 observer {record_combined_event, nullptr};
     const TlsfGr1BothOptionsV2 routing {&options, phase_records_enabled () ? &observer : nullptr,
                                         !args.r_prepass};
-    status = tlsf_gr1_both_from_target_v2 (target.get (), &routing, &result, &error);
+    // One global 1s direct quantum protects cheap targets from U discovery.
+    // A local stop leaves U and fallback the remaining absolute arm budget.
+    TlsfGr1BothOptionsV3 ordered {&routing, real_only ? 0ull : 1000000000ull};
+# ifdef ACACIA_NATIVE_TEST_HOOKS
+    native_lift_test_routing (ordered);
+# endif
+    status = tlsf_gr1_both_from_target_v3 (target.get (), &ordered, &result, &error);
     combined_phase.finish ();
     if (real_only && result.route == TLSF_GR1_BOTH_ENV_LIFT) {
       native_arm_diagnostic (arm, "route", -1, "R-only arm selected U");
@@ -146,8 +152,7 @@ namespace acacia {
         !proof.certificate_json || !proof.certificate_json_size ||
         (certificate && (!proof.policy_aag || !proof.policy_size || !proof.policy_json ||
                          !proof.policy_json_size)) ||
-        !proof.evidence_json || !proof.evidence_size || result.target_checks < 1 ||
-        (result.route != TLSF_GR1_BOTH_DIRECT && result.target_checks != 1)) {
+        !proof.evidence_json || !proof.evidence_size || result.target_checks < 1) {
       native_arm_diagnostic (arm, "artifact", -1, "incomplete checked proof");
       return EXIT_CODE_UNKNOWN;
     }

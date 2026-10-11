@@ -271,7 +271,7 @@ def main() -> None:
             assert observed.returncode == code, observed
             complete_records(rows(directory))
             winner = next(row for row in rows(directory) if row.get("event") == "parent_winner")
-            assert winner["route"] == route, winner
+            assert winner["route"] == "direct", winner
             assert winner["original_polarity"] == winner["proof_polarity"] == (
                 "REAL" if code == 0 else "UNREAL"), winner
         native_exception_stops(hook, sources["direct"], root)

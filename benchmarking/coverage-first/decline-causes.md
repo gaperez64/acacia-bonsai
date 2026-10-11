@@ -50,7 +50,7 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 
 ## Validator, contract and failure-origin census
 
-734 enumerated checks/origins across preparation, reduction, seeds, R, U, checking, native proof binding, OxiDD and Spot providers. A slash-separated class means the source retains a typed failure from its called operation; status matrices and runtime fault panels test the alternatives. Boolean helpers report through the named consumer; false does not itself emit telemetry.
+737 enumerated checks/origins across preparation, reduction, seeds, R, U, checking, native proof binding, OxiDD and Spot providers. A slash-separated class means the source retains a typed failure from its called operation; status matrices and runtime fault panels test the alternatives. Boolean helpers report through the named consumer; false does not itself emit telemetry.
 
 | Origin | Legacy result | Cause expression/helper | Expected telemetry | Stage | Check/message |
 |---|---|---|---|---|---|
@@ -74,10 +74,10 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 | src/native_gr1_lift_arm.cc:49 | `UNKNOWN` | `worker_decline` | DECLINE/applicability | `worker` | `stage` |
 | src/native_gr1_lift_arm.cc:53 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `native_failure_reason (native_failure (failure))` |
 | src/native_gr1_lift_arm.cc:94 | `int (status)` | `native_failure (preparation_cause)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `error.stage` | `native_budget_message (error.stage, error.message, stats.work)` |
-| src/native_gr1_lift_arm.cc:112 | `-1` | `error` | STOPPED/error | `"route"` | `"R-only arm selected U"` |
-| src/native_gr1_lift_arm.cc:130 | `int (status)` | `native_failure (status)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `error.stage` | `native_budget_message (error.stage, error.message, stats.work)` |
-| src/native_gr1_lift_arm.cc:151 | `-1` | `error` | STOPPED/error | `"artifact"` | `"incomplete checked proof"` |
-| src/native_gr1_lift_arm.cc:189 | `-1` | `error` | STOPPED/error | `"binding"` | `"checked proof binding mismatch"` |
+| src/native_gr1_lift_arm.cc:118 | `-1` | `error` | STOPPED/error | `"route"` | `"R-only arm selected U"` |
+| src/native_gr1_lift_arm.cc:136 | `int (status)` | `native_failure (status)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `error.stage` | `native_budget_message (error.stage, error.message, stats.work)` |
+| src/native_gr1_lift_arm.cc:156 | `-1` | `error` | STOPPED/error | `"artifact"` | `"incomplete checked proof"` |
+| src/native_gr1_lift_arm.cc:194 | `-1` | `error` | STOPPED/error | `"binding"` | `"checked proof binding mismatch"` |
 | src/native_param_lift_arm.cc:107 | `int (lift_status)` | `native_failure (failure_status)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `lift_error.stage` | `native_budget_message (lift_error.stage, lift_error.message, work)` |
 | src/native_param_lift_arm.cc:129 | `-1` | `error` | STOPPED/error | `"artifact"` | `"incomplete or unverified system proof"` |
 | src/native_param_lift_arm.cc:139 | `-1` | `error` | STOPPED/error | `"evidence"` | `"invalid lift evidence JSON"` |
@@ -354,233 +354,236 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 | subprojects/tlsf-tools/src/lib/gr1_lift.cc:621 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_window"` | `"selected seeds are not consecutive"` |
 | subprojects/tlsf-tools/src/lib/gr1_lift.cc:629 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"parameters"` | `"absent"` |
 | subprojects/tlsf-tools/src/lib/gr1_lift.cc:640 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_window"` | `"fixed seed probe budget exhausted"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:744 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_window"` | `"fixed seed probe budget exhausted"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:762 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_binding"` | `"seed reduction hash differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:880 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_solve"` | `reason` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:909 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_solve"` | `"deadline exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:912 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"seed_solve"` | `"cancelled"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:917 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_solve"` | `"solver capacity exhausted"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:919 | `DECLINED` | `unreal ? FailureCause::applicability : FailureCause::error` | DECLINE/applicability or STOPPED/error | `unreal ? "seed_solve" : "seed_error"` | `"no system certificate"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:930 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"certificate metadata mismatch"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:974 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_solve"` | `reason` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1010 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_solve"` | `"deadline exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1016 | `TLSF_GR1_LIFT_DECLINED` | `solver_failure_cause(failure.kind)` | STOPPED/error/resource/deadline/cancelled | `"seed_solve"` | `"exact seed certificate unavailable"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1030 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"seed certificate metadata mismatch"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1058 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_check"` | `"deadline exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1062 | `TLSF_GR1_LIFT_DECLINED` | `check_failure_cause(status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `"seed_check"` | `"independent seed proof rejected"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1099 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"monitor inventory"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1104 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate monitor latch literal"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1120 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"unmatched latch literal"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1135 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"latch inventory"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1141 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate game literal"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1144 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"signal inventory"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1150 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"game signal unmatched"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1153 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"invalid signal direction"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1170 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"certificate input mismatch"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1178 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"certificate input mismatch"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1193 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate justice ID"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1200 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"justice inventory"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1204 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing justice ID"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1209 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"multi-index goal"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1222 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"multi-member justice"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1235 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing seed predicate"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1238 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing seed predicate"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1247 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"OxiDD allocation failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1284 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"cannot create OxiDD manager"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1293 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `stage` | `"fixed BDD operation budget exhausted"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1299 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"node cap exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1317 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"BDD variable limit"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1394 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"unmapped BDD support"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1448 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"AIG root references missing gate"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1470 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"candidate"` | `"unmapped BDD variable"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1529 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"subset count limit"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1550 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"duplicate normalized variable"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1563 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"within-role projection disagreement"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1569 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"predicate not exactly reconstructed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1623 | `DECLINED` | `cause` | STOPPED/error/resource/deadline/cancelled | `"schema"` | `"no bounded exact template"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1630 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"target subset count limit"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1638 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"missing role template"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1653 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"missing target variable"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1671 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema"` | `"no seeds"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1674 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"fairness changed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1681 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"role classes changed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1697 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"goal class absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1700 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema"` | `"empty rank depth"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1702 | `TLSF_GR1_LIFT_DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"rank depth changed from " + field(depth) + " to " + field(current)` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1725 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"goal class absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1737 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"multi-member justice"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1880 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"certificate_export"` | `"cannot allocate AIG"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1916 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"candidate"` | `"unmapped target game gate"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2107 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"policy"` | `"cannot allocate AIG"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2141 | `TLSF_GR1_LIFT_DECLINED` | `FailureCause::error` | STOPPED/error | `"target_check"` | `"prepared game changed before verification"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2240 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"region_check"` | `"checker cancelled"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2248 | `DECLINED` | `check_failure_cause(status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `status == TLSF_GR1_CHECK_OK ? "target_check" : "checker_error"` | `"region not verified"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2299 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"target_check"` | `"checker cancelled"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2302 | `DECLINED` | `check_failure_cause(status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `status == TLSF_GR1_CHECK_OK ? "target_check" : "checker_error"` | `"certificate not verified"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2324 | `policy_capacity_status` | `failure_cause(policy_capacity_status)` | STOPPED/resource/deadline | `"target_check"` | `"region and policy proof budgets exhausted"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2329 | `region_capacity_status == TLSF_GR1_CHECK_DEADLINE ? TLSF_GR1_LIFT_DEADLINE : TLSF_GR1_LIFT_LIMIT` | `failure_cause(region_capacity_status == TLSF_GR1_CHECK_DEADLINE ? TLSF_GR1_LIFT_DEADLINE : TLSF_GR1_LIFT_LIMIT)` | STOPPED/resource/deadline | `"region_check"` | `"checker capacity or deadline"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2339 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"publish-size"` | `"artifact size overflow"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2343 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"publish"` | `"cannot allocate result"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2389 | `TLSF_GR1_LIFT_INVALID` | `FailureCause::invalid` | STOPPED/error | `"source"` | `"invalid byte snapshot or embedded NUL"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2393 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"parse"` | `"source parse failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2395 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"parameters"` | `"absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2410 | `retry.status` | `e.cause` | STOPPED/error/resource/deadline/cancelled | `retry.stage` | `retry.what()` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2437 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"parameters"` | `"absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2485 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"candidate"` | `"fault hook could not mutate the game"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2497 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_check"` | `"unverified candidate"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2511 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"publish"` | `"artifact hash failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2517 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"publish"` | `"policy artifact hash failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2666 | `TLSF_GR1_LIFT_INVALID` | `FailureCause::invalid` | STOPPED/error | `"override"` | `"empty or duplicate target override"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2737 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"direct_solve"` | `"deadline exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2742 | `TLSF_GR1_LIFT_DECLINED` | `solver_failure_cause(failure.kind)` | STOPPED/error/resource/deadline/cancelled | `"direct_solve"` | `"direct exact proof unavailable"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2770 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"prepared game changed before verification"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2790 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"target_check"` | `"deadline exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2794 | `TLSF_GR1_LIFT_DECLINED` | `cause` | STOPPED/error/resource/deadline/cancelled | `"target_check"` | `"candidate proof did not verify"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2799 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_check"` | `"certificate side differs from route"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3007 | `TLSF_GR1_LIFT_INVALID` | `FailureCause::invalid` | STOPPED/error | `"arguments"` | `"invalid proof order"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3093 | `TLSF_GR1_LIFT_INVALID` | `FailureCause::invalid` | STOPPED/error | `"arguments"` | `"invalid proof order"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3098 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"publish"` | `"artifact seal failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3196 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"trusted source or game changed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3223 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_binding"` | `"seed cache key differs from game"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3237 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_error"` | `"injected unknown seed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3264 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"candidate_integrity"` | `"R candidate checked target"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3287 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"injected candidate capacity stop"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3325 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"candidate_integrity"` | `"environment candidate checked target"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3340 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_check"` | `"environment proof did not verify"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3375 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `e.stage` | `"worker deadline exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:46 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"missing reduction metadata or game"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:59 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"source or reduction hash differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:70 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate parameter identity"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:76 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"selected parameter identity is absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:85 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"undetermined signal index role"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:91 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"incomplete element width identity"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:96 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"invalid width parameter identity"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:104 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"inconsistent declaration binding"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:108 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"axis has no typed element declaration"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:129 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `env_stage_seed_window` | `"seed probe budget exhausted"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:146 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `env_stage_seed_window` | `"unstable exact seed structure"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:151 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `env_stage_seed_window` | `"target coordinate inventory changed"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:174 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_solve"` | `why` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:213 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"seed_solve"` | `"cancelled"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:218 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_solve"` | `"solver capacity exhausted"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:221 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_error"` | `"seed solver failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:229 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"REAL seed certificate metadata mismatch"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:257 | `DECLINED` | `check_failure_cause(check_status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `check_status == TLSF_GR1_CHECK_OK ? "seed_check" : "checker_error"` | `"REAL seed certificate did not check"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:261 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"seed_check"` | `"checked REAL seed is ineligible for U"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:266 | `DECLINED` | `real ? FailureCause::applicability : FailureCause::error` | DECLINE/applicability or STOPPED/error | `real ? "seed_solve" : "seed_error"` | `"checked environment seed is unavailable"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:279 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"environment seed metadata mismatch"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:309 | `DECLINED` | `check_failure_cause(check_status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `check_status == TLSF_GR1_CHECK_OK ? "seed_check" : "checker_error"` | `"independent environment seed check failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:403 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"monitor owner is outside the axis"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:425 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"pair owner lacks typed reference"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:503 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate game signal literal"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:507 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game signal inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:514 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game signal lacks unique provenance"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:533 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate letter identity"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:536 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game signal name inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:545 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game signal inventory is incomplete"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:555 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate source conjunct identity"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:567 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"monitor lacks frontend origin"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:582 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"monitor source conjunct is missing"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:594 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"monitor latch inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:606 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"monitor transition references differ"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:618 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"monitor/source construction differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:628 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"ambiguous sibling linkage"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:634 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"justice ordinal inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:643 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"justice points outside its monitor"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:648 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"fairness ordinal exceeds game"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:653 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"fairness points outside its monitor"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:661 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"monitor game inventory is incomplete"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:672 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"ambiguous sibling monitor roles"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:694 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate state identity"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:697 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game latch name inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:736 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"certificate count inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:740 | `DECLINED` | `view.outer ? FailureCause::resource : FailureCause::error` | STOPPED/error/resource | `"typed_alignment"` | `"rank depth is unbounded"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:746 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"certificate input identity differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:750 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"certificate input inventory is incomplete"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:765 | `DECLINED` | `FailureCause::resource` | STOPPED/resource | `"typed_alignment"` | `"rank number is out of range"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:773 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate certificate output name"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:789 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"goal ordinal is absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:799 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"rank index is out of bounds"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:802 | `DECLINED` | `FailureCause::resource` | STOPPED/resource | `"typed_alignment"` | `"rank index is out of bounds"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:811 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"goal ordinal is absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:819 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"fairness ordinal is absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:823 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"unexpected certificate output"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:826 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"outer rank is out of bounds"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:832 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate predicate identity"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:852 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"rank level inventory is incomplete"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:856 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"rank levels are not consecutive"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:865 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"certificate output inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:878 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"policy sidecar inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:884 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game latch lacks a name"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:893 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate policy input"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:896 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"policy input inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:909 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate policy output"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:913 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"policy output inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:921 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate policy sidecar output"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:925 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"policy sidecar output count differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:929 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"policy sidecar output differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:941 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"rank class inventory differs across seeds"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:949 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"target conjunct or role class missing"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:952 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"target has no typed owner roles"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1037 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"typed BDD variable is absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1049 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"cumulative rank node cap exhausted at " + context` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1053 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"accounted rank memory cap exhausted at " + context` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1065 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"cumulative rank apply cap exhausted at " + context` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1102 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"accounted rank apply cache cap exhausted at " + context` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1189 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"unmapped BDD variable"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1218 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"AIG leaf lacks typed provenance"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1234 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"rank uses an unmapped target variable"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1371 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"arity exceeds seed width"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1409 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"within-role projection disagreement"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1415 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"normalized variable is ambiguous"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1423 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"predicate is not exactly reconstructed"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1445 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"target role template is absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1454 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"target typed variable is ambiguous"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1460 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"target typed variable is absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1497 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"seed rank templates disagree"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1502 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"rank class has no seed observation"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1519 | `DECLINED` | `cause` | STOPPED/error/resource/deadline/cancelled | `"schema"` | `"no exact bounded projection"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1529 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"previous rank has ambiguous seed identity"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1537 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"previous rank is absent in seed"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1541 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"selected owner term exceeds bounded arity"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1558 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"previous rank and owner term do not reconstruct"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1569 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"selected owner terms disagree across seeds"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1581 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"selected owner term exceeds bounded arity"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1589 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"selected owner template is absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1601 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"selected owner variable is absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1647 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"anchor canonicalization collision"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1787 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"summary feature lacks a lane binding"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1894 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"no exact cross-lane summary"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1906 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"anchor pattern is absent in seed summaries"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1949 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"rank class is absent in a seed"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1995 | `DECLINED` | `!is_applicability(projection.cause) ? projection.cause : summary.cause` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `"schema"` | `"rank has no exact bounded grammar"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2006 | `previous.status` | `cause` | STOPPED/error/resource/deadline/cancelled | `previous.stage` | `previous.what()` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2044 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"instantiate"` | `"AIG allocation failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2051 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"instantiate"` | `"target latch is unnamed"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2067 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"target rank class is absent from seeds"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2073 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"previous target rank is absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2096 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"target rank level is absent in seeds"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2144 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"policy_reconstruct"` | `"Skolem output reads current letter"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2181 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"target game variable inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2191 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"policy_reconstruct"` | `"target has no unique bad predicate"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2208 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"policy_reconstruct"` | `"justice is not a single predicate"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2227 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"instantiate"` | `"target inner rank is missing"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2307 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"policy_reconstruct"` | `"response letter survived quantification"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2311 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"policy_totality"` | `"no common environment move"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2385 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"policy_reconstruct"` | `"policy reads current letter"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2396 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"emit"` | `"AIG allocation failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2428 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"instantiate"` | `"target output lacks construction"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2550 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"target_reduction"` | `"exact target reduction is required"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2557 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"source snapshot hash differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2563 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"trusted game hash differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2574 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"target conjunct or role class missing"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2618 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"invalid seed certificate encoding"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2645 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"distinct owner role inventory differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2713 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"prepared game changed before verification"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2761 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"target_check"` | `"checker deadline"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2764 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"target_check"` | `"checker cancelled"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2767 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"target_check"` | `"checker capacity"` |
-| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2770 | `TLSF_GR1_LIFT_DECLINED` | `check_failure_cause(status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `"checker_rejected"` | `detail.empty() ? "independent target certificate check failed" : detail` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:760 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_window"` | `"fixed seed probe budget exhausted"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:778 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_binding"` | `"seed reduction hash differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:896 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_solve"` | `reason` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:925 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_solve"` | `"deadline exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:928 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"seed_solve"` | `"cancelled"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:933 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_solve"` | `"solver capacity exhausted"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:935 | `DECLINED` | `unreal ? FailureCause::applicability : FailureCause::error` | DECLINE/applicability or STOPPED/error | `unreal ? "seed_solve" : "seed_error"` | `"no system certificate"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:946 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"certificate metadata mismatch"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:990 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_solve"` | `reason` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1026 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_solve"` | `"deadline exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1032 | `TLSF_GR1_LIFT_DECLINED` | `solver_failure_cause(failure.kind)` | STOPPED/error/resource/deadline/cancelled | `"seed_solve"` | `"exact seed certificate unavailable"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1046 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"seed certificate metadata mismatch"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1074 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_check"` | `"deadline exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1078 | `TLSF_GR1_LIFT_DECLINED` | `check_failure_cause(status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `"seed_check"` | `"independent seed proof rejected"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1115 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"monitor inventory"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1120 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate monitor latch literal"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1136 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"unmatched latch literal"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1151 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"latch inventory"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1157 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate game literal"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1160 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"signal inventory"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1166 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"game signal unmatched"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1169 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"invalid signal direction"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1186 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"certificate input mismatch"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1194 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"certificate input mismatch"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1209 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate justice ID"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1216 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"justice inventory"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1220 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing justice ID"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1225 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"multi-index goal"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1238 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"multi-member justice"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1251 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing seed predicate"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1254 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing seed predicate"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1263 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"OxiDD allocation failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1300 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"cannot create OxiDD manager"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1309 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `stage` | `"fixed BDD operation budget exhausted"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1315 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"node cap exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1333 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"BDD variable limit"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1410 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"unmapped BDD support"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1464 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"AIG root references missing gate"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1486 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"candidate"` | `"unmapped BDD variable"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1545 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"subset count limit"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1566 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"duplicate normalized variable"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1579 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"within-role projection disagreement"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1585 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"predicate not exactly reconstructed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1639 | `DECLINED` | `cause` | STOPPED/error/resource/deadline/cancelled | `"schema"` | `"no bounded exact template"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1646 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"target subset count limit"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1654 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"missing role template"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1669 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"missing target variable"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1687 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema"` | `"no seeds"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1690 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"fairness changed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1697 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"role classes changed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1713 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"goal class absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1716 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema"` | `"empty rank depth"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1718 | `TLSF_GR1_LIFT_DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"rank depth changed from " + field(depth) + " to " + field(current)` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1741 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"goal class absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1753 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"multi-member justice"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1896 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"certificate_export"` | `"cannot allocate AIG"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1932 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"candidate"` | `"unmapped target game gate"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2123 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"policy"` | `"cannot allocate AIG"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2157 | `TLSF_GR1_LIFT_DECLINED` | `FailureCause::error` | STOPPED/error | `"target_check"` | `"prepared game changed before verification"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2256 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"region_check"` | `"checker cancelled"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2264 | `DECLINED` | `check_failure_cause(status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `status == TLSF_GR1_CHECK_OK ? "target_check" : "checker_error"` | `"region not verified"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2315 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"target_check"` | `"checker cancelled"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2318 | `DECLINED` | `check_failure_cause(status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `status == TLSF_GR1_CHECK_OK ? "target_check" : "checker_error"` | `"certificate not verified"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2340 | `policy_capacity_status` | `failure_cause(policy_capacity_status)` | STOPPED/resource/deadline | `"target_check"` | `"region and policy proof budgets exhausted"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2345 | `region_capacity_status == TLSF_GR1_CHECK_DEADLINE ? TLSF_GR1_LIFT_DEADLINE : TLSF_GR1_LIFT_LIMIT` | `failure_cause(region_capacity_status == TLSF_GR1_CHECK_DEADLINE ? TLSF_GR1_LIFT_DEADLINE : TLSF_GR1_LIFT_LIMIT)` | STOPPED/resource/deadline | `"region_check"` | `"checker capacity or deadline"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2355 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"publish-size"` | `"artifact size overflow"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2359 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"publish"` | `"cannot allocate result"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2405 | `TLSF_GR1_LIFT_INVALID` | `FailureCause::invalid` | STOPPED/error | `"source"` | `"invalid byte snapshot or embedded NUL"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2409 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"parse"` | `"source parse failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2411 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"parameters"` | `"absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2426 | `retry.status` | `e.cause` | STOPPED/error/resource/deadline/cancelled | `retry.stage` | `retry.what()` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2453 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"parameters"` | `"absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2501 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"candidate"` | `"fault hook could not mutate the game"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2513 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_check"` | `"unverified candidate"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2527 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"publish"` | `"artifact hash failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2533 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"publish"` | `"policy artifact hash failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2682 | `TLSF_GR1_LIFT_INVALID` | `FailureCause::invalid` | STOPPED/error | `"override"` | `"empty or duplicate target override"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2755 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"direct_solve"` | `"solver cancelled"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2760 | `TLSF_GR1_LIFT_DECLINED` | `solver_failure_cause(failure.kind)` | STOPPED/error/resource/deadline/cancelled | `"direct_solve"` | `"direct exact proof unavailable"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2788 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"prepared game changed before verification"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2810 | `TLSF_GR1_LIFT_DECLINED` | `cause` | STOPPED/error/resource/deadline/cancelled | `"target_check"` | `"candidate proof did not verify"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:2815 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_check"` | `"certificate side differs from route"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3023 | `TLSF_GR1_LIFT_INVALID` | `FailureCause::invalid` | STOPPED/error | `"arguments"` | `"invalid proof order"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3109 | `TLSF_GR1_LIFT_INVALID` | `FailureCause::invalid` | STOPPED/error | `"arguments"` | `"invalid proof order"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3114 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"publish"` | `"artifact seal failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3214 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"trusted source or game changed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3244 | `TLSF_GR1_LIFT_CANCELLED` | `e.cause` | STOPPED/error/resource/deadline/cancelled | `e.stage` | `e.what()` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3279 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_binding"` | `"seed cache key differs from game"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3293 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_error"` | `"injected unknown seed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3322 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"candidate_integrity"` | `"R candidate checked target"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3345 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"injected candidate capacity stop"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3383 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"candidate_integrity"` | `"environment candidate checked target"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3398 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_check"` | `"environment proof did not verify"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:3433 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `e.stage` | `"worker deadline exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:47 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"missing reduction metadata or game"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:60 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"source or reduction hash differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:71 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate parameter identity"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:77 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"selected parameter identity is absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:86 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"undetermined signal index role"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:92 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"incomplete element width identity"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:97 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"invalid width parameter identity"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:105 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"inconsistent declaration binding"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:109 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"axis has no typed element declaration"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:119 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"target variable inventory exceeds node cap"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:142 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `env_stage_seed_window` | `"seed probe budget exhausted"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:159 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `env_stage_seed_window` | `"unstable exact seed structure"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:164 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `env_stage_seed_window` | `"target coordinate inventory changed"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:187 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_solve"` | `why` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:226 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"seed_solve"` | `"cancelled"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:231 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_solve"` | `"solver capacity exhausted"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:234 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_error"` | `"seed solver failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:242 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"REAL seed certificate metadata mismatch"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:270 | `DECLINED` | `check_failure_cause(check_status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `check_status == TLSF_GR1_CHECK_OK ? "seed_check" : "checker_error"` | `"REAL seed certificate did not check"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:274 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"seed_check"` | `"checked REAL seed is ineligible for U"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:279 | `DECLINED` | `real ? FailureCause::applicability : FailureCause::error` | DECLINE/applicability or STOPPED/error | `real ? "seed_solve" : "seed_error"` | `"checked environment seed is unavailable"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:292 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"environment seed metadata mismatch"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:322 | `DECLINED` | `check_failure_cause(check_status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `check_status == TLSF_GR1_CHECK_OK ? "seed_check" : "checker_error"` | `"independent environment seed check failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:416 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"monitor owner is outside the axis"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:438 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"pair owner lacks typed reference"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:516 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate game signal literal"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:520 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game signal inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:527 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game signal lacks unique provenance"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:546 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate letter identity"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:549 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game signal name inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:558 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game signal inventory is incomplete"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:568 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate source conjunct identity"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:580 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"monitor lacks frontend origin"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:595 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"monitor source conjunct is missing"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:607 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"monitor latch inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:619 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"monitor transition references differ"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:631 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"monitor/source construction differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:641 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"ambiguous sibling linkage"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:647 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"justice ordinal inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:656 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"justice points outside its monitor"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:661 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"fairness ordinal exceeds game"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:666 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"fairness points outside its monitor"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:674 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"monitor game inventory is incomplete"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:685 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"ambiguous sibling monitor roles"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:707 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate state identity"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:710 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game latch name inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:749 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"certificate count inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:753 | `DECLINED` | `view.outer ? FailureCause::resource : FailureCause::error` | STOPPED/error/resource | `"typed_alignment"` | `"rank depth is unbounded"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:759 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"certificate input identity differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:763 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"certificate input inventory is incomplete"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:778 | `DECLINED` | `FailureCause::resource` | STOPPED/resource | `"typed_alignment"` | `"rank number is out of range"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:786 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate certificate output name"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:802 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"goal ordinal is absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:812 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"rank index is out of bounds"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:815 | `DECLINED` | `FailureCause::resource` | STOPPED/resource | `"typed_alignment"` | `"rank index is out of bounds"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:824 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"goal ordinal is absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:832 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"fairness ordinal is absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:836 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"unexpected certificate output"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:839 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"outer rank is out of bounds"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:845 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate predicate identity"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:865 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"rank level inventory is incomplete"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:869 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"rank levels are not consecutive"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:878 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"certificate output inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:891 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"policy sidecar inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:897 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"game latch lacks a name"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:906 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate policy input"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:909 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"policy input inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:922 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate policy output"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:926 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"policy output inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:934 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"duplicate policy sidecar output"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:938 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"policy sidecar output count differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:942 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"policy sidecar output differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:954 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"rank class inventory differs across seeds"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:962 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"target conjunct or role class missing"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:965 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"target has no typed owner roles"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1061 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"typed BDD variable is absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1073 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"policy_capacity"` | `"structural policy node budget exhausted at " + context` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1077 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"cumulative rank node cap exhausted at " + context` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1081 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"accounted rank memory cap exhausted at " + context` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1093 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"policy_capacity"` | `"structural policy apply budget exhausted at " + context` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1097 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"cumulative rank apply cap exhausted at " + context` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1134 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"accounted rank apply cache cap exhausted at " + context` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1221 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"unmapped BDD variable"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1250 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"AIG leaf lacks typed provenance"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1266 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"rank uses an unmapped target variable"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1403 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"arity exceeds seed width"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1441 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"within-role projection disagreement"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1447 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"normalized variable is ambiguous"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1455 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"predicate is not exactly reconstructed"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1477 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"target role template is absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1486 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"target typed variable is ambiguous"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1492 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"target typed variable is absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1529 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"seed rank templates disagree"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1534 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"rank class has no seed observation"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1551 | `DECLINED` | `cause` | STOPPED/error/resource/deadline/cancelled | `"schema"` | `"no exact bounded projection"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1561 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"previous rank has ambiguous seed identity"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1569 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"previous rank is absent in seed"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1573 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"selected owner term exceeds bounded arity"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1590 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"previous rank and owner term do not reconstruct"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1601 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"selected owner terms disagree across seeds"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1613 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"selected owner term exceeds bounded arity"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1621 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"selected owner template is absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1633 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"selected owner variable is absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1679 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"anchor canonicalization collision"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1819 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"summary feature lacks a lane binding"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1926 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema"` | `"no exact cross-lane summary"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1938 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"anchor pattern is absent in seed summaries"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:1981 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"rank class is absent in a seed"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2027 | `DECLINED` | `!is_applicability(projection.cause) ? projection.cause : summary.cause` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `"schema"` | `"rank has no exact bounded grammar"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2038 | `previous.status` | `cause` | STOPPED/error/resource/deadline/cancelled | `previous.stage` | `previous.what()` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2076 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"instantiate"` | `"AIG allocation failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2083 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"instantiate"` | `"target latch is unnamed"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2099 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"target rank class is absent from seeds"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2105 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"previous target rank is absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2128 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"instantiate"` | `"target rank level is absent in seeds"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2176 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"policy_reconstruct"` | `"Skolem output reads current letter"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2213 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"typed_alignment"` | `"target game variable inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2223 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"policy_reconstruct"` | `"target has no unique bad predicate"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2240 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"policy_reconstruct"` | `"justice is not a single predicate"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2259 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"instantiate"` | `"target inner rank is missing"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2348 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"policy_reconstruct"` | `"response letter survived quantification"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2352 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"policy_totality"` | `"no common environment move"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2428 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"policy_reconstruct"` | `"policy reads current letter"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2439 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"emit"` | `"AIG allocation failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2471 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"instantiate"` | `"target output lacks construction"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2593 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"target_reduction"` | `"exact target reduction is required"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2600 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"source snapshot hash differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2606 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"trusted game hash differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2617 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"target conjunct or role class missing"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2661 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"invalid seed certificate encoding"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2688 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"typed_alignment"` | `"distinct owner role inventory differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2756 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"prepared game changed before verification"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2804 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"target_check"` | `"checker deadline"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2807 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"target_check"` | `"checker cancelled"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2810 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"target_check"` | `"checker capacity"` |
+| subprojects/tlsf-tools/src/lib/gr1_env_lift.cc:2813 | `TLSF_GR1_LIFT_DECLINED` | `check_failure_cause(status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `"checker_rejected"` | `detail.empty() ? "independent target certificate check failed" : detail` |
 | subprojects/tlsf-tools/src/lib/gr1_check.c:4837 | `TLSF_GR1_CHECK_BAD_ARGUMENT` | `TLSF_GR1_CHECK_BAD_ARGUMENT` | STOPPED/error | `"check"` | `"invalid argument or missing resource cap"` |
 | subprojects/tlsf-tools/src/lib/gr1_check.c:4844 | `TLSF_GR1_CHECK_LIMIT` | `TLSF_GR1_CHECK_LIMIT` | STOPPED/resource | `"check"` | `"input artifact cap exceeded"` |
 | subprojects/tlsf-tools/src/lib/gr1_check.c:4847 | `TLSF_GR1_CHECK_CANCELLED` | `TLSF_GR1_CHECK_CANCELLED` | STOPPED/cancelled | `"check"` | `"cancelled"` |

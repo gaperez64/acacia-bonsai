@@ -47,40 +47,50 @@ int main () {
   const auto prepared = tlsf_gr1_lift_target_prepare_exact (
       reinterpret_cast<const uint8_t*> (source), sizeof source - 1, &options, &target, &error);
   check (prepared == TLSF_GR1_LIFT_OK && target);
-  for (unsigned cancel_after : {0u, 1u, 2u}) {
-    const bool cancel = cancel_after != 0;
-    observation state;
-    state.cancel_after = cancel_after;
-    options.cancelled = cancelled;
-    options.cancel_ctx = &state;
-    TlsfGr1BothObserverV1 observer {observe, &state};
-    TlsfGr1BothResult result {};
-    const auto status =
-        tlsf_gr1_both_from_target_v1 (target, &options, &observer, &result, &error);
-    const std::vector<TlsfGr1BothEventKind> expected {
-        TLSF_GR1_BOTH_EVENT_SELECTED,
-        TLSF_GR1_BOTH_EVENT_START,
-        TLSF_GR1_BOTH_EVENT_DECLINE,
-        TLSF_GR1_BOTH_EVENT_SELECTED,
-        TLSF_GR1_BOTH_EVENT_START,
-        TLSF_GR1_BOTH_EVENT_CHECK_START,
-        cancel ? TLSF_GR1_BOTH_EVENT_STOPPED : TLSF_GR1_BOTH_EVENT_VERIFIED};
-    check (state.events == expected);
-    if (cancel_after == 2)
-      check (state.check_polls >= 2);
-    check (status == (cancel_after == 1   ? TLSF_GR1_LIFT_CANCELLED
-                       : cancel_after == 2 ? TLSF_GR1_LIFT_DECLINED
-                                           : TLSF_GR1_LIFT_OK));
-    check (result.target_checks == (cancel_after == 1 ? 0 : 1));
-    if (cancel) {
-      check (state.failure == TLSF_GR1_LIFT_CANCELLED);
-      check (!result.proof.game_aag && !result.proof.certificate_aag);
-      check (std::strcmp (error.stage, "target_check") == 0);
+  for (bool ordered : {false, true}) {
+    for (unsigned cancel_after : {0u, 1u, 2u}) {
+      const bool cancel = cancel_after != 0;
+      observation state;
+      state.cancel_after = cancel_after;
+      options.cancelled = cancelled;
+      options.cancel_ctx = &state;
+      TlsfGr1BothObserverV1 observer {observe, &state};
+      TlsfGr1BothResult result {};
+      const TlsfGr1BothOptionsV2 combined {&options, &observer, 0};
+      const TlsfGr1BothOptionsV3 routing {&combined, 1000000000ull};
+      const auto status =
+          ordered ? tlsf_gr1_both_from_target_v3 (target, &routing, &result, &error)
+                  : tlsf_gr1_both_from_target_v1 (target, &options, &observer, &result, &error);
+      std::vector<TlsfGr1BothEventKind> expected {
+          TLSF_GR1_BOTH_EVENT_SELECTED,
+          TLSF_GR1_BOTH_EVENT_START,
+          TLSF_GR1_BOTH_EVENT_DECLINE,
+          TLSF_GR1_BOTH_EVENT_SELECTED,
+          TLSF_GR1_BOTH_EVENT_START,
+          TLSF_GR1_BOTH_EVENT_CHECK_START,
+          cancel ? TLSF_GR1_BOTH_EVENT_STOPPED : TLSF_GR1_BOTH_EVENT_VERIFIED};
+      if (ordered)
+        expected.erase (expected.begin (), expected.begin () + 3);
+      check (state.events == expected);
+      if (cancel_after == 2)
+        check (state.check_polls >= 2);
+      check (status == (cancel_after == 1 || (ordered && cancel_after == 2)
+                            ? TLSF_GR1_LIFT_CANCELLED
+                        : cancel_after == 2 ? TLSF_GR1_LIFT_DECLINED
+                                            : TLSF_GR1_LIFT_OK));
+      if (ordered)
+        check (result.seed_probes == 0 && result.seed_solves == 0);
+      check (result.target_checks == (cancel_after == 1 ? 0 : 1));
+      if (cancel) {
+        check (state.failure == TLSF_GR1_LIFT_CANCELLED);
+        check (!result.proof.game_aag && !result.proof.certificate_aag);
+        check (std::strcmp (error.stage, "target_check") == 0);
+      }
+      else {
+        check (tlsf_gr1_lift_target_matches (target, &result.proof));
+      }
+      tlsf_gr1_both_result_clear (&result);
     }
-    else {
-      check (tlsf_gr1_lift_target_matches (target, &result.proof));
-    }
-    tlsf_gr1_both_result_clear (&result);
   }
   for (bool invalid : {false, true}) {
     options.cancelled = nullptr;

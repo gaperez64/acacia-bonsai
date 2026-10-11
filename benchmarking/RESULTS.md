@@ -423,3 +423,29 @@ makes apparent solves an upper bound. PAR-2 changes are descriptive, and no 60 s
 floor is assumed. [baselines.tsv](baselines.tsv) pins the three frozen binaries and their
 archive IDs; `LEGFINAL` is the next G1 baseline once this PR merges. The sprint decisions
 and rejected routes are recorded in [legacy-route/decisions.md](legacy-route/decisions.md).
+
+
+## 2026-10-11 — opt-in U ordering and policy budget (#209), screen pending
+
+The opt-in `both:gr1-lift:oxidd` worker gives direct GR(1), including independent
+checking, a global 1 s quantum before seed discovery. U applicability checks
+precede seed expansion, and its policy relation/choice construction now has a
+structural work allowance. Universal response elimination distributes across
+policy obligations. Every accepted answer still requires independent exact-target
+verification. The shipping REAL-only worker keeps its ordering.
+
+The archived 64-input U-relevant panel was reconstructed from verified
+`opt20260927-p4n4` membership. Its historical U-on/direct result remains 29/29
+with no faster marginal U answer. Fresh baseline/changed U-on versus REAL-only
+64-input screens are **driver pending**: the user prohibits coding-agent timing
+campaigns. Single-instance 8 GiB/no-swap profiles show a cheap UNREAL target
+avoiding all seed work, and a generated pure-U target declining earlier under
+the policy budget instead of reaching apply 12,000,001. These observations
+establish no coverage or PAR-2 admission.
+
+Acacia's 82 unit tests, full pytest (2,302 passed, 40 skipped), hardcoding guard,
+and tlsf-tools' checks pass, with its build-stamp test rerun under the corrected
+OxiDD worktree environment. clang-format 22.1.8 passes. The
+[ordering report](coverage-first/env-lift-ordering.md) records the pending table,
+archived overhead proxies, diagnostics, exact build hashes and test limitation.
+No demonstrated U answer beats direct GR(1); U stays opt-in and #209 remains open.
