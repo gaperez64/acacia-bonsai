@@ -458,3 +458,29 @@ exceptions and REAL workers reaching action construction. Its inherited 5 GiB so
 is disclosed. These are single-invocation diagnostics; performance admission and full-corpus
 screens remain with the driver. See the [translation record](coverage-first/guarded-event-univ-translation.md)
 for ordinal firing sets, limits, generated checks and local evidence. Changes remain uncommitted.
+
+## Post-campaign issue sweep (2026-10-10/11)
+
+Campaign `legacy20261010-issue-sweep` is closed. Its archive, published in the
+`evidence-2026-10-10-legacy` release and registered in the evidence index, preserves
+the original rows, sidecars, repetitions, attribution reports and issue/PR snapshots. The screens used paired,
+rotated, cooled runs in 8 GiB no-swap scopes. These subset observations supplement the
+full closing campaign rather than replacing its measured and derived results.
+
+| Issue | Measured outcome and disposition |
+|---|---|
+| [#200](https://github.com/gaperez64/acacia-bonsai/issues/200#issuecomment-6101183224) | MONA streaming preserved all 41 solves on the 80-input 60 s screen, but the median peak ratio was 0.998 and one peak increase reproduced. The dense action table remained the binding limit. Closed with a negative result; streaming was not landed. |
+| [#201 / PR #240](https://github.com/gaperez64/acacia-bonsai/pull/240) | Guarded Spot simplification added three verified UNREAL answers on the 40 eligible inputs: 21 → 24 solved at 17 s and 24 → 27 at 60 s, with no losses. PAR-2 fell 684.8 → 582.9 s and 2,018.9 → 1,660.4 s respectively; G1 passed. Merged. The robot-grid memory failure remained. |
+| [#202](https://github.com/gaperez64/acacia-bonsai/issues/202#issuecomment-6103867430) | Replay retained five current contention losses, two near the cap. Controlled attribution tied the three large slowdowns to shared memory-hierarchy interference. One/two heavy-stage slots, three repetitions each, recovered none: all 18 runs timed out at 60 s. Closed with attribution and a negative scheduler result; no scheduling change was admitted. |
+| [#205](https://github.com/gaperez64/acacia-bonsai/issues/205#issuecomment-6103727482) | The 1,524-input census found 45 equivariant attempts and 24 representative entries; nine remained unsolved in the 17 s shipping race. The optimistic direct phase-saving ceiling was 2.638 s per input, 5.274 s summed over those nine. This bounds direct decoder/filter work, not end-to-end race savings or possible coverage. Closed with census evidence; E-B was not implemented or admitted. |
+| [#208 / PR #241](https://github.com/gaperez64/acacia-bonsai/pull/241) | Compact payloads preserved 41/41 solves on the 80-input 60 s memory/control screen. The largest robot grid changed from an 8 GiB MEMOUT to a timeout at about 395 MiB. On 100 random inputs at 17 s, solves rose 72 → 73 and PAR-2 fell 994.3 → 970.6 s; the gain reproduced 3/3 with no losses. G1 passed; merged. |
+| [#209](https://github.com/gaperez64/acacia-bonsai/issues/209#issuecomment-6106940978) | The 64-input standalone 60 s screen solved the same 29 inputs with U off, revised U on, and master U on. PAR-2 was 4,272.9 / 4,298.1 / 4,322.7 s respectively. U became cheaper but added no unique solve and retained overhead. Closed with a negative result; U remains outside the shipping default. |
+| [#212](https://github.com/gaperez64/acacia-bonsai/issues/212#issuecomment-6104280960) | All three native/converted pairs matched in all three 60 s repetitions. Collector now solves natively in 8.14–8.24 s; Alarm solves on both routes in 17–20 s; robot grid reaches the memory limit on both. Closed as the reported coverage discrepancy no longer reproduced, without claiming equal route speed. |
+| [#213](https://github.com/gaperez64/acacia-bonsai/issues/213#issuecomment-6103867590) | Structural OxiDD cache sizing improved the isolated native arm but had no useful shipping-race effect: 60 easy inputs × three repetitions had a paired median −1.5 ms and unchanged median peak memory. The 100-input 17 s screen remained 72 → 72 solved, PAR-2 996.6 → 1,000.2 s, within noise. Closed with a negative admission result; the cache change was not landed. |
+
+The measured PR builds are frozen as `binary-LEGI201-5350762f` at `21a2ce42`
+and `binary-LEGI208-ac1ff537` at `7d8235a5`, and pinned in [baselines.tsv](baselines.tsv).
+The latter precedes PR #241's final head; neither pin substitutes the merge revision
+for the executable that produced the rows. Separate archives retain LEGI200, LEGI213,
+LEGI209 and LEGI209M, including their original build provenance. Higher-cap mechanism
+diagnostics and the #205 direct cost ceilings remain distinct from measured coverage.
