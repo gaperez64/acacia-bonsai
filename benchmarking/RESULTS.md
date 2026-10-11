@@ -423,3 +423,18 @@ makes apparent solves an upper bound. PAR-2 changes are descriptive, and no 60 s
 floor is assumed. [baselines.tsv](baselines.tsv) pins the three frozen binaries and their
 archive IDs; `LEGFINAL` is the next G1 baseline once this PR merges. The sprint decisions
 and rejected routes are recorded in [legacy-route/decisions.md](legacy-route/decisions.md).
+
+
+## 2026-10-10 — guarded eventual/universal translation diagnostics
+
+A structural guard in the shared legacy translation path enables Spot's language-preserving
+`favor_event_univ` simplification only when the worker's distinct NNF-DAG F/U/M count exceeds
+Spot's configured acceptance width. The translator options and automata at or below the width
+remain unchanged; generated tests check byte identity, language equivalence and realizability.
+No polarity step was added. The frontend-only census finds 33 eligible REAL inputs and 28 for
+each UNREAL timing route, with 40 inputs in their union. Three of the four requested 60-second
+shipping diagnostics verify UNREAL; the fourth remains UNKNOWN, with two UNREAL acceptance-limit
+exceptions and REAL workers reaching action construction. Its inherited 5 GiB soft memory limit
+is disclosed. These are single-invocation diagnostics; performance admission and full-corpus
+screens remain with the driver. See the [translation record](coverage-first/guarded-event-univ-translation.md)
+for ordinal firing sets, limits, generated checks and local evidence. Changes remain uncommitted.

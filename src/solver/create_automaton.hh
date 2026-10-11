@@ -2,6 +2,7 @@
 
 #include "solver/phase_observation.hh"
 #include "solver/transition_payload.hh"
+#include "solver/translator_options.hh"
 #include "utils/verbose.hh"
 
 #include <iostream>
@@ -21,6 +22,18 @@ spot::twa_graph_ptr create_automaton (
     spot::postprocessor::output_pref preference = ACACIA_TRANSLATION_PREF) {
   verb_do (1, vout << "Formula: " << f << std::endl);
 
+  auto translation_formula = f;
+  const auto promises = acacia::translation::distinct_promises (f);
+  if (acacia::translation::needs_event_univ (promises)) {
+    acacia::legacy_phase simplifying ("translation-event-univ");
+    acacia::legacy_count ("distinct_promises", promises);
+    acacia::legacy_count ("acceptance_set_width", acacia::translation::acceptance_set_width ());
+    translation_formula = acacia::translation::favor_event_univ (f);
+    if (acacia::phase_records_enabled ())
+      acacia::legacy_count ("simplified_promises",
+                            acacia::translation::distinct_promises (translation_formula));
+  }
+
 #if ACACIA_TRANSITION_ACCEPTANCE
   // Keep acceptance on transitions.  `BA` below is documented by Spot as
   // implying `SBAcc`, and that lowering duplicates states precisely to move
@@ -31,7 +44,7 @@ spot::twa_graph_ptr create_automaton (
   trans.set_type (spot::postprocessor::Buchi);
   trans.set_pref (preference);
   acacia::legacy_phase translating ("translation");
-  auto aut = trans.run (f);
+  auto aut = trans.run (translation_formula);
   acacia::legacy_graph (aut);
   return aut;
 #else
@@ -44,7 +57,7 @@ spot::twa_graph_ptr create_automaton (
       // spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
       spot::postprocessor::SBAcc);  // state-based acceptacen
   acacia::legacy_phase translating ("translation");
-  auto aut = trans.run (f);
+  auto aut = trans.run (translation_formula);
   acacia::legacy_graph (aut);
   translating.finish ();
   if (aut->num_states () > 0 and not aut->prop_state_acc ().is_true ()) {
