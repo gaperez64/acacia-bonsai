@@ -14,11 +14,12 @@ build = Path(sys.argv[2])
 arms = sys.argv[3].split(",")
 expected_ltl_children = int(sys.argv[4])
 verbose_enabled = sys.argv[5] == "true"
-legacy = [a for a in arms if ":gr1:oxidd" not in a and
+ordinary = [a for a in arms if a != "both:obligation:spot"]
+legacy = [a for a in ordinary if ":gr1:oxidd" not in a and
           ":gr1-lift:oxidd" not in a and
           ":gr1-real-lift:oxidd" not in a and
           ":param-lift:oxidd" not in a]
-native = [a for a in arms if a not in legacy]
+native = [a for a in ordinary if a not in legacy]
 assert native
 
 
@@ -54,7 +55,7 @@ ltl = ("-f", "G(i -> o)", "-i", "i", "-o", "o")
 plain, plain_records = run_recorded([str(binary), *ltl, "-v"])
 assert plain.returncode == 0, plain
 check_children(plain, plain_records, expected_ltl_children, False)
-assert plain.stderr.count("Skipping default native arm") == len(native), plain
+assert plain.stderr.count("Skipping default arm") == len(native), plain
 
 synth = build / "default-native-synthesis.aag"
 synth.unlink(missing_ok=True)
@@ -62,7 +63,8 @@ made, made_records = run_recorded([str(binary), *ltl, "-v", "-s", str(synth)])
 assert made.returncode == 0 and synth.is_file() and synth.stat().st_size, made
 assert not any(record.get("phase") == "child_startup" and
                record.get("arm") in native for record in made_records), (made, made_records)
-assert made.stderr.count("Skipping default native arm") == len(native), made
+assert made.stderr.count("Skipping default arm") == len(arms) - len(legacy), made
+assert not any(record.get("arm") == "both:obligation:spot" for record in made_records)
 synth.unlink()
 
 explicit = subprocess.run([str(binary), *ltl, "--arms", native[0]],
@@ -77,8 +79,8 @@ source.write_text(source_text)
 try:
     tlsf, tlsf_records = run_recorded([str(binary), "-T", str(source), "-v"])
     assert tlsf.returncode == 0, tlsf
-    check_children(tlsf, tlsf_records, len(arms), True)
-    assert "Skipping default native arm" not in tlsf.stderr, tlsf
+    check_children(tlsf, tlsf_records, len(ordinary), True)
+    assert "Skipping default arm" not in tlsf.stderr, tlsf
 finally:
     source.unlink(missing_ok=True)
 
@@ -100,10 +102,10 @@ with tempfile.TemporaryDirectory(prefix="default-native-wrapper-", dir=build) as
     wrapped_tlsf, wrapped_tlsf_records = run_recorded(
         [str(wrapper), "--tlsf", "-v"], input=source_text)
     assert wrapped_tlsf.returncode == 0, wrapped_tlsf
-    check_children(wrapped_tlsf, wrapped_tlsf_records, len(arms), True)
-    assert "Skipping default native arm" not in wrapped_tlsf.stderr, wrapped_tlsf
+    check_children(wrapped_tlsf, wrapped_tlsf_records, len(ordinary), True)
+    assert "Skipping default arm" not in wrapped_tlsf.stderr, wrapped_tlsf
 
     wrapped_ltl, wrapped_ltl_records = run_recorded([str(wrapper), *ltl, "-v"])
     assert wrapped_ltl.returncode == 0, wrapped_ltl
     check_children(wrapped_ltl, wrapped_ltl_records, expected_ltl_children, False)
-    assert wrapped_ltl.stderr.count("Skipping default native arm") == len(native), wrapped_ltl
+    assert wrapped_ltl.stderr.count("Skipping default arm") == len(native), wrapped_ltl

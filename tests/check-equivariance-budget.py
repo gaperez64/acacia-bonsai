@@ -59,7 +59,7 @@ def check_budget(budget: dict, limit: dict, deadline: bool,
 def main() -> None:
     binary, build = (Path(value).resolve() for value in sys.argv[1:3])
     incumbent = Path(sys.argv[3]).resolve() if len(sys.argv) > 3 else None
-    args = ["--obligation-helper", "off", "-f", "G (i <-> X o)", "-i", "i", "-o", "o",
+    args = ["-f", "G (i <-> X o)", "-i", "i", "-o", "o",
             "--spot-fast", "off",
             "--arms", "real:small:backward"]
     with tempfile.TemporaryDirectory(dir=build) as temporary:
@@ -142,8 +142,7 @@ def main() -> None:
                                               ("0ms", None, 0)):
                 directory = regime / f"decomposed-{value}"
                 directory.mkdir()
-                decomposed = ["--obligation-helper", "off",
-                              "-f", "G (i <-> X o) & G (j <-> X p)", "-i", "i,j", "-o", "o,p",
+                decomposed = ["-f", "G (i <-> X o) & G (j <-> X p)", "-i", "i,j", "-o", "o,p",
                               "--spot-fast", "off", "--arms", "real:small:backward",
                               "--equivariance-budget", value]
                 result = execute(binary, decomposed, directory, deadline)

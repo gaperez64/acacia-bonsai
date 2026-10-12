@@ -99,6 +99,7 @@ def main() -> None:
     parser.add_argument("--ltlsynt", type=Path)
     parser.add_argument("--tlsf", action="store_true")
     parser.add_argument("--native", action="store_true")
+    parser.add_argument("--default-arms", default="")
     options = parser.parse_args()
     binary, library = options.binary.resolve(), options.fault_lib.resolve()
     root = options.build_dir.resolve()
@@ -123,20 +124,32 @@ def main() -> None:
     pair = ["--arms", ordinary_pair]
     race = ["--arms", ordinary_pair + "," + arm]
     real = ["--arms", "real:small:backward," + arm]
-    off = ["--obligation-helper", "off"]
-    # Explicit ordinary selection and off both omit all obligation work.
-    for selection in (off, pair, [*pair, *off]):
+    default_arms = options.default_arms.split(",") if options.default_arms else []
+    default_has_helper = arm in default_arms
+    ordinary_defaults = [value for value in default_arms
+                         if value != arm and ":oxidd" not in value]
+    previous = ["--arms", ",".join(ordinary_defaults)] if ordinary_defaults else []
+    # Explicit ordinary selections omit all obligation work.
+    for selection in (previous, pair):
         result, rows = run(binary, [*source, *selection], root, library)
         assert result.returncode == 0 and "REALIZABLE" in result.stdout, result
         assert not any(row.get("event", "").startswith("obligation_") for row in rows)
-        if "--arms" in selection:
-            assert len([row for row in rows if row.get("event") == "worker_spawn"]) == 2
+        expected_workers = 2 if selection == pair else len(ordinary_defaults)
+        if expected_workers:
+            assert len([row for row in rows if row.get("event") == "worker_spawn"]) == (
+                expected_workers)
+
+    if not default_has_helper:
+        result, rows = run(binary, source, root, library)
+        assert result.returncode == 0, result
+        assert not any(row.get("event", "").startswith("obligation_") for row in rows)
 
     for formula, expected in [("G (i <-> o)", 0), ("G (X i <-> o)", 1)]:
         args = ["-f", formula, "-i", "i", "-o", "o"]
-        exact, exact_rows = run(binary, [*args, *off], root, library)
+        exact, exact_rows = run(binary, [*args, *previous], root, library)
         assert not any(row.get("event", "").startswith("obligation_") for row in exact_rows)
-        for selection in ([], race, alone):
+        selections = [[], race, alone] if default_has_helper else [race, alone]
+        for selection in selections:
             candidate, rows = run(binary, [*args, *selection], root, library, delay_ms=300)
             assert exact.returncode == candidate.returncode == expected, (exact, candidate)
             winners = [row for row in rows if row.get("event") == "parent_winner"]
@@ -166,7 +179,7 @@ def main() -> None:
             "effective_backend"] == "obligation", rows
 
     ineligible_source = ["-f", "G F (i <-> o)", "-i", "i", "-o", "o"]
-    baseline, baseline_rows = run(binary, [*ineligible_source, *off], root, library)
+    baseline, baseline_rows = run(binary, [*ineligible_source, *previous], root, library)
     for selection in ([], race, alone):
         ineligible, rows = run(binary, [*ineligible_source, *selection], root, library)
         assert ineligible.returncode == (2 if selection == alone else 0), ineligible
@@ -185,33 +198,55 @@ def main() -> None:
             assert not any(row.get("event", "").startswith("obligation_") for row in rows)
             assert (ineligible.returncode, ineligible.stdout) == (
                 baseline.returncode, baseline.stdout)
+            def specs(records):
+                return sorted(({key: value for key, value in row.items()
+                                if key != "worker_pid"} for row in records
+                               if row.get("event") == "worker_spec"),
+                              key=lambda row: row["worker"])
+            assert specs(rows) == specs(baseline_rows), (rows, baseline_rows)
         if selection == race:
             assert len(spawns) == 2, rows
 
     # One ordinary arm makes every record deterministic apart from sampled runtime values.
-    # Default membership is still active with -r; compare all records, including phases,
-    # stage/metric records, terminal records and the parent winner, against the off route.
-    sampled = {"worker_pid", "mono_ns", "entry_ns", "wall_ns", "cpu_ns", "rss_kb",
+    # Compare ineligible helper selection with the same ordinary arm alone, including
+    # phases, metrics, terminal records and the parent winner.
+    sampled = {"worker_pid", "pid", "mono_ns", "entry_ns", "deadline_ns",
+               "wall_ns", "cpu_ns", "rss_kb",
                "peak_rss_kb", "mallinfo2"}
 
     def stable_records(rows: list[dict]) -> list[str]:
         return sorted(json.dumps({key: value for key, value in row.items() if key not in sampled},
                                  sort_keys=True) for row in rows)
 
-    for formula, route in [("G F (i <-> o)", ["-r", "small"]),
-                           ("F G (i <-> o)", ["-u", "formula"])]:
-        args = ["-f", formula, "-i", "i", "-o", "o", *route]
-        exact, exact_rows = run(binary, [*args, *off], root, library)
-        default, default_rows = run(binary, args, root, library)
-        assert not any(row.get("event", "").startswith("obligation_") for row in default_rows)
+    for formula, ordinary in [("G F (i <-> o)", "real:small:backward"),
+                              ("F G (i <-> o)", "unreal:formula:backward")]:
+        args = ["-f", formula, "-i", "i", "-o", "o"]
+        exact, exact_rows = run(binary, [*args, "--arms", ordinary], root, library)
+        default, default_rows = run(binary, [*args, "--arms", ordinary + "," + arm],
+                                    root, library)
+        assert not helper_rows(default_rows, "start"), default_rows
+        eligibility = helper_rows(default_rows, "eligibility")
+        assert len(eligibility) == 1 and eligibility[0]["outcome"] == "inapplicable"
+        # Explicit selection adds this one eligibility record to the writer's count.
+        exact_writer = next(row for row in exact_rows if row.get("event") == "writer_summary")
+        selected_writer = next(row for row in default_rows
+                               if row.get("event") == "writer_summary")
+        assert selected_writer["delivered_records"] == exact_writer["delivered_records"] + 1
+        selected_writer["delivered_records"] -= 1
+        default_rows = [row for row in default_rows
+                        if row.get("event") != "obligation_eligibility"]
         assert (default.returncode, default.stdout, default.stderr, stable_records(default_rows)) == (
             exact.returncode, exact.stdout, exact.stderr, stable_records(exact_rows)), (
                 default_rows, exact_rows)
 
+    for route in (["-r", "small"], ["-u", "formula"]):
+        result, rows = run(binary, [*source, *route], root, library)
+        assert not any(row.get("event", "").startswith("obligation_") for row in rows)
+
     for marker in (".inputs", ".outputs"):
         for partition in ("-i", "-o"):
             args = ["-f", "G o", "-i", "i", "-o", "o", partition, marker]
-            exact, _ = run(binary, [*args, *off], root, library)
+            exact, _ = run(binary, [*args, *previous], root, library)
             selected, rows = run(binary, [*args, *alone], root, library, "prepare-stall")
             assert exact.returncode == selected.returncode == 3, (exact, selected)
             message = f"value '{marker}' is a partition marker, not an atomic proposition."
@@ -290,7 +325,7 @@ def main() -> None:
         if options.tlsf:
             malformed = Path(directory) / "malformed.tlsf"
             malformed.write_text("invalid TLSF")
-            failed, _ = run(binary, ["-T", str(malformed), *pair, *off], root, library)
+            failed, _ = run(binary, ["-T", str(malformed), *pair], root, library)
             selected, selected_rows = run(binary, ["-T", str(malformed), *race], root, library)
             assert failed.returncode == selected.returncode == 3, (failed, selected)
             assert failed.stdout == selected.stdout and failed.stderr == selected.stderr
@@ -302,7 +337,7 @@ def main() -> None:
                 tlsf.write_text(f'''INFO {{ TITLE: "generated" SEMANTICS: {semantics} TARGET: Moore }}
 MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ G (i <-> o); }} }}
 ''')
-                exact, _ = run(binary, ["-T", str(tlsf), *pair, *off], root, library)
+                exact, _ = run(binary, ["-T", str(tlsf), *pair], root, library)
                 result, rows = run(binary, ["-T", str(tlsf), *race], root, library, delay_ms=300)
                 assert exact.returncode == result.returncode == expected, (exact, result)
                 assert helper_rows(rows, "completion")[0]["outcome"] == (
@@ -314,7 +349,7 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ G (i <-> o); }} }}
 MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }}
        ASSUMPTIONS {{ G i; }} GUARANTEES {{ G (i <-> o); }} }}
 ''')
-                exact, _ = run(binary, ["-T", str(tlsf), *pair, *off], root, library)
+                exact, _ = run(binary, ["-T", str(tlsf), *pair], root, library)
                 result, rows = run(binary, ["-T", str(tlsf), *race], root, library, delay_ms=300)
                 assert exact.returncode in (0, 1) and result.returncode == exact.returncode, (
                     exact, result)
@@ -335,16 +370,15 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G (i <-> o); } }
                 assert result.returncode == 0, result
                 assert helper_rows(rows, "eligibility")[0]["reason"] == "eligible", rows
 
-    invalid = subprocess.run([str(binary), *source, "--obligation-helper", "maybe"],
-                             capture_output=True, text=True)
-    assert invalid.returncode == 3 and "expects off" in invalid.stderr, invalid
-    for selection in (["--obligation-helper", "on"],
-                      [*alone, *off],
+    for selection in (["--obligation-helper", "off"],
+                      ["--obligation-helper", "on"],
                       ["--arms", arm + "," + arm],
                       [*alone, "-s", str(root / "unused.aag")]):
         invalid = subprocess.run([str(binary), *source, *selection],
                                  capture_output=True, text=True)
         assert invalid.returncode == 3, invalid
+        if selection[0] == "--obligation-helper":
+            assert "unrecognized option" in invalid.stderr, invalid
     print("obligation arm selection, routing, oracle, faults, synthesis and cleanup checks passed")
 
 

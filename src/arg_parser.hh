@@ -59,7 +59,6 @@ struct arg_parse_result {
     acacia::candidate_mode candidate = ACACIA_DEFAULT_CANDIDATE_MODE;
     weakening_mode weakening = weakening_mode::basic;
     acacia::unreal_witnesses::allowances weakening_allowances;
-    bool obligation_helper = true;  // off escape hatch for default membership only
     bool obligation_explicit = false;
     bool r_prepass = true;
     bool equivariance = ACACIA_ENABLE_EQUIVARIANT_SOLVER;

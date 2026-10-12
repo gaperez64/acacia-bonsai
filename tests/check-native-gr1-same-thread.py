@@ -27,7 +27,7 @@ def repeat(binary: Path, source: Path, arm: str, count: int,
         env = os.environ.copy()
         env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + 30)
         process = subprocess.Popen(
-            [str(binary), "--obligation-helper", "off", "--arms", arm, "-T", str(source)],
+            [str(binary), "--arms", arm, "-T", str(source)],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
             env=env, start_new_session=True,
         )

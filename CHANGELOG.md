@@ -84,10 +84,12 @@ See [the panels](benchmarking/RESULTS.md) and
 
 ### Unreleased
 
-- **Oct 12:** `both:obligation:spot` joins the default portfolio for eligible
-  original objectives and can run alone through `--arms`. Explicit arm lists
-  select exactly their members. `--obligation-helper off` remains the default-arm
-  escape hatch because the CLI has no general subtraction option; `on` is removed.
+- **Oct 12:** `both:obligation:spot` joins the explicit shipping portfolios through
+  the compile-time registry, so frozen builds record their full arm lists. It runs
+  only for eligible original objectives and can run alone through `--arms`.
+  Explicit arm lists select exactly their members; the runtime helper toggle is
+  removed. Select the previous arms explicitly to recover the original portfolio.
+  Historical presets and the empty default-arm configuration stay unchanged.
   Synthesis keeps its existing route. The driver's earlier helper screens show
   eight additional REAL solves with no losses; full-corpus admission remains
   pending. [Arm notes](benchmarking/coverage-first/obligation-helper.md).

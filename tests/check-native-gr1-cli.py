@@ -37,7 +37,6 @@ MAIN { INPUTS { controllable_o0; } OUTPUTS { uncontrollable_i0; }
 
 def run(binary: Path, args: list[str], deadline: float | None = None,
         corrupt_proof: bool = False) -> subprocess.CompletedProcess[str]:
-    args = ["--obligation-helper", "off", *args]
     env = os.environ.copy()
     if deadline is not None:
         env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(deadline)
@@ -279,7 +278,7 @@ def check_record_failures(worker: Path, binary: Path, real: Path,
             env["ACACIA_PHASE_RECORDS"] = str(record_dir)
         env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(deadline)
         before = time.monotonic()
-        proc = subprocess.run([str(binary), "--obligation-helper", "off",
+        proc = subprocess.run([str(binary),
                                "-T", str(real), "--arms", arm],
                               capture_output=True, text=True, env=env, timeout=5)
         return proc.returncode, proc.stdout, time.monotonic() - before

@@ -17,7 +17,7 @@ run_case() {
   shift 4
 
   local output status
-  output=$("$solver" --obligation-helper off -f "$formula" -i i -o o -v "$@" 2>&1)
+  output=$("$solver" -f "$formula" -i i -o o -v "$@" 2>&1)
   status=$?
   if (( status != expected_status )); then
     printf '%s: expected status %d, got %d\n%s\n' \

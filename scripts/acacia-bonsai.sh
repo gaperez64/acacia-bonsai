@@ -30,11 +30,10 @@ Usage: $0 [config_name] [--tlsf] [acacia-bonsai arguments...]
 
   --arms LIST       Run exactly the listed arms, including both:obligation:spot
                     for a bounded syntactic-obligation decision worker. This arm
-                    is included by default and starts only on eligible inputs.
-  --obligation-helper off
-                    Omit the obligation arm from the default portfolio. There is
-                    no general default-arm subtraction option. Synthesis (-s)
-                    uses its existing route.
+                    starts only on eligible inputs. Default membership follows
+                    the selected build's registry portfolio. Omit the arm from
+                    an explicit list to use the original portfolio. Synthesis
+                    (-s) uses its existing route.
 
 Available configurations:
 EOF

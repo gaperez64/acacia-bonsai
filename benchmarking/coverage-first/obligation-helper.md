@@ -1,28 +1,41 @@
 # Obligation decision arm
 
-`both:obligation:spot` is part of the default portfolio in the CLI and Docker wrapper.
-It races one bounded original-game decision worker for eligible inputs alongside the
-existing arms. `--arms both:obligation:spot` measures this arm alone; an ineligible input
-returns UNKNOWN with no solver process. Any explicit `--arms` list runs exactly its named
-arms, so omitting this arm disables it for that selection.
+The shipping presets with explicit portfolios declare `both:obligation:spot` in
+`config/acacia-presets.json`, through the existing `acacia_default_arms` build option.
+The first `docker_default` preset includes it, as do the non-native sparse formula fallback
+and the bounding-box-tree portfolio. The arm uses Spot directly and needs neither native
+arms nor OxiDD. Historical presets, including inherited sweep portfolios, and the empty
+historical-default path retain their previous lists. Meson's `intro-buildoptions.json`
+records the shipped membership; there is no runtime append or helper toggle.
 
-There is no general CLI operation to subtract one arm from the default portfolio.
-`--obligation-helper off` is therefore retained solely as that escape hatch; it restores
-the frozen post-memory master route. `on` is removed: arms join through `--arms`.
-Combining `off` with an explicitly selected obligation arm is an error. Synthesis (`-s`)
-uses the ordinary default route; explicitly selecting this decision-only arm with `-s`
-is an error. Replay and native checking retain their existing routes.
+It races one bounded original-game decision worker for eligible inputs alongside the
+existing arms. `--arms both:obligation:spot` runs it alone, with supervised preparation;
+an ineligible input returns UNKNOWN without starting an obligation solver. Explicit `--arms`
+lists run exactly their named arms. A preset without the arm also preserves the original
+route. For the first shipping preset, the previous TLSF decision portfolio is:
+
+```sh
+previous_arms=real:small:backward,real:small:forward
+previous_arms="$previous_arms,unreal:formula:spot-guarded-sparse"
+previous_arms="$previous_arms,unreal:automaton:forward,both:gr1-real-lift:oxidd"
+acacia-bonsai -T spec.tlsf --arms "$previous_arms"
+```
+
+For LTL input, omit the native GR(1) arm, which requires `-T`. Explicit `-r`/`-u` selections
+also run only their requested routes. Synthesis (`-s`) uses the ordinary default route;
+explicitly selecting this decision-only arm with `-s` is an error. Replay and native
+checking retain their existing routes.
 
 ## Driver screens and pending admission
 
 The driver compared frozen helper implementation `0e6edbd9` (PMC2) with frozen post-memory
 master M. On the 223 inputs whose objectives are syntactic obligations, the enabled helper solves
-215 versus 207 for `off` and master at 17 s: eight additional REAL solves, zero losses and
-paired PAR-2 −286 s. Explicit `off` matches master exactly in this screen.
+215 versus 207 for the helper-disabled route and master at 17 s: eight additional REAL solves, zero losses and
+paired PAR-2 −286 s. The helper-disabled route matches master exactly in this historical screen.
 
 At 60 s on the 16 obligation inputs unresolved at 17 s, the enabled helper solves nine versus one each for
-`off` and master. The same eight gains complete in 0.1–1.1 s, with zero losses. On 156
-ineligible controls at 17 s, the enabled helper and `off` both solve 62; paired PAR-2 changes by +1.8 s.
+the helper-disabled route and master. The same eight gains complete in 0.1–1.1 s, with zero losses. On 156
+ineligible controls at 17 s, the enabled helper and the helper-disabled route both solve 62; paired PAR-2 changes by +1.8 s.
 These are driver-supplied screens, not a completed full-corpus admission result. The default
 is enabled so the driver's full-corpus candidate campaign exercises shipping behavior;
 final admission remains with that campaign.
@@ -87,8 +100,9 @@ and `error`; only completed decisions map to the parent's REAL/UNREAL codes. Eli
 completion, outcome/reason and elapsed wall time use the existing bounded nonblocking phase
 channel. Obligation records and worker specifications identify `both:obligation:spot`;
 `parent_winner` identifies the accepted worker. Parent records cover killed helpers. Missing/dropped records remain uncertain.
-Off allocates no mailbox, checks no eligibility, samples no helper clocks/RSS and emits no helper
-events or workers. This runtime-only arm needs no compile-option registry entry.
+A portfolio without the arm allocates no mailbox, checks no eligibility, samples no helper
+clocks/RSS and emits no helper events or workers. Membership uses the existing compile-time
+`acacia_default_arms` registry option; its empty default remains unchanged across frontends.
 
 ## Trust and checks
 
@@ -104,7 +118,7 @@ The C++ unit covers eligibility, shared DAGs, abbreviations, constants, unused s
 Actions execute outside assertions. The CLI panel cross-checks Mealy/Moore with ltlsynt general
 construction (`--obligation-synthesis=no --bypass=no`) and Acacia's existing route, including
 strict TLSF safety assumptions. It tests single arm membership, exact `--arms` selection, default eligibility, launch order, native-only and
-opposite-polarity selection, post-simplification eligibility, off, synthesis exclusion, exceptions,
+opposite-polarity selection, post-simplification eligibility, ordinary-only selection, synthesis exclusion, exceptions,
 null/empty/allocation/abnormal exits, wall/RSS stops, cancellation, deadlines, parent termination
 and no remaining child processes/groups. Faults use a test-only preload library, never linked
 into or installed with a solver; release binaries contain no new mutation hook.
@@ -113,7 +127,7 @@ Checked/release unit suites passed 90/90 and 87/87; obligation outputs agree byt
 Diagnostics-enabled CLI checks and ASan/UBSan passed. Leak scanning was disabled because sandbox
 ptrace supervision blocks LeakSanitizer. Full pytest: 2,299 passed, 40 skipped, 23 passing subtests;
 hardcoding: 96 passed, one skipped. Ruff and config frontend checks passed. Ten generated games
-match frozen post-memory master in exit code, stdout and worker specifications with helper off.
+match frozen post-memory master in exit code, stdout and worker specifications with the then-used helper-disabled route.
 
 Four serial release diagnostics used the first registry-resolved `docker_default` preset, built
 via `BENCHMARK_COMPILE_JOBS=4 ./self-benchmark.sh -R -c <preset>`, in
@@ -137,8 +151,8 @@ The first registry-resolved `docker_default` preset passed 90/90 checked and 87/
 unit tests after exposing the worker as an arm. Obligation unit output is byte-identical
 between builds. The CLI checks cover exact selection, default membership, no solver spawn
 on ineligible inputs, ordinary worker specifications unchanged on ineligible controls,
-conversion errors, disabled routing, timing, typed faults, synthesis and cleanup.
-Ten generated Mealy/Moore and strict games with `off` still match frozen master in exit code,
+conversion errors, ordinary-only routing, timing, typed faults, synthesis and cleanup.
+Ten generated Mealy/Moore and strict games with the then-used helper-disabled route still match frozen master in exit code,
 stdout and worker specifications. No resource thresholds or solving semantics changed.
 
 Full pytest passed 2,299 tests and 23 subtests, with 40 existing conditional skips and no
@@ -165,3 +179,52 @@ portfolio and once with `--arms both:obligation:spot`. These make no timing clai
 All spawned workers have parent reaping records and no surviving worker PID. Ineligible
 arm-only selection spawns zero solver processes. The scope bus required sandbox escalation;
 the initial blocked attempt ran no solver. Full-corpus admission remains the driver's campaign.
+
+
+## Registry membership validation (12 October 2026)
+
+The obligation arm now joins through the existing build option, rather than a runtime
+append. All three shipping presets with explicit portfolios declare it; the two shipping
+presets with empty historical defaults stay unchanged. Resolved options for every
+non-shipping preset remain identical to their previous values, including the inherited
+sweep and diagnostic portfolios. The non-native fallback can run the arm because its
+Spot implementation is compiled independently of native arms.
+
+The first registry-resolved shipping preset passed 90/90 checked and 87/87 release unit
+tests. Its release build used `BENCHMARK_COMPILE_JOBS=4 ./self-benchmark.sh -R -c <preset>`;
+`meson-info/intro-buildoptions.json` records the complete six-arm list, including
+`both:obligation:spot`. No new compile option or fallback default was introduced.
+Registry validation and all 49 shared scalar frontend checks pass, with the existing
+documented TLSF frontend divergence.
+
+Full pytest passed 2,300 tests and 23 subtests, with 40 existing conditional skips and the
+temporary-repository commit fixtures enabled. Local Python bindings and Spot bindings
+were supplied through the same module-path setup as CI. Hardcoding pytest passed 96 tests
+with one existing skip; Ruff, shell syntax and diff checks passed. The CLI checks reject the
+removed helper toggle and preserve explicit arm selection, eligibility, full normalized
+record parity apart from the explicit inapplicability record, typed faults, cancellation,
+partition validation, synthesis exclusion and cleanup. Checked/release obligation-unit
+output is byte-identical. Ten generated games match frozen master in exit code, stdout and
+worker specifications in both builds using explicit previous-arm selection.
+
+The same four structural selections ran serially under 8 GiB, zero-swap systemd scopes
+with the default portfolio and the obligation arm alone. These are correctness smokes,
+with no timing or full-corpus admission claim.
+
+| Ordinal | Default verdict | Default solver workers | Arm-only verdict | Arm-only solver workers |
+|---|---|---|---|---|
+| 52 | UNREAL | 6 | UNREAL | 1 |
+| 493 | REAL | 6 | REAL | 1 |
+| 489 | REAL | 6 | REAL | 1 |
+| 964 | REAL | 5 | UNKNOWN | 0 |
+
+The three eligible default helpers were cancelled by the ordinary winner. The ineligible
+default input emitted no helper records and started no extra process. Arm-only
+inapplicability used one supervised preparation child and never entered obligation
+synthesis. All spawned processes have parent reaping records and no surviving PID or
+process group. The existing wall/address/RSS allowances, racing, trust boundary and
+same-library REAL check are unchanged.
+
+Logs, frozen binaries, build options, master parity and smoke records are retained under
+`build_scratch/pm-p2-registry/`. Large temporary checked/Python build directories were
+removed after validation. All source changes remain unstaged and uncommitted.

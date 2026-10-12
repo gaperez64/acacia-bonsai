@@ -607,7 +607,7 @@ if default_arms_opt != ''
     needs_real = needs_real or real_arm
     needs_unreal = needs_unreal or unreal_arm
     native_arm = spec.contains (':gr1:oxidd') or spec.contains (':gr1-lift:oxidd') or spec.contains (':gr1-real-lift:oxidd') or spec.contains (':param-lift:oxidd')
-    if not native_arm
+    if not native_arm and spec != 'both:obligation:spot'
       default_check_children += 1
       has_legacy_real = has_legacy_real or real_arm
       has_legacy_unreal = has_legacy_unreal or unreal_arm
@@ -1025,7 +1025,8 @@ if host_machine.system () == 'linux'
     dependencies : [spot_dep, bddx_dep, cpp.find_library ('dl')], install : false)
   obligation_cli_args = [files ('check-obligation-helper.py'), ab_exe,
                          obligation_helper_test, obligation_helper_faults,
-                         meson.current_build_dir ()]
+                         meson.current_build_dir (),
+                         '--default-arms', get_option ('acacia_default_arms')]
   if ltlsynt_exe.found ()
     obligation_cli_args += ['--ltlsynt', ltlsynt_exe.full_path ()]
   endif

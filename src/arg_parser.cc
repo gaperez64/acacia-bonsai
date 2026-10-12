@@ -84,7 +84,6 @@ void show_help (const char* program_name) {
          "provider (default frozen-graph)\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
          "requires frozen-graph\n"
-      << "  --obligation-helper off   omit the obligation arm from the default portfolio\n"
       << "  --weakening VAL          [basic|extended|off] (default basic)\n"
       << "  --weakening-attempt-ms N   absolute extended-attempt allowance (default 250 ms)\n"
       << "  --weakening-total-ms N     absolute extended pre-pass allowance (default 1000 ms)\n"
@@ -105,7 +104,8 @@ void show_help (const char* program_name) {
       << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, "
          "decision only\n"
       << "                    both:obligation:spot: syntactic obligations, decision only;\n"
-      << "                    included by default, starts only when eligible; no provider\n"
+      << "                    membership follows the build default; starts only when eligible;\n"
+      << "                    no provider\n"
       << "                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\n"
       << "                    both:gr1-real-lift:oxidd,\n"
       << "                    real:gr1:oxidd, unreal:gr1:oxidd, and\n"
@@ -430,7 +430,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
   int opt;
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
-  static constexpr int OPT_OBLIGATION_HELPER = 1015;
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
@@ -461,7 +460,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
-      {"obligation-helper", required_argument, nullptr, OPT_OBLIGATION_HELPER},
       {"weakening", required_argument, nullptr, OPT_WEAKENING},
       {"weakening-attempt-ms", required_argument, nullptr, OPT_WEAKENING_ATTEMPT_MS},
       {"weakening-total-ms", required_argument, nullptr, OPT_WEAKENING_TOTAL_MS},
@@ -586,14 +584,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
                                          : retval.weakening_allowances.total_ms) = value;
         break;
       }
-      case OPT_OBLIGATION_HELPER:
-        if (std::string_view {optarg} == "off")
-          retval.obligation_helper = false;
-        else
-          error (EXIT_CODE_ERROR,
-                 "Error: --obligation-helper expects off; select both:obligation:spot "
-                 "with --arms.\n");
-        break;
       case OPT_WEAKENING:
         if (std::string_view {optarg} == "basic")
           retval.weakening = weakening_mode::basic;
@@ -749,8 +739,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
           (arm.kind == portfolio_arm_kind::obligation && !retval.synth_fname))
         return false;
       if (retval.verbose_level)
-        std::cerr << "Skipping default native arm " << arm.native_name ()
-                  << (retval.tlsf_specified ? " during synthesis" : " without -T") << '\n';
+        std::cerr << "Skipping default arm " << arm.native_name ()
+                  << (retval.synth_fname ? " during synthesis" : " without -T") << '\n';
       return true;
     });
     const bool has_real = std::ranges::any_of (
@@ -850,23 +840,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
                "or the corresponding unreal/--arms selection.\n");
     }
   }
-
-  if (!retval.obligation_helper) {
-    if (explicit_arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-          return arm.kind == portfolio_arm_kind::obligation;
-        }))
-      error (EXIT_CODE_ERROR,
-             "Error: --obligation-helper off conflicts with explicit both:obligation:spot.\n");
-    std::erase_if (*retval.arms, [] (const auto& arm) {
-      return arm.kind == portfolio_arm_kind::obligation;
-    });
-  }
-  else if (!explicit_arms && !retval.synth_fname &&
-           std::ranges::none_of (*retval.arms, [] (const auto& arm) {
-             return arm.kind == portfolio_arm_kind::obligation;
-           }))
-    retval.arms->push_back (
-        portfolio_arm::native (false, portfolio_arm_kind::obligation, true));
 
 #if ACACIA_ENABLE_TLSF_FRONTEND
   if (retval.tlsf_specified && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
