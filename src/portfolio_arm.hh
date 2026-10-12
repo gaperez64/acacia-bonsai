@@ -11,7 +11,7 @@
 #include <string_view>
 #include <vector>
 
-enum class portfolio_arm_kind { legacy, gr1, gr1_lift, gr1_real_lift, param_lift };
+enum class portfolio_arm_kind { legacy, gr1, gr1_lift, gr1_real_lift, param_lift, obligation };
 
 struct legacy_arm_options {
     TRANSLATION_PREF_T translation_pref;
@@ -46,6 +46,8 @@ struct portfolio_arm {
     }
 
     const char* native_name () const {
+      if (kind == portfolio_arm_kind::obligation)
+        return "obligation-helper";
       if (kind == portfolio_arm_kind::gr1)
         return both ? "both:gr1:oxidd" : unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd";
       if (kind == portfolio_arm_kind::gr1_lift)

@@ -84,6 +84,7 @@ void show_help (const char* program_name) {
          "provider (default frozen-graph)\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
          "requires frozen-graph\n"
+      << "  --obligation-helper VAL   race an obligation decision helper [off|on] (default off)\n"
       << "  --weakening VAL          [basic|extended|off] (default basic)\n"
       << "  --weakening-attempt-ms N   absolute extended-attempt allowance (default 250 ms)\n"
       << "  --weakening-total-ms N     absolute extended pre-pass allowance (default 1000 ms)\n"
@@ -424,6 +425,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   int opt;
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
+  static constexpr int OPT_OBLIGATION_HELPER = 1015;
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
@@ -454,6 +456,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
+      {"obligation-helper", required_argument, nullptr, OPT_OBLIGATION_HELPER},
       {"weakening", required_argument, nullptr, OPT_WEAKENING},
       {"weakening-attempt-ms", required_argument, nullptr, OPT_WEAKENING_ATTEMPT_MS},
       {"weakening-total-ms", required_argument, nullptr, OPT_WEAKENING_TOTAL_MS},
@@ -578,6 +581,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
                                          : retval.weakening_allowances.total_ms) = value;
         break;
       }
+      case OPT_OBLIGATION_HELPER:
+        if (std::string_view {optarg} == "on")
+          retval.obligation_helper = true;
+        else if (std::string_view {optarg} == "off")
+          retval.obligation_helper = false;
+        else
+          error (EXIT_CODE_ERROR, "Error: --obligation-helper expects off or on.\n");
+        break;
       case OPT_WEAKENING:
         if (std::string_view {optarg} == "basic")
           retval.weakening = weakening_mode::basic;

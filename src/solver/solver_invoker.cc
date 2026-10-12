@@ -9,6 +9,7 @@
 #include "solver/diagnostics.hh"
 #include "solver/forced_output_contradiction.hh"
 #include "solver/mealy_to_moore.hh"
+#include "solver/obligation_helper.hh"
 #include "solver/real_backend_selector.hh"
 #include "solver/realizability_simplify.hh"
 #include "solver/solve_game.hh"
@@ -1107,7 +1108,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               const specification_metadata& metadata, acacia::automaton_provider provider,
               acacia::candidate_mode candidate, bool equivariance, uint64_t diagnostic_deadline_ns,
               const std::string& diagnostic_source_sha256, weakening_mode weakening,
-              const acacia::unreal_witnesses::allowances& weakening_allowances) {
+              const acacia::unreal_witnesses::allowances& weakening_allowances,
+              acacia::obligation::control* obligation_eligibility) {
   // Protect internal callers as well as the CLI synthesis route.
   if (synth_fname.has_value ()) {
     backend = acacia::synthesis_backend (backend, true);
@@ -1198,6 +1200,11 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     acacia::diagnostics::snapshot ("after-rsimp");
     verb_do (2, vout << "Simplified formula: " << spot_formula << std::endl);
   }
+
+  // Publish from an existing arm at the common original-game boundary. The
+  // parent has already started its other arms; it does no serial preprocessing.
+  if (obligation_eligibility)
+    acacia::obligation::publish_eligibility (obligation_eligibility, spot_formula);
 
   if (!acacia::is_closure_provider (provider)) {
     acacia::legacy_phase bypass ("direct-checks");
