@@ -29,6 +29,8 @@ def rows(directory: Path) -> list[dict]:
 
 def execute(binary: Path, args: list[str], directory: Path | None,
             extra: dict[str, str] | None = None) -> subprocess.CompletedProcess:
+    # These checks require the selected route to decide without a competing helper.
+    args = ["--obligation-helper", "off", *args]
     env = os.environ.copy()
     env.pop("ACACIA_PHASE_RECORDS", None)
     env.pop("ACACIA_TEST_ATTRIBUTION_PAUSE", None)
@@ -86,8 +88,8 @@ def interrupted(binary: Path, source: Path, directory: Path, route: str,
     env["ACACIA_TEST_ATTRIBUTION_PAUSE"] = route
     env["MALLOC_PERTURB_"] = "0"
     env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + 8)
-    process = subprocess.Popen([str(binary), "-T", str(source), "--arms",
-                                "both:gr1-lift:oxidd"], env=env,
+    process = subprocess.Popen([str(binary), "--obligation-helper", "off",
+                                "-T", str(source), "--arms", "both:gr1-lift:oxidd"], env=env,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     end = time.monotonic() + 7.5
     selected = None
@@ -143,6 +145,7 @@ def complete_timeout_delivery(records: list[dict], expected_workers: int,
 
 def timeout_portfolio(binary: Path, directory: Path, signum: int | None = None,
                       *, diagnostics: bool = True) -> tuple[int, str]:
+    # These checks require the selected route to decide without a competing helper.
     env = os.environ.copy()
     env.pop("ACACIA_PHASE_RECORDS", None)
     env.pop("ACACIA_TEST_DELAY_AFTER_REAP", None)
@@ -150,7 +153,7 @@ def timeout_portfolio(binary: Path, directory: Path, signum: int | None = None,
     env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + (8 if signum else .4))
     if diagnostics:
         env["ACACIA_PHASE_RECORDS"] = str(directory)
-    args = ["-f", "G o", "-i", "i", "-o", "o", "--arms",
+    args = ["--obligation-helper", "off", "-f", "G o", "-i", "i", "-o", "o", "--arms",
             "real:small:backward,real:small:forward,unreal:formula:backward,"
             "unreal:automaton:forward,unreal:formula:forward"]
     process = subprocess.Popen([str(binary), *args], env=env, text=True,

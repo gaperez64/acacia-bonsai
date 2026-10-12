@@ -1086,19 +1086,20 @@ namespace {
   }
 #endif
 
-  void validate_ltl_partition (const std::vector<std::string>& input_aps,
-                               const std::vector<std::string>& output_aps) {
-    const auto validate = [] (const std::vector<std::string>& declared, const char* kind) {
-      for (const std::string& ap : declared)
-        if (ap == ".inputs" or ap == ".outputs")
-          error (EXIT_CODE_ERROR,
-                 "Error: %s value '%s' is a partition marker, not an atomic proposition.\n", kind,
-                 ap.c_str ());
-    };
-    validate (input_aps, "input");
-    validate (output_aps, "output");
-  }
 }  // namespace
+
+void validate_ltl_partition (const std::vector<std::string>& input_aps,
+                            const std::vector<std::string>& output_aps) {
+  const auto validate = [] (const std::vector<std::string>& declared, const char* kind) {
+    for (const std::string& ap : declared)
+      if (ap == ".inputs" or ap == ".outputs")
+        error (EXIT_CODE_ERROR,
+               "Error: %s value '%s' is a partition marker, not an atomic proposition.\n", kind,
+               ap.c_str ());
+  };
+  validate (input_aps, "input");
+  validate (output_aps, "output");
+}
 
 bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> output_aps,
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,

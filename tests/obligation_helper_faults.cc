@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <dlfcn.h>
 #include <new>
+#include <ostream>
 #include <spot/twaalgos/mtdswa.hh>
 #include <spot/twaalgos/synthesis.hh>
 #include <stdexcept>
@@ -74,4 +75,36 @@ namespace spot {
       throw std::runtime_error ("test direct strategy lookup failed");
     return original (f, outputs, info, want_strategy);
   }
+}
+
+// Delay/fail original-objective normalization before obligation_synthesis is entered.
+extern "C" void preparation_fault (void*, spot::formula, const std::vector<std::string>&,
+                                   unsigned, std::ostream*)
+    __asm__ ("_ZN4spot24realizability_simplifierC1ENS_7formulaERKSt6vectorINSt7__cxx1112basic_"
+             "stringIcSt11char_traitsIcESaIcEEESaIS8_EEjPSo");
+extern "C" void preparation_fault (void* self, spot::formula formula,
+                                   const std::vector<std::string>& inputs, unsigned options,
+                                   std::ostream* verbose) {
+  const char* mode = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
+  const std::string_view fault = mode ? mode : "";
+  if (fault == "prepare-stall")
+    while (true)
+      pause ();
+  if (fault == "prepare-allocation")
+    throw std::bad_alloc ();
+  if (fault == "prepare-exception")
+    throw std::runtime_error ("test preparation exception");
+  if (fault == "prepare-real-exit")
+    _exit (0);
+  if (fault == "prepare-unreal-exit")
+    _exit (1);
+  using function = void (*) (void*, spot::formula, const std::vector<std::string>&,
+                             unsigned, std::ostream*);
+  auto original = reinterpret_cast<function> (dlsym (
+      RTLD_NEXT,
+      "_ZN4spot24realizability_simplifierC1ENS_7formulaERKSt6vectorINSt7__cxx1112basic_"
+      "stringIcSt11char_traitsIcESaIcEEESaIS8_EEjPSo"));
+  if (!original)
+    throw std::runtime_error ("test preparation lookup failed");
+  original (self, formula, inputs, options, verbose);
 }

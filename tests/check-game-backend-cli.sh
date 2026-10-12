@@ -23,7 +23,7 @@ run() {
     local output
     local status
     set +e
-    output=$("$binary" "$@" 2>&1)
+    output=$("$binary" --obligation-helper off "$@" 2>&1)
     status=$?
     set -e
     if [[ $status -ne $wanted_status ]]; then

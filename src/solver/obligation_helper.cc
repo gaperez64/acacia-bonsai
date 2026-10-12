@@ -50,7 +50,8 @@ namespace acacia::obligation {
     char line[640];
     const int length =
         snprintf (line, sizeof line,
-                  "{\"event\":\"obligation_%s\",\"worker\":%d,\"worker_pid\":%ld,"
+                  "{\"arm\":\"both:obligation:spot\",\"event\":\"obligation_%s\","
+                  "\"worker\":%d,\"worker_pid\":%ld,"
                   "\"outcome\":\"%s\",\"reason\":\"%s\",\"mono_ns\":%llu,\"wall_ns\":%llu,"
                   "\"trust\":\"trusted_exact_spot\",\"same_library_checked\":%s}\n",
                   event, worker, long (pid), name (value), reason, (unsigned long long) now,

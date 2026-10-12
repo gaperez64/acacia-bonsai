@@ -40,6 +40,9 @@ inline const char* translation_pref_name (TRANSLATION_PREF_T preference) {
   }
 }
 
+void validate_ltl_partition (const std::vector<std::string>& input_aps,
+                            const std::vector<std::string>& output_aps);
+
 bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> output_aps,
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal,

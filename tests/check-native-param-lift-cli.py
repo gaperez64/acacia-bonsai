@@ -39,6 +39,7 @@ def source(formula: str, request: str, grant: str, *, count: int = 5,
 
 def run(binary: Path, args: list[str], *, budget: float = 15,
         fault: str | None = None) -> subprocess.CompletedProcess[str]:
+    args = ["--obligation-helper", "off", *args]
     env = os.environ.copy()
     env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + budget)
     if fault:
@@ -73,7 +74,8 @@ def check_deadline_reap(binary: Path, source_path: Path, spot_hook: Path) -> Non
     read_fd, write_fd = os.pipe()
     env["ACACIA_NATIVE_TEST_SPOT_FD"] = str(write_fd)
     try:
-        process = subprocess.Popen([str(binary), "-T", str(source_path), "--arms", ARM],
+        process = subprocess.Popen([str(binary), "--obligation-helper", "off",
+                                    "-T", str(source_path), "--arms", ARM],
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    text=True, env=env, start_new_session=True,
                                    pass_fds=(write_fd,))

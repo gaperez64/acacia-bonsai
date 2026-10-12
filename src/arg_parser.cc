@@ -84,7 +84,7 @@ void show_help (const char* program_name) {
          "provider (default frozen-graph)\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
          "requires frozen-graph\n"
-      << "  --obligation-helper VAL   race an obligation decision helper [off|on] (default off)\n"
+      << "  --obligation-helper off   omit the obligation arm from the default portfolio\n"
       << "  --weakening VAL          [basic|extended|off] (default basic)\n"
       << "  --weakening-attempt-ms N   absolute extended-attempt allowance (default 250 ms)\n"
       << "  --weakening-total-ms N     absolute extended pre-pass allowance (default 1000 ms)\n"
@@ -104,6 +104,8 @@ void show_help (const char* program_name) {
       << "                    provider options apply to arms without an explicit provider\n"
       << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, "
          "decision only\n"
+      << "                    both:obligation:spot: syntactic obligations, decision only;\n"
+      << "                    included by default, starts only when eligible; no provider\n"
       << "                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\n"
       << "                    both:gr1-real-lift:oxidd,\n"
       << "                    real:gr1:oxidd, unreal:gr1:oxidd, and\n"
@@ -350,13 +352,16 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       break;
     case portfolio_arm_parse_error::both_transform:
       error (EXIT_CODE_ERROR,
-             "Error: polarity both requires gr1, gr1-lift, or gr1-real-lift with oxidd in --arms "
-             "spec %s.\n",
+             "Error: polarity both requires an exact decision arm in --arms spec %s.\n",
              parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::native_backend:
       error (EXIT_CODE_ERROR, "Error: native arm %s requires the oxidd backend.\n",
              parsed.spec.c_str ());
+      break;
+    case portfolio_arm_parse_error::obligation_spec:
+      error (EXIT_CODE_ERROR,
+             "Error: obligation arms require both:obligation:spot without a provider.\n");
       break;
     case portfolio_arm_parse_error::duplicate:
       error (EXIT_CODE_ERROR, "Error: duplicate arm %s in --arms list.\n", parsed.spec.c_str ());
@@ -582,12 +587,12 @@ arg_parse_result arg_parser (int argc, char** argv) {
         break;
       }
       case OPT_OBLIGATION_HELPER:
-        if (std::string_view {optarg} == "on")
-          retval.obligation_helper = true;
-        else if (std::string_view {optarg} == "off")
+        if (std::string_view {optarg} == "off")
           retval.obligation_helper = false;
         else
-          error (EXIT_CODE_ERROR, "Error: --obligation-helper expects off or on.\n");
+          error (EXIT_CODE_ERROR,
+                 "Error: --obligation-helper expects off; select both:obligation:spot "
+                 "with --arms.\n");
         break;
       case OPT_WEAKENING:
         if (std::string_view {optarg} == "basic")
@@ -707,6 +712,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   // unreal child.  Given without -u it must not suppress the default
   // portfolio below -- unreal_strategies is what decides whether an unreal
   // child was actually requested, not whether this override was mentioned.
+  const bool explicit_arms = retval.arms.has_value ();
   bool build_default_arms = false;
   if (not retval.arms.has_value () and not retval.real_strategies.has_value () and
       not retval.unreal_strategies.has_value ()) {
@@ -739,7 +745,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
     const bool needed_unreal = std::ranges::any_of (
         *retval.arms, [] (const auto& arm) { return arm.unreal || arm.both; });
     std::erase_if (*retval.arms, [&] (const portfolio_arm& arm) {
-      if (arm.kind == portfolio_arm_kind::legacy)
+      if (arm.kind == portfolio_arm_kind::legacy ||
+          (arm.kind == portfolio_arm_kind::obligation && !retval.synth_fname))
         return false;
       if (retval.verbose_level)
         std::cerr << "Skipping default native arm " << arm.native_name ()
@@ -760,6 +767,10 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   if (retval.synth_fname.has_value ()) {
+    if (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+          return arm.kind == portfolio_arm_kind::obligation;
+        }))
+      error (EXIT_CODE_ERROR, "Error: both:obligation:spot does not support -s synthesis.\n");
     if (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
           return arm.kind != portfolio_arm_kind::legacy;
         }))
@@ -803,6 +814,10 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   for (auto& arm : *retval.arms) {
+    if (arm.kind == portfolio_arm_kind::obligation) {
+      retval.obligation_explicit = explicit_arms;
+      continue;
+    }
     if (arm.kind != portfolio_arm_kind::legacy) {
 #if !ACACIA_NATIVE_ARMS
       error (EXIT_CODE_ERROR, "Error: native arms require -Dacacia_native_arms=true.\n");
@@ -836,6 +851,23 @@ arg_parse_result arg_parser (int argc, char** argv) {
     }
   }
 
+  if (!retval.obligation_helper) {
+    if (explicit_arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+          return arm.kind == portfolio_arm_kind::obligation;
+        }))
+      error (EXIT_CODE_ERROR,
+             "Error: --obligation-helper off conflicts with explicit both:obligation:spot.\n");
+    std::erase_if (*retval.arms, [] (const auto& arm) {
+      return arm.kind == portfolio_arm_kind::obligation;
+    });
+  }
+  else if (!explicit_arms && !retval.synth_fname &&
+           std::ranges::none_of (*retval.arms, [] (const auto& arm) {
+             return arm.kind == portfolio_arm_kind::obligation;
+           }))
+    retval.arms->push_back (
+        portfolio_arm::native (false, portfolio_arm_kind::obligation, true));
+
 #if ACACIA_ENABLE_TLSF_FRONTEND
   if (retval.tlsf_specified && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
         return arm.kind == portfolio_arm_kind::legacy;
@@ -852,7 +884,10 @@ arg_parse_result arg_parser (int argc, char** argv) {
       retval.outputs_specified = true;
     } catch (const std::exception& exception) {
       const bool has_native = std::ranges::any_of (
-          *retval.arms, [] (const auto& arm) { return arm.kind != portfolio_arm_kind::legacy; });
+          *retval.arms, [] (const auto& arm) {
+            return arm.kind != portfolio_arm_kind::legacy &&
+                   arm.kind != portfolio_arm_kind::obligation;
+          });
       if (not has_native)
         error (EXIT_CODE_ERROR, "Error: TLSF conversion failed: %s\n", exception.what ());
       retval.legacy_available = false;

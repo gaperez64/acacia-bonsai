@@ -45,6 +45,17 @@ decision arm: LTL `-f` input and synthesis `-s` use the regular solver arms.
 The previous four-arm sparse formula configuration remains available in the
 group as the non-native fallback.
 
+`both:obligation:spot` is a default portfolio arm. It races one bounded decision
+worker when the original normalized objective is a syntactic obligation. Select
+it alone with `--arms both:obligation:spot`; the objective is then prepared in one
+supervised child, and an ineligible objective returns UNKNOWN without starting the
+helper. In the default portfolio an ineligible input starts no extra process. Explicit `--arms` lists run only the named arms.
+The CLI has no general option to subtract one arm from the default set, so
+`--obligation-helper off` remains the escape hatch for the original decision
+portfolio. Synthesis (`-s`) keeps its existing route. The driver's screens and
+pending full-corpus admission are documented in
+[the obligation arm notes](benchmarking/coverage-first/obligation-helper.md).
+
 # Dependencies
 
 This program depends on:

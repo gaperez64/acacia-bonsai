@@ -215,14 +215,16 @@ namespace {
 
   spot::formula helper_objective (const arg_parse_result& args) {
     std::string formula = args.formula;
-    auto inputs = args.inputs;
+    auto inputs = args.inputs, outputs = args.outputs;
 #if ACACIA_ENABLE_TLSF_FRONTEND
     if (args.tlsf_specified && !args.formula_specified) {
       auto spec = acacia::tlsf_frontend::parse (args.tlsf_source);
       formula = std::move (spec.formula);
       inputs = std::move (spec.inputs);
+      outputs = std::move (spec.outputs);
     }
 #endif
+    validate_ltl_partition (inputs, outputs);
     auto parsed = spot::parse_infix_psl (formula, spot::default_environment::instance (),
                                           false, false);
     if (!parsed.f || !parsed.errors.empty ())
@@ -256,8 +258,15 @@ namespace {
         // Mealy. Solve that positive normalized objective once, without a swap
         // or another X shift. Raw API Moore order is exercised in unit tests.
         const auto objective = helper_objective (args);
-        acacia::worker_stage ("obligation_synthesis");
-        result = acacia::obligation::solve (objective, inputs, outputs);
+        if (g_obligation->eligible.load (std::memory_order_acquire) ==
+            acacia::obligation::eligibility::pending)
+          acacia::obligation::publish_eligibility (g_obligation, objective);
+        if (!acacia::obligation::eligible (objective))
+          result = {outcome::inapplicable, "non_obligation"};
+        else {
+          acacia::worker_stage ("obligation_synthesis");
+          result = acacia::obligation::solve (objective, inputs, outputs);
+        }
       }
     } catch (const std::bad_alloc&) {
       result = {outcome::exhausted, "allocation"};
@@ -446,8 +455,10 @@ namespace {
         // Also close the fork-to-setpgid window in the parent.
         setpgid (pid, pid);
         if (arm.kind == portfolio_arm_kind::obligation)
-          acacia::obligation::record ("start", acacia::obligation::outcome::pending, "eligible",
-                                      g_obligation->start_ns, false, int (g_child_count), pid);
+          acacia::obligation::record (
+              "start", acacia::obligation::outcome::pending,
+              eligibility_channel ? "preparation" : "eligible", g_obligation->start_ns,
+              false, int (g_child_count), pid);
         if (g_worker_records) {
           // Use the pre-fork context; the child owns the live snapshot.
           auto spawned = parent_context;
@@ -510,6 +521,27 @@ namespace {
                                                                          : nullptr);
     }
 
+    const auto launch_helper = [&] (bool prepare) {
+      g_helper_index = g_child_count;
+      g_helper_rss_share = acacia::obligation::rss_share (size_t (g_child_count) + 1);
+      g_obligation->start_ns = monotonic_ns ();
+      const auto helper = portfolio_arm::native (false, portfolio_arm_kind::obligation, true);
+      verb_do (1, vout << "Starting additional obligation decision helper\n" << std::flush);
+      launch_child (helper, arg_values, deadline_mono_ns, block_set,
+                    prepare ? g_obligation : nullptr);
+      if (g_child_count == g_helper_index) {
+        acacia::obligation::record ("completion", acacia::obligation::outcome::error,
+                                    "fork_failed", g_obligation->start_ns);
+        g_helper_index = -1;
+      }
+    };
+    if (g_obligation && g_child_count == 0) {
+      validate_ltl_partition (arg_values.inputs, arg_values.outputs);
+      // With this arm alone, its existing limits cover preparation as well as solving.
+      if (!g_interrupted && (!deadline_mono_ns || monotonic_ns () < deadline_mono_ns))
+        launch_helper (true);
+    }
+
     int status;
     bool child_reported_error = false;
     while (true) {  // wait only for solver arms; the record writer is separate
@@ -518,30 +550,19 @@ namespace {
         const auto eligible = g_obligation->eligible.load (std::memory_order_acquire);
         if (eligible != eligibility::pending) {
           g_eligibility_observed = true;
-          acacia::obligation::record (
-              "eligibility",
-              eligible == eligibility::eligible ? acacia::obligation::outcome::pending
-                             : eligible == eligibility::inapplicable
-                                 ? acacia::obligation::outcome::inapplicable
-                                 : acacia::obligation::outcome::error,
-              eligible == eligibility::eligible ? "eligible"
-              : eligible == eligibility::inapplicable ? "non_obligation"
-                                                      : "preprocessing_failed");
-          if (eligible == eligibility::eligible && !g_interrupted &&
-              (!deadline_mono_ns || monotonic_ns () < deadline_mono_ns)) {
-            g_helper_index = g_child_count;
-            g_helper_rss_share = acacia::obligation::rss_share (size_t (g_child_count) + 1);
-            g_obligation->start_ns = monotonic_ns ();
-            const auto helper =
-                portfolio_arm::native (false, portfolio_arm_kind::obligation, true);
-            verb_do (1, vout << "Starting additional obligation decision helper\n" << std::flush);
-            launch_child (helper, arg_values, deadline_mono_ns, block_set);
-            if (g_child_count == g_helper_index) {
-              acacia::obligation::record ("completion", acacia::obligation::outcome::error,
-                                          "fork_failed", g_obligation->start_ns);
-              g_helper_index = -1;
-            }
-          }
+          if (eligible != eligibility::inapplicable || arg_values.obligation_explicit)
+            acacia::obligation::record (
+                "eligibility",
+                eligible == eligibility::eligible ? acacia::obligation::outcome::pending
+                               : eligible == eligibility::inapplicable
+                                   ? acacia::obligation::outcome::inapplicable
+                                   : acacia::obligation::outcome::error,
+                eligible == eligibility::eligible ? "eligible"
+                : eligible == eligibility::inapplicable ? "non_obligation"
+                                                        : "preprocessing_failed");
+          if (eligible == eligibility::eligible && g_helper_index < 0 && !g_interrupted &&
+              (!deadline_mono_ns || monotonic_ns () < deadline_mono_ns))
+            launch_helper (false);
         }
       }
       if (g_helper_index >= 0 && g_child_pids[g_helper_index] > 0 &&
@@ -691,7 +712,10 @@ int main (int argc, char** argv) {
   utils::verbose = arg_values.verbose_level;
 
   assert (arg_values.arms.has_value ());
-  const bool helper_requested = arg_values.obligation_helper && !arg_values.synth_fname;
+  // Keep optional membership out of ordinary arms' construction/thread/RSS budgets.
+  const bool helper_requested = std::erase_if (*arg_values.arms, [] (const auto& arm) {
+    return arm.kind == portfolio_arm_kind::obligation;
+  }) != 0;
   const size_t worker_slots = arg_values.arms->size () + size_t (helper_requested);
   g_child_pids = new pid_t[worker_slots];
   if (helper_requested) {
@@ -716,9 +740,6 @@ int main (int argc, char** argv) {
       acacia::obligation::record ("eligibility", acacia::obligation::outcome::error,
                                   "shared_allocation");
   }
-  else if (arg_values.obligation_helper)
-    acacia::obligation::record ("eligibility", acacia::obligation::outcome::inapplicable,
-                                "synthesis_requested");
   g_main_pid = getpid ();
   if (acacia::phase_records_enabled ()) {
     const size_t bytes = worker_slots * sizeof (acacia::worker_record);

@@ -29,7 +29,8 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ {formula}; }} }}
             arm = "real:small" if polarity == "real" else "unreal:formula"
             env = dict(os.environ, ACACIA_SPOT_CAPTURE_DIR=str(captures))
             backend = "spot-guarded-sparse" if provider.startswith("closure") else "spot-guarded"
-            command = [binary, "-T", str(spec), "--spot-fast", "off", "-K", "5",
+            command = [binary, "--obligation-helper", "off", "-T", str(spec),
+                       "--spot-fast", "off", "-K", "5",
                        "--arms", f"{arm}:{backend}:{provider}"]
             result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=10)
             assert result.returncode == expected, (command, result.stdout, result.stderr)
@@ -80,7 +81,8 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G(i <-> X(o)); } }
             captures = root / f"{provider}-{limit}"
             env = dict(os.environ, ACACIA_SPOT_CAPTURE_DIR=str(captures))
             env[limit] = cap
-            command = [binary, "-T", str(spec), "--spot-fast", "off", "-K", "5",
+            command = [binary, "--obligation-helper", "off", "-T", str(spec),
+                       "--spot-fast", "off", "-K", "5",
                        "--arms", f"real:small:spot-guarded-sparse:{provider}",
                        "--candidate-mode", "fallback"]
             result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=10)

@@ -64,7 +64,11 @@ def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
             stdout, stderr = process.communicate(timeout=12)
         except subprocess.TimeoutExpired:
             process.send_signal(signal.SIGTERM)
-            process.communicate(timeout=3)
+            try:
+                process.communicate(timeout=3)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.communicate()
             raise
         rows = records(directory)
         completed = subprocess.CompletedProcess(process.args, process.returncode, stdout, stderr)
@@ -112,49 +116,131 @@ def main() -> None:
                 capture_output=True, text=True, timeout=10)
             assert oracle.returncode == (0 if expected == "completed_REAL" else 1), oracle
 
+    arm = "both:obligation:spot"
+    alone = ["--arms", arm]
     source = ["-f", "G (i <-> o)", "-i", "i", "-o", "o"]
-    pair = ["--arms", "real:small:backward,unreal:formula:backward"]
-    real = ["--arms", "real:small:backward"]
-    for mode in ([], ["--obligation-helper", "off"]):
-        result, rows = run(binary, [*source, *pair, *mode], root, library)
+    ordinary_pair = "real:small:backward,unreal:formula:backward"
+    pair = ["--arms", ordinary_pair]
+    race = ["--arms", ordinary_pair + "," + arm]
+    real = ["--arms", "real:small:backward," + arm]
+    off = ["--obligation-helper", "off"]
+    # Explicit ordinary selection and off both omit all obligation work.
+    for selection in (off, pair, [*pair, *off]):
+        result, rows = run(binary, [*source, *selection], root, library)
         assert result.returncode == 0 and "REALIZABLE" in result.stdout, result
         assert not any(row.get("event", "").startswith("obligation_") for row in rows)
-        assert len([row for row in rows if row.get("event") == "worker_spawn"]) == 2
+        if "--arms" in selection:
+            assert len([row for row in rows if row.get("event") == "worker_spawn"]) == 2
 
-    on = ["--obligation-helper", "on"]
     for formula, expected in [("G (i <-> o)", 0), ("G (X i <-> o)", 1)]:
-        args = ["-f", formula, "-i", "i", "-o", "o", *pair]
-        exact, _ = run(binary, args, root, library)
-        candidate, rows = run(binary, [*args, *on], root, library, delay_ms=300)
-        assert exact.returncode == candidate.returncode == expected, (exact, candidate)
-        winners = [row for row in rows if row.get("event") == "parent_winner"]
-        assert len(winners) == 1 and winners[0]["effective_backend"] == "obligation", rows
-        finish = helper_rows(rows, "completion")
-        assert len(finish) == 1 and finish[0]["outcome"] == (
-            "completed_REAL" if expected == 0 else "completed_UNREAL"), rows
-        assert finish[0]["same_library_checked"] == (expected == 0)
-        helper_specs = [row for row in rows if row.get("kind") == "obligation-helper"]
-        assert len(helper_specs) == 1, rows
-        helper_index = helper_specs[0]["worker"]
-        assert helper_index == 2, rows  # existing arms start first
+        args = ["-f", formula, "-i", "i", "-o", "o"]
+        exact, exact_rows = run(binary, [*args, *off], root, library)
+        assert not any(row.get("event", "").startswith("obligation_") for row in exact_rows)
+        for selection in ([], race, alone):
+            candidate, rows = run(binary, [*args, *selection], root, library, delay_ms=300)
+            assert exact.returncode == candidate.returncode == expected, (exact, candidate)
+            winners = [row for row in rows if row.get("event") == "parent_winner"]
+            assert len(winners) == 1 and winners[0]["effective_backend"] == "obligation", rows
+            finish = helper_rows(rows, "completion")
+            assert len(finish) == 1 and finish[0]["outcome"] == (
+                "completed_REAL" if expected == 0 else "completed_UNREAL"), rows
+            assert finish[0]["same_library_checked"] == (expected == 0)
+            assert all(row["arm"] == arm for row in rows
+                       if row.get("event", "").startswith("obligation_")), rows
+            helper_specs = [row for row in rows if row.get("kind") == arm]
+            assert len(helper_specs) == 1, rows
+            spawns = [row for row in rows if row.get("event") == "worker_spawn"]
+            assert helper_specs[0]["worker"] == len(spawns) - 1, rows
+            if selection == alone:
+                assert len(spawns) == 1, rows
+            elif selection == race:
+                assert len(spawns) == 3, rows
 
     for formula, arms, expected in [
             ("G (i <-> o)", "unreal:formula:backward", 0),
             ("G (X i <-> o)", "real:small:backward", 1)]:
         result, rows = run(binary, ["-f", formula, "-i", "i", "-o", "o",
-                                   "--arms", arms, *on], root, library, delay_ms=300)
+                                   "--arms", arms + "," + arm], root, library, delay_ms=300)
         assert result.returncode == expected, result
         assert [row for row in rows if row.get("event") == "parent_winner"][0][
             "effective_backend"] == "obligation", rows
 
-    ineligible, rows = run(binary, ["-f", "G F (i <-> o)", "-i", "i", "-o", "o",
-                                   *pair, *on], root, library)
-    assert ineligible.returncode == 0, ineligible
-    assert helper_rows(rows, "eligibility")[0]["outcome"] == "inapplicable", rows
-    assert not helper_rows(rows, "start"), rows
-    assert len([row for row in rows if row.get("event") == "worker_spawn"]) == 2
+    ineligible_source = ["-f", "G F (i <-> o)", "-i", "i", "-o", "o"]
+    baseline, baseline_rows = run(binary, [*ineligible_source, *off], root, library)
+    for selection in ([], race, alone):
+        ineligible, rows = run(binary, [*ineligible_source, *selection], root, library)
+        assert ineligible.returncode == (2 if selection == alone else 0), ineligible
+        spawns = [row for row in rows if row.get("event") == "worker_spawn"]
+        if selection == alone:
+            assert len(spawns) == 1, rows
+            assert helper_rows(rows, "start")[0]["reason"] == "preparation", rows
+            assert helper_rows(rows, "completion")[0]["outcome"] == "inapplicable", rows
+            assert not any(row.get("stage") == "obligation_synthesis" for row in rows), rows
+        else:
+            assert not helper_rows(rows, "start"), rows
+            assert not any(row.get("kind") == arm for row in rows), rows
+        if selection:
+            assert helper_rows(rows, "eligibility")[0]["outcome"] == "inapplicable", rows
+        else:
+            assert not any(row.get("event", "").startswith("obligation_") for row in rows)
+            assert (ineligible.returncode, ineligible.stdout) == (
+                baseline.returncode, baseline.stdout)
+        if selection == race:
+            assert len(spawns) == 2, rows
+
+    # One ordinary arm makes every record deterministic apart from sampled runtime values.
+    # Default membership is still active with -r; compare all records, including phases,
+    # stage/metric records, terminal records and the parent winner, against the off route.
+    sampled = {"worker_pid", "mono_ns", "entry_ns", "wall_ns", "cpu_ns", "rss_kb",
+               "peak_rss_kb", "mallinfo2"}
+
+    def stable_records(rows: list[dict]) -> list[str]:
+        return sorted(json.dumps({key: value for key, value in row.items() if key not in sampled},
+                                 sort_keys=True) for row in rows)
+
+    for formula, route in [("G F (i <-> o)", ["-r", "small"]),
+                           ("F G (i <-> o)", ["-u", "formula"])]:
+        args = ["-f", formula, "-i", "i", "-o", "o", *route]
+        exact, exact_rows = run(binary, [*args, *off], root, library)
+        default, default_rows = run(binary, args, root, library)
+        assert not any(row.get("event", "").startswith("obligation_") for row in default_rows)
+        assert (default.returncode, default.stdout, default.stderr, stable_records(default_rows)) == (
+            exact.returncode, exact.stdout, exact.stderr, stable_records(exact_rows)), (
+                default_rows, exact_rows)
+
+    for marker in (".inputs", ".outputs"):
+        for partition in ("-i", "-o"):
+            args = ["-f", "G o", "-i", "i", "-o", "o", partition, marker]
+            exact, _ = run(binary, [*args, *off], root, library)
+            selected, rows = run(binary, [*args, *alone], root, library, "prepare-stall")
+            assert exact.returncode == selected.returncode == 3, (exact, selected)
+            message = f"value '{marker}' is a partition marker, not an atomic proposition."
+            assert message in exact.stderr and message in selected.stderr, (exact, selected)
+            assert not helper_rows(rows, "start"), rows
+
+    for fault, outcome in [("prepare-exception", "error"), ("prepare-allocation", "exhausted"),
+                           ("prepare-real-exit", "error"), ("prepare-unreal-exit", "error")]:
+        result, rows = run(binary, [*source, *alone], root, library, fault)
+        assert result.returncode == 2 and "REALIZABLE" not in result.stdout, result
+        assert helper_rows(rows, "completion")[0]["outcome"] == outcome, (fault, rows)
+        assert not any(row.get("event") == "parent_winner" for row in rows), rows
+    for interruption in (False, True):
+        started = time.monotonic()
+        result, rows = run(binary, [*source, *alone], root, library, "prepare-stall",
+                           outer_seconds=0 if interruption else 0.2, interrupt=interruption)
+        assert time.monotonic() - started < 2, result
+        assert result.returncode == 2, result
+        finish = helper_rows(rows, "completion")
+        assert len(finish) == 1 and finish[0]["outcome"] == "cancelled", rows
+        assert finish[0]["reason"] == ("interrupted" if interruption else "deadline"), rows
+        assert not any(row.get("event") == "parent_winner" for row in rows), rows
+    result, rows = run(binary, [*source, *alone], root, library, "prepare-stall")
+    assert result.returncode == 2, result
+    finish = helper_rows(rows, "completion")
+    assert len(finish) == 1 and finish[0]["outcome"] == "exhausted", rows
+    assert finish[0]["reason"] == "wall_allowance", rows
     # Eligibility uses the post-simplification original objective: GF i becomes false.
-    simplified, rows = run(binary, ["-f", "G F i", "-i", "i", "-o", "o", *pair, *on],
+    simplified, rows = run(binary, ["-f", "G F i", "-i", "i", "-o", "o", *alone],
                            root, library)
     assert simplified.returncode == 1, simplified
     assert helper_rows(rows, "eligibility")[0]["reason"] == "eligible", rows
@@ -162,54 +248,62 @@ def main() -> None:
     for fault, outcome in [("null", "error"), ("empty", "error"), ("exception", "error"),
                            ("allocation", "exhausted"), ("signal", "error"),
                            ("unreal-exit", "error"), ("real-exit", "error")]:
-        result, rows = run(binary, [*source, *real, *on], root, library, fault, 300)
+        result, rows = run(binary, [*source, *real], root, library, fault, 300)
         assert result.returncode == 0, result
         finish = helper_rows(rows, "completion")
         assert len(finish) == 1 and finish[0]["outcome"] == outcome, (fault, rows)
         assert all(row.get("effective_backend") != "obligation"
                    for row in rows if row.get("event") == "parent_winner"), rows
 
-    result, rows = run(binary, [*source, *real, *on], root, library, "stall", 300)
+    result, rows = run(binary, [*source, *real], root, library, "stall", 300)
     assert result.returncode == 0, result
     finish = helper_rows(rows, "completion")
     assert len(finish) == 1 and finish[0]["outcome"] == "cancelled", rows
     assert finish[0]["reason"] == "winner_cancelled", rows
-    result, rows = run(binary, [*source, *real, *on], root, library, "stall", 7000)
+    result, rows = run(binary, [*source, *real], root, library, "stall", 7000)
     assert result.returncode == 0, result
     finish = helper_rows(rows, "completion")
     assert len(finish) == 1 and finish[0]["outcome"] == "exhausted", rows
     assert finish[0]["reason"] == "wall_allowance", rows
-    result, rows = run(binary, [*source, *real, *on], root, library, "memory", 300,
+    result, rows = run(binary, [*source, *real], root, library, "memory", 300,
                        rss_limit=True)
     assert result.returncode == 0, result
     finish = helper_rows(rows, "completion")
     assert len(finish) == 1 and finish[0]["outcome"] == "exhausted", rows
     assert finish[0]["reason"] == "rss_share", rows
-    result, rows = run(binary, [*source, *real, *on], root, library, "stall", 7000,
+    result, rows = run(binary, [*source, *real], root, library, "stall", 7000,
                        outer_seconds=0.2)
     assert result.returncode == 2, result
     assert helper_rows(rows, "completion")[0]["outcome"] == "cancelled", rows
-    result, rows = run(binary, [*source, *real, *on], root, library, "stall", 7000, interrupt=True)
+    result, rows = run(binary, [*source, *real], root, library, "stall", 7000, interrupt=True)
     assert result.returncode == 2, result
     assert helper_rows(rows, "completion")[0]["outcome"] == "cancelled", rows
 
     with tempfile.TemporaryDirectory(dir=root) as directory:
         controller = Path(directory) / "controller.aag"
-        result, rows = run(binary, [*source, *real, *on, "-s", str(controller)],
+        result, rows = run(binary, [*source, "-r", "small", "-s", str(controller)],
                            root, library, "exception")
         assert result.returncode == 0 and controller.read_text().startswith("aag"), result
-        assert helper_rows(rows, "eligibility")[0]["reason"] == "synthesis_requested"
+        assert not helper_rows(rows, "eligibility"), rows
         assert not helper_rows(rows, "start"), rows
         assert len([row for row in rows if row.get("event") == "worker_spawn"]) == 1
         if options.tlsf:
+            malformed = Path(directory) / "malformed.tlsf"
+            malformed.write_text("invalid TLSF")
+            failed, _ = run(binary, ["-T", str(malformed), *pair, *off], root, library)
+            selected, selected_rows = run(binary, ["-T", str(malformed), *race], root, library)
+            assert failed.returncode == selected.returncode == 3, (failed, selected)
+            assert failed.stdout == selected.stdout and failed.stderr == selected.stderr
+            assert "TLSF conversion failed" in selected.stderr, selected
+            assert not any(row.get("event") == "worker_spawn" for row in selected_rows)
             for semantics, expected in [("Mealy", 0), ("Moore", 1), ("Strict,Mealy", 0),
                                         ("Strict,Moore", 1)]:
                 tlsf = Path(directory) / "source.tlsf"
                 tlsf.write_text(f'''INFO {{ TITLE: "generated" SEMANTICS: {semantics} TARGET: Moore }}
 MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ G (i <-> o); }} }}
 ''')
-                exact, _ = run(binary, ["-T", str(tlsf), *pair], root, library)
-                result, rows = run(binary, ["-T", str(tlsf), *pair, *on], root, library, delay_ms=300)
+                exact, _ = run(binary, ["-T", str(tlsf), *pair, *off], root, library)
+                result, rows = run(binary, ["-T", str(tlsf), *race], root, library, delay_ms=300)
                 assert exact.returncode == result.returncode == expected, (exact, result)
                 assert helper_rows(rows, "completion")[0]["outcome"] == (
                     "completed_REAL" if expected == 0 else "completed_UNREAL"), rows
@@ -220,8 +314,8 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ G (i <-> o); }} }}
 MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }}
        ASSUMPTIONS {{ G i; }} GUARANTEES {{ G (i <-> o); }} }}
 ''')
-                exact, _ = run(binary, ["-T", str(tlsf), *pair], root, library)
-                result, rows = run(binary, ["-T", str(tlsf), *pair, *on], root, library, delay_ms=300)
+                exact, _ = run(binary, ["-T", str(tlsf), *pair, *off], root, library)
+                result, rows = run(binary, ["-T", str(tlsf), *race], root, library, delay_ms=300)
                 assert exact.returncode in (0, 1) and result.returncode == exact.returncode, (
                     exact, result)
                 finish = helper_rows(rows, "completion")
@@ -231,15 +325,27 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }}
                 tlsf.write_text('''INFO { TITLE: "generated" SEMANTICS: Mealy TARGET: Mealy }
 MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G (i <-> o); } }
 ''')
-                result, rows = run(binary, ["-T", str(tlsf), "--arms", "both:gr1:oxidd", *on],
+                selected, selected_rows = run(
+                    binary, ["-T", str(tlsf), "--arms", "both:gr1:oxidd"], root, library)
+                assert selected.returncode == 0, selected
+                assert not helper_rows(selected_rows, "eligibility"), selected_rows
+                assert len([row for row in selected_rows if row.get("event") == "worker_spawn"]) == 1
+                result, rows = run(binary, ["-T", str(tlsf), "--arms", "both:gr1:oxidd," + arm],
                                    root, library)
                 assert result.returncode == 0, result
                 assert helper_rows(rows, "eligibility")[0]["reason"] == "eligible", rows
 
     invalid = subprocess.run([str(binary), *source, "--obligation-helper", "maybe"],
                              capture_output=True, text=True)
-    assert invalid.returncode == 3 and "expects off or on" in invalid.stderr, invalid
-    print("obligation routing, oracle, faults, synthesis and cleanup checks passed")
+    assert invalid.returncode == 3 and "expects off" in invalid.stderr, invalid
+    for selection in (["--obligation-helper", "on"],
+                      [*alone, *off],
+                      ["--arms", arm + "," + arm],
+                      [*alone, "-s", str(root / "unused.aag")]):
+        invalid = subprocess.run([str(binary), *source, *selection],
+                                 capture_output=True, text=True)
+        assert invalid.returncode == 3, invalid
+    print("obligation arm selection, routing, oracle, faults, synthesis and cleanup checks passed")
 
 
 if __name__ == "__main__":

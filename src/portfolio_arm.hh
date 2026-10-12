@@ -28,7 +28,7 @@ struct legacy_arm_options {
 
 struct portfolio_arm {
     bool unreal;  // false selects a realizability arm
-    bool both = false;  // exact GR(1) may prove either side
+    bool both = false;  // exact arms may prove either side
     portfolio_arm_kind kind;
     std::optional<legacy_arm_options> legacy;
 
@@ -47,7 +47,7 @@ struct portfolio_arm {
 
     const char* native_name () const {
       if (kind == portfolio_arm_kind::obligation)
-        return "obligation-helper";
+        return "both:obligation:spot";
       if (kind == portfolio_arm_kind::gr1)
         return both ? "both:gr1:oxidd" : unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd";
       if (kind == portfolio_arm_kind::gr1_lift)
@@ -81,6 +81,7 @@ enum class portfolio_arm_parse_error {
   gr1_lift_polarity,
   both_transform,
   native_backend,
+  obligation_spec,
   duplicate,
 };
 

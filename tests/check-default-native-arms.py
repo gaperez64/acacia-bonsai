@@ -41,7 +41,9 @@ def check_children(result: subprocess.CompletedProcess[str], records: list[dict]
                    expected: int, expected_native: bool) -> None:
     startups = [record["arm"] for record in records
                 if record.get("phase") == "child_startup"]
-    assert len(startups) == expected, (result, startups)
+    assert startups.count("both:obligation:spot") <= 1, (result, startups)
+    ordinary = [arm for arm in startups if arm != "both:obligation:spot"]
+    assert len(ordinary) == expected, (result, startups)
     for arm in native:
         assert (arm in startups) == expected_native, (result, arm, startups)
     if verbose_enabled:

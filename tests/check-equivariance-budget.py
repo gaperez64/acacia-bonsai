@@ -59,7 +59,8 @@ def check_budget(budget: dict, limit: dict, deadline: bool,
 def main() -> None:
     binary, build = (Path(value).resolve() for value in sys.argv[1:3])
     incumbent = Path(sys.argv[3]).resolve() if len(sys.argv) > 3 else None
-    args = ["-f", "G (i <-> X o)", "-i", "i", "-o", "o", "--spot-fast", "off",
+    args = ["--obligation-helper", "off", "-f", "G (i <-> X o)", "-i", "i", "-o", "o",
+            "--spot-fast", "off",
             "--arms", "real:small:backward"]
     with tempfile.TemporaryDirectory(dir=build) as temporary:
         root = Path(temporary)
@@ -130,7 +131,7 @@ def main() -> None:
                     assert terminal["exit_code"] == 0 and terminal["reason"] == "none", terminal
             assert unbounded_outputs == [unbounded_outputs[0]] * len(unbounded_outputs)
             if incumbent is not None:
-                original = execute(incumbent, args, None, deadline)
+                original = execute(incumbent, args[2:], None, deadline)
                 assert outputs["unbounded"] == (original.returncode, original.stdout,
                                                 original.stderr)
             for label in ("seconds", "milliseconds"):
@@ -141,7 +142,8 @@ def main() -> None:
                                               ("0ms", None, 0)):
                 directory = regime / f"decomposed-{value}"
                 directory.mkdir()
-                decomposed = ["-f", "G (i <-> X o) & G (j <-> X p)", "-i", "i,j", "-o", "o,p",
+                decomposed = ["--obligation-helper", "off",
+                              "-f", "G (i <-> X o) & G (j <-> X p)", "-i", "i,j", "-o", "o,p",
                               "--spot-fast", "off", "--arms", "real:small:backward",
                               "--equivariance-budget", value]
                 result = execute(binary, decomposed, directory, deadline)

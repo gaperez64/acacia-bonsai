@@ -26,6 +26,9 @@ with tempfile.TemporaryDirectory(dir=Path.cwd(), prefix="check-help-") as direct
             assert "--arms LIST" in result.stdout, (option, invalid_deadline, result)
             assert "--equivariance-budget F|DURATION|unbounded (default 3s)" in result.stdout
             assert "[scan|grouped] (default: grouped)" in result.stdout
+            assert "--obligation-helper off" in result.stdout
+            assert "both:obligation:spot" in result.stdout
+            assert "included by default, starts only when eligible" in result.stdout
             assert result.stderr == "", (option, invalid_deadline, result)
             assert list(cwd.iterdir()) == [], (option, invalid_deadline)
 
