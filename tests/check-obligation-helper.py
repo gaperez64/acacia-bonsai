@@ -13,7 +13,7 @@ import tempfile
 import time
 
 from moore_aiger_oracle import Aiger, check
-from obligation_test_support import LegacyGate, records
+from obligation_test_support import LegacyGate, StageGate, records
 
 
 def gone(pid: int) -> bool:
@@ -28,7 +28,7 @@ def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
         fault: str = "", interrupt: bool = False,
         outer_seconds: float = 0, rss_limit: bool = False,
         gate: bool = False, helper_delay_ms: int = 0,
-        release_stalls: bool = True
+        release_stalls: bool = True, ready_stage: str = "", termination_seconds: float = 0
         ) -> tuple[subprocess.CompletedProcess, list[dict]]:
     with tempfile.TemporaryDirectory(dir=root) as location:
         directory = Path(location)
@@ -44,45 +44,38 @@ def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
         env["ACACIA_TEST_OBLIGATION_HELPER_DELAY_MS"] = str(helper_delay_ms)
         if "-s" in args:
             env["ACACIA_TEST_OBLIGATION_OUTPUT"] = args[args.index("-s") + 1]
-        if outer_seconds:
-            env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + outer_seconds)
-        with LegacyGate(env, gate) as legacy:
+        assert not interrupt or ready_stage, "interruption requires a readiness stage"
+        with StageGate(env, ready_stage, outer_seconds) as stage, LegacyGate(env, gate) as legacy:
             memory_cap = 256 * 1024 * 1024
             process = subprocess.Popen([str(binary), *args], env=env, text=True,
                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       pass_fds=legacy.descriptors,
+                                       pass_fds=legacy.descriptors + stage.descriptors,
                                        preexec_fn=(lambda: resource.setrlimit(
                                            resource.RLIMIT_AS, (memory_cap, memory_cap)))
                                        if rss_limit else None)
-            if interrupt:
-                deadline = time.monotonic() + 3
-                while time.monotonic() < deadline:
-                    if any(row.get("event") == "obligation_start"
-                           for row in records(directory, complete_only=True)):
-                        break
-                    if process.poll() is not None:
-                        raise AssertionError(("parent exited before interruption",
-                                              records(directory, complete_only=True)))
-                    time.sleep(0.005)
-                else:
-                    process.kill()
-                    process.communicate()
-                    raise AssertionError(("helper failed to start",
-                                          records(directory, complete_only=True)))
-                process.send_signal(signal.SIGTERM)
             try:
+                if ready_stage:
+                    stage.wait_ready(process, directory)
+                    stage.trigger()
+                    if interrupt:
+                        process.send_signal(signal.SIGTERM)
                 stdout, stderr = legacy.communicate(
-                    process, directory, timeout=12, release_stalls=release_stalls)
-            except subprocess.TimeoutExpired as error:
+                    process, directory,
+                    timeout=(max(0, stage.triggered_at + termination_seconds - time.monotonic())
+                             if termination_seconds else 12), release_stalls=release_stalls)
+            except (subprocess.TimeoutExpired, AssertionError) as error:
                 process.send_signal(signal.SIGTERM)
                 try:
                     process.communicate(timeout=3)
                 except subprocess.TimeoutExpired:
                     process.kill()
                     process.communicate()
-                raise AssertionError(("solver timed out", process.args,
+                raise AssertionError(("solver failed readiness/termination", process.args,
                                       records(directory, complete_only=True))) from error
+            triggered_at, ready_pid = stage.triggered_at, stage.ready_pid
         rows = records(directory)
+        if ready_stage:
+            assert ready_pid == helper_row(rows, "completion")["worker_pid"], (ready_stage, rows)
         for row in rows:
             if row.get("event", "").startswith("obligation_"):
                 assert row["trust"] == "spot_exact" and not row["independent_checked"], rows
@@ -99,6 +92,11 @@ def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
                 pass
             else:
                 raise AssertionError(("surviving process group", pid))
+        if termination_seconds:
+            # Includes parent termination, record collection and every child/group
+            # cleanup assertion; measured from the trigger, independent of startup.
+            assert time.monotonic() - triggered_at < termination_seconds, (
+                "cancellation/cleanup exceeded bound", ready_stage, termination_seconds, completed)
         return completed, rows
 
 
@@ -320,10 +318,9 @@ def main() -> None:
         assert helper_row(rows, "completion")["outcome"] == outcome, (fault, rows)
         assert not any(row.get("event") == "parent_winner" for row in rows), rows
     for interruption in (False, True):
-        started = time.monotonic()
         result, rows = run(binary, [*source, *alone], root, library, "prepare-stall",
-                           outer_seconds=0 if interruption else 0.2, interrupt=interruption)
-        assert time.monotonic() - started < 2, result
+                           outer_seconds=0 if interruption else 0.2, interrupt=interruption,
+                           ready_stage="preparation", termination_seconds=2)
         assert result.returncode == 2, result
         finish = helper_rows(rows, "completion")
         assert len(finish) == 1, rows
@@ -333,7 +330,7 @@ def main() -> None:
     result, rows = run(binary, [*source, *alone], root, library, "decision-contract")
     assert result.returncode == 0, result
     result, rows = run(binary, [*source, *alone], root, library, "slow-decision",
-                       outer_seconds=9)
+                       outer_seconds=9, ready_stage="decision")
     assert result.returncode == 0, result
     finish = helper_rows(rows, "completion")
     assert len(finish) == 1, rows
@@ -375,11 +372,11 @@ def main() -> None:
     assert finish[0]["outcome"] == "exhausted", rows
     assert finish[0]["reason"] == "rss_share", rows
     result, rows = run(binary, [*source, *real], root, library, "stall", gate=True,
-                       release_stalls=False, outer_seconds=0.2)
+                       release_stalls=False, outer_seconds=0.2, ready_stage="decision")
     assert result.returncode == 2, result
     assert helper_row(rows, "completion")["outcome"] == "cancelled", rows
     result, rows = run(binary, [*source, *real], root, library, "stall", gate=True,
-                       release_stalls=False, interrupt=True)
+                       release_stalls=False, interrupt=True, ready_stage="decision")
     assert result.returncode == 2, result
     assert helper_row(rows, "completion")["outcome"] == "cancelled", rows
 
@@ -441,9 +438,11 @@ def main() -> None:
         fifo = Path(directory) / "controller.fifo"
         os.mkfifo(fifo)
         result, rows = run(binary, [*synth_source, *alone, "-s", str(fifo)],
-                           root, library, gate=True, release_stalls=False, outer_seconds=.2)
+                           root, library, gate=True, release_stalls=False, outer_seconds=.2,
+                           ready_stage="fifo-open", termination_seconds=2)
         assert result.returncode == 2 and "REALIZABLE" not in result.stdout, result
         assert helper_row(rows, "completion")["outcome"] == "cancelled", rows
+        cancellation_reason(rows, "deadline")
         assert not any(row.get("event") == "parent_winner" for row in rows), rows
         # There is no runtime product check. Test-only corruptions are accepted as
         # trusted results, and the offline oracle detects their bad controllers.
@@ -474,7 +473,8 @@ def main() -> None:
                        and row["mono_ns"] < finish[0]["mono_ns"] for row in rows), rows
         # Synthesis has the ordinary race/invocation bound, with no local allowance.
         result, rows = run(binary, [*synth_source, *alone, "-s", str(controller)],
-                           root, library, "slow-decision", gate=True, outer_seconds=9)
+                           root, library, "slow-decision", gate=True,
+                           outer_seconds=9, ready_stage="decision")
         assert result.returncode == 0, result
         finish = helper_rows(rows, "completion")
         assert len(finish) == 1, rows
@@ -494,7 +494,8 @@ def main() -> None:
         for interrupted in (False, True):
             result, rows = run(binary, [*synth_source, *alone, "-s", str(controller)],
                                root, library, "export-stall", gate=True, release_stalls=False,
-                               outer_seconds=0 if interrupted else .2, interrupt=interrupted)
+                               outer_seconds=0 if interrupted else .2, interrupt=interrupted,
+                               ready_stage="export")
             assert result.returncode == 2 and "REALIZABLE" not in result.stdout, result
             assert not any(row.get("event") == "parent_winner" for row in rows), rows
             finish = helper_rows(rows, "completion")

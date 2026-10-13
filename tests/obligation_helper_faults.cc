@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 namespace {
+  const pid_t supervisor_pid = getpid ();
   bool obligation_entered = false;
   bool controller_opened = false;
   unsigned obligation_calls = 0;
@@ -40,6 +41,17 @@ namespace {
     else
       delay ("ACACIA_TEST_OBLIGATION_LEGACY_DELAY_MS");
   }
+  void stage_ready (const char* stage) {
+    const char* expected = std::getenv ("ACACIA_TEST_OBLIGATION_STAGE");
+    const char* value = std::getenv ("ACACIA_TEST_OBLIGATION_STAGE_READY_FD");
+    if (!expected || !value || std::strcmp (stage, expected) != 0)
+      return;
+    char message[128];
+    const int length = snprintf (message, sizeof message, "%s %ld\n", stage, long (getpid ()));
+    const int descriptor = int (std::strtol (value, nullptr, 10));
+    while (write (descriptor, message, size_t (length)) < 0 && errno == EINTR) {
+    }
+  }
   void stall_ready () {
     if (const char* value = std::getenv ("ACACIA_TEST_OBLIGATION_STALL_READY_FD")) {
       const int descriptor = int (std::strtol (value, nullptr, 10));
@@ -54,6 +66,7 @@ namespace spot {
                                    bool simplify_terms, int debug) {
     obligation_entered = true;
     delay ("ACACIA_TEST_OBLIGATION_HELPER_DELAY_MS");
+    stage_ready ("decision");
     ++obligation_calls;
     const char* mode = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
     const std::string_view fault = mode ? mode : "";
@@ -112,6 +125,7 @@ namespace spot {
     const char* mode = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
     const std::string_view fault = mode ? mode : "";
     if (obligation_entered && fault == "export-stall") {
+      stage_ready ("export");
       stall_ready ();
       while (true)
         pause ();
@@ -177,9 +191,11 @@ extern "C" void preparation_fault (void* self, spot::formula formula,
                                    std::ostream* verbose) {
   const char* mode = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
   const std::string_view fault = mode ? mode : "";
-  if (fault == "prepare-stall")
+  if (fault == "prepare-stall") {
+    stage_ready ("preparation");
     while (true)
       pause ();
+  }
   if (fault == "prepare-allocation")
     throw std::bad_alloc ();
   if (fault == "prepare-exception")
@@ -213,6 +229,10 @@ namespace {
     }
     using function = FILE* (*) (const char*, const char*);
     auto original = reinterpret_cast<function> (dlsym (RTLD_NEXT, symbol));
+    struct stat destination_stat {};
+    if (controller && obligation_entered && stat (path, &destination_stat) == 0 &&
+        S_ISFIFO (destination_stat.st_mode))
+      stage_ready ("fifo-open");
     FILE* file = original (path, mode);
     if (controller && file)
       controller_opened = true;
@@ -266,4 +286,33 @@ extern "C" ssize_t write (int fd, const void* data, size_t size) {
     errno = saved_errno;
   }
   return written;
+}
+
+// A test pipe controls when the real parent deadline expires. Child clocks stay
+// real, and startup cannot consume the deadline while awaiting stage readiness.
+extern "C" int clock_gettime (clockid_t clock, timespec* now) {
+  using function = int (*) (clockid_t, timespec*);
+  static const auto original = reinterpret_cast<function> (dlsym (RTLD_NEXT, "clock_gettime"));
+  const int result = original (clock, now);
+  if (result != 0 || clock != CLOCK_MONOTONIC || getpid () != supervisor_pid)
+    return result;
+  const char* value = std::getenv ("ACACIA_TEST_OBLIGATION_DEADLINE_FD");
+  if (!value)
+    return result;
+  const int saved_errno = errno;
+  static uint64_t expiry = 0;
+  if (!expiry) {
+    const int descriptor = int (std::strtol (value, nullptr, 10));
+    uint64_t received = 0;
+    ssize_t count;
+    do {
+      count = read (descriptor, &received, sizeof received);
+    } while (count < 0 && errno == EINTR);
+    if (count == sizeof received)
+      expiry = received;
+  }
+  if (expiry && uint64_t (now->tv_sec) * 1000000000ULL + now->tv_nsec >= expiry)
+    now->tv_sec += 86400;
+  errno = saved_errno;
+  return result;
 }

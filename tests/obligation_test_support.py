@@ -2,6 +2,8 @@
 
 import json
 import os
+import select
+import struct
 import subprocess
 import time
 
@@ -78,3 +80,65 @@ class LegacyGate:
                 return process.communicate(timeout=min(0.02, remaining))
             except subprocess.TimeoutExpired:
                 pass
+
+
+class StageGate:
+    """Reach a specified helper stage before starting a deadline or interruption."""
+
+    def __init__(self, env, stage, seconds):
+        self.stage = stage
+        self.seconds = seconds
+        self.descriptors = ()
+        self.owned = []
+        self.ready_pid = None
+        self.triggered_at = None
+        for name in ("ACACIA_TEST_OBLIGATION_STAGE_READY_FD",
+                     "ACACIA_TEST_OBLIGATION_STAGE",
+                     "ACACIA_TEST_OBLIGATION_DEADLINE_FD"):
+            env.pop(name, None)
+        if stage:
+            self.ready_read, ready_write = os.pipe()
+            self.owned.extend((self.ready_read, ready_write))
+            self.descriptors = (ready_write,)
+            env["ACACIA_TEST_OBLIGATION_STAGE_READY_FD"] = str(ready_write)
+            env["ACACIA_TEST_OBLIGATION_STAGE"] = stage
+        if seconds:
+            assert stage, "controlled deadlines require a readiness stage"
+            trigger_read, self.trigger_write = os.pipe()
+            os.set_blocking(trigger_read, False)
+            self.owned.extend((trigger_read, self.trigger_write))
+            self.descriptors += (trigger_read,)
+            env["ACACIA_TEST_OBLIGATION_DEADLINE_FD"] = str(trigger_read)
+            # Keep the solver's deadline inactive during startup. Only the preload
+            # library's parent clock advances by one day after our trigger expires.
+            env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + 86400)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        for descriptor in self.owned:
+            os.close(descriptor)
+
+    def wait_ready(self, process, directory, timeout=12):
+        deadline = time.monotonic() + timeout
+        message = b""
+        while b"\n" not in message:
+            assert process.poll() is None, ("parent exited before readiness", self.stage,
+                                           records(directory, complete_only=True))
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired(process.args, timeout)
+            if select.select([self.ready_read], [], [], min(.02, remaining))[0]:
+                message += os.read(self.ready_read, 128)
+        stage, pid = message.decode().strip().split()
+        assert stage == self.stage, (stage, self.stage)
+        self.ready_pid = int(pid)
+        assert process.poll() is None, ("parent exited before trigger", self.stage)
+
+    def trigger(self):
+        assert self.ready_pid is not None, "cancellation must follow stage readiness"
+        self.triggered_at = time.monotonic()
+        if self.seconds:
+            expiry = time.monotonic_ns() + round(self.seconds * 1_000_000_000)
+            os.write(self.trigger_write, struct.pack("=Q", expiry))
