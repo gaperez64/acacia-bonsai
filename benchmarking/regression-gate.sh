@@ -28,8 +28,13 @@ if [[ -z "$baseline_bin" ]]; then
   echo "The old default silently answered a different question."
   exit 1
 fi
-if [[ ! -f "$baseline_bin" || ! -x "$baseline_bin" ]]; then
+if [[ ! -f "$baseline_bin" ]]; then
   echo "GATE FAIL: baseline binary $baseline_bin is missing or not executable"
+  exit 1
+fi
+if [[ ! -x "$baseline_bin" ]]; then
+  echo "GATE FAIL: baseline binary $baseline_bin is not executable;" \
+    "restored archives before #245 need chmod +x"
   exit 1
 fi
 baseline_bin=$(realpath "$baseline_bin")

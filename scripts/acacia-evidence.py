@@ -25,7 +25,7 @@ INDEX_COLUMNS = ("campaign_id", "status", "asset_name", "url", "sha256", "bytes"
 STATUS = ("closed", "stopped", "partial")
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 SAFE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
-TOOL_VERSION = "1"
+TOOL_VERSION = "2"
 MAX_ARCHIVE_MEMBER = 16 * 1024 * 1024 * 1024
 MAX_METADATA = 16 * 1024 * 1024
 ORIGINAL_ID = re.compile(r"\boriginal[ _-]*id\b", re.IGNORECASE)
@@ -101,13 +101,17 @@ def load_patterns():
             if line.strip() and not line.startswith("#")]
 
 
-def tar_entry(name, size):
+def packed_mode(path):
+    return 0o755 if path.stat().st_mode & 0o111 else 0o644
+
+
+def tar_entry(name, size, mode=0o644):
     item = tarfile.TarInfo(name)
     item.size = size
     item.mtime = 0
     item.uid = item.gid = 0
     item.uname = item.gname = ""
-    item.mode = 0o644
+    item.mode = mode
     return item
 
 
@@ -135,8 +139,8 @@ def pack(args):
         sha, size = digest_file(path)
         if size > MAX_ARCHIVE_MEMBER:
             fail(f"member exceeds size bound: {name}")
-        records.append((name, size, sha))
-    if sum(size for _, size, _ in records) > MAX_ARCHIVE_MEMBER:
+        records.append((name, size, sha, packed_mode(path)))
+    if sum(size for _, size, _, _ in records) > MAX_ARCHIVE_MEMBER:
         fail("campaign exceeds declared size bound")
     revisions = args.source_revision or [subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()]
@@ -149,10 +153,10 @@ def pack(args):
                            "source_revisions": sorted(set(revisions)),
                            "binary_sha256s": sorted(set(args.binary_sha256)),
                            "created_utc": created, "tool_version": TOOL_VERSION,
-                           "declared_bytes": sum(size for _, size, _ in records)})
-    campaign_record = ("CAMPAIGN.json", len(campaign), hashlib.sha256(campaign).hexdigest())
-    manifest = b"path\tbytes\tsha256\n" + b"".join(
-        f"{name}\t{size}\t{sha}\n".encode() for name, size, sha in
+                           "declared_bytes": sum(size for _, size, _, _ in records)})
+    campaign_record = ("CAMPAIGN.json", len(campaign), hashlib.sha256(campaign).hexdigest(), 0o644)
+    manifest = b"path\tbytes\tsha256\tmode\n" + b"".join(
+        f"{name}\t{size}\t{sha}\t{mode:04o}\n".encode() for name, size, sha, mode in
         sorted([*records, campaign_record]))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -165,13 +169,13 @@ def pack(args):
             with tarfile.open(fileobj=zipped, mode="w", format=tarfile.USTAR_FORMAT) as tar:
                 tar.addfile(tar_entry("CAMPAIGN.json", len(campaign)), io.BytesIO(campaign))
                 tar.addfile(tar_entry("MANIFEST.tsv", len(manifest)), io.BytesIO(manifest))
-                for (name, path), (_, size, sha) in zip(members, records):
+                for (name, path), (_, size, sha, mode) in zip(members, records):
                     # Refuse races which change a source after its manifest was prepared.
-                    if digest_file(path) != (sha, size):
+                    if digest_file(path) != (sha, size) or packed_mode(path) != mode:
                         fail(f"member changed while packing: {name}")
                     with path.open("rb") as stream:
-                        tar.addfile(tar_entry(name, size), stream)
-                    if digest_file(path) != (sha, size):
+                        tar.addfile(tar_entry(name, size, mode), stream)
+                    if digest_file(path) != (sha, size) or packed_mode(path) != mode:
                         fail(f"member changed while packing: {name}")
         sha, size = digest_file(archive)
         print(f"{sha}\t{size}\t{archive}")
@@ -183,18 +187,26 @@ def pack(args):
 def parse_manifest(data):
     try:
         lines = data.decode("utf-8").splitlines()
-        if not lines or lines[0] != "path\tbytes\tsha256":
+        if not lines or lines[0] not in ("path\tbytes\tsha256", "path\tbytes\tsha256\tmode"):
             fail("invalid manifest header")
+        has_mode = lines[0].endswith("\tmode")
         rows = {}
         for line in lines[1:]:
-            name, size_text, sha = line.split("\t")
+            if has_mode:
+                name, size_text, sha, mode_text = line.split("\t")
+                if mode_text not in ("0644", "0755"):
+                    fail("invalid manifest mode")
+                mode = int(mode_text, 8)
+            else:
+                name, size_text, sha = line.split("\t")
+                mode = None
             safe_name(name)
             if name in rows or name == "MANIFEST.tsv":
                 fail("duplicate or reserved manifest path")
             size = int(size_text)
             if size < 0 or size > MAX_ARCHIVE_MEMBER or not HEX64.fullmatch(sha):
                 fail("invalid manifest entry")
-            rows[name] = (size, sha)
+            rows[name] = (size, sha, mode)
         return rows
     except (UnicodeError, ValueError) as exc:
         fail(f"invalid manifest: {exc}")
@@ -209,6 +221,7 @@ def verify_archive(path, expected_sha=None, max_bytes=None, extract_to=None):
     campaign = None
     campaign_digest = None
     campaign_size = None
+    campaign_mode = None
     manifest = None
     found = set()
     total = 0
@@ -236,6 +249,7 @@ def verify_archive(path, expected_sha=None, max_bytes=None, extract_to=None):
                     fail("invalid campaign metadata")
                 campaign_digest = hashlib.sha256(data).hexdigest()
                 campaign_size = item.size
+                campaign_mode = item.mode
                 declared = campaign.get("declared_bytes")
                 if not isinstance(declared, int) or declared < 0 or declared > MAX_ARCHIVE_MEMBER:
                     fail("invalid declared bytes bound")
@@ -247,17 +261,33 @@ def verify_archive(path, expected_sha=None, max_bytes=None, extract_to=None):
             elif item.name == "MANIFEST.tsv":
                 data = stream.read(item.size)
                 manifest = parse_manifest(data)
-                if manifest.get("CAMPAIGN.json") != (campaign_size, campaign_digest):
+                campaign_record = manifest.get("CAMPAIGN.json")
+                if (campaign_record is None or
+                        campaign_record[:2] != (campaign_size, campaign_digest)):
                     fail("campaign metadata differs from manifest")
-                if sum(size for name, (size, _) in manifest.items()
+                if campaign.get("tool_version") == "2" and campaign_record[2] is None:
+                    fail("manifest is missing recorded modes")
+                if campaign_record[2] is not None:
+                    if campaign_record[2] != 0o644 or campaign_mode != campaign_record[2]:
+                        fail("member mode differs from manifest: CAMPAIGN.json")
+                    if item.mode != 0o644:
+                        fail("invalid MANIFEST.tsv mode")
+                    if extract_to is not None:
+                        (extract_to / "CAMPAIGN.json").chmod(campaign_record[2])
+                if sum(size for name, (size, _, _) in manifest.items()
                        if name != "CAMPAIGN.json") != declared:
                     fail("manifest differs from declared bytes bound")
                 if extract_to is not None:
                     with (extract_to / item.name).open("xb") as output:
                         output.write(data)
+                    if campaign_record[2] is not None:
+                        (extract_to / item.name).chmod(0o644)
             else:
                 if item.name not in manifest or item.size != manifest[item.name][0]:
                     fail(f"member absent from manifest or wrong size: {item.name}")
+                mode = manifest[item.name][2]
+                if mode is not None and item.mode != mode:
+                    fail(f"member mode differs from manifest: {item.name}")
                 total += item.size
                 if total > declared:
                     fail("declared extraction size exceeded")
@@ -282,6 +312,8 @@ def verify_archive(path, expected_sha=None, max_bytes=None, extract_to=None):
                         output.close()
                 if h.hexdigest() != manifest[item.name][1]:
                     fail(f"member SHA-256 mismatch: {item.name}")
+                if extract_to is not None and mode is not None:
+                    target.chmod(mode)
     if campaign is None or manifest is None or found != set(manifest) | {"MANIFEST.tsv"}:
         fail("archive member set differs from manifest")
     print(f"{outer_sha}\t{archive_bytes}\t{len(manifest)} members verified")
