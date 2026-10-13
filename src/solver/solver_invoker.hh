@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+namespace acacia::obligation { struct control; }
+
 // These are the valid ways of treating unrealizability.
 enum class weakening_mode { basic, extended, off };
 
@@ -38,6 +40,9 @@ inline const char* translation_pref_name (TRANSLATION_PREF_T preference) {
   }
 }
 
+void validate_ltl_partition (const std::vector<std::string>& input_aps,
+                            const std::vector<std::string>& output_aps);
+
 bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> output_aps,
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
@@ -49,4 +54,5 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               bool equivariance = true, uint64_t diagnostic_deadline_ns = 0,
               const std::string& diagnostic_source_sha256 = {},
               weakening_mode weakening = weakening_mode::basic,
-              const acacia::unreal_witnesses::allowances& weakening_allowances = {});
+              const acacia::unreal_witnesses::allowances& weakening_allowances = {},
+              acacia::obligation::control* obligation_eligibility = nullptr);

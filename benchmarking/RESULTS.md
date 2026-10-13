@@ -5,6 +5,99 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-13 — post-memory frontend close: admit the obligation arm (#244)
+
+Campaign `postmem20261012-closing`: all 1,524 SYNTCOMP26 inputs, fresh matched
+PMC4/PMM races, serial and rotated, cooled to 70 °C, 8 GiB with zero swap and
+external caps without a solver-visible invocation deadline. PMC4 is #244 head
+`188cef33`; PMM is post-memory master `b95777aa` containing #235/#240/#241.
+Frozen default membership preserves PMM's five arms and adds `both:obligation:spot`.
+The driver supplied the measurements; closeout ran no solvers.
+
+| 17 s series | REAL | UNREAL | Solved | PAR-2 total (s) | PAR-2 mean (s) |
+|---|---:|---:|---:|---:|---:|
+| PMC4 candidate, fresh paired | 569 | 653 | 1222 | 11156.317827 | 7.320419 |
+| PMM incumbent, fresh paired | 562 | 652 | 1214 | 11441.203366 | 7.507351 |
+| ltlsynt216, archived separate-session reference | 576 | 687 | 1263 | 9421.852115 | 6.182318 |
+| TACAS23, archived separate-session reference | 457 | 355 | 812 | 24803.908447 | 16.275530 |
+
+| 60 s series | REAL | UNREAL | Solved | PAR-2 total (s) | PAR-2 mean (s) |
+|---|---:|---:|---:|---:|---:|
+| PMC4 candidate, fresh measured | 578 | 677 | 1255 | 34164.99997 | 22.417979 |
+| PMM incumbent, fresh measured | 570 | 677 | 1247 | 35137.094832 | 23.055837 |
+| ltlsynt216, archived derived separate-session reference | 589 | 697 | 1286 | 29864.296577 | 19.595995 |
+| TACAS23, archived derived separate-session reference | 480 | 374 | 854 | 82460.128477 | 54.107696 |
+
+**Admit the obligation arm: eight confirmed REAL gains, zero confirmed losses at
+either cap.** The gains are `Automata32S.ltl`, `chomp_pb_2_4_pe_.ltl`,
+`chomp_pb_2_5_pe_.ltl`, `chomp_pb_2_6_pe_.ltl`, `chomp_pb_3_3_pe_.ltl`,
+`chomp_pb_3_4_pe_.ltl`, `chomp_pb_4_2_pe_.ltl`, `chomp_pb_4_3_pe_.ltl`.
+Paired PAR-2 deltas (candidate minus incumbent) are **−284.885539 s at 17 s**
+and **−972.094862 s at fresh 60 s**. No 60 s noise floor is assumed.
+
+Raw 17 s outcomes have nine gains (eight REAL, one UNREAL) and one REAL loss.
+Three cooled alternating repetitions adjudicate `07.ltl` as no confirmed loss
+(candidate 2/3 solves, incumbent 0/3) and `g-unreal-310.ltl` as no confirmed gain
+(3/3 for both). Counts and PAR-2 above retain the original observations.
+Fresh 60 s gives exactly eight REAL gains and zero losses; no changed solves lie
+within 2 s of that cap. Both fresh series have zero verdict conflicts, ERROR,
+MEMOUT, CRASH, SYFCO-FAIL or AUDIT-ERROR. Their TIMEOUT/UNKNOWN counts are
+301/1 and 309/1 at 17 s, and 268/1 and 276/1 at 60 s.
+
+| Cap | Acacia series | Acacia-only vs ltlsynt | Common with ltlsynt | ltlsynt-only | Both unsolved | Net solved deficit |
+|---|---|---:|---:|---:|---:|---:|
+| 17 s | PMC4 | 78 | 1144 | 119 | 183 | 41 |
+| 17 s | PMM (M) | 79 | 1135 | 128 | 182 | 49 |
+| 60 s | PMC4 | 77 | 1178 | 108 | 161 | 31 |
+| 60 s | PMM (M) | 77 | 1170 | 116 | 161 | 39 |
+
+The historical LEGFINAL net deficits were 56/42 at 17/60 s. PMC4's deficits
+are 7 REAL + 34 UNREAL = 41 and 11 REAL + 20 UNREAL = 31. These net counts
+are distinct from ltlsynt-only sets. The comparator counts come from
+`legacy20261008-closing` plus `legacy20261008-closing-amend1`, reused by owner
+decision as separate-session references. Their 60 s observations remain derived.
+Acacia includes native TLSF parsing in timed work; reference clocks exclude
+preconversion and retain the SyFCo Strict-semantics limitation. TACAS23 retains
+its killed-child signal-handling caveat: apparent solves are an upper bound,
+with 3/14 audit-invalid verdicts rescored at 17/60 s.
+
+Both Acacia 60 s series are **fully fresh measured**: completed 60-rerun and
+60-recycled passes form exact disjoint 1,524-input unions, every source cap is
+60 s, and no short-cap row is reused. The driver selected this fallback because
+the unchanged recycling adjudicator retained candidate `03.ltl`'s parent winner
+route configuration difference and two incumbent missing worker-sequence findings
+without structured transport differences. Validation samples, strict/adjudicated
+findings and hash-bound repetitions remain evidence; they do not gate these
+fresh rows. `FINAL-REPORT.md` retains the earlier preparation narrative; the
+completed `join-17/` and `join-60/` outputs supply these final numbers.
+
+Scope peak and process RSS coverage is 1,524/1,524 per fresh series at each cap.
+Maximum scope peaks are candidate/incumbent 5235.3/5235.2 MiB at 17 s and
+5234.9/6257.3 MiB at 60 s; every fresh median is 62.7 MiB. References cover
+1,517/1,524 rows, with seven unexecuted conversion failures; their partial
+medians are suppressed. Missing/dropped route records remain incomplete, so
+observed spans are neither CPU totals nor complete counterfactual attribution.
+
+**Rejected idea:** expand `favor_event_univ` below the acceptance-width guard.
+P1 gives **zero gains on all 883 changed inputs**, with 17 s losses on
+`GF-G-contradiction6/7`, `g-unreal-39`, `infinite-race-unequal-25`, `sort42`,
+`sort50`, and 60 s losses on `g-unreal-311`, `sort50`, `sort42`,
+`infinite-race-unequal-26`, `thermostat-GF-unreal1`. Eleven of twelve loss
+observations stall in translation. Keep the guarded default and retain
+`feat/event-univ-policy` without a PR. Evidence: `postmem20261011-p1` and the
+loss diagnosis in `postmem20261011-p0`. P2's bypass study was never decisive;
+general construction sufficed on 55/57 inputs, while obligation synthesis
+decided 11/15 Acacia-missed obligations (`postmem20261011-p2`).
+
+See the [dated decisions](post-memory-frontend/decisions.md) and
+[arm contract](coverage-first/obligation-helper.md). Executables are archived as
+`binary-PMM-99ca4055`, `binary-PMC1-d52363fa`, `binary-PMC2-1f64f527`,
+`binary-PMC3-f2449fb4`, `binary-PMC4-b3953b43`. PMM records master's configuration;
+once #244 merges, PMC4 is the same-configuration previous-revision G1 baseline
+for the next change. Issues #245–#251 remain follow-ups. Archive modes are
+normalized to 0644 (#245); restores must explicitly restore executable permissions.
+The new index rows await the driver's upload and remote fetch-verification.
+
 ## 2026-10-11 — compact action payloads (#208, #200), development measurements
 
 Six inputs selected structurally from long-search closing rows were profiled with
