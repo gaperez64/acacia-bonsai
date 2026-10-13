@@ -1016,7 +1016,8 @@ test ('action-payload', action_payload_test, suite : ['unit', 'action-payload'],
 
 obligation_helper_test = executable (
   'obligation-helper-test',
-  ['obligation_helper_test.cc', '../src/solver/obligation_helper.cc'],
+  ['obligation_helper_test.cc', '../src/solver/obligation_helper.cc',
+   '../src/solver/mealy_to_moore.cc'],
   include_directories : inc, dependencies : [spot_dep, bddx_dep])
 test ('obligation-helper', obligation_helper_test, suite : ['unit', 'obligation'])
 if host_machine.system () == 'linux'
@@ -1039,4 +1040,14 @@ if host_machine.system () == 'linux'
   test ('obligation-helper-cli', py, args : obligation_cli_args,
         suite : ['unit', 'obligation', 'portfolio'], timeout : 90,
         depends : [ab_exe, obligation_helper_test, obligation_helper_faults])
+  if enable_tlsf_frontend
+    test ('obligation-helper-synthesis', py,
+          args : [files ('check-moore-synthesis.py'), ab_exe,
+                  '--ab-option=--arms', '--ab-option=both:obligation:spot',
+                  '--require-obligation'],
+          env : ['LD_PRELOAD=' + obligation_helper_faults.full_path (),
+                 'ACACIA_TEST_OBLIGATION_LEGACY_DELAY_MS=300'],
+          suite : ['unit', 'obligation', 'synthesis'], timeout : 120,
+          depends : [ab_exe, obligation_helper_faults])
+  endif
 endif

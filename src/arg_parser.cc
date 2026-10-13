@@ -103,7 +103,7 @@ void show_help (const char* program_name) {
       << "                    provider options apply to arms without an explicit provider\n"
       << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, "
          "decision only\n"
-      << "                    both:obligation:spot: syntactic obligations, decision only;\n"
+      << "                    both:obligation:spot: syntactic obligations, checked synthesis;\n"
       << "                    membership follows the build default; starts only when eligible;\n"
       << "                    no provider\n"
       << "                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\n"
@@ -736,7 +736,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
         *retval.arms, [] (const auto& arm) { return arm.unreal || arm.both; });
     std::erase_if (*retval.arms, [&] (const portfolio_arm& arm) {
       if (arm.kind == portfolio_arm_kind::legacy ||
-          (arm.kind == portfolio_arm_kind::obligation && !retval.synth_fname))
+          arm.kind == portfolio_arm_kind::obligation)
         return false;
       if (retval.verbose_level)
         std::cerr << "Skipping default arm " << arm.native_name ()
@@ -757,14 +757,30 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   if (retval.synth_fname.has_value ()) {
+    const bool obligation_synthesis = retval.arms && std::ranges::any_of (
+        *retval.arms, [] (const auto& arm) { return arm.kind == portfolio_arm_kind::obligation; });
     if (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-          return arm.kind == portfolio_arm_kind::obligation;
-        }))
-      error (EXIT_CODE_ERROR, "Error: both:obligation:spot does not support -s synthesis.\n");
-    if (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-          return arm.kind != portfolio_arm_kind::legacy;
+          return arm.kind != portfolio_arm_kind::legacy &&
+                 arm.kind != portfolio_arm_kind::obligation;
         }))
       error (EXIT_CODE_ERROR, "Error: native arms do not support -s controller synthesis.\n");
+    if (obligation_synthesis) {
+      const bool ordinary = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+        return arm.kind == portfolio_arm_kind::legacy;
+      });
+      const bool real = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+        return arm.kind == portfolio_arm_kind::legacy && !arm.unreal;
+      });
+      // Synthesis must retain the ordinary route when the bounded helper declines,
+      // including --arms both:obligation:spot alone.
+      if (!real)
+        retval.arms->emplace_back (false, default_real_strategies ().front (), UNREAL_X_FORMULA,
+                                   acacia::game_backend::backward);
+      if (!ordinary)
+        for (auto strategy : default_unreal_strategies ())
+          retval.arms->emplace_back (true, retval.primary_translation_pref, strategy,
+                                     retval.unreal_backend);
+    }
     const bool closure =
         acacia::is_closure_provider (retval.real_provider) ||
         acacia::is_closure_provider (retval.unreal_provider) ||
@@ -776,7 +792,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
     if (retval.arms.has_value ()) {
       bool kept_real_arm = false;
       std::erase_if (*retval.arms, [&kept_real_arm] (const portfolio_arm& arm) {
-        if (arm.unreal)
+        if (arm.unreal || arm.kind == portfolio_arm_kind::obligation)
           return false;
         if (not kept_real_arm) {
           kept_real_arm = true;

@@ -74,7 +74,7 @@ MAIN {{ OUTPUTS {{ grant; }} PRESET {{ {"" if initial_output else "!"}grant; }}
                     (initial_output, 0), toggle_transition)
 
 
-def run(binary, directory, exhaustive=False, extra=()):
+def run(binary, directory, exhaustive=False, extra=(), require_obligation=False):
     directory.mkdir(parents=True, exist_ok=True)
     rows = []
     for index, (description, text, monitor) in enumerate(cases(exhaustive)):
@@ -82,8 +82,13 @@ def run(binary, directory, exhaustive=False, extra=()):
         aig = directory / f"case-{index}.aag"
         spec.write_text(text)
         command = [str(binary), "-T", str(spec), "-s", str(aig), *extra]
+        env = os.environ.copy()
+        if require_obligation:
+            phases = directory / f"case-{index}-phases"
+            phases.mkdir()
+            env["ACACIA_PHASE_RECORDS"] = str(phases)
         try:
-            result = subprocess.run(command, capture_output=True, text=True, timeout=20)
+            result = subprocess.run(command, capture_output=True, text=True, timeout=20, env=env)
         except subprocess.TimeoutExpired:
             rows.append({"case": description, "error": "synthesis timeout"})
             continue
@@ -91,6 +96,16 @@ def run(binary, directory, exhaustive=False, extra=()):
             rows.append({"case": description, "error": result.stderr[-2000:],
                          "exit": result.returncode})
             continue
+        if require_obligation:
+            records = [json.loads(line) for file in phases.glob("*.jsonl")
+                       for line in file.read_text().splitlines()]
+            winners = [row for row in records if row.get("event") == "parent_winner"]
+            checks = [row for row in records if row.get("event") == "obligation_completion"]
+            if (len(winners) != 1 or winners[0]["effective_backend"] != "obligation"
+                    or len(checks) != 1 or not checks[0]["independent_checked"]):
+                rows.append({"case": description, "error": "obligation did not produce controller",
+                             "records": records})
+                continue
         oracle = check(Aiger.read(aig), *monitor, moore=description[1] == "Moore")
         rows.append({"case": description, "valid": oracle.valid, "states": oracle.states,
                      "transitions": oracle.transitions, "counterexample": oracle.counterexample,
@@ -108,14 +123,17 @@ def main():
     parser.add_argument("binary", type=Path)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--exhaustive", action="store_true")
+    parser.add_argument("--require-obligation", action="store_true")
     parser.add_argument("--ab-option", action="append", default=[])
     args = parser.parse_args()
     if args.output_dir:
-        rows = run(args.binary, args.output_dir, args.exhaustive, args.ab_option)
+        rows = run(args.binary, args.output_dir, args.exhaustive, args.ab_option,
+                   args.require_obligation)
     else:
         # All scratch lives in the caller's task-specific TMPDIR.
         with tempfile.TemporaryDirectory(dir=os.environ.get("TMPDIR")) as temporary:
-            rows = run(args.binary, Path(temporary), args.exhaustive, args.ab_option)
+            rows = run(args.binary, Path(temporary), args.exhaustive, args.ab_option,
+                   args.require_obligation)
     return int(any(not row.get("valid", False) for row in rows))
 
 

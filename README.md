@@ -48,14 +48,18 @@ non-native fallback, with the Spot obligation arm alongside its four regular arm
 `both:obligation:spot` belongs to the explicit default portfolios of the shipping
 presets that can run it. Membership comes from the compile-time registry and is
 recorded in the build's Meson options; historical defaults stay unchanged.
-It races one bounded decision worker when the original normalized objective is a syntactic obligation. Select
+It races one supervised worker when the original normalized objective is a syntactic obligation.
+Decision mode makes one trusted exact Spot call, with no retained strategy or re-check, bounded
+by the invocation/race. Select
 it alone with `--arms both:obligation:spot`; the objective is then prepared in one
 supervised child, and an ineligible objective returns UNKNOWN without starting the
 helper. In a default portfolio an ineligible input starts no extra process.
 Explicit `--arms` lists run only the named arms. To use the original decision
 portfolio, select its arms explicitly or build a preset without the obligation
-arm. Synthesis (`-s`) keeps its existing route. The driver's screens and
-pending full-corpus admission are documented in
+arm. Synthesis (`-s`) accepts an AIGER controller only after Acacia's independent controller
+check, including Moore initialization. Its absolute five-second budget applies with or without
+an outer deadline; failures/timeouts leave ordinary synthesis running. Selecting the arm alone
+with `-s` also retains that fallback. Trust boundaries and historical driver screens are in
 [the obligation arm notes](benchmarking/coverage-first/obligation-helper.md).
 
 # Dependencies

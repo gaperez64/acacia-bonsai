@@ -6,6 +6,7 @@
 #include "solver/configured_components.hh"
 #include "solver/create_automaton.hh"
 #include "solver/degenerate_io.hh"
+#include "solver/controller_check.hh"
 #include "solver/diagnostics.hh"
 #include "solver/forced_output_contradiction.hh"
 #include "solver/mealy_to_moore.hh"
@@ -429,9 +430,8 @@ namespace {
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("synthesis-check-after-translation");
-        const auto checked_controller = mealy_aig->as_automaton (false);
-        const bool intersects = aut->intersects (checked_controller);
-        const bool valid = check_unreal.has_value () ? intersects : not intersects;
+        const bool satisfies = acacia::synthesis::controller_satisfies (aut, mealy_aig);
+        const bool valid = check_unreal.has_value () ? not satisfies : satisfies;
         assert (valid);
 
 #endif

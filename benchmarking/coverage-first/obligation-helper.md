@@ -1,4 +1,4 @@
-# Obligation decision arm
+# Obligation arm
 
 The shipping presets with explicit portfolios declare `both:obligation:spot` in
 `config/acacia-presets.json`, through the existing `acacia_default_arms` build option.
@@ -8,11 +8,13 @@ arms nor OxiDD. Historical presets, including inherited sweep portfolios, and th
 historical-default path retain their previous lists. Meson's `intro-buildoptions.json`
 records the shipped membership; there is no runtime append or helper toggle.
 
-It races one bounded original-game decision worker for eligible inputs alongside the
-existing arms. `--arms both:obligation:spot` runs it alone, with supervised preparation;
+It races one supervised original-game worker for eligible inputs alongside the
+existing arms. Decision work is bounded by the invocation/race, without a local wall allowance.
+`--arms both:obligation:spot` runs it alone, with supervised preparation;
 an ineligible input returns UNKNOWN without starting an obligation solver. Explicit `--arms`
-lists run exactly their named arms. A preset without the arm also preserves the original
-route. For the first shipping preset, the previous TLSF decision portfolio is:
+lists run exactly their named arms in decision mode. Synthesis retains an ordinary
+fallback even when the obligation arm is selected alone. A preset without the arm preserves
+the original route. For the first shipping preset, the previous TLSF decision portfolio is:
 
 ```sh
 previous_arms=real:small:backward,real:small:forward
@@ -22,9 +24,11 @@ acacia-bonsai -T spec.tlsf --arms "$previous_arms"
 ```
 
 For LTL input, omit the native GR(1) arm, which requires `-T`. Explicit `-r`/`-u` selections
-also run only their requested routes. Synthesis (`-s`) uses the ordinary default route;
-explicitly selecting this decision-only arm with `-s` is an error. Replay and native
-checking retain their existing routes.
+also run only their requested routes. Synthesis (`-s`) can accept a retained strategy only
+through AIGER export and Acacia's independent controller check. Export/check failure,
+no retained strategy, or the fixed synthesis timeout leaves the ordinary synthesis route
+running. With the arm alone and `-s`, the ordinary REAL/UNREAL routes are added as fallbacks.
+Replay and native checking retain their existing routes.
 
 ## Driver screens and full-corpus admission (13 October 2026)
 
@@ -61,8 +65,11 @@ finishes by determining the initial root's winner and setting acceptance `t` (RE
 
 With `realizability=true`, a normal return has one `bddtrue` or `bddfalse` root, respectively,
 with matching colors. **This flag distinguishes both verdicts.** With `false`, REAL retains a
-strategy; UNREAL still returns one `bddfalse` root with acceptance `f`. The helper uses `false`
-for strategy checking. `debug=-1` is mandatory: partial debug automata are not decisions.
+strategy; UNREAL still returns one `bddfalse` root with acceptance `f`. Decision mode makes
+exactly one call with `true`, keeps no strategy and performs no re-check. Synthesis uses
+`false` and can answer only REAL with a retained, exported and independently checked
+controller; a losing result declines to the ordinary route. `debug=-1` is mandatory:
+partial debug automata are not decisions.
 
 Null/empty objects have no normal contract and mean error, never UNREAL. Malformed root/colors
 or acceptance results likewise mean error. `std::runtime_error` can report non-obligation input,
@@ -75,8 +82,10 @@ completed outcome matching the helper's exit code.
 ## Eligibility, timing and execution
 
 Eligibility is solely Spot's cached DAG property `is_syntactic_obligation()` on the positive
-original normalized objective, after common realizability simplification and before decomposition
-or UNREAL polarity/X transformations. No names, fingerprints, size rules or fitted thresholds
+original normalized objective, after common realizability simplification in decision mode,
+and before decomposition or UNREAL polarity/X transformations. Synthesis skips realizability
+simplification, as the ordinary synthesis route does: eliminated signals are not patched back
+into the strategy. No names, fingerprints, size rules or fitted thresholds
 select the helper. An existing legacy child publishes eligibility through a shared atomic mailbox
 at that boundary. In a native-only portfolio, one existing native child prepares that same
 objective; preparation failure leaves the ordinary native solve running. When the obligation
@@ -96,13 +105,26 @@ normalization inside its bounded process and rechecks eligibility. Winner, deadl
 and parent-error cleanup kill and reap it through the ordinary loser path. Linux additionally uses
 `PR_SET_PDEATHSIG=SIGKILL` for abrupt parent death.
 
-Mealy registers inputs before outputs; Moore registers outputs first, as the API documents.
+Registration follows ltlsynt: traverse the current formula DAG and pre-register only its
+first timing block, inputs for Mealy and outputs for Moore. Spot registers the remaining
+block in formula traversal order; declared unused signals are retained in the controller
+interface. Inputs still precede outputs for Mealy, and outputs precede inputs for Moore.
 Production LTL is Mealy. The linked TLSF frontend already supplies effective Mealy, including
 Moore lowering and strict normalization: the helper solves that objective without another shift
 or polarity swap. Raw Moore tests detect registration as Mealy.
 
-The fixed five-second wall allowance starts at fork, matching the existing optional-work reference
-horizon. Address space is capped at eight GiB. The soft RSS share follows native construction:
+Decision mode has no fixed wall allowance: the parent supervises/reaps the process under
+winner, signal and invocation deadline handling, like the other arms. Synthesis uses an
+**absolute five-second allowance from helper fork**, covering preparation, retained-strategy
+synthesis, conversion, serialization, checking, private storage and controller publication together.
+Publication runs in a supervised process under the original helper allowance; the parent rechecks
+interruption and the invocation deadline immediately before accepting its answer. Ordinary writers
+are stopped before publication to avoid output races, and restarted on any publication failure
+(including open, read, write, close, or allowance exhaustion). This is the
+existing global optional-work horizon, not a fraction of remaining time and not fitted to
+inputs. It applies identically with or without `ACACIA_OUTER_DEADLINE_MONOTONIC`; an earlier
+outer deadline wins. Parent polling may overshoot, and a result observed beyond the allowance
+is rejected. Address space is capped at eight GiB. The soft RSS share follows native construction:
 cgroup memory limit (bounded by the address cap) / launched workers including helper / 2. The
 parent polls and kills/reaps on either limit; scheduling can overshoot these soft limits. These
 are global resource choices. An earlier invocation deadline still governs answer acceptance.
@@ -118,19 +140,39 @@ clocks/RSS and emits no helper events or workers. Membership uses the existing c
 
 ## Trust and checks
 
-Spot's completed decision is trusted exact. REAL additionally converts the strategy with
-`mtdswa_strategy_to_mealy`, checks input coverage, and checks intersection against
-`obligation_to_mtdswa(Not objective)->as_twa()`. This avoids a full Büchi LTL translation and is
-a **same-library check, not an independent certificate**. Failed checks are errors. UNREAL has
-no independent certificate. Phase records declare `trust=trusted_exact_spot` and whether the
-same-library check passed. Existing replay/native checks are untouched.
+Decision REAL and UNREAL are **trusted exact Spot library verdicts**, with no strategy and
+no re-check. Phase records declare `trust=trusted_exact_spot`, `same_library_checked=false`
+and `independent_checked=false`. Exceptions, interruptions, null/malformed objects and
+unpublished or mismatched exits never become verdicts.
+
+Synthesis converts the retained MTBDD strategy to a Mealy machine, exports the same ASCII
+AIGER format as ordinary synthesis, reparses those exact bytes, and checks them **in process**
+before publishing REAL. It uses Acacia's existing general LTL/controller product check,
+shared with the ordinary debug synthesis checker through `controller_satisfies()`. A fresh
+general Büchi translation of the negated original target-frame objective must have empty
+intersection with the exported controller. This check is **independent of the obligation
+synthesis algorithm**: it consumes neither its MTBDD proof nor its winning predicates.
+Both paths still depend on Spot's general translation, AIG and product primitives; this is
+algorithmic independence, not a claim of an independent library implementation. The checker
+runs in release builds as well. No UNREAL certificate is produced by this synthesis arm.
+
+TLSF synthesis preserves the source target formula separately from the effective Mealy
+solve formula. Moore export reuses the ordinary `mealy_to_moore()` conversion, including
+advancing source latches through the dummy initial round for Moore-to-Mealy input lowering.
+True resets use complemented physical latches so all emitted AIGER latches start at zero.
+The independent check covers the final converted controller and its initial state, and rejects
+current-input-dependent Moore outputs. Checked bytes are stored in a private unlinked file;
+only the accepted helper publishes them after competing writers have been killed/reaped.
+Timeouts, exceptions and failed exports/checks therefore leave the ordinary route available.
+Successful synthesis records use `trust=independent_controller_check`,
+`independent_checked=true`, and `same_library_checked=false`.
 
 The C++ unit covers eligibility, shared DAGs, abbreviations, constants, unused signals, timing,
 `realizability=true`, malformed/null results, nondecision exit mapping and a mutated strategy.
 Actions execute outside assertions. The CLI panel cross-checks Mealy/Moore with ltlsynt general
 construction (`--obligation-synthesis=no --bypass=no`) and Acacia's existing route, including
 strict TLSF safety assumptions. It tests single arm membership, exact `--arms` selection, default eligibility, launch order, native-only and
-opposite-polarity selection, post-simplification eligibility, ordinary-only selection, synthesis exclusion, exceptions,
+opposite-polarity selection, post-simplification eligibility, ordinary-only selection, synthesis/fallback, exceptions,
 null/empty/allocation/abnormal exits, wall/RSS stops, cancellation, deadlines, parent termination
 and no remaining child processes/groups. Faults use a test-only preload library, never linked
 into or installed with a solver; release binaries contain no new mutation hook.
@@ -241,3 +283,216 @@ same-library REAL check are unchanged.
 Logs, frozen binaries, build options, master parity and smoke records are retained under
 `build_scratch/pm-p2-registry/`. Large temporary checked/Python build directories were
 removed after validation. All source changes remain unstaged and uncommitted.
+
+## Issue #248: negative diagnosis (13 October 2026)
+
+This is the preserved investigation of the earlier contract. The owner's subsequent
+13 October decision implemented below supersedes its decision-mode checking and wall policy.
+
+No solver change is proposed. The existing preparation already performs ltlsynt's
+polarity/global-equivalence simplification. Formula traversal BDD order improves the
+synthesis call, but does not close these inputs under the existing five-second allowance
+and required REAL strategy check. Removing that check or choosing a longer allowance to
+fit these rows would change the requested contract. This investigation does not rule out a
+future on-the-fly strategy checker or other general algorithm changes.
+
+Selection was limited to the three documented evaluation rows in #248, then verified with
+`is_syntactic_obligation()` on their positive normalized objectives. Builds resolve the
+first `docker_default` preset from the registry, use Spot 2.16 at base `e762e736`, and match
+the normal release profile (`release`, optimization 3, LTO, compiler profile `release`).
+Every solver diagnostic ran serially under
+`systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=0`. These are single uncooled
+observations, not a benchmark campaign or admission evidence. Early diagnostics overlapped
+compilation; the driver must measure any future implementation independently.
+
+### Preparation and preprocessing
+
+The arm-alone release runs all exhaust the fixed allowance, even when the outer invocation
+could allow 60 seconds. The parent reports `wall_allowance`, kills/reaps the worker, and
+returns UNKNOWN. Its existing `obligation_synthesis` worker stage groups the library call
+and REAL check, so scratch calls separate those costs below.
+
+| Input | Startup to parent eligibility observation (s) | Simplification phase (s) | Helper wall at stop (s) |
+|---|---:|---:|---:|
+| `chomp_pb_3_5` | 0.0193 | 0.0092 | 5.0280 |
+| `chomp_pb_4_4` | 0.0298 | 0.0133 | 5.0301 |
+| `chomp_pb_3_6` | 0.0300 | 0.0145 | 5.0480 |
+
+The eligibility observation includes supervisor polling, so it is an upper bound on
+preparation. Neither TLSF conversion nor normalization accounts for the misses.
+`helper_objective()` invokes `realizability::apply_simplifier()`, which constructs Spot's
+`realizability_simplifier` with its default polarity and global-equivalence options.
+ltlsynt uses the same options for Mealy. On each input, its verbose `new formula:` output
+matches `tlsf-frontend-inspect --rsimp` byte for byte and parses to the same Spot formula.
+Both already eliminate `oto := !oti`. ltlsynt reports one subformula in every case;
+decomposition supplies no advantage here.
+
+### Synthesis, order and checking
+
+The tiny scratch C++ program calls `obligation_synthesis` on Acacia's objective and on the
+exact formula extracted from ltlsynt's trace, in fresh dictionaries. It varies only
+registration and `realizability`, keeps `simplify_terms=true` and `debug=-1`, and times
+preparation, registration, the library call, and the existing `check_strategy()` separately.
+Acacia pre-registers all inputs and outputs in declaration order. ltlsynt pre-registers
+only the first timing block, in formula traversal order, and lets Spot register the rest
+in traversal order. Input-before-output order remains Mealy; no game polarity or timing
+transformation is involved.
+
+| Input | Declaration order, decision (s) | Formula order, decision (s) | Declaration order, retained strategy (s) | Formula order, retained strategy (s) |
+|---|---:|---:|---:|---:|
+| `chomp_pb_3_5` | 4.031 | 1.848 | 16.770 | 4.299 |
+| `chomp_pb_4_4` | 11.344 | 4.460 | 32.990 | 5.116 |
+| `chomp_pb_3_6` | >120 | 52.180 | >70 | 60.602 |
+
+Decision calls use `realizability=true`; retained-strategy calls use `false`, as production
+does. The formula-order decision calls closely explain the issue's 1.9/4.6/45-second
+reference, especially the first two rows. The early full ltlsynt CLI reruns took
+8.864/22.463/>70 seconds during compilation; those are not paired performance comparisons.
+Even the fastest completed third-row decision is far outside the helper allowance.
+
+| Input | Existing check, declaration order (s) | Existing check, formula order (s) | General low-level translation check (s) |
+|---|---:|---:|---:|
+| `chomp_pb_3_5` | 13.564, passed | >235 | >67, translation incomplete |
+| `chomp_pb_4_4` | 29.618, passed | >65 | >60, translation incomplete |
+| `chomp_pb_3_6` | not reached | >10 | >18, translation incomplete |
+
+Lower bounds end at diagnostic cutoffs, not completion. Formula-order checking reached
+neither an accepted REAL result nor a failed strategy result: the same-library language
+check was unfinished. These C++ runs do not split negated-objective construction from
+intersection. The general-check trial retained input coverage
+and intersection against the original objective, replacing the negated-obligation
+construction with Spot's ordinary translator at low optimization. Synthesis took
+2.628/9.239/51.355 seconds and strategy conversion only 0.00077/0.00321/0.00407 seconds;
+translation of the negated objective then consumed the remaining 70-second diagnostic
+budget on every input. Thus conversion is cheap, and swapping to ordinary translation
+does not make the required check fit. ltlsynt's ordinary `--realizability --verbose`
+invocation does not request `--verify` and supplies no equivalent language check.
+
+The normal library REAL returns in unfinished scratch checks are not accepted arm
+verdicts. The original same-library check remains required and trusted exact Spot remains
+the declared trust boundary. No new same-library check is presented as an independent
+certificate.
+
+Spot's ordinary level-2 LTL simplifier was also tried, entirely in scratch. Its
+language-equivalent formulas remain syntactic obligations, but retained-strategy synthesis
+took 2.840/4.087/42.326 seconds, followed by checks still unfinished at the 70-second
+cutoffs (>67/>65/>27 seconds respectively). This does not close the gap either. No such
+transformation was installed in the arm. The existing checked/release unit and CLI oracle
+panel exercises the unchanged arm, including Mealy and Moore semantics.
+
+There is no implemented after version: the negative branch requires leaving solver code
+unchanged. The tables compare the current arm with single-run scratch alternatives, not
+new shipping performance. Eligibility, original-frame timing, racing, reaping, resource
+limits, decision-only selection, trust declarations, and the route for ineligible inputs
+retain their existing implementation exactly. No names, sizes, fitted thresholds or
+precomputed decisions enter the solver.
+
+### Validation and retained evidence
+
+- Checked build: `meson compile -C build_scratch/i248/checked -j 4`;
+  `meson test -C build_scratch/i248/checked --suite unit --num-processes 4 --no-rebuild`: 90/90.
+- Release build: `meson compile -C build_scratch/i248/release -j 4`;
+  `meson test -C build_scratch/i248/release --suite unit --num-processes 4 --no-rebuild`: 87/87.
+- Checked/release obligation-unit stdout is byte-identical. The CLI tests cover timing,
+  general-construction Mealy/Moore oracles, eligibility, racing, faults and cleanup.
+- `/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python3 -m pytest tests/pytest/ -q`: 2,296
+  passed, 40 existing conditional skips, 20 passing subtests, four failures. All four are
+  `test_evidence_tools.py` history fixtures attempting to create commits with
+  `git fast-import`. The user's explicit prohibition on staging/committing applies to
+  throwaway repositories too. A scratch `sitecustomize.py` audit guard blocks those
+  commands before execution, including absolute executable paths; no tests were excluded
+  and no commit was created. Python/Spot bindings were supplied through `PYTHONPATH` as in
+  CI, with `TMPDIR` under this task's scratch directory. A fully passing pytest run remains
+  unavailable under that prohibition.
+- Hardcoding pytest: 96 passed, one existing skip.
+- `ruff check tests scripts benchmarking`: passed; the obligation CLI script also passes.
+  An extra `ruff check .` finds 19 pre-existing errors in examples and dependency tooling;
+  those files are unchanged.
+- `python3 tests/check-config-frontends.py`: all 49 shared scalar options agree, with the
+  existing documented TLSF frontend divergence. No options changed.
+
+Raw phase records, objective/order equality, per-call logs, scratch C++/Python sources,
+build options, binary hashes and validation logs remain under `build_scratch/i248/`. The
+retained release binary has the same hash before and after this investigation. All three
+original arm workers have parent terminal/reaping records and no surviving PID. Large
+checked/release build directories and the copied dependency were removed after validation.
+Only this documentation changes in the working tree; nothing is staged or committed.
+
+The driver can decide whether to pursue a general on-the-fly REAL strategy checker or a
+separate, independently justified helper-budget policy. Increasing the allowance to fit
+these three timings, omitting the REAL check, or changing ineligible routing is not a fix
+submitted by this task. Commit-based pytest fixtures and the unrelated broad Ruff errors
+remain outside this diagnosis.
+
+
+## Issues #248 and #249: owner-directed implementation (13 October 2026)
+
+The owner changed the decision contract to one trusted exact decision call without a local
+wall allowance, and authorized independently checked controller synthesis within an absolute
+five-second allowance. The earlier diagnosis above is retained as evidence of the old contract;
+its hypothetical alternatives are not performance claims about this implementation.
+
+Validation used the first registry-resolved `docker_default` preset. Checked and release
+builds used `meson compile -j 4`; release uses optimization 3, LTO and the normal release
+compiler profile. Unit suites ran with `--num-processes 4` and passed 91/91 checked and
+88/88 release. The initial checked run hit deadlines in two existing native attribution
+tests while compilation/pytest overlapped; both passed targeted rechecks and the final
+complete 91-test run. No timeout or assertion was weakened.
+
+The decision oracle panel checks 74 Mealy/Moore rows, including 64 generated obligations,
+against ltlsynt's general construction with obligation synthesis and bypass disabled.
+Declaration, reverse-declaration and formula-traversal registration variants agree. Unit
+stdout is byte-identical in checked/release. Test-only ELF interposition confirms the single
+`realizability=true` call, decisions completing beyond five seconds, null/exception/abnormal
+exit declines, memory limits, cancellation, deadlines and reaping. Synthesis tests reject
+corrupt strategies and serialized controllers, exercise export/check exceptions and
+five-second fallback with and without an outer deadline, and require the helper to produce
+all 64 Mealy/Moore/strict and autonomous controllers accepted by the independent explicit
+AIGER safety-product oracle. All actions run outside assertions.
+
+The synthesis subset (`shift_2`, `shift_4`, `lilydemo13`) passed through the configured
+`tests/check-real-correct.sh` with `AB_OPTS='--arms both:obligation:spot'`. Ten generated
+ineligible Mealy/Moore/strict TLSF games match a release build of pinned master `b95777aa`
+in exit code, stdout, stderr and all worker specifications; no helper event or process is
+added. This master source was extracted with read-only `git archive`, without checkout,
+staging or commits. Full pytest passed **2,300 tests and 23 subtests**, with 40 existing
+conditional skips; the explicitly allowed commit-creating temporary-repository fixtures
+ran normally. The first pytest run found stale generated attribution line references;
+regeneration fixed them, and the complete rerun passed. Hardcoding pytest passed 96 tests
+with one existing skip. Ruff on `tests scripts benchmarking`, configuration frontend checks
+(all 49 shared scalars), and `git diff --check` passed.
+
+The four authorized release diagnostics ran serially, after compilation and correctness
+tests, in `systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=0`, each with an
+external 60-second cap and no outer-deadline environment variable. The three decision
+runs select exactly `--arms both:obligation:spot`. The synthesis smoke is generated Moore
+safety with nonzero output initialization, using the same arm selection and `-s`.
+Times include scope/invocation overhead. These are single observations, with no performance
+claim or new full-corpus admission evidence.
+
+Diagnostic outcomes follow below. The externally capped third run lost terminal phase
+records when the timeout signalled the process group (including the record writer);
+completion/reaping telemetry for that run is incomplete, not an exact verdict.
+
+
+| Input | Mode | Observed scope/invocation time | Verdict | Accepted route / helper outcome |
+|---|---|---:|---|---|
+| `chomp_pb_3_5` | decision | 3.069 s | REAL | obligation / `completed_REAL` |
+| `chomp_pb_4_4` | decision | 7.080 s | REAL | obligation / `completed_REAL` |
+| `chomp_pb_3_6` | decision | 60 s external cap hit | UNKNOWN | none / incomplete termination telemetry |
+| generated Moore safety | `-s` | 0.034 s | REAL | ordinary backward / helper cancelled by winner |
+
+The third run's harness required terminal records before persisting its wrapper status and
+total wall time; that assertion failed because group termination also killed the writer.
+Its displayed time is therefore the known external cap, not an invented completed-run
+measurement. It was not rerun. A separate host PID/process-group check confirmed no surviving
+worker. The other three runs have parent terminal records for every spawned worker. The
+synthesis smoke's helper lost the race safely; the emitted controller was accepted by the
+independent explicit Moore AIGER oracle. The 64-controller test panel above requires helper
+wins in both builds, separately establishing successful arm synthesis.
+
+Raw diagnostic records, oracle results, build commands/options, binary identities, master
+parity, and all validation logs remain under `build_scratch/i248-249/`. Large build objects,
+throwaway repositories and copied dependency/source trees were removed; the three solver
+binaries, required local shared library, unit binaries and Python bindings are retained.
+Nothing in this worktree was staged or committed.

@@ -84,6 +84,14 @@ See [the panels](benchmarking/RESULTS.md) and
 
 ### Unreleased
 
+- **Oct 13:** The obligation arm makes one trusted exact Spot decision call in formula
+  traversal order, without retaining/rechecking a strategy or a fixed decision wall allowance.
+  With `-s`, it exports AIGER and independently checks the final controller, including Moore
+  initialization, before accepting REAL. An absolute five-second synthesis budget applies with
+  or without an outer deadline; export/check failure or timeout leaves ordinary synthesis
+  running. The earlier #248 diagnosis is preserved in the
+  [arm notes](benchmarking/coverage-first/obligation-helper.md).
+
 - **Oct 12:** `both:obligation:spot` joins the explicit shipping portfolios through
   the compile-time registry, so frozen builds record their full arm lists. It runs
   only for eligible original objectives and can run alone through `--arms`.
