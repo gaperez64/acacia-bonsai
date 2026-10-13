@@ -13,11 +13,7 @@ import tempfile
 import time
 
 from moore_aiger_oracle import Aiger, check
-
-
-def records(directory: Path) -> list[dict]:
-    return [json.loads(line) for path in directory.glob("*.jsonl")
-            for line in path.read_text().splitlines() if line.strip()]
+from obligation_test_support import LegacyGate, records
 
 
 def gone(pid: int) -> bool:
@@ -31,7 +27,8 @@ def gone(pid: int) -> bool:
 def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
         fault: str = "", delay_ms: int = 0, interrupt: bool = False,
         outer_seconds: float = 0, rss_limit: bool = False,
-        fifo: Path | None = None, reader_delay: float = 0
+        fifo: Path | None = None, reader_delay: float = 0,
+        gate: bool = False, helper_delay_ms: int = 0
         ) -> tuple[subprocess.CompletedProcess, list[dict]]:
     with tempfile.TemporaryDirectory(dir=root) as location:
         directory = Path(location)
@@ -40,50 +37,54 @@ def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
         env.pop("ACACIA_OUTER_DEADLINE_MONOTONIC", None)
         env.pop("ACACIA_TEST_CHILD_MODES", None)
         env.pop("ACACIA_TEST_DELAY_AFTER_REAP", None)
-        if fault or delay_ms:
+        if fault or delay_ms or gate or helper_delay_ms:
             env["LD_PRELOAD"] = str(fault_lib)
             env["ACACIA_TEST_OBLIGATION_FAULT"] = fault
             env["ACACIA_TEST_OBLIGATION_LEGACY_DELAY_MS"] = str(delay_ms)
+            env["ACACIA_TEST_OBLIGATION_HELPER_DELAY_MS"] = str(helper_delay_ms)
         if "-s" in args:
             env["ACACIA_TEST_OBLIGATION_OUTPUT"] = args[args.index("-s") + 1]
         if outer_seconds:
             env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + outer_seconds)
-        process = subprocess.Popen([str(binary), *args], env=env, text=True,
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   preexec_fn=(lambda: resource.setrlimit(
-                                       resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024)))
-                                   if rss_limit else None)
-        if interrupt:
-            deadline = time.monotonic() + 3
-            while time.monotonic() < deadline:
-                if any(row.get("event") == "obligation_start" for row in records(directory)):
-                    break
-                if process.poll() is not None:
-                    raise AssertionError("parent exited before interruption")
-                time.sleep(0.005)
-            else:
-                process.kill()
-                process.communicate()
-                raise AssertionError("helper failed to start")
-            process.send_signal(signal.SIGTERM)
-        reader = None
-        if fifo:
-            time.sleep(reader_delay)
-            exited_before_reader = process.poll() is not None
-            reader = os.open(fifo, os.O_RDWR | os.O_NONBLOCK)
-        try:
-            stdout, stderr = process.communicate(timeout=12)
-        except subprocess.TimeoutExpired:
-            process.send_signal(signal.SIGTERM)
+        with LegacyGate(env, gate) as legacy:
+            memory_cap = 256 * 1024 * 1024
+            process = subprocess.Popen([str(binary), *args], env=env, text=True,
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       pass_fds=legacy.descriptors,
+                                       preexec_fn=(lambda: resource.setrlimit(
+                                           resource.RLIMIT_AS, (memory_cap, memory_cap)))
+                                       if rss_limit else None)
+            if interrupt:
+                deadline = time.monotonic() + 3
+                while time.monotonic() < deadline:
+                    if any(row.get("event") == "obligation_start" for row in records(directory)):
+                        break
+                    if process.poll() is not None:
+                        raise AssertionError("parent exited before interruption")
+                    time.sleep(0.005)
+                else:
+                    process.kill()
+                    process.communicate()
+                    raise AssertionError("helper failed to start")
+                process.send_signal(signal.SIGTERM)
+            reader = None
+            if fifo:
+                time.sleep(reader_delay)
+                exited_before_reader = process.poll() is not None
+                reader = os.open(fifo, os.O_RDWR | os.O_NONBLOCK)
             try:
-                process.communicate(timeout=3)
+                stdout, stderr = legacy.communicate(process, directory, timeout=12)
             except subprocess.TimeoutExpired:
-                process.kill()
-                process.communicate()
-            raise
-        finally:
-            if reader is not None:
-                os.close(reader)
+                process.send_signal(signal.SIGTERM)
+                try:
+                    process.communicate(timeout=3)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.communicate()
+                raise
+            finally:
+                if reader is not None:
+                    os.close(reader)
         if fifo and outer_seconds and reader_delay > outer_seconds:
             assert exited_before_reader, "parent waited for a FIFO reader beyond its deadline"
         rows = records(directory)
@@ -170,7 +171,8 @@ def main() -> None:
         assert not any(row.get("event", "").startswith("obligation_") for row in exact_rows)
         selections = [[], race, alone] if default_has_helper else [race, alone]
         for selection in selections:
-            candidate, rows = run(binary, [*args, *selection], root, library, delay_ms=300)
+            candidate, rows = run(binary, [*args, *selection], root, library, gate=True,
+                                  helper_delay_ms=500 if selection == race else 0)
             assert exact.returncode == candidate.returncode == expected, (exact, candidate)
             winners = [row for row in rows if row.get("event") == "parent_winner"]
             assert len(winners) == 1 and winners[0]["effective_backend"] == "obligation", rows
@@ -195,7 +197,7 @@ def main() -> None:
             ("G (i <-> o)", "unreal:formula:backward", 0),
             ("G (X i <-> o)", "real:small:backward", 1)]:
         result, rows = run(binary, ["-f", formula, "-i", "i", "-o", "o",
-                                   "--arms", arms + "," + arm], root, library, delay_ms=300)
+                                   "--arms", arms + "," + arm], root, library, gate=True)
         assert result.returncode == expected, result
         assert [row for row in rows if row.get("event") == "parent_winner"][0][
             "effective_backend"] == "obligation", rows
@@ -321,14 +323,14 @@ def main() -> None:
     for fault, outcome in [("null", "error"), ("empty", "error"), ("exception", "error"),
                            ("allocation", "exhausted"), ("signal", "error"),
                            ("unreal-exit", "error"), ("real-exit", "error")]:
-        result, rows = run(binary, [*source, *real], root, library, fault, 300)
+        result, rows = run(binary, [*source, *real], root, library, fault, gate=True)
         assert result.returncode == 0, result
         finish = helper_rows(rows, "completion")
         assert len(finish) == 1 and finish[0]["outcome"] == outcome, (fault, rows)
         assert all(row.get("effective_backend") != "obligation"
                    for row in rows if row.get("event") == "parent_winner"), rows
 
-    result, rows = run(binary, [*source, *real], root, library, "stall", 300)
+    result, rows = run(binary, [*source, *real], root, library, "stall", gate=True)
     assert result.returncode == 0, result
     finish = helper_rows(rows, "completion")
     assert len(finish) == 1 and finish[0]["outcome"] == "cancelled", rows
@@ -338,7 +340,7 @@ def main() -> None:
     finish = helper_rows(rows, "completion")
     assert len(finish) == 1 and finish[0]["outcome"] == "cancelled", rows
     assert finish[0]["reason"] == "winner_cancelled" and finish[0]["wall_ns"] > 5_000_000_000
-    result, rows = run(binary, [*source, *real], root, library, "memory", 300,
+    result, rows = run(binary, [*source, *real], root, library, "memory", gate=True,
                        rss_limit=True)
     assert result.returncode == 0, result
     finish = helper_rows(rows, "completion")
@@ -360,11 +362,11 @@ def main() -> None:
         assert not helper_rows(rows, "eligibility"), rows
         assert not helper_rows(rows, "start"), rows
         assert len([row for row in rows if row.get("event") == "worker_spawn"]) == 1
-        # Delay only the ordinary exporter so the helper's success/failure is observed.
+        # Gate the ordinary exporter until the helper succeeds, declines or stalls.
         synth_source = ["-f", "o & G o", "-i", "i", "-o", "o"]
         for selection in (alone, real):
             result, rows = run(binary, [*synth_source, *selection, "-s", str(controller)],
-                               root, library, delay_ms=300)
+                               root, library, gate=True)
             assert result.returncode == 0 and controller.read_text().startswith("aag"), result
             winner = next(row for row in rows if row.get("event") == "parent_winner")
             assert winner["effective_backend"] == "obligation", rows
@@ -384,7 +386,8 @@ def main() -> None:
                                        (["--arms", "real:small:backward"], "backward")):
                 result, rows = run(binary, ["-f", "G o", *inputs, "-o", "o", *selection,
                                            "-s", str(controller)],
-                                   root, library, "writer-contract", delay_ms=300)
+                                   root, library, "writer-contract",
+                                   gate=backend == "obligation")
                 assert result.returncode == 0, result
                 winner = next(row for row in rows if row.get("event") == "parent_winner")
                 assert winner["effective_backend"] == backend, rows
@@ -397,7 +400,7 @@ def main() -> None:
         link = Path(directory) / "linked.aag"
         link.symlink_to(target)
         result, rows = run(binary, [*synth_source, *alone, "-s", str(link)],
-                           root, library, delay_ms=300)
+                           root, library, gate=True)
         assert result.returncode == 0 and link.is_symlink(), result
         assert next(row for row in rows if row.get("event") == "parent_winner")[
             "effective_backend"] == "obligation", rows
@@ -408,7 +411,7 @@ def main() -> None:
         fifo = Path(directory) / "controller.fifo"
         os.mkfifo(fifo)
         result, rows = run(binary, [*synth_source, *alone, "-s", str(fifo)],
-                           root, library, delay_ms=300, outer_seconds=.2,
+                           root, library, gate=True, outer_seconds=.2,
                            fifo=fifo, reader_delay=.4)
         assert result.returncode == 2 and "REALIZABLE" not in result.stdout, result
         assert helper_rows(rows, "completion")[0]["outcome"] == "cancelled", rows
@@ -417,7 +420,7 @@ def main() -> None:
         # trusted results, and the offline oracle detects their bad controllers.
         for fault in ("wrong-strategy", "corrupt-controller", "check-exception"):
             result, rows = run(binary, [*synth_source, *alone, "-s", str(controller)],
-                               root, library, fault, delay_ms=300)
+                               root, library, fault, gate=True)
             assert result.returncode == 0, (fault, result)
             assert next(row for row in rows if row.get("event") == "parent_winner")[
                 "effective_backend"] == "obligation", rows
@@ -429,7 +432,7 @@ def main() -> None:
         for fault in ("export-open", "export-exception", "export-stream", "null", "exception"):
             controller.unlink(missing_ok=True)
             result, rows = run(binary, [*synth_source, *alone, "-s", str(controller)],
-                               root, library, fault, delay_ms=300)
+                               root, library, fault, gate=True)
             assert result.returncode == 0 and controller.exists(), (fault, result)
             finish = helper_rows(rows, "completion")
             assert finish[0]["outcome"] == "error" and not finish[0]["independent_checked"], rows
@@ -450,7 +453,7 @@ def main() -> None:
         verify_controller()
         for fault in ("stall", "export-stall"):
             result, rows = run(binary, [*synth_source, *alone, "-s", str(controller)],
-                               root, library, fault, delay_ms=300)
+                               root, library, fault, gate=True)
             assert result.returncode == 0, result
             finish = helper_rows(rows, "completion")
             assert finish[0]["outcome"] == "cancelled" and finish[0]["reason"] == "winner_cancelled"
@@ -467,7 +470,7 @@ def main() -> None:
         # Ineligible and losing synthesis inputs use the existing route, even arm-alone.
         for formula, expected in (("G F (i <-> o)", 0), ("G i", 1)):
             result, rows = run(binary, ["-f", formula, "-i", "i", "-o", "o", *alone,
-                                       "-s", str(controller)], root, library, delay_ms=300)
+                                       "-s", str(controller)], root, library, gate=True)
             assert result.returncode == expected, result
             assert next(row for row in rows if row.get("event") == "parent_winner")[
                 "effective_backend"] != "obligation", rows
@@ -487,7 +490,7 @@ def main() -> None:
 MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ G (i <-> o); }} }}
 ''')
                 exact, _ = run(binary, ["-T", str(tlsf), *pair], root, library)
-                result, rows = run(binary, ["-T", str(tlsf), *race], root, library, delay_ms=300)
+                result, rows = run(binary, ["-T", str(tlsf), *race], root, library, gate=True)
                 assert exact.returncode == result.returncode == expected, (exact, result)
                 assert helper_rows(rows, "completion")[0]["outcome"] == (
                     "completed_REAL" if expected == 0 else "completed_UNREAL"), rows
@@ -499,7 +502,7 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }}
        ASSUMPTIONS {{ G i; }} GUARANTEES {{ G (i <-> o); }} }}
 ''')
                 exact, _ = run(binary, ["-T", str(tlsf), *pair], root, library)
-                result, rows = run(binary, ["-T", str(tlsf), *race], root, library, delay_ms=300)
+                result, rows = run(binary, ["-T", str(tlsf), *race], root, library, gate=True)
                 assert exact.returncode in (0, 1) and result.returncode == exact.returncode, (
                     exact, result)
                 finish = helper_rows(rows, "completion")

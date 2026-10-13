@@ -20,11 +20,26 @@ namespace {
   bool obligation_entered = false;
   bool controller_opened = false;
   unsigned obligation_calls = 0;
-  void delay () {
-    if (const char* value = std::getenv ("ACACIA_TEST_OBLIGATION_LEGACY_DELAY_MS")) {
+  void delay (const char* name) {
+    if (const char* value = std::getenv (name)) {
       const long ms = std::strtol (value, nullptr, 10);
       timespec wait {ms / 1000, (ms % 1000) * 1000000};
-      nanosleep (&wait, nullptr);
+      while (nanosleep (&wait, &wait) != 0 && errno == EINTR) {}
+    }
+  }
+  void wait_legacy () {
+    if (const char* value = std::getenv ("ACACIA_TEST_OBLIGATION_LEGACY_GATE_FD")) {
+      char byte;
+      const int descriptor = int (std::strtol (value, nullptr, 10));
+      while (read (descriptor, &byte, 1) < 0 && errno == EINTR) {}
+    }
+    else
+      delay ("ACACIA_TEST_OBLIGATION_LEGACY_DELAY_MS");
+  }
+  void stall_ready () {
+    if (const char* value = std::getenv ("ACACIA_TEST_OBLIGATION_STALL_READY_FD")) {
+      const int descriptor = int (std::strtol (value, nullptr, 10));
+      while (write (descriptor, "x", 1) < 0 && errno == EINTR) {}
     }
   }
 }
@@ -33,6 +48,7 @@ namespace spot {
                                    const std::vector<std::string>& outvars, bool realizability,
                                    bool simplify_terms, int debug) {
     obligation_entered = true;
+    delay ("ACACIA_TEST_OBLIGATION_HELPER_DELAY_MS");
     ++obligation_calls;
     const char* mode = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
     const std::string_view fault = mode ? mode : "";
@@ -66,9 +82,11 @@ namespace spot {
       while (true)
         pause ();
     }
-    if (fault == "stall")
+    if (fault == "stall") {
+      stall_ready ();
       while (true)
         pause ();
+    }
     using function = decltype (&obligation_synthesis);
     auto original = reinterpret_cast<function> (dlsym (
         RTLD_NEXT,
@@ -81,13 +99,13 @@ namespace spot {
   }
 
   std::ostream& print_aiger (std::ostream& os, const_aig_ptr circuit) {
-    if (!obligation_entered)
-      delay ();
     const char* mode = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
     const std::string_view fault = mode ? mode : "";
-    if (obligation_entered && fault == "export-stall")
+    if (obligation_entered && fault == "export-stall") {
+      stall_ready ();
       while (true)
         pause ();
+    }
     if (obligation_entered && fault == "export-stream") {
       os.setstate (std::ios::badbit);
       return os;
@@ -128,7 +146,7 @@ namespace spot {
 
   mealy_like try_create_direct_strategy (formula f, const std::vector<std::string>& outputs,
                                          synthesis_info& info, bool want_strategy) {
-    delay ();
+    wait_legacy ();
     using function = decltype (&try_create_direct_strategy);
     auto original = reinterpret_cast<function> (
         dlsym (RTLD_NEXT,
@@ -176,6 +194,9 @@ namespace {
   FILE* controller_fopen (const char* path, const char* mode, const char* symbol) {
     const char* destination = std::getenv ("ACACIA_TEST_OBLIGATION_OUTPUT");
     const bool controller = destination && std::strcmp (path, destination) == 0;
+    // Gate before ofstream opens/truncates the destination, not during printing.
+    if (controller && !obligation_entered)
+      wait_legacy ();
     const char* fault = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
     if (controller && obligation_entered && fault && std::strcmp (fault, "export-open") == 0) {
       errno = EIO;

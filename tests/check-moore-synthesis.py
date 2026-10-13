@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 
 from moore_aiger_oracle import Aiger, check, delayed_table_monitor
+from obligation_test_support import LegacyGate
 
 
 def boolean_formula(inputs, table):
@@ -110,12 +111,30 @@ def run(binary, directory, exhaustive=False, extra=(), require_obligation=False)
         spec.write_text(text)
         command = [str(binary), "-T", str(spec), "-s", str(aig), *extra]
         env = os.environ.copy()
+        phases = directory
         if require_obligation:
             phases = directory / f"case-{index}-phases"
             phases.mkdir()
             env["ACACIA_PHASE_RECORDS"] = str(phases)
+            env["ACACIA_TEST_OBLIGATION_OUTPUT"] = str(aig)
+            # Exercise a helper slower than the former 300 ms race-steering delay.
+            env["ACACIA_TEST_OBLIGATION_HELPER_DELAY_MS"] = "500" if index == 0 else "0"
         try:
-            result = subprocess.run(command, capture_output=True, text=True, timeout=20, env=env)
+            with LegacyGate(env, require_obligation) as legacy:
+                with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                      text=True, env=env, pass_fds=legacy.descriptors) as process:
+                    try:
+                        stdout, stderr = legacy.communicate(process, phases, timeout=20)
+                    except subprocess.TimeoutExpired:
+                        process.terminate()
+                        try:
+                            process.communicate(timeout=3)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.communicate()
+                        raise
+                    result = subprocess.CompletedProcess(
+                        command, process.returncode, stdout, stderr)
         except subprocess.TimeoutExpired:
             rows.append({"case": description, "error": "synthesis timeout"})
             continue

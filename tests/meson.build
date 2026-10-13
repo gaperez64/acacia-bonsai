@@ -1049,8 +1049,7 @@ if host_machine.system () == 'linux'
           args : [files ('check-moore-synthesis.py'), ab_exe,
                   '--ab-option=--arms', '--ab-option=both:obligation:spot',
                   '--require-obligation'],
-          env : ['LD_PRELOAD=' + obligation_helper_faults.full_path (),
-                 'ACACIA_TEST_OBLIGATION_LEGACY_DELAY_MS=300'],
+          env : ['LD_PRELOAD=' + obligation_helper_faults.full_path ()],
           suite : ['unit', 'obligation', 'synthesis'], timeout : 120,
           depends : [ab_exe, obligation_helper_faults])
   endif
