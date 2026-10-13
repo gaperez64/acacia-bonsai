@@ -1,0 +1,52 @@
+[
+  {
+    "fixture": "native-censored/746375.jsonl",
+    "source": "/home/gperez/GIT-repos/acacia-bonsai/build_scratch/issues/restore/postmem20261012-closing/build_scratch/cov/wt-pm-p0/_bm-logs.pm-final/17/phase-records/candidate/17/01.ltl-0/746375.jsonl",
+    "sha256": "5792667a55c37989a12151a060868c3bde50aac6f94e958d15f2db8a4e4f7f3b"
+  },
+  {
+    "fixture": "native-censored/746376.jsonl",
+    "source": "/home/gperez/GIT-repos/acacia-bonsai/build_scratch/issues/restore/postmem20261012-closing/build_scratch/cov/wt-pm-p0/_bm-logs.pm-final/17/phase-records/candidate/17/01.ltl-0/746376.jsonl",
+    "sha256": "68dacc9c8912c6152802bdc2d29adefa71a2bb749761acd806b0aeb9ab324877"
+  },
+  {
+    "fixture": "native-censored/746381.jsonl",
+    "source": "/home/gperez/GIT-repos/acacia-bonsai/build_scratch/issues/restore/postmem20261012-closing/build_scratch/cov/wt-pm-p0/_bm-logs.pm-final/17/phase-records/candidate/17/01.ltl-0/746381.jsonl",
+    "sha256": "520b2f6134c0402e2339c5c06347422cc3499de7259dfb0b48c6705e7b2e9a70"
+  },
+  {
+    "fixture": "obligation/747510.jsonl",
+    "source": "/home/gperez/GIT-repos/acacia-bonsai/build_scratch/issues/restore/postmem20261012-closing/build_scratch/cov/wt-pm-p0/_bm-logs.pm-final/17/phase-records/candidate/17/Automata.ltl-31/747510.jsonl",
+    "sha256": "4fe46a84399da3947a81583e593accdea0a6dd094e5643c34f908d56f3f130d8"
+  },
+  {
+    "fixture": "obligation/747511.jsonl",
+    "source": "/home/gperez/GIT-repos/acacia-bonsai/build_scratch/issues/restore/postmem20261012-closing/build_scratch/cov/wt-pm-p0/_bm-logs.pm-final/17/phase-records/candidate/17/Automata.ltl-31/747511.jsonl",
+    "sha256": "398d89a7628460a1c0ec8762bdb17060d67a6f4611cfab7583d2b1fcd6eca8a8"
+  },
+  {
+    "fixture": "obligation/747516.jsonl",
+    "source": "/home/gperez/GIT-repos/acacia-bonsai/build_scratch/issues/restore/postmem20261012-closing/build_scratch/cov/wt-pm-p0/_bm-logs.pm-final/17/phase-records/candidate/17/Automata.ltl-31/747516.jsonl",
+    "sha256": "cae5c12b7c858dc01d02ceb14dfdc274e64b10946d168820b0139c9dbf6daab2"
+  },
+  {
+    "fixture": "obligation/747517.jsonl",
+    "source": "/home/gperez/GIT-repos/acacia-bonsai/build_scratch/issues/restore/postmem20261012-closing/build_scratch/cov/wt-pm-p0/_bm-logs.pm-final/17/phase-records/candidate/17/Automata.ltl-31/747517.jsonl",
+    "sha256": "a85240a91bfad758133d9fc31e2dbb55e7bda0dbf0df8f0df8d63ff6b15faafd"
+  },
+  {
+    "fixture": "native-check/747580.jsonl",
+    "source": "/home/gperez/GIT-repos/acacia-bonsai/build_scratch/issues/restore/postmem20261012-closing/build_scratch/cov/wt-pm-p0/_bm-logs.pm-final/17/phase-records/candidate/17/Button.ltl-34/747580.jsonl",
+    "sha256": "86548fb12af269fe967eeab17e089b008ba0dac4356fc7fe582ec9f2aa34069a"
+  },
+  {
+    "fixture": "native-check/747581.jsonl",
+    "source": "/home/gperez/GIT-repos/acacia-bonsai/build_scratch/issues/restore/postmem20261012-closing/build_scratch/cov/wt-pm-p0/_bm-logs.pm-final/17/phase-records/candidate/17/Button.ltl-34/747581.jsonl",
+    "sha256": "2f74e3c18f7ac347178b1a533798a1cf2831b7a1a4dc233f76d3e852f7aadc3c"
+  },
+  {
+    "fixture": "native-check/747586.jsonl",
+    "source": "/home/gperez/GIT-repos/acacia-bonsai/build_scratch/issues/restore/postmem20261012-closing/build_scratch/cov/wt-pm-p0/_bm-logs.pm-final/17/phase-records/candidate/17/Button.ltl-34/747586.jsonl",
+    "sha256": "3d1eedfa618b963ac231bc80ed59eec30b1e2447ce15d970e0ab1c61ed06c750"
+  }
+]

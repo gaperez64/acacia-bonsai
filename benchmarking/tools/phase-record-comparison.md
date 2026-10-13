@@ -50,6 +50,7 @@ Only these `stage_metric` records are excluded as timing measurements:
 | Metric key | Reason |
 | --- | --- |
 | `bdd_gc_wall_ns` | Time spent in BDD garbage collection; `bdd_gc_count` remains compared. |
+| `first_useful_action_query_ns`, `query_snapshot_ns` | Absolute dense query observation clocks. Query counts and rank/support values remain compared. |
 | `first_useful_rank_query_ms` | Elapsed time to the first useful rank query. |
 | `row_generation_ms` | Row generation duration. |
 | `row_started_clock_ms` | Row generation start clock. |
