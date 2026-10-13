@@ -185,6 +185,17 @@ namespace {
     const char* value = std::getenv ("ACACIA_TEST_CHILD_MODES");
     if (!value)
       return;
+    // A single pipe write survives fast exit/reaping and records the actual group.
+    char report[128];
+    const int length = snprintf (report, sizeof report,
+                                 "{\"stage\":\"child_group\",\"pid\":%ld,\"pgid\":%ld}\n",
+                                 long (getpid ()), long (getpgrp ()));
+    ssize_t written;
+    do {
+      written = write (STDERR_FILENO, report, size_t (length));
+    } while (written < 0 && errno == EINTR);
+    if (written != length)
+      _exit (EXIT_CODE_ERROR);
     std::string_view mode {value};
     for (sig_atomic_t i = 0; i < index; ++i) {
       const auto comma = mode.find (',');
