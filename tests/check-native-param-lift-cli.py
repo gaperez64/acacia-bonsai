@@ -73,7 +73,8 @@ def check_deadline_reap(binary: Path, source_path: Path, spot_hook: Path) -> Non
     read_fd, write_fd = os.pipe()
     env["ACACIA_NATIVE_TEST_SPOT_FD"] = str(write_fd)
     try:
-        process = subprocess.Popen([str(binary), "-T", str(source_path), "--arms", ARM],
+        process = subprocess.Popen([str(binary),
+                                    "-T", str(source_path), "--arms", ARM],
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    text=True, env=env, start_new_session=True,
                                    pass_fds=(write_fd,))

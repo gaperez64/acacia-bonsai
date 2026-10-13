@@ -7,6 +7,12 @@
 #include "native_support.hh"
 #include "phase_records.hh"
 #include "solver/solver_invoker.hh"
+#include "solver/obligation_helper.hh"
+#include "solver/realizability_simplify.hh"
+#include <spot/tl/parse.hh>
+#ifdef __linux__
+# include <sys/prctl.h>
+#endif
 #include <string_view>
 #include <unordered_map>
 
@@ -43,8 +49,36 @@ namespace {
   pid_t g_main_pid = 0;
   acacia::worker_record* g_worker_records = nullptr;
   bool g_worker_records_shared = false;
+  acacia::obligation::control* g_obligation = nullptr;
+  sig_atomic_t g_eligibility_source = -1, g_helper_index = -1;
+  bool g_eligibility_observed = false;
+  uint64_t g_helper_rss_share = 0;
+  acacia::obligation::outcome g_helper_forced = acacia::obligation::outcome::pending;
+  const char* g_helper_stop_reason = "none";
 
   void record_parent_terminal (sig_atomic_t index, int status, const char* reason, pid_t pid) {
+    if (g_obligation && index == g_eligibility_source &&
+        g_obligation->eligible.load (std::memory_order_acquire) ==
+            acacia::obligation::eligibility::pending)
+      g_obligation->eligible.store (acacia::obligation::eligibility::error,
+                                     std::memory_order_release);
+    if (g_obligation && index == g_helper_index) {
+      using acacia::obligation::outcome;
+      auto value = g_obligation->result.load (std::memory_order_acquire);
+      const char* helper_reason = reason;
+      if (g_helper_forced != outcome::pending) {
+        value = g_helper_forced;
+        helper_reason = g_helper_stop_reason;
+      }
+      else if (value == outcome::pending)
+        value = std::strcmp (reason, "signal") == 0 || std::strcmp (reason, "exit") == 0
+                    ? outcome::error : outcome::cancelled;
+      if (g_helper_forced != outcome::pending ||
+          g_obligation->result.load (std::memory_order_acquire) == outcome::pending)
+        acacia::obligation::record ("completion", value, helper_reason, g_obligation->start_ns,
+                                    false, int (index), pid);
+      g_obligation->result.store (value, std::memory_order_release);
+    }
     if (!g_worker_records)
       return;
     auto& record = g_worker_records[index];
@@ -179,11 +213,97 @@ namespace {
   }
 #endif
 
+  spot::formula helper_objective (const arg_parse_result& args) {
+    std::string formula = args.formula;
+    auto inputs = args.inputs, outputs = args.outputs;
+#if ACACIA_ENABLE_TLSF_FRONTEND
+    if (args.tlsf_specified && !args.formula_specified) {
+      auto spec = acacia::tlsf_frontend::parse (args.tlsf_source);
+      formula = std::move (spec.formula);
+      inputs = std::move (spec.inputs);
+      outputs = std::move (spec.outputs);
+    }
+#endif
+    validate_ltl_partition (inputs, outputs);
+    auto parsed = spot::parse_infix_psl (formula, spot::default_environment::instance (),
+                                          false, false);
+    if (!parsed.f || !parsed.errors.empty ())
+      throw std::runtime_error ("unable to parse original obligation objective");
+    auto objective = parsed.f;
+    if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER)
+      acacia::realizability::apply_simplifier (objective, inputs);
+    return objective;
+  }
+
+  [[noreturn]] void dispatch_helper (const arg_parse_result& args) {
+    using acacia::obligation::outcome;
+    acacia::worker_route ("original_game", "obligation", "unknown");
+    acacia::worker_stage ("obligation_preprocessing");
+    acacia::obligation::result result;
+    try {
+      if (args.synth_fname)
+        result = {outcome::inapplicable, "synthesis_requested"};
+      else if (!acacia::obligation::limit_address_space ())
+        result = {outcome::error, "address_space_limit"};
+      else {
+        auto inputs = args.inputs, outputs = args.outputs;
+#if ACACIA_ENABLE_TLSF_FRONTEND
+        if (args.tlsf_specified && !args.formula_specified) {
+          auto spec = acacia::tlsf_frontend::parse (args.tlsf_source);
+          inputs = std::move (spec.inputs);
+          outputs = std::move (spec.outputs);
+        }
+#endif
+        // The linked frontend already lowered Moore/strict TLSF to effective
+        // Mealy. Solve that positive normalized objective once, without a swap
+        // or another X shift. Raw API Moore order is exercised in unit tests.
+        const auto objective = helper_objective (args);
+        if (g_obligation->eligible.load (std::memory_order_acquire) ==
+            acacia::obligation::eligibility::pending)
+          acacia::obligation::publish_eligibility (g_obligation, objective);
+        if (!acacia::obligation::eligible (objective))
+          result = {outcome::inapplicable, "non_obligation"};
+        else {
+          acacia::worker_stage ("obligation_synthesis");
+          result = acacia::obligation::solve (objective, inputs, outputs);
+        }
+      }
+    } catch (const std::bad_alloc&) {
+      result = {outcome::exhausted, "allocation"};
+    } catch (...) {
+      result = {outcome::error, "preprocessing_exception"};
+    }
+    acacia::obligation::record ("completion", result.value, result.reason,
+                                g_obligation->start_ns, result.same_library_checked);
+    const int code = acacia::obligation::exit_code (result.value);
+    acacia::worker_route ("original_game", "obligation",
+                          result.value == outcome::real     ? "REAL"
+                          : result.value == outcome::unreal ? "UNREAL"
+                                                            : "unknown");
+    acacia::worker_terminal (code, result.reason);
+    g_obligation->result.store (result.value, std::memory_order_release);
+    _exit (code);
+  }
+
   [[noreturn]] void dispatch_child (const portfolio_arm& arm, const arg_parse_result& arg_values,
-                                    uint64_t deadline_mono_ns) {
+                                    uint64_t deadline_mono_ns,
+                                    acacia::obligation::control* eligibility_channel) {
+    if (arm.kind == portfolio_arm_kind::obligation)
+      dispatch_helper (arg_values);
     if (arm.kind != portfolio_arm_kind::legacy) {
 #if ACACIA_NATIVE_ARMS
       try {
+        // A native-only portfolio has no legacy normalization boundary. Use one
+        // existing child to prepare eligibility, while its siblings already run.
+        if (eligibility_channel) {
+          try {
+            acacia::obligation::publish_eligibility (eligibility_channel,
+                                                    helper_objective (arg_values));
+          } catch (...) {
+            eligibility_channel->eligible.store (acacia::obligation::eligibility::error,
+                                                   std::memory_order_release);
+          }
+        }
 # ifdef ACACIA_NATIVE_TEST_HOOKS
         acacia::native_attribution_test_exception ();
 # endif
@@ -257,7 +377,8 @@ namespace {
                                   : arg_values.synth_fname,
                               arg_values.metadata, provider, arg_values.candidate,
                               arg_values.equivariance, deadline_mono_ns, arg_values.tlsf_sha256,
-                              arg_values.weakening, arg_values.weakening_allowances);
+                              arg_values.weakening, arg_values.weakening_allowances,
+                              eligibility_channel);
     verb_do (1, vout << "returning " << res << "\n");
 
     if (!res && acacia::active_worker_record () &&
@@ -273,7 +394,8 @@ namespace {
   }
 
   void launch_child (const portfolio_arm& arm, const arg_parse_result& arg_values,
-                     uint64_t deadline_mono_ns, const sigset_t& block_set) {
+                     uint64_t deadline_mono_ns, const sigset_t& block_set,
+                     acacia::obligation::control* eligibility_channel = nullptr) {
     // Publish the child PID before a termination handler can run.
     sigset_t old_mask;
     sigprocmask (SIG_BLOCK, &block_set, &old_mask);
@@ -283,7 +405,9 @@ namespace {
       record.index = unsigned (g_child_count);
       record.r_prepass = arg_values.r_prepass;
       record.equivariance = arg_values.equivariance;
-      const char* backend = arm.legacy ? acacia::game_backend_name (arm.legacy->backend) : "oxidd";
+      const char* backend = arm.legacy ? acacia::game_backend_name (arm.legacy->backend)
+                            : arm.kind == portfolio_arm_kind::obligation ? "obligation"
+                                                                         : "oxidd";
       acacia::worker_record_text (record.requested_backend, backend);
       acacia::worker_record_text (record.effective_backend, backend);
       acacia::worker_record_text (record.original_polarity, arm.both     ? "both"
@@ -307,6 +431,13 @@ namespace {
           fork_start.wall ? acacia::phase_stamp {fork_start.wall,
                                                  acacia::phase_clock (CLOCK_PROCESS_CPUTIME_ID)}
                           : acacia::phase_stamp {};
+#ifdef __linux__
+      if (arm.kind == portfolio_arm_kind::obligation) {
+        // Also contain the helper if the parent is killed without running its handler.
+        if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != g_main_pid)
+          _exit (EXIT_CODE_UNKNOWN);
+      }
+#endif
       if (setpgid (0, 0) != 0)
         _exit (EXIT_CODE_ERROR);
       sigprocmask (SIG_SETMASK, &old_mask, nullptr);
@@ -317,12 +448,17 @@ namespace {
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
       test_child_behavior (g_child_count, deadline_mono_ns);
 #endif
-      dispatch_child (arm, arg_values, deadline_mono_ns);
+      dispatch_child (arm, arg_values, deadline_mono_ns, eligibility_channel);
     }
     else {
       if (pid > 0) {
         // Also close the fork-to-setpgid window in the parent.
         setpgid (pid, pid);
+        if (arm.kind == portfolio_arm_kind::obligation)
+          acacia::obligation::record (
+              "start", acacia::obligation::outcome::pending,
+              eligibility_channel ? "preparation" : "eligible", g_obligation->start_ns,
+              false, int (g_child_count), pid);
         if (g_worker_records) {
           // Use the pre-fork context; the child owns the live snapshot.
           auto spawned = parent_context;
@@ -380,12 +516,68 @@ namespace {
         stop_children ("interrupted");
         error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
       }
-      launch_child (arm, arg_values, deadline_mono_ns, block_set);
+      launch_child (arm, arg_values, deadline_mono_ns, block_set,
+                    g_obligation && g_child_count == g_eligibility_source ? g_obligation
+                                                                         : nullptr);
+    }
+
+    const auto launch_helper = [&] (bool prepare) {
+      g_helper_index = g_child_count;
+      g_helper_rss_share = acacia::obligation::rss_share (size_t (g_child_count) + 1);
+      g_obligation->start_ns = monotonic_ns ();
+      const auto helper = portfolio_arm::native (false, portfolio_arm_kind::obligation, true);
+      verb_do (1, vout << "Starting additional obligation decision helper\n" << std::flush);
+      launch_child (helper, arg_values, deadline_mono_ns, block_set,
+                    prepare ? g_obligation : nullptr);
+      if (g_child_count == g_helper_index) {
+        acacia::obligation::record ("completion", acacia::obligation::outcome::error,
+                                    "fork_failed", g_obligation->start_ns);
+        g_helper_index = -1;
+      }
+    };
+    if (g_obligation && g_child_count == 0) {
+      validate_ltl_partition (arg_values.inputs, arg_values.outputs);
+      // With this arm alone, its existing limits cover preparation as well as solving.
+      if (!g_interrupted && (!deadline_mono_ns || monotonic_ns () < deadline_mono_ns))
+        launch_helper (true);
     }
 
     int status;
     bool child_reported_error = false;
     while (true) {  // wait only for solver arms; the record writer is separate
+      if (g_obligation && !g_eligibility_observed) {
+        using acacia::obligation::eligibility;
+        const auto eligible = g_obligation->eligible.load (std::memory_order_acquire);
+        if (eligible != eligibility::pending) {
+          g_eligibility_observed = true;
+          if (eligible != eligibility::inapplicable || arg_values.obligation_explicit)
+            acacia::obligation::record (
+                "eligibility",
+                eligible == eligibility::eligible ? acacia::obligation::outcome::pending
+                               : eligible == eligibility::inapplicable
+                                   ? acacia::obligation::outcome::inapplicable
+                                   : acacia::obligation::outcome::error,
+                eligible == eligibility::eligible ? "eligible"
+                : eligible == eligibility::inapplicable ? "non_obligation"
+                                                        : "preprocessing_failed");
+          if (eligible == eligibility::eligible && g_helper_index < 0 && !g_interrupted &&
+              (!deadline_mono_ns || monotonic_ns () < deadline_mono_ns))
+            launch_helper (false);
+        }
+      }
+      if (g_helper_index >= 0 && g_child_pids[g_helper_index] > 0 &&
+          g_helper_forced == acacia::obligation::outcome::pending) {
+        const pid_t helper = g_child_pids[g_helper_index];
+        const bool elapsed = monotonic_ns () - g_obligation->start_ns >=
+                             acacia::obligation::allowance_ns;
+        const bool memory = acacia::obligation::resident_bytes (helper) > g_helper_rss_share;
+        if (elapsed || memory) {
+          g_helper_forced = acacia::obligation::outcome::exhausted;
+          g_helper_stop_reason = elapsed ? "wall_allowance" : "rss_share";
+          kill (-helper, SIGKILL);
+          kill (helper, SIGKILL);
+        }
+      }
       bool live_arm = false;
       for (sig_atomic_t i = 0; i < g_child_count; ++i)
         if (g_child_pids[i] > 0) {
@@ -469,6 +661,11 @@ namespace {
         continue;
       }
       int ret = WEXITSTATUS (status);
+      if (g_obligation && reaped_index == g_helper_index &&
+          (g_helper_forced != acacia::obligation::outcome::pending ||
+           acacia::obligation::exit_code (
+               g_obligation->result.load (std::memory_order_acquire)) != ret))
+        ret = EXIT_CODE_UNKNOWN;
       if (ret == EXIT_CODE_ERROR) {
         child_reported_error = true;
         continue;
@@ -515,16 +712,43 @@ int main (int argc, char** argv) {
   utils::verbose = arg_values.verbose_level;
 
   assert (arg_values.arms.has_value ());
-  g_child_pids = new pid_t[arg_values.arms->size ()];
+  // Keep optional membership out of ordinary arms' construction/thread/RSS budgets.
+  const bool helper_requested = std::erase_if (*arg_values.arms, [] (const auto& arm) {
+    return arm.kind == portfolio_arm_kind::obligation;
+  }) != 0;
+  const size_t worker_slots = arg_values.arms->size () + size_t (helper_requested);
+  g_child_pids = new pid_t[worker_slots];
+  if (helper_requested) {
+    void* shared = mmap (nullptr, sizeof (acacia::obligation::control), PROT_READ | PROT_WRITE,
+                         MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    if (shared != MAP_FAILED) {
+      g_obligation = new (shared) acacia::obligation::control;
+      sig_atomic_t index = 0;
+      for (const auto& arm : *arg_values.arms) {
+        if (arm.kind == portfolio_arm_kind::legacy) {
+          if (!arg_values.legacy_available)
+            continue;
+          g_eligibility_source = index;
+          break;
+        }
+        ++index;
+      }
+      if (g_eligibility_source < 0)
+        g_eligibility_source = 0;
+    }
+    else
+      acacia::obligation::record ("eligibility", acacia::obligation::outcome::error,
+                                  "shared_allocation");
+  }
   g_main_pid = getpid ();
   if (acacia::phase_records_enabled ()) {
-    const size_t bytes = arg_values.arms->size () * sizeof (acacia::worker_record);
+    const size_t bytes = worker_slots * sizeof (acacia::worker_record);
     void* shared =
         mmap (nullptr, bytes, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     g_worker_records_shared = shared != MAP_FAILED;
     g_worker_records = g_worker_records_shared
                            ? static_cast<acacia::worker_record*> (shared)
-                           : new (std::nothrow) acacia::worker_record[arg_values.arms->size ()];
+                           : new (std::nothrow) acacia::worker_record[worker_slots];
     if (!g_worker_records) {
       constexpr char unavailable[] =
           "{\"event\":\"attribution_unavailable\",\"reason\":\"allocation\"}\n";
@@ -552,9 +776,13 @@ int main (int argc, char** argv) {
   try {
     return run_portfolio (arg_values, deadline_mono_ns, block_set);
   } catch (const std::exception& e) {
+    if (g_obligation && getpid () == g_main_pid)
+      stop_children ("exception");
     acacia::worker_terminal (EXIT_CODE_ERROR, "exception");
     error (EXIT_CODE_ERROR, "Exception caught: %s\n", e.what ());
   } catch (...) {
+    if (g_obligation && getpid () == g_main_pid)
+      stop_children ("exception");
     acacia::worker_terminal (EXIT_CODE_ERROR, "exception");
     error (EXIT_CODE_ERROR, "Unknown exception\n");
   }

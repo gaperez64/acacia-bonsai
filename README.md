@@ -42,8 +42,21 @@ a wrapper without arguments to list the ones it accepts. The CLI launcher reads
 `config/docker-default.list`, which tests keep aligned with the registry group;
 Python is only needed when compiling configurations. The GR(1) pre-pass is a
 decision arm: LTL `-f` input and synthesis `-s` use the regular solver arms.
-The previous four-arm sparse formula configuration remains available in the
-group as the non-native fallback.
+The sparse formula configuration remains available in the group as the
+non-native fallback, with the Spot obligation arm alongside its four regular arms.
+
+`both:obligation:spot` belongs to the explicit default portfolios of the shipping
+presets that can run it. Membership comes from the compile-time registry and is
+recorded in the build's Meson options; historical defaults stay unchanged.
+It races one bounded decision worker when the original normalized objective is a syntactic obligation. Select
+it alone with `--arms both:obligation:spot`; the objective is then prepared in one
+supervised child, and an ineligible objective returns UNKNOWN without starting the
+helper. In a default portfolio an ineligible input starts no extra process.
+Explicit `--arms` lists run only the named arms. To use the original decision
+portfolio, select its arms explicitly or build a preset without the obligation
+arm. Synthesis (`-s`) keeps its existing route. The driver's screens and
+pending full-corpus admission are documented in
+[the obligation arm notes](benchmarking/coverage-first/obligation-helper.md).
 
 # Dependencies
 

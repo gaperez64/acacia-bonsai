@@ -28,6 +28,13 @@ Usage: $0 [config_name] [--tlsf] [acacia-bonsai arguments...]
                       cat spec.tlsf | docker run -i ... \\
                           /opt/acacia-bonsai/scripts/acacia-bonsai.sh --tlsf
 
+  --arms LIST       Run exactly the listed arms, including both:obligation:spot
+                    for a bounded syntactic-obligation decision worker. This arm
+                    starts only on eligible inputs. Default membership follows
+                    the selected build's registry portfolio. Omit the arm from
+                    an explicit list to use the original portfolio. Synthesis
+                    (-s) uses its existing route.
+
 Available configurations:
 EOF
     for c in "${CONFIGS[@]}"; do

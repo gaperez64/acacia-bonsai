@@ -37,7 +37,8 @@ def run(binary: Path, source: Path, arm: str, records: Path,
         env["ACACIA_NATIVE_TEST_LIFT_FAULT"] = fault
     else:
         env.pop("ACACIA_NATIVE_TEST_LIFT_FAULT", None)
-    process = subprocess.run([str(binary), "-T", str(source), "--arms", arm],
+    process = subprocess.run([str(binary),
+                              "-T", str(source), "--arms", arm],
                              capture_output=True, text=True, env=env, timeout=65)
     rows = [json.loads(line) for path in records.glob("*.jsonl")
             for line in path.read_text().splitlines()]
