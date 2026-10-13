@@ -86,8 +86,8 @@ def interrupted(binary: Path, source: Path, directory: Path, route: str,
     env["ACACIA_TEST_ATTRIBUTION_PAUSE"] = route
     env["MALLOC_PERTURB_"] = "0"
     env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + 8)
-    process = subprocess.Popen([str(binary), "-T", str(source), "--arms",
-                                "both:gr1-lift:oxidd"], env=env,
+    process = subprocess.Popen([str(binary),
+                                "-T", str(source), "--arms", "both:gr1-lift:oxidd"], env=env,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     end = time.monotonic() + 7.5
     selected = None
@@ -143,6 +143,7 @@ def complete_timeout_delivery(records: list[dict], expected_workers: int,
 
 def timeout_portfolio(binary: Path, directory: Path, signum: int | None = None,
                       *, diagnostics: bool = True) -> tuple[int, str]:
+    # These checks require the selected route to decide without a competing helper.
     env = os.environ.copy()
     env.pop("ACACIA_PHASE_RECORDS", None)
     env.pop("ACACIA_TEST_DELAY_AFTER_REAP", None)

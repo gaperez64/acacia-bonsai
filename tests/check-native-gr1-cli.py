@@ -165,8 +165,8 @@ def main() -> None:
             ("both:gr1-real-lift:backward", "requires the oxidd backend"),
             ("both:gr1-real-lift:oxidd:frozen-graph", "does not accept a provider"),
             ("real:gr1:backward", "requires the oxidd backend"),
-            ("both:param-lift:oxidd", "polarity both requires gr1, gr1-lift, or gr1-real-lift with oxidd"),
-            ("both:small:backward", "polarity both requires gr1, gr1-lift, or gr1-real-lift with oxidd"),
+            ("both:param-lift:oxidd", "polarity both requires an exact decision arm"),
+            ("both:small:backward", "polarity both requires an exact decision arm"),
             ("both:gr1:backward", "requires the oxidd backend"),
             ("both:gr1:oxidd:frozen-graph", "does not accept a provider"),
             ("both:gr1:oxidd,both:gr1:oxidd", "duplicate arm"),
@@ -278,7 +278,8 @@ def check_record_failures(worker: Path, binary: Path, real: Path,
             env["ACACIA_PHASE_RECORDS"] = str(record_dir)
         env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(deadline)
         before = time.monotonic()
-        proc = subprocess.run([str(binary), "-T", str(real), "--arms", arm],
+        proc = subprocess.run([str(binary),
+                               "-T", str(real), "--arms", arm],
                               capture_output=True, text=True, env=env, timeout=5)
         return proc.returncode, proc.stdout, time.monotonic() - before
     baseline_real = run_real(None, time.monotonic() + 2)
