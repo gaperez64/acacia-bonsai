@@ -540,6 +540,7 @@ def run_systemd_scope(
     cpu_quota: str | None = None,
     scope_env: Mapping[str, str] | None = None,
     oom_group: bool = False,
+    scratch_root: pathlib.Path | None = None,
 ) -> RunResult:
     """Run one workload in a fresh limited cgroup with an external observer.
 
@@ -578,7 +579,7 @@ def run_systemd_scope(
         scoped_cmd.append(f"--property=CPUQuota={cpu_quota}")
     if scope_env is not None:
         scoped_cmd.extend(f"--setenv={name}={value}" for name, value in sorted(scope_env.items()))
-    scratch = ROOT / "build_scratch" / "scope-memory"
+    scratch = scratch_root or ROOT / "build_scratch" / "scope-memory"
     scratch.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=unit + "-", dir=scratch) as raw_state:
         state = pathlib.Path(raw_state)
@@ -783,6 +784,38 @@ PHASE_VOLATILE_FIELDS = frozenset({
 PHASE_DECLINE_PREFIXES = ("lift_decline_", "reduce_decline_")
 
 
+# The P0 plan chain describes boundaries, not algorithmic outcomes. Native route
+# intervals may contain nested work; mapping them never invents a completed query.
+PLAN_STAGES = {
+    "simplification": "pre-translation checks", "direct-checks": "pre-translation checks",
+    "startup": "pre-translation checks", "dispatch": "pre-translation checks",
+    "child_startup": "pre-translation checks", "decomposition": "pre-translation checks",
+    "pre-pass": "pre-translation checks", "rewrite": "rewrite",
+    "translation-event-univ": "rewrite", "translation": "translator/postprocessing",
+    "translation-lowering": "translator/postprocessing", "input-push": "input push",
+    "input-push-lowering": "input push", "preprocessing": "preprocessing/Booleanization",
+    "booleanization": "preprocessing/Booleanization",
+    "io-preparation": "IO/action construction", "io-decoding": "IO/action construction",
+    "action-construction": "IO/action construction", "picker-preparation": "IO/action construction",
+    "trusted_prepare": "IO/action construction", "prepare": "IO/action construction",
+    "seed_discovery": "IO/action construction", "target_reductions": "IO/action construction",
+    "seed_cache": "IO/action construction", "R": "IO/action construction",
+    "search": "K-search", "k-attempt": "K-search", "direct": "K-search",
+    "direct_solve": "K-search", "search_error": "K-search", "original_game": "K-search",
+    "seed_REAL": "K-search",
+    "seed_UNREAL": "K-search", "combined_call": "K-search", "obligation": "K-search",
+    "verification": "independent verification", "certificate-check": "independent verification",
+    "target_check": "independent verification", "final_checks": "independent verification",
+    "proof_binding": "independent verification", "check": "independent verification",
+    "verified": "parent verdict",
+}
+
+
+def phase_plan_stage(stage, route=""):
+    """Map observed stages; decline labels use their recorded active route only."""
+    return PLAN_STAGES.get(stage, PLAN_STAGES.get(route, "unknown"))
+
+
 def phase_record_dir(root, solver_label: str, cap, instance: str, run_index) -> pathlib.Path:
     """The per-run directory run-syntcomp26-coverage.py gives ACACIA_PHASE_RECORDS."""
     safe_label = re.sub(r"[^A-Za-z0-9_.-]", "_", solver_label)
@@ -839,6 +872,27 @@ class PhaseRecords:
                         found.append((arm, prefix.rstrip("_"), phase[len(prefix):]))
         return found
 
+    def worker_events(self) -> dict[str, list[dict]]:
+        """Join physical workers, including native summaries lacking inline PIDs.
+
+        Native summary identity comes from the emitting PID file and the explicit
+        arm. Parent annotations already carry the supervised PID. Raw records stay
+        unchanged so canonical comparisons still compare original wire content.
+        """
+        workers = {}
+        for process in self.processes:
+            for event in process.events:
+                pid = event.get("worker_pid")
+                if pid is None and str(event.get("arm", "")).startswith(
+                        ("both:gr1", "real:gr1", "unreal:gr1", "real:param-lift", "both:obligation")):
+                    if event.get("phase") != "record_summary" and process.name[:-6].isdigit():
+                        pid = int(process.name[:-6])
+                if pid is not None and int(pid) > 0:
+                    workers.setdefault(str(pid), []).append({**event, "worker_pid": pid})
+        for events in workers.values():
+            events.sort(key=lambda e: (e.get("mono_ns", 0), e.get("seq", 0)))
+        return workers
+
     def canonical(self, arm: str, volatile=PHASE_VOLATILE_FIELDS) -> tuple:
         """Order-independent, time-free content of one arm's records.
 
@@ -878,7 +932,8 @@ def load_phase_records(directory) -> PhaseRecords:
                     raise ValueError(f"{path}:{number}: phase record is not an object")
                 events.append(event)
             summaries = [event for event in events if event.get("phase") == "record_summary"]
-            dropped = sum(int(event.get("dropped_records") or 0) for event in summaries)
+            dropped = max([sum(int(event.get("dropped_records") or 0) for event in summaries),
+                           *(int(event.get("dropped_records") or 0) for event in events)])
             processes.append(PhaseProcess(path.name, tuple(events), bool(summaries), dropped))
     return PhaseRecords(directory, tuple(processes))
 

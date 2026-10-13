@@ -52,6 +52,7 @@ VOLATILE_FIELDS = PHASE_VOLATILE_FIELDS | frozenset({
     "initial_remaining_ns", "allowance_ns", "consumed_ns", "total_ns",
 })
 VOLATILE_METRICS = frozenset({
+    "first_useful_action_query_ns", "query_snapshot_ns",
     "bdd_gc_wall_ns", "first_useful_rank_query_ms", "row_generation_ms",
     "row_started_clock_ms", "stage_started_clock_ms", "verification_row_ms",
 })

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "phase_records.hh"
+#include <string>
 #include <type_traits>
 
 #include <bddx.h>
@@ -25,6 +26,46 @@ namespace acacia {
     else
       count ("sccs", 0);
   }
+
+  class legacy_query_progress {
+      bool enabled_ = phase_records_enabled ();
+      uint64_t stage_id_ = 0, completed_ = 0;
+
+    public:
+      template <typename Rank>
+      void completed (const Rank& rank) {
+        if (!enabled_)
+          return;
+        auto* worker = active_worker_record ();
+        if (!worker || strcmp (worker->observed_stage, "search") != 0)
+          return;
+        if (stage_id_ != worker->stage_id) {
+          stage_id_ = worker->stage_id;
+          completed_ = 0;
+        }
+        // Global sampling rule: first four, then powers of two; at most 65
+        // snapshots per stage. No rank scan, clock or counter with observation off.
+        if (completed_ == UINT64_MAX)
+          return;
+        ++completed_;
+        if (completed_ > 4 && (completed_ & (completed_ - 1)) != 0)
+          return;
+        const auto now = phase_clock (CLOCK_MONOTONIC);
+        if (completed_ == 1)
+          legacy_count ("first_useful_action_query_ns", now);
+        legacy_count ("query_snapshot_ns", now);
+        legacy_count ("completed_action_applications", completed_);
+        size_t support = 0;
+        long long maximum = -1;
+        for (size_t q = 0; q < rank.size (); ++q)
+          if (rank[q] != -1) {
+            ++support;
+            maximum = std::max (maximum, static_cast<long long> (rank[q]));
+          }
+        legacy_count ("query_rank_support", support);
+        legacy_metric ("query_rank_maximum", std::to_string (maximum).c_str ());
+      }
+  };
 
   class legacy_bdd_gc {
       inline static legacy_bdd_gc* active_ = nullptr;

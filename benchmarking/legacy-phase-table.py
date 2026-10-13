@@ -12,12 +12,13 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-from benchlib import load_phase_records
+from benchlib import load_phase_records, phase_plan_stage
+from phase_attribution import native_rows
 
 IDENTITY = ('invocation', 'worker_pid', 'worker', 'subjob', 'subjobs', 'run_id', 'k',
             'stage_id', 'stage', 'requested_backend', 'effective_backend',
             'original_polarity', 'proof_polarity', 'route')
-BASE_FIELDS = (*IDENTITY, 'entry_ns', 'completion_ns', 'wall_ns', 'cpu_ns', 'peak_rss_kb',
+BASE_FIELDS = (*IDENTITY, 'plan_stage', 'entry_ns', 'completion_ns', 'wall_ns', 'cpu_ns', 'peak_rss_kb',
                'state', 'reason', 'delivery', 'dropped_records', 'censored_lower_ns',
                'capture_join')
 
@@ -108,8 +109,21 @@ def build_rows(invocation, records, captures=()):
             if censored and end.get('mono_ns', 0) >= row['entry_ns']:
                 row['censored_lower_ns'] = end['mono_ns'] - row['entry_ns']
             row['reason'] = end.get('reason', 'signal') if censored else 'missing-completion'
-    join_captures(list(stages.values()), captures)
-    return sorted(stages.values(), key=lambda r: (str(r['worker_pid']), r['stage_id']))
+    rows = list(stages.values())
+    for row in rows:
+        row['plan_stage'] = phase_plan_stage(row.get('stage', ''), row.get('route', ''))
+    additions = native_rows(invocation, records)
+    for row in additions:
+        pid = row['worker_pid']
+        seq = sorted(set(sequences[pid]))
+        gap = bool(seq and (seq[0] != 1 or any(b != a + 1 for a, b in zip(seq, seq[1:]))))
+        row['dropped_records'] = drops[pid]
+        row['delivery'] = 'partial' if gap or drops[pid] or global_partial else (
+            'observed' if writer_confirmed else 'unconfirmed')
+    rows.extend(additions)
+    join_captures(rows, captures)
+    return sorted(rows, key=lambda r: (str(r['worker_pid']), (0, r['stage_id']) if isinstance(r['stage_id'], int)
+                                           else (1, r['stage_id'])))
 
 
 def join_captures(rows, captures):
@@ -117,7 +131,7 @@ def join_captures(rows, captures):
     identity = ('invocation', 'worker_pid', 'subjob', 'run_id', 'k')
     prefixes = {
         'search': ('search_', 'wrapper_', 'rank_', 'subsumption_', 'scan_', 'losing_',
-                   'proofs_', 'dependency_', 'queue_'),
+                   'proofs_', 'dependency_', 'queue_', 'first_useful_rank_query_'),
         'verification': ('verify_', 'verification_'),
     }
     for capture in captures:
@@ -181,7 +195,9 @@ def worker_summaries(rows):
                                                ('subjob', 'k', 'stage', 'state',
                                                 'censored_lower_ns')}
                                               for r in group if r['state'] not in
-                                              {'completed', 'stopped', 'inapplicable'}],
+                                              {'completed', 'stopped', 'inapplicable', 'summary-only'}],
+                          'summary_only_stages': [r for r in group
+                                                  if r['state'] == 'summary-only'],
                           'delivery': 'partial' if any(r['delivery'] == 'partial' for r in group)
                           else 'unconfirmed' if any(r['delivery'] == 'unconfirmed' for r in group)
                           else 'observed'})

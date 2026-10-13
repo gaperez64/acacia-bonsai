@@ -670,6 +670,10 @@ if host_machine.system () == 'linux'
     link_args : ['-Wl,--wrap=getpid', '-Wl,--wrap=clock_gettime', '-Wl,--wrap=getrusage',
                  '-Wl,--wrap=_ZSt19uncaught_exceptionsv'])
   test ('phase-observation-off', phase_observation_off, suite : ['unit', 'attribution'])
+  phase_query_progress = executable (
+    'phase-query-progress', 'phase_query_progress.cc',
+    include_directories : inc, dependencies : [spot_dep, bddx_dep])
+  test ('phase-query-progress', phase_query_progress, suite : ['unit', 'attribution'])
 endif
 
 if enable_tlsf_frontend

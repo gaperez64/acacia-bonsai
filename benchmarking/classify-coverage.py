@@ -18,7 +18,7 @@ import re
 import shlex
 import sys
 
-from benchlib import PhaseRecords, load_phase_records, phase_record_dir
+from benchlib import PhaseRecords, load_phase_records, phase_record_dir, phase_plan_stage
 from family_metadata import parse_origin, read_tsv
 
 
@@ -188,7 +188,11 @@ def phase_attribution(events):
                   if e.get("phase", "").startswith("route_")), UNKNOWN)
     return {"first_stop_reason": stops[0][0] if stops else UNKNOWN,
             "first_stop_category": stops[0][1] if stops else UNKNOWN,
-            "last_observed_stage": visible[-1]["phase"] if visible else UNKNOWN,
+            "last_observed_stage": (visible[-1].get("phase") or visible[-1].get("stage") or
+                                    visible[-1].get("event", UNKNOWN)) if visible else UNKNOWN,
+            "last_plan_stage": phase_plan_stage(
+                visible[-1].get("stage") or visible[-1].get("phase", ""),
+                visible[-1].get("route", "")) if visible else "unknown",
             "recorded_route": route,
             "all_stop_reasons": json.dumps([reason for reason, _ in stops])}
 
@@ -223,11 +227,19 @@ def arm_attribution(records, arm, standalone=False):
         producer = "legacy"
     processes = records.arm_processes(producer)
     events = [e for process in processes for e in process.events if e.get("arm") == producer]
+    # Parent lifecycle annotations have no arm label; join only the emitting
+    # physical worker, never a portfolio index or another worker in the PID file.
+    workers = [group for group in records.worker_events().values()
+               if any(e.get("arm") == producer for e in group)]
+    if workers:
+        events = [e for group in workers for e in group
+                  if not e.get("arm") or e.get("arm") == producer]
+    unambiguous = len(workers) == 1 if workers else len(processes) == 1
     # File/PID order across producers cannot establish a first or last stage.
-    detail = phase_attribution(events if len(processes) == 1 else [])
+    detail = phase_attribution(events if unambiguous else [])
     terminal = [e for e in events if e.get("phase") == "budget_decline" or
                 str(e.get("phase", "")).startswith(("reduce_decline_", "lift_decline_"))]
-    stop = phase_attribution(terminal if len(processes) == 1 else [])
+    stop = phase_attribution(terminal if unambiguous else [])
     detail.update(first_terminal_obstruction=stop["first_stop_category"],
                   terminal_reason=stop["first_stop_reason"], processes=len(processes),
                   records_complete=bool(processes) and all(p.finished for p in processes)
