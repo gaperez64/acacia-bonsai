@@ -577,3 +577,21 @@ The latter precedes PR #241's final head; neither pin substitutes the merge revi
 for the executable that produced the rows. Separate archives retain LEGI200, LEGI213,
 LEGI209 and LEGI209M, including their original build provenance. Higher-cap mechanism
 diagnostics and the #205 direct cost ceilings remain distinct from measured coverage.
+
+
+## 2026-10-13 — residual construction and simplifier closeout (#250/#247)
+
+The completed 53-input 60-second panel gives LAR/ACD 53 decisions each, PS 30,
+DS 13 and SD 9 with both ltlsynt 2.16 shortcuts disabled. Matched primary-worker
+BA/generic-deterministic/parity translations complete 23/45/25 inputs. Generic
+construction gains 29 BA timeouts but loses seven BA completions; shared-HOA ACD
+replay completes 45/45 versus LAR 44/45, with mixed size/wall costs. Apply the
+prewritten rule: research an acceptance-aware provider and explicit conversion
+policy, but select no production interface/default change or Acacia solve. Neither
+BA simplifier variant rescues a 60-second translation; all 22 paired completions
+retain identical state/edge counts and both lose one completion. Close #247 with
+the upstream report and no Acacia change. See [the stage tables and decision](residual-construction.md);
+evidence: `residual-construction20261013`, `spot-implication20261013`,
+`postmem20261011-p2`, `postmem20261012-closing`, `binary-PMC4-b3953b43`.
+`obligation-trust20261013` and `binary-PMC5-0b8b9be1` preserve the separate
+trust/decision-mode screens and frozen #255 candidate without claiming admission.
