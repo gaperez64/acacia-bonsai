@@ -1,13 +1,10 @@
 #include "solver/obligation_helper.hh"
 
-#include "solver/controller_check.hh"
 #include "solver/mealy_to_moore.hh"
 #include <unordered_set>
 
 #include <algorithm>
 #include <new>
-#include <spot/twaalgos/translate.hh>
-#include <sstream>
 #include <stdexcept>
 
 namespace acacia::obligation {
@@ -44,7 +41,7 @@ namespace acacia::obligation {
   }
 
   void record (const char* event, outcome value, const char* reason, uint64_t start_ns,
-               bool independent_checked, int worker, pid_t pid) noexcept {
+               int worker, pid_t pid) noexcept {
     if (!phase_records_enabled ())
       return;
     if (auto* current = active_worker_record ()) {
@@ -58,11 +55,10 @@ namespace acacia::obligation {
                   "{\"arm\":\"both:obligation:spot\",\"event\":\"obligation_%s\","
                   "\"worker\":%d,\"worker_pid\":%ld,"
                   "\"outcome\":\"%s\",\"reason\":\"%s\",\"mono_ns\":%llu,\"wall_ns\":%llu,"
-                  "\"trust\":\"%s\",\"same_library_checked\":false,\"independent_checked\":%s}\n",
+                  "\"trust\":\"spot_exact\",\"same_library_checked\":false,"
+                  "\"independent_checked\":false}\n",
                   event, worker, long (pid), name (value), reason, (unsigned long long) now,
-                  (unsigned long long) (start_ns ? now - start_ns : 0),
-                  independent_checked ? "independent_controller_check" : "trusted_exact_spot",
-                  independent_checked ? "true" : "false");
+                  (unsigned long long) (start_ns ? now - start_ns : 0));
     if (length > 0 && size_t (length) < sizeof line)
       phase_records_send (line, size_t (length));
   }
@@ -82,32 +78,9 @@ namespace acacia::obligation {
     return outcome::real;
   }
 
-  bool check_controller (spot::formula objective, const spot::aig_ptr& controller, bool moore) {
-    if (!objective || !controller)
-      return false;
-    if (moore) {
-      std::vector<bool> input_dependent (controller->max_var () / 2 + 1, false);
-      for (unsigned i = 0; i < controller->num_inputs (); ++i)
-        input_dependent[controller->input_var (i) / 2] = true;
-      for (unsigned i = 0; i < controller->num_gates (); ++i) {
-        const auto [left, right] = controller->gates ()[i];
-        input_dependent[controller->gate_var (i) / 2] =
-            input_dependent[left / 2] || input_dependent[right / 2];
-      }
-      for (const unsigned output : controller->outputs ())
-        if (input_dependent[output / 2])
-          return false;
-    }
-    const auto machine = controller->as_automaton (false);
-    spot::translator translator (machine->get_dict ());
-    translator.set_type (spot::postprocessor::BA);
-    const auto negated = translator.run (spot::formula::Not (objective));
-    return acacia::synthesis::controller_satisfies (negated, controller);
-  }
-
   result solve (spot::formula objective, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs, timing semantics, bool synthesis,
-                conversion convert, spot::formula controller_objective) {
+                conversion convert) {
     if (!eligible (objective))
       return {outcome::inapplicable, "non_obligation"};
     try {
@@ -152,21 +125,7 @@ namespace acacia::obligation {
       if (convert != conversion::none)
         circuit =
             acacia::synthesis::mealy_to_moore (circuit, convert == conversion::undo_input_shift);
-      std::ostringstream exported;
-      spot::print_aiger (exported, circuit);
-      if (!exported)
-        return {outcome::error, "controller_export_failed"};
-      // Check the actual serialized controller, including conversion/reset, in
-      // the original target frame. The general translator does not use MTBDDs.
-      std::istringstream serialized (exported.str ());
-      auto checked = spot::aig::parse_aag (serialized, "obligation controller");
-      if (!checked || checked->input_names () != inputs || checked->output_names () != outputs)
-        return {outcome::error, "controller_interface_failed"};
-      worker_stage ("obligation_independent_check");
-      if (!check_controller (controller_objective ? controller_objective : objective, checked,
-                             semantics == timing::moore || convert != conversion::none))
-        return {outcome::error, "controller_check_failed"};
-      return {outcome::real, "completed", true, exported.str ()};
+      return {outcome::real, "completed", std::move (circuit)};
     } catch (const std::bad_alloc&) {
       return {outcome::exhausted, "allocation"};
     } catch (const std::exception&) {

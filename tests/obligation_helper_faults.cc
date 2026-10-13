@@ -1,14 +1,12 @@
 // Test-only ELF interposition. Never linked into or installed with a solver.
 #include <string_view>
 
-#include <algorithm>
 #include <cerrno>
-#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <fcntl.h>
 #include <dlfcn.h>
+#include <fstream>
 #include <new>
 #include <ostream>
 #include <spot/twaalgos/aiger.hh>
@@ -20,6 +18,7 @@
 
 namespace {
   bool obligation_entered = false;
+  bool controller_opened = false;
   unsigned obligation_calls = 0;
   void delay () {
     if (const char* value = std::getenv ("ACACIA_TEST_OBLIGATION_LEGACY_DELAY_MS")) {
@@ -86,6 +85,16 @@ namespace spot {
       delay ();
     const char* mode = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
     const std::string_view fault = mode ? mode : "";
+    if (obligation_entered && fault == "export-stall")
+      while (true)
+        pause ();
+    if (obligation_entered && fault == "export-stream") {
+      os.setstate (std::ios::badbit);
+      return os;
+    }
+    if (fault == "writer-contract" &&
+        (!controller_opened || !dynamic_cast<std::ofstream*> (&os)))
+      throw std::runtime_error ("controller must use the ordinary file writer");
     if (obligation_entered && fault == "export-exception")
       throw std::runtime_error ("test export failure");
     if (obligation_entered && fault == "corrupt-controller") {
@@ -164,87 +173,28 @@ extern "C" void preparation_fault (void* self, spot::formula formula,
 }
 
 namespace {
-  bool publication_entered = false;
-  int publication_output = -1;
-
-  bool publication_fault (std::string_view operation) {
-    const char* mode = std::getenv ("ACACIA_TEST_PUBLICATION_FAULT");
-    if (!publication_entered || !mode)
-      return false;
-    const std::string_view fault = mode;
-    if (fault == operation) {
+  FILE* controller_fopen (const char* path, const char* mode, const char* symbol) {
+    const char* destination = std::getenv ("ACACIA_TEST_OBLIGATION_OUTPUT");
+    const bool controller = destination && std::strcmp (path, destination) == 0;
+    const char* fault = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
+    if (controller && obligation_entered && fault && std::strcmp (fault, "export-open") == 0) {
       errno = EIO;
-      return true;
+      return nullptr;
     }
-    if (fault == std::string (operation) + "-delay") {
-      timespec wait {1, 200000000};
-      nanosleep (&wait, nullptr);
-    }
-    if (fault == std::string (operation) + "-stall")
-      while (true)
-        pause ();
-    return false;
+    using function = FILE* (*) (const char*, const char*);
+    auto original = reinterpret_cast<function> (dlsym (RTLD_NEXT, symbol));
+    FILE* file = original (path, mode);
+    if (controller && file)
+      controller_opened = true;
+    return file;
   }
 }
 
-extern "C" ssize_t pread (int fd, void* buffer, size_t size, off_t offset) {
-  char descriptor[64], path[4096];
-  snprintf (descriptor, sizeof descriptor, "/proc/self/fd/%d", fd);
-  const auto count = readlink (descriptor, path, sizeof path - 1);
-  if (count > 0) {
-    path[count] = '\0';
-    if (std::strstr (path, ".obligation-") && std::strstr (path, " (deleted)"))
-      publication_entered = true;
-  }
-  if (offset && publication_fault ("pread-late"))
-    return -1;
-  if (publication_fault ("pread"))
-    return -1;
-  using function = decltype (&pread);
-  auto original = reinterpret_cast<function> (dlsym (RTLD_NEXT, "pread"));
-  return original (fd, buffer, size, offset);
+extern "C" FILE* test_fopen (const char*, const char*) asm ("fopen");
+extern "C" FILE* test_fopen (const char* path, const char* mode) {
+  return controller_fopen (path, mode, "fopen");
 }
 
-extern "C" int open (const char* path, int flags, ...) {
-  mode_t mode = 0;
-  if (flags & O_CREAT) {
-    va_list args;
-    va_start (args, flags);
-    mode = va_arg (args, mode_t);
-    va_end (args);
-  }
-  if (publication_fault ("open"))
-    return -1;
-  using function = int (*) (const char*, int, ...);
-  auto original = reinterpret_cast<function> (dlsym (RTLD_NEXT, "open"));
-  const int fd = original (path, flags, mode);
-  if (publication_entered && (flags & O_WRONLY))
-    publication_output = fd;
-  return fd;
-}
-
-extern "C" ssize_t write (int fd, const void* buffer, size_t size) {
-  if (fd == publication_output && publication_fault ("write"))
-    return -1;
-  using function = decltype (&write);
-  auto original = reinterpret_cast<function> (dlsym (RTLD_NEXT, "write"));
-  const char* mode = std::getenv ("ACACIA_TEST_PUBLICATION_FAULT");
-  if (fd == publication_output && mode && std::string_view (mode) == "write-partial") {
-    static bool partial = false;
-    if (partial) {
-      errno = EIO;
-      return -1;
-    }
-    partial = true;
-    return original (fd, buffer, std::min<size_t> (size, 8));
-  }
-  return original (fd, buffer, size);
-}
-
-extern "C" int close (int fd) {
-  const bool failed = fd == publication_output && publication_fault ("close");
-  using function = decltype (&close);
-  auto original = reinterpret_cast<function> (dlsym (RTLD_NEXT, "close"));
-  const int result = original (fd);
-  return failed ? -1 : result;
+extern "C" FILE* fopen64 (const char* path, const char* mode) {
+  return controller_fopen (path, mode, "fopen64");
 }

@@ -15,9 +15,6 @@ namespace acacia::obligation {
   enum class timing { mealy, moore };
   enum class eligibility { pending, eligible, inapplicable, error };
 
-  // Absolute synthesis budget from fork, including preparation, export and checking.
-  // Decision work has only the invocation/race bound. Neither policy is input-fitted.
-  inline constexpr uint64_t synthesis_allowance_ns = 5000000000ULL;
   enum class conversion { none, delay_outputs, undo_input_shift };
 
   struct control {
@@ -31,8 +28,7 @@ namespace acacia::obligation {
   struct result {
       outcome value = outcome::error;
       const char* reason = "error";
-      bool independent_checked = false;
-      std::string controller;
+      spot::aig_ptr controller;
   };
 
   const char* name (outcome value) noexcept;
@@ -40,18 +36,14 @@ namespace acacia::obligation {
   bool eligible (spot::formula objective) noexcept;
   void publish_eligibility (control* channel, spot::formula objective) noexcept;
   void record (const char* event, outcome value, const char* reason, uint64_t start_ns = 0,
-               bool independent_checked = false, int worker = -1, pid_t pid = -1) noexcept;
+               int worker = -1, pid_t pid = -1) noexcept;
 
   // Spot 2.16 uses acc=t/f for completed REAL/UNREAL. A null or empty object is
   // an error, never UNREAL. debug must stay -1; partial debug automata are unsafe.
   outcome completed (const spot::mtdswa_ptr& answer, bool decision_only) noexcept;
-  // General LTL/controller product, independent of the MTBDD synthesis algorithm.
-  bool check_controller (spot::formula objective, const spot::aig_ptr& controller,
-                         bool moore = false);
   result solve (spot::formula objective, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs, timing semantics = timing::mealy,
-                bool synthesis = false, conversion convert = conversion::none,
-                spot::formula controller_objective = {});
+                bool synthesis = false, conversion convert = conversion::none);
 
   // Same global address-space cap and cgroup-aware soft RSS share as native workers.
   bool limit_address_space () noexcept;

@@ -27,7 +27,8 @@ with tempfile.TemporaryDirectory(dir=Path.cwd(), prefix="check-help-") as direct
             assert "--equivariance-budget F|DURATION|unbounded (default 3s)" in result.stdout
             assert "[scan|grouped] (default: grouped)" in result.stdout
             assert "--obligation-helper" not in result.stdout
-            assert "both:obligation:spot" in result.stdout
+            assert ("both:obligation:spot: syntactic obligations, trusted Spot synthesis"
+                    in result.stdout)
             assert "membership follows the build default; starts only when eligible" in result.stdout
             assert result.stderr == "", (option, invalid_deadline, result)
             assert list(cwd.iterdir()) == [], (option, invalid_deadline)

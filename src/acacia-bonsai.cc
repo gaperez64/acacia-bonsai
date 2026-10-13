@@ -7,6 +7,7 @@
 #include "native_support.hh"
 #include "phase_records.hh"
 #include "solver/solver_invoker.hh"
+#include "solver/controller_writer.hh"
 #include "solver/obligation_helper.hh"
 #include "solver/realizability_simplify.hh"
 #include <spot/tl/parse.hh>
@@ -22,7 +23,6 @@
 #include <cmath>
 #include <csignal>
 #include <cstring>
-#include <fcntl.h>
 #include <fstream>
 #include <memory>
 #include <new>
@@ -55,7 +55,6 @@ namespace {
   sig_atomic_t g_eligibility_source = -1, g_helper_index = -1;
   bool g_eligibility_observed = false;
   uint64_t g_helper_rss_share = 0;
-  int g_helper_controller_fd = -1;
   acacia::obligation::outcome g_helper_forced = acacia::obligation::outcome::pending;
   const char* g_helper_stop_reason = "none";
 
@@ -79,7 +78,7 @@ namespace {
       if (g_helper_forced != outcome::pending ||
           g_obligation->result.load (std::memory_order_acquire) == outcome::pending)
         acacia::obligation::record ("completion", value, helper_reason, g_obligation->start_ns,
-                                    false, int (index), pid);
+                                    int (index), pid);
       g_obligation->result.store (value, std::memory_order_release);
     }
     if (!g_worker_records)
@@ -248,7 +247,6 @@ namespace {
         result = {outcome::error, "address_space_limit"};
       else {
         auto inputs = args.inputs, outputs = args.outputs;
-        auto controller_objective = spot::formula {};
         auto conversion = acacia::obligation::conversion::none;
 #if ACACIA_ENABLE_TLSF_FRONTEND
         if (args.tlsf_specified && (!args.formula_specified || args.synth_fname)) {
@@ -256,9 +254,6 @@ namespace {
           inputs = std::move (spec.inputs);
           outputs = std::move (spec.outputs);
           if (args.synth_fname) {
-            controller_objective = spot::parse_infix_psl (spec.controller_formula).f;
-            if (!controller_objective)
-              throw std::runtime_error ("unable to parse controller objective");
             if (spec.metadata.tlsf_target == "Moore")
               conversion = spec.metadata.tlsf_semantics.find ("Moore") != std::string::npos
                                ? acacia::obligation::conversion::undo_input_shift
@@ -277,26 +272,17 @@ namespace {
           result = {outcome::inapplicable, "non_obligation"};
         else {
           acacia::worker_stage ("obligation_synthesis");
-          if (args.synth_fname && g_helper_controller_fd < 0)
-            result = {outcome::error, "controller_storage_failed"};
-          else
-            result = acacia::obligation::solve (objective, inputs, outputs,
-                                                acacia::obligation::timing::mealy,
-                                                args.synth_fname.has_value (), conversion,
-                                                controller_objective);
+          result = acacia::obligation::solve (objective, inputs, outputs,
+                                              acacia::obligation::timing::mealy,
+                                              args.synth_fname.has_value (), conversion);
           if (result.value == outcome::real && args.synth_fname) {
-            size_t offset = 0;
-            while (offset < result.controller.size ()) {
-              const auto written = write (g_helper_controller_fd,
-                                           result.controller.data () + offset,
-                                           result.controller.size () - offset);
-              if (written < 0 && errno == EINTR)
-                continue;
-              if (written <= 0) {
-                result = {outcome::error, "controller_storage_failed"};
-                break;
-              }
-              offset += size_t (written);
+            try {
+              if (!acacia::synthesis::write_controller (*args.synth_fname, result.controller))
+                result = {outcome::error, "controller_export_failed"};
+            } catch (const std::bad_alloc&) {
+              result = {outcome::exhausted, "allocation"};
+            } catch (...) {
+              result = {outcome::error, "controller_export_failed"};
             }
           }
         }
@@ -307,7 +293,7 @@ namespace {
       result = {outcome::error, "preprocessing_exception"};
     }
     acacia::obligation::record ("completion", result.value, result.reason,
-                                g_obligation->start_ns, result.independent_checked);
+                                g_obligation->start_ns);
     const int code = acacia::obligation::exit_code (result.value);
     acacia::worker_route ("original_game", "obligation",
                           result.value == outcome::real     ? "REAL"
@@ -315,58 +301,6 @@ namespace {
                                                             : "unknown");
     acacia::worker_terminal (code, result.reason);
     g_obligation->result.store (result.value, std::memory_order_release);
-    _exit (code);
-  }
-
-  bool publish_controller (const std::string& path) {
-    if (!acacia::obligation::limit_address_space ())
-      return false;
-    char buffer[16384];
-    ssize_t count;
-    do {
-      count = pread (g_helper_controller_fd, buffer, sizeof buffer, 0);
-    } while (count < 0 && errno == EINTR);
-    if (count <= 0)
-      return false;
-    const int output = open (path.c_str (), O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    if (output < 0)
-      return false;
-    off_t offset = 0;
-    bool success = true;
-    while (count > 0 && success) {
-      size_t written = 0;
-      while (written < size_t (count)) {
-        const auto size = write (output, buffer + written, size_t (count) - written);
-        if (size < 0 && errno == EINTR)
-          continue;
-        if (size <= 0) {
-          success = false;
-          break;
-        }
-        written += size_t (size);
-      }
-      if (!success)
-        break;
-      offset += count;
-      do {
-        count = pread (g_helper_controller_fd, buffer, sizeof buffer, offset);
-      } while (count < 0 && errno == EINTR);
-    }
-    const int closed = close (output);
-    return success && count == 0 && closed == 0;
-  }
-
-  [[noreturn]] void dispatch_publication (const arg_parse_result& args) {
-    acacia::worker_route ("original_game", "obligation", "REAL");
-    acacia::worker_stage ("controller_publication");
-    const bool published = publish_controller (*args.synth_fname);
-    const auto value = published ? acacia::obligation::outcome::real
-                                 : acacia::obligation::outcome::error;
-    const char* reason = published ? "controller_published" : "controller_publication_failed";
-    acacia::obligation::record ("publication", value, reason, g_obligation->start_ns, published);
-    const int code = acacia::obligation::exit_code (value);
-    acacia::worker_terminal (code, reason);
-    g_obligation->result.store (value, std::memory_order_release);
     _exit (code);
   }
 
@@ -480,8 +414,7 @@ namespace {
 
   void launch_child (const portfolio_arm& arm, const arg_parse_result& arg_values,
                      uint64_t deadline_mono_ns, const sigset_t& block_set,
-                     acacia::obligation::control* eligibility_channel = nullptr,
-                     bool publication = false) {
+                     acacia::obligation::control* eligibility_channel = nullptr) {
     // Publish the child PID before a termination handler can run.
     sigset_t old_mask;
     sigprocmask (SIG_BLOCK, &block_set, &old_mask);
@@ -519,7 +452,6 @@ namespace {
                           : acacia::phase_stamp {};
 #ifdef __linux__
       if (arm.kind == portfolio_arm_kind::obligation) {
-        // Also contain the helper if the parent is killed without running its handler.
         if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != g_main_pid)
           _exit (EXIT_CODE_UNKNOWN);
       }
@@ -534,8 +466,6 @@ namespace {
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
       test_child_behavior (g_child_count, deadline_mono_ns);
 #endif
-      if (publication)
-        dispatch_publication (arg_values);
       dispatch_child (arm, arg_values, deadline_mono_ns, eligibility_channel);
     }
     else {
@@ -544,10 +474,9 @@ namespace {
         setpgid (pid, pid);
         if (arm.kind == portfolio_arm_kind::obligation)
           acacia::obligation::record (
-              publication ? "publication_start" : "start",
-              acacia::obligation::outcome::pending,
+              "start", acacia::obligation::outcome::pending,
               eligibility_channel ? "preparation" : "eligible", g_obligation->start_ns,
-              false, int (g_child_count), pid);
+              int (g_child_count), pid);
         if (g_worker_records) {
           // Use the pre-fork context; the child owns the live snapshot.
           auto spawned = parent_context;
@@ -631,7 +560,6 @@ namespace {
         launch_helper (true);
     }
 
-    bool publishing = false;
     const auto check_acceptance = [&] {
       if (deadline_mono_ns && monotonic_ns () >= deadline_mono_ns) {
         std::cerr << "{\"stage\":\"deadline\",\"status\":\"expired\"}\n";
@@ -643,21 +571,6 @@ namespace {
         error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
       }
     };
-    const auto restart_ordinary = [&] {
-      // Publication may have truncated the destination. Restart ordinary writers
-      // so their answer always refers to their own complete controller.
-      stop_children ("publication_failed");
-      g_child_count = 0;
-      g_helper_index = -1;
-      publishing = false;
-      for (const auto& arm : *arg_values.arms) {
-        if (arm.kind == portfolio_arm_kind::legacy && !arg_values.legacy_available)
-          continue;
-        check_acceptance ();
-        launch_child (arm, arg_values, deadline_mono_ns, block_set);
-      }
-    };
-
     int status;
     bool child_reported_error = false;
     while (true) {  // wait only for solver arms; the record writer is separate
@@ -684,13 +597,10 @@ namespace {
       if (g_helper_index >= 0 && g_child_pids[g_helper_index] > 0 &&
           g_helper_forced == acacia::obligation::outcome::pending) {
         const pid_t helper = g_child_pids[g_helper_index];
-        const bool elapsed = arg_values.synth_fname &&
-                             monotonic_ns () - g_obligation->start_ns >=
-                                 acacia::obligation::synthesis_allowance_ns;
         const bool memory = acacia::obligation::resident_bytes (helper) > g_helper_rss_share;
-        if (elapsed || memory) {
+        if (memory) {
           g_helper_forced = acacia::obligation::outcome::exhausted;
-          g_helper_stop_reason = elapsed ? "wall_allowance" : "rss_share";
+          g_helper_stop_reason = "rss_share";
           kill (-helper, SIGKILL);
           kill (helper, SIGKILL);
         }
@@ -763,13 +673,6 @@ namespace {
         break;
       }
 
-      if (g_obligation && reaped_index >= 0 && reaped_index == g_helper_index &&
-          arg_values.synth_fname &&
-          monotonic_ns () - g_obligation->start_ns >= acacia::obligation::synthesis_allowance_ns &&
-          g_helper_forced == acacia::obligation::outcome::pending) {
-        g_helper_forced = acacia::obligation::outcome::exhausted;
-        g_helper_stop_reason = "wall_allowance";
-      }
       if (reaped_index >= 0)
         record_parent_terminal (reaped_index, status, WIFSIGNALED (status) ? "signal" : "exit",
                                 reaped);
@@ -779,10 +682,6 @@ namespace {
       // and would be silently misreported as "REALIZABLE". Skip such children
       // so we either hear from a sibling that finished cleanly, or fall
       // through to UNKNOWN below.
-      if (publishing && reaped_index == g_helper_index && !WIFEXITED (status)) {
-        restart_ordinary ();
-        continue;
-      }
       if (not WIFEXITED (status)) {
         if (WIFSIGNALED (status))
           std::cerr << "{\"stage\":\"child_signal\",\"status\":" << WTERMSIG (status) << "}\n";
@@ -794,35 +693,11 @@ namespace {
            acacia::obligation::exit_code (
                g_obligation->result.load (std::memory_order_acquire)) != ret))
         ret = EXIT_CODE_UNKNOWN;
-      if (publishing && reaped_index == g_helper_index && ret != EXIT_CODE_REAL) {
-        restart_ordinary ();
-        continue;
-      }
       if (ret == EXIT_CODE_ERROR) {
         child_reported_error = true;
         continue;
       }
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
-        if (reaped_index == g_helper_index && arg_values.synth_fname && !publishing) {
-          // Only one process writes the destination. Publication is supervised
-          // under the same absolute allowance, and failure restarts the fallback.
-          stop_children ("winner_cancelled");
-          check_acceptance ();
-          g_child_count = g_helper_index;
-          g_obligation->result.store (acacia::obligation::outcome::pending,
-                                      std::memory_order_release);
-          const auto helper = portfolio_arm::native (false, portfolio_arm_kind::obligation, true);
-          launch_child (helper, arg_values, deadline_mono_ns, block_set, nullptr, true);
-          publishing = true;
-          if (g_child_count == g_helper_index)
-            restart_ordinary ();
-          continue;
-        }
-        if (publishing && monotonic_ns () - g_obligation->start_ns >=
-                              acacia::obligation::synthesis_allowance_ns) {
-          restart_ordinary ();
-          continue;
-        }
         check_acceptance ();
         if (g_worker_records && reaped_index >= 0) {
           auto& winner = g_worker_records[reaped_index];
@@ -834,8 +709,6 @@ namespace {
                                                   : "incomplete");
         }
         // Publish the definitive answer before terminating the other children.
-        if (publishing)
-          check_acceptance ();
         if (ret == EXIT_CODE_REAL)
           std::cout << "REALIZABLE\n";
         else
@@ -894,14 +767,6 @@ int main (int argc, char** argv) {
     else
       acacia::obligation::record ("eligibility", acacia::obligation::outcome::error,
                                   "shared_allocation");
-  }
-  if (g_obligation && arg_values.synth_fname) {
-    // A private unlinked file avoids output races and leaves no artifact on
-    // cancellation, exception or timeout. Create it beside the requested output.
-    std::string path = *arg_values.synth_fname + ".obligation-XXXXXX";
-    g_helper_controller_fd = mkstemp (path.data ());
-    if (g_helper_controller_fd >= 0)
-      unlink (path.c_str ());
   }
   g_main_pid = getpid ();
   if (acacia::phase_records_enabled ()) {

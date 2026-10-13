@@ -25,9 +25,8 @@ acacia-bonsai -T spec.tlsf --arms "$previous_arms"
 
 For LTL input, omit the native GR(1) arm, which requires `-T`. Explicit `-r`/`-u` selections
 also run only their requested routes. Synthesis (`-s`) can accept a retained strategy only
-through AIGER export and Acacia's independent controller check. Export/check failure,
-no retained strategy, or the fixed synthesis timeout leaves the ordinary synthesis route
-running. With the arm alone and `-s`, the ordinary REAL/UNREAL routes are added as fallbacks.
+through AIGER export as a trusted exact Spot result. Export failure or no retained strategy
+leaves the ordinary synthesis route running. With the arm alone and `-s`, the ordinary REAL/UNREAL routes are added as fallbacks.
 Replay and native checking retain their existing routes.
 
 ## Driver screens and full-corpus admission (13 October 2026)
@@ -67,7 +66,7 @@ With `realizability=true`, a normal return has one `bddtrue` or `bddfalse` root,
 with matching colors. **This flag distinguishes both verdicts.** With `false`, REAL retains a
 strategy; UNREAL still returns one `bddfalse` root with acceptance `f`. Decision mode makes
 exactly one call with `true`, keeps no strategy and performs no re-check. Synthesis uses
-`false` and can answer only REAL with a retained, exported and independently checked
+`false` and can answer only REAL with a retained, exported and published trusted Spot
 controller; a losing result declines to the ordinary route. `debug=-1` is mandatory:
 partial debug automata are not decisions.
 
@@ -113,20 +112,24 @@ Production LTL is Mealy. The linked TLSF frontend already supplies effective Mea
 Moore lowering and strict normalization: the helper solves that objective without another shift
 or polarity swap. Raw Moore tests detect registration as Mealy.
 
-Decision mode has no fixed wall allowance: the parent supervises/reaps the process under
-winner, signal and invocation deadline handling, like the other arms. Synthesis uses an
-**absolute five-second allowance from helper fork**, covering preparation, retained-strategy
-synthesis, conversion, serialization, checking, private storage and controller publication together.
-Publication runs in a supervised process under the original helper allowance; the parent rechecks
-interruption and the invocation deadline immediately before accepting its answer. Ordinary writers
-are stopped before publication to avoid output races, and restarted on any publication failure
-(including open, read, write, close, or allowance exhaustion). This is the
-existing global optional-work horizon, not a fraction of remaining time and not fitted to
-inputs. It applies identically with or without `ACACIA_OUTER_DEADLINE_MONOTONIC`; an earlier
-outer deadline wins. Parent polling may overshoot, and a result observed beyond the allowance
-is rejected. Address space is capped at eight GiB. The soft RSS share follows native construction:
-cgroup memory limit (bounded by the address cap) / launched workers including helper / 2. The
-parent polls and kills/reaps on either limit; scheduling can overshoot these soft limits. These
+Decision and synthesis work have no fixed local wall allowance. The parent supervises and
+reaps the worker under the existing winner, signal and invocation deadline handling. In `-s`
+mode the worker builds the controller, writes directly to the requested file through the same
+`std::ofstream`/Spot ASCII AIGER writer used by ordinary synthesis, closes the stream, and exits
+REAL only after successful export. An open, write, close or export exception makes the arm
+exit UNKNOWN; ordinary workers keep running. The parent handles that exit like any worker,
+without a second publication process, stopping/resuming ordinary writers, private publication
+files, rename/rollback or a separate publication allowance.
+
+File guarantees match master's ordinary synthesis: concurrent workers can open/truncate/write
+the same destination, and cancellation can leave a partial or truncated file. Existing output
+bytes are not restored. A controller is checked offline after a successful run; file preservation
+or transactional publication is not promised. A blocked writer remains inside its supervised
+worker, so the parent can kill and reap it on a winner, interruption or invocation deadline.
+
+Address space is capped at eight GiB. The soft RSS share follows native construction:
+cgroup memory limit (bounded by the address cap) / launched workers including helper / 2.
+The parent polls and kills/reaps on that limit; scheduling can overshoot the soft limit. These
 are global resource choices. An earlier invocation deadline still governs answer acceptance.
 
 Typed outcomes are `completed_REAL`, `completed_UNREAL`, `inapplicable`, `exhausted`, `cancelled`
@@ -140,35 +143,49 @@ clocks/RSS and emits no helper events or workers. Membership uses the existing c
 
 ## Trust and checks
 
-Decision REAL and UNREAL are **trusted exact Spot library verdicts**, with no strategy and
-no re-check. Phase records declare `trust=trusted_exact_spot`, `same_library_checked=false`
-and `independent_checked=false`. Exceptions, interruptions, null/malformed objects and
-unpublished or mismatched exits never become verdicts.
+Decision REAL and UNREAL and synthesis REAL/controllers are **trusted exact Spot library
+results**. Both modes declare `trust=spot_exact`, `same_library_checked=false` and
+`independent_checked=false`. Decision mode retains no strategy and performs no re-check.
+Synthesis performs no runtime independent controller check or general Büchi translation.
+Exceptions, interruptions, null/malformed library returns, failed exports and mismatched exits
+never become verdicts. No UNREAL certificate is produced by the synthesis arm.
 
-Synthesis converts the retained MTBDD strategy to a Mealy machine, exports the same ASCII
-AIGER format as ordinary synthesis, reparses those exact bytes, and checks them **in process**
-before publishing REAL. It uses Acacia's existing general LTL/controller product check,
-shared with the ordinary debug synthesis checker through `controller_satisfies()`. A fresh
-general Büchi translation of the negated original target-frame objective must have empty
-intersection with the exported controller. This check is **independent of the obligation
-synthesis algorithm**: it consumes neither its MTBDD proof nor its winning predicates.
-Both paths still depend on Spot's general translation, AIG and product primitives; this is
-algorithmic independence, not a claim of an independent library implementation. The checker
-runs in release builds as well. No UNREAL certificate is produced by this synthesis arm.
+Synthesis converts the retained MTBDD strategy to a machine and exports the same ASCII AIGER
+format and declared IO names as ordinary synthesis, using Spot's used-signal-first export
+convention and appending unused declarations. Used signal order follows the strategy; it need
+not equal declaration order. The trusted strategy is serialized directly to the file without
+runtime reparsing or controller checking. Spot's quantified BDD registration order is
+part of the semantics contract: formula traversal registers inputs before outputs for Mealy,
+outputs before inputs for raw Moore. Production LTL uses Mealy; TLSF uses the frontend's
+normalized effective Mealy objective, including strict assumptions, and no extra shift.
 
-TLSF synthesis preserves the source target formula separately from the effective Mealy
-solve formula. Moore export reuses the ordinary `mealy_to_moore()` conversion, including
-advancing source latches through the dummy initial round for Moore-to-Mealy input lowering.
-True resets use complemented physical latches so all emitted AIGER latches start at zero.
-The independent check covers the final converted controller and its initial state, and rejects
-current-input-dependent Moore outputs. Checked bytes are stored in a private unlinked file;
-only the accepted helper publishes them after competing writers have been killed/reaped.
-Timeouts, exceptions and failed exports/checks therefore leave the ordinary route available.
-Successful synthesis records use `trust=independent_controller_check`,
-`independent_checked=true`, and `same_library_checked=false`.
+Moore target export reuses ordinary `mealy_to_moore()` conversion, including advancing source
+latches through the dummy initial round for Moore-to-Mealy input lowering. True resets use
+complemented physical latches so every emitted AIGER latch starts at zero. The worker writes
+these bytes directly to `-s`; the parent applies its existing deadline/interruption checks before
+accepting the worker's REAL exit. Export failures leave ordinary synthesis running.
+
+These semantic guarantees are verified **offline**. Generated Mealy and raw Moore obligations
+are synthesized by the same helper API and checked by the existing general controller product
+in the C++ test only. The CLI panel checks final Mealy/Moore AIGER bytes with the independent
+explicit safety-product oracle, including strict REQUIRE/ASSERT assumptions, unused declared
+signals, autonomous controllers and true/false Moore initialization. A Moore objective
+registered as Mealy is detected by the offline controller check; the converse is detected by
+the expected synthesis result. Test-only strategy and output corruptions are accepted as
+trusted Spot results at runtime and rejected by the offline oracle, making the boundary
+explicit. An interposed general-check exception confirms the arm no longer calls that checker.
+Tests require both ordinary and obligation workers to serialize through a file stream opened
+on the requested destination and compare their format on constant controllers. Open, stream
+and exception export faults must leave an already-running ordinary worker answering with an
+oracle-valid controller. Stalled synthesis/export and FIFO writers exercise the ordinary
+winner, deadline, interruption and reaping paths. Synthesis lasting beyond five seconds can
+still win under the invocation deadline. The special publication-protocol tests were removed.
+The synthesis suite subset also runs through `tests/check-real-correct.sh` with
+`AB_OPTS='--arms both:obligation:spot'`.
 
 The C++ unit covers eligibility, shared DAGs, abbreviations, constants, unused signals, timing,
-`realizability=true`, malformed/null results, nondecision exit mapping and a mutated strategy.
+`realizability=true`, malformed/null results, nondecision exit mapping and offline checks of
+generated and mutated strategies.
 Actions execute outside assertions. The CLI panel cross-checks Mealy/Moore with ltlsynt general
 construction (`--obligation-synthesis=no --bypass=no`) and Acacia's existing route, including
 strict TLSF safety assumptions. It tests single arm membership, exact `--arms` selection, default eligibility, launch order, native-only and
@@ -425,7 +442,10 @@ submitted by this task. Commit-based pytest fixtures and the unrelated broad Ruf
 remain outside this diagnosis.
 
 
-## Issues #248 and #249: owner-directed implementation (13 October 2026)
+## Issues #248 and #249: earlier independently checked implementation (13 October 2026)
+
+This section records the earlier implementation and its validation. The subsequent binding
+owner decision below supersedes its synthesis trust and publication policy.
 
 The owner changed the decision contract to one trusted exact decision call without a local
 wall allowance, and authorized independently checked controller synthesis within an absolute
@@ -496,3 +516,47 @@ parity, and all validation logs remain under `build_scratch/i248-249/`. Large bu
 throwaway repositories and copied dependency/source trees were removed; the three solver
 binaries, required local shared library, unit binaries and Python bindings are retained.
 Nothing in this worktree was staged or committed.
+
+
+## Issue #249: trusted synthesis owner decision (13 October 2026)
+
+The binding owner decision extends exact Spot trust to synthesis. The timed arm builds no
+general Büchi automaton and runs no controller product or serialized-interface check. Both
+modes record `trust=spot_exact`, `same_library_checked=false` and `independent_checked=false`.
+Decision solving, eligibility, formula-order registration and global memory limits are unchanged.
+
+The latest driver decision removes the special parent-side publication protocol completely.
+The arm now publishes like any ordinary REAL synthesis worker: it converts Spot's retained
+strategy with the CLI's Mealy/Moore semantics and writes directly to `-s` through the shared
+ordinary ASCII AIGER writer. Successful export yields the ordinary REAL exit code. Failed
+export yields UNKNOWN, and the already-running ordinary route can answer. There is no local
+synthesis/publication allowance. The existing parent winner, deadline, cancellation and reaping
+logic governs the arm, including blocked export. File guarantees are exactly those of master's
+ordinary synthesis; concurrent writes and cancellation do not preserve an earlier destination.
+
+Generated timing and strict-objective checks run only in the tests, including raw registration
+order mutations and deliberately swapped CLI semantics. Strategy/output corruptions are
+trusted at runtime and rejected offline. Two-input CLI cases preserve declared IO names
+without imposing declaration order on Spot's used-signal-first AIGER interface. The shared
+writer contract and export-failure fallback are tested directly; publication/rollback tests no
+longer apply. Earlier validation of the removed publication protocol is superseded by this
+implementation and the review findings that prompted the driver decision.
+
+Validation of direct worker export used the first registry-resolved `docker_default` preset.
+Both builds compiled with `-j 4`. Complete unit suites passed **91/91 checked and 88/88
+release** with `--num-processes 4`; the separate obligation suites passed **3/3 per build**.
+Each build's arm wrote **116 generated CLI controllers** accepted by the explicit AIGER
+oracle; deliberately swapping either target semantics was rejected. Raw API controller
+products, registration-order mutations, shared writer/format checks, export-failure fallback,
+blocked export/FIFO supervision, deadline/interruption and worker reaping passed. Checked and
+release obligation-unit stdout is byte-identical.
+
+The synthesis subset (`shift_2`, `shift_4`, `lilydemo13`) passed **3/3 per build** through
+`tests/check-real-correct.sh` with `AB_OPTS='--arms both:obligation:spot'`. Full pytest passed
+**2,300 tests and 23 subtests**, with 40 conditional skips, using the authorized temporary
+repository fixtures and `TMPDIR` under `build_scratch/i249-direct-worker/`. Hardcoding pytest
+passed **96 tests**, with one existing skip. Ruff on `tests scripts benchmarking`, all 49
+shared configuration frontend scalars and `git diff --check` passed. The generated decline
+cause census was refreshed only for the three source-line references shifted by extracting
+the writer. Changes remain uncommitted and the index is unchanged. Validation logs are retained
+in `build_scratch/i249-direct-worker/logs/`; the large task build directories were removed.

@@ -71,7 +71,6 @@ namespace acacia::tlsf_frontend {
     // synthesis metadata, but ask the linked frontend for an effective Mealy
     // formula so solving and controller conversion share one internal path.
     const std::string source_target = result.target;
-    const std::string controller_formula = result.preprocessed_ltl;
     if (source_target != "Mealy") {
       conversion_options.overwrite_target = "Mealy";
       result = tlsf::decompose (owned, conversion_options);
@@ -99,7 +98,6 @@ namespace acacia::tlsf_frontend {
     }
 
     value.formula = std::move (result.preprocessed_ltl);
-    value.controller_formula = controller_formula;
     value.metadata.tlsf_normalized_objective = value.formula;
     value.inputs = std::move (result.inputs);
     value.outputs = std::move (result.outputs);

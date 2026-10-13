@@ -24,7 +24,8 @@ def boolean_formula(inputs, table):
 def cases(exhaustive):
     for semantics in ("Moore", "Mealy", "Strict,Moore", "Strict,Mealy"):
         for target in ("Moore", "Mealy"):
-            tables = [("request", (False, True))]
+            tables = [("request", (False, True)),
+                      ("request,event", (False, True, True, False))]
             if exhaustive:
                 tables = [("request", tuple(bool(mask & (1 << i)) for i in range(2)))
                           for mask in range(4)]
@@ -53,6 +54,21 @@ MAIN {{ INPUTS {{ {"; ".join(inputs)}; }} OUTPUTS {{ grant; }}
         {preset_text} GUARANTEE {{ {guarantee} }} }}
 '''
                         yield (semantics, target, names, delay, preset, table), text, monitor
+            if semantics.startswith("Strict") and target == semantics.split(",")[-1]:
+                # Strict safety must hold until the first REQUIRE violation;
+                # future assumption failure cannot forgive an earlier bad output.
+                def strict_transition(released, letter):
+                    if released or not letter["request"]:
+                        return True
+                    return False if letter["grant"] else None
+
+                text = f'''
+INFO {{ TITLE: "strict safety timing" SEMANTICS: {semantics} TARGET: {target} }}
+MAIN {{ INPUTS {{ request; }} OUTPUTS {{ grant; }}
+        REQUIRE {{ request; }} ASSERT {{ grant; }} }}
+'''
+                yield (semantics, target, "request", "strict-assumptions"), text, (
+                    False, strict_transition)
             # No-input synthesis uses a separate lasso-to-AIG emission path.
             for initial_output in (False, True):
                 output_offset = int(semantics.endswith("Mealy") and target == "Moore")
@@ -72,6 +88,17 @@ MAIN {{ OUTPUTS {{ grant; }} PRESET {{ {"" if initial_output else "!"}grant; }}
 '''
                 yield (semantics, target, "no-input", initial_output), text, (
                     (initial_output, 0), toggle_transition)
+
+    # Immediate Mealy equality and its Moore-target lowering provide controllers
+    # that must fail when the offline oracle deliberately swaps target semantics.
+    for target in ("Mealy", "Moore"):
+        text = f'''
+INFO {{ TITLE: "generated immediate timing" SEMANTICS: Mealy TARGET: {target} }}
+MAIN {{ INPUTS {{ request; }} OUTPUTS {{ grant; }}
+        GUARANTEE {{ G (grant <-> request); }} }}
+'''
+        yield ("Mealy", target, "request", 0, None, (False, True), "swap-semantics"), text, (
+            delayed_table_monitor(["request"], "grant", (False, True), int(target == "Moore")))
 
 
 def run(binary, directory, exhaustive=False, extra=(), require_obligation=False):
@@ -102,11 +129,27 @@ def run(binary, directory, exhaustive=False, extra=(), require_obligation=False)
             winners = [row for row in records if row.get("event") == "parent_winner"]
             checks = [row for row in records if row.get("event") == "obligation_completion"]
             if (len(winners) != 1 or winners[0]["effective_backend"] != "obligation"
-                    or len(checks) != 1 or not checks[0]["independent_checked"]):
+                    or len(checks) != 1 or checks[0]["independent_checked"]
+                    or checks[0]["trust"] != "spot_exact"):
                 rows.append({"case": description, "error": "obligation did not produce controller",
                              "records": records})
                 continue
-        oracle = check(Aiger.read(aig), *monitor, moore=description[1] == "Moore")
+        circuit = Aiger.read(aig)
+        expected_inputs = () if description[2] == "no-input" else tuple(
+            reversed(description[2].split(",")))
+        if (sorted(circuit.input_names) != sorted(expected_inputs)
+                or circuit.output_names != ("grant",)):
+            rows.append({"case": description, "error": "wrong AIGER signal names"})
+            continue
+        oracle = check(circuit, *monitor, moore=description[1] == "Moore")
+        if description[-1] == "swap-semantics":
+            swapped_moore = description[1] == "Mealy"
+            swapped_monitor = delayed_table_monitor(["request"], "grant", (False, True),
+                                                    int(swapped_moore))
+            swapped = check(circuit, *swapped_monitor, moore=swapped_moore)
+            if swapped.valid:
+                rows.append({"case": description, "error": "swapped semantics escaped oracle"})
+                continue
         rows.append({"case": description, "valid": oracle.valid, "states": oracle.states,
                      "transitions": oracle.transitions, "counterexample": oracle.counterexample,
                      "input_dependent": oracle.input_dependent})

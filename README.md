@@ -56,10 +56,15 @@ supervised child, and an ineligible objective returns UNKNOWN without starting t
 helper. In a default portfolio an ineligible input starts no extra process.
 Explicit `--arms` lists run only the named arms. To use the original decision
 portfolio, select its arms explicitly or build a preset without the obligation
-arm. Synthesis (`-s`) accepts an AIGER controller only after Acacia's independent controller
-check, including Moore initialization. Its absolute five-second budget applies with or without
-an outer deadline; failures/timeouts leave ordinary synthesis running. Selecting the arm alone
-with `-s` also retains that fallback. Trust boundaries and historical driver screens are in
+arm. Synthesis (`-s`) trusts Spot's retained strategy and exports the usual ASCII AIGER
+controller with the CLI's Mealy/Moore timing, Moore initialization and strict TLSF objective.
+Both modes declare `trust: spot_exact`; controller correctness is checked offline in the tests.
+The arm writes directly to the `-s` file through the ordinary synthesis writer, and the parent
+accepts its exit and cancels the other workers through the existing race logic. Export failure
+returns UNKNOWN from the arm while ordinary workers continue. Synthesis has the same file and
+cancellation guarantees as ordinary synthesis. Selecting the arm alone with `-s` retains that
+fallback.
+Trust boundaries and historical driver screens are in
 [the obligation arm notes](benchmarking/coverage-first/obligation-helper.md).
 
 # Dependencies

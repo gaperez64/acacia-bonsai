@@ -10,7 +10,6 @@ namespace acacia::tlsf_frontend {
 
   struct specification {
     std::string formula;
-    std::string controller_formula;
     std::vector<std::string> inputs;
     std::vector<std::string> outputs;
     specification_metadata metadata;
