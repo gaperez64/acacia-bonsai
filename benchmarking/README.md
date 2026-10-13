@@ -31,7 +31,21 @@ Restored archives preserve their `benchmarking/` paths under `DIR`. Reporting
 tools in [tools/](tools/) accept that root or explicit input paths. Fetch is
 opt-in; ordinary builds, tests, and solver runs stay offline. Frozen executables
 are pinned by SHA-256 in [baselines.tsv](baselines.tsv) and also archived; G1
-must use the matching old configuration's executable. The read-only/default
+must use the matching old configuration's executable. New archives record each
+member's mode in `MANIFEST.tsv`: `0755` if any execute bit is set when packed,
+`0644` otherwise. Ownership and timestamps remain normalized for deterministic
+archives. Verify checks the recorded modes as well as sizes and SHA-256 hashes,
+and fetch restores those modes, including executable permissions.
+
+Archives packed before #245 retain their original three-column manifests and
+continue to verify and fetch as before. Their frozen executables need this
+one-line repair after fetching, using the restored binary's path:
+
+```sh
+chmod +x DIR/PATH/TO/FROZEN-BINARY
+```
+
+Changing permissions leaves the binary's SHA-256 unchanged. The read-only/default
 `scripts/prune-artifacts.sh` respects the registries and write-protected local
 artifacts. Do not prune active, unpublished, unadjudicated, or sole-copy local
 evidence before archive verification.
