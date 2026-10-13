@@ -85,3 +85,4 @@ PMC1	_bm-logs.postmem/frozen/PMC1	d52363fad20717c27ff0fc6b23dbcc2e2eca617861ceaf
 PMC2	_bm-logs.postmem/frozen/PMC2	1f64f527e1fcd2bf03df5ea9863efb6bdcf09b99bc317e5a24da58dd0a7ba45e	frozen-obligation-helper-screen; 0e6edbd9; historical helper-toggle implementation	binary-PMC2-1f64f527
 PMC3	_bm-logs.postmem/frozen/PMC3	f2449fb4d4f62bb9030bd6a727a3a186dd91dc2fcd3277342f89da91fe9dcbb5	frozen-obligation-named-arm-checkpoint; 7a620eb0	binary-PMC3-f2449fb4
 PMC4	_bm-logs.postmem/frozen/PMC4	b3953b437ede826eabfeb54a5d6f2deb3f79f59153189b7ae79a3c6b35b7951f	selected-evaluation-baseline; closing candidate PR #244 head 188cef33; same-configuration previous-revision G1 baseline for the next change after #244 merges	binary-PMC4-b3953b43
+PMO251	_bm-logs.issues/frozen/PMO251	1746c36a87c7633122b24216cd234a75678868149e36ce90e9c523e3d1d710e9	observation build for the #251 attribution panel (dense query markers; not a shipping configuration)	binary-PMO251-1746c36a

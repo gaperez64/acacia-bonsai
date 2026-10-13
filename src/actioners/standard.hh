@@ -204,6 +204,7 @@ namespace actioners {
               apply_row (p, avec[p]);
           }
 
+          query_progress.completed (m);
           return State (apply_out);
         }
 
@@ -212,6 +213,7 @@ namespace actioners {
         VECTOR_ELT_T K;
         posets::utils::vector_mm<VECTOR_ELT_T> apply_out, backward_reset;
         input_and_actions_set input_output_fwd_actions;
+        acacia::legacy_query_progress query_progress;
 
         template <typename Set>
         auto compute_action_vec (const Set& transset) {

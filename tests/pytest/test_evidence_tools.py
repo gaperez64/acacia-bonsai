@@ -4,6 +4,8 @@ import hashlib
 import importlib.util
 import fcntl
 import io
+import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -122,6 +124,154 @@ class EvidenceToolTests(unittest.TestCase):
                     changed_tar.addfile(info, io.BytesIO(content))
         result = run("python3", "-s", str(EVIDENCE), "verify", str(changed), ok=False)
         self.assertIn("member SHA-256 mismatch", result.stderr)
+
+    def pack_mode_fixture(self, out):
+        script = self.work / "hello.sh"
+        script.write_text("#!/bin/sh\nprintf 'restored executable\\n'\n")
+        script.chmod(0o750)
+        report = self.work / "report.txt"
+        report.write_text("plain report\n")
+        report.chmod(0o640)
+        members = [path.relative_to(ROOT).as_posix() for path in (script, report)]
+        run("python3", "-s", str(EVIDENCE), "pack", "--campaign", "modes",
+            "--status", "closed", "--members", ",".join(members), "--out", str(out),
+            "--source-revision", "abc")
+        return out / "modes.tar.gz", script, report, members
+
+    def fetch_fixture(self, archive, campaign, dest):
+        index = self.work / f"{dest.name}-index.tsv"
+        index.write_text((ROOT / "benchmarking/evidence-index.tsv").read_text())
+        run("python3", "-s", str(EVIDENCE), "index-add", "--index", str(index),
+            "--campaign", campaign, "--status", "closed", "--asset-name", archive.name,
+            "--url", archive.as_uri(), "--sha256",
+            hashlib.sha256(archive.read_bytes()).hexdigest(), "--bytes",
+            str(archive.stat().st_size), "--supports", "mode fixture", "--source-revisions", "abc", "--binary-sha256s", "")
+        run("python3", "-s", str(EVIDENCE), "fetch", "--index", str(index),
+            "--campaign", campaign, "--dest", str(dest))
+
+    def test_executable_modes_are_deterministic_and_restored_by_file_url(self):
+        archive, script, report, members = self.pack_mode_fixture(self.work / "first")
+        modes = {members[0]: 0o755, members[1]: 0o644,
+                 "CAMPAIGN.json": 0o644, "MANIFEST.tsv": 0o644}
+        with tarfile.open(archive, "r:gz") as tar:
+            manifest = tar.extractfile("MANIFEST.tsv").read().decode().splitlines()
+            self.assertEqual(manifest[0], "path\tbytes\tsha256\tmode")
+            recorded = {row.split("\t")[0]: row.split("\t")[3] for row in manifest[1:]}
+            for info in tar:
+                self.assertEqual(info.mode, modes[info.name])
+                self.assertEqual((info.uid, info.gid, info.mtime), (0, 0, 0))
+                self.assertEqual((info.uname, info.gname), ("", ""))
+                if info.name != "MANIFEST.tsv":
+                    self.assertEqual(recorded[info.name], f"{info.mode:04o}")
+        # Different access permissions and execute classes still normalize identically.
+        for number, mode in enumerate((0o610, 0o601, 0o4700)):
+            with self.subTest(mode=oct(mode)):
+                script.chmod(mode)
+                report.chmod(0o600)
+                out = self.work / f"repeat-{number}"
+                run("python3", "-s", str(EVIDENCE), "pack", "--campaign", "modes",
+                    "--status", "closed", "--members", ",".join(reversed(members)),
+                    "--out", str(out), "--source-revision", "abc")
+                self.assertEqual(archive.read_bytes(), (out / "modes.tar.gz").read_bytes())
+        dest = self.work / "restore-executable"
+        previous_umask = os.umask(0o077)
+        try:
+            self.fetch_fixture(archive, "modes", dest)
+        finally:
+            os.umask(previous_umask)
+        for name, mode in modes.items():
+            self.assertEqual((dest / name).stat().st_mode & 0o7777, mode)
+        self.assertEqual(run(str(dest / members[0])).stdout, "restored executable\n")
+        self.assertEqual((dest / members[1]).read_bytes(), report.read_bytes())
+
+    def test_verify_rejects_changed_archive_and_manifest_modes(self):
+        archive, _, _, members = self.pack_mode_fixture(self.work / "original")
+        mutations = [(members[0], 0o644), (members[1], 0o755), (members[0], 0o4755),
+                     ("CAMPAIGN.json", 0o755), ("MANIFEST.tsv", 0o755)]
+        mutations += [("manifest", mode) for mode in ("0644", "0777", "4755", "755", "junk")]
+        mutations.append(("legacy-manifest", None))
+        for number, (name, mode) in enumerate(mutations):
+            with self.subTest(name=name, mode=mode):
+                changed = self.work / f"changed-mode-{number}.tar.gz"
+                with tarfile.open(archive, "r:gz") as source_tar:
+                    with tarfile.open(changed, "w:gz") as changed_tar:
+                        for info in source_tar:
+                            content = source_tar.extractfile(info).read()
+                            if info.name == name:
+                                info.mode = mode
+                            elif name == "manifest" and info.name == "MANIFEST.tsv":
+                                content = content.replace(b"\t0755\n", f"\t{mode}\n".encode())
+                                info.size = len(content)
+                            elif name == "legacy-manifest" and info.name == "MANIFEST.tsv":
+                                content = b"\n".join(line.rsplit(b"\t", 1)[0]
+                                                     for line in content.splitlines()) + b"\n"
+                                info.size = len(content)
+                            changed_tar.addfile(info, io.BytesIO(content))
+                result = run("python3", "-s", str(EVIDENCE), "verify", str(changed), ok=False)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("mode", result.stderr)
+                if number == 0:
+                    dest = self.work / "bad-mode-restore"
+                    index = self.work / "bad-mode-index.tsv"
+                    index.write_text((ROOT / "benchmarking/evidence-index.tsv").read_text())
+                    run("python3", "-s", str(EVIDENCE), "index-add", "--index", str(index),
+                        "--campaign", "modes", "--status", "closed", "--asset-name", changed.name,
+                        "--url", changed.as_uri(), "--sha256",
+                        hashlib.sha256(changed.read_bytes()).hexdigest(), "--bytes",
+                        str(changed.stat().st_size), "--supports", "tampered mode fixture",
+                        "--source-revisions", "abc", "--binary-sha256s", "")
+                    result = run("python3", "-s", str(EVIDENCE), "fetch", "--index", str(index),
+                                 "--campaign", "modes", "--dest", str(dest), ok=False)
+                    self.assertIn("mode differs from manifest", result.stderr)
+                    self.assertFalse(any(dest.iterdir()))
+
+    def test_old_format_archive_still_verifies_and_fetches_without_execute_bits(self):
+        member = "frozen/hello.sh"
+        script = b"#!/bin/sh\nprintf 'legacy executable\\n'\n"
+        campaign = (json.dumps({"id": "legacy", "status": "closed", "tool_version": "1",
+                                "source_revisions": ["abc"], "binary_sha256s": [],
+                                "created_utc": "1970-01-01T00:00:00Z",
+                                "declared_bytes": len(script)},
+                               sort_keys=True, separators=(",", ":")) + "\n").encode()
+        manifest = b"path\tbytes\tsha256\n" + b"".join(
+            f"{name}\t{len(data)}\t{hashlib.sha256(data).hexdigest()}\n".encode()
+            for name, data in (("CAMPAIGN.json", campaign), (member, script)))
+        archive = self.work / "legacy.tar.gz"
+        with tarfile.open(archive, "w:gz", format=tarfile.USTAR_FORMAT) as tar:
+            for name, content in (("CAMPAIGN.json", campaign), ("MANIFEST.tsv", manifest),
+                                  (member, script)):
+                info = tarfile.TarInfo(name)
+                info.size = len(content)
+                info.mode = 0o644
+                tar.addfile(info, io.BytesIO(content))
+        run("python3", "-s", str(EVIDENCE), "verify", str(archive))
+        dest = self.work / "restore-legacy"
+        previous_umask = os.umask(0o077)
+        try:
+            self.fetch_fixture(archive, "legacy", dest)
+        finally:
+            os.umask(previous_umask)
+        restored = dest / member
+        self.assertEqual(restored.read_bytes(), script)
+        for name in (member, "CAMPAIGN.json", "MANIFEST.tsv"):
+            self.assertEqual((dest / name).stat().st_mode & 0o7777, 0o600)
+        restored.chmod(restored.stat().st_mode | 0o111)
+        self.assertEqual(hashlib.sha256(restored.read_bytes()).digest(),
+                         hashlib.sha256(script).digest())
+        self.assertEqual(run(str(restored)).stdout, "legacy executable\n")
+
+    def test_gate_distinguishes_missing_and_nonexecutable_baseline(self):
+        gate = ROOT / "benchmarking/regression-gate.sh"
+        baseline = self.work / "baseline"
+        missing = run("bash", str(gate), "--baseline-bin", str(baseline), str(self.work), ok=False)
+        self.assertEqual(missing.returncode, 1)
+        self.assertIn("missing or not executable", missing.stdout)
+        self.assertNotIn("chmod +x", missing.stdout)
+        baseline.write_text("#!/bin/sh\nexit 0\n")
+        baseline.chmod(0o644)
+        result = run("bash", str(gate), "--baseline-bin", str(baseline), str(self.work), ok=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("restored archives before #245 need chmod +x", result.stdout)
 
     def test_reject_symlink_sealed_path_and_unsafe_archive(self):
         link = self.work / "link.txt"

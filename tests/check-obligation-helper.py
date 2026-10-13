@@ -237,15 +237,27 @@ def main() -> None:
                "peak_rss_kb", "mallinfo2"}
 
     def stable_records(rows: list[dict]) -> list[str]:
-        return sorted(json.dumps({key: value for key, value in row.items() if key not in sampled},
-                                 sort_keys=True) for row in rows)
+        normalized = []
+        for row in rows:
+            ignored = sampled
+            # Query progress clocks are sampled values too; keep the records and counters.
+            if row.get("event") == "stage_metric" and row.get("key") in {
+                    "first_useful_action_query_ns", "query_snapshot_ns"}:
+                ignored = sampled | {"value"}
+            normalized.append(json.dumps({key: value for key, value in row.items()
+                                          if key not in ignored}, sort_keys=True))
+        return sorted(normalized)
 
-    for formula, ordinary in [("G F (i <-> o)", "real:small:backward"),
-                              ("F G (i <-> o)", "unreal:formula:backward")]:
+    # Deciding arms keep this full-record panel within the bounded transport's capacity.
+    for formula, ordinary, expected in [("G F (i <-> o)", "real:small:backward", 0),
+                                        ("F G (i <-> o)", "real:small:backward", 0),
+                                        ("G F (X i <-> o)", "unreal:formula:backward", 1)]:
         args = ["-f", formula, "-i", "i", "-o", "o"]
         exact, exact_rows = run(binary, [*args, "--arms", ordinary], root, library)
         default, default_rows = run(binary, [*args, "--arms", ordinary + "," + arm],
                                     root, library)
+        assert exact.returncode == default.returncode == expected, (exact, default)
+        assert not any(row.get("dropped_records", 0) for row in exact_rows + default_rows)
         assert not helper_rows(default_rows, "start"), default_rows
         eligibility = helper_rows(default_rows, "eligibility")
         assert len(eligibility) == 1 and eligibility[0]["outcome"] == "inapplicable"
@@ -253,6 +265,8 @@ def main() -> None:
         exact_writer = next(row for row in exact_rows if row.get("event") == "writer_summary")
         selected_writer = next(row for row in default_rows
                                if row.get("event") == "writer_summary")
+        assert exact_writer["failed_records"] == selected_writer["failed_records"] == 0
+        assert not exact_writer["incomplete_packet"] and not selected_writer["incomplete_packet"]
         assert selected_writer["delivered_records"] == exact_writer["delivered_records"] + 1
         selected_writer["delivered_records"] -= 1
         default_rows = [row for row in default_rows

@@ -58,6 +58,70 @@ sets. `identity.json` binds the source map by SHA-256. An initial census incorre
 Spot's sole rewritten component. Its output is retained as
 `census-before-single-component-fix.tsv`; the corrected tool has a regression self-test.
 
+### Isolated census driver (13 October 2026)
+
+Use `tests/event-univ-census-isolated.py` for corpus-wide counts. It runs serially,
+starting the checked, uninstalled census executable once per source-map data row with
+an ephemeral one-row map. This discards Spot's simplifier/BDD state between inputs.
+The original single-process command remains available, but accumulated state can make
+later inputs much slower, make completion depend on input order, or stall the run.
+Its observed stall at row 450 lasted over an hour; the same input took about eight seconds
+in a fresh process. Single-process corpus counts therefore require particular care.
+
+```sh
+python3 tests/event-univ-census-isolated.py \
+  tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv /path/to/tlsf-corpus \
+  build_scratch/i246/checked/tests/event-univ-census \
+  --output build_scratch/i246/isolated-census --systemd-scope
+```
+
+The global evaluation bound is 120 seconds per input, configurable with `--timeout`.
+`--systemd-scope` puts each invocation in a separate user scope with `MemoryMax=8G`
+and `MemorySwapMax=0`; scope use is optional. At the bound the driver kills and reaps
+that invocation, records `exhausted`, and continues to the next source row. Nonzero
+exits become `error_N`, with signal exits represented as 128 plus the signal number.
+A launcher failure becomes `error_127`. The headerless `input-status.tsv` contains
+original one-based data-row ordinal, `ok|exhausted|error_N`, and elapsed seconds.
+
+Each census row contains only the guarded count: ordinal, status, frame, component,
+`expected_components`, distinct promises, Spot's acceptance width, and `guard_fires`.
+The driver rewrites the local ordinal 1 to the original ordinal and concatenates rows
+under one header. `inputs/` retains individual outputs and errors; `run.json` records
+bounds and isolation settings. The output directory must be new to preserve existing evidence.
+
+The driver calls `tests/event-univ-census-summary.py --input-status ... --allow-incomplete`.
+An input enters every count only when every expected component of all seven frames is
+present and its process status is `ok`. Missing, exhausted, failed and truncated inputs
+remain explicitly unknown, even if some of their rows already show a firing guard.
+`summary.json` reports complete-input counts, guard ordinals, status counts and exhausted
+ordinals. `guard-firing.list` labels partial membership when completion is incomplete.
+`identity.json` binds the source map, census, status file, executable and relevant sources
+by SHA-256 and records build options, compiler and linked libraries. Direct summary use
+rejects incomplete runs unless `--allow-incomplete` is supplied. The isolated driver returns
+nonzero for errors or unexplained incomplete output; expected exhaustion is a reported
+partial census with exit zero. These are frontend diagnostics and add no runtime solver option.
+
+The 13 October rerun used a `debugoptimized` build with assertions retained, no LTO,
+Spot 2.16 and its 64-set acceptance width, the source map above, and corpus
+`/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus`. All 1,524 input statuses are `ok`:
+zero exhausted, zero errors, zero missing statuses, and every component of every frame
+is present. The summary is complete. All seven counts in the table above are unchanged;
+the shipping guard union is exactly the same 40 ordinals (2.62%), and the two UNREAL
+sets still agree. No solver or game ran during this diagnostic.
+
+The rerun artifacts are archived as `census20261013-isolated` (see [evidence-index.tsv](../evidence-index.tsv)): `census.tsv`,
+`input-status.tsv`, `summary.json`, `guard-firing.list`, `run.json`, `identity.json`,
+individual outputs/errors and a verified source snapshot. The summary and isolated-driver
+regressions pass all 38 cases; the checked unit suite passes 75/75 with four workers.
+Full pytest with freshly built Python bindings passes 2,333 tests and 20 subtests, with
+40 existing skips. Four evidence-history tests fail because the task's absolute no-commit
+instruction blocks their temporary `git fast-import` commits before execution. No other
+tests fail. The separate anti-hardcoding check passes 96 tests with one existing skip;
+Ruff, configuration consistency, census self-test and diff checks pass.
+Artifact hashes and retained sources were verified, no census scopes remain, and cleanup
+removed 125 build objects (554,094,056 bytes), temporary dependency sources and test caches.
+The runnable census binary, Python bindings, build metadata and diagnostic evidence are retained.
+
 ## Four shipping diagnostics
 
 Exactly one invocation per requested source ran sequentially, using the shipping default

@@ -64,6 +64,10 @@ int main () {
   {
     acacia::legacy_phase scope ("search");
     acacia::legacy_count ("queries", 1000);
+    acacia::legacy_query_progress progress;
+    const State rank (1, 0);
+    for (size_t i = 0; i < 1000; ++i)
+      progress.completed (rank);
     acacia::legacy_metric ("status", "complete");
     acacia::legacy_graph (graph);
     acacia::legacy_bdd_gc gc;
