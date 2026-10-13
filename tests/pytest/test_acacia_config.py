@@ -91,7 +91,7 @@ def test_gr1_prepass_preset_is_five_arms():
     ]
 
 
-def test_gr1_real_prepass_preset_is_five_arms():
+def test_gr1_real_prepass_preset_is_six_arms():
     module = load_module()
     options, presets = module.load_registry()
     parent = module.normalize_preset(options, presets, "otf_sparse_formula")
@@ -108,10 +108,31 @@ def test_gr1_real_prepass_preset_is_five_arms():
         "unreal:formula:spot-guarded-sparse",
         "unreal:automaton:forward",
         "both:gr1-real-lift:oxidd",
+        "both:obligation:spot",
     ]
     assert {
         key for key in candidate if key not in {"_preset", "preset"} and candidate[key] != parent[key]
     } == {"native_arms", "default_arms"}
+
+
+def test_obligation_membership_is_declared_only_in_explicit_shipping_portfolios():
+    module = load_module()
+    options, presets = module.load_registry()
+    shipping = presets["groups"]["docker_default"]
+    arm = "both:obligation:spot"
+    for name, data in presets["presets"].items():
+        values = module.normalize_preset(options, presets, name)
+        arms = values["default_arms"].split(",")
+        if name in shipping and data.get("default_arms"):
+            assert arms.count(arm) == 1, name
+            assert f"-Dacacia_default_arms={values['default_arms']}" in module.meson_args(
+                options, values)
+        else:
+            assert arm not in arms, name
+    fallback = module.normalize_preset(options, presets, "otf_sparse_formula")
+    assert fallback["native_arms"] is False
+    assert arm in fallback["default_arms"].split(",")
+    assert options["options"]["default_arms"]["default"] == ""
 
 
 def test_docker_launcher_uses_registry_group_without_python():

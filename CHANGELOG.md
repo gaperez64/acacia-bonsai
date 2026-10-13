@@ -82,6 +82,18 @@ See [the panels](benchmarking/RESULTS.md) and
 
 ## Timeline (newest first)
 
+### Unreleased
+
+- **Oct 12:** `both:obligation:spot` joins the explicit shipping portfolios through
+  the compile-time registry, so frozen builds record their full arm lists. It runs
+  only for eligible original objectives and can run alone through `--arms`.
+  Explicit arm lists select exactly their members; the runtime helper toggle is
+  removed. Select the previous arms explicitly to recover the original portfolio.
+  Historical presets and the empty default-arm configuration stay unchanged.
+  Synthesis keeps its existing route. The driver's earlier helper screens show
+  eight additional REAL solves with no losses; full-corpus admission remains
+  pending. [Arm notes](benchmarking/coverage-first/obligation-helper.md).
+
 ### Unreleased, September 2026
 
 - **Sep 23–25:** Draft [PR #192](https://github.com/gaperez64/acacia-bonsai/pull/192) is porting source-bound, generic GR(1) and parameter-lifting arms into Acacia through tlsf-tools; the native GR(1) arms and per-arm deadline fix landed, while full-corpus and integrated portfolio measurements remain in progress. [Decisions](benchmarking/RESULTS.md).

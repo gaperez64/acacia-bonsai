@@ -484,6 +484,7 @@ game_backend_integration_sources = [
   '../src/solver/mealy_to_moore.cc',
   '../src/solver/real_backend_selector.cc',
   '../src/solver/solver_invoker.cc',
+  '../src/solver/obligation_helper.cc',
   '../src/solver/solve_game.cc',
   '../src/solver/solve_game_vector.cc',
 ]
@@ -606,7 +607,7 @@ if default_arms_opt != ''
     needs_real = needs_real or real_arm
     needs_unreal = needs_unreal or unreal_arm
     native_arm = spec.contains (':gr1:oxidd') or spec.contains (':gr1-lift:oxidd') or spec.contains (':gr1-real-lift:oxidd') or spec.contains (':param-lift:oxidd')
-    if not native_arm
+    if not native_arm and spec != 'both:obligation:spot'
       default_check_children += 1
       has_legacy_real = has_legacy_real or real_arm
       has_legacy_unreal = has_legacy_unreal or unreal_arm
@@ -1016,3 +1017,30 @@ action_payload_test = executable ('action-payload-test', 'action_payload_test.cc
                                   dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep],
                                   cpp_args : ['-UNO_VERBOSE'])
 test ('action-payload', action_payload_test, suite : ['unit', 'action-payload'], timeout : 120)
+
+obligation_helper_test = executable (
+  'obligation-helper-test',
+  ['obligation_helper_test.cc', '../src/solver/obligation_helper.cc'],
+  include_directories : inc, dependencies : [spot_dep, bddx_dep])
+test ('obligation-helper', obligation_helper_test, suite : ['unit', 'obligation'])
+if host_machine.system () == 'linux'
+  obligation_helper_faults = shared_library (
+    'obligation-helper-faults', 'obligation_helper_faults.cc',
+    dependencies : [spot_dep, bddx_dep, cpp.find_library ('dl')], install : false)
+  obligation_cli_args = [files ('check-obligation-helper.py'), ab_exe,
+                         obligation_helper_test, obligation_helper_faults,
+                         meson.current_build_dir (),
+                         '--default-arms', get_option ('acacia_default_arms')]
+  if ltlsynt_exe.found ()
+    obligation_cli_args += ['--ltlsynt', ltlsynt_exe.full_path ()]
+  endif
+  if enable_tlsf_frontend
+    obligation_cli_args += ['--tlsf']
+  endif
+  if get_option ('acacia_native_arms')
+    obligation_cli_args += ['--native']
+  endif
+  test ('obligation-helper-cli', py, args : obligation_cli_args,
+        suite : ['unit', 'obligation', 'portfolio'], timeout : 90,
+        depends : [ab_exe, obligation_helper_test, obligation_helper_faults])
+endif

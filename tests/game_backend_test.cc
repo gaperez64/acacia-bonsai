@@ -179,5 +179,23 @@ int main () {
   if (parse_portfolio_arms ("real:gr1:backward").error !=
       portfolio_arm_parse_error::native_backend) return 1;
 
+  const auto obligation = parse_portfolio_arms ("both:obligation:spot");
+  if (obligation.error != portfolio_arm_parse_error::none || obligation.arms.size () != 1 ||
+      obligation.arms[0].kind != portfolio_arm_kind::obligation ||
+      !obligation.arms[0].both || obligation.arms[0].unreal || obligation.arms[0].legacy ||
+      std::string_view (obligation.arms[0].native_name ()) != "both:obligation:spot")
+    return 1;
+  const auto obligation_mix = parse_portfolio_arms (
+      "both:obligation:spot,real:small:backward,both:gr1:oxidd");
+  if (obligation_mix.error != portfolio_arm_parse_error::none || obligation_mix.arms.size () != 3)
+    return 1;
+  for (const char* spec : {"real:obligation:spot", "unreal:obligation:spot",
+                         "both:obligation:backward", "both:obligation:spot:frozen-graph"})
+    if (parse_portfolio_arms (spec).error != portfolio_arm_parse_error::obligation_spec)
+      return 1;
+  if (parse_portfolio_arms ("both:obligation:spot,both:obligation:spot").error !=
+      portfolio_arm_parse_error::duplicate)
+    return 1;
+
   return 0;
 }
