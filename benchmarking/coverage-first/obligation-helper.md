@@ -26,7 +26,7 @@ also run only their requested routes. Synthesis (`-s`) uses the ordinary default
 explicitly selecting this decision-only arm with `-s` is an error. Replay and native
 checking retain their existing routes.
 
-## Driver screens and pending admission
+## Driver screens and full-corpus admission (13 October 2026)
 
 The driver compared frozen helper implementation `0e6edbd9` (PMC2) with frozen post-memory
 master M. On the 223 inputs whose objectives are syntactic obligations, the enabled helper solves
@@ -36,9 +36,21 @@ paired PAR-2 −286 s. The helper-disabled route matches master exactly in this 
 At 60 s on the 16 obligation inputs unresolved at 17 s, the enabled helper solves nine versus one each for
 the helper-disabled route and master. The same eight gains complete in 0.1–1.1 s, with zero losses. On 156
 ineligible controls at 17 s, the enabled helper and the helper-disabled route both solve 62; paired PAR-2 changes by +1.8 s.
-These are driver-supplied screens, not a completed full-corpus admission result. The default
-is enabled so the driver's full-corpus candidate campaign exercises shipping behavior;
-final admission remains with that campaign.
+These historical driver screens are archived in `postmem20261011-p2`, with frozen
+PMC2 in `binary-PMC2-1f64f527`.
+
+The completed full-corpus campaign `postmem20261012-closing` admits the shipping arm at
+PR #244 head `188cef33` (PMC4, `binary-PMC4-b3953b43`) against post-memory master
+`b95777aa` (PMM, `binary-PMM-99ca4055`). Fresh paired 17 s races solve 1,222 versus
+1,214; fully fresh measured 60 s races solve 1,255 versus 1,247, each on all 1,524 inputs.
+Eight REAL gains and zero losses are confirmed at both caps. Raw paired PAR-2 deltas are
+−284.885539 s and −972.094862 s. The raw 17 s near-cap loss `07.ltl` and gain
+`g-unreal-310.ltl` are not confirmed by three cooled repetitions; original counts and
+PAR-2 remain unchanged. The fresh 60 s series reuse no 17 s rows. ltlsynt/TACAS23 are
+archived separate-session references, with derived 60 s observations. See
+[RESULTS.md](../RESULTS.md) and the [decision record](../post-memory-frontend/decisions.md)
+for exact counts, validation fallback and trust disclosures. Once #244 merges, PMC4 is
+the same-configuration previous-revision G1 baseline for the next shipping change.
 
 ## Spot 2.16 API audit
 
@@ -178,7 +190,8 @@ portfolio and once with `--arms both:obligation:spot`. These make no timing clai
 
 All spawned workers have parent reaping records and no surviving worker PID. Ineligible
 arm-only selection spawns zero solver processes. The scope bus required sandbox escalation;
-the initial blocked attempt ran no solver. Full-corpus admission remains the driver's campaign.
+the initial blocked attempt ran no solver. Full-corpus admission is now recorded above in
+`postmem20261012-closing`; these earlier diagnostics remain correctness observations.
 
 
 ## Registry membership validation (12 October 2026)
