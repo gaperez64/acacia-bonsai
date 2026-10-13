@@ -1,4 +1,5 @@
 // Test-only ELF interposition. Never linked into or installed with a solver.
+#include "../src/phase_records.hh"
 #include <string_view>
 
 #include <cerrno>
@@ -9,6 +10,7 @@
 #include <fstream>
 #include <new>
 #include <ostream>
+#include <poll.h>
 #include <spot/twaalgos/aiger.hh>
 #include <spot/twaalgos/mtdswa.hh>
 #include <spot/twaalgos/synthesis.hh>
@@ -24,14 +26,16 @@ namespace {
     if (const char* value = std::getenv (name)) {
       const long ms = std::strtol (value, nullptr, 10);
       timespec wait {ms / 1000, (ms % 1000) * 1000000};
-      while (nanosleep (&wait, &wait) != 0 && errno == EINTR) {}
+      while (nanosleep (&wait, &wait) != 0 && errno == EINTR) {
+      }
     }
   }
   void wait_legacy () {
     if (const char* value = std::getenv ("ACACIA_TEST_OBLIGATION_LEGACY_GATE_FD")) {
       char byte;
       const int descriptor = int (std::strtol (value, nullptr, 10));
-      while (read (descriptor, &byte, 1) < 0 && errno == EINTR) {}
+      while (read (descriptor, &byte, 1) < 0 && errno == EINTR) {
+      }
     }
     else
       delay ("ACACIA_TEST_OBLIGATION_LEGACY_DELAY_MS");
@@ -39,7 +43,8 @@ namespace {
   void stall_ready () {
     if (const char* value = std::getenv ("ACACIA_TEST_OBLIGATION_STALL_READY_FD")) {
       const int descriptor = int (std::strtol (value, nullptr, 10));
-      while (write (descriptor, "x", 1) < 0 && errno == EINTR) {}
+      while (write (descriptor, "x", 1) < 0 && errno == EINTR) {
+      }
     }
   }
 }
@@ -82,7 +87,12 @@ namespace spot {
       while (true)
         pause ();
     }
-    if (fault == "stall") {
+    if (fault == "stall" || fault == "long-stall") {
+      if (fault == "long-stall") {
+        timespec wait {5, 200000000};
+        while (nanosleep (&wait, &wait) != 0 && errno == EINTR) {
+        }
+      }
       stall_ready ();
       while (true)
         pause ();
@@ -110,8 +120,7 @@ namespace spot {
       os.setstate (std::ios::badbit);
       return os;
     }
-    if (fault == "writer-contract" &&
-        (!controller_opened || !dynamic_cast<std::ofstream*> (&os)))
+    if (fault == "writer-contract" && (!controller_opened || !dynamic_cast<std::ofstream*> (&os)))
       throw std::runtime_error ("controller must use the ordinary file writer");
     if (obligation_entered && fault == "export-exception")
       throw std::runtime_error ("test export failure");
@@ -218,4 +227,43 @@ extern "C" FILE* test_fopen (const char* path, const char* mode) {
 
 extern "C" FILE* fopen64 (const char* path, const char* mode) {
   return controller_fopen (path, mode, "fopen64");
+}
+
+// Record delivery is best effort in the solver. Tests that assert complete rows
+// acknowledge each packet's append, so writer scheduling cannot drop their oracle.
+extern "C" ssize_t write (int fd, const void* data, size_t size) {
+  using function = ssize_t (*) (int, const void*, size_t);
+  static const auto original = reinterpret_cast<function> (dlsym (RTLD_NEXT, "write"));
+  const char* directory = std::getenv ("ACACIA_PHASE_RECORDS");
+  constexpr size_t header = offsetof (acacia::phase_packet, line);
+  pid_t pid = -1;
+  uint16_t length = 0;
+  if (size > header && size <= sizeof (acacia::phase_packet)) {
+    std::memcpy (&pid, data, sizeof pid);
+    std::memcpy (&length,
+                 static_cast<const char*> (data) + offsetof (acacia::phase_packet, length),
+                 sizeof length);
+  }
+  if (!directory || !std::getenv ("ACACIA_TEST_OBLIGATION_RECORD_ACK") || pid != getpid () ||
+      size != header + length || !length || static_cast<const char*> (data)[size - 1] != '\n')
+    return original (fd, data, size);
+  char path[4096];
+  const int used = snprintf (path, sizeof path, "%s/%ld.jsonl", directory, long (pid));
+  if (used <= 0 || size_t (used) >= sizeof path)
+    return original (fd, data, size);
+  struct stat before {};
+  const off_t end = (stat (path, &before) == 0 ? before.st_size : 0) + length;
+  ssize_t written;
+  while ((written = original (fd, data, size)) < 0 && (errno == EAGAIN || errno == EINTR)) {
+    pollfd writable {fd, POLLOUT, 0};
+    poll (&writable, 1, -1);
+  }
+  if (written == ssize_t (size)) {
+    const int saved_errno = errno;
+    struct stat after {};
+    while (stat (path, &after) != 0 || after.st_size < end)
+      poll (nullptr, 0, 1);
+    errno = saved_errno;
+  }
+  return written;
 }

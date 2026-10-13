@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 
 from moore_aiger_oracle import Aiger, check, delayed_table_monitor
-from obligation_test_support import LegacyGate
+from obligation_test_support import LegacyGate, records as phase_records
 
 
 def boolean_formula(inputs, table):
@@ -116,6 +116,7 @@ def run(binary, directory, exhaustive=False, extra=(), require_obligation=False)
             phases = directory / f"case-{index}-phases"
             phases.mkdir()
             env["ACACIA_PHASE_RECORDS"] = str(phases)
+            env["ACACIA_TEST_OBLIGATION_RECORD_ACK"] = "1"
             env["ACACIA_TEST_OBLIGATION_OUTPUT"] = str(aig)
             # Exercise a helper slower than the former 300 ms race-steering delay.
             env["ACACIA_TEST_OBLIGATION_HELPER_DELAY_MS"] = "500" if index == 0 else "0"
@@ -136,15 +137,16 @@ def run(binary, directory, exhaustive=False, extra=(), require_obligation=False)
                     result = subprocess.CompletedProcess(
                         command, process.returncode, stdout, stderr)
         except subprocess.TimeoutExpired:
-            rows.append({"case": description, "error": "synthesis timeout"})
+            rows.append({"case": description, "error": "synthesis timeout",
+                         "records": phase_records(phases, complete_only=True)})
             continue
         if result.returncode != 0 or not aig.exists():
             rows.append({"case": description, "error": result.stderr[-2000:],
-                         "exit": result.returncode})
+                         "exit": result.returncode,
+                         "records": phase_records(phases, complete_only=True)})
             continue
         if require_obligation:
-            records = [json.loads(line) for file in phases.glob("*.jsonl")
-                       for line in file.read_text().splitlines()]
+            records = phase_records(phases)
             winners = [row for row in records if row.get("event") == "parent_winner"]
             checks = [row for row in records if row.get("event") == "obligation_completion"]
             if (len(winners) != 1 or winners[0]["effective_backend"] != "obligation"
@@ -175,7 +177,7 @@ def run(binary, directory, exhaustive=False, extra=(), require_obligation=False)
     (directory / "results.json").write_text(json.dumps(rows, indent=2) + "\n")
     failures = [row for row in rows if not row.get("valid", False)]
     print(f"{len(rows) - len(failures)}/{len(rows)} exact controller checks passed")
-    for row in failures[:8]:
+    for row in failures:
         print(json.dumps(row))
     return rows
 

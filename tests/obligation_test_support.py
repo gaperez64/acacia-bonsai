@@ -42,27 +42,34 @@ class LegacyGate:
         if self.descriptors:
             os.close(self.ready_read)
 
-    def communicate(self, process, directory, timeout):
+    def communicate(self, process, directory, timeout, release_stalls=True):
         if not self.descriptors:
             return process.communicate(timeout=timeout)
         deadline = time.monotonic() + timeout
+        stall_ready = False
         while True:
             # A successful helper keeps ordinary workers gated until the parent
             # accepts it and cancels them. Declines and actual injected stalls
             # release the existing fallback, whose winner is still asserted.
+            # Wait for reaping before releasing a decline: completion is emitted
+            # before the child publishes its shared result and exits.
+            # Deadline/interruption tests hold stalls until the parent stops them.
             if self.release_fd is not None:
                 try:
-                    ready = os.read(self.ready_read, 1)
+                    stall_ready |= bool(os.read(self.ready_read, 1))
                 except BlockingIOError:
-                    ready = b""
+                    pass
                 rows = records(directory, complete_only=True)
                 declined = any(
                     row.get("event") == "obligation_completion"
                     and row.get("outcome") not in {"completed_REAL", "completed_UNREAL"}
+                    and any(terminal.get("event") == "parent_terminal"
+                            and terminal.get("worker_pid") == row["worker_pid"]
+                            for terminal in rows)
                     or row.get("event") == "obligation_eligibility"
                     and row.get("outcome") == "inapplicable"
                     for row in rows)
-                if ready or declined:
+                if stall_ready and release_stalls or declined:
                     self.release()
             remaining = deadline - time.monotonic()
             if remaining <= 0:
