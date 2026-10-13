@@ -7,6 +7,7 @@
 #include <spot/tl/apcollect.hh>
 #include <spot/tl/parse.hh>
 #include <spot/twaalgos/synthesis.hh>
+#include <sstream>
 #include <stdexcept>
 
 namespace {
@@ -19,15 +20,15 @@ namespace {
     return shift (shift, formula);
   }
 
-  size_t component_count (spot::formula formula, const std::vector<std::string>& inputs,
-                          const std::vector<std::string>& outputs, bool real, bool shifted) {
+  std::vector<spot::formula> component_frames (spot::formula formula,
+                                               const std::vector<std::string>& inputs,
+                                               const std::vector<std::string>& outputs, bool real,
+                                               bool shifted) {
     auto [forms, partitions] = spot::split_independent_formulas (formula, outputs);
-    // The runner keeps its original objective unless decomposition yields
-    // multiple components; Spot can rewrite even its sole returned component.
+    // Match the runner: a sole decomposition result never replaces its objective.
     if (forms.size () <= 1)
       forms = {formula};
-    size_t maximum = 0;
-    for (auto form : forms) {
+    for (auto& form : forms) {
       if (real && forms.size () > 1) {
         spot::realizability_simplifier simplifier (form, inputs);
         form = simplifier.simplified_formula ();
@@ -36,9 +37,26 @@ namespace {
         form = spot::formula::Not (form);
       if (shifted)
         form = shift_outputs (form, outputs);
-      maximum = std::max (maximum, acacia::translation::distinct_promises (form));
     }
+    return forms;
+  }
+
+  size_t maximum_promises (const std::vector<spot::formula>& forms) {
+    size_t maximum = 0;
+    for (const auto& form : forms)
+      maximum = std::max (maximum, acacia::translation::distinct_promises (form));
     return maximum;
+  }
+
+  void emit (std::ostream& out, unsigned ordinal, const char* frame,
+             const std::vector<spot::formula>& forms) {
+    using namespace acacia::translation;
+    for (size_t i = 0; i < forms.size (); ++i) {
+      const auto promises = distinct_promises (forms[i]);
+      out << ordinal << "\tok\t" << frame << '\t' << i + 1 << '\t' << forms.size () << '\t'
+          << promises << '\t' << acceptance_set_width () << '\t' << needs_event_univ (promises)
+          << std::endl;
+    }
   }
 }
 
@@ -48,14 +66,26 @@ int main (int argc, char** argv) {
     using namespace acacia::translation;
     const auto positive = distinct_promises (formula);
     const auto negative = distinct_promises (spot::formula::Not (formula));
-    if (component_count (formula, {"a"}, {"b"}, false, false) != positive ||
-        component_count (formula, {"a"}, {"b"}, false, true) != positive ||
-        component_count (formula, {"a"}, {"b"}, true, false) != negative)
+    if (maximum_promises (component_frames (formula, {"a"}, {"b"}, false, false)) != positive ||
+        maximum_promises (component_frames (formula, {"a"}, {"b"}, false, true)) != positive ||
+        maximum_promises (component_frames (formula, {"a"}, {"b"}, true, false)) != negative)
+      return 1;
+    const auto independent = spot::parse_infix_psl ("G F b & G F c").f;
+    const auto components = component_frames (independent, {"a"}, {"b", "c"}, false, false);
+    if (components.size () != 2)
+      return 1;
+    std::ostringstream rows;
+    emit (rows, 7, "automaton-unreal", components);
+    const auto text = rows.str ();
+    if (std::count (text.begin (), text.end (), '\n') != 2 ||
+        !text.starts_with ("7\tok\tautomaton-unreal\t1\t2\t") ||
+        text.find ("\n7\tok\tautomaton-unreal\t2\t2\t") == std::string::npos)
       return 1;
     return 0;
   }
   if (argc != 3) {
-    std::cerr << "usage: event-univ-census SOURCE_MAP CORPUS_ROOT\n";
+    std::cerr << "usage: event-univ-census SOURCE_MAP CORPUS_ROOT\n"
+                 "For bounded per-input isolation, use tests/event-univ-census-isolated.py.\n";
     return 2;
   }
   std::ifstream sources (argv[1]);
@@ -64,10 +94,9 @@ int main (int argc, char** argv) {
   std::string row;
   std::getline (sources, row);
   unsigned ordinal = 0, failures = 0;
-  std::cout << "source_row\tfrontend_positive\tfrontend_negative\tsimplified_positive\t"
-               "simplified_negative\treal_components_max\tunreal_formula_components_max\t"
-               "unreal_automaton_components_max\twidth\treal_guard\tunreal_formula_guard\t"
-               "unreal_automaton_guard\tstatus\n";
+  std::cout << "source_row\tstatus\tframe\tcomponent\texpected_components\tdistinct_promises\t"
+               "width\tguard_fires\n"
+            << std::flush;
   while (std::getline (sources, row)) {
     ++ordinal;
     try {
@@ -79,21 +108,18 @@ int main (int argc, char** argv) {
       const auto parsed = spot::parse_infix_psl (spec.formula);
       if (!parsed.f || !parsed.errors.empty ())
         throw std::runtime_error ("frontend formula did not parse");
+      emit (std::cout, ordinal, "raw-positive", {parsed.f});
+      emit (std::cout, ordinal, "raw-negative", {spot::formula::Not (parsed.f)});
       spot::realizability_simplifier simplifier (parsed.f, spec.inputs);
       const auto simplified = simplifier.simplified_formula ();
-      using namespace acacia::translation;
-      const auto real = component_count (simplified, spec.inputs, spec.outputs, true, false);
-      const auto unreal_formula =
-          component_count (simplified, spec.inputs, spec.outputs, false, true);
-      const auto unreal_automaton =
-          component_count (simplified, spec.inputs, spec.outputs, false, false);
-      std::cout << ordinal << '\t' << distinct_promises (parsed.f) << '\t'
-                << distinct_promises (spot::formula::Not (parsed.f)) << '\t'
-                << distinct_promises (simplified) << '\t'
-                << distinct_promises (spot::formula::Not (simplified)) << '\t' << real << '\t'
-                << unreal_formula << '\t' << unreal_automaton << '\t' << acceptance_set_width ()
-                << '\t' << needs_event_univ (real) << '\t' << needs_event_univ (unreal_formula)
-                << '\t' << needs_event_univ (unreal_automaton) << "\tok\n";
+      emit (std::cout, ordinal, "simplified-positive", {simplified});
+      emit (std::cout, ordinal, "simplified-negative", {spot::formula::Not (simplified)});
+      emit (std::cout, ordinal, "real-components",
+            component_frames (simplified, spec.inputs, spec.outputs, true, false));
+      emit (std::cout, ordinal, "formula-unreal",
+            component_frames (simplified, spec.inputs, spec.outputs, false, true));
+      emit (std::cout, ordinal, "automaton-unreal",
+            component_frames (simplified, spec.inputs, spec.outputs, false, false));
     } catch (const std::exception& error) {
       ++failures;
       std::cerr << "row " << ordinal << ": " << error.what () << '\n';
