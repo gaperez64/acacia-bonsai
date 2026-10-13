@@ -1,8 +1,10 @@
 #include "solver/obligation_helper.hh"
 
+#include "solver/mealy_to_moore.hh"
+#include <unordered_set>
+
 #include <algorithm>
 #include <new>
-#include <spot/twaalgos/emptiness.hh>
 #include <stdexcept>
 
 namespace acacia::obligation {
@@ -39,7 +41,7 @@ namespace acacia::obligation {
   }
 
   void record (const char* event, outcome value, const char* reason, uint64_t start_ns,
-               bool same_library_checked, int worker, pid_t pid) noexcept {
+               int worker, pid_t pid) noexcept {
     if (!phase_records_enabled ())
       return;
     if (auto* current = active_worker_record ()) {
@@ -53,10 +55,10 @@ namespace acacia::obligation {
                   "{\"arm\":\"both:obligation:spot\",\"event\":\"obligation_%s\","
                   "\"worker\":%d,\"worker_pid\":%ld,"
                   "\"outcome\":\"%s\",\"reason\":\"%s\",\"mono_ns\":%llu,\"wall_ns\":%llu,"
-                  "\"trust\":\"trusted_exact_spot\",\"same_library_checked\":%s}\n",
+                  "\"trust\":\"spot_exact\",\"same_library_checked\":false,"
+                  "\"independent_checked\":false}\n",
                   event, worker, long (pid), name (value), reason, (unsigned long long) now,
-                  (unsigned long long) (start_ns ? now - start_ns : 0),
-                  same_library_checked ? "true" : "false");
+                  (unsigned long long) (start_ns ? now - start_ns : 0));
     if (length > 0 && size_t (length) < sizeof line)
       phase_records_send (line, size_t (length));
   }
@@ -76,34 +78,18 @@ namespace acacia::obligation {
     return outcome::real;
   }
 
-  bool check_strategy (spot::formula objective, const spot::mtdswa_ptr& strategy) {
-    if (completed (strategy, false) != outcome::real)
-      return false;
-    auto mealy = spot::mtdswa_strategy_to_mealy (strategy, false, false);
-    if (!mealy || !mealy->num_states ())
-      return false;
-    const bdd outputs = strategy->get_controllable_variables ();
-    for (unsigned state = 0; state < mealy->num_states (); ++state) {
-      bdd coverage = bddfalse;
-      for (const auto& edge : mealy->out (state))
-        coverage |= edge.cond;
-      if (bdd_exist (coverage, outputs) != bddtrue)
-        return false;
-    }
-    auto negated =
-        spot::obligation_to_mtdswa (spot::formula::Not (objective), strategy->get_dict ());
-    if (!negated || !negated->num_roots ())
-      return false;
-    // Same-library language check, without a full Büchi translation. This is
-    // not an independent certificate; the exact Spot decision remains trusted.
-    return !negated->as_twa (false, false)->intersects (mealy);
-  }
-
   result solve (spot::formula objective, const std::vector<std::string>& inputs,
-                const std::vector<std::string>& outputs, timing semantics) {
+                const std::vector<std::string>& outputs, timing semantics, bool synthesis,
+                conversion convert) {
     if (!eligible (objective))
       return {outcome::inapplicable, "non_obligation"};
     try {
+      // Spot 2.16 sizes its output-AP bitmap before constructing names from
+      // outvars. Keep even absent output APs alive first, without BDD registration.
+      std::vector<spot::formula> output_aps;
+      output_aps.reserve (outputs.size ());
+      for (const auto& output : outputs)
+        output_aps.push_back (spot::formula::ap (output));
       auto dict = spot::make_bdd_dict ();
       int owner = 0;
       struct cleanup {
@@ -111,29 +97,35 @@ namespace acacia::obligation {
           int* owner;
           ~cleanup () { dict->unregister_all_my_variables (owner); }
       } variables {dict, &owner};
-      const auto register_variables = [&] (const std::vector<std::string>& aps) {
-        for (const auto& ap : aps)
-          dict->register_proposition (spot::formula::ap (ap), &owner);
-      };
-      if (semantics == timing::mealy) {
-        register_variables (inputs);
-        register_variables (outputs);
-      }
-      else {
-        register_variables (outputs);
-        register_variables (inputs);
-      }
-      // realizability=false retains a REAL strategy for the same-library check.
-      // Both settings explicitly distinguish winners using acc=t/f in 2.16.
-      // No partial/debug return or exception is allowed to become a verdict.
-      auto answer = spot::obligation_synthesis (objective, dict, outputs, false, true, -1);
-      const auto value = completed (answer, false);
-      if (value == outcome::real) {
-        if (!check_strategy (objective, answer))
-          return {outcome::error, "strategy_check_failed"};
-        return {outcome::real, "completed", true};
-      }
-      return {value, value == outcome::unreal ? "completed" : "invalid_return"};
+      // ltlsynt pre-registers only the first timing block in formula traversal
+      // order. obligation_synthesis registers the remaining block in that order.
+      const auto& first = semantics == timing::mealy ? inputs : outputs;
+      const std::unordered_set<std::string> first_names (first.begin (), first.end ());
+      objective.traverse ([&] (spot::formula ap) {
+        if (ap.is (spot::op::ap) && first_names.contains (ap.ap_name ()))
+          dict->register_proposition (ap, &owner);
+        return false;
+      });
+      // One completed decision call: no strategy allocation or re-check.
+      // Partial/debug returns and exceptions never become verdicts.
+      auto answer = spot::obligation_synthesis (objective, dict, outputs, !synthesis, true, -1);
+      const auto value = completed (answer, !synthesis);
+      if (!synthesis)
+        return {value, value == outcome::real || value == outcome::unreal ? "completed"
+                                                                          : "invalid_return"};
+      if (value != outcome::real)
+        return {value == outcome::unreal ? outcome::inapplicable : outcome::error,
+                value == outcome::unreal ? "no_strategy" : "invalid_return"};
+      worker_stage ("obligation_export");
+      const auto mealy = spot::mtdswa_strategy_to_mealy (answer, false, false);
+      if (!mealy || !mealy->num_states ())
+        return {outcome::error, "strategy_export_failed"};
+      auto circuit = spot::mealy_machines_to_aig (std::vector<spot::twa_graph_ptr> {mealy}, "isop",
+                                                  inputs, {outputs});
+      if (convert != conversion::none)
+        circuit =
+            acacia::synthesis::mealy_to_moore (circuit, convert == conversion::undo_input_shift);
+      return {outcome::real, "completed", std::move (circuit)};
     } catch (const std::bad_alloc&) {
       return {outcome::exhausted, "allocation"};
     } catch (const std::exception&) {

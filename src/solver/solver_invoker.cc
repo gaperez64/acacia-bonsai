@@ -6,6 +6,8 @@
 #include "solver/configured_components.hh"
 #include "solver/create_automaton.hh"
 #include "solver/degenerate_io.hh"
+#include "solver/controller_check.hh"
+#include "solver/controller_writer.hh"
 #include "solver/diagnostics.hh"
 #include "solver/forced_output_contradiction.hh"
 #include "solver/mealy_to_moore.hh"
@@ -199,12 +201,8 @@ namespace {
       circuit->set_next_latch (bit, aig_lit_for_bdd (circuit, func));
     }
 
-    std::ofstream synthesis_file (synth_fname);
-    if (synthesis_file) {
-      circuit = convert_controller (circuit, conversion);
-      spot::print_aiger (synthesis_file, circuit);
-    }
-    else
+    circuit = convert_controller (circuit, conversion);
+    if (!acacia::synthesis::write_controller (synth_fname, circuit))
       std::cerr << "Failed to open the file to store controller!\n";
   }
 
@@ -410,10 +408,7 @@ namespace {
                                                          // are in the AIG
                                                          input_aps, nonempty_out_part);
         spot::aig_ptr output_aig = convert_controller (mealy_aig, conversion);
-        std::ofstream synthesis_file (*synth_fname);
-        if (synthesis_file)
-          spot::print_aiger (synthesis_file, output_aig);
-        else
+        if (!acacia::synthesis::write_controller (*synth_fname, output_aig))
           std::cerr << "Failed to open the file to store controller!\n";
 #ifndef NDEBUG
         spot::print_hoa (std::cout, mealy_aig->as_automaton (false));
@@ -429,9 +424,8 @@ namespace {
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("synthesis-check-after-translation");
-        const auto checked_controller = mealy_aig->as_automaton (false);
-        const bool intersects = aut->intersects (checked_controller);
-        const bool valid = check_unreal.has_value () ? intersects : not intersects;
+        const bool satisfies = acacia::synthesis::controller_satisfies (aut, mealy_aig);
+        const bool valid = check_unreal.has_value () ? not satisfies : satisfies;
         assert (valid);
 
 #endif

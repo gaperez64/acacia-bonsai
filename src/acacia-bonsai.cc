@@ -7,6 +7,7 @@
 #include "native_support.hh"
 #include "phase_records.hh"
 #include "solver/solver_invoker.hh"
+#include "solver/controller_writer.hh"
 #include "solver/obligation_helper.hh"
 #include "solver/realizability_simplify.hh"
 #include <spot/tl/parse.hh>
@@ -22,6 +23,7 @@
 #include <cmath>
 #include <csignal>
 #include <cstring>
+#include <fstream>
 #include <memory>
 #include <new>
 #include <optional>
@@ -76,7 +78,7 @@ namespace {
       if (g_helper_forced != outcome::pending ||
           g_obligation->result.load (std::memory_order_acquire) == outcome::pending)
         acacia::obligation::record ("completion", value, helper_reason, g_obligation->start_ns,
-                                    false, int (index), pid);
+                                    int (index), pid);
       g_obligation->result.store (value, std::memory_order_release);
     }
     if (!g_worker_records)
@@ -230,7 +232,7 @@ namespace {
     if (!parsed.f || !parsed.errors.empty ())
       throw std::runtime_error ("unable to parse original obligation objective");
     auto objective = parsed.f;
-    if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER)
+    if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER && !args.synth_fname)
       acacia::realizability::apply_simplifier (objective, inputs);
     return objective;
   }
@@ -241,17 +243,22 @@ namespace {
     acacia::worker_stage ("obligation_preprocessing");
     acacia::obligation::result result;
     try {
-      if (args.synth_fname)
-        result = {outcome::inapplicable, "synthesis_requested"};
-      else if (!acacia::obligation::limit_address_space ())
+      if (!acacia::obligation::limit_address_space ())
         result = {outcome::error, "address_space_limit"};
       else {
         auto inputs = args.inputs, outputs = args.outputs;
+        auto conversion = acacia::obligation::conversion::none;
 #if ACACIA_ENABLE_TLSF_FRONTEND
-        if (args.tlsf_specified && !args.formula_specified) {
+        if (args.tlsf_specified && (!args.formula_specified || args.synth_fname)) {
           auto spec = acacia::tlsf_frontend::parse (args.tlsf_source);
           inputs = std::move (spec.inputs);
           outputs = std::move (spec.outputs);
+          if (args.synth_fname) {
+            if (spec.metadata.tlsf_target == "Moore")
+              conversion = spec.metadata.tlsf_semantics.find ("Moore") != std::string::npos
+                               ? acacia::obligation::conversion::undo_input_shift
+                               : acacia::obligation::conversion::delay_outputs;
+          }
         }
 #endif
         // The linked frontend already lowered Moore/strict TLSF to effective
@@ -265,7 +272,19 @@ namespace {
           result = {outcome::inapplicable, "non_obligation"};
         else {
           acacia::worker_stage ("obligation_synthesis");
-          result = acacia::obligation::solve (objective, inputs, outputs);
+          result = acacia::obligation::solve (objective, inputs, outputs,
+                                              acacia::obligation::timing::mealy,
+                                              args.synth_fname.has_value (), conversion);
+          if (result.value == outcome::real && args.synth_fname) {
+            try {
+              if (!acacia::synthesis::write_controller (*args.synth_fname, result.controller))
+                result = {outcome::error, "controller_export_failed"};
+            } catch (const std::bad_alloc&) {
+              result = {outcome::exhausted, "allocation"};
+            } catch (...) {
+              result = {outcome::error, "controller_export_failed"};
+            }
+          }
         }
       }
     } catch (const std::bad_alloc&) {
@@ -274,7 +293,7 @@ namespace {
       result = {outcome::error, "preprocessing_exception"};
     }
     acacia::obligation::record ("completion", result.value, result.reason,
-                                g_obligation->start_ns, result.same_library_checked);
+                                g_obligation->start_ns);
     const int code = acacia::obligation::exit_code (result.value);
     acacia::worker_route ("original_game", "obligation",
                           result.value == outcome::real     ? "REAL"
@@ -433,7 +452,6 @@ namespace {
                           : acacia::phase_stamp {};
 #ifdef __linux__
       if (arm.kind == portfolio_arm_kind::obligation) {
-        // Also contain the helper if the parent is killed without running its handler.
         if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != g_main_pid)
           _exit (EXIT_CODE_UNKNOWN);
       }
@@ -458,7 +476,7 @@ namespace {
           acacia::obligation::record (
               "start", acacia::obligation::outcome::pending,
               eligibility_channel ? "preparation" : "eligible", g_obligation->start_ns,
-              false, int (g_child_count), pid);
+              int (g_child_count), pid);
         if (g_worker_records) {
           // Use the pre-fork context; the child owns the live snapshot.
           auto spawned = parent_context;
@@ -526,7 +544,7 @@ namespace {
       g_helper_rss_share = acacia::obligation::rss_share (size_t (g_child_count) + 1);
       g_obligation->start_ns = monotonic_ns ();
       const auto helper = portfolio_arm::native (false, portfolio_arm_kind::obligation, true);
-      verb_do (1, vout << "Starting additional obligation decision helper\n" << std::flush);
+      verb_do (1, vout << "Starting additional obligation worker\n" << std::flush);
       launch_child (helper, arg_values, deadline_mono_ns, block_set,
                     prepare ? g_obligation : nullptr);
       if (g_child_count == g_helper_index) {
@@ -542,6 +560,17 @@ namespace {
         launch_helper (true);
     }
 
+    const auto check_acceptance = [&] {
+      if (deadline_mono_ns && monotonic_ns () >= deadline_mono_ns) {
+        std::cerr << "{\"stage\":\"deadline\",\"status\":\"expired\"}\n";
+        stop_children ("deadline");
+        error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
+      }
+      if (g_interrupted) {
+        stop_children ("interrupted");
+        error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
+      }
+    };
     int status;
     bool child_reported_error = false;
     while (true) {  // wait only for solver arms; the record writer is separate
@@ -568,12 +597,10 @@ namespace {
       if (g_helper_index >= 0 && g_child_pids[g_helper_index] > 0 &&
           g_helper_forced == acacia::obligation::outcome::pending) {
         const pid_t helper = g_child_pids[g_helper_index];
-        const bool elapsed = monotonic_ns () - g_obligation->start_ns >=
-                             acacia::obligation::allowance_ns;
         const bool memory = acacia::obligation::resident_bytes (helper) > g_helper_rss_share;
-        if (elapsed || memory) {
+        if (memory) {
           g_helper_forced = acacia::obligation::outcome::exhausted;
-          g_helper_stop_reason = elapsed ? "wall_allowance" : "rss_share";
+          g_helper_stop_reason = "rss_share";
           kill (-helper, SIGKILL);
           kill (helper, SIGKILL);
         }
@@ -671,6 +698,7 @@ namespace {
         continue;
       }
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
+        check_acceptance ();
         if (g_worker_records && reaped_index >= 0) {
           auto& winner = g_worker_records[reaped_index];
           acacia::worker_record_text (winner.original_polarity,

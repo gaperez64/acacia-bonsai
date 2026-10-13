@@ -84,6 +84,15 @@ See [the panels](benchmarking/RESULTS.md) and
 
 ### Unreleased
 
+- **Oct 13:** The obligation arm makes one trusted exact Spot decision call in formula
+  traversal order, without retaining/rechecking a strategy or a fixed decision wall allowance.
+  With `-s`, it trusts Spot's strategy (`trust: spot_exact`) and exports ASCII AIGER with
+  Mealy/Moore timing, Moore initialization and strict TLSF normalization verified offline.
+  The arm writes directly to `-s` through the ordinary AIGER writer, under the existing
+  winner, deadline and cancellation logic. Export failure declines while ordinary workers
+  continue. The earlier #248 diagnosis is preserved in the
+  [arm notes](benchmarking/coverage-first/obligation-helper.md).
+
 - **Oct 12:** `both:obligation:spot` joins the explicit shipping portfolios through
   the compile-time registry, so frozen builds record their full arm lists. It runs
   only for eligible original objectives and can run alone through `--arms`.

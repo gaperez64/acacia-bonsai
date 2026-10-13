@@ -63,8 +63,8 @@ made, made_records = run_recorded([str(binary), *ltl, "-v", "-s", str(synth)])
 assert made.returncode == 0 and synth.is_file() and synth.stat().st_size, made
 assert not any(record.get("phase") == "child_startup" and
                record.get("arm") in native for record in made_records), (made, made_records)
-assert made.stderr.count("Skipping default arm") == len(arms) - len(legacy), made
-assert not any(record.get("arm") == "both:obligation:spot" for record in made_records)
+assert made.stderr.count("Skipping default arm") == len(native), made
+assert sum(record.get("event") == "obligation_start" for record in made_records) <= 1
 synth.unlink()
 
 explicit = subprocess.run([str(binary), *ltl, "--arms", native[0]],
