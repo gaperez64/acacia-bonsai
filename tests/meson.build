@@ -1054,3 +1054,33 @@ if host_machine.system () == 'linux'
           depends : [ab_exe, obligation_helper_faults])
   endif
 endif
+
+# The same generated events exercise all four downsets, independent of which
+# one is selected for the solver in this build.
+foreach downset : ['rank_bucketed_vector_backed', 'kdtree_backed',
+                   'sharingtrie_backed', 'bboxtree_backed']
+  cpre_downset_test = executable (
+    'cpre-' + downset + '-test', 'cpre_downset_test.cc',
+    include_directories : inc,
+    dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+    cpp_args : ['-DACACIA_REPLAY_TEST_DOWNSET=' + downset,
+                '-DPOSETS_ENABLE_VECTOR_VECTOR_BACKED=1'])
+  test ('cpre-' + downset, cpre_downset_test,
+        suite : ['unit', 'cpre-downsets'])
+endforeach
+
+antichain_capture_test = executable (
+  'antichain-capture-test', 'antichain_capture_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+  cpp_args : ['-DACACIA_ENABLE_DIAGNOSTICS=1'])
+test ('antichain-capture', antichain_capture_test,
+      args : [meson.current_build_dir() / 'capture-test-output'],
+      suite : ['unit', 'cpre-downsets'])
+
+if get_option ('build_research_tools')
+  test ('cpre-replay-events', find_program ('check-cpre-replay-events.py'),
+        args : [acacia_cpre_replay_exe, meson.current_build_dir()],
+        suite : ['unit', 'cpre-downsets'],
+        depends : acacia_cpre_replay_exe)
+endif

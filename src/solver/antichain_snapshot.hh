@@ -68,6 +68,8 @@ namespace acacia::antichain_snapshot {
         size_t cpre_max_actions = 4096;
         size_t cpre_dumps = 0;
         size_t cpre_maximum = 8;
+        size_t cpre_start = 0;
+        size_t cpre_every = 1;
         std::ofstream cpre_out;
     };
 
@@ -109,6 +111,10 @@ namespace acacia::antichain_snapshot {
         detail::env_size ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE_MAX_ACTIONS", 4096, false);
     snapshot.cpre_maximum =
         detail::env_size ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE_MAX", 8, true);
+    snapshot.cpre_start =
+        detail::env_size ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE_START", 0, true);
+    snapshot.cpre_every =
+        detail::env_size ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE_EVERY", 1, false);
     snapshot.cpre_dumps = 0;
     snapshot.cpre_out.close ();
     snapshot.cpre_out.clear ();
@@ -292,7 +298,9 @@ namespace acacia::antichain_snapshot {
                                   const std::string& input, const Actions& actions) {
     detail::snapshot_state& snapshot = detail::state ();
     if (snapshot.directory.empty () or not snapshot.cpre or
-        snapshot.cpre_dumps >= snapshot.cpre_maximum)
+        snapshot.cpre_dumps >= snapshot.cpre_maximum or loop < 0 or
+        static_cast<size_t> (loop) < snapshot.cpre_start or
+        (static_cast<size_t> (loop) - snapshot.cpre_start) % snapshot.cpre_every != 0)
       return false;
     // An input class with a very large action list would dominate the dump; the
     // cap is recorded rather than silently applied.

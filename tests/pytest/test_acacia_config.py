@@ -115,7 +115,7 @@ def test_gr1_real_prepass_preset_is_six_arms():
     } == {"native_arms", "default_arms"}
 
 
-def test_obligation_membership_is_declared_only_in_explicit_shipping_portfolios():
+def test_obligation_membership_is_declared_in_shipping_or_inherited_experiments():
     module = load_module()
     options, presets = module.load_registry()
     shipping = presets["groups"]["docker_default"]
@@ -127,6 +127,11 @@ def test_obligation_membership_is_declared_only_in_explicit_shipping_portfolios(
             assert arms.count(arm) == 1, name
             assert f"-Dacacia_default_arms={values['default_arms']}" in module.meson_args(
                 options, values)
+        elif (arm in arms and data.get("role") == "sweep" and
+              data.get("inherits") in shipping):
+            parent = module.normalize_preset(options, presets, data["inherits"])
+            assert "default_arms" not in data, name
+            assert values["default_arms"] == parent["default_arms"], name
         else:
             assert arm not in arms, name
     fallback = module.normalize_preset(options, presets, "otf_sparse_formula")
@@ -849,3 +854,20 @@ def test_validate_preset_rejects_invalid_choice_value():
             presets = {"presets": {"bad": {name: "invalid"}}}
             with pytest.raises(SystemExit, match=f"bad: invalid {name}=invalid"):
                 module.validate_preset(options, presets, "bad")
+
+
+@pytest.mark.parametrize("backend", ["kdtree", "sharingtrie", "bboxtree"])
+def test_downset_experiments_inherit_only_one_option(backend):
+    module = load_module()
+    options, presets = module.load_registry()
+    shipping = presets["groups"]["docker_default"][0]
+    name = f"sparse_gr1_{backend}_downset"
+    data = presets["presets"][name]
+    assert data["inherits"] == shipping
+    assert data["role"] == "sweep"
+    assert all(name not in group for group in presets["groups"].values())
+    control = module.normalize_preset(options, presets, shipping)
+    treatment = module.normalize_preset(options, presets, name)
+    assert {key for key in control if key not in {"_preset", "preset"} and
+            control[key] != treatment[key]} == {"vector_downset"}
+    assert treatment["vector_downset"] == f"{backend}_backed"

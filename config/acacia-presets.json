@@ -502,6 +502,24 @@
       "spot_lazy_provider": true,
       "forward_safety_solver": true,
       "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward"
+    },
+    "sparse_gr1_kdtree_downset": {
+      "description": "Compare kdtree downsets with the current six-arm portfolio.",
+      "role": "sweep",
+      "inherits": "otf_sparse_formula_gr1_real_prepass",
+      "vector_downset": "kdtree_backed"
+    },
+    "sparse_gr1_sharingtrie_downset": {
+      "description": "Compare sharingtrie downsets with the current six-arm portfolio.",
+      "role": "sweep",
+      "inherits": "otf_sparse_formula_gr1_real_prepass",
+      "vector_downset": "sharingtrie_backed"
+    },
+    "sparse_gr1_bboxtree_downset": {
+      "description": "Compare bboxtree downsets with the current six-arm portfolio.",
+      "role": "sweep",
+      "inherits": "otf_sparse_formula_gr1_real_prepass",
+      "vector_downset": "bboxtree_backed"
     }
   },
   "tool_baselines": {

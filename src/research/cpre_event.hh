@@ -15,9 +15,11 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <posets/utils/vector_mm.hh>
@@ -26,6 +28,7 @@ namespace acacia::research {
 
   struct event {
       int schema_version = 0;
+      bool complete = false;
       int k = -1;
       int loop = -1;
       size_t states = 0;
@@ -49,8 +52,13 @@ namespace acacia::research {
     std::vector<VECTOR_ELT_T> row;
     std::istringstream in {line};
     int value;
-    while (in >> value)
+    while (in >> value) {
+      if (value < -1 or value > std::numeric_limits<VECTOR_ELT_T>::max ())
+        fail ("rank value outside signed element range");
       row.push_back (static_cast<VECTOR_ELT_T> (value));
+    }
+    if (not in.eof ())
+      fail ("malformed rank row");
     return row;
   }
 
@@ -63,6 +71,7 @@ namespace acacia::research {
     ev.states = states;
     std::string line;
     enum { none, before, actions, after } section = none;
+    long long expected_before = -1, expected_actions = -1, expected_after = -1;
 
     while (std::getline (in, line)) {
       if (line.empty ())
@@ -71,17 +80,31 @@ namespace acacia::research {
         ev.schema_version = static_cast<int> (field (line, "schema_version"));
         ev.k = static_cast<int> (field (line, "k"));
         ev.loop = static_cast<int> (field (line, "loop"));
+        expected_before = field (line, "before");
+        expected_actions = field (line, "actions");
         continue;
       }
-      if (line.rfind ("[before]", 0) == 0) { section = before; continue; }
-      if (line.rfind ("[actions]", 0) == 0) { section = actions; continue; }
-      if (line.rfind ("[after]", 0) == 0) { section = after; continue; }
+      if (line.rfind ("[before]", 0) == 0) {
+        section = before;
+        continue;
+      }
+      if (line.rfind ("[actions]", 0) == 0) {
+        section = actions;
+        continue;
+      }
+      if (line.rfind ("[after]", 0) == 0) {
+        section = after;
+        std::istringstream count {line.substr (7)};
+        if (not (count >> expected_after) or expected_after < 0)
+          fail ("missing or invalid after count");
+        continue;
+      }
 
       if (section == before or section == after) {
         auto row = parse_row (line);
         if (row.size () != states)
-          fail ("row of width " + std::to_string (row.size ()) + " where meta.tsv says "
-                + std::to_string (states));
+          fail ("row of width " + std::to_string (row.size ()) + " where meta.tsv says " +
+                std::to_string (states));
         posets::utils::vector_mm<VECTOR_ELT_T> v (states, 0);
         std::copy (row.begin (), row.end (), v.begin ());
         (section == before ? ev.before : ev.after).push_back (std::move (v));
@@ -98,15 +121,18 @@ namespace acacia::research {
         int increment;
         if (not (row >> i >> j >> increment))
           fail ("malformed transition row: " + line);
-        if (i >= states)
-          fail ("transition row indexes state " + std::to_string (i) + " of "
-                + std::to_string (states));
+        if (i >= states or j >= states or (increment != 0 and increment != 1))
+          fail ("transition row indexes state " + std::to_string (i) + " of " +
+                std::to_string (states));
         ev.actions.back ()[i].emplace_back (j, increment != 0);
       }
     }
+    ev.complete = expected_before >= 0 and expected_actions >= 0 and expected_after >= 0 and
+                  std::cmp_equal (ev.before.size (), expected_before) and
+                  std::cmp_equal (ev.actions.size (), expected_actions) and
+                  std::cmp_equal (ev.after.size (), expected_after);
     return ev;
   }
-
 
   inline size_t meta_field (const std::filesystem::path& dir, const std::string& name) {
     std::ifstream meta {dir / "meta.tsv"};
