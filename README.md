@@ -59,11 +59,12 @@ portfolio, select its arms explicitly or build a preset without the obligation
 arm. Synthesis (`-s`) trusts Spot's retained strategy and exports the usual ASCII AIGER
 controller with the CLI's Mealy/Moore timing, Moore initialization and strict TLSF objective.
 Both modes declare `trust: spot_exact`; controller correctness is checked offline in the tests.
-The arm writes directly to the `-s` file through the ordinary synthesis writer, and the parent
-accepts its exit and cancels the other workers through the existing race logic. Export failure
-returns UNKNOWN from the arm while ordinary workers continue. Synthesis has the same file and
-cancellation guarantees as ordinary synthesis. Selecting the arm alone with `-s` retains that
-fallback.
+In synthesis mode the parent selects the first conclusive verdict and suspends the other
+workers before controller construction/export. Only the selected REAL worker writes to `-s`;
+the parent accepts REAL after the controller stream closes successfully, then cancels the
+competitors. Export failure resumes the existing fallback workers. UNREAL needs no controller.
+Interruption or deadline expiry may leave partial bytes but cannot publish REAL. Selecting the
+obligation arm alone with `-s` retains ordinary synthesis fallback.
 Trust boundaries and historical driver screens are in
 [the obligation arm notes](benchmarking/coverage-first/obligation-helper.md).
 

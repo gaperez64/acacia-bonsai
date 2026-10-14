@@ -291,6 +291,31 @@ def test_interleaved_parent_records_do_not_mix_child_sequences(tmp_path, lifecyc
     assert result["workers"][1]["producer_case"] == "documented_kill"
 
 
+@pytest.mark.parametrize("fault", [None, "child_gap", "parent_gap", "child_emitter"])
+def test_synthesis_selection_preserves_child_sequence(tmp_path, lifecycle, fault):
+    selection = {**lifecycle[10][0], "event": "parent_verdict", "seq": 4,
+                 "reason": "selected", "exit_code": 0, "signal": 0, "mono_ns": 101}
+    lifecycle[20][3]["mono_ns"] = 102
+    if fault == "child_gap":
+        lifecycle[20][3]["seq"] = 5
+        lifecycle[10][2]["seq"] = 6
+        lifecycle[10][3]["seq"] = 7
+    if fault == "parent_gap":
+        selection["seq"] = 5
+    if fault == "child_emitter":
+        lifecycle[20].insert(3, selection)
+    else:
+        lifecycle[10].insert(2, selection)
+    write_records(tmp_path, lifecycle)
+    result = reader.audit_row(row(), tmp_path)
+    if fault is None:
+        assert result["complete"], result
+    else:
+        assert result["delivery"] == "incomplete"
+        assert ("wrong_parent_emitter" if fault == "child_emitter" else "sequence_gap") in (
+            reasons(result, "delivery"))
+
+
 @pytest.mark.parametrize("destination", ["fifo", "device_symlink"])
 def test_non_regular_destination_is_rejected_within_deadline(tmp_path, lifecycle, destination):
     write_records(tmp_path, lifecycle, failed_records=1)

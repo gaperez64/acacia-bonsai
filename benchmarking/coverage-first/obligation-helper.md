@@ -112,20 +112,38 @@ Production LTL is Mealy. The linked TLSF frontend already supplies effective Mea
 Moore lowering and strict normalization: the helper solves that objective without another shift
 or polarity swap. Raw Moore tests detect registration as Mealy.
 
-Decision and synthesis work have no fixed local wall allowance. The parent supervises and
-reaps the worker under the existing winner, signal and invocation deadline handling. In `-s`
-mode the worker builds the controller, writes directly to the requested file through the same
-`std::ofstream`/Spot ASCII AIGER writer used by ordinary synthesis, closes the stream, and exits
-REAL only after successful export. An open, write, close or export exception makes the arm
-exit UNKNOWN; ordinary workers keep running. The parent handles that exit like any worker,
-without a second publication process, stopping/resuming ordinary writers, private publication
-files, rename/rollback or a separate publication allowance.
+Decision and synthesis work have no fixed local wall allowance. In `-s` mode the race
+rendezvous occurs at the first conclusive full-objective verdict, before controller construction
+and export. The parent selects that worker and suspends competing process groups. Only the
+selected worker may construct/export the controller or open the destination. Ordinary workers retain
+winning regions or solved arenas, including each decomposed game's Boolean counter layout,
+and defer Mealy reconstruction until selection. Spot's obligation call retains its strategy
+as part of the completed proof; conversion, AIG construction and writing follow selection. UNREAL requires no controller and never opens the destination.
 
-File guarantees match master's ordinary synthesis: concurrent workers can open/truncate/write
-the same destination, and cancellation can leave a partial or truncated file. Existing output
-bytes are not restored. A controller is checked offline after a successful run; file preservation
-or transactional publication is not promised. A blocked writer remains inside its supervised
-worker, so the parent can kill and reap it on a winner, interruption or invocation deadline.
+The selected REAL worker writes through the ordinary `std::ofstream`/Spot ASCII AIGER writer,
+closes the stream, and reports successful completion only after the close succeeds. An open,
+write, close, construction or export failure declines the result; the parent resumes the existing
+ordinary fallback workers with their retained work. A successful export lets the parent accept
+REAL and kill/reap the suspended competitors. Decision mode retains its existing race.
+
+### File guarantees
+
+A reported REAL answer in synthesis mode is accompanied by one complete controller. A losing
+worker cannot truncate or overwrite it: all writers rendezvous before construction, and the
+parent grants only one exporter at a time. This is atomic verdict/controller publication to the
+CLI caller, without a second publication process or private rename/rollback files. The writer
+still follows symlinks and supports FIFOs. Interruption, deadline expiry or a failed invocation
+may leave partial bytes; existing destination bytes are not restored. No REAL answer is accepted
+for such an invocation. A selected blocked exporter is supervised by the invocation deadline and
+interruption handling; its competitors remain suspended until it fails or is cancelled.
+
+Synthesis work is no longer raced after the first verdict, so synthesis wall time is expected to
+be that verdict's route cost plus its controller construction/export cost; a slower exporter can
+therefore take longer than the former race of complete exports. Only legacy REAL workers
+(backward, including synthesis-forced forward/guarded routes) and the trusted obligation helper
+produce controllers. Legacy UNREAL workers produce no controller; native arms reject `-s`.
+Retaining the proofs for all decomposed games may change peak memory usage. Existing resource
+limits and failure fallback remain in force. No performance measurements quantify these effects.
 
 Address space is capped at eight GiB. The soft RSS share follows native construction:
 cgroup memory limit (bounded by the address cap) / launched workers including helper / 2.
@@ -163,7 +181,7 @@ Moore target export reuses ordinary `mealy_to_moore()` conversion, including adv
 latches through the dummy initial round for Moore-to-Mealy input lowering. True resets use
 complemented physical latches so every emitted AIGER latch starts at zero. The worker writes
 these bytes directly to `-s`; the parent applies its existing deadline/interruption checks before
-accepting the worker's REAL exit. Export failures leave ordinary synthesis running.
+accepting the worker's REAL exit. Export failures resume the suspended ordinary synthesis workers.
 
 These semantic guarantees are verified **offline**. Generated Mealy and raw Moore obligations
 are synthesized by the same helper API and checked by the existing general controller product
@@ -179,7 +197,8 @@ on the requested destination and compare their format on constant controllers. O
 and exception export faults must leave an already-running ordinary worker answering with an
 oracle-valid controller. Stalled synthesis/export and FIFO writers exercise the ordinary
 winner, deadline, interruption and reaping paths. Synthesis lasting beyond five seconds can
-still win under the invocation deadline. The special publication-protocol tests were removed.
+still win under the invocation deadline. The verdict rendezvous is tested with two actual solver proofs held ready, exclusive
+construction, failure fallback, UNREAL and interruption.
 The synthesis suite subset also runs through `tests/check-real-correct.sh` with
 `AB_OPTS='--arms both:obligation:spot'`.
 
@@ -518,14 +537,16 @@ binaries, required local shared library, unit binaries and Python bindings are r
 Nothing in this worktree was staged or committed.
 
 
-## Issue #249: trusted synthesis owner decision (13 October 2026)
+## Issue #249: trusted synthesis owner decision (13 October 2026; historical publication policy)
 
 The binding owner decision extends exact Spot trust to synthesis. The timed arm builds no
 general Büchi automaton and runs no controller product or serialized-interface check. Both
 modes record `trust=spot_exact`, `same_library_checked=false` and `independent_checked=false`.
 Decision solving, eligibility, formula-order registration and global memory limits are unchanged.
 
-The latest driver decision removes the special parent-side publication protocol completely.
+The 14 October 2026 verdict rendezvous above supersedes this paragraph's publication policy;
+the trusted Spot synthesis boundary remains binding. The earlier driver decision removed
+the special parent-side publication protocol completely.
 The arm now publishes like any ordinary REAL synthesis worker: it converts Spot's retained
 strategy with the CLI's Mealy/Moore semantics and writes directly to `-s` through the shared
 ordinary ASCII AIGER writer. Successful export yields the ordinary REAL exit code. Failed

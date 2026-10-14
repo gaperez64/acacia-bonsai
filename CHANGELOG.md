@@ -84,6 +84,12 @@ See [the panels](benchmarking/RESULTS.md) and
 
 ### Unreleased
 
+- **Oct 14:** With `-s`, the first conclusive verdict selects the worker that builds
+  and writes the controller. Other workers are suspended and resume if that worker
+  fails to finish. REALIZABLE is accepted only after the controller file closes
+  successfully. UNREALIZABLE no longer creates or replaces a countercontroller file.
+  This supersedes the Oct 13 policy of workers writing directly while racing.
+
 - **Oct 13:** The obligation arm makes one trusted exact Spot decision call in formula
   traversal order, without retaining/rechecking a strategy or a fixed decision wall allowance.
   With `-s`, it trusts Spot's strategy (`trust: spot_exact`) and exports ASCII AIGER with

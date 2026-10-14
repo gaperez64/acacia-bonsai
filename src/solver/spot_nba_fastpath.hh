@@ -20,6 +20,7 @@
 #include <spot/twaalgos/game.hh>
 #include <spot/twaalgos/mealy_machine.hh>
 #include <spot/twaalgos/synthesis.hh>
+#include "solver/synthesis_rendezvous.hh"
 
 namespace acacia::spot_fastpath {
 
@@ -402,8 +403,16 @@ namespace acacia::spot_fastpath {
         original_winners[s] = arena_winners[s];
       res.current_output_player_winning_region = std::move (original_winners);
     }
-    if (p_out_wins and want_strategy)
-      res.strategy = spot::solved_game_to_separated_mealy (arena, gi);
+    if (p_out_wins and want_strategy) {
+      if (acacia::synthesis::deferred_controller) {
+        *acacia::synthesis::deferred_controller = [arena, gi] () mutable {
+          return spot::solved_game_to_separated_mealy (arena, gi);
+        };
+        res.strategy = aut_forbid;
+      }
+      else
+        res.strategy = spot::solved_game_to_separated_mealy (arena, gi);
+    }
 
     return res;
   }

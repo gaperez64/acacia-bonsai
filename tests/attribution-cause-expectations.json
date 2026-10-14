@@ -655,6 +655,18 @@
     "cause": "worker_stopped",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
   },
+  "src/solver/solver_invoker.cc | throw std::runtime_error | UNKNOWN | provider | \"failed to write controller\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/solver_invoker.cc | throw std::runtime_error | UNKNOWN | provider | \"failed to write controller\" | 1": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/synthesis_rendezvous.hh | throw std::runtime_error | UNKNOWN | provider | \"failed to write controller\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
   "src/solver/spot_lazy_buchi_view.hh | ResourceLimit | UNKNOWN | provider | \"lazy Buchi BDD budget exceeded\" | 0": {
     "cause": "resource",
     "telemetry": "STOPPED/resource"

@@ -9,6 +9,7 @@
 #include "posets/vectors/traits.hh"
 #include "solver/configured_components.hh"
 #include "solver/game_backend.hh"
+#include "solver/synthesis_rendezvous.hh"
 #include "solver/spot_worker_record.hh"
 #include "solver/unreal_weakening_records.hh"
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
@@ -32,6 +33,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <optional>
+#include <memory>
 #include <spot/twa/acc.hh>
 #include <spot/twa/twagraph.hh>
 #include <utility>
@@ -53,6 +55,22 @@ namespace acacia::solver_detail {
       return std::nullopt;
     if (not do_synthesis)
       return aut;
+
+    if (acacia::synthesis::deferred_controller) {
+      using result = std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>;
+      auto proof = std::make_shared<result> (std::move (win_res));
+      const auto threshold = posets::vectors::bool_threshold;
+      *acacia::synthesis::deferred_controller = [proof, aut, all_inputs, all_outputs, threshold] {
+        acacia::synthesis::controller_capture immediate (nullptr);
+        // Each decomposed game owns its Boolean counter layout.
+        struct restore_layout {
+            size_t previous;
+            ~restore_layout () { posets::vectors::bool_threshold = previous; }
+        } restore {std::exchange (posets::vectors::bool_threshold, threshold)};
+        return *post_real<SetOfStates> (std::move (*proof), true, aut, all_inputs, all_outputs);
+      };
+      return aut;
+    }
 
     // We got here, so there is a winning region and we need to do synthesis.
     const auto& [k, winning_region] = *win_res;

@@ -203,7 +203,7 @@ namespace {
 
     circuit = convert_controller (circuit, conversion);
     if (!acacia::synthesis::write_controller (synth_fname, circuit))
-      std::cerr << "Failed to open the file to store controller!\n";
+      throw std::runtime_error ("failed to write controller");
   }
 
   bool run_no_input_ltl (const std::vector<std::string>& output_aps, spot::formula spot_formula,
@@ -257,6 +257,7 @@ namespace {
       return false;
 
     if (synth_fname.has_value ()) {
+      acacia::synthesis::await_selection (EXIT_CODE_REAL);
       word->simplify ();
       word->use_all_aps (all_outputs);
 
@@ -313,7 +314,7 @@ namespace {
       const controller_conversion conversion;
       const std::string target_semantics;
       const std::vector<symmetry::indexed_family_hint>& indexed_family_hints;
-      std::vector<spot::const_twa_graph_ptr> strats;
+      std::vector<acacia::synthesis::controller_builder> strats;
       const acacia::unreal_witnesses::records& weakening_records;
 
     public:
@@ -381,6 +382,7 @@ namespace {
 
       void synthesis (spot::formula spot_formula, std::vector<std::vector<std::string>> out_part) {
         assert (synth_fname.has_value ());
+        acacia::synthesis::await_selection (EXIT_CODE_REAL);
         assert (strats.size () > 0);
         assert (strats.size () == out_part.size ());
         std::vector<spot::const_twa_graph_ptr> nonempty_strats;
@@ -388,7 +390,7 @@ namespace {
         for (size_t i = 0; i < out_part.size (); ++i) {
           if (out_part[i].empty ())
             continue;
-          nonempty_strats.push_back (strats[i]);
+          nonempty_strats.push_back (strats[i] ());
           nonempty_out_part.push_back (std::move (out_part[i]));
         }
 
@@ -396,8 +398,8 @@ namespace {
           std::ofstream synthesis_file (*synth_fname);
           if (synthesis_file)
             print_no_output_aag (synthesis_file, input_aps);
-          else
-            std::cerr << "Failed to open the file to store controller!\n";
+          synthesis_file.close ();
+          acacia::synthesis::controller_closed (bool (synthesis_file));
           return;
         }
 
@@ -409,7 +411,7 @@ namespace {
                                                          input_aps, nonempty_out_part);
         spot::aig_ptr output_aig = convert_controller (mealy_aig, conversion);
         if (!acacia::synthesis::write_controller (*synth_fname, output_aig))
-          std::cerr << "Failed to open the file to store controller!\n";
+          throw std::runtime_error ("failed to write controller");
 #ifndef NDEBUG
         spot::print_hoa (std::cout, mealy_aig->as_automaton (false));
         spot_formula = spot::formula::Not (spot_formula);
@@ -432,6 +434,9 @@ namespace {
       }
 
       bool operator() (spot::formula spot_formula) {
+        acacia::synthesis::controller_builder builder;
+        acacia::synthesis::controller_capture deferred (
+            synth_fname && acacia::synthesis::current_slot ? &builder : nullptr);
         if (auto* w = acacia::active_worker_record (); w && acacia::phase_records_enabled ()) {
           w->subjob = ++w->subjobs_executed;
           w->k = -1;
@@ -641,7 +646,9 @@ namespace {
         if (fast.conclusive) {
           if (fast.strategy.has_value ()) {
             assert (want_controller_strategy);
-            strats.push_back (*fast.strategy);
+            strats.push_back (builder ? std::move (builder)
+                                      : acacia::synthesis::controller_builder {
+                                            [strategy = *fast.strategy] { return strategy; }});
           }
           verb_do (1, vout << "Spot NBA fast path returning " << fast.current_output_player_wins
                            << "\n");
@@ -845,7 +852,9 @@ namespace {
         }
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())
-            strats.push_back (*maybe_strat);
+            strats.push_back (builder ? std::move (builder)
+                                      : acacia::synthesis::controller_builder {
+                                            [strategy = *maybe_strat] { return strategy; }});
           return acacia::diagnostics::finish (true, "solve-game");
         }
         else {
@@ -983,11 +992,8 @@ namespace {
                          std::optional<UNREAL_X_T> check_unreal,
                          const std::optional<std::string>& synth_fname, run_one_ltl& runner) {
     if (check_unreal.has_value () and synth_fname.has_value ()) {
-      if (runner (spot_formula)) {
-        std::vector<std::vector<std::string>> out_part = {output_aps};
-        runner.synthesis (spot_formula, out_part);
+      if (runner (spot_formula))
         return acacia::diagnostics::finish (true, "monolithic-unreal-synthesis");
-      }
       return acacia::diagnostics::finish (false, "monolithic-unreal-synthesis");
     }
 
@@ -1070,7 +1076,7 @@ namespace {
         acacia::legacy_count ("subjobs_executed", w->subjobs_executed);
     }
     if (result) {
-      if (synth_fname.has_value ())
+      if (synth_fname.has_value () && !check_unreal)
         runner.synthesis (spot_formula, out_part);
       return acacia::diagnostics::finish (true, "decomposition");
     }
@@ -1302,7 +1308,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 #if DECOMPOSE_SPEC == 0
   // Just launch a monolithic runner.
   if (runner (spot_formula)) {
-    if (synth_fname.has_value ()) {
+    if (synth_fname.has_value () && !check_unreal) {
       std::vector<std::vector<std::string>> out_part = {output_aps};
       runner.synthesis (spot_formula, out_part);
     }
