@@ -3,6 +3,7 @@
 #include "aut_preprocessors/cap_census.hh"
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
+#include "solver/ap_partition.hh"
 #include "solver/configured_components.hh"
 #include "solver/create_automaton.hh"
 #include "solver/degenerate_io.hh"
@@ -834,14 +835,12 @@ namespace {
         std::optional<spot::twa_graph_ptr> maybe_strat;
         {
           ACACIA_DIAG_SCOPED_TIMER (solve_ms);
+          const auto partition =
+              acacia::project_ap_partition (aut->ap_vars (), all_inputs, all_outputs);
           maybe_strat =
-              solve_game (aut, opt_k, opt_kmin, opt_kinc,
-                          // we obtain the subset of inputs by projecting out the set of
-                          // all outputs from the cube of all atomic propositions
-                          bdd_exist (aut->ap_vars (), all_outputs),
-                          // same for the outputs
-                          bdd_exist (aut->ap_vars (), all_inputs), synth_fname.has_value (),
-                          indexed_family_hints, effective_backend, candidate, equivariance);
+              solve_game (aut, opt_k, opt_kmin, opt_kinc, partition.inputs, partition.outputs,
+                          synth_fname.has_value (), indexed_family_hints, effective_backend,
+                          candidate, equivariance);
         }
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())

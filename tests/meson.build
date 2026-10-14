@@ -1054,3 +1054,16 @@ if host_machine.system () == 'linux'
           depends : [ab_exe, obligation_helper_faults])
   endif
 endif
+
+exact_buchi_test = executable (
+  'exact-buchi-test', 'exact_buchi_test.cc', include_directories : inc,
+  dependencies : [spot_dep, bddx_dep])
+test ('exact-buchi-equivalence', exact_buchi_test,
+      suite : ['unit', 'research', 'translation'], timeout : 120)
+if get_option ('build_research_tools')
+  test ('exact-buchi-games', py,
+        args : [files ('check-exact-buchi.py'), exact_buchi_test, acacia_tela_to_buchi_exe,
+                acacia_hoa_replay_exe, meson.current_build_dir () / 'exact-buchi-scratch'],
+        suite : ['unit', 'research', 'translation'], timeout : 120,
+        depends : [exact_buchi_test, acacia_tela_to_buchi_exe, acacia_hoa_replay_exe])
+endif

@@ -56,6 +56,9 @@ if native_test_hooks
 endif
 
 if get_option('build_research_tools')
+  acacia_tela_to_buchi_exe = executable (
+    'acacia-tela-to-buchi', ['research/tela_to_buchi.cc', 'version.cc'], version_h,
+    include_directories : inc, install : false, dependencies : [spot_dep, bddx_dep])
   acacia_spot_provider_replay_exe = executable(
     'acacia-spot-provider-replay',
     'research/spot_provider_replay.cc',
