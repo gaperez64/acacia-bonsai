@@ -1,3 +1,10 @@
+if get_option ('build_research_tools') or get_option ('build_tests')
+  parity_sources = files ('solver/parity/game.cc', 'solver/parity/lifting.cc',
+                         'solver/parity/strpm.cc')
+  parity_lib = static_library ('research-parity', parity_sources,
+    include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
+endif
+
 closure_buchi_provider_lib = static_library (
   'closure-buchi-provider',
   'solver/closure_buchi_provider.cc',
@@ -56,6 +63,13 @@ if native_test_hooks
 endif
 
 if get_option('build_research_tools')
+  parity_route_lib = static_library ('parity-route',
+    ['research/parity_route_impl.cc', 'solver/mealy_to_moore.cc'],
+    include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
+  acacia_parity_route_exe = executable ('acacia-parity-route',
+    ['research/parity_route.cc', 'version.cc'], version_h,
+    link_with : [parity_route_lib, parity_lib], include_directories : inc,
+    dependencies : [spot_dep, bddx_dep], install : false)
   acacia_spot_provider_replay_exe = executable(
     'acacia-spot-provider-replay',
     'research/spot_provider_replay.cc',

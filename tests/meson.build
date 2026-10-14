@@ -1054,3 +1054,29 @@ if host_machine.system () == 'linux'
           depends : [ab_exe, obligation_helper_faults])
   endif
 endif
+
+parity_strpm_test = executable ('parity-strpm-test', 'parity_strpm_test.cc',
+  link_with : parity_lib, include_directories : inc, dependencies : [spot_dep, bddx_dep])
+test ('parity-strpm', parity_strpm_test, suite : ['unit', 'parity'], timeout : 120)
+parity_portable_test = executable ('parity-portable-test',
+  ['parity_strpm_test.cc'] + parity_sources, cpp_args : ['-DACACIA_PARITY_PORTABLE'],
+  include_directories : inc, dependencies : [spot_dep, bddx_dep])
+test ('parity-portable', parity_portable_test, suite : ['unit', 'parity'], timeout : 120)
+
+if get_option ('build_research_tools')
+  parity_route_test = executable ('parity-route-test', 'parity_route_test.cc',
+    link_with : [parity_route_lib, parity_lib], include_directories : inc,
+    dependencies : [spot_dep, bddx_dep])
+  test ('parity-route', parity_route_test, suite : ['unit', 'parity'], timeout : 120)
+  test ('parity-events', py,
+    args : [files ('check-parity-events.py'), acacia_parity_route_exe],
+    suite : ['unit', 'parity'], timeout : 120, depends : [acacia_parity_route_exe])
+  test ('parity-route-acacia', py,
+    args : [files ('check-parity-route.py'), acacia_parity_route_exe, ab_exe],
+    suite : ['unit', 'parity'], timeout : 120,
+    depends : [acacia_parity_route_exe, ab_exe])
+endif
+parity_lifting_test = executable ('parity-lifting-test',
+  ['parity_lifting_test.cc', '../src/solver/parity/lifting.cc'],
+  include_directories : inc)
+test ('parity-lifting', parity_lifting_test, suite : ['unit', 'parity'], timeout : 120)
