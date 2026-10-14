@@ -70,6 +70,9 @@ if get_option('build_research_tools')
     ['research/parity_route.cc', 'version.cc'], version_h,
     link_with : [parity_route_lib, parity_lib], include_directories : inc,
     dependencies : [spot_dep, bddx_dep], install : false)
+  acacia_tela_to_buchi_exe = executable (
+    'acacia-tela-to-buchi', ['research/tela_to_buchi.cc', 'version.cc'], version_h,
+    include_directories : inc, install : false, dependencies : [spot_dep, bddx_dep])
   acacia_spot_provider_replay_exe = executable(
     'acacia-spot-provider-replay',
     'research/spot_provider_replay.cc',
