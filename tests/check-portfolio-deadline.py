@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -37,28 +38,20 @@ def check(binary: Path, args: list[str], modes: str, seconds: float,
     process = subprocess.Popen([str(binary), *args], env=env, text=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                start_new_session=True)
-    children: set[int] = set()
-    child_list = Path(f"/proc/{process.pid}/task/{process.pid}/children")
-    while len(children) < expected_children and process.poll() is None:
-        try:
-            children.update(int(pid) for pid in child_list.read_text().split())
-        except FileNotFoundError:
-            break
-        time.sleep(0.002)
-    for pid in children:
-        for _ in range(30):
-            try:
-                group = os.getpgid(pid)
-            except ProcessLookupError:
-                break
-            if group == pid:
-                break
-            time.sleep(0.001)
-        else:
-            raise AssertionError(("child lacks its own process group", pid, group))
     stdout, stderr = process.communicate(timeout=3)
+    children: set[int] = set()
+    reports = []
+    for line in stderr.splitlines():
+        if not line.startswith('{"stage":"child_group",'):
+            continue
+        report = json.loads(line)
+        reports.append(report)
+        pid, group = report["pid"], report["pgid"]
+        if pid <= 0 or group != pid:
+            raise AssertionError(("child lacks its own process group", pid, group))
+        children.add(pid)
     elapsed = time.monotonic() - started
-    if len(children) < expected_children:
+    if len(children) != expected_children or len(reports) != expected_children:
         raise AssertionError(("missing fake children", modes, children, stdout, stderr))
     if (process.returncode != expected_code or expected_text not in stdout + stderr
             or elapsed >= max_elapsed):
