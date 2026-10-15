@@ -99,7 +99,8 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
                    LD_PRELOAD=ack_library)
         arms = ('unreal:formula:backward' if unreal else
                 'real:small:backward,both:obligation:spot')
-        formula = 'G (o <-> X i)' if unreal else 'G (o <-> i)'
+        # The UNREAL fixture must reach a worker verdict even with the base preset.
+        formula = 'F G o & G (i -> X !o)' if unreal else 'G (o <-> i)'
         process = subprocess.Popen([binary, '-f', formula, '-i', 'i', '-o', 'o',
                                     '--arms', arms, '--spot-fast', fast, '-s', str(controller)], env=env,
                                    pass_fds=(ready_read, export_read, helper_read),
@@ -110,18 +111,27 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
         os.close(helper_read)
         rows = []
         pending = b''
+        stderr_seen = bytearray()
+
+        def exited(name):
+            _, stderr = process.communicate(timeout=5)
+            raise AssertionError(('process exited before readiness', name, process.returncode,
+                                  rows, (bytes(stderr_seen) + stderr).decode(errors='replace')))
 
         def stage(name, count):
             nonlocal pending
             end = time.monotonic() + 15
             while len([row for row in rows if row.get('stage') == name]) < count:
-                assert process.poll() is None, (rows, process.returncode)
+                if process.poll() is not None:
+                    exited(name)
                 remaining = end - time.monotonic()
                 assert remaining > 0, rows
                 if not select.select([process.stderr], [], [], remaining)[0]:
                     raise AssertionError(('no readiness', name, rows))
                 chunk = os.read(process.stderr.fileno(), 4096)
-                assert chunk, (rows, process.poll())
+                if not chunk:
+                    exited(name)
+                stderr_seen.extend(chunk)
                 pending += chunk
                 while b'\n' in pending:
                     line, pending = pending.split(b'\n', 1)
