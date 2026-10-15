@@ -2,6 +2,7 @@
 
 #include "solver/mealy_to_moore.hh"
 #include "solver/spot_nba_fastpath.hh"
+#include "solver/synthesis_rendezvous.hh"
 #include "solver/translator_options.hh"
 
 #include <algorithm>
@@ -159,9 +160,11 @@ namespace acacia::parity_route {
     synthesis.sp = spot::synthesis_info::splittype::AUTO;
     spot::twa_graph_ptr arena;
     bool winning = false;
+    acacia::synthesis::controller_builder buchi_controller;
     if (output.tier < 4) {
       output.route = "acacia";
       aut = tier.buchi;
+      const bool keep_arena = config.verify or config.on_game or config.on_solution;
       // The incumbent deterministic forbidden-Buchi shortcut, with its usual
       // completion and co-Buchi game. Native Moore uses the same Spot split API
       // with output-first order; shipping callers keep the default Mealy frame.
@@ -170,12 +173,15 @@ namespace acacia::parity_route {
           tier.buchi->register_ap (spot::formula::ap (name));
         for (const auto& name : input.outputs)
           tier.buchi->register_ap (spot::formula::ap (name));
+        // Production needs only the verdict and, after selection, the controller.
+        acacia::synthesis::controller_capture capture (&buchi_controller);
         auto fast = acacia::spot_fastpath::deterministic_forbidden_fast_path (
-            tier.buchi, outputs, false, true, native_moore);
+            tier.buchi, outputs, config.synthesis and not keep_arena, keep_arena, native_moore);
         winning = fast.current_output_player_wins;
-        arena = *fast.solved_arena;
+        if (keep_arena)
+          arena = *fast.solved_arena;
       });
-      if (config.verify or config.on_game or config.on_solution)
+      if (keep_arena)
         stage ("explicit", [&] {
           output.game = std::make_unique<parity::arena_game> (arena);
           aut = arena;
@@ -238,8 +244,12 @@ namespace acacia::parity_route {
     if (config.on_verdict)
       config.on_verdict (winning);
     if (winning and config.synthesis) {
-      stage ("strategy",
-             [&] { output.controller = spot::solved_game_to_separated_mealy (arena, synthesis); });
+      stage ("strategy", [&] {
+        if (buchi_controller)
+          output.controller = buchi_controller ();
+        else
+          output.controller = spot::solved_game_to_separated_mealy (arena, synthesis);
+      });
       stage ("encode-controller", [&] {
         if (not output.controller)
           throw std::runtime_error ("missing controller strategy");

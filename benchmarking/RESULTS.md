@@ -595,3 +595,13 @@ evidence: `residual-construction20261013`, `spot-implication20261013`,
 `postmem20261011-p2`, `postmem20261012-closing`, `binary-PMC4-b3953b43`.
 `obligation-trust20261013` and `binary-PMC5-0b8b9be1` preserve the separate
 trust/decision-mode screens and frozen #255 candidate without claiming admission.
+
+
+## 2026-10-15 — deterministic-Buchi solver choice for the parity arm
+
+Keep Spot's explicit co-Buchi solver for tiers 1–3. On the 36-input 60 s comparisons,
+Spot decides 36/36 (PAR-2 43–44 s), versus 33/36 (427 s) for K-bounded antichains,
+35/36 (149 s) for strpm-simd, and 34/36 (265 s) for symbolic GR(1), with zero verdict
+conflicts. The alternatives remain on `research/parity-buchi-engines`. See the
+[comparison and diagnoses](coverage-first/parity-arm.md#tiers-13-keep-spots-explicit-solver)
+for the resource regime and local evidence directories; archive IDs are pending.

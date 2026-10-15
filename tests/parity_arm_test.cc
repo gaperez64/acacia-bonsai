@@ -51,27 +51,31 @@ spot::twa_graph_ptr forbidden (unsigned tier) {
   return aut;
 }
 
+void check_controller (const spot::aig_ptr& circuit, spot::formula specification, bool moore) {
+  if (moore) {
+    std::vector<bool> dependent (circuit->max_var () / 2 + 1);
+    for (unsigned i = 0; i < circuit->num_inputs (); ++i)
+      dependent[circuit->input_var (i) / 2] = true;
+    for (unsigned i = 0; i < circuit->gates ().size (); ++i) {
+      const auto gate = circuit->gates ()[i];
+      dependent[circuit->gate_var (i) / 2] =
+          dependent[gate.first / 2] || dependent[gate.second / 2];
+    }
+    for (const auto output : circuit->outputs ())
+      require (!dependent[output / 2], "Moore output depends on the current input");
+  }
+  auto aut = circuit->as_automaton (false);
+  spot::translator checker (aut->get_dict ());
+  checker.set_type (spot::postprocessor::BA);
+  require (!checker.run (spot::formula::Not (specification))->intersects (aut),
+           "exported controller violates the specification");
+}
+
 int main (int argc, char** argv) {
   try {
     if (argc == 5 && std::string (argv[1]) == "--check-controller") {
       auto circuit = spot::aig::parse_aag (std::string (argv[2]));
-      if (std::string (argv[4]) == "moore") {
-        std::vector<bool> dependent (circuit->max_var () / 2 + 1);
-        for (unsigned i = 0; i < circuit->num_inputs (); ++i)
-          dependent[circuit->input_var (i) / 2] = true;
-        for (unsigned i = 0; i < circuit->gates ().size (); ++i) {
-          const auto gate = circuit->gates ()[i];
-          dependent[circuit->gate_var (i) / 2] =
-              dependent[gate.first / 2] || dependent[gate.second / 2];
-        }
-        for (const auto output : circuit->outputs ())
-          require (!dependent[output / 2], "Moore output depends on the current input");
-      }
-      auto aut = circuit->as_automaton (false);
-      spot::translator checker (aut->get_dict ());
-      checker.set_type (spot::postprocessor::BA);
-      require (!checker.run (spot::formula::Not (formula (argv[3])))->intersects (aut),
-               "exported controller violates the specification");
+      check_controller (circuit, formula (argv[3]), std::string (argv[4]) == "moore");
       return 0;
     }
     const char* specifications[] = {"", "FG !x", "FG !x | FG !y", "G x", "GF x"};
@@ -104,6 +108,44 @@ int main (int argc, char** argv) {
           require (answer.tier == tier, "fixture missed its tier");
           require (answer.verdict == (real ? "REALIZABLE" : "UNREALIZABLE"),
                    "decision disagrees with the fixture oracle");
+          if (tier < 4) {
+            require (!answer.game && answer.solution.winner.empty (),
+                     "production decision retained an explicit game or winning region");
+            bool selected = false;
+            auto synthesis = decision;
+            synthesis.synthesis = true;
+            synthesis.on_verdict = [&] (bool winner) {
+              require (winner == real, "synthesis published wrong verdict");
+              selected = true;
+            };
+            auto made =
+                route::run (input, synthesis, [&] (const char* stage, const auto&, double) {
+                  if (std::string (stage) == "strategy" ||
+                      std::string (stage) == "encode-controller")
+                    require (selected, "controller construction preceded selection");
+                });
+            require (selected && made.verdict == answer.verdict &&
+                         bool (made.circuit) == real && !made.game &&
+                         made.solution.winner.empty (),
+                     "production synthesis changed the verdict or retained diagnostics");
+            if (real)
+              check_controller (made.circuit, input.specification, moore);
+            for (bool solution_output : {false, true}) {
+              auto observed = decision;
+              bool visited = false;
+              auto check_game = [&] (const auto& game) {
+                require (!game.extract ().winner.empty (), "diagnostic lost its winning region");
+                visited = true;
+              };
+              if (solution_output)
+                observed.on_solution = [&] (const auto& game, const auto&) { check_game (game); };
+              else
+                observed.on_game = check_game;
+              auto diagnostic = route::run (input, observed);
+              require (visited && diagnostic.game && diagnostic.verdict == answer.verdict,
+                       "game or solution observer changed the verdict or lost the arena");
+            }
+          }
           reference::options diagnostic;
           diagnostic.verify = true;
           diagnostic.cross_check = true;
