@@ -1,9 +1,9 @@
-if get_option ('build_research_tools') or get_option ('build_tests')
-  parity_sources = files ('solver/parity/game.cc', 'solver/parity/lifting.cc',
-                         'solver/parity/strpm.cc')
-  parity_lib = static_library ('research-parity', parity_sources,
-    include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
-endif
+parity_sources = files ('solver/parity/game.cc', 'solver/parity/lifting.cc',
+                       'solver/parity/strpm.cc')
+parity_lib = static_library ('parity', parity_sources,
+  include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
+parity_route_lib = static_library ('parity-route', 'solver/parity/route.cc',
+  include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
 
 closure_buchi_provider_lib = static_library (
   'closure-buchi-provider',
@@ -21,6 +21,7 @@ ab_sources = [
   'solver/real_backend_selector.cc',
   'solver/solver_invoker.cc',
   'solver/obligation_helper.cc',
+  'parity_arm.cc',
   'solver/solve_game.cc',
   'solver/solve_game_vector.cc',
 ]
@@ -43,7 +44,7 @@ endif
 #subdir ('python_pybind')
 
 ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
-                     link_with : closure_buchi_provider_lib,
+                     link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib],
                      include_directories : inc,
                      install: true,
                      install_tag: 'cli',
@@ -54,7 +55,7 @@ if native_test_hooks
     'native_test_hooks.cc', '../tests/native_attribution_hooks.cc', version_h,
     tlsf_native.get_variable ('gr1_reduction_source'),
     tlsf_native.get_variable ('reduction_contract_hooks'),
-    link_with : closure_buchi_provider_lib,
+    link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib],
     include_directories : inc,
     cpp_args : ['-DACACIA_NATIVE_TEST_HOOKS=1', '-DTLSF_GR1_REDUCTION_TEST_FAULT'],
     install : false,
@@ -63,11 +64,9 @@ if native_test_hooks
 endif
 
 if get_option('build_research_tools')
-  parity_route_lib = static_library ('parity-route',
-    ['research/parity_route_impl.cc', 'solver/mealy_to_moore.cc'],
-    include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
   acacia_parity_route_exe = executable ('acacia-parity-route',
-    ['research/parity_route.cc', 'version.cc'], version_h,
+    ['research/parity_route.cc', 'research/parity_route_impl.cc',
+     'solver/mealy_to_moore.cc', 'version.cc'], version_h,
     link_with : [parity_route_lib, parity_lib], include_directories : inc,
     dependencies : [spot_dep, bddx_dep], install : false)
   acacia_tela_to_buchi_exe = executable (

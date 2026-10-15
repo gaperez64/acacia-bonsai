@@ -115,7 +115,7 @@ def test_gr1_real_prepass_preset_is_six_arms():
     } == {"native_arms", "default_arms"}
 
 
-def test_obligation_membership_is_declared_only_in_explicit_shipping_portfolios():
+def test_obligation_membership_is_explicit_in_shipping_and_parity_portfolios():
     module = load_module()
     options, presets = module.load_registry()
     shipping = presets["groups"]["docker_default"]
@@ -123,7 +123,7 @@ def test_obligation_membership_is_declared_only_in_explicit_shipping_portfolios(
     for name, data in presets["presets"].items():
         values = module.normalize_preset(options, presets, name)
         arms = values["default_arms"].split(",")
-        if name in shipping and data.get("default_arms"):
+        if name in (*shipping, "otf_sparse_formula_parity") and data.get("default_arms"):
             assert arms.count(arm) == 1, name
             assert f"-Dacacia_default_arms={values['default_arms']}" in module.meson_args(
                 options, values)
@@ -133,6 +133,21 @@ def test_obligation_membership_is_declared_only_in_explicit_shipping_portfolios(
     assert fallback["native_arms"] is False
     assert arm in fallback["default_arms"].split(",")
     assert options["options"]["default_arms"]["default"] == ""
+
+
+def test_parity_preset_adds_only_one_arm_to_the_first_shipping_preset():
+    module = load_module()
+    options, presets = module.load_registry()
+    name = "otf_sparse_formula_parity"
+    first = presets["groups"]["docker_default"][0]
+    assert presets["presets"][name]["inherits"] == first
+    baseline = module.normalize_preset(options, presets, first)
+    candidate = module.normalize_preset(options, presets, name)
+    assert candidate["default_arms"] == baseline["default_arms"] + ",both:parity:spot"
+    assert name not in presets["groups"]["docker_default"]
+    for key in baseline:
+        if key not in {"_preset", "preset", "default_arms"}:
+            assert candidate[key] == baseline[key], key
 
 
 def test_docker_launcher_uses_registry_group_without_python():

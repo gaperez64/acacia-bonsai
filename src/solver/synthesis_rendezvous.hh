@@ -37,7 +37,7 @@ namespace acacia::synthesis {
   inline rendezvous_slot* current_slot = nullptr;
   inline std::atomic<uint64_t>* verdict_sequence = nullptr;
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
-  void test_worker_started (bool obligation);
+  void test_worker_started (bool obligation, bool parity = false);
   void test_before_worker_protection ();
   void test_before_verdict ();
   void test_after_selection ();
