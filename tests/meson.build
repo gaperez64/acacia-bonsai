@@ -493,6 +493,7 @@ game_backend_integration_sources = [
   '../src/solver/solver_invoker.cc',
   '../src/solver/obligation_helper.cc',
   '../src/parity_arm.cc',
+  '../src/solver/parity/buchi_antichain.cc',
   '../src/solver/solve_game.cc',
   '../src/solver/solve_game_vector.cc',
 ]
@@ -1117,9 +1118,11 @@ if get_option ('build_research_tools')
 endif
 
 parity_arm_test = executable ('parity-arm-test',
-  ['parity_arm_test.cc', '../src/solver/mealy_to_moore.cc'],
+  ['parity_arm_test.cc', '../src/solver/mealy_to_moore.cc',
+   '../src/solver/parity/buchi_antichain.cc', '../src/solver/solve_game.cc',
+   '../src/solver/solve_game_vector.cc'],
   link_with : [parity_route_lib, parity_lib], include_directories : inc,
-  dependencies : [spot_dep, bddx_dep])
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
 test ('parity-arm', parity_arm_test, suite : ['unit', 'parity'], timeout : 120)
 parity_arm_cli_depends = [ab_exe, parity_arm_test]
 parity_arm_cli_args = [files ('check-parity-arm.py'), ab_exe, parity_arm_test,

@@ -159,7 +159,17 @@ namespace acacia::parity_route {
     synthesis.sp = spot::synthesis_info::splittype::AUTO;
     spot::twa_graph_ptr arena;
     bool winning = false;
-    if (output.tier < 4) {
+    buchi_solution antichain;
+    if (output.tier < 4 and config.solve_buchi) {
+      output.route = "antichain";
+      aut = tier.buchi;
+      stage ("antichain", [&] { antichain = config.solve_buchi (tier.buchi, native_moore); });
+      output.solution.stats = antichain.stats;
+      if (not antichain.real)
+        return output;
+      winning = *antichain.real;
+    }
+    else if (output.tier < 4) {
       output.route = "acacia";
       aut = tier.buchi;
       // The incumbent deterministic forbidden-Buchi shortcut, with its usual
@@ -227,9 +237,9 @@ namespace acacia::parity_route {
     }
     if (config.on_solved)
       config.on_solved (output.solution.stats);
-    if (config.on_solution)
+    if (config.on_solution and output.game)
       stage ("solution-output", [&] { config.on_solution (*output.game, output.solution); });
-    if (config.verify)
+    if (config.verify and not antichain.real)
       stage ("verify-game", [&] {
         std::string reason;
         if (not parity::check_strategy (output.game->explicit_game, output.solution, &reason))
@@ -238,14 +248,18 @@ namespace acacia::parity_route {
     if (config.on_verdict)
       config.on_verdict (winning);
     if (winning and config.synthesis) {
-      stage ("strategy",
-             [&] { output.controller = spot::solved_game_to_separated_mealy (arena, synthesis); });
+      stage ("strategy", [&] {
+        output.controller = antichain.real
+                                ? antichain.controller ()
+                                : spot::solved_game_to_separated_mealy (arena, synthesis);
+      });
       stage ("encode-controller", [&] {
         if (not output.controller)
           throw std::runtime_error ("missing controller strategy");
         output.circuit =
             spot::mealy_machine_to_aig (output.controller, "isop", input.inputs, input.outputs);
-        if (input.moore and input.frame == timing_frame::effective_mealy)
+        if ((antichain.real and native_moore) or
+            (input.moore and input.frame == timing_frame::effective_mealy))
           output.circuit = acacia::synthesis::mealy_to_moore (output.circuit, true);
       });
       if (config.verify) {
@@ -280,7 +294,9 @@ namespace acacia::parity_route {
       output.verdict = "REALIZABLE";
     else {
       if (config.verify)
-        output.verification = "environment strategy on game; no independent certificate";
+        output.verification = antichain.real
+                                  ? "antichain environment proof; no independent certificate"
+                                  : "environment strategy on game; no independent certificate";
       output.verdict = "UNREALIZABLE";
     }
     output.checked = config.verify;

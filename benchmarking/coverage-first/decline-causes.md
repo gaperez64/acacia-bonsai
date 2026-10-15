@@ -50,21 +50,25 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 
 ## Validator, contract and failure-origin census
 
-748 enumerated checks/origins across preparation, reduction, seeds, R, U, checking, native proof binding, OxiDD and Spot providers. A slash-separated class means the source retains a typed failure from its called operation; status matrices and runtime fault panels test the alternatives. Boolean helpers report through the named consumer; false does not itself emit telemetry.
+752 enumerated checks/origins across preparation, reduction, seeds, R, U, checking, native proof binding, OxiDD and Spot providers. A slash-separated class means the source retains a typed failure from its called operation; status matrices and runtime fault panels test the alternatives. Boolean helpers report through the named consumer; false does not itself emit telemetry.
 
 | Origin | Legacy result | Cause expression/helper | Expected telemetry | Stage | Check/message |
 |---|---|---|---|---|---|
-| src/parity_arm.cc:43 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"rss_share"` |
-| src/parity_arm.cc:53 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"address_space_limit"` |
-| src/parity_arm.cc:71 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"invalid_formula"` |
-| src/parity_arm.cc:113 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"inconclusive"` |
-| src/parity_arm.cc:123 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"controller_export_failed"` |
-| src/parity_arm.cc:130 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"translation_allocation"` |
-| src/parity_arm.cc:132 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"allocation"` |
-| src/parity_arm.cc:134 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"capacity"` |
-| src/parity_arm.cc:140 | `UNKNOWN` | `worker_decline` | DECLINE/applicability | `worker` | `"acceptance_capacity"` |
-| src/parity_arm.cc:142 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"parity_exception"` |
-| src/parity_arm.cc:144 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"parity_exception"` |
+| src/parity_arm.cc:47 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"rss_share"` |
+| src/parity_arm.cc:57 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"address_space_limit"` |
+| src/parity_arm.cc:75 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"invalid_formula"` |
+| src/parity_arm.cc:142 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"inconclusive"` |
+| src/parity_arm.cc:152 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"controller_export_failed"` |
+| src/parity_arm.cc:159 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"translation_allocation"` |
+| src/parity_arm.cc:161 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"allocation"` |
+| src/parity_arm.cc:163 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"capacity"` |
+| src/parity_arm.cc:169 | `UNKNOWN` | `worker_decline` | DECLINE/applicability | `worker` | `"acceptance_capacity"` |
+| src/parity_arm.cc:171 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"parity_exception"` |
+| src/parity_arm.cc:173 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"parity_exception"` |
+| src/solver/parity/buchi_antichain.cc:100 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"input_push_limit"` |
+| src/solver/parity/buchi_antichain.cc:121 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"empty_after_preprocessing"` |
+| src/solver/parity/buchi_antichain.cc:47 | `UNKNOWN` | `std::bad_alloc` | STOPPED/resource | `provider` | `` |
+| src/solver/parity/buchi_antichain.cc:115 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"antichain input requires Buchi acceptance"` |
 | src/native_support.cc:91 | `UNKNOWN` | `worker_decline` | DECLINE/applicability | `worker` | `reason.c_str ()` |
 | src/native_support.cc:94 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `native_failure_reason (category)` |
 | src/native_support.cc:122 | `status` | `category` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `stage` | `message` |

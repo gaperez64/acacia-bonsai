@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <spot/twaalgos/aiger.hh>
 #include <string>
 #include <vector>
@@ -20,6 +21,11 @@ namespace acacia::parity_route {
       timing_frame frame = timing_frame::original;
       bool moore = false;
   };
+  struct buchi_solution {
+      std::optional<bool> real;
+      parity::statistics stats;
+      std::function<spot::twa_graph_ptr ()> controller;
+  };
   struct options {
       bool synthesis = true;
       bool use_spot = false;
@@ -27,6 +33,8 @@ namespace acacia::parity_route {
       bool verify = false;
       bool cross_check = false;
       parity::limits bounds;
+      // Empty keeps the deterministic forbidden-Buchi Spot game path unchanged.
+      std::function<buchi_solution (spot::twa_graph_ptr, bool)> solve_buchi;
       std::function<void (bool)> on_verdict;
       std::function<void (const parity::statistics&)> on_solved;
       std::function<void (unsigned, const std::string&)> on_classified;

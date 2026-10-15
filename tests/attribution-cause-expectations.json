@@ -2990,5 +2990,21 @@
   "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"inconclusive\" | 0": {
     "cause": "worker_stopped",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/parity/buchi_antichain.cc | worker_stopped | UNKNOWN | worker | \"input_push_limit\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/parity/buchi_antichain.cc | worker_stopped | UNKNOWN | worker | \"empty_after_preprocessing\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/parity/buchi_antichain.cc | throw std::runtime_error | UNKNOWN | provider | \"antichain input requires Buchi acceptance\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/parity/buchi_antichain.cc | throw std::bad_alloc | UNKNOWN | provider |  | 0": {
+    "cause": "std::bad_alloc",
+    "telemetry": "STOPPED/resource"
   }
 }

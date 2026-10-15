@@ -67,6 +67,7 @@ struct arg_parse_result {
     // behaviour.
     std::optional<uint64_t> equivariance_budget_ns = 3000000000ULL;
     acacia::OracleLayout oracle_layout = acacia::OracleLayout::grouped;
+    bool parity_buchi_antichain = false;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     specification_metadata metadata;

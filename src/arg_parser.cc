@@ -118,6 +118,9 @@ void show_help (const char* program_name) {
       << "                    native arms have no provider and do not support -s\n"
       << "  --r-prepass VAL   [on|off] R discovery/candidates in combined native arms (default "
          "on)\n"
+      << "  --parity-buchi-engine spot-game|antichain\n"
+      << "                    how the parity arm solves a deterministic Buchi automaton:\n"
+      << "                    Spot's game solver (default) or Acacia's antichain solver\n"
       << "  --equivariance VAL [on|off] exact pre-pass in backward decision workers (default "
       << (ACACIA_ENABLE_EQUIVARIANT_SOLVER ? "on" : "off") << ")\n"
       << "                    off keeps ordinary backward solving; on requires compiled support\n"
@@ -438,6 +441,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   int opt;
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
+  static constexpr int OPT_PARITY_BUCHI_ENGINE = 1015;
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
@@ -461,6 +465,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"help", no_argument, nullptr, 'h'},
       {"oracle-layout", required_argument, nullptr, OPT_ORACLE_LAYOUT},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
+      {"parity-buchi-engine", required_argument, nullptr, OPT_PARITY_BUCHI_ENGINE},
       {"unreal-translation-pref", required_argument, nullptr, OPT_UNREAL_TRANSLATION_PREF},
       {"real-backend", required_argument, nullptr, OPT_REAL_BACKEND},
       {"unreal-backend", required_argument, nullptr, OPT_UNREAL_BACKEND},
@@ -664,6 +669,15 @@ arg_parse_result arg_parser (int argc, char** argv) {
         retval.oracle_layout = *layout;
         break;
       }
+      case OPT_PARITY_BUCHI_ENGINE:
+        if (std::string_view {optarg} == "antichain")
+          retval.parity_buchi_antichain = true;
+        else if (std::string_view {optarg} == "spot-game")
+          retval.parity_buchi_antichain = false;
+        else
+          error (EXIT_CODE_ERROR,
+                 "Error: --parity-buchi-engine expects spot-game or antichain.\n");
+        break;
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
       case OPT_REAL_BACKEND:
         if (retval.arms.has_value ())

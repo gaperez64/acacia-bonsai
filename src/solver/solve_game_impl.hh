@@ -48,11 +48,14 @@ namespace acacia::solver_detail {
   template <class SetOfStates>
   std::optional<spot::twa_graph_ptr> post_real (
       std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res, bool do_synthesis,
-      spot::twa_graph_ptr aut, const bdd& all_inputs, const bdd& all_outputs) {
+      spot::twa_graph_ptr aut, const bdd& all_inputs, const bdd& all_outputs,
+      unsigned* winning_k = nullptr) {
     using state = typename SetOfStates::value_type;
 
     if (not win_res.has_value ())
       return std::nullopt;
+    if (winning_k)
+      *winning_k = unsigned (win_res->first);
     if (not do_synthesis)
       return aut;
 
@@ -189,7 +192,7 @@ namespace acacia::solver_detail {
       const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
       [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints,
       acacia::game_backend backend, [[maybe_unused]] acacia::candidate_mode candidate,
-      [[maybe_unused]] bool equivariance) {
+      [[maybe_unused]] bool equivariance, unsigned* winning_k = nullptr) {
     backend = acacia::synthesis_backend (backend, do_synthesis);
     acacia::config::checks::check_solver_components<SpecializedDownset> ();
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
@@ -215,7 +218,7 @@ namespace acacia::solver_detail {
           ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints, budget);
       if (eq.outcome == acacia::solver_detail::equivariant::status::completed)
         return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut, all_inputs,
-                                              all_outputs);
+                                              all_outputs, winning_k);
     }
 #endif
     if (backend == acacia::game_backend::backward)
@@ -393,6 +396,8 @@ namespace acacia::solver_detail {
                          << " ranks=" << result.nodes << " choices=" << result.choices
                          << " status=" << forward_result_name (result.status) << std::endl);
         if (result.status == forward_result_status::win_k) {
+          if (winning_k)
+            *winning_k = unsigned (k);
           acacia::diagnostics::set_final_reason ("spot-guarded-verified-win");
           return aut;
         }
@@ -440,7 +445,7 @@ namespace acacia::solver_detail {
       auto win = forward.solve ();
       if (not forward.should_fallback_to_backward ())
         return post_real<SpecializedDownset> (std::move (win), do_synthesis, aut, all_inputs,
-                                              all_outputs);
+                                              all_outputs, winning_k);
     }
 #else
     // CLI requests are rejected while parsing.  Abort if an internal caller
@@ -452,8 +457,8 @@ namespace acacia::solver_detail {
                                            ActionerMaker, InputPickerMaker> (
         aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
         ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
-    return post_real<SpecializedDownset> (skn.solve (), do_synthesis, aut, all_inputs,
-                                          all_outputs);
+    return post_real<SpecializedDownset> (skn.solve (), do_synthesis, aut, all_inputs, all_outputs,
+                                          winning_k);
   }
 
 }  // namespace acacia::solver_detail

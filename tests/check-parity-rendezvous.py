@@ -43,8 +43,15 @@ def records(directory):
             for line in path.read_text().splitlines()]
 
 
+def event_records(rows, event, count):
+    found = [row for row in rows if row.get("event") == event]
+    dropped = max((row.get("dropped_records", 0) for row in rows), default=0)
+    assert len(found) <= count and count - len(found) <= dropped, (event, count, rows)
+    return found
+
+
 def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
-        parent_death=False, unreal=False):
+        parent_death=False, unreal=False, engine="spot-game"):
     with tempfile.TemporaryDirectory(dir=scratch) as temporary:
         root = Path(temporary)
         target = root / "controller.aag"
@@ -60,7 +67,8 @@ def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
         formula = "G (o <-> X i)" if unreal else "G (o <-> i)"
         arms = "both:parity:spot" if unreal else "real:small:backward,both:parity:spot"
         process = subprocess.Popen([binary, "-f", formula, "-i", "i", "-o", "o", "--arms", arms,
-                                    "-s", str(target)], env=env,
+                                    "-s", str(target), "--parity-buchi-engine", engine,
+                                    "-M", "2", "-K", "2"], env=env,
                                    pass_fds=tuple(read for read, _ in gates),
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         for read, _ in gates:
@@ -112,18 +120,32 @@ def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
                 oracle = check(Aiger.read(target), 0, lambda state, letter:
                                state if letter["o"] == letter["i"] else None, moore=False)
                 assert oracle.valid, oracle
+                if failure:
+                    resumed = [json.loads(line) for line in (events.pending + stderr).splitlines()
+                               if line.startswith(b"{") and b"synthesis_selected" in line]
+                    other, = [worker for worker in workers if worker != selected["pid"]]
+                    assert any(row["pid"] == other for row in resumed), resumed
                 rows = records(phases)
-                winner, = [row for row in rows if row.get("event") == "parent_winner"]
-                assert (winner["requested_backend"] == "parity") == (parity_first != failure), rows
+                for winner in event_records(rows, "parent_winner", 1):
+                    assert (winner["requested_backend"] == "parity") == (parity_first != failure), rows
                 exporters = [row for row in rows if row.get("event") == "stage_entry"
                              and row.get("stage") in {"strategy", "encode-controller", "parity_export"}]
                 if parity_first and not failure:
-                    assert exporters and all(row["worker_pid"] == selected["pid"] for row in exporters)
+                    assert exporters or any(row.get("dropped_records", 0) for row in rows), rows
+                    assert all(row["worker_pid"] == selected["pid"] for row in exporters), rows
             if not parent_death:
                 for worker in workers:
                     assert not Path(f"/proc/{worker}").exists(), worker
                 rows = records(phases)
-                assert len([row for row in rows if row.get("event") == "parent_terminal"]) == len(workers)
+                # The nonblocking record transport may drop optional telemetry;
+                # actual child reaping is checked independently above.
+                terminals = event_records(rows, "parent_terminal", len(workers))
+                terminal_pids = [row["worker_pid"] for row in terminals]
+                assert len(set(terminal_pids)) == len(terminal_pids), terminals
+                assert set(terminal_pids) <= set(workers), terminals
+                writer, = [row for row in rows if row.get("event") == "writer_summary"]
+                assert writer["failed_records"] == 0 and not writer["incomplete_packet"], writer
+                assert writer["delivered_records"] == len(rows) - 1, writer
         finally:
             if process.poll() is None:
                 process.kill()
@@ -142,7 +164,7 @@ def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
                     pass
 
 
-def memory_limit(binary, scratch):
+def memory_limit(binary, scratch, engine):
     with tempfile.TemporaryDirectory(dir=scratch) as temporary:
         root = Path(temporary)
         gate_read, gate_write = os.pipe()
@@ -154,7 +176,9 @@ def memory_limit(binary, scratch):
             resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024))
 
         process = subprocess.Popen([binary, "-f", "G o", "-i", "", "-o", "o", "--arms", "both:parity:spot",
-                                    "-s", str(root / "controller.aag")], env=env, preexec_fn=limit,
+                                    "-s", str(root / "controller.aag"), "--parity-buchi-engine", engine,
+                                    "-M", "2", "-K", "2"],
+                                   env=env, preexec_fn=limit,
                                    pass_fds=(gate_read,), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         os.close(gate_read)
         try:
@@ -179,13 +203,14 @@ def main():
     libc = ctypes.CDLL(None, use_errno=True)
     assert libc.prctl(36, 1, 0, 0, 0) == 0  # Adopt children when their parent is killed.
     binary = str(args.binary.resolve())
-    for parity_first in (False, True):
-        run(binary, args.scratch, parity_first=parity_first)
-        run(binary, args.scratch, parity_first=parity_first, failure=True)
-    run(binary, args.scratch, interrupt=True)
-    run(binary, args.scratch, parent_death=True)
-    run(binary, args.scratch, unreal=True)
-    memory_limit(binary, args.scratch)
+    for engine in ("spot-game", "antichain"):
+        for parity_first in (False, True):
+            run(binary, args.scratch, engine=engine, parity_first=parity_first)
+            run(binary, args.scratch, engine=engine, parity_first=parity_first, failure=True)
+        run(binary, args.scratch, engine=engine, interrupt=True)
+        run(binary, args.scratch, engine=engine, parent_death=True)
+        run(binary, args.scratch, engine=engine, unreal=True)
+        memory_limit(binary, args.scratch, engine)
     print("Parity selection, fallback, cancellation, parent death and RSS supervision passed")
 
 

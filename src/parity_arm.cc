@@ -4,6 +4,7 @@
 #include "solver/controller_writer.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/obligation_helper.hh"
+#include "solver/parity/buchi_antichain.hh"
 #include "solver/parity/route.hh"
 #include "solver/synthesis_rendezvous.hh"
 
@@ -13,23 +14,26 @@
 
 namespace acacia {
   namespace {
-    void record (const char* event, unsigned tier, const parity::statistics& stats = {}) {
+    void record (const char* event, unsigned tier, const char* engine,
+                 const parity::statistics& stats = {}) {
       if (!phase_records_enabled ())
         return;
       auto* worker = active_worker_record ();
       if (!worker)
         return;
-      char line[768];
+      char line[1024];
       const int length = snprintf (
           line, sizeof line,
           "{\"arm\":\"both:parity:spot\",\"event\":\"%s\",\"worker\":%u,"
           "\"worker_pid\":%ld,\"seq\":%llu,\"tier\":%u,\"k\":%u,\"t\":%u,"
           "\"pairs\":%u,\"fallback\":%s,\"fallback_reason\":\"%s\","
-          "\"mono_ns\":%llu,\"trust\":\"exact_game\",\"same_library_checked\":false,"
+          "\"route\":\"%s\",\"effective_backend\":\"%s\","
+          "\"mono_ns\":%llu,\"trust\":\"%s\",\"same_library_checked\":false,"
           "\"independent_checked\":false}\n",
           event, worker->index, long (worker->pid), ++worker->sequence, tier, stats.k, stats.t,
-          stats.pairs, stats.fallback ? "true" : "false", stats.fallback_reason.c_str (),
-          (unsigned long long) phase_clock (CLOCK_MONOTONIC));
+          stats.pairs, stats.fallback ? "true" : "false", stats.fallback_reason.c_str (), engine,
+          engine, (unsigned long long) phase_clock (CLOCK_MONOTONIC),
+          std::strcmp (engine, "antichain") == 0 ? "exact_antichain" : "exact_game");
       if (length > 0 && size_t (length) < sizeof line)
         phase_records_send (line, size_t (length));
       else
@@ -80,23 +84,48 @@ namespace acacia {
       parity_route::options config;
       config.synthesis = args.synth_fname.has_value ();
       unsigned tier = 0;
+      const char* engine = "unknown";
+      parity::statistics final_stats;
+      if (args.parity_buchi_antichain) {
+        parity_route::antichain_options antichain;
+        antichain.kmax = args.opt_k;
+        antichain.kmin = args.opt_kmin;
+        antichain.kinc = args.opt_kinc;
+        antichain.real_backend = args.real_backend;
+        antichain.unreal_backend = args.unreal_backend;
+        antichain.candidate = args.candidate;
+        antichain.equivariance = args.equivariance;
+        antichain.synthesis = config.synthesis;
+        antichain.hints = metadata.tlsf_indexed_families;
+        config.solve_buchi = [&, antichain] (auto buchi, bool moore) {
+          auto solved = parity_route::solve_buchi_antichain (buchi, input.inputs, input.outputs,
+                                                             moore, antichain);
+          record ("parity_parameters", tier, engine, solved.stats);
+          return solved;
+        };
+      }
       config.on_classified = [&] (unsigned value, const std::string&) {
         tier = value;
-        worker_route (value < 4 ? "deterministic_buchi" : "acd_parity",
-                      value < 4 ? "spot-fast" : "strpm-simd", "unknown");
-        record ("parity_tier", tier);
+        engine =
+            value < 4 ? (args.parity_buchi_antichain ? "antichain" : "spot-fast") : "strpm-simd";
+        worker_route (value < 4 ? "deterministic_buchi" : "acd_parity", engine, "unknown");
+        record ("parity_tier", tier, engine);
       };
       config.bounds.parameter_observer = [&] (const auto& stats) {
-        record ("parity_parameters", tier, stats);
+        record ("parity_parameters", tier, engine, stats);
       };
       config.bounds.fallback_observer = [&] (const auto& stats, double seconds) {
-        record (seconds < 0 ? "parity_fallback_start" : "parity_fallback_end", tier, stats);
+        record (seconds < 0 ? "parity_fallback_start" : "parity_fallback_end", tier, engine,
+                stats);
       };
-      config.on_solved = [&] (const auto& stats) { record ("parity_solved", tier, stats); };
+      config.on_solved = [&] (const auto& stats) {
+        final_stats = stats;
+        record ("parity_solved", tier, engine, stats);
+      };
       config.on_verdict = [&] (bool real) {
         if (auto* worker = active_worker_record ())
           worker_record_text (worker->proof_polarity, real ? "REAL" : "UNREAL");
-        record ("parity_verdict", tier);
+        record ("parity_verdict", tier, engine, final_stats);
         if (args.synth_fname)
           synthesis::await_selection (real ? EXIT_CODE_REAL : EXIT_CODE_UNREAL);
       };
