@@ -33,7 +33,9 @@ namespace acacia::parity_route {
       bool verify = false;
       bool cross_check = false;
       parity::limits bounds;
-      // Empty keeps the deterministic forbidden-Buchi Spot game path unchanged.
+      // Tiers 1-3 otherwise keep the deterministic forbidden-Buchi Spot shortcut.
+      bool buchi_strpm = false;
+      // A supplied antichain solver takes precedence over buchi_strpm.
       std::function<buchi_solution (spot::twa_graph_ptr, bool)> solve_buchi;
       std::function<void (bool)> on_verdict;
       std::function<void (const parity::statistics&)> on_solved;

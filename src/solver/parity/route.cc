@@ -2,6 +2,7 @@
 
 #include "solver/mealy_to_moore.hh"
 #include "solver/spot_nba_fastpath.hh"
+#include "solver/synthesis_rendezvous.hh"
 #include "solver/translator_options.hh"
 
 #include <algorithm>
@@ -160,6 +161,7 @@ namespace acacia::parity_route {
     spot::twa_graph_ptr arena;
     bool winning = false;
     buchi_solution antichain;
+    acacia::synthesis::controller_builder buchi_controller;
     if (output.tier < 4 and config.solve_buchi) {
       output.route = "antichain";
       aut = tier.buchi;
@@ -169,9 +171,10 @@ namespace acacia::parity_route {
         return output;
       winning = *antichain.real;
     }
-    else if (output.tier < 4) {
+    else if (output.tier < 4 and not config.buchi_strpm) {
       output.route = "acacia";
       aut = tier.buchi;
+      const bool keep_arena = config.verify or config.on_game or config.on_solution;
       // The incumbent deterministic forbidden-Buchi shortcut, with its usual
       // completion and co-Buchi game. Native Moore uses the same Spot split API
       // with output-first order; shipping callers keep the default Mealy frame.
@@ -180,12 +183,15 @@ namespace acacia::parity_route {
           tier.buchi->register_ap (spot::formula::ap (name));
         for (const auto& name : input.outputs)
           tier.buchi->register_ap (spot::formula::ap (name));
+        // Production needs only the verdict and, after selection, the controller.
+        acacia::synthesis::controller_capture capture (&buchi_controller);
         auto fast = acacia::spot_fastpath::deterministic_forbidden_fast_path (
-            tier.buchi, outputs, false, true, native_moore);
+            tier.buchi, outputs, config.synthesis and not keep_arena, keep_arena, native_moore);
         winning = fast.current_output_player_wins;
-        arena = *fast.solved_arena;
+        if (keep_arena)
+          arena = *fast.solved_arena;
       });
-      if (config.verify or config.on_game or config.on_solution)
+      if (keep_arena)
         stage ("explicit", [&] {
           output.game = std::make_unique<parity::arena_game> (arena);
           aut = arena;
@@ -195,34 +201,53 @@ namespace acacia::parity_route {
         });
     }
     else {
-      output.route = config.use_spot ? "spot" : "strpm-simd";
-      stage ("parity", [&] {
-        // For captured REAL workers, complement exactly once after classification.
-        // Original-formula mode reuses its positive translation for the game.
-        auto objective = input.source == source_language::real_worker ? spot::dualize (aut) : aut;
-        if (config.use_lar) {
-          aut = spot::to_parity (objective);
-          spot::reduce_parity_here (aut);
-        }
-        else {
-          aut = spot::acd_transform (objective);
-        }
-      });
-      stage ("split", [&] {
-        arena = spot::split_2step (aut, outputs, true, synthesis.sp, native_moore);
-        spot::set_synthesis_outputs (arena, outputs);
-        aut = arena;
-      });
+      const bool use_spot = output.tier == 4 and config.use_spot;
+      output.route = use_spot ? "spot" : "strpm-simd";
+      if (output.tier < 4) {
+        stage ("cobuchi", [&] {
+          // Build exactly the deterministic shortcut's game, without solving it.
+          for (const auto& name : input.inputs)
+            tier.buchi->register_ap (spot::formula::ap (name));
+          for (const auto& name : input.outputs)
+            tier.buchi->register_ap (spot::formula::ap (name));
+          aut = acacia::spot_fastpath::complete_copy_with_rejecting_sink (tier.buchi);
+          aut->set_acceptance (1, spot::acc_cond::acc_code::cobuchi ());
+          spot::set_synthesis_outputs (aut, outputs);
+        });
+        stage ("split", [&] {
+          arena = spot::split_2step (aut, synthesis);
+          aut = arena;
+        });
+      }
+      else {
+        stage ("parity", [&] {
+          // For captured REAL workers, complement exactly once after classification.
+          // Original-formula mode reuses its positive translation for the game.
+          auto objective = input.source == source_language::real_worker ? spot::dualize (aut) : aut;
+          if (config.use_lar) {
+            aut = spot::to_parity (objective);
+            spot::reduce_parity_here (aut);
+          }
+          else {
+            aut = spot::acd_transform (objective);
+          }
+        });
+        stage ("split", [&] {
+          arena = spot::split_2step (aut, outputs, true, synthesis.sp, native_moore);
+          spot::set_synthesis_outputs (arena, outputs);
+          aut = arena;
+        });
+      }
       spot::twa_graph_ptr same_game;
       stage ("explicit", [&] {
         output.game = std::make_unique<parity::arena_game> (arena);
-        if (config.use_spot or config.cross_check)
+        if (use_spot or config.cross_check)
           same_game = parity::to_spot (output.game->explicit_game, dictionary);
         if (config.on_game)
           config.on_game (*output.game);
       });
       stage ("solve", [&] {
-        output.solution = config.use_spot
+        output.solution = use_spot
                               ? parity::solve_spot (output.game->explicit_game, same_game)
                               : parity::solve_strpm (output.game->explicit_game, config.bounds);
         winning = output.solution.winner[arena->get_init_state_number ()];
@@ -249,9 +274,12 @@ namespace acacia::parity_route {
       config.on_verdict (winning);
     if (winning and config.synthesis) {
       stage ("strategy", [&] {
-        output.controller = antichain.real
-                                ? antichain.controller ()
-                                : spot::solved_game_to_separated_mealy (arena, synthesis);
+        if (antichain.real)
+          output.controller = antichain.controller ();
+        else if (buchi_controller)
+          output.controller = buchi_controller ();
+        else
+          output.controller = spot::solved_game_to_separated_mealy (arena, synthesis);
       });
       stage ("encode-controller", [&] {
         if (not output.controller)

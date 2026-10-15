@@ -11,12 +11,23 @@ The production worker and `acacia-parity-route` share `src/solver/parity/route.{
 worker's forbidden language is classified using the same structural tiers as the research route:
 Buchi or constant acceptance, finite-occurrence-free acceptance, exact deterministic-Buchi
 conversion, then genuine parity acceptance. Tiers 1–3 select their engine at runtime with
-`--parity-buchi-engine spot-game|antichain`. The default, `spot-game`, preserves the existing
-deterministic forbidden-Buchi fast path: completion, a co-Buchi game, and Spot's `solve_game`.
+`--parity-buchi-engine spot-game|antichain|strpm-simd`. The default, `spot-game`, preserves
+the existing deterministic forbidden-Buchi fast path: completion, a co-Buchi game, and Spot's `solve_game`.
+Production requests only the verdict and, for synthesis, the shortcut's deferred controller.
+Verification and game/solution observers retain the full winning region and solved arena via
+`solve_parity_game`, preserving the research tool's diagnostic output.
 `antichain` instead enters the ordinary worker's K-bounded solver after the Spot shortcut,
 using the build's configured automaton preprocessing, Boolean-state discovery, downsets,
 backend defaults and K schedule (`-M`, `-K`, `-I`). Synthesis uses the ordinary backward
-fallback and deferred strategy builder. No compile-time option is added.
+fallback and deferred strategy builder.
+`strpm-simd` builds the same completed co-Buchi game as `spot-game`, including the rejecting
+sink, declared synthesis outputs, and two-step split in the requested Mealy/Moore frame.
+It then uses tier 4's explicit `parity::arena_game` conversion and `parity::solve_strpm`,
+with the same adaptive `(k,t)` bounds and Spot fallback on bound exhaustion. The solution
+is installed on the split arena before the ordinary controller construction and AIG export.
+Completed decisions therefore use Acacia's parity solver unless the recorded fallback occurs.
+The antichain K options (`-M`, `-K`, `-I`) do not set the parity solver's bounds.
+No compile-time option is added; the default remains `spot-game`.
 
 The classified DBA recognizes the REAL worker's forbidden language, `!phi`. Acacia interprets
 an existential NBA for a language L as a universal co-Buchi automaton for its complement:
@@ -54,9 +65,10 @@ The port's GPL-3.0 provenance is unchanged; no additional Oink logic is included
 Production trusts completed REAL/UNREAL game results and strategies under the owner's trust
 rule. It performs no game strategy or original-specification product check. The research tool
 retains `--verify on --cross-check` as an explicit diagnostic. The unit suite independently
-checks both tier-1–3 engines on small REAL/UNREAL Mealy/Moore games, checks exported AIGs
+checks all three tier-1–3 engines on small REAL/UNREAL Mealy/Moore games, checks exported AIGs
 against a fresh negated-specification translation and Moore output independence, and retains
-the existing scalar oracle and 480-game Spot comparison.
+the existing scalar oracle and 480-game Spot comparison. Tier-3 tests also force the Spot
+fallback with the existing operation budget and verify its installed strategies and controllers.
 
 Decision-only calls do not construct or encode controllers. During synthesis, both verdicts
 enter the existing parent rendezvous; only a selected REAL worker constructs its controller
@@ -72,9 +84,11 @@ solve, parameter changes, fallback boundaries and trust declarations. Every pari
 the selected tier engine in `route` and `effective_backend`: `spot-fast`, `antichain`, or
 `strpm-simd`. Antichain search events retain each K reached;
 `parity_parameters`, `parity_solved` and `parity_verdict` report the winning K (`t=0`, `pairs=0`).
-Its trust declaration is `exact_antichain`; game engines retain `exact_game`. Tier-4
-`parity_verdict` now carries the completed adaptive `k`, `t`, `pairs`, `fallback` and
-`fallback_reason` from `parity_solved`, including fallback outcomes. Cancellation
+Its trust declaration is `exact_antichain`; game engines retain `exact_game`. For `strpm-simd`
+in every tier, `parity_tier`, `parity_solved` and `parity_verdict` include the tier, engine,
+`k`, `t`, `pairs`, `fallback` and `fallback_reason`. The classification event precedes solving
+and starts with zero bounds and no fallback; `parity_verdict` carries the completed adaptive
+`k`, `t`, `pairs`, `fallback` and `fallback_reason` from `parity_solved`, including fallback outcomes. Cancellation
 retains the last stage snapshot. Capacity/allocation/translation/export declines and stops are
 included in the generated decline-cause census; diagnostics-off avoids the record channel.
 
@@ -96,3 +110,6 @@ cancelled arms. It then compares the same frozen candidate binary with the defau
 `--parity-buchi-engine antichain`, first on that panel, then on the original complete
 204-input screen list. Implementation performs correctness tests only; the driver chooses
 an engine after measuring coverage, tier costs, K reached, resource stops and race outcomes.
+The same runtime comparison can now include `--parity-buchi-engine strpm-simd`; its parameter
+and fallback records distinguish Acacia parity decisions from the Spot fallback. No measurements
+or default changes accompany this extension.

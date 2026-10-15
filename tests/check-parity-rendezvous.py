@@ -203,7 +203,7 @@ def main():
     libc = ctypes.CDLL(None, use_errno=True)
     assert libc.prctl(36, 1, 0, 0, 0) == 0  # Adopt children when their parent is killed.
     binary = str(args.binary.resolve())
-    for engine in ("spot-game", "antichain"):
+    for engine in ("spot-game", "antichain", "strpm-simd"):
         for parity_first in (False, True):
             run(binary, args.scratch, engine=engine, parity_first=parity_first)
             run(binary, args.scratch, engine=engine, parity_first=parity_first, failure=True)

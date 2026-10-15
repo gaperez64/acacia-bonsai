@@ -86,7 +86,8 @@ namespace acacia {
       unsigned tier = 0;
       const char* engine = "unknown";
       parity::statistics final_stats;
-      if (args.parity_buchi_antichain) {
+      config.buchi_strpm = args.parity_buchi_engine == arg_parse_result::buchi_engine::strpm_simd;
+      if (args.parity_buchi_engine == arg_parse_result::buchi_engine::antichain) {
         parity_route::antichain_options antichain;
         antichain.kmax = args.opt_k;
         antichain.kmin = args.opt_kmin;
@@ -106,8 +107,9 @@ namespace acacia {
       }
       config.on_classified = [&] (unsigned value, const std::string&) {
         tier = value;
-        engine =
-            value < 4 ? (args.parity_buchi_antichain ? "antichain" : "spot-fast") : "strpm-simd";
+        engine = value == 4 or config.buchi_strpm
+                     ? "strpm-simd"
+                     : (config.solve_buchi ? "antichain" : "spot-fast");
         worker_route (value < 4 ? "deterministic_buchi" : "acd_parity", engine, "unknown");
         record ("parity_tier", tier, engine);
       };

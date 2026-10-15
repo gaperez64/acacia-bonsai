@@ -167,6 +167,15 @@ declined lifts go directly to the exact game solve. The `real` and
 [the research oracle](benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py) for
 differential tests.
 
+The explicit `--arms both:parity:spot` arm accepts
+`--parity-buchi-engine spot-game|antichain|strpm-simd` for deterministic Büchi tiers.
+`spot-game` (the default) uses Spot's game solver; `antichain` uses Acacia's bounded
+antichain solver; `strpm-simd` uses Acacia's parity game solver with adaptive bounds
+and a recorded Spot fallback when those bounds are exhausted. All three support
+controller export with `-s`; the flag leaves tier 4's parity solving unchanged.
+See [the parity arm documentation](benchmarking/coverage-first/parity-arm.md) for
+timing semantics, solver bounds and records.
+
 Correctness and performance gates, including the sequential measurement
 protocol, are documented in [benchmarking/README.md](benchmarking/README.md).
 The comparison with `ltlsynt` is in
