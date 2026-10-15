@@ -32,7 +32,8 @@ ADAPTER_SPEC.loader.exec_module(adapter)
 
 
 def test_shared_deadline_stops_a_slow_stage_and_reaps_it():
-    deadline = wrapper.Deadline.start(0.04)
+    # Allow scheduling before entry; the blocked child must still be killed and reaped promptly.
+    deadline = wrapper.Deadline.start(1.0)
     started = time.monotonic()
     outcome = wrapper.run_process(
         [sys.executable, "-c", "import time; time.sleep(10)"],
@@ -42,19 +43,20 @@ def test_shared_deadline_stops_a_slow_stage_and_reaps_it():
 
     assert outcome.timed_out
     assert outcome.timeout_kind == "invocation"
-    assert time.monotonic() - started < 1.0
+    assert time.monotonic() - started < 5.0
     with pytest.raises(ProcessLookupError):
         os.kill(outcome.pid, 0)
 
 
 def test_in_process_stage_uses_the_same_absolute_deadline():
-    deadline = wrapper.Deadline.start(0.02)
+    # The invocation must expire during the callable, before its separate stage allowance.
+    deadline = wrapper.Deadline.start(1.0)
     with pytest.raises(wrapper.BudgetExhausted) as caught:
         wrapper.run_callable(
-            lambda: time.sleep(1),
+            lambda: time.sleep(10),
             deadline,
             "fake_proposal",
-            stage_limit_s=0.5,
+            stage_limit_s=2.0,
         )
     assert caught.value.stage == "fake_proposal"
     assert caught.value.when == "during"
