@@ -161,6 +161,8 @@ namespace acacia::parity_route {
     legacy_phase solve ("gr1_solve");
     Gr1SolveOptions options {};
     options.oxidd = oxidd_solve_options_default ();
+    // Select the automaton state before its signal-dependent transition labels.
+    options.oxidd.var_order = OXIDD_VAR_ORDER_STATE_FIRST;
     OxiddFailure failure {};
     options.oxidd.failure = &failure;
     Gr1CertificateStats stats {};
