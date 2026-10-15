@@ -24,6 +24,7 @@ with tempfile.TemporaryDirectory(dir=Path.cwd(), prefix="check-help-") as direct
             assert result.returncode == 0, (option, invalid_deadline, result)
             assert result.stdout.startswith("Usage:"), (option, invalid_deadline, result)
             assert "--arms LIST" in result.stdout, (option, invalid_deadline, result)
+            assert "--parity-buchi-engine spot-game|antichain|strpm-simd|gr1" in result.stdout
             assert "--equivariance-budget F|DURATION|unbounded (default 3s)" in result.stdout
             assert "[scan|grouped] (default: grouped)" in result.stdout
             assert "--obligation-helper" not in result.stdout

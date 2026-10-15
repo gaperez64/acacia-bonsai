@@ -25,6 +25,9 @@ export CXX=/opt/homebrew/bin/g++-14
 # Match Homebrew libstdc++.6.dylib's minimum target so delocate accepts the wheel.
 export MACOSX_DEPLOYMENT_TARGET=15.0
 
+project_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+"$project_dir/scripts/prepare-gr1-dependency.sh"
+
 echo "== Building Spot ${SPOT_VERSION} =="
 workdir=$(mktemp -d)
 cd "$workdir"

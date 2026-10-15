@@ -5,6 +5,7 @@
 #include "solver/mealy_to_moore.hh"
 #include "solver/obligation_helper.hh"
 #include "solver/parity/buchi_antichain.hh"
+#include "solver/parity/buchi_gr1.hh"
 #include "solver/parity/route.hh"
 #include "solver/synthesis_rendezvous.hh"
 
@@ -105,12 +106,22 @@ namespace acacia {
           return solved;
         };
       }
+      if (args.parity_buchi_engine == arg_parse_result::buchi_engine::gr1) {
+        config.buchi_route = "gr1";
+        config.solve_buchi = [&] (auto buchi, bool moore) {
+          return parity_route::solve_buchi_gr1 (buchi, input.inputs, input.outputs, moore,
+                                                config.synthesis);
+        };
+      }
       config.on_classified = [&] (unsigned value, const std::string&) {
         tier = value;
         engine = value == 4 or config.buchi_strpm
                      ? "strpm-simd"
-                     : (config.solve_buchi ? "antichain" : "spot-fast");
-        worker_route (value < 4 ? "deterministic_buchi" : "acd_parity", engine, "unknown");
+                     : (config.solve_buchi ? config.buchi_route.c_str () : "spot-fast");
+        worker_route (std::strcmp (engine, "gr1") == 0 ? "gr1"
+                      : value < 4                      ? "deterministic_buchi"
+                                                       : "acd_parity",
+                      engine, "unknown");
         record ("parity_tier", tier, engine);
       };
       config.bounds.parameter_observer = [&] (const auto& stats) {

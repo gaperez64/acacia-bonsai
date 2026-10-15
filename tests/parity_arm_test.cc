@@ -1,5 +1,6 @@
 #include "research/parity_route.hh"
 #include "solver/parity/buchi_antichain.hh"
+#include "solver/parity/buchi_gr1.hh"
 #include "utils/verbose.hh"
 
 #include <iostream>
@@ -64,6 +65,14 @@ void use_antichain (route::options& options, const route::request& input) {
   };
 }
 
+void use_gr1 (route::options& options, const route::request& input) {
+  const bool synthesis = options.synthesis;
+  options.buchi_route = "gr1";
+  options.solve_buchi = [input, synthesis] (auto buchi, bool moore) {
+    return route::solve_buchi_gr1 (buchi, input.inputs, input.outputs, moore, synthesis);
+  };
+}
+
 void check_controller (const spot::aig_ptr& circuit, spot::formula specification, bool moore) {
   if (moore) {
     std::vector<bool> dependent (circuit->max_var () / 2 + 1);
@@ -96,7 +105,7 @@ int main (int argc, char** argv) {
     for (unsigned tier = 1; tier <= 4; ++tier)
       for (bool moore : {false, true})
         for (bool real : {false, true})
-          for (const std::string engine : {"spot-game", "antichain", "strpm-simd"}) {
+          for (const std::string engine : {"spot-game", "antichain", "strpm-simd", "gr1"}) {
             const bool antichain = engine == "antichain";
             context = "tier=" + std::to_string (tier) + " moore=" + std::to_string (moore) +
                       " real=" + std::to_string (real) +
@@ -116,6 +125,8 @@ int main (int argc, char** argv) {
             decision.buchi_strpm = engine == "strpm-simd";
             if (antichain)
               use_antichain (decision, input);
+            if (engine == "gr1")
+              use_gr1 (decision, input);
             decision.on_verdict = [&] (bool winner) {
               require (winner == real, "published wrong verdict");
               published = true;
@@ -123,7 +134,8 @@ int main (int argc, char** argv) {
             auto answer =
                 route::run (input, decision, [&] (const char* stage, const auto&, double) {
                   exported |= std::string (stage) == "strategy" ||
-                              std::string (stage) == "encode-controller";
+                              std::string (stage) == "encode-controller" ||
+                              std::string (stage) == "gr1_export";
                   verification |= std::string (stage).starts_with ("verify-");
                 });
             require (published && !exported && !verification && !answer.circuit,
@@ -175,6 +187,8 @@ int main (int argc, char** argv) {
                          "game or solution observer changed the verdict or lost the arena");
               }
             }
+            if (engine == "gr1" && tier < 4)
+              require (answer.route == "gr1" && !answer.game, "GR(1) used an explicit game");
             reference::options diagnostic;
             diagnostic.verify = true;
             diagnostic.cross_check = true;
@@ -214,10 +228,23 @@ int main (int argc, char** argv) {
               synthesis.synthesis = true;
               if (antichain)
                 use_antichain (synthesis, input);
-              auto made = route::run (input, synthesis);
+              if (engine == "gr1")
+                use_gr1 (synthesis, input);
+              bool selected = false;
+              synthesis.on_verdict = [&] (bool winner) {
+                require (winner == real, "synthesis published wrong verdict");
+                selected = true;
+              };
+              auto made =
+                  route::run (input, synthesis, [&] (const char* stage, const auto&, double) {
+                    if (std::string (stage) == "gr1_export")
+                      require (selected, "GR(1) export preceded selection");
+                  });
               require (made.verdict == answer.verdict && made.checked,
                        "synthesis differs from decision");
               require (bool (made.circuit) == real, "incorrect controller presence");
+              if (real)
+                check_controller (made.circuit, input.specification, moore);
             }
           }
     // A small operation budget forces the existing Spot fallback on tier three.
@@ -300,7 +327,7 @@ int main (int argc, char** argv) {
       }
     // Selection precedes strategy extraction and encoding, in every tier.
     for (unsigned tier = 1; tier <= 4; ++tier)
-      for (const std::string engine : {"spot-game", "antichain", "strpm-simd"}) {
+      for (const std::string engine : {"spot-game", "antichain", "strpm-simd", "gr1"}) {
         const bool antichain = engine == "antichain";
         route::request input;
         input.automaton = forbidden (tier);
@@ -311,12 +338,15 @@ int main (int argc, char** argv) {
         synthesis.buchi_strpm = engine == "strpm-simd";
         if (antichain)
           use_antichain (synthesis, input);
+        if (engine == "gr1")
+          use_gr1 (synthesis, input);
         synthesis.on_verdict = [&] (bool real) {
           require (real, "expected REAL before export");
           selected = true;
         };
         auto answer = route::run (input, synthesis, [&] (const char* stage, const auto&, double) {
-          if (std::string (stage) == "strategy" || std::string (stage) == "encode-controller")
+          if (std::string (stage) == "strategy" || std::string (stage) == "encode-controller" ||
+              std::string (stage) == "gr1_export")
             require (selected, "controller construction preceded selection");
         });
         require (selected && answer.circuit, "missing selected controller");

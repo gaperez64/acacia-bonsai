@@ -20,23 +20,13 @@ enable_tlsf_frontend = get_option ('acacia_enable_tlsf_frontend') or get_option 
 native_test_hooks = get_option ('acacia_native_arms') and \
   get_option ('buildtype') in ['debug', 'debugoptimized'] and \
   get_option ('acacia_compiler_profile') == 'debug'
-if get_option ('acacia_native_arms')
-  tlsf_native = subproject ('tlsf-tools', default_options : [
-    'cpp_std=c++23', 'native_gr1=enabled', 'oxidd=enabled',
-    'research_tools=false',
-  ])
-  tlsf_deps += tlsf_native.get_variable ('tlsf_dep')
-elif enable_tlsf_frontend
-  tlsf_deps += dependency (
-    'tlsf',
-    fallback : ['tlsf-tools', 'tlsf_dep'],
-    default_options : [
-      'cpp_std=c++23',
-      'oxidd=disabled',
-      'research_tools=false',
-    ],
-  )
-endif
+# The parity arm's GR(1) engine is available in every CLI build, independently
+# of the native TLSF arms and frontend switches.
+tlsf_native = subproject ('tlsf-tools', default_options : [
+  'cpp_std=c++23', 'native_gr1=enabled', 'oxidd=enabled',
+  'research_tools=false',
+])
+tlsf_deps += tlsf_native.get_variable ('tlsf_dep')
 
 compiler_profile = get_option ('acacia_compiler_profile')
 compiler_profile_args = []

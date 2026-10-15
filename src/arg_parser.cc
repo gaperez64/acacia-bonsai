@@ -118,10 +118,10 @@ void show_help (const char* program_name) {
       << "                    native arms have no provider and do not support -s\n"
       << "  --r-prepass VAL   [on|off] R discovery/candidates in combined native arms (default "
          "on)\n"
-      << "  --parity-buchi-engine spot-game|antichain|strpm-simd\n"
+      << "  --parity-buchi-engine spot-game|antichain|strpm-simd|gr1\n"
       << "                    how the parity arm solves a deterministic Buchi automaton:\n"
       << "                    Spot's game solver (default), Acacia's antichain solver,\n"
-      << "                    or Acacia's parity game solver with adaptive bounds\n"
+      << "                    Acacia's parity solver with adaptive bounds, or its generalized reactivity solver\n"
       << "  --equivariance VAL [on|off] exact pre-pass in backward decision workers (default "
       << (ACACIA_ENABLE_EQUIVARIANT_SOLVER ? "on" : "off") << ")\n"
       << "                    off keeps ordinary backward solving; on requires compiled support\n"
@@ -677,9 +677,11 @@ arg_parse_result arg_parser (int argc, char** argv) {
           retval.parity_buchi_engine = arg_parse_result::buchi_engine::spot_game;
         else if (std::string_view {optarg} == "strpm-simd")
           retval.parity_buchi_engine = arg_parse_result::buchi_engine::strpm_simd;
+        else if (std::string_view {optarg} == "gr1")
+          retval.parity_buchi_engine = arg_parse_result::buchi_engine::gr1;
         else
           error (EXIT_CODE_ERROR,
-                 "Error: --parity-buchi-engine expects spot-game, antichain, or strpm-simd.\n");
+                 "Error: --parity-buchi-engine expects spot-game, antichain, strpm-simd, or gr1.\n");
         break;
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
       case OPT_REAL_BACKEND:

@@ -23,6 +23,7 @@ ab_sources = [
   'solver/obligation_helper.cc',
   'parity_arm.cc',
   'solver/parity/buchi_antichain.cc',
+  'solver/parity/buchi_gr1.cc',
   'solver/solve_game.cc',
   'solver/solve_game_vector.cc',
 ]

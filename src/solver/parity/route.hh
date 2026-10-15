@@ -25,6 +25,7 @@ namespace acacia::parity_route {
       std::optional<bool> real;
       parity::statistics stats;
       std::function<spot::twa_graph_ptr ()> controller;
+      std::function<spot::aig_ptr ()> circuit;
   };
   struct options {
       bool synthesis = true;
@@ -35,8 +36,9 @@ namespace acacia::parity_route {
       parity::limits bounds;
       // Tiers 1-3 otherwise keep the deterministic forbidden-Buchi Spot shortcut.
       bool buchi_strpm = false;
-      // A supplied antichain solver takes precedence over buchi_strpm.
+      // A supplied Buchi solver takes precedence over buchi_strpm.
       std::function<buchi_solution (spot::twa_graph_ptr, bool)> solve_buchi;
+      std::string buchi_route = "antichain";
       std::function<void (bool)> on_verdict;
       std::function<void (const parity::statistics&)> on_solved;
       std::function<void (unsigned, const std::string&)> on_classified;

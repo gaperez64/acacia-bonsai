@@ -17,7 +17,7 @@ set -euo pipefail
 echo "== Installing build dependencies =="
 yum install -y --setopt=install_weak_deps=False \
     autoconf automake libtool bison flex \
-    git swig wget \
+    git swig wget curl \
     gcc-toolset-14 gcc-toolset-14-gcc gcc-toolset-14-gcc-c++
 
 # Use GCC 14 for both Spot and the wheel compilation — the acacia-bonsai
@@ -26,6 +26,9 @@ yum install -y --setopt=install_weak_deps=False \
 source /opt/rh/gcc-toolset-14/enable
 export CC=gcc
 export CXX=g++
+
+project_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+"$project_dir/scripts/prepare-gr1-dependency.sh"
 
 echo "== Building Spot ${SPOT_VERSION} =="
 workdir=$(mktemp -d)

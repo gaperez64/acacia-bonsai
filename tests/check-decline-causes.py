@@ -10,7 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "benchmarking/coverage-first/decline-causes.md"
 EXPECTATIONS = ROOT / "tests/attribution-cause-expectations.json"
 SOURCES = (
-    "src/parity_arm.cc", "src/solver/parity/buchi_antichain.cc", "src/native_support.cc", "src/native_proof_binding.cc",
+    "src/parity_arm.cc", "src/solver/parity/buchi_antichain.cc",
+    "src/solver/parity/buchi_gr1.cc", "src/native_support.cc", "src/native_proof_binding.cc",
     "src/native_gr1_arm.cc", "src/native_gr1_lift_arm.cc", "src/native_param_lift_arm.cc",
     "src/solver/closure_buchi_provider.cc", "src/solver/spot_state_ids.hh",
     "src/solver/spot_rows.hh", "src/solver/spot_letter_oracle.hh",

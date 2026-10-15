@@ -129,7 +129,7 @@ def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
                 for winner in event_records(rows, "parent_winner", 1):
                     assert (winner["requested_backend"] == "parity") == (parity_first != failure), rows
                 exporters = [row for row in rows if row.get("event") == "stage_entry"
-                             and row.get("stage") in {"strategy", "encode-controller", "parity_export"}]
+                             and row.get("stage") in {"strategy", "encode-controller", "parity_export", "gr1_export"}]
                 if parity_first and not failure:
                     assert exporters or any(row.get("dropped_records", 0) for row in rows), rows
                     assert all(row["worker_pid"] == selected["pid"] for row in exporters), rows
@@ -168,12 +168,18 @@ def memory_limit(binary, scratch, engine):
     with tempfile.TemporaryDirectory(dir=scratch) as temporary:
         root = Path(temporary)
         gate_read, gate_write = os.pipe()
+        # Leave room for the BDD worker's allocator reservations as well as the
+        # injected resident memory, which must exceed half the address cap.
+        address_limit = (512 if engine == "gr1" else 256) * 1024 * 1024
         env = dict(os.environ, ACACIA_PHASE_RECORDS=str(root),
                    ACACIA_TEST_SYNTHESIS_PARITY_VERDICT_FD=str(gate_read),
-                   ACACIA_TEST_SYNTHESIS_PARITY_RSS_BYTES=str(144 * 1024 * 1024))
+                   ACACIA_TEST_SYNTHESIS_PARITY_RSS_BYTES=str(address_limit * 9 // 16),
+                   # OxiDD otherwise reserves a 1 GiB worker stack, exceeding
+                   # this fixture's address-space limit before solving.
+                   OXIDD_STACK_SIZE=str(8 * 1024 * 1024))
 
         def limit():
-            resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024))
+            resource.setrlimit(resource.RLIMIT_AS, (address_limit, address_limit))
 
         process = subprocess.Popen([binary, "-f", "G o", "-i", "", "-o", "o", "--arms", "both:parity:spot",
                                     "-s", str(root / "controller.aag"), "--parity-buchi-engine", engine,
@@ -186,7 +192,8 @@ def memory_limit(binary, scratch, engine):
             assert process.returncode == 2 and not stdout, (stdout, stderr)
             rows = records(root)
             terminal, = [row for row in rows if row.get("event") == "parent_terminal"]
-            assert terminal["reason"] == "rss_share" and terminal["signal"] == signal.SIGKILL, rows
+            assert terminal["reason"] == "rss_share" and terminal["signal"] == signal.SIGKILL, (
+                rows, stdout, stderr)
             assert not (root / "controller.aag").exists()
         finally:
             os.close(gate_write)
@@ -203,7 +210,7 @@ def main():
     libc = ctypes.CDLL(None, use_errno=True)
     assert libc.prctl(36, 1, 0, 0, 0) == 0  # Adopt children when their parent is killed.
     binary = str(args.binary.resolve())
-    for engine in ("spot-game", "antichain", "strpm-simd"):
+    for engine in ("spot-game", "antichain", "strpm-simd", "gr1"):
         for parity_first in (False, True):
             run(binary, args.scratch, engine=engine, parity_first=parity_first)
             run(binary, args.scratch, engine=engine, parity_first=parity_first, failure=True)

@@ -50,25 +50,35 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 
 ## Validator, contract and failure-origin census
 
-752 enumerated checks/origins across preparation, reduction, seeds, R, U, checking, native proof binding, OxiDD and Spot providers. A slash-separated class means the source retains a typed failure from its called operation; status matrices and runtime fault panels test the alternatives. Boolean helpers report through the named consumer; false does not itself emit telemetry.
+762 enumerated checks/origins across preparation, reduction, seeds, R, U, checking, native proof binding, OxiDD and Spot providers. A slash-separated class means the source retains a typed failure from its called operation; status matrices and runtime fault panels test the alternatives. Boolean helpers report through the named consumer; false does not itself emit telemetry.
 
 | Origin | Legacy result | Cause expression/helper | Expected telemetry | Stage | Check/message |
 |---|---|---|---|---|---|
-| src/parity_arm.cc:47 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"rss_share"` |
-| src/parity_arm.cc:57 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"address_space_limit"` |
-| src/parity_arm.cc:75 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"invalid_formula"` |
-| src/parity_arm.cc:144 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"inconclusive"` |
-| src/parity_arm.cc:154 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"controller_export_failed"` |
-| src/parity_arm.cc:161 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"translation_allocation"` |
-| src/parity_arm.cc:163 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"allocation"` |
-| src/parity_arm.cc:165 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"capacity"` |
-| src/parity_arm.cc:171 | `UNKNOWN` | `worker_decline` | DECLINE/applicability | `worker` | `"acceptance_capacity"` |
-| src/parity_arm.cc:173 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"parity_exception"` |
-| src/parity_arm.cc:175 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"parity_exception"` |
+| src/parity_arm.cc:48 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"rss_share"` |
+| src/parity_arm.cc:58 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"address_space_limit"` |
+| src/parity_arm.cc:76 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"invalid_formula"` |
+| src/parity_arm.cc:155 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"inconclusive"` |
+| src/parity_arm.cc:165 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"controller_export_failed"` |
+| src/parity_arm.cc:172 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"translation_allocation"` |
+| src/parity_arm.cc:174 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"allocation"` |
+| src/parity_arm.cc:176 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"capacity"` |
+| src/parity_arm.cc:182 | `UNKNOWN` | `worker_decline` | DECLINE/applicability | `worker` | `"acceptance_capacity"` |
+| src/parity_arm.cc:184 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"parity_exception"` |
+| src/parity_arm.cc:186 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"parity_exception"` |
 | src/solver/parity/buchi_antichain.cc:100 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"input_push_limit"` |
 | src/solver/parity/buchi_antichain.cc:121 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"empty_after_preprocessing"` |
 | src/solver/parity/buchi_antichain.cc:47 | `UNKNOWN` | `std::bad_alloc` | STOPPED/resource | `provider` | `` |
 | src/solver/parity/buchi_antichain.cc:115 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"antichain input requires Buchi acceptance"` |
+| src/solver/parity/buchi_gr1.cc:31 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"Boolean strategy partition changed"` |
+| src/solver/parity/buchi_gr1.cc:36 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"Boolean strategy input changed"` |
+| src/solver/parity/buchi_gr1.cc:43 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"Boolean strategy has a nonconstant reset"` |
+| src/solver/parity/buchi_gr1.cc:59 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"Boolean strategy output missing"` |
+| src/solver/parity/buchi_gr1.cc:70 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"Boolean game encoding requires a deterministic Buchi automaton"` |
+| src/solver/parity/buchi_gr1.cc:74 | `UNKNOWN` | `std::bad_alloc` | STOPPED/resource | `provider` | `` |
+| src/solver/parity/buchi_gr1.cc:80 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"Boolean game signal partition overlaps"` |
+| src/solver/parity/buchi_gr1.cc:101 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"Boolean game automaton AP missing from partition"` |
+| src/solver/parity/buchi_gr1.cc:138 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"Boolean game state latch missing"` |
+| src/solver/parity/buchi_gr1.cc:150 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `message` |
 | src/native_support.cc:91 | `UNKNOWN` | `worker_decline` | DECLINE/applicability | `worker` | `reason.c_str ()` |
 | src/native_support.cc:94 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `native_failure_reason (category)` |
 | src/native_support.cc:122 | `status` | `category` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `stage` | `message` |

@@ -11,7 +11,7 @@ The production worker and `acacia-parity-route` share `src/solver/parity/route.{
 worker's forbidden language is classified using the same structural tiers as the research route:
 Buchi or constant acceptance, finite-occurrence-free acceptance, exact deterministic-Buchi
 conversion, then genuine parity acceptance. Tiers 1–3 select their engine at runtime with
-`--parity-buchi-engine spot-game|antichain|strpm-simd`. The default, `spot-game`, preserves
+`--parity-buchi-engine spot-game|antichain|strpm-simd|gr1`. The default, `spot-game`, preserves
 the existing deterministic forbidden-Buchi fast path: completion, a co-Buchi game, and Spot's `solve_game`.
 Production requests only the verdict and, for synthesis, the shortcut's deferred controller.
 Verification and game/solution observers retain the full winning region and solved arena via
@@ -27,6 +27,42 @@ with the same adaptive `(k,t)` bounds and Spot fallback on bound exhaustion. The
 is installed on the split arena before the ordinary controller construction and AIG export.
 Completed decisions therefore use Acacia's parity solver unless the recorded fallback occurs.
 The antichain K options (`-M`, `-K`, `-I`) do not set the parity solver's bounds.
+`gr1` instead encodes the same classified forbidden DBA, completed with a rejecting
+sink, as an AbsSynthe AIGER game. State numbers are binary codes XORed with the
+initial state, so every latch starts at zero. Edge-label BDDs become shared AIG
+cones for the transition function. A separate latch samples accepting transitions,
+which preserves infinite acceptance even when the DBA is transition-based.
+Uncontrollable and controllable inputs represent specification inputs and outputs;
+private positional names avoid the AbsSynthe `controllable_` prefix colliding with
+user signal names. Export restores the complete original partition, including unused
+and indexed signals, and preserves the solver's state and goal-counter latches.
+
+Its one fairness assumption is `accepting`; its one singleton justice goal is
+constant false. Thus the system objective is `GF accepting -> GF false`, exactly
+`FG !accepting`. An empty justice record would instead mean true and is not used.
+Both `tlsf_gr1_validate_game` and `solve_gr1_oxidd` accept this profile unchanged.
+One solve decides both polarities: a returned strategy means REAL, `*unreal=1`
+means UNREAL, and any internal failure means UNKNOWN. No opposite-polarity search,
+Spot game solve, local allowance or benchmark-based dispatch is used.
+
+AbsSynthe's native frame is Mealy. For native Moore, pending-output latches hold the
+previous round's controllables and a started latch skips the first DBA transition.
+The dummy first round commits the initial output; each later transition consumes
+that committed output with the new environment input. A Moore strategy extends by
+ignoring the dummy input. Conversely, fixing the dummy input to zero produces a
+Moore strategy from any winning Mealy strategy of the encoded game. This finite
+prefix cannot affect GF/FG acceptance. The existing `mealy_to_moore(..., true)`
+conversion advances all controller latches through the fixed dummy round and delays
+the committed outputs, giving exact initial outputs and output-before-input timing.
+TLSF continues to use the frontend's effective-Mealy lowering once and its existing
+target conversion.
+
+The GR(1) solver returns its strategy AIG during solving, including in decision-only
+calls; decision calls immediately release it. Synthesis retains it through the
+rendezvous and only a selected REAL worker converts it to Spot's AIG representation
+and uses the shared controller writer. No file is opened by an unselected or UNREAL
+worker. There are no tlsf-tools source/API changes. All CLI builds now link the
+existing OxiDD GR(1) library, including base builds without native TLSF arms.
 No compile-time option is added; the default remains `spot-game`.
 
 The classified DBA recognizes the REAL worker's forbidden language, `!phi`. Acacia interprets
@@ -65,13 +101,19 @@ The port's GPL-3.0 provenance is unchanged; no additional Oink logic is included
 Production trusts completed REAL/UNREAL game results and strategies under the owner's trust
 rule. It performs no game strategy or original-specification product check. The research tool
 retains `--verify on --cross-check` as an explicit diagnostic. The unit suite independently
-checks all three tier-1–3 engines on small REAL/UNREAL Mealy/Moore games, checks exported AIGs
+checks all four tier-1–3 engines on small REAL/UNREAL Mealy/Moore games, checks exported AIGs
 against a fresh negated-specification translation and Moore output independence, and retains
-the existing scalar oracle and 480-game Spot comparison. Tier-3 tests also force the Spot
+the existing scalar oracle and 480-game Spot comparison. A further 480 generated
+DBA games compare the GR(1) route directly with Spot's `solve_game` in both timing
+frames, including partial transitions, nonzero initial states, state and transition
+acceptance, empty partitions and signal names starting with `controllable_`.
+Winning random-game controllers are checked against the forbidden DBA; formula and
+TLSF controllers are checked against fresh negated-specification translations. Tier-3 tests also force the Spot
 fallback with the existing operation budget and verify its installed strategies and controllers.
 
-Decision-only calls do not construct or encode controllers. During synthesis, both verdicts
-enter the existing parent rendezvous; only a selected REAL worker constructs its controller
+Except for the strategy AIG returned inside the GR(1) solve, decision-only calls do not
+construct or encode controllers. During synthesis, both verdicts
+enter the existing parent rendezvous; only a selected REAL worker exports its controller
 and uses the ordinary controller writer. UNREAL never opens the destination. A failed export
 resumes the suspended competitors. Parent death, interruption, race cancellation and the outer
 invocation deadline use the existing process-group supervisor. The solver receives no local
@@ -81,8 +123,11 @@ stop is never accepted as a verdict.
 
 Worker records include translate/orient/classify, tier, ACD/split/explicit game construction,
 solve, parameter changes, fallback boundaries and trust declarations. Every parity event identifies
-the selected tier engine in `route` and `effective_backend`: `spot-fast`, `antichain`, or
-`strpm-simd`. Antichain search events retain each K reached;
+the selected tier engine in `route` and `effective_backend`: `spot-fast`, `antichain`, `strpm-simd`, or `gr1`. The GR(1) worker route is also `gr1`;
+its stages are `gr1_encode`, `gr1_solve`, `gr1_export`, and `parity_export`. Solve-stage
+metrics report `bdd_nodes_at_export` and `bdd_nodes_before_teardown`. The API does not
+provide a peak, so these samples are not labeled as peaks. GR(1) uses zero `k`, `t`
+and `pairs`, with no fallback. Antichain search events retain each K reached;
 `parity_parameters`, `parity_solved` and `parity_verdict` report the winning K (`t=0`, `pairs=0`).
 Its trust declaration is `exact_antichain`; game engines retain `exact_game`. For `strpm-simd`
 in every tier, `parity_tier`, `parity_solved` and `parity_verdict` include the tier, engine,

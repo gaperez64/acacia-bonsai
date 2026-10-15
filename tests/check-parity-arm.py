@@ -36,7 +36,7 @@ def main():
         default_results = {}
         reached = set()
         final_bounds = set()
-        for engine in ("spot-game", "antichain", "strpm-simd"):
+        for engine in ("spot-game", "antichain", "strpm-simd", "gr1"):
             for formula in fixtures:
                 phases = root / "phases"
                 phases.mkdir(exist_ok=True)
@@ -46,7 +46,7 @@ def main():
                 if engine == "antichain":
                     # A nondefault schedule must reach the actual winning bound.
                     command += ["--parity-buchi-engine", engine, "-M", "5", "-K", "11", "-I", "2"]
-                elif engine == "strpm-simd":
+                elif engine in {"strpm-simd", "gr1"}:
                     command += ["--parity-buchi-engine", engine]
                 decision = execute(command, env)
                 if engine == "spot-game":
@@ -68,7 +68,7 @@ def main():
                 assert solved["tier"] == verdict["tier"] == tier["tier"], rows
                 fields = ("k", "t", "pairs", "fallback", "fallback_reason", "effective_backend")
                 assert all(verdict[key] == solved[key] for key in fields), rows
-                if tier["tier"] == 4 or engine != "spot-game":
+                if tier["tier"] == 4 or engine in {"antichain", "strpm-simd"}:
                     parameters = [row for row in rows if row.get("event") == "parity_parameters"]
                     assert parameters and all(parameters[-1][key] == verdict[key]
                                               for key in ("k", "t", "pairs")), rows
@@ -82,6 +82,12 @@ def main():
                         final_bounds.add((verdict["k"], verdict["t"]))
                     else:
                         assert 5 <= verdict["k"] <= 11 and (verdict["k"] - 5) % 2 == 0
+                if engine == "gr1" and tier["tier"] < 4:
+                    stages = {row.get("stage") for row in rows
+                              if row.get("event") == "stage_completion"}
+                    assert {"gr1_encode", "gr1_solve"} <= stages, rows
+                    samples = [row for row in rows if row.get("key") == "bdd_nodes_at_export"]
+                    assert samples and int(samples[0]["value"]) >= 0, rows
                 assert not any(row.get("phase") in {"strategy", "encode-controller"} for row in rows)
                 assert not any(row.get("event") == "verification_complete" for row in rows)
                 assert solved["trust"] == ("exact_antichain" if expected == "antichain"
@@ -107,12 +113,12 @@ def main():
         assert any(t > 1 for _, t in final_bounds), "adaptive t never increased"
         wrong_engine = subprocess.run([binary, "-f", "1", "--parity-buchi-engine", "unknown"],
                                       capture_output=True, text=True, timeout=20)
-        assert wrong_engine.returncode == 3 and "spot-game, antichain, or strpm-simd" in wrong_engine.stderr
-        for engine in ("spot-game", "antichain", "strpm-simd"):
+        assert wrong_engine.returncode == 3 and "spot-game, antichain, strpm-simd, or gr1" in wrong_engine.stderr
+        for engine in ("spot-game", "antichain", "strpm-simd", "gr1"):
             phases = root / "repeat-phases"
             phases.mkdir(exist_ok=True)
             command = [binary, "-f", "G o", "-i", "", "-o", "o", "--arms", "both:parity:spot"]
-            for previous in ("spot-game", "antichain", "strpm-simd"):
+            for previous in ("spot-game", "antichain", "strpm-simd", "gr1"):
                 command += ["--parity-buchi-engine", previous]
             execute([*command, "--parity-buchi-engine", engine],
                     dict(os.environ, ACACIA_PHASE_RECORDS=str(phases)))
@@ -138,7 +144,7 @@ MAIN {{ INPUTS {{ i[n]; }} OUTPUTS {{ o[n]; }}
 GUARANTEES {{ &&[0 <= j < n] G {signal}[j]; }} }}
 ''')
                         decisions = []
-                        for engine in ("spot-game", "antichain", "strpm-simd"):
+                        for engine in ("spot-game", "antichain", "strpm-simd", "gr1"):
                             phases = root / "indexed-phases"
                             phases.mkdir(exist_ok=True)
                             env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases))
@@ -168,7 +174,7 @@ GUARANTEES {{ &&[0 <= j < n] G {signal}[j]; }} }}
                             for path in phases.glob("*.jsonl"):
                                 path.unlink()
                         assert len(set(decisions)) == 1, (semantics, target, signal, decisions)
-            for engine in ("spot-game", "antichain", "strpm-simd"):
+            for engine in ("spot-game", "antichain", "strpm-simd", "gr1"):
                 for semantics in ("Mealy", "Moore"):
                     for target in ("Mealy", "Moore"):
                         for guarantee, original, real in (

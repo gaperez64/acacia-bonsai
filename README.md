@@ -84,13 +84,13 @@ Initialize the vendored Posets and TLSF-tools dependencies after cloning:
 ```
 git submodule update --init
 ```
-This is deliberately non-recursive. To compile a `docker_default` preset with
-native GR(1) arms, also initialize TLSF-tools' nested OxiDD submodule, install
-Rust 1.91 or newer with Cargo and `cbindgen`, and build its stamped C library
-before Meson setup:
+This is deliberately non-recursive. Every CLI build, including the base preset,
+also needs TLSF-tools' nested OxiDD submodule for the optional GR(1) game engine.
+Initialize it and build its stamped C library before Meson setup (the preparation
+script installs Rust 1.91 and `cbindgen` if needed):
 ```
 git -C subprojects/tlsf-tools submodule update --init external/oxidd
-subprojects/tlsf-tools/scripts/build_oxidd.sh
+scripts/prepare-gr1-dependency.sh
 ```
 Meson checks the OxiDD source commit and archive hash recorded in that stamp.
 The Docker CLI release checkout includes the nested submodule, and
@@ -168,7 +168,10 @@ declined lifts go directly to the exact game solve. The `real` and
 differential tests.
 
 The explicit `--arms both:parity:spot` arm accepts
-`--parity-buchi-engine spot-game|antichain|strpm-simd` for deterministic Büchi tiers.
+`--parity-buchi-engine spot-game|antichain|strpm-simd|gr1` for deterministic Büchi tiers.
+The default is `spot-game`. `gr1` encodes the forbidden automaton as a Boolean game
+and uses tlsf-tools' exact GR(1) fixpoint to decide both outcomes in one solve.
+It supports Mealy and Moore objectives and controller synthesis; tier 4 is unchanged.
 `spot-game` (the default) uses Spot's game solver; `antichain` uses Acacia's bounded
 antichain solver; `strpm-simd` uses Acacia's parity game solver with adaptive bounds
 and a recorded Spot fallback when those bounds are exhausted. All three support

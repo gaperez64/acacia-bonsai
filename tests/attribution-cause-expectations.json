@@ -3006,5 +3006,45 @@
   "src/solver/parity/buchi_antichain.cc | throw std::bad_alloc | UNKNOWN | provider |  | 0": {
     "cause": "std::bad_alloc",
     "telemetry": "STOPPED/resource"
+  },
+  "src/solver/parity/buchi_gr1.cc | throw std::runtime_error | UNKNOWN | provider | \"Boolean strategy partition changed\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/parity/buchi_gr1.cc | throw std::runtime_error | UNKNOWN | provider | \"Boolean strategy input changed\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/parity/buchi_gr1.cc | throw std::runtime_error | UNKNOWN | provider | \"Boolean strategy has a nonconstant reset\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/parity/buchi_gr1.cc | throw std::runtime_error | UNKNOWN | provider | \"Boolean strategy output missing\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/parity/buchi_gr1.cc | throw std::runtime_error | UNKNOWN | provider | \"Boolean game encoding requires a deterministic Buchi automaton\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/parity/buchi_gr1.cc | throw std::bad_alloc | UNKNOWN | provider |  | 0": {
+    "cause": "std::bad_alloc",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/parity/buchi_gr1.cc | throw std::runtime_error | UNKNOWN | provider | \"Boolean game signal partition overlaps\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/parity/buchi_gr1.cc | throw std::runtime_error | UNKNOWN | provider | \"Boolean game automaton AP missing from partition\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/parity/buchi_gr1.cc | throw std::runtime_error | UNKNOWN | provider | \"Boolean game state latch missing\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/parity/buchi_gr1.cc | throw std::runtime_error | UNKNOWN | provider | message | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
   }
 }

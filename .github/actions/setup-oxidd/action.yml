@@ -1,0 +1,17 @@
+name: Build OxiDD
+description: Prepare the GR(1) solver dependency used by every CLI configuration.
+runs:
+  using: composite
+  steps:
+    - name: Check out the nested OxiDD submodule
+      shell: bash
+      run: git -C subprojects/tlsf-tools submodule update --init external/oxidd
+    - uses: dtolnay/rust-toolchain@stable
+      with: {toolchain: '1.91.0'}
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: subprojects/tlsf-tools/external/oxidd -> target
+        key: ci-oxidd
+    - name: Build OxiDD for game solving
+      shell: bash
+      run: scripts/prepare-gr1-dependency.sh
