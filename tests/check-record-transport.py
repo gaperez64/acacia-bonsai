@@ -8,7 +8,6 @@ import resource
 import subprocess
 import sys
 import tempfile
-import time
 
 
 def rows(directory):
@@ -25,6 +24,7 @@ def main():
             directory.mkdir()
             env = os.environ.copy()
             env["ACACIA_PHASE_RECORDS"] = str(directory)
+            env["ACACIA_TEST_RECORD_DRAIN"] = "1"
             if pipe == "512":
                 env["ACACIA_TEST_RECORD_PIPE_512"] = "1"
             process = subprocess.run([str(binary)], input="x", text=True, env=env,
@@ -42,26 +42,32 @@ def main():
             assert metric["key"] == "states" and metric["value"] == "7"
         directory = root / "full"
         directory.mkdir()
+        env.pop("ACACIA_TEST_RECORD_DRAIN")
         env["ACACIA_PHASE_RECORDS"] = str(directory)
-        env["ACACIA_TEST_RECORD_WRITER_DELAY"] = "1"
+        writer_read, writer_write = os.pipe()
+        env["ACACIA_TEST_RECORD_WRITER_GATE_FD"] = str(writer_read)
         process = subprocess.Popen([str(binary)], text=True, env=env,
+                                   pass_fds=(writer_read,),
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
+        os.close(writer_read)
         process.stdin.write("f")
         process.stdin.flush()
         assert process.stdout.readline() == "flooded\n"
-        deadline = time.monotonic() + 2
-        while time.monotonic() < deadline:
-            if any(row.get("phase") == "flood" for row in rows(directory)):
-                break
-            time.sleep(.005)
-        else:
-            raise AssertionError("writer did not recover")
+        process.stdin.write("l")
+        process.stdin.flush()
+        assert process.stdout.readline() == "terminal_dropped\n"
+        assert not rows(directory), "writer read before its release"
+        os.close(writer_write)
         stdout, stderr = process.communicate("x", timeout=3)
         assert process.returncode == 0 and not stderr, (stdout, stderr)
         records = rows(directory)
         terminal = next(row for row in records if row.get("event") == "parent_terminal")
         assert terminal["telemetry"] == "dropped" and terminal["dropped_records"] > 0
+        assert any(row.get("phase") == "flood" for row in records), records
+        summary, = [row for row in records if row.get("event") == "writer_summary"]
+        assert summary["failed_records"] == 0 and not summary["incomplete_packet"], summary
+        assert summary["delivered_records"] == len(records) - 1, summary
         for mode in ("fifo", "full_disk", "broken", "slow"):
             directory = root / mode
             directory.mkdir()

@@ -399,9 +399,16 @@ unreal_safety_core_witnesses_test = executable (
 test ('unreal-safety-core-witnesses',
       unreal_safety_core_witnesses_test,
       suite : ['unit', 'translation'])
+weakening_record_args = [files ('check-weakening-records.py'), unreal_safety_core_witnesses_test,
+                         meson.current_build_dir (), ab_exe]
+if host_machine.system () == 'linux'
+  record_transport_ack = shared_library (
+    'record-transport-ack', 'record_transport_ack.cc',
+    include_directories : inc, dependencies : cpp.find_library ('dl'), install : false)
+  weakening_record_args += ['--record-ack-library', record_transport_ack]
+endif
 test ('unreal-weakening-records', py,
-      args : [files ('check-weakening-records.py'), unreal_safety_core_witnesses_test,
-              meson.current_build_dir (), ab_exe],
+      args : weakening_record_args,
       suite : ['unit', 'attribution'], timeout : 60)
 
 diagnostics_attempt_test = executable (
@@ -501,7 +508,8 @@ if enable_tlsf_frontend
   game_backend_integration_sources += '../src/tlsf_frontend.cc'
 endif
 game_backend_integration = executable (
-  'game-backend-integration', game_backend_integration_sources, version_h,
+  'game-backend-integration', game_backend_integration_sources,
+  'synthesis_rendezvous_hooks.cc', version_h,
   link_with : closure_buchi_provider_lib,
   include_directories : inc,
   cpp_args : ['-DACACIA_PORTFOLIO_TEST_HOOKS=1',
@@ -516,6 +524,18 @@ if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release
                              meson.project_build_root ()]
   if get_option ('acacia_native_arms')
     portfolio_deadline_args += ['--native']
+  endif
+  if host_machine.system () == 'linux'
+    test ('synthesis-rendezvous', py,
+          args : [files ('check-synthesis-rendezvous.py'), game_backend_integration,
+                  meson.current_build_dir (), record_transport_ack],
+          suite : ['unit', 'portfolio', 'synthesis'], timeout : 90,
+          depends : [game_backend_integration])
+    test ('synthesis-worker-cleanup', py,
+          args : [files ('check-synthesis-worker-cleanup.py'), game_backend_integration,
+                  meson.current_build_dir ()],
+          suite : ['unit', 'portfolio', 'synthesis'], timeout : 90,
+          depends : [game_backend_integration])
   endif
   test ('portfolio-deadline', py,
         args : portfolio_deadline_args,

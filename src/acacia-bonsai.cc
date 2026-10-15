@@ -52,6 +52,7 @@ namespace {
   acacia::worker_record* g_worker_records = nullptr;
   bool g_worker_records_shared = false;
   acacia::obligation::control* g_obligation = nullptr;
+  acacia::synthesis::rendezvous_slot* g_synthesis = nullptr;
   sig_atomic_t g_eligibility_source = -1, g_helper_index = -1;
   bool g_eligibility_observed = false;
   uint64_t g_helper_rss_share = 0;
@@ -409,6 +410,8 @@ namespace {
                               arg_values.equivariance, deadline_mono_ns, arg_values.tlsf_sha256,
                               arg_values.weakening, arg_values.weakening_allowances,
                               eligibility_channel);
+    if (res && g_synthesis)
+      acacia::synthesis::await_selection (arm.unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL);
     verb_do (1, vout << "returning " << res << "\n");
 
     if (!res && acacia::active_worker_record () &&
@@ -450,6 +453,23 @@ namespace {
         g_worker_records ? g_worker_records[g_child_count] : acacia::worker_record {};
     const pid_t pid = fork ();
     if (pid == 0) {
+#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
+      acacia::synthesis::test_worker_started (arm.kind == portfolio_arm_kind::obligation);
+      if (g_synthesis)
+        acacia::synthesis::test_before_worker_protection ();
+#endif
+#ifdef __linux__
+      if (g_synthesis || arm.kind == portfolio_arm_kind::obligation) {
+        // SIGKILL also terminates suspended synthesis competitors. Recheck the
+        // parent to cover its death between fork and installing the signal.
+        if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != g_main_pid)
+          _exit (EXIT_CODE_UNKNOWN);
+      }
+#endif
+      if (g_synthesis) {
+        acacia::synthesis::current_slot = &g_synthesis[g_child_count];
+        g_synthesis[g_child_count].suspend_ready.store (true, std::memory_order_release);
+      }
       acacia::phase_records_init ();
       if (g_worker_records) {
         acacia::active_worker_record () = &g_worker_records[g_child_count];
@@ -461,12 +481,6 @@ namespace {
           fork_start.wall ? acacia::phase_stamp {fork_start.wall,
                                                  acacia::phase_clock (CLOCK_PROCESS_CPUTIME_ID)}
                           : acacia::phase_stamp {};
-#ifdef __linux__
-      if (arm.kind == portfolio_arm_kind::obligation) {
-        if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != g_main_pid)
-          _exit (EXIT_CODE_UNKNOWN);
-      }
-#endif
       if (setpgid (0, 0) != 0)
         _exit (EXIT_CODE_ERROR);
       sigprocmask (SIG_SETMASK, &old_mask, nullptr);
@@ -517,6 +531,22 @@ namespace {
         acacia::worker_event (g_worker_records[g_child_count], "parent_terminal", "fork_failed",
                               -1, 0, "unavailable");
       sigprocmask (SIG_SETMASK, &old_mask, nullptr);
+      if (pid > 0 && g_synthesis) {
+        // Never suspend a child before it can be killed on parent death.
+        auto& slot = g_synthesis[g_child_count - 1];
+        while (!slot.suspend_ready.load (std::memory_order_acquire)) {
+          if (g_interrupted || (deadline_mono_ns && monotonic_ns () >= deadline_mono_ns))
+            return;
+          siginfo_t exited {};
+          const int observed = waitid (P_PID, pid, &exited, WEXITED | WNOHANG | WNOWAIT);
+          if ((observed == 0 && exited.si_pid == pid) || (observed < 0 && errno == ECHILD))
+            break;
+          if (observed < 0 && errno != EINTR)
+            throw std::runtime_error ("unable to initialize synthesis worker");
+          timespec pause {0, 1000000};
+          nanosleep (&pause, nullptr);
+        }
+      }
     }
   }
 
@@ -582,10 +612,17 @@ namespace {
         error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
       }
     };
+    sig_atomic_t synthesis_winner = -1;
+    const auto resume_competitors = [&] {
+      synthesis_winner = -1;
+      for (sig_atomic_t i = 0; i < g_child_count; ++i)
+        if (g_child_pids[i] > 0)
+          kill (-g_child_pids[i], SIGCONT);
+    };
     int status;
     bool child_reported_error = false;
     while (true) {  // wait only for solver arms; the record writer is separate
-      if (g_obligation && !g_eligibility_observed) {
+      if (g_obligation && !g_eligibility_observed && synthesis_winner < 0) {
         using acacia::obligation::eligibility;
         const auto eligible = g_obligation->eligible.load (std::memory_order_acquire);
         if (eligible != eligibility::pending) {
@@ -616,6 +653,36 @@ namespace {
           kill (helper, SIGKILL);
         }
       }
+      if (g_synthesis && synthesis_winner < 0) {
+        check_acceptance ();
+        sig_atomic_t nominee = -1;
+        uint64_t first = UINT64_MAX;
+        for (sig_atomic_t i = 0; i < g_child_count; ++i) {
+          const auto order = g_synthesis[i].order.load (std::memory_order_acquire);
+          if (g_child_pids[i] > 0 && order && order < first) {
+            nominee = i;
+            first = order;
+          }
+        }
+        if (nominee >= 0) {
+          const sig_atomic_t i = nominee;
+          synthesis_winner = i;
+          // Suspend the existing fallback, preserving its work if export fails.
+          // Every exporter waits here, so no competitor can open the destination.
+          for (sig_atomic_t other = 0; other < g_child_count; ++other)
+            if (other != i && g_child_pids[other] > 0)
+              kill (-g_child_pids[other], SIGSTOP);
+          if (g_worker_records) {
+            // The worker resumes this sequence after selection. Parent observations
+            // must not consume entries in the child's live record stream.
+            auto selected = g_worker_records[i];
+            acacia::worker_event (selected, "parent_verdict", "selected",
+                                  g_synthesis[i].verdict.load (std::memory_order_acquire));
+          }
+          check_acceptance ();
+          g_synthesis[i].proceed.store (true, std::memory_order_release);
+        }
+      }
       bool live_arm = false;
       for (sig_atomic_t i = 0; i < g_child_count; ++i)
         if (g_child_pids[i] > 0) {
@@ -625,7 +692,9 @@ namespace {
       if (!live_arm)
         break;
       siginfo_t finished {};
-      const int observed = waitid (P_ALL, 0, &finished, WEXITED | WNOHANG | WNOWAIT);
+      const int observed = waitid (synthesis_winner >= 0 ? P_PID : P_ALL,
+                                   synthesis_winner >= 0 ? g_child_pids[synthesis_winner] : 0,
+                                   &finished, WEXITED | WNOHANG | WNOWAIT);
       pid_t reaped = observed == -1 ? -1 : 0;
       int wait_error = errno;
       if (observed == 0 && finished.si_pid == acacia::phase_records_writer_pid ()) {
@@ -694,6 +763,8 @@ namespace {
       // so we either hear from a sibling that finished cleanly, or fall
       // through to UNKNOWN below.
       if (not WIFEXITED (status)) {
+        if (g_synthesis && reaped_index == synthesis_winner)
+          resume_competitors ();
         if (WIFSIGNALED (status))
           std::cerr << "{\"stage\":\"child_signal\",\"status\":" << WTERMSIG (status) << "}\n";
         continue;
@@ -704,12 +775,31 @@ namespace {
            acacia::obligation::exit_code (
                g_obligation->result.load (std::memory_order_acquire)) != ret))
         ret = EXIT_CODE_UNKNOWN;
+      if (g_synthesis && (ret == EXIT_CODE_REAL || ret == EXIT_CODE_UNREAL) &&
+          (reaped_index < 0 || reaped_index != synthesis_winner ||
+           g_synthesis[reaped_index].verdict.load (std::memory_order_acquire) != ret ||
+           (ret == EXIT_CODE_REAL &&
+            !g_synthesis[reaped_index].controller_complete.load (std::memory_order_acquire))))
+        ret = EXIT_CODE_UNKNOWN;
+      if (g_synthesis && reaped_index == synthesis_winner &&
+          ret != EXIT_CODE_REAL && ret != EXIT_CODE_UNREAL)
+        resume_competitors ();
       if (ret == EXIT_CODE_ERROR) {
         child_reported_error = true;
         continue;
       }
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
         check_acceptance ();
+        // A closed stdout can terminate the parent with SIGPIPE. Reap suspended
+        // synthesis competitors before publishing the definitive answer.
+#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
+        if (g_synthesis)
+          acacia::synthesis::test_before_publication ();
+#endif
+        if (g_synthesis) {
+          stop_children ("winner_cancelled");
+          check_acceptance ();
+        }
         if (g_worker_records && reaped_index >= 0) {
           auto& winner = g_worker_records[reaped_index];
           acacia::worker_record_text (winner.original_polarity,
@@ -719,13 +809,13 @@ namespace {
                                 : winner.terminal ? "complete"
                                                   : "incomplete");
         }
-        // Publish the definitive answer before terminating the other children.
         if (ret == EXIT_CODE_REAL)
           std::cout << "REALIZABLE\n";
         else
           std::cout << "UNREALIZABLE\n";
         std::cout << std::flush;
-        stop_children ("winner_cancelled");
+        if (!g_synthesis)
+          stop_children ("winner_cancelled");
         return ret;
       }
     }
@@ -779,6 +869,19 @@ int main (int argc, char** argv) {
       acacia::obligation::record ("eligibility", acacia::obligation::outcome::error,
                                   "shared_allocation");
   }
+  if (arg_values.synth_fname) {
+    const size_t slots_bytes = worker_slots * sizeof (acacia::synthesis::rendezvous_slot);
+    const size_t bytes = slots_bytes + sizeof (std::atomic<uint64_t>);
+    void* shared = mmap (nullptr, bytes, PROT_READ | PROT_WRITE,
+                         MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    if (shared == MAP_FAILED)
+      error (EXIT_CODE_ERROR, "Error: unable to synchronize controller synthesis.\n");
+    g_synthesis = static_cast<acacia::synthesis::rendezvous_slot*> (shared);
+    acacia::synthesis::verdict_sequence =
+        new (static_cast<char*> (shared) + slots_bytes) std::atomic<uint64_t> {0};
+    for (size_t i = 0; i < worker_slots; ++i)
+      new (&g_synthesis[i]) acacia::synthesis::rendezvous_slot;
+  }
   g_main_pid = getpid ();
   if (acacia::phase_records_enabled ()) {
     const size_t bytes = worker_slots * sizeof (acacia::worker_record);
@@ -815,12 +918,12 @@ int main (int argc, char** argv) {
   try {
     return run_portfolio (arg_values, deadline_mono_ns, block_set);
   } catch (const std::exception& e) {
-    if (g_obligation && getpid () == g_main_pid)
+    if ((g_obligation || g_synthesis) && getpid () == g_main_pid)
       stop_children ("exception");
     acacia::worker_terminal (EXIT_CODE_ERROR, "exception");
     error (EXIT_CODE_ERROR, "Exception caught: %s\n", e.what ());
   } catch (...) {
-    if (g_obligation && getpid () == g_main_pid)
+    if ((g_obligation || g_synthesis) && getpid () == g_main_pid)
       stop_children ("exception");
     acacia::worker_terminal (EXIT_CODE_ERROR, "exception");
     error (EXIT_CODE_ERROR, "Unknown exception\n");

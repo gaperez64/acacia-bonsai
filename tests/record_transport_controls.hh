@@ -4,6 +4,16 @@
 
 namespace acacia {
   inline void record_transport_test_setup () {
+    if (const char* descriptor = getenv ("ACACIA_TEST_RECORD_WRITER_GATE_FD")) {
+      char release;
+      ssize_t got;
+      do {
+        got = read (std::atoi (descriptor), &release, 1);
+      } while (got < 0 && errno == EINTR);
+      if (got < 0)
+        _exit (3);
+      close (std::atoi (descriptor));
+    }
     if (getenv ("ACACIA_TEST_RECORD_WRITER_STALL"))
       while (true)
         pause ();

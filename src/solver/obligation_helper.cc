@@ -1,6 +1,7 @@
 #include "solver/obligation_helper.hh"
 
 #include "solver/mealy_to_moore.hh"
+#include "solver/synthesis_rendezvous.hh"
 #include <unordered_set>
 
 #include <algorithm>
@@ -116,6 +117,7 @@ namespace acacia::obligation {
       if (value != outcome::real)
         return {value == outcome::unreal ? outcome::inapplicable : outcome::error,
                 value == outcome::unreal ? "no_strategy" : "invalid_return"};
+      acacia::synthesis::await_selection (EXIT_CODE_REAL);
       worker_stage ("obligation_export");
       const auto mealy = spot::mtdswa_strategy_to_mealy (answer, false, false);
       if (!mealy || !mealy->num_states ())

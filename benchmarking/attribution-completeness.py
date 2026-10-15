@@ -32,8 +32,8 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKER = load_module("attribution_worker_phases", ROOT / "benchmarking/summarize-worker-phases.py")
 DIAG = load_module("attribution_diag_phases", ROOT / "benchmarking/summarize-diag-phases.py")
 CONFIG = load_module("attribution_config", ROOT / "scripts/acacia-config.py")
-PARENT_EVENTS = {"worker_spawn", "worker_spec", "parent_terminal", "parent_winner",
-                 "stage_censored"}
+PARENT_EVENTS = {"worker_spawn", "worker_spec", "parent_verdict", "parent_terminal",
+                 "parent_winner", "stage_censored"}
 CONTEXT = ("requested_backend", "effective_backend", "original_polarity", "proof_polarity",
            "route", "stage", "reason", "r_prepass", "equivariance")
 SOLVED = {"REALIZABLE": 0, "UNREALIZABLE": 1}
@@ -365,6 +365,17 @@ def audit_row(row, directory, expected_workers=None):
         sequences = [r.get("seq") for r in child]
         if sequences != list(range(1, len(child) + 1)):
             issue("delivery", "sequence_gap", f"{directory}/{pid}.jsonl: seq={sequences}")
+        for selection in by_event["parent_verdict"]:
+            # Selection observes a paused child; its private snapshot must not
+            # consume the sequence number of the child's next emitted record.
+            before = [r for r in child if nonnegative_int(r.get("mono_ns")) and
+                      nonnegative_int(selection.get("mono_ns")) and
+                      r["mono_ns"] <= selection["mono_ns"]]
+            last = before[-1].get("seq", 0) if before else 0
+            if not nonnegative_int(last) or selection.get("seq") != last + 1:
+                issue("delivery", "sequence_gap", location(selection))
+            if selection.get("reason") != "selected" or selection.get("exit_code") not in (0, 1):
+                issue("delivery", "invalid_parent_verdict", location(selection))
         # Spawn uses a pre-fork copy. Terminal resumes the reaped child's shared
         # sequence; comparing adjacent parent-file records would invent gaps.
         if terminal and terminal.get("telemetry") != "unavailable":

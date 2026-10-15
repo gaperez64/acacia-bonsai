@@ -50,7 +50,7 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 
 ## Validator, contract and failure-origin census
 
-734 enumerated checks/origins across preparation, reduction, seeds, R, U, checking, native proof binding, OxiDD and Spot providers. A slash-separated class means the source retains a typed failure from its called operation; status matrices and runtime fault panels test the alternatives. Boolean helpers report through the named consumer; false does not itself emit telemetry.
+737 enumerated checks/origins across preparation, reduction, seeds, R, U, checking, native proof binding, OxiDD and Spot providers. A slash-separated class means the source retains a typed failure from its called operation; status matrices and runtime fault panels test the alternatives. Boolean helpers report through the named consumer; false does not itself emit telemetry.
 
 | Origin | Legacy result | Cause expression/helper | Expected telemetry | Stage | Check/message |
 |---|---|---|---|---|---|
@@ -218,6 +218,9 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 | src/solver/solver_invoker.cc:124 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"resource"` |
 | src/solver/solver_invoker.cc:128 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `message.find ("Too many acceptance sets") != std::string_view::npos ? "resource" : "error"` |
 | src/solver/solver_invoker.cc:137 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"error"` |
+| src/solver/solver_invoker.cc:206 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
+| src/solver/solver_invoker.cc:414 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
+| src/solver/synthesis_rendezvous.hh:69 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
 | src/solver/spot_lazy_buchi_view.hh:65 | `UNKNOWN` | `resource` | STOPPED/resource | `provider` | `"lazy Buchi BDD budget exceeded"` |
 | src/solver/spot_lazy_buchi_view.hh:86 | `UNKNOWN` | `resource` | STOPPED/resource | `provider` | `"lazy Buchi acceptance budget exceeded"` |
 | src/solver/spot_lazy_buchi_view.hh:91 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `provider` | `"lazy Buchi requires a conjunction of all Inf sets or false"` |

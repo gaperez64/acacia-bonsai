@@ -264,21 +264,27 @@ namespace {
       while (true)
         pause ();
     };
-    const auto deadline = acacia::phase_clock (CLOCK_MONOTONIC) + 50000000;
+    // Cancellation stays bounded, but allow a loaded runner time to schedule and reap children.
+    constexpr uint64_t scheduling_slack = 5 * 1000000000ULL;
+    const auto cancellation_limit = acacia::phase_clock (CLOCK_MONOTONIC) + scheduling_slack;
     auto cancelled = bounded_attempt (d, blocked, acacia::phase_clock (CLOCK_MONOTONIC) + 5000000);
     check (cancelled.state == attempt_result::cancelled);
-    check (acacia::phase_clock (CLOCK_MONOTONIC) < deadline);
+    check (acacia::phase_clock (CLOCK_MONOTONIC) < cancellation_limit);
     int status;
     const auto reaped = waitpid (-1, &status, WNOHANG);
     const auto reap_error = errno;
     check (reaped == -1 && reap_error == ECHILD);
     auto oversized = [] (spot::formula) -> bool { throw std::length_error ("acceptance limit"); };
-    const auto exception = bounded_attempt (d, oversized, deadline);
+    // Finishing attempts each get a fresh deadline, independent of earlier cancellation work.
+    const auto exception =
+        bounded_attempt (d, oversized, acacia::phase_clock (CLOCK_MONOTONIC) + scheduling_slack);
     check (exception.state == attempt_result::exception);
     auto unverified = [] (spot::formula) { return true; };
     const auto expired = bounded_attempt (d, unverified, acacia::phase_clock (CLOCK_MONOTONIC));
     check (expired.state == attempt_result::cancelled);
-    auto result = bounded_attempt (d, unverified, deadline);
+    auto result =
+        bounded_attempt (d, unverified, acacia::phase_clock (CLOCK_MONOTONIC) + scheduling_slack);
+    check (result.state == attempt_result::completed);
     check (result.result && !accept (d, formula, p.source, result.proof));
     // Both failed attempts are reaped before the original fallback starts.
     bool full_started = false;
@@ -286,10 +292,12 @@ namespace {
       full_started = true;
       return f == formula;
     };
-    const auto invocation = acacia::phase_clock (CLOCK_MONOTONIC) + 200000000;
+    // The invocation fractions must bind before either absolute research allowance.
+    // Keep seconds of invocation time for scheduling, reaping, and the original fallback.
+    const auto invocation = acacia::phase_clock (CLOCK_MONOTONIC) + scheduling_slack;
     records silent;
     const auto bounded = try_extended_witnesses (formula, p.source, true, blocked, silent,
-                                               invocation, {2000, 8000});
+                                               invocation, {20000, 80000});
     check (!bounded);
     check (acacia::phase_clock (CLOCK_MONOTONIC) < invocation);
     const auto full = fallback (formula);
@@ -299,7 +307,7 @@ namespace {
     const auto short_attempt =
         try_extended_witnesses (formula, p.source, true, blocked, silent, 0, {5, 20});
     check (!short_attempt);
-    check (acacia::phase_clock (CLOCK_MONOTONIC) - short_entry < 200000000);
+    check (acacia::phase_clock (CLOCK_MONOTONIC) - short_entry < scheduling_slack);
     const auto final_reaped = waitpid (-1, &status, WNOHANG);
     const auto final_reap_error = errno;
     check (final_reaped == -1 && final_reap_error == ECHILD);

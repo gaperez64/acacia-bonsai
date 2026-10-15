@@ -15,7 +15,7 @@ SOURCES = (
     "src/solver/closure_buchi_provider.cc", "src/solver/spot_state_ids.hh",
     "src/solver/spot_rows.hh", "src/solver/spot_letter_oracle.hh",
     "src/solver/spot_lazy_game.hh", "src/solver/spot_guarded_forward_safety.hh",
-    "src/solver/solver_invoker.cc",
+    "src/solver/solver_invoker.cc", "src/solver/synthesis_rendezvous.hh",
     "src/solver/spot_lazy_buchi_view.hh", "src/solver/spot_lazy_worker.hh",
     "subprojects/tlsf-tools/src/lib/pipeline.c",
     "subprojects/tlsf-tools/src/lib/pipeline_source.c",

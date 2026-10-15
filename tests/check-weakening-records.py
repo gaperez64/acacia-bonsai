@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Exercise the basic loop and wire records with generated ASTs and test-only runners."""
 
+import argparse
 import importlib.util
 import os
 from pathlib import Path
 import subprocess
-import sys
 import tempfile
 import time
 
@@ -18,10 +18,23 @@ def load_reader():
     return module
 
 
+# Complete delivery can pace thousands of phase packets under a one-CPU test cap.
+# This is an invocation allowance for every real-solver case, including diagnostics-off;
+# the exact lifecycle, verdict, binding and remaining-budget assertions stay active.
+SOLVER_SECONDS = 10
+
+
 def main():
-    binary = str(Path(sys.argv[1]).resolve())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("binary", type=Path)
+    parser.add_argument("build_directory", type=Path)
+    parser.add_argument("solver", type=Path, nargs="?")
+    parser.add_argument("reference", type=Path, nargs="?")
+    parser.add_argument("--record-ack-library", type=Path)
+    options = parser.parse_args()
+    binary = str(options.binary.resolve())
     reader = load_reader()
-    with tempfile.TemporaryDirectory(dir=sys.argv[2]) as temporary:
+    with tempfile.TemporaryDirectory(dir=options.build_directory) as temporary:
         root = Path(temporary)
         modes = ["success", "inconclusive", "exception", "cancellation", "decline", "mixed",
                  "not_top_level_and", "no_global_conjunction",
@@ -130,8 +143,8 @@ def main():
         summary, = reader.census(records)
         assert summary["census"] == "incomplete" and summary["started"] is None
         assert summary["cancellations"] is None and summary["observed_cancellations"] == 0
-        if len(sys.argv) > 3:
-            solver = str(Path(sys.argv[3]).resolve())
+        if options.solver:
+            solver = str(options.solver.resolve())
             # The helper selects a compiled formula arm from the generated build config.
             arm = subprocess.check_output([binary, "--solver-arm"], text=True, timeout=5).strip()
             predictive = ["F(o & " + "X " * j + "!o)" for j in range(1, 65)]
@@ -149,30 +162,34 @@ def main():
                            "--arms", arm, "-K", "2"]
                 results = []
                 executables = [(solver, True), (solver, False)]
-                if len(sys.argv) > 4:
-                    executables.append((str(Path(sys.argv[4]).resolve()), False))
+                if options.reference:
+                    executables.append((str(options.reference.resolve()), False))
                 for executable, diagnostics in executables:
                     env = os.environ.copy()
                     env.pop("ACACIA_PHASE_RECORDS", None)
                     if diagnostics:
                         env["ACACIA_PHASE_RECORDS"] = str(directory)
-                    env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + 2)
+                        if options.record_ack_library:
+                            env["LD_PRELOAD"] = str(options.record_ack_library.resolve())
+                            env["ACACIA_TEST_RECORD_ACK"] = "1"
+                    env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + SOLVER_SECONDS)
                     result = subprocess.run([executable, *command[1:]], env=env,
-                                            capture_output=True, timeout=4)
+                                            capture_output=True, timeout=SOLVER_SECONDS + 2)
                     results.append((result.returncode, result.stdout, result.stderr))
                 assert all(r == results[0] for r in results), (name, results)
                 assert results[0][0] in (1, 2), (name, arm, results)
                 records, problems = reader.read_records(directory)
                 assert not problems
                 summary, = reader.census(records)
+                assert all(r.get("dropped_records", 0) == 0 for r in records), (name, records)
                 assert summary["census"] == "complete", (name, summary, records)
                 assert summary["mode"] == summary["effective_mode"] == "basic"
                 assert summary["eligible"] and summary["generated"] == 8
-                assert summary["started"] == (1 if proof else 8)
+                assert summary["started"] == (1 if proof else 8), (name, summary, records)
                 assert summary["successes"] == int(proof)
                 assert summary["full_solver_started"] is not proof
                 if not proof:
-                    assert 0 < summary["full_solver_remaining_ns"] < 2_000_000_000
+                    assert 0 < summary["full_solver_remaining_ns"] < SOLVER_SECONDS * 1_000_000_000
                 else:
                     assert results[0][0] == 1 and results[0][1] == b"UNREALIZABLE\n"
     print("weakening lifecycle, reasons, binding, exceptions, cancellation and drops passed")

@@ -482,7 +482,7 @@ def main() -> None:
                 and finish[0]["wall_ns"] > 5_000_000_000), rows
         assert winner_row(rows)["effective_backend"] == "obligation", rows
         verify_controller()
-        for fault in ("stall", "export-stall"):
+        for fault in ("stall",):
             result, rows = run(binary, [*synth_source, *alone, "-s", str(controller)],
                                root, library, fault, gate=True)
             assert result.returncode == 0, result
@@ -491,6 +491,8 @@ def main() -> None:
             assert (finish[0]["outcome"] == "cancelled"
                     and finish[0]["reason"] == "winner_cancelled"), rows
             verify_controller()
+        # After the first verdict, competing workers are suspended. A blocked
+        # selected exporter must be cancelled by the invocation, not outraced.
         for interrupted in (False, True):
             result, rows = run(binary, [*synth_source, *alone, "-s", str(controller)],
                                root, library, "export-stall", gate=True, release_stalls=False,
