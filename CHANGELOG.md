@@ -84,6 +84,8 @@ See [the panels](benchmarking/RESULTS.md) and
 
 ### Unreleased
 
+- Add `--obligation-memory-share equal|alone` to let the obligation helper use its full memory allowance; equal sharing remains the default.
+
 - **Oct 14:** With `-s`, the first conclusive verdict selects the worker that builds
   and writes the controller. Other workers are suspended and resume if that worker
   fails to finish. REALIZABLE is accepted only after the controller file closes

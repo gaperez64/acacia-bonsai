@@ -582,7 +582,8 @@ namespace {
 
     const auto launch_helper = [&] (bool prepare) {
       g_helper_index = g_child_count;
-      g_helper_rss_share = acacia::obligation::rss_share (size_t (g_child_count) + 1);
+      g_helper_rss_share = acacia::obligation::rss_share (size_t (g_child_count) + 1,
+                                                        arg_values.obligation_memory_share);
       g_obligation->start_ns = monotonic_ns ();
       const auto helper = portfolio_arm::native (false, portfolio_arm_kind::obligation, true);
       verb_do (1, vout << "Starting additional obligation worker\n" << std::flush);

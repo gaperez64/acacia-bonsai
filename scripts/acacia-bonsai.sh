@@ -35,6 +35,12 @@ Usage: $0 [config_name] [--tlsf] [acacia-bonsai arguments...]
                     an explicit list to use the original portfolio. Synthesis
                     (-s) uses its existing route.
 
+  --obligation-memory-share equal|alone
+                    The helper allowance is half the smaller of the memory
+                    limit and 8 GiB (at most 4 GiB). Divide it among launched
+                    workers (equal, default) or give all of it to the helper
+                    (alone). The separate 8 GiB address-space cap still applies.
+
 Available configurations:
 EOF
     for c in "${CONFIGS[@]}"; do
