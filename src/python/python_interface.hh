@@ -2,7 +2,7 @@
 
 // Only lightweight headers here. The SWIG wrapper also includes this header,
 // so keep implementation-heavy dependencies in python_interface.cc.
-#include "configuration.hh"  // VECTOR_ELT_T, VECTOR_IMPL, VECTOR_AND_BITSET_DOWNSET_IMPL macros
+#include "configuration.hh"  // VECTOR_ELT_T, simd_vector_backed, VECTOR_AND_BITSET_DOWNSET_IMPL macros
 
 #include <bddx.h>
 #include <optional>
@@ -19,7 +19,7 @@
 /**
  * The type of vectors in a winning region.
  */
-using vector_type = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
+using vector_type = posets::vectors::simd_vector_backed<VECTOR_ELT_T>;
 
 /**
  * The type of winning region.

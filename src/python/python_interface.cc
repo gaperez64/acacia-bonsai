@@ -1,3 +1,4 @@
+#include "solver/formula_input.hh"
 
 #include "python_interface.hh"
 
@@ -28,30 +29,6 @@ unsigned int utils::verbose = 0;
 // TODO We need to figure out some clean way to define these, instead of copying them everywhere
 size_t posets::vectors::bool_threshold = 0;
 
-// Parse the LTL formula. Mirrors the CLI parser helper.
-static spot::formula parse_ltl (const std::string& input) {
-  auto pf = spot::parse_infix_psl (input, spot::default_environment::instance (), false, false);
-
-  if ((not pf.f) or (not pf.errors.empty ())) {
-    pf.format_errors (std::cerr);
-    throw std::runtime_error ("Error parsing LTL formula");
-  }
-
-  return pf.f;
-}
-
-// Wraps each input AP in the formula with X(...), implementing the
-// UNREAL_X_FORMULA Moore-semantics transformation.
-static void prep_unreal_formula (spot::formula& formula,
-                                 const std::vector<std::string>& input_aps) {
-  auto rec = [&input_aps] (auto&& self, spot::formula m) -> spot::formula {
-    if (m.is (spot::op::ap) and (std::ranges::find (input_aps, m.ap_name ()) != input_aps.end ()))
-      return spot::formula::X (m);
-    return m.map ([&] (spot::formula t) { return self (self, t); });
-  };
-  formula = formula.map ([&] (spot::formula t) { return rec (rec, t); });
-}
-
 // Build the TWA for the given formula using an already-created dict.
 static spot::twa_graph_ptr build_twa (spot::formula& formula, spot::bdd_dict_ptr dict) {
   spot::option_map extra_options = acacia::translation::make_options ();
@@ -63,10 +40,10 @@ static spot::twa_graph_ptr build_twa (spot::formula& formula, spot::bdd_dict_ptr
 
 Game* create_twa (const std::string& formula_str, const std::vector<std::string>& input_aps,
                   const std::vector<std::string>& output_aps, bool unreal_x_formula) {
-  auto formula = parse_ltl (formula_str);
+  auto formula = acacia::formula_input::parse (formula_str);
 
   if (unreal_x_formula)
-    prep_unreal_formula (formula, input_aps);
+    acacia::formula_input::shift_inputs (formula, input_aps);
 
   auto dict = spot::make_bdd_dict ();
 
@@ -132,7 +109,7 @@ static std::optional<std::pair<VECTOR_ELT_T, winreg_type>> solve_game_python (
     const bdd& all_inputs, const bdd& all_outputs) {
   using SpecializedDownset = winreg_type;
   using IOsPrecomputationMaker = IOS_PRECOMPUTER;
-  using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
+  using ActionerMaker = actioners::standard<typename SpecializedDownset::value_type>;
   using InputPickerMaker = INPUT_PICKER;
 
   auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker, ActionerMaker,

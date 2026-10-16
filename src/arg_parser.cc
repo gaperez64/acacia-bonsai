@@ -89,7 +89,7 @@ void show_help (const char* program_name) {
       << "  --weakening-total-ms N     absolute extended pre-pass allowance (default 1000 ms)\n"
       << "                            invocation deadline bounds still apply; 0 skips work\n"
       << "  --candidate-mode VAL     [only|fallback] on candidate resource limits (default "
-      << acacia::candidate_mode_name (ACACIA_DEFAULT_CANDIDATE_MODE) << ")\n"
+      << acacia::candidate_mode_name (acacia::candidate_mode::only) << ")\n"
       << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] "
          "game backend for unreal arms\n"
       << "  --arms LIST       run exactly the comma-separated portfolio arms\n"
@@ -229,10 +229,6 @@ void process_arg_unreal (const std::string& arg, arg_parse_result& result) {
 std::vector<TRANSLATION_PREF_T> default_real_strategies () { return {ACACIA_TRANSLATION_PREFS}; }
 
 std::vector<UNREAL_X_T> default_unreal_strategies () {
-  if (DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON)
-    return {UNREAL_X_AUTOMATON};
-  if (DEFAULT_UNREAL_X == UNREAL_X_FORMULA)
-    return {UNREAL_X_FORMULA};
   return {UNREAL_X_FORMULA, UNREAL_X_AUTOMATON};
 }
 

@@ -42,10 +42,10 @@ namespace {
       std::vector<std::string> inputs;
       std::vector<std::string> outputs;
       orientation worker = orientation::real;
-      VECTOR_ELT_T kmax = DEFAULT_K;
-      VECTOR_ELT_T kmin = DEFAULT_KMIN;
-      VECTOR_ELT_T kinc = DEFAULT_KINC;
-      SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
+      VECTOR_ELT_T kmax = 99;
+      VECTOR_ELT_T kmin = 2;
+      VECTOR_ELT_T kinc = 3;
+      SPOT_FAST_T spot_fast = SPOT_FAST_DET;
 #if ACACIA_FORWARD_SAFETY_SOLVER
       acacia::game_backend backend = acacia::game_backend::forward;
 #else
@@ -89,9 +89,9 @@ namespace {
   void usage (std::ostream& out, const char* program) {
     out << "Usage: " << program << " --hoa FILE --inputs CSV --outputs CSV [OPTIONS]\n"
         << "  --orientation real|unreal-formula|unreal-automaton|direct\n"
-        << "  -K N  final bound (default " << static_cast<int> (DEFAULT_K) << ")\n"
-        << "  -k N  initial bound (default " << static_cast<int> (DEFAULT_KMIN) << ")\n"
-        << "  -I N  bound increment (default " << static_cast<int> (DEFAULT_KINC) << ")\n"
+        << "  -K N  final bound (default " << static_cast<int> (99) << ")\n"
+        << "  -k N  initial bound (default " << static_cast<int> (2) << ")\n"
+        << "  -I N  bound increment (default " << static_cast<int> (3) << ")\n"
         << "  --game-backend backward|forward\n"
         << "  --spot-fast off|det\n"
         << "  -v, --version, --help\n";
@@ -243,7 +243,7 @@ namespace {
       return false;
     {
       acacia::legacy_phase booleanizing ("booleanization");
-      posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, arguments.kmax)) ();
+      posets::vectors::bool_threshold = (boolean_states::forward_saturation::make (aut, arguments.kmax)) ();
     }
 #if ACACIA_ENABLE_DIAGNOSTICS
     if (auto* diag = acacia::diagnostics::current ())

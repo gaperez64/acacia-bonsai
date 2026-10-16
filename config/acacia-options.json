@@ -8,39 +8,12 @@
           "type": "aut_preprocessors::surely_losing",
           "gate": "ACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING"
         },
-        "no_preprocessing": {
-          "type": "aut_preprocessors::no_preprocessing",
-          "gate": "ACACIA_ENABLE_AUT_PREPROCESSOR_NO_PREPROCESSING"
-        },
         "standard": {
           "type": "aut_preprocessors::standard",
           "gate": "ACACIA_ENABLE_AUT_PREPROCESSOR_STANDARD"
-        },
-        "elevator": {
-          "type": "aut_preprocessors::elevator",
-          "gate": "ACACIA_ENABLE_AUT_PREPROCESSOR_ELEVATOR"
         }
       },
       "macro": "AUT_PREPROCESSOR"
-    },
-    "boolean_states": {
-      "meson": "acacia_boolean_states",
-      "default": "forward_saturation",
-      "choices": {
-        "forward_saturation": {
-          "type": "boolean_states::forward_saturation",
-          "gate": "ACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION"
-        },
-        "no_boolean_states": {
-          "type": "boolean_states::no_boolean_states",
-          "gate": "ACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES"
-        },
-        "transition_core": {
-          "type": "boolean_states::transition_core",
-          "gate": "ACACIA_ENABLE_BOOLEAN_STATES_TRANSITION_CORE"
-        }
-      },
-      "macro": "BOOLEAN_STATES"
     },
     "ios_precomputer": {
       "meson": "acacia_ios_precomputer",
@@ -49,18 +22,6 @@
         "standard": {
           "type": "ios_precomputers::standard",
           "gate": "ACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD"
-        },
-        "delegate": {
-          "type": "ios_precomputers::delegate",
-          "gate": "ACACIA_ENABLE_IOS_PRECOMPUTER_DELEGATE"
-        },
-        "fake_vars": {
-          "type": "ios_precomputers::fake_vars",
-          "gate": "ACACIA_ENABLE_IOS_PRECOMPUTER_FAKE_VARS"
-        },
-        "powset": {
-          "type": "ios_precomputers::powset",
-          "gate": "ACACIA_ENABLE_IOS_PRECOMPUTER_POWSET"
         },
         "mona": {
           "type": "ios_precomputers::mona",
@@ -73,21 +34,6 @@
       },
       "macro": "IOS_PRECOMPUTER"
     },
-    "actioner": {
-      "meson": "acacia_actioner",
-      "default": "standard",
-      "choices": {
-        "standard": {
-          "type": "actioners::standard",
-          "gate": "ACACIA_ENABLE_ACTIONER_STANDARD"
-        },
-        "no_ios_precomputation": {
-          "type": "actioners::no_ios_precomputation",
-          "gate": "ACACIA_ENABLE_ACTIONER_NO_IOS_PRECOMPUTATION"
-        }
-      },
-      "macro": "ACTIONER"
-    },
     "input_picker": {
       "meson": "acacia_input_picker",
       "default": "critical_pq",
@@ -99,120 +45,19 @@
         "critical": {
           "type": "input_pickers::critical",
           "gate": "ACACIA_ENABLE_INPUT_PICKER_CRITICAL"
-        },
-        "critical_rnd": {
-          "type": "input_pickers::critical_rnd",
-          "gate": "ACACIA_ENABLE_INPUT_PICKER_CRITICAL_RND"
-        },
-        "critical_fullrnd": {
-          "type": "input_pickers::critical_fullrnd",
-          "gate": "ACACIA_ENABLE_INPUT_PICKER_CRITICAL_FULLRND"
         }
       },
       "macro": "INPUT_PICKER"
     }
   },
   "options": {
-    "default_k": {
-      "meson": "acacia_default_k",
-      "type": "integer",
-      "default": 99,
-      "min": 1,
-      "max": 127,
-      "description": "Default final K (bounded by the signed-char counter representation)",
-      "macros": [
-        {
-          "name": "DEFAULT_K",
-          "emit": "always",
-          "encoding": "value"
-        }
-      ]
-    },
-    "default_kmin": {
-      "meson": "acacia_default_kmin",
-      "type": "integer",
-      "default": 2,
-      "min": 1,
-      "max": 127,
-      "description": "Default initial K (must not exceed acacia_default_k at runtime)",
-      "macros": [
-        {
-          "name": "DEFAULT_KMIN",
-          "emit": "always",
-          "encoding": "value"
-        }
-      ]
-    },
-    "default_kinc": {
-      "meson": "acacia_default_kinc",
-      "type": "integer",
-      "default": 3,
-      "min": 1,
-      "max": 127,
-      "description": "Default K increment",
-      "macros": [
-        {
-          "name": "DEFAULT_KINC",
-          "emit": "always",
-          "encoding": "value"
-        }
-      ]
-    },
-    "default_unreal_x": {
-      "meson": "acacia_default_unreal_x",
-      "type": "combo",
-      "default": "both",
-      "choices": [
-        "both",
-        "automaton",
-        "formula"
-      ],
-      "description": "Default unrealizability check mode",
-      "macros": [
-        {
-          "name": "DEFAULT_UNREAL_X",
-          "emit": "always",
-          "encoding": "map",
-          "map": {
-            "both": "UNREAL_X_BOTH",
-            "automaton": "UNREAL_X_AUTOMATON",
-            "formula": "UNREAL_X_FORMULA"
-          }
-        }
-      ]
-    },
-    "default_spot_fast": {
-      "meson": "acacia_default_spot_fast",
-      "type": "combo",
-      "default": "det",
-      "choices": [
-        "off",
-        "det",
-        "det_and_gfg"
-      ],
-      "description": "Default Spot fast-path strategy checks",
-      "macros": [
-        {
-          "name": "DEFAULT_SPOT_FAST",
-          "emit": "always",
-          "encoding": "map",
-          "map": {
-            "off": "SPOT_FAST_OFF",
-            "det": "SPOT_FAST_DET",
-            "det_and_gfg": "SPOT_FAST_DET_AND_GFG"
-          }
-        }
-      ]
-    },
     "translation_pref": {
       "meson": "acacia_translation_pref",
       "type": "combo",
       "default": "small",
       "choices": [
         "small",
-        "any",
-        "small+any",
-        "deterministic"
+        "any"
       ],
       "description": "Spot translator postprocessor preference list for realizability checks",
       "macros": [
@@ -222,9 +67,7 @@
           "encoding": "map",
           "map": {
             "small": "spot::postprocessor::Small",
-            "any": "spot::postprocessor::Any",
-            "small+any": "spot::postprocessor::Small",
-            "deterministic": "spot::postprocessor::Deterministic"
+            "any": "spot::postprocessor::Any"
           }
         },
         {
@@ -233,36 +76,8 @@
           "encoding": "map",
           "map": {
             "small": "spot::postprocessor::Small",
-            "any": "spot::postprocessor::Any",
-            "small+any": "spot::postprocessor::Small, spot::postprocessor::Any",
-            "deterministic": "spot::postprocessor::Deterministic"
+            "any": "spot::postprocessor::Any"
           }
-        }
-      ]
-    },
-    "enable_realizability_simplifier": {
-      "meson": "acacia_enable_realizability_simplifier",
-      "type": "boolean",
-      "default": true,
-      "description": "Enable Spot realizability-preserving formula simplification before solving and after decomposition",
-      "macros": [
-        {
-          "name": "ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
-    "enable_syntactic_bypass": {
-      "meson": "acacia_enable_syntactic_bypass",
-      "type": "boolean",
-      "default": true,
-      "description": "Enable Spot direct-strategy checks before automaton construction",
-      "macros": [
-        {
-          "name": "ACACIA_ENABLE_SYNTACTIC_BYPASS",
-          "emit": "always",
-          "encoding": "bool_int"
         }
       ]
     },
@@ -276,52 +91,6 @@
           "name": "ACACIA_FORCED_OUTPUT_CONTRADICTION",
           "emit": "always",
           "encoding": "bool_int"
-        }
-      ]
-    },
-    "profile_dominance": {
-      "meson": "acacia_profile_dominance",
-      "type": "boolean",
-      "default": false,
-      "description": "Prune globally dominated semantic actions after decoding, per input",
-      "macros": [
-        {
-          "name": "ACACIA_PROFILE_DOMINANCE",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
-    "forward_eager_minimal_successors": {
-      "meson": "acacia_forward_eager_minimal_successors",
-      "type": "boolean",
-      "default": false,
-      "description": "Eagerly apply and Pareto-minimise every forward controller action (comparison mode)",
-      "macros": [
-        {
-          "name": "ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
-    "k_schedule": {
-      "meson": "acacia_k_schedule",
-      "type": "combo",
-      "default": "linear",
-      "choices": [
-        "linear",
-        "geometric",
-        "cheap_loss_adaptive",
-        "direct_max"
-      ],
-      "description": "Bound-raising schedule for the K loop",
-      "macros": [
-        {
-          "name": "ACACIA_K_SCHEDULE",
-          "emit": "always",
-          "encoding": "prefix",
-          "prefix": "acacia::k_schedule::kind::"
         }
       ]
     },
@@ -351,142 +120,6 @@
         }
       ]
     },
-    "equivariant_max_states": {
-      "meson": "acacia_equivariant_max_states",
-      "type": "integer",
-      "default": 512,
-      "min": 1,
-      "description": "Maximum automaton states admitted to unhinted equivariant recognition",
-      "macros": [
-        {
-          "name": "ACACIA_EQUIVARIANT_MAX_STATES",
-          "emit": "always",
-          "encoding": "value"
-        }
-      ]
-    },
-    "symmetry_profile": {
-      "meson": "acacia_symmetry_profile",
-      "type": "boolean",
-      "default": false,
-      "description": "Collect and report phase timings and call counts for symmetry and equivariant solving",
-      "macros": [
-        {
-          "name": "ACACIA_SYMMETRY_PROFILE",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
-    "equivariant_max_output_letters": {
-      "meson": "acacia_equivariant_max_output_letters",
-      "type": "integer",
-      "default": 4096,
-      "min": 1,
-      "description": "Maximum output valuations enumerated for equivariant orbit sweeping; exceeding the cap declines the equivariant solver",
-      "macros": [
-        {
-          "name": "ACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS",
-          "emit": "always",
-          "encoding": "value"
-        }
-      ]
-    },
-    "equivariant_max_orbits": {
-      "meson": "acacia_equivariant_max_orbits",
-      "type": "integer",
-      "default": 4096,
-      "min": 1,
-      "description": "Maximum input orbits, including shared-input assignments, admitted to equivariant solving",
-      "macros": [
-        {
-          "name": "ACACIA_EQUIVARIANT_MAX_ORBITS",
-          "emit": "always",
-          "encoding": "value"
-        }
-      ]
-    },
-    "equivariant_max_sweep_clients": {
-      "meson": "acacia_equivariant_max_sweep_clients",
-      "type": "integer",
-      "default": 4,
-      "min": 0,
-      "description": "Maximum client count for direct orbit sweeping: small orbits can cost less than generator-fixpoint closure; larger groups use the representative/picker loop for greater payoff (0 disables sweeping)",
-      "macros": [
-        {
-          "name": "ACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS",
-          "emit": "always",
-          "encoding": "value"
-        }
-      ]
-    },
-    "equivariant_exhaustive_detect": {
-      "meson": "acacia_equivariant_exhaustive_detect",
-      "type": "boolean",
-      "default": false,
-      "description": "Use exhaustive symmetry detection to select the largest full symmetric subgroup instead of fast star-generator recognition",
-      "macros": [
-        {
-          "name": "ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
-    "equivariant_validate_fast_recognition": {
-      "meson": "acacia_equivariant_validate_fast_recognition",
-      "type": "boolean",
-      "default": false,
-      "description": "Cross-check fast symmetry recognition against exhaustive detection, reporting mismatches and asserting agreement",
-      "macros": [
-        {
-          "name": "ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
-    "symmetry_verbose_diagnostics": {
-      "meson": "acacia_symmetry_verbose_diagnostics",
-      "type": "boolean",
-      "default": false,
-      "description": "Run an additional symmetry-detection pass on the final game automaton for verbose and phase diagnostics",
-      "macros": [
-        {
-          "name": "ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
-    "equivariant_min_clients": {
-      "meson": "acacia_equivariant_min_clients",
-      "type": "integer",
-      "default": 3,
-      "min": 2,
-      "description": "Minimum indexed client count admitted to equivariant recognition",
-      "macros": [
-        {
-          "name": "ACACIA_EQUIVARIANT_MIN_CLIENTS",
-          "emit": "always",
-          "encoding": "value"
-        }
-      ]
-    },
-    "equivariant_min_blocks": {
-      "meson": "acacia_equivariant_min_blocks",
-      "type": "integer",
-      "default": 2,
-      "min": 0,
-      "description": "Minimum client-state block count required by the equivariant solver (0 disables this payoff gate)",
-      "macros": [
-        {
-          "name": "ACACIA_EQUIVARIANT_MIN_BLOCKS",
-          "emit": "always",
-          "encoding": "value"
-        }
-      ]
-    },
     "simd_is_max": {
       "meson": "acacia_simd_is_max",
       "type": "boolean",
@@ -500,50 +133,13 @@
         }
       ]
     },
-    "decompose_spec": {
-      "meson": "acacia_decompose_spec",
-      "type": "boolean",
-      "default": true,
-      "description": "Decompose the specification before solving",
-      "macros": [
-        {
-          "name": "DECOMPOSE_SPEC",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
-    "cpre_avoid_unions": {
-      "meson": "acacia_cpre_avoid_unions",
-      "type": "boolean",
-      "default": false,
-      "description": "Avoid unions during controllable predecessor computation",
-      "macros": [
-        {
-          "name": "CPRE_AVOID_UNIONS",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
     "vector_downset": {
       "meson": "acacia_vector_downset",
       "type": "combo",
       "default": "vector_backed",
       "choices": [
         "vector_backed",
-        "vector_or_kdtree_backed",
-        "kdtree_backed",
-        "bboxtree_backed",
-        "comptrie_backed",
-        "sharingtree_backed",
-        "simple_sharingtree_backed",
-        "sharingtrie_backed",
-        "skiplist_backed",
-        "cst_backed",
-        "rank_bucketed_vector_backed",
-        "filtered_vector_backed",
-        "vector_backed_bin"
+        "rank_bucketed_vector_backed"
       ],
       "description": "Downset implementation for vectors and bitsets",
       "macros": [
@@ -551,33 +147,6 @@
           "name": "VECTOR_AND_BITSET_DOWNSET_IMPL",
           "emit": "always",
           "encoding": "value"
-        }
-      ]
-    },
-    "no_simd": {
-      "meson": "acacia_no_simd",
-      "type": "boolean",
-      "default": false,
-      "description": "Disable SIMD vector operations",
-      "macros": [
-        {
-          "name": "NO_SIMD",
-          "emit": "true",
-          "encoding": "bare"
-        }
-      ]
-    },
-    "compile_all_components": {
-      "meson": "acacia_compile_all_components",
-      "type": "boolean",
-      "default": false,
-      "description": "Compile all component family implementations",
-      "macros": [
-        {
-          "name": "ACACIA_COMPILE_ALL_COMPONENTS",
-          "emit": "true",
-          "encoding": "constant",
-          "value": 1
         }
       ]
     },
@@ -605,55 +174,6 @@
           "name": "ACACIA_DEFAULT_ARMS",
           "emit": "nonempty",
           "encoding": "c_string"
-        }
-      ]
-    },
-    "default_candidate_mode": {
-      "meson": "acacia_default_candidate_mode",
-      "type": "combo",
-      "default": "only",
-      "choices": [
-        "only",
-        "fallback"
-      ],
-      "description": "Default response to a Spot candidate resource limit; the CLI can override it",
-      "macros": [
-        {
-          "name": "ACACIA_DEFAULT_CANDIDATE_MODE",
-          "emit": "always",
-          "encoding": "map",
-          "map": {
-            "only": "acacia::candidate_mode::only",
-            "fallback": "acacia::candidate_mode::fallback"
-          }
-        }
-      ]
-    },
-    "spot_taa_max_rank_nodes": {
-      "meson": "acacia_spot_taa_max_rank_nodes",
-      "type": "integer",
-      "default": 200000,
-      "min": 0,
-      "description": "Default per-attempt rank-node cap for both TAA providers; frozen guarded solving keeps its own limit",
-      "macros": [
-        {
-          "name": "ACACIA_SPOT_TAA_MAX_RANK_NODES",
-          "emit": "always",
-          "encoding": "value"
-        }
-      ]
-    },
-    "local_certificate": {
-      "meson": "acacia_local_certificate",
-      "type": "boolean",
-      "default": false,
-      "description": "Enable the bounded local winning-certificate and root-refutation probe",
-      "macros": [
-        {
-          "name": "ACACIA_LOCAL_CERTIFICATE",
-          "emit": "true",
-          "encoding": "constant",
-          "value": 1
         }
       ]
     },
@@ -685,91 +205,6 @@
         }
       ]
     },
-    "real_backend_selector": {
-      "meson": "acacia_real_backend_selector",
-      "type": "boolean",
-      "default": false,
-      "description": "B2 (sprint/symbolic-rows-selective-real): structural real-slot forward/sparse selection, decision-only, disabled by default",
-      "macros": [
-        {
-          "name": "ACACIA_REAL_BACKEND_SELECTOR",
-          "emit": "true",
-          "encoding": "constant",
-          "value": 1
-        }
-      ]
-    },
-    "real_backend_selector_max_boolean_percent": {
-      "meson": "acacia_real_backend_selector_max_boolean_percent",
-      "type": "integer",
-      "default": 30,
-      "min": 0,
-      "max": 100,
-      "description": "Frozen 100*boolean_states/states threshold for acacia_real_backend_selector: at or below this, prefer spot-guarded-sparse",
-      "macros": [
-        {
-          "name": "ACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT",
-          "emit": "always",
-          "encoding": "value"
-        }
-      ]
-    },
-    "spot_guarded_existential_outputs": {
-      "meson": "acacia_spot_guarded_existential_outputs",
-      "type": "boolean",
-      "default": false,
-      "description": "Cover guarded inputs with existentially quantified outputs instead of a constant output",
-      "macros": [
-        {
-          "name": "ACACIA_SPOT_GUARDED_EXISTENTIAL_OUTPUTS",
-          "emit": "true",
-          "encoding": "constant",
-          "value": 1
-        }
-      ]
-    },
-    "spot_guarded_losing_input_search": {
-      "meson": "acacia_spot_guarded_losing_input_search",
-      "type": "boolean",
-      "default": false,
-      "description": "Search guarded inputs for a losing input before sampling an uncovered input",
-      "macros": [
-        {
-          "name": "ACACIA_SPOT_GUARDED_LOSING_INPUT_SEARCH",
-          "emit": "true",
-          "encoding": "constant",
-          "value": 1
-        }
-      ]
-    },
-    "spot_guarded_lean_verifier": {
-      "meson": "acacia_spot_guarded_lean_verifier",
-      "type": "boolean",
-      "default": false,
-      "description": "Minimize sparse guarded losing proof dependencies and release unused verifier preimages",
-      "macros": [
-        {
-          "name": "ACACIA_SPOT_GUARDED_LEAN_VERIFIER",
-          "emit": "true",
-          "encoding": "constant",
-          "value": 1
-        }
-      ]
-    },
-    "spot_guarded_inequality_covering": {
-      "meson": "acacia_spot_guarded_inequality_covering",
-      "type": "boolean",
-      "default": false,
-      "description": "Cover guarded inputs with the <= successor preimage instead of the exact successor",
-      "macros": [
-        {
-          "name": "ACACIA_SPOT_GUARDED_INEQUALITY_COVERING",
-          "emit": "true",
-          "encoding": "constant",
-          "value": 1
-        }
-      ]
-    },
     "forward_safety_solver": {
       "meson": "acacia_forward_safety_solver",
       "type": "boolean",
@@ -778,20 +213,6 @@
       "macros": [
         {
           "name": "ACACIA_FORWARD_SAFETY_SOLVER",
-          "emit": "true",
-          "encoding": "constant",
-          "value": 1
-        }
-      ]
-    },
-    "forward_conditional_covering": {
-      "meson": "acacia_forward_conditional_covering",
-      "type": "boolean",
-      "default": false,
-      "description": "Enable conditional downward covering of optimistic successors",
-      "macros": [
-        {
-          "name": "ACACIA_FORWARD_CONDITIONAL_COVERING",
           "emit": "true",
           "encoding": "constant",
           "value": 1
@@ -812,39 +233,6 @@
         }
       ]
     },
-    "transition_acceptance": {
-      "meson": "acacia_transition_acceptance",
-      "type": "boolean",
-      "default": false,
-      "description": "Carry transition acceptance into rank actions",
-      "macros": [
-        {
-          "name": "ACACIA_TRANSITION_ACCEPTANCE",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
-    "vector_impl": {
-      "meson": "acacia_vector_impl",
-      "type": "combo",
-      "default": "auto",
-      "choices": [
-        "auto",
-        "simd_vector_backed",
-        "simd_vector_backed_sum",
-        "vector_backed"
-      ],
-      "description": "Vector implementation; auto selects the default",
-      "macros": [
-        {
-          "name": "VECTOR_IMPL",
-          "emit": "not_equal",
-          "encoding": "value",
-          "skip_value": "auto"
-        }
-      ]
-    },
     "preset": {
       "meson": "acacia_preset",
       "type": "string",
@@ -862,15 +250,16 @@
   "constants": {
     "VECTOR_ELT_T": {
       "value": "signed char",
-      "description": "Counter element type. Overflow WARNING: Check VECTOR_ELT_T before changing DEFAULT_K. The acacia_default_k maximum of 127 in meson.options repeats the same signed-char representation constraint.",
+      "description": "Counter element type. Check its signed-char range before changing the CLI K defaults or runtime bound checks.",
       "sources": [
         "src/config/acacia_build_config.hh.in",
-        "meson.options"
+        "src/arg_parser.hh",
+        "src/arg_parser.cc"
       ]
     },
     "VECTOR_IMPL_AUTO": {
-      "value": "NO_SIMD ? vector_backed : simd_vector_backed",
-      "description": "Resolution of VECTOR_IMPL when vector_impl is auto. meson.build resolves acacia_no_simd once for both the generated header and the posets_vector_impl component gates.",
+      "value": "simd_vector_backed",
+      "description": "Fixed SIMD vector representation, using the portable SIMD dependency when the compiler lacks experimental/simd.",
       "sources": [
         "meson.build",
         "src/config/acacia_build_config.hh.in"

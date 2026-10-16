@@ -12,23 +12,6 @@ import pytest
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "acacia-config.py"
 
-NEW_OPTION_CASES = [
-    ("spot_taa_max_rank_nodes", "ACACIA_SPOT_TAA_MAX_RANK_NODES", 200000, 1000, "1000"),
-    ("symmetry_profile", "ACACIA_SYMMETRY_PROFILE", False, True, "1"),
-    ("equivariant_max_output_letters", "ACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS",
-     4096, 8192, "8192"),
-    ("equivariant_max_orbits", "ACACIA_EQUIVARIANT_MAX_ORBITS", 4096, 8192, "8192"),
-    ("equivariant_max_sweep_clients", "ACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS", 4, 0, "0"),
-    ("equivariant_exhaustive_detect", "ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT",
-     False, True, "1"),
-    ("equivariant_validate_fast_recognition", "ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION",
-     False, True, "1"),
-    ("symmetry_verbose_diagnostics", "ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS",
-     False, True, "1"),
-    ("forward_eager_minimal_successors", "ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS",
-     False, True, "1"),
-    ("transition_acceptance", "ACACIA_TRANSITION_ACCEPTANCE", False, True, "1"),
-]
 
 
 def load_module(script=SCRIPT):
@@ -50,30 +33,6 @@ def test_committed_registry_is_valid():
     module.command_validate(options, presets)
 
 
-def test_p4_final_candidate_inherits_only_native_arms_and_portfolio():
-    module = load_module()
-    options, presets = module.load_registry()
-    name = "otf_sparse_formula_gr1_lift"
-    data = presets["presets"][name]
-    assert data["role"] == "sweep"
-    assert data["inherits"] == "otf_sparse_formula"
-    assert set(data) == {"description", "role", "inherits", "native_arms", "default_arms"}
-    assert name not in presets["groups"]["docker_default"]
-
-    parent = module.normalize_preset(options, presets, "otf_sparse_formula")
-    candidate = module.normalize_preset(options, presets, name)
-    assert candidate["default_arms"].split(",") == [
-        "real:small:backward",
-        "real:small:forward",
-        "unreal:formula:spot-guarded-sparse",
-        "unreal:automaton:forward",
-        "both:gr1:oxidd",
-        "real:param-lift:oxidd",
-    ]
-    assert candidate["native_arms"] is True
-    assert {
-        key for key in candidate if key not in {"_preset", "preset"} and candidate[key] != parent[key]
-    } == {"native_arms", "default_arms"}
 
 
 def test_gr1_prepass_preset_is_five_arms():
@@ -94,12 +53,12 @@ def test_gr1_prepass_preset_is_five_arms():
 def test_gr1_real_prepass_preset_is_six_arms():
     module = load_module()
     options, presets = module.load_registry()
-    parent = module.normalize_preset(options, presets, "otf_sparse_formula")
-    name = "otf_sparse_formula_gr1_real_prepass"
+    shipping = presets["groups"]["docker_default"]
+    parent = module.normalize_preset(options, presets, shipping[2])
+    name = shipping[1]
     data = presets["presets"][name]
     assert data["role"] == "shipping"
     assert name in presets["groups"]["docker_default"]
-    assert data["inherits"] == "otf_sparse_formula"
     candidate = module.normalize_preset(options, presets, name)
     assert candidate["native_arms"] is True
     assert candidate["default_arms"].split(",") == [
@@ -129,7 +88,8 @@ def test_obligation_membership_is_explicit_in_shipping_portfolios():
                 options, values)
         else:
             assert arm not in arms, name
-    fallback = module.normalize_preset(options, presets, "otf_sparse_formula")
+    fallback = module.normalize_preset(
+        options, presets, presets["groups"]["docker_default"][2])
     assert fallback["native_arms"] is False
     assert arm in fallback["default_arms"].split(",")
     assert options["options"]["default_arms"]["default"] == ""
@@ -141,7 +101,6 @@ def test_first_shipping_preset_adds_only_parity_to_the_previous_default():
     shipping = presets["groups"]["docker_default"]
     name, previous = shipping[:2]
     assert presets["presets"][name]["role"] == "shipping"
-    assert presets["presets"][name]["inherits"] == previous
     baseline = module.normalize_preset(options, presets, previous)
     candidate = module.normalize_preset(options, presets, name)
     assert candidate["default_arms"] == baseline["default_arms"] + ",both:parity:spot"
@@ -170,27 +129,6 @@ def test_config_validation_rejects_stale_docker_list(tmp_path, monkeypatch):
         module.command_validate(options, presets)
 
 
-def test_candidate_mode_default_and_bounded_taa_presets():
-    module = load_module()
-    options, presets = module.load_registry()
-    defaults = module.defaults(options)
-    assert defaults['default_candidate_mode'] == 'only'
-    assert defaults['spot_taa_max_rank_nodes'] == 200000
-    assert '-DACACIA_DEFAULT_CANDIDATE_MODE=acacia::candidate_mode::only' in module.preprocessor_flags(options, defaults)
-    template = (ROOT / 'src/config/acacia_build_config.hh.in').read_text()
-    assert '# define ACACIA_DEFAULT_CANDIDATE_MODE @ACACIA_DEFAULT_CANDIDATE_MODE@' in template
-    for provider in ['lazy', 'eager']:
-        name = 'otf_taa_fallback_' + provider
-        values = module.normalize_preset(options, presets, name)
-        assert values['default_candidate_mode'] == 'fallback'
-        assert values['spot_taa_max_rank_nodes'] == 1000
-        assert '-DACACIA_DEFAULT_CANDIDATE_MODE=acacia::candidate_mode::fallback' in module.preprocessor_flags(options, values)
-        assert '-Dacacia_spot_taa_max_rank_nodes=1000' in module.meson_args(options, values)
-        arms = values['default_arms'].split(',')
-        assert len(arms) == 4
-        assert {'real:small:forward', 'unreal:formula:forward', 'unreal:automaton:forward'} <= set(arms)
-        assert 'real:small:spot-guarded:spot-' + provider in arms
-        assert name not in presets['groups']['docker_default']
 
 
 def test_every_preset_has_its_own_description_and_role():
@@ -203,13 +141,6 @@ def test_every_preset_has_its_own_description_and_role():
         if module.normalize_preset(options, presets, name)["enable_diagnostics"]:
             assert data["role"] == "diagnostic", name
 
-    assert presets["presets"]["best_decomp_mona"]["role"] == "reference"
-    for group in ("posets_downset_sweep", "local_tuning_default"):
-        for name in presets["groups"][group]:
-            # The plain-vector reference and shipped translation arm also
-            # participate in these comparisons; their primary roles take precedence.
-            if name != "best_decomp_mona" and name not in presets["groups"]["docker_default"]:
-                assert presets["presets"][name]["role"] == "sweep", name
 
 
 @pytest.mark.parametrize("key,value", [
@@ -267,7 +198,7 @@ def test_naming_lint_accepts_all_grandfathered_names():
     module = load_module()
     _, presets = module.load_registry()
     grandfathered = presets["naming"]["grandfathered"]
-    assert len(grandfathered) == len(set(grandfathered)) == 43
+    assert len(grandfathered) == len(set(grandfathered))
     assert set(grandfathered) <= set(presets["presets"]) | set(presets["aliases"])
     # Make the limits deliberately impossible for these names: the exemption
     # must cover both length and tokens, including the bare name 'best'.
@@ -503,52 +434,8 @@ def test_registry_meson_types_choices_and_bounds_agree():
         assert set(family["choices"]) == set(declared["choices"]), family["meson"]
 
 
-@pytest.mark.parametrize("name,macro,default,selected,encoded", NEW_OPTION_CASES)
-def test_new_options_preserve_defaults_and_flow_through_frontends(
-    name, macro, default, selected, encoded,
-):
-    module = load_module()
-    options, _ = module.load_registry()
-    option = options["options"][name]
-    assert option["default"] == default
-    assert f"-D{macro}={int(default)}" in module.preprocessor_flags(
-        options, module.defaults(options)
-    )
-    if isinstance(default, bool):
-        assert option["type"] == "boolean"
-        assert option["macros"] == [
-            {"name": macro, "emit": "always", "encoding": "bool_int"}
-        ]
-
-    presets = {"presets": {"custom": {name: selected}}}
-    if name == "transition_acceptance":
-        presets["presets"]["custom"].update(
-            boolean_states="transition_core", aut_preprocessor="standard",
-        )
-    module.validate_preset(options, presets, "custom")
-    values = module.normalize_preset(options, presets, "custom")
-    meson_value = str(selected).lower() if isinstance(selected, bool) else str(selected)
-    assert f"-D{option['meson']}={meson_value}" in module.meson_args(options, values)
-    assert f"-D{macro}={encoded}" in module.preprocessor_flags(options, values)
-
-    template = (ROOT / "src/config/acacia_build_config.hh.in").read_text()
-    assert f"#ifndef {macro}\n# define {macro} @{macro}@\n#endif" in template
 
 
-def test_transition_core_preset_selects_type_and_exactly_one_family_gate():
-    module = load_module()
-    options, _ = module.load_registry()
-    presets = {"presets": {"custom": {"boolean_states": "transition_core"}}}
-    module.validate_preset(options, presets, "custom")
-    values = module.normalize_preset(options, presets, "custom")
-    flags = module.preprocessor_flags(options, values)
-    assert "-Dacacia_boolean_states=transition_core" in module.meson_args(options, values)
-    assert "-DBOOLEAN_STATES=boolean_states::transition_core" in flags
-    assert "-DACACIA_ENABLE_BOOLEAN_STATES_TRANSITION_CORE=1" in flags
-    assert "-DACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION=0" in flags
-    assert "-DACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES=0" in flags
-    default_flags = module.preprocessor_flags(options, module.defaults(options))
-    assert "-DACACIA_ENABLE_BOOLEAN_STATES_TRANSITION_CORE=0" in default_flags
 
 
 def test_constants_are_documentation_only():
@@ -667,7 +554,7 @@ def test_all_groups_reference_existing_presets_and_shipping_is_unique():
 
     # Shipping membership and order come from the registry, not a fixed menu.
     docker_default = presets["groups"]["docker_default"]
-    assert docker_default
+    assert len(docker_default) == 4
     assert len(set(docker_default)) == len(docker_default)
     for name in docker_default:
         assert name in presets["presets"]
@@ -709,66 +596,24 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     options, _ = module.load_registry()
     values = module.defaults(options)
     values.update({
-        "default_k": 6,
-        "default_unreal_x": "formula",
-        "default_spot_fast": "det_and_gfg",
-        "translation_pref": "small+any",
-        "enable_realizability_simplifier": False,
-        "k_schedule": "geometric",
+        "translation_pref": "any",
         "simd_is_max": False,
-        "no_simd": True,
-        "compile_all_components": True,
         "enable_diagnostics": True,
         "default_arms": "real:identity:backward,unreal:identity:forward",
-        "local_certificate": True,
         "forward_safety_solver": True,
-        "forward_conditional_covering": True,
-        "vector_impl": "vector_backed",
     })
-
     expected = [
-        "-DDEFAULT_K=6",
-        "-DDEFAULT_KMIN=2",
-        "-DDEFAULT_KINC=3",
-        "-DDEFAULT_UNREAL_X=UNREAL_X_FORMULA",
-        "-DDEFAULT_SPOT_FAST=SPOT_FAST_DET_AND_GFG",
-        "-DACACIA_TRANSLATION_PREF=spot::postprocessor::Small",
-        "-DACACIA_TRANSLATION_PREFS=spot::postprocessor::Small, spot::postprocessor::Any",
-        "-DACACIA_ENABLE_REALIZABILITY_SIMPLIFIER=0",
-        "-DACACIA_ENABLE_SYNTACTIC_BYPASS=1",
+        "-DACACIA_TRANSLATION_PREF=spot::postprocessor::Any",
+        "-DACACIA_TRANSLATION_PREFS=spot::postprocessor::Any",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",
-        "-DACACIA_PROFILE_DOMINANCE=0",
-        "-DACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS=0",
-        "-DACACIA_K_SCHEDULE=acacia::k_schedule::kind::geometric",
         "-DACACIA_ENABLE_TLSF_FRONTEND=1",
         "-DACACIA_NATIVE_ARMS=0",
-        "-DACACIA_EQUIVARIANT_MAX_STATES=512",
-        "-DACACIA_SYMMETRY_PROFILE=0",
-        "-DACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS=4096",
-        "-DACACIA_EQUIVARIANT_MAX_ORBITS=4096",
-        "-DACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS=4",
-        "-DACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT=0",
-        "-DACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION=0",
-        "-DACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS=0",
-        "-DACACIA_EQUIVARIANT_MIN_CLIENTS=3",
-        "-DACACIA_EQUIVARIANT_MIN_BLOCKS=2",
         "-DSIMD_IS_MAX=false",
-        "-DDECOMPOSE_SPEC=1",
-        "-DCPRE_AVOID_UNIONS=0",
         "-DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed",
-        "-DNO_SIMD",
-        "-DACACIA_COMPILE_ALL_COMPONENTS=1",
         "-DACACIA_ENABLE_DIAGNOSTICS=1",
         r'-DACACIA_DEFAULT_ARMS=\"real:identity:backward,unreal:identity:forward\"',
-        "-DACACIA_DEFAULT_CANDIDATE_MODE=acacia::candidate_mode::only",
-        "-DACACIA_SPOT_TAA_MAX_RANK_NODES=200000",
-        "-DACACIA_LOCAL_CERTIFICATE=1",
-        "-DACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT=30",
         "-DACACIA_FORWARD_SAFETY_SOLVER=1",
-        "-DACACIA_FORWARD_CONDITIONAL_COVERING=1",
         "-DACACIA_ENABLE_EQUIVARIANT_SOLVER=1",
-        "-DACACIA_TRANSITION_ACCEPTANCE=0",
-        "-DVECTOR_IMPL=vector_backed",
     ]
     flags = module.preprocessor_flags(options, values)
 
@@ -861,3 +706,34 @@ def test_validate_preset_rejects_invalid_choice_value():
             presets = {"presets": {"bad": {name: "invalid"}}}
             with pytest.raises(SystemExit, match=f"bad: invalid {name}=invalid"):
                 module.validate_preset(options, presets, "bad")
+
+
+@pytest.mark.parametrize("count", [0, 3, 5])
+def test_config_validation_requires_exactly_four_shipping_members(count):
+    module = load_module()
+    options, presets = module.load_registry()
+    members = presets["groups"]["docker_default"]
+    presets["groups"]["docker_default"] = (members + [members[0]])[:count]
+    with pytest.raises(SystemExit, match="exactly four distinct members"):
+        module.command_validate(options, presets)
+
+
+def test_config_validation_rejects_duplicate_shipping_members():
+    module = load_module()
+    options, presets = module.load_registry()
+    members = presets["groups"]["docker_default"]
+    members[-1] = members[0]
+    with pytest.raises(SystemExit, match="exactly four distinct members"):
+        module.command_validate(options, presets)
+
+
+def test_kept_presets_are_flat_and_each_selector_varies():
+    module = load_module()
+    options, presets = module.load_registry()
+    assert all("inherits" not in data for data in presets["presets"].values())
+    resolved = [module.normalize_preset(options, presets, name) for name in presets["presets"]]
+    for section in ("options", "families"):
+        for name, option in options[section].items():
+            if name in {"native_arms", "enable_tlsf_frontend", "preset"}:
+                continue
+            assert any(values[name] != option["default"] for values in resolved), name

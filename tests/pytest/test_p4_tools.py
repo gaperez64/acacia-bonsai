@@ -1193,7 +1193,7 @@ def mixed_comparison_fixture(tmp_path, monkeypatch):
                 {**shared, "label": "E5", "kind": "race", "portfolio_size": 5,
                  "arms": five},
                 {**shared, "label": "final", "kind": "race", "portfolio_size": 6,
-                 "preset": "otf_sparse_formula_gr1_lift", "arms": six,
+                 "preset": "frozen_fixture", "arms": six,
                  "use_default_arms": True, "build_options": options.name}]}
     comparison = tmp_path / "comparison.json"
     comparison.write_text(json.dumps(spec))

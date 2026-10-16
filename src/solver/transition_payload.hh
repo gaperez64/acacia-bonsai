@@ -7,9 +7,6 @@
 #include <type_traits>
 #include <utility>
 
-#ifndef ACACIA_TRANSITION_ACCEPTANCE
-# define ACACIA_TRANSITION_ACCEPTANCE 0
-#endif
 
 namespace acacia::transitions {
   struct triple {
@@ -18,11 +15,7 @@ namespace acacia::transitions {
       bool acc = false;
   };
 
-#if ACACIA_TRANSITION_ACCEPTANCE
-  using element = triple;
-#else
   using element = std::pair<int, int>;
-#endif
 
   namespace detail {
     template <typename Payload, typename Edge>

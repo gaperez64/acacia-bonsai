@@ -124,15 +124,6 @@ namespace {
                   acacia::transitions::source (into_accepting_state) == 7 and
                       acacia::transitions::dest (into_accepting_state) == 1);
 
-#if ACACIA_TRANSITION_ACCEPTANCE
-    static_assert (std::is_same_v<acacia::transitions::element,
-                                  acacia::transitions::triple>);
-    ok &= expect ("triple ignores accepting destination state",
-                  not acacia::transitions::increment (into_accepting_state, aut));
-    ok &= expect ("triple uses accepting incoming edge",
-                  acacia::transitions::increment (
-                      accepting_into_nonaccepting_state, aut));
-#else
     static_assert (std::is_same_v<acacia::transitions::element,
                                   std::pair<int, int>>);
     ok &= expect ("pair uses accepting destination state",
@@ -140,7 +131,6 @@ namespace {
     ok &= expect ("pair ignores accepting incoming edge",
                   not acacia::transitions::increment (
                       accepting_into_nonaccepting_state, aut));
-#endif
     return ok;
   }
 
@@ -161,21 +151,12 @@ namespace {
     }
     const auto& action_vec = input_actions.front ().second.front ();
 
-#if ACACIA_TRANSITION_ACCEPTANCE
-    ok &= expect_action ("parallel edges and accepting self-loop", action_vec[1],
-                         {{0, false}, {0, true}, {1, true}});
-    ok &= expect_action ("accepting edge into nonaccepting state", action_vec[3],
-                         {{2, true}, {3, false}});
-    ok &= expect_action ("mixed incoming edge acceptance", action_vec[4],
-                         {{0, true}, {1, false}, {2, true}, {4, false}});
-#else
     ok &= expect_action ("parallel edges and state fallback", action_vec[1],
                          {{0, true}, {0, true}, {1, true}});
     ok &= expect_action ("nonaccepting destination fallback", action_vec[3],
                          {{2, false}, {3, false}});
     ok &= expect_action ("mixed incoming edges use destination fallback", action_vec[4],
                          {{0, false}, {1, false}, {2, false}, {4, false}});
-#endif
 
     const rank_state ranks {
         static_cast<VECTOR_ELT_T> (6), static_cast<VECTOR_ELT_T> (2),
@@ -186,17 +167,10 @@ namespace {
     const auto backward = rank_action.apply (
         ranks, action_vec, actioners::direction::backward);
 
-#if ACACIA_TRANSITION_ACCEPTANCE
-    ok &= expect_rank ("transition-acceptance forward ranks", forward,
-                       {-1, 7, -1, 8, 8});
-    ok &= expect_rank ("transition-acceptance backward ranks", backward,
-                       {-1, 0, -1, 1, 0});
-#else
     ok &= expect_rank ("state-acceptance forward ranks", forward,
                        {-1, 7, -1, 7, 7});
     ok &= expect_rank ("state-acceptance backward ranks", backward,
                        {0, 0, 0, 1, 0});
-#endif
     return ok;
   }
 }

@@ -28,7 +28,7 @@ namespace {
 
   using namespace acacia::research;
 
-  using state = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
+  using state = posets::vectors::simd_vector_backed<VECTOR_ELT_T>;
   using SetOfStates = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<state>;
 
   SetOfStates replay (const event& ev) {

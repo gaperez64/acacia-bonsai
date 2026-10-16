@@ -83,7 +83,7 @@ so Valgrind is only needed if you ask for it.
 
 ## Installing dependencies on macOS
 
-Note that on macOS the compilation has to happen via GCC. 
+Note that on macOS the compilation has to happen via GCC.
 GCC can be installed using Homebrew: `brew install gcc`. Once installed,
 meson needs to be told to use GCC instead of built-in Clang. This can be done
 using the meson-native file, or by setting the `CXX` and `CC` environment variables.
@@ -163,24 +163,18 @@ result into `acacia_build_config.hh`.
 
 The options pick data structures and algorithms, for instance:
 
-- `acacia_vector_downset`: the downset representation (`vector_backed`,
-  `rank_bucketed_vector_backed`, `kdtree_backed`, `bboxtree_backed`, sharing
-  trees, and others).
-- `acacia_vector_impl`: the vector type stored in the downset, SIMD or plain
-  (`auto` follows `acacia_no_simd`).
-- `acacia_forward_safety_solver`: use the on-the-fly forward safety-game solver
-  instead of the backward antichain fixed point.
-- `acacia_ios_precomputer`: how input/output letters are precomputed
-  (`standard`, `mona`, `semantic_mona`, ...).
-- `acacia_k_schedule`: how the K loop raises its bound (`linear`, `geometric`,
-  ...), with `acacia_default_k`, `_kmin` and `_kinc` setting its parameters.
-- `acacia_translation_pref`: the Spot translator preference, `small` by default,
-  also `any`, `small+any` and `deterministic`.
-- `acacia_decompose_spec`: decompose the specification before solving.
-- `acacia_enable_equivariant_solver`: compile the exact equivariant solver. It
-  declines to the classic solver when no verified profitable symmetry is
-  available, or when fewer than `acacia_equivariant_min_blocks` client-state
-  blocks are found.
+- `acacia_vector_downset`: the downset representation (`vector_backed` or
+  `rank_bucketed_vector_backed`), storing SIMD vectors.
+- `acacia_forward_safety_solver`: use the on-the-fly forward safety-game solver.
+- `acacia_ios_precomputer`: input/output precomputation (`standard`, `mona`,
+  `semantic_mona`).
+- `acacia_translation_pref`: the Spot translator preference (`small` or `any`).
+- `acacia_enable_equivariant_solver`: compile the exact equivariant solver,
+  which declines to the classic solver when no verified profitable symmetry is available.
+
+K starts at 2, increases by 3, and stops at 99 by default. The CLI's K options
+can override these bounds and increment. Specification decomposition and the
+realizability-preserving simplifier are always enabled on their applicable paths.
 
 Some configurations take Spot's on-the-fly paths instead of the frozen automaton
 graph, gated by `-Dacacia_spot_guarded_backend` and `-Dacacia_spot_lazy_provider`
@@ -211,12 +205,9 @@ best.
 Each preset declares a `role`: `shipping` for `docker_default` members,
 `reference` for measurement controls, `sweep` for comparison arms, `diagnostic`
 for instrumented builds, `legacy` for historical configurations.
-`best_decomp_mona` is the plain vector-backed downset configuration, kept as the
-reference point for downset comparisons, and
-`best_decomp_rank_bucketed_mona_noequivariant` is the classic-solver-only
-ablation. A new preset inherits from the nearest existing configuration and
-overrides only the values being tested; new names are limited to 40 characters
-and cannot contain `best`, while existing names are grandfathered.
+Retained historical presets also identify frozen baselines in
+`benchmarking/baselines.tsv`. New names are limited to 40 characters and cannot
+contain `best`, while existing names are grandfathered.
 
 # Documentation
 

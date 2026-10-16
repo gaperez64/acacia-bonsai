@@ -318,7 +318,7 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'source-format diagnostic label',
     ('src/solver/diagnostics.hh', ' tlsf_gr_level='):
         'diagnostic field for GR level',
-    ('src/solver/solver_invoker.cc', 'Error parsing LTL formula'):
+    ('src/solver/formula_input.hh', 'Error parsing LTL formula'):
         'generic input parser error',
     ('src/solver/solver_invoker.cc', 'no-input-ltl-synthesis'):
         'diagnostic reason for the no-input synthesis path',
@@ -373,8 +373,6 @@ SAFE_ENV_READS = {
     ("src/solver/diagnostics.hh", "name"): "helper receives fixed diagnostic option names",
     ("src/solver/diagnostics.hh", "ACACIA_DIAG_PREPROCESSING_CENSUS"): "diagnostic census",
     ("src/solver/diagnostics.hh", "ACACIA_DIAG_PROGRESS_EVERY"): "diagnostic output frequency",
-    ("src/solver/diagnostics.hh", "ACACIA_LOCAL_CERTIFICATE_TRACE"): "certificate tracing",
-    ("src/solver/losing_proof_replay.hh", "ACACIA_REPLAY_TRACE"): "replay tracing",
     ("src/solver/spot_worker_record.hh", "ACACIA_SPOT_CAPTURE_DIR"): "capture output directory",
     ("src/solver/spot_worker_record.hh", "ACACIA_SPOT_CAPTURE_HISTORY"): "capture history setting",
     ("src/solver/spot_worker_record.hh", "ACACIA_DIAG_INSTANCE"): "capture label only",
@@ -1171,12 +1169,12 @@ def mutation_case(kind: str, ids: Identities) -> tuple[Path, str, str, str]:
                   if len(name) > 12 and "_" in name
                   and name[:3] not in ids.families and name[3:] not in ids.families)
     cases = {
-        "basename": ("src/solver/real_backend_selector.hh",
+        "basename": ("src/solver/game_backend.hh",
                      f'\nconstexpr auto target = "{basename}";\n', "identity literal", "identity"),
-        "split family": ("src/solver/real_backend_selector.hh",
+        "split family": ("src/solver/game_backend.hh",
                          f'\nconstexpr auto target = "{family[:3]}" "{family[3:]}";\n',
                          "identity literal", "identity"),
-        "embedded family": ("src/solver/real_backend_selector.hh",
+        "embedded family": ("src/solver/game_backend.hh",
                             '\nconstexpr auto label = "prefix_arbiter_suffix";\n',
                             "identity literal", "identity"),
         "short family": ("src/new_solver.cc",
@@ -1214,31 +1212,31 @@ def mutation_case(kind: str, ids: Identities) -> tuple[Path, str, str, str]:
                                     '  auto key =\n    basename(source_path);\n'
                                     '  if (key ==\n      "ordinary") return 2;\n}\n',
                                     "basename alias verdict", "alias"),
-        "corpus hash": ("src/solver/real_backend_selector.hh",
+        "corpus hash": ("src/solver/game_backend.hh",
                         f'\nconstexpr auto target = "{min(ids.digests)}";\n',
                         "identity literal", "identity"),
-        "macro basename": ("src/solver/real_backend_selector.hh",
+        "macro basename": ("src/solver/game_backend.hh",
                            f'\n#define PART_A "{basename[:len(basename) // 2]}"\n'
                            f'#define PART_B "{basename[len(basename) // 2:]}"\n'
                            '#define TARGET PART_A PART_B\n'
                            'if (source_name == TARGET) return true;\n',
                            "macro-expanded identity literal", "macro"),
-        "macro split family": ("src/solver/real_backend_selector.hh",
+        "macro split family": ("src/solver/game_backend.hh",
                                f'\n#define FAMILY_A "{family[:3]}"\n'
                                f'#define FAMILY_B "{family[3:]}"\n'
                                '#define TARGET FAMILY_A FAMILY_B\n'
                                'if (source_name == TARGET) return true;\n',
                                "macro-expanded identity literal", "macro"),
-        "macro family name": ("src/solver/real_backend_selector.hh",
+        "macro family name": ("src/solver/game_backend.hh",
                               '\n#define arbiter 1\n'
                               'if (source_name == arbiter) return true;\n',
                               "macro identity verdict", "macro"),
-        "alias next line": ("src/solver/real_backend_selector.hh",
+        "alias next line": ("src/solver/game_backend.hh",
                             '\nauto input_name = basename(source_path);\n'
                             'auto copied_name = input_name;\n'
                             'if (copied_name == "special") return EXIT_CODE_REAL;\n',
                             "basename alias verdict", "alias"),
-        "verdict map": ("src/solver/real_backend_selector.hh",
+        "verdict map": ("src/solver/game_backend.hh",
                         '\nauto input_name = basename(source_path);\n'
                         'return verdict_map[input_name];\n',
                         "basename verdict-map lookup", "alias"),
@@ -1250,11 +1248,11 @@ def mutation_case(kind: str, ids: Identities) -> tuple[Path, str, str, str]:
                             '\nauto key = std::getenv (name);\n'
                             'return verdict_map[key];\n',
                             "environment verdict-map lookup", "alias"),
-        "hash verdict": ("src/solver/real_backend_selector.hh",
+        "hash verdict": ("src/solver/game_backend.hh",
                          '\nauto key = sha256(input_bytes);\n'
                          'if (key == "special") return REALIZABLE;\n',
                          "hash alias verdict", "alias"),
-        "hash map": ("src/solver/real_backend_selector.hh",
+        "hash map": ("src/solver/game_backend.hh",
                      '\nauto key = sha256(input_bytes);\n'
                      'return verdict_map[key];\n',
                      "hash verdict-map lookup", "alias"),
@@ -1318,7 +1316,7 @@ MUTATIONS = ("basename", "split family", "embedded family", "short family",
 def test_guard_rejects_solver_mutations(kind: str, tmp_path: Path) -> None:
     ids = corpus_identities()
     logical, injection, expected, _ = mutation_case(kind, ids)
-    template = ROOT / "src/solver/real_backend_selector.hh" if not logical.exists() else logical
+    template = ROOT / "src/solver/game_backend.hh" if not logical.exists() else logical
     mutant = tmp_path / logical.name
     mutant.write_text(template.read_text(encoding="utf-8") + injection, encoding="utf-8")
     source = mutant.read_text(encoding="utf-8")
@@ -1331,7 +1329,7 @@ def test_guard_rejects_solver_mutations(kind: str, tmp_path: Path) -> None:
 def test_mutation_requires_its_detector(kind: str, tmp_path: Path) -> None:
     ids = corpus_identities()
     logical, injection, expected, detector = mutation_case(kind, ids)
-    template = ROOT / "src/solver/real_backend_selector.hh" if not logical.exists() else logical
+    template = ROOT / "src/solver/game_backend.hh" if not logical.exists() else logical
     mutant = tmp_path / logical.name
     mutant.write_text(template.read_text(encoding="utf-8") + injection, encoding="utf-8")
     source = mutant.read_text(encoding="utf-8")
@@ -1348,7 +1346,7 @@ def test_every_detector_has_a_disabling_mutation() -> None:
     covered = set()
     for kind in MUTATIONS:
         logical, injection, _, detector = mutation_case(kind, ids)
-        template = ROOT / "src/solver/real_backend_selector.hh" if not logical.exists() else logical
+        template = ROOT / "src/solver/game_backend.hh" if not logical.exists() else logical
         source = template.read_text(encoding="utf-8") + injection
         active = [hit for hit in file_hits(logical, source, ids)
                   if allowed_hit(hit, source) is None]
@@ -1467,7 +1465,7 @@ def test_literal_exception_is_exact() -> None:
 def test_comments_are_evidence_but_directives_are_code(comment: str) -> None:
     ids = corpus_identities()
     basename = next(name for name in sorted(ids.basenames) if len(name) > 20)
-    path = ROOT / "src/solver/real_backend_selector.hh"
+    path = ROOT / "src/solver/game_backend.hh"
     ending = " */" if comment == "/*" else ""
     source = f'int x = 0; {comment} evidence: {basename}{ending}\n'
     assert not identity_hits(path, source, ids)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile the backward solver with registry-selected tree downsets."""
+"""Compile the backward solver with registry-selected downsets."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ def main():
     for preset in presets:
         options = json.loads(subprocess.check_output(registry + ['show', preset], text=True))
         backend = options['vector_downset']
-        if backend not in {'bboxtree_backed', 'kdtree_backed'} or backend in checked:
+        if backend in checked:
             continue
         assert options['enable_equivariant_solver'], preset
         flags = [f'-DVECTOR_AND_BITSET_DOWNSET_IMPL={backend}',
@@ -42,7 +42,8 @@ def main():
             failures.append(preset)
         print(f'{preset}: return code {result.returncode}', flush=True)
     assert not failures, failures
-    assert checked == {'bboxtree_backed', 'kdtree_backed'}, checked
+    options = json.loads((root / 'config/acacia-options.json').read_text())
+    assert checked == set(options['options']['vector_downset']['choices']), checked
 
 
 if __name__ == '__main__':

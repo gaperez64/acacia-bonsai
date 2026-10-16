@@ -56,9 +56,9 @@ namespace {
     return state (vector);
   }
 
-  // Actual wrapper verdicts and published decision counters, plus eager and
+  // Actual wrapper verdicts and published decision counters, plus
   // lazy fixed-K results. Timing and demand fields are deliberately excluded.
-  using signature = std::array<unsigned long long, 48>;
+  using signature = std::array<unsigned long long, 36>;
 
   signature solve_cases () {
     signature result {};
@@ -105,20 +105,17 @@ namespace {
       auto actioner = maker.make (aut, inputs, 2);
       const auto initial = rank ({0, -1, -1, -1});
       const auto safe = rank ({1, 1, 1, 0});
-      diag::scoped_child child {"gate-eager-lazy"};
+      diag::scoped_child child {"gate-forward"};
       diag::set_support_graph (aut);
       diag::set_support_actions (actioner.actions ());
-      const auto lazy = solve_forward_reachable_safety<SetOfStates, false> (
+      const auto lazy = solve_forward_reachable_safety<SetOfStates> (
           initial, safe, actioner.actions (), actioner);
       const auto lazy_applications = diag::current ()->support_demand.search_applications;
-      const auto eager = solve_forward_reachable_safety<SetOfStates, true> (
-          initial, safe, actioner.actions (), actioner);
       if (diag::support_demand_enabled ()) {
         expect ("every lazy application recorded", lazy_applications == lazy.raw_actions);
-        expect ("every eager application recorded",
-                diag::current ()->support_demand.search_applications - lazy_applications == eager.raw_actions);
+
       }
-      for (const auto* run : {&lazy, &eager}) {
+      for (const auto* run : {&lazy}) {
         result[next++] = static_cast<unsigned> (run->status);
         result[next++] = run->env_nodes;
         result[next++] = run->ctrl_nodes;

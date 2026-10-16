@@ -52,28 +52,7 @@ namespace ios_precomputers {
 
      *Implementations.*
 
-     Two implementations are provided; powset.hh and fake_vars.hh:
-
-     - powset.hh:
-
-     1. C' = {U}  (recall that U is our universe, with BDDs this would be True)
-     2. for each S in C:
-     3.   for each S' in C':
-     4.     if (S cap S' is not empty)
-     5.        Remove S' from C'
-     6.        Add (S cap S') and (S^c cap S') to C' (^c denotes complement).
-
-     - fake_vars.hh:
-
-     I encode C' as a BDD itself, introducing lots of fresh variables; namely,
-     if C' = {F, G} for two BDDs F and G, I introduce two fresh variables X_F
-     and X_G, and encode C' as (F & X_F) | (G & X_G).  This allows lines 3 and 4
-     to become:
-
-     3. Compute C' & S and project it on the X_? variables.
-     4. Iterate through each of the variables that appear: if X_S' appears, this means that S cap
-     S' is nonempty.
-     */
+    */
     template <typename RetSet, typename FormSet, typename Projection>
     auto power (const FormSet& formulas_to_transs, const Projection& projection) {
       RetSet powset;
@@ -106,41 +85,5 @@ namespace ios_precomputers {
       return powset;
     }
 
-    template <typename Aut, typename TransSet>
-    class powset {
-      public:
-        powset (Aut aut, bdd input_support, bdd output_support)
-          : aut {aut},
-            input_support {input_support},
-            output_support {output_support} {}
-
-        auto operator() () const {
-          using crossings_t = typename std::list<std::pair<bdd, TransSet>>;
-          using input_to_ios_t = typename std::list<std::pair<bdd, std::list<TransSet>>>;
-
-          auto crossings = power<crossings_t> (
-              transition_enumerator (
-                  aut, [] (const auto& e) {
-                    return acacia::transitions::make (e.src, e.dst, e);
-                  }),
-              [] (bdd b) { return b; });
-
-          return power<input_to_ios_t> (crossings,
-                                        [this] (bdd b) { return bdd_exist (b, output_support); });
-        }
-
-      private:
-        Aut aut;
-        const bdd input_support, output_support;
-    };
-
-  }
-
-  struct powset {
-      template <typename Aut,
-                typename TransSet = std::vector<acacia::transitions::element>>
-      static auto make (Aut aut, bdd input_support, bdd output_support) {
-        return detail::powset<Aut, TransSet> (aut, input_support, output_support);
-      }
-  };
-}
+  }  // namespace detail
+}  // namespace ios_precomputers

@@ -99,24 +99,14 @@ namespace acacia::solver_detail {
             safe_vector[i] = 0;
           const state safe {safe_vector};
 
-          // The local search object is intentionally reconstructed at every K.
-          // Both knobs are runtime-configurable so a sweep can measure what
-          // they are worth on real instances without a rebuild per arm.  The
-          // The shipped lazy path uses the antichain but never consults the
-          // minimisation threshold.  The threshold remains runtime-tunable for
-          // ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS comparison builds.
+          // Rebuild the rank search at each K; retain runtime antichain control.
           static const bool use_antichain =
               acacia::diagnostics::env_size ("ACACIA_FORWARD_LOSING_ANTICHAIN", 1, true) != 0;
-          static const std::size_t minimisation_threshold =
-              acacia::diagnostics::env_size ("ACACIA_FORWARD_MINIMISATION_THRESHOLD",
-                                             default_controller_minimisation_threshold, true);
           if (auto* w = acacia::active_worker_record (); w && acacia::phase_records_enabled ())
             w->k = k;
           acacia::legacy_phase searching ("search");
-          const auto attempt_started = clock::now ();
           auto result = solve_forward_reachable_safety<SetOfStates> (
-              initial, safe, input_output_fwd_actions, actioner, limits, use_antichain,
-              minimisation_threshold);
+              initial, safe, input_output_fwd_actions, actioner, limits, use_antichain);
           acacia::diagnostics::set_forward_attempt (
               static_cast<int> (k), forward_result_name (result.status),
               result.status == forward_result_status::resource_limit
@@ -144,17 +134,7 @@ namespace acacia::solver_detail {
               finish ("forward-kmax-lose");
               return std::nullopt;
             }
-            const acacia::k_schedule::loss_evidence evidence {
-                std::chrono::duration_cast<std::chrono::milliseconds> (clock::now () -
-                                                                       attempt_started)
-                    .count (),
-                result.losing_antichain_peak,
-                result.env_expanded + result.ctrl_expanded,
-                not result.losing_proofs.empty (),
-            };
-            const auto next_k = acacia::k_schedule::next (
-                ACACIA_K_SCHEDULE, static_cast<long long> (k), static_cast<long long> (kfrom),
-                static_cast<long long> (kto), static_cast<long long> (kinc), evidence);
+            const auto next_k = acacia::k_schedule::next (static_cast<long long> (k), static_cast<long long> (kfrom), static_cast<long long> (kto), static_cast<long long> (kinc));
             if (not next_k.has_value ()) {
               finish ("forward-kmax-lose");
               return std::nullopt;

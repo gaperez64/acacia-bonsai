@@ -6,7 +6,7 @@
 #include "research/explicit_forward_game.hh"
 #include "solver/certificate_verifier.hh"
 #include "solver/forward_reachable_safety.hh"
-#include "solver/losing_proof_replay.hh"
+#include "losing_proof_replay.hh"
 #include "solver/minimal_losing_antichain.hh"
 #include "tiny_game_oracle.hh"
 #include "utils/verbose.hh"
@@ -40,13 +40,9 @@ namespace {
 
   int failures = 0;
   unsigned certificates_checked = 0;
-  unsigned lazy_eager_games_compared = 0;
+  unsigned explicit_games_compared = 0;
 
   using f1_result = acacia::solver_detail::forward_solve_result<state>;
-  using choice_reduction =
-      acacia::solver_detail::forward_reachable_detail::
-          controller_choice_reduction<state>;
-
   void check_certificate (const std::string& label, const tiny_game& game,
                           size_t bool_threshold, const rank_vector& initial,
                           const f1_result& result);
@@ -86,12 +82,7 @@ namespace {
     return {states, K, std::move (inputs)};
   }
 
-  rank_vector as_rank (const state& value) {
-    rank_vector result (value.size (), 0);
-    for (size_t i = 0; i < value.size (); ++i)
-      result[i] = value[i];
-    return result;
-  }
+
 
   /// F0 fixtures use vector_mm while F1 deliberately operates on the solver's
   /// configured state representation, so tests cross that boundary explicitly.
@@ -119,58 +110,16 @@ namespace {
     return std::forward<Check> (check) (actioner);
   }
 
-  template <bool EagerMinimalSuccessors>
-  f1_result solve_f1_mode (
-      const tiny_game& game, size_t bool_threshold,
-      const rank_vector& initial,
-      const acacia::solver_detail::forward_limits& limits = {},
-      bool use_losing_antichain = false,
-      std::size_t controller_minimisation_threshold =
-          acacia::solver_detail::default_controller_minimisation_threshold) {
-    return with_actioner (game, bool_threshold, [&] (auto& actioner) {
-      const state initial_state = as_solver_state (initial);
-      const state safe_state = as_solver_state (
-          safe_vector (game.states, game.K, bool_threshold));
-      return acacia::solver_detail::solve_forward_reachable_safety<
-          SetOfStates, EagerMinimalSuccessors> (
-          initial_state, safe_state, game.inputs, actioner, limits,
-          use_losing_antichain, controller_minimisation_threshold);
-    });
-  }
-
   f1_result solve_f1 (
       const tiny_game& game, size_t bool_threshold,
       const rank_vector& initial,
       const acacia::solver_detail::forward_limits& limits = {},
-      bool use_losing_antichain = false,
-      std::size_t controller_minimisation_threshold =
-          acacia::solver_detail::default_controller_minimisation_threshold) {
-    return solve_f1_mode<false> (
-        game, bool_threshold, initial, limits, use_losing_antichain,
-        controller_minimisation_threshold);
-  }
-
-  f1_result solve_f1_eager (
-      const tiny_game& game, size_t bool_threshold,
-      const rank_vector& initial,
-      const acacia::solver_detail::forward_limits& limits = {},
-      bool use_losing_antichain = false,
-      std::size_t controller_minimisation_threshold =
-          acacia::solver_detail::default_controller_minimisation_threshold) {
-    return solve_f1_mode<true> (
-        game, bool_threshold, initial, limits, use_losing_antichain,
-        controller_minimisation_threshold);
-  }
-
-  choice_reduction reduce_first_input (
-      const tiny_game& game, size_t bool_threshold, const rank_vector& parent,
-      std::size_t controller_minimisation_threshold =
-          acacia::solver_detail::default_controller_minimisation_threshold) {
+      bool use_losing_antichain = false) {
     return with_actioner (game, bool_threshold, [&] (auto& actioner) {
-      return acacia::solver_detail::forward_reachable_detail::
-          reduce_controller_successors<state> (
-              as_solver_state (parent), game.inputs.front ().second, actioner,
-              controller_minimisation_threshold);
+      const state initial_state = as_solver_state (initial);
+      const state safe_state = as_solver_state (safe_vector (game.states, game.K, bool_threshold));
+      return acacia::solver_detail::solve_forward_reachable_safety<SetOfStates> (
+          initial_state, safe_state, game.inputs, actioner, limits, use_losing_antichain);
     });
   }
 
@@ -192,74 +141,20 @@ namespace {
         game, bool_threshold, result, result.losing_proofs);
   }
 
-  void print_rank (std::ostream& out, const rank_vector& rank) {
-    out << '[';
-    for (std::size_t i = 0; i < rank.size (); ++i) {
-      if (i != 0)
-        out << ',';
-      out << static_cast<int> (rank[i]);
-    }
-    out << ']';
-  }
-
-  void print_game (const std::string& label, const tiny_game& game,
-                   std::size_t bool_threshold, const rank_vector& initial) {
-    std::cerr << "lazy/eager disagreement in " << label << ": states="
-              << game.states << " K=" << static_cast<int> (game.K)
-              << " bool_threshold=" << bool_threshold << " initial=";
-    print_rank (std::cerr, initial);
-    std::cerr << '\n';
-    std::size_t input_index = 0;
-    for (const auto& input_and_actions : game.inputs) {
-      std::size_t action_index = 0;
-      for (const auto& action : input_and_actions.second) {
-        std::cerr << "  input " << input_index << " action " << action_index
-                  << ':';
-        for (std::size_t destination = 0; destination < action.size ();
-             ++destination)
-          for (const auto& [source, increment] : action[destination])
-            std::cerr << " (dst=" << destination << ",src=" << source
-                      << ",inc=" << (increment ? 1 : 0) << ')';
-        std::cerr << '\n';
-        ++action_index;
-      }
-      ++input_index;
-    }
-  }
-
-  void compare_lazy_and_eager (const std::string& label, const tiny_game& game,
-                               std::size_t bool_threshold,
-                               const rank_vector& initial,
-                               const f1_result* known_eager = nullptr) {
-    const f1_result lazy = solve_f1 (game, bool_threshold, initial, {}, true);
-    std::optional<f1_result> computed_eager;
-    if (known_eager == nullptr)
-      computed_eager.emplace (
-          solve_f1_eager (game, bool_threshold, initial, {}, true, 0));
-    const f1_result& eager =
-        known_eager == nullptr ? *computed_eager : *known_eager;
-    const bool same_status = lazy.status == eager.status;
-    if (not same_status) {
-      print_game (label, game, bool_threshold, initial);
-      std::cerr << "  status_equal=0\n";
-    }
-    expect (label + ": lazy/eager verdicts agree", same_status);
-    // Covering intentionally interns fewer ranks, so the two searches need not
-    // expose identical intermediate losing antichains or strategy generators.
-    // Their independently replayed proofs and certificates are the semantic
-    // comparisons that remain meaningful.
-    check_certificate (
-        label + ": lazy comparison", game, bool_threshold, initial, lazy);
-    check_certificate (
-        label + ": eager comparison", game, bool_threshold, initial, eager);
+  void compare_with_explicit (const std::string& label, const tiny_game& game,
+                               std::size_t bool_threshold, const rank_vector& initial) {
+    const auto lazy = solve_f1 (game, bool_threshold, initial, {}, true);
+    const auto ref = solve_explicit_forward_game (initial, game.inputs, game.K, bool_threshold);
+    expect (label + ": forward verdict agrees with independent explicit game",
+            (lazy.status == acacia::solver_detail::forward_result_status::win_k)
+                == (ref.status == forward_status::win_k));
+    check_certificate (label, game, bool_threshold, initial, lazy);
     if (lazy.status == acacia::solver_detail::forward_result_status::lose_k)
-      expect (label + ": lazy comparison losing proof replays",
+      expect (label + ": losing proof independently replays",
               replay_losing_proof (game, bool_threshold, lazy));
-    if (eager.status == acacia::solver_detail::forward_result_status::lose_k)
-      expect (label + ": eager comparison losing proof replays",
-              replay_losing_proof (game, bool_threshold, eager));
-    ++lazy_eager_games_compared;
+    ++explicit_games_compared;
   }
+
 
   void check_antichain_unit_behaviour () {
     using antichain = acacia::solver_detail::minimal_losing_antichain<state>;
@@ -403,83 +298,11 @@ namespace {
                      == acacia::solver_detail::forward_result_status::lose_k)
                         == not expected_win);
     check_certificate (label, game, bool_threshold, initial, lazy);
-    compare_lazy_and_eager (label, game, bool_threshold, initial);
+    compare_with_explicit (label, game, bool_threshold, initial);
     return result;
   }
 
-  void check_state_dependent_minimal_successors () {
-    const action_vec larger =
-        make_action (2, {{0, 0, true}, {1, 1, false}});
-    const action_vec smaller =
-        make_action (2, {{0, 0, false}, {1, 1, false}});
-    const tiny_game comparable = make_game (
-        2, static_cast<VECTOR_ELT_T> (2), {{larger, smaller, smaller}});
 
-    const choice_reduction minimal =
-        reduce_first_input (comparable, 2, vec ({0, 0}));
-    expect ("F3 comparable: all raw actions are counted",
-            minimal.raw_actions == 3);
-    expect ("F3 comparable: exact quotient has two successors",
-            minimal.distinct_successors == 2);
-    expect ("F3 comparable: dominated successor is dropped",
-            minimal.choices.size () == 1
-                and as_rank (minimal.choices.front ().successor)
-                        == vec ({0, 0}));
-    expect ("F3 comparable: first action for the survivor is retained",
-            minimal.choices.size () == 1
-                and minimal.choices.front ().representative_action_index == 1);
-
-    const f1_result integrated =
-        solve_f1_eager (comparable, 2, vec ({0, 0}));
-    expect ("F3 comparable: controller expansion exports exact metrics",
-            integrated.raw_actions == 3
-                and integrated.distinct_successors == 2
-                and integrated.minimal_successors == 1
-                and integrated.equality_reduction == 2.0 / 3.0
-                and integrated.dominance_reduction == 1.0 / 2.0);
-    compare_lazy_and_eager (
-        "F3 comparable", comparable, 2, vec ({0, 0}));
-
-    const choice_reduction dedup_only =
-        reduce_first_input (comparable, 2, vec ({0, 0}), 0);
-    expect ("F3 cutoff zero: exact duplicate is still dropped",
-            dedup_only.raw_actions == 3
-                and dedup_only.distinct_successors == 2
-                and dedup_only.choices.size () == 2);
-    expect ("F3 cutoff zero: distinct action order is preserved",
-            dedup_only.choices.size () == 2
-                and dedup_only.choices[0].representative_action_index == 0
-                and dedup_only.choices[1].representative_action_index == 1);
-
-    const action_vec left = make_action (2, {{0, 0, false}});
-    const action_vec right = make_action (2, {{1, 1, false}});
-    const tiny_game incomparable = make_game (
-        2, static_cast<VECTOR_ELT_T> (2), {{left, right}});
-    const choice_reduction both =
-        reduce_first_input (incomparable, 2, vec ({0, 0}));
-    expect ("F3 incomparable: both successors survive in action order",
-            both.choices.size () == 2
-                and as_rank (both.choices[0].successor) == vec ({0, -1})
-                and as_rank (both.choices[1].successor) == vec ({-1, 0})
-                and both.choices[0].representative_action_index == 0
-                and both.choices[1].representative_action_index == 1);
-    compare_lazy_and_eager (
-        "F3 incomparable", incomparable, 2, vec ({0, 0}));
-
-    const action_vec self = make_action (1, {{0, 0, false}});
-    const tiny_game duplicate = make_game (
-        1, static_cast<VECTOR_ELT_T> (2), {{self, self}});
-    const choice_reduction exact =
-        reduce_first_input (duplicate, 1, vec ({0}));
-    expect ("F3 exact duplicate: one successor survives",
-            exact.raw_actions == 2 and exact.distinct_successors == 1
-                and exact.choices.size () == 1);
-    expect ("F3 exact duplicate: first action index is retained",
-            exact.choices.size () == 1
-                and exact.choices.front ().representative_action_index == 0);
-    compare_lazy_and_eager (
-        "F3 exact duplicate", duplicate, 1, vec ({0}));
-  }
 
   void check_hand_written_games () {
     const action_vec self = make_action (1, {{0, 0, false}});
@@ -556,12 +379,6 @@ namespace {
                 and lazy_duplicate.forward_actions_skipped == 2
                 and lazy_duplicate.distinct_successors == 1
                 and lazy_duplicate.minimal_successors == 1);
-    const f1_result eager_duplicate =
-        solve_f1_eager (duplicate_successors, 1, vec ({0}), {}, true);
-    expect ("9 duplicate action successors: eager comparison applies all actions",
-            eager_duplicate.raw_actions == 3
-                and eager_duplicate.forward_actions_skipped == 0);
-
     const action_vec unsafe_boolean =
         make_action (3, {{1, 0, true}, {1, 1, true}});
     const action_vec safe_boolean =
@@ -577,175 +394,6 @@ namespace {
                 forward_status::lose_k);
   }
 
-#if ACACIA_FORWARD_CONDITIONAL_COVERING
-  void report_cover_case (const std::string& name, int failures_before,
-                          const f1_result& result) {
-    if (failures == failures_before)
-      std::cout << "forward-safety-game: named case " << name
-                << " passed"
-                << " covers_created=" << result.forward_covers_created
-                << " covers_resolved=" << result.forward_covers_resolved
-                << " cover_search_visits="
-                << result.forward_cover_search_visits << '\n';
-  }
-
-  tiny_game cover_resolution_game (bool actual_successor_wins) {
-    // From I=[0,-1,-1], make D=[-1,1,-1] first, then Y=[-1,0,-1].  Y is
-    // conditionally covered by D while D is still optimistic.  The last input
-    // distinguishes D from Y: D immediately overflows.  In the winning form,
-    // Y instead reaches Z=[-1,-1,1], whose actions all fall to the safe bottom;
-    // in the losing form Y reaches the already-losing D.  The root has no
-    // later action after Y, so its WIN genuinely depends on resolving Y.
-    const action_vec to_d = make_action (3, {{1, 0, true}});
-    const action_vec to_y = make_action (3, {{1, 0, false}});
-    const action_vec low = make_action (3, {});
-    const action_vec distinguish =
-        actual_successor_wins
-            ? make_action (3, {{2, 1, true}})
-            : make_action (3, {{1, 1, true}});
-    return make_game (
-        3, static_cast<VECTOR_ELT_T> (2),
-        {{to_d, low}, {to_y}, {to_y}, {distinguish}});
-  }
-
-  void check_cover_remains_winning () {
-    const int before = failures;
-    const action_vec disappear = make_action (1, {});
-    const tiny_game game =
-        make_game (1, static_cast<VECTOR_ELT_T> (1), {{disappear}});
-    const f1_result result = solve_f1 (game, 1, vec ({0}), {}, true);
-    expect ("cover remains winning: solver returns WIN",
-            result.status
-                == acacia::solver_detail::forward_result_status::win_k);
-    expect ("cover remains winning: cover is retained",
-            result.forward_covers_created == 1
-                and result.forward_covers_resolved == 0
-                and result.env_nodes == 1);
-    check_certificate ("cover remains winning", game, 1, vec ({0}), result);
-    report_cover_case ("cover-remains-winning", before, result);
-  }
-
-  void check_cover_loses_actual_wins () {
-    const int before = failures;
-    const tiny_game game = cover_resolution_game (true);
-    const f1_result result =
-        solve_f1 (game, 3, vec ({0, -1, -1}), {}, true);
-    expect ("cover loses actual wins: solver returns WIN",
-            result.status
-                == acacia::solver_detail::forward_result_status::win_k);
-    expect ("cover loses actual wins: lost cover resolves through saved image",
-            result.forward_covers_created != 0
-                and result.forward_covers_resolved >= 2);
-    check_certificate (
-        "cover loses actual wins", game, 3, vec ({0, -1, -1}), result);
-    report_cover_case ("cover-loses-actual-wins", before, result);
-  }
-
-  void check_cover_loses_actual_loses () {
-    const int before = failures;
-    const tiny_game game = cover_resolution_game (false);
-    const f1_result result =
-        solve_f1 (game, 3, vec ({0, -1, -1}), {}, true);
-    expect ("cover loses actual loses: solver returns LOSE",
-            result.status
-                == acacia::solver_detail::forward_result_status::lose_k);
-    expect ("cover loses actual loses: lost cover still checks saved image",
-            result.forward_covers_created != 0
-                and result.forward_covers_resolved >= 2);
-    expect ("cover loses actual loses: losing proof replays",
-            replay_losing_proof (game, 3, result));
-    report_cover_case ("cover-loses-actual-loses", before, result);
-  }
-
-  void check_strict_cover_chain () {
-    const int before = failures;
-    const tiny_game game = cover_resolution_game (true);
-    const f1_result result =
-        solve_f1 (game, 3, vec ({0, -1, -1}), {}, true);
-    // D strictly covers Y.  While D is acting as that cover, D's own
-    // controllers are themselves covered by older ranks, exercising reverse
-    // dependencies at both levels of the chain.
-    expect ("strict cover chain: solver returns WIN",
-            result.status
-                == acacia::solver_detail::forward_result_status::win_k);
-    expect ("strict cover chain: both levels created covers",
-            result.forward_covers_created >= 3
-                and result.forward_cover_search_visits
-                        >= result.forward_covers_created);
-    check_certificate (
-        "strict cover chain", game, 3, vec ({0, -1, -1}), result);
-    report_cover_case ("strict-cover-chain", before, result);
-  }
-
-  void check_equal_state_interning () {
-    const int before = failures;
-    const action_vec self = make_action (1, {{0, 0, false}});
-    const tiny_game game =
-        make_game (1, static_cast<VECTOR_ELT_T> (1), {{self}});
-    const f1_result result = solve_f1 (game, 1, vec ({0}), {}, true);
-    expect ("equal-state interning: exact existing rank is selected",
-            result.status
-                    == acacia::solver_detail::forward_result_status::win_k
-                and result.env_nodes == 1
-                and result.forward_covers_created == 1
-                and result.forward_cover_search_visits == 1);
-    check_certificate ("equal-state interning", game, 1, vec ({0}), result);
-    report_cover_case ("equal-state-interning", before, result);
-  }
-
-  void check_multiple_controllers_one_cover () {
-    const int before = failures;
-    const tiny_game game = cover_resolution_game (true);
-    const f1_result result =
-        solve_f1 (game, 3, vec ({0, -1, -1}), {}, true);
-    expect ("multiple controllers one cover: solver returns WIN",
-            result.status
-                == acacia::solver_detail::forward_result_status::win_k);
-    expect ("multiple controllers one cover: both lost-cover dependants resolve",
-            result.forward_covers_created >= 2
-                and result.forward_covers_resolved >= 2);
-    check_certificate (
-        "multiple controllers one cover", game, 3, vec ({0, -1, -1}),
-        result);
-    report_cover_case ("multiple-controllers-one-cover", before, result);
-  }
-
-  void check_corrupted_cover_is_rejected () {
-    const int before = failures;
-    const action_vec increment = make_action (1, {{0, 0, true}});
-    const tiny_game game =
-        make_game (1, static_cast<VECTOR_ELT_T> (1), {{increment}});
-
-    // Inject the certificate a corrupt cover would produce by falsely using
-    // [0] to cover its actual image [1].  This is a false WIN unless the shared
-    // verifier ignores cover bookkeeping and reapplies the action itself.
-    const bool accepted = with_actioner (game, 1, [&] (auto& actioner) {
-      std::vector<state> generators;
-      generators.push_back (as_solver_state (vec ({0})));
-      const SetOfStates corrupt_candidate {std::move (generators)};
-      const SetOfStates envelope {
-          as_solver_state (safe_vector (game.states, game.K, 1))};
-      return acacia::solver_detail::verify_winning_certificate (
-          envelope, corrupt_candidate, as_solver_state (vec ({0})),
-          game.inputs, actioner);
-    });
-    expect ("corrupted cover: independent verifier rejects false WIN",
-            not accepted);
-    if (failures == before)
-      std::cout << "forward-safety-game: named case corrupted-cover passed"
-                   " verifier_rejected=1\n";
-  }
-
-  void check_conditional_downward_covering () {
-    check_cover_remains_winning ();
-    check_cover_loses_actual_wins ();
-    check_cover_loses_actual_loses ();
-    check_strict_cover_chain ();
-    check_equal_state_interning ();
-    check_multiple_controllers_one_cover ();
-    check_corrupted_cover_is_rejected ();
-  }
-#endif
 
   void check_random_agreement () {
     constexpr unsigned random_games = 5000;
@@ -775,33 +423,6 @@ namespace {
           nodes_invalidated += result.nodes_invalidated;
         }
     } antichain_totals;
-    struct reduction_totals {
-        std::size_t raw_actions = 0;
-        std::size_t distinct_successors = 0;
-        std::size_t minimal_successors = 0;
-        double minimisation_ms = 0.0;
-
-        void add (const f1_result& result) {
-          raw_actions += result.raw_actions;
-          distinct_successors += result.distinct_successors;
-          minimal_successors += result.minimal_successors;
-          minimisation_ms += result.minimisation_ms;
-        }
-
-        [[nodiscard]] double equality_reduction () const {
-          return raw_actions == 0
-                     ? 1.0
-                     : static_cast<double> (distinct_successors) / raw_actions;
-        }
-
-        [[nodiscard]] double dominance_reduction () const {
-          return distinct_successors == 0
-                     ? 1.0
-                     : static_cast<double> (minimal_successors)
-                           / distinct_successors;
-        }
-    } f3_totals, dedup_totals;
-
     for (unsigned trial = 0; trial < random_games; ++trial) {
       const tiny_game game = random_game (gen);
       std::uniform_int_distribution<size_t> threshold_distribution {0, game.states};
@@ -810,55 +431,39 @@ namespace {
       const exact_region truth = brute_force_winning_region (game, bool_threshold);
       const forward_result result = solve_explicit_forward_game (
           initial, game.inputs, game.K, bool_threshold);
-      const f1_result f3 = solve_f1_eager (game, bool_threshold, initial);
-      const f1_result dedup_only =
-          solve_f1_eager (game, bool_threshold, initial, {}, false, 0);
+      const f1_result f3 = solve_f1 (game, bool_threshold, initial);
       const f1_result pruned =
-          solve_f1_eager (game, bool_threshold, initial, {}, true);
-      const f1_result eager_exact =
-          solve_f1_eager (game, bool_threshold, initial, {}, true, 0);
+          solve_f1 (game, bool_threshold, initial, {}, true);
       const std::string label = "random game " + std::to_string (trial);
 
-      expect (label + ": F3 status agrees with cutoff-zero F1",
-              f3.status == dedup_only.status);
-      expect (label + ": antichain-on F3 status agrees with F1 baseline",
-              pruned.status == dedup_only.status);
+      expect (label + ": forward with antichain status agrees with forward baseline",
+              pruned.status == f3.status);
 
       if (result.status != forward_status::resource_limit) {
         expect (label + ": F0 agrees with the complete-domain greatest fixpoint",
                 (result.status == forward_status::win_k)
                     == truth.contains (initial));
-        expect (label + ": cutoff-zero F1/F0 winning statuses agree",
-                (dedup_only.status
-                 == acacia::solver_detail::forward_result_status::win_k)
-                    == (result.status == forward_status::win_k));
-        expect (label + ": cutoff-zero F1/F0 losing statuses agree",
-                (dedup_only.status
-                 == acacia::solver_detail::forward_result_status::lose_k)
-                    == (result.status == forward_status::lose_k));
-        expect (label + ": F3/F0 winning statuses agree",
+        expect (label + ": forward/reference winning statuses agree",
                 (f3.status
                  == acacia::solver_detail::forward_result_status::win_k)
                     == (result.status == forward_status::win_k));
-        expect (label + ": F3/F0 losing statuses agree",
+        expect (label + ": forward/reference losing statuses agree",
                 (f3.status
                  == acacia::solver_detail::forward_result_status::lose_k)
                     == (result.status == forward_status::lose_k));
-        expect (label + ": antichain-on F3/F0 winning statuses agree",
+        expect (label + ": forward with antichain/F0 winning statuses agree",
                 (pruned.status
                  == acacia::solver_detail::forward_result_status::win_k)
                     == (result.status == forward_status::win_k));
-        expect (label + ": antichain-on F3/F0 losing statuses agree",
+        expect (label + ": forward with antichain/F0 losing statuses agree",
                 (pruned.status
                  == acacia::solver_detail::forward_result_status::lose_k)
                     == (result.status == forward_status::lose_k));
         ++compared;
       }
       check_certificate (label, game, bool_threshold, initial, result);
-      check_certificate (label + ": F3", game, bool_threshold, initial, f3);
-      check_certificate (label + ": cutoff-zero F1", game, bool_threshold,
-                         initial, dedup_only);
-      check_certificate (label + ": antichain-on F3", game, bool_threshold,
+      check_certificate (label + ": forward", game, bool_threshold, initial, f3);
+      check_certificate (label + ": forward with antichain", game, bool_threshold,
                          initial, pruned);
 
       const auto replay_if_losing = [&] (const std::string& variant,
@@ -925,24 +530,16 @@ namespace {
                 corrupted_proof_rejected);
       };
       replay_if_losing ("F3", f3);
-      replay_if_losing ("cutoff-zero F1", dedup_only);
-      replay_if_losing ("antichain-on F3", pruned);
+      replay_if_losing ("forward with antichain", pruned);
 
-      compare_lazy_and_eager (
-          label, game, bool_threshold, initial, &eager_exact);
+      compare_with_explicit (
+          label, game, bool_threshold, initial);
 
       antichain_totals.add (pruned);
-      f3_totals.add (f3);
-      dedup_totals.add (dedup_only);
     }
 
-    expect ("random campaign performed at least 5000 F3/F1/F0 comparisons",
+    expect ("random campaign performed at least 5000 forward/reference comparisons",
             compared >= 5000);
-    expect ("random campaign exercised strict successor dominance",
-            f3_totals.minimal_successors < f3_totals.distinct_successors);
-    expect ("cutoff-zero campaign used exact-equality dedup only",
-            dedup_totals.minimal_successors
-                == dedup_totals.distinct_successors);
     expect ("random campaign exercised antichain queries",
             antichain_totals.queries != 0);
     expect ("random campaign inserted losing generators",
@@ -955,24 +552,7 @@ namespace {
               << " losing proofs\n";
     std::cout << "forward-safety-game: corrupted losing proof rejected\n";
     std::cout << "forward-safety-game: all " << compared
-              << " fixed-seed F3/F1/F0 statuses matched\n";
-    std::cout << std::fixed << std::setprecision (6)
-              << "forward-safety-game: F3 reduction totals"
-              << " raw_actions=" << f3_totals.raw_actions
-              << " distinct_successors=" << f3_totals.distinct_successors
-              << " minimal_successors=" << f3_totals.minimal_successors
-              << " minimisation_ms=" << f3_totals.minimisation_ms
-              << " equality_reduction=" << f3_totals.equality_reduction ()
-              << " dominance_reduction=" << f3_totals.dominance_reduction ()
-              << '\n';
-    std::cout << "forward-safety-game: cutoff-zero reduction totals"
-              << " raw_actions=" << dedup_totals.raw_actions
-              << " distinct_successors=" << dedup_totals.distinct_successors
-              << " minimal_successors=" << dedup_totals.minimal_successors
-              << " minimisation_ms=" << dedup_totals.minimisation_ms
-              << " equality_reduction=" << dedup_totals.equality_reduction ()
-              << " dominance_reduction="
-              << dedup_totals.dominance_reduction () << '\n';
+              << " fixed-seed forward/reference statuses matched\n";
     std::cout << "forward-safety-game: antichain totals"
               << " losing_antichain_size_sum=" << antichain_totals.final_sizes
               << " losing_antichain_peak_max=" << antichain_totals.peak
@@ -992,7 +572,7 @@ namespace {
     const action_vec self = make_action (1, {{0, 0, false}});
     const tiny_game game =
         make_game (1, static_cast<VECTOR_ELT_T> (1), {{self}});
-    compare_lazy_and_eager (
+    compare_with_explicit (
         "resource-limit fixture", game, 1, vec ({0}));
     forward_limits limits;
     limits.max_ctrl_nodes = 0;
@@ -1104,11 +684,7 @@ namespace {
 int main () {
   check_antichain_unit_behaviour ();
   check_antichain_rank_prefilter ();
-  check_state_dependent_minimal_successors ();
   check_hand_written_games ();
-#if ACACIA_FORWARD_CONDITIONAL_COVERING
-  check_conditional_downward_covering ();
-#endif
   check_random_agreement ();
   check_resource_limit_is_inconclusive ();
 
@@ -1119,8 +695,8 @@ int main () {
   std::cout << "forward-safety-game: verified " << certificates_checked
             << " winning certificates\n";
   std::cout << "forward-safety-game: compared "
-            << lazy_eager_games_compared
-            << " games across lazy and eager controller expansion\n";
+            << explicit_games_compared
+            << " games against the independent explicit solver\n";
   std::cout << "forward-safety-game: all checks passed\n";
   return 0;
 }

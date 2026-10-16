@@ -1,8 +1,5 @@
 #define POSETS_BBOX_STATS
 #define POSETS_RANK_STATS
-#define ACACIA_SYMMETRY_PROFILE 1
-#define ACACIA_EQUIVARIANT_MIN_BLOCKS 0
-#define ACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS 0
 
 #ifdef NDEBUG
 # error "The debug invariant test helper must compile with assertions enabled"
@@ -19,7 +16,7 @@
 #include <posets/downsets/bboxtree_backed.hh>
 #include <posets/downsets/rank_bucketed_vector_backed.hh>
 
-using state = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
+using state = posets::vectors::simd_vector_backed<VECTOR_ELT_T>;
 using configured_downset = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<state>;
 namespace eq = acacia::solver_detail::equivariant;
 

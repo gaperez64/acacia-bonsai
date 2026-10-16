@@ -524,9 +524,6 @@ namespace symmetry {
 
   inline group detect_full_symmetric_generators (const spot::twa_graph_ptr& aut,
                                                  const indexed_ap_analysis& analysis) {
-#if ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT
-    return largest_full_symmetric_subgroup (detect (aut, analysis));
-#else
     const group base = group_from_analysis (analysis);
     if (base.families.empty () or base.indices.size () < 2)
       return base;
@@ -565,17 +562,6 @@ namespace symmetry {
         break;
     }
 
-# if ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION
-    const group exhaustive = largest_full_symmetric_subgroup (detect (aut, analysis));
-    const bool agrees = (G.full_symmetric == exhaustive.full_symmetric) and
-                        (G.indices == exhaustive.indices);
-    if (not agrees)
-      verb_do (1, vout << "[symmetry] fast/exhaustive recognition mismatch:"
-                       << " fast_full=" << G.full_symmetric
-                       << " exhaustive_full=" << exhaustive.full_symmetric
-                       << " clients=" << G.indices.size () << "\n");
-    assert (agrees);
-# endif
 
     [[maybe_unused]] const unsigned needed =
         G.indices.size () > 0 ? (unsigned) G.indices.size () - 1 : 0;
@@ -584,7 +570,6 @@ namespace symmetry {
                      << " clients (full_symmetric=" << G.full_symmetric
                      << "), aut has " << aut->num_states () << " states\n");
     return G;
-#endif
   }
 
   inline group detect_full_symmetric_generators (const spot::twa_graph_ptr& aut,

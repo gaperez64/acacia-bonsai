@@ -37,18 +37,11 @@ namespace {
     auto options = acacia::translation::make_options ();
     spot::translator translator (dict, &options);
     acacia::translation::validate_options (options);
-#if ACACIA_TRANSITION_ACCEPTANCE
-    translator.set_type (spot::postprocessor::Buchi);
-    translator.set_pref (preference);
-#else
     translator.set_type (spot::postprocessor::BA);
     translator.set_pref (preference | spot::postprocessor::SBAcc);
-#endif
     auto aut = translator.run (f);
-#if !ACACIA_TRANSITION_ACCEPTANCE
     if (aut->num_states () && !aut->prop_state_acc ().is_true ())
       aut = spot::sbacc (aut);
-#endif
     return aut;
   }
 

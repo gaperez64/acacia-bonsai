@@ -171,7 +171,7 @@ namespace acacia::diagnostics {
       std::string result = "unknown";
       std::string final_reason = "unknown";
       std::string translation_pref = "unknown";
-      std::string k_schedule = acacia::k_schedule::name (ACACIA_K_SCHEDULE);
+      std::string k_schedule = "linear";
       std::string source_format = "ltl";
       std::string tlsf_semantics = "-";
       std::string tlsf_target = "-";
@@ -183,7 +183,6 @@ namespace acacia::diagnostics {
       std::string fast_verdict = "fallback";
       std::string preprocessor = "unknown";
       std::string equivariant = "not-run";
-      std::string local_probe_status = "none";
       std::string forward_result = "not-run";
       std::string forward_resource_reason = "none";
       std::string forward_final_reason = "not-run";
@@ -202,7 +201,6 @@ namespace acacia::diagnostics {
       long long rsimp_ms = 0;
       long long syntactic_bypass_ms = 0;
       long long forced_contradiction_ms = 0;
-      double profile_dominance_ms = 0.0;
       long long translation_ms = 0;
       long long fast_class_ms = 0;
       long long fast_solve_ms = 0;
@@ -226,9 +224,6 @@ namespace acacia::diagnostics {
       std::size_t forced_contradiction_responses = 0;
       std::size_t profile_actions_before = 0;
       std::size_t profile_actions_after = 0;
-      std::size_t profile_dominance_tests = 0;
-      std::size_t profile_dominance_endpoint_visits = 0;
-      std::size_t profile_dominance_declined = 0;
       size_t preproc_states_before = 0;
       size_t preproc_states_after = 0;
       size_t preproc_edges_before = 0;
@@ -244,10 +239,6 @@ namespace acacia::diagnostics {
       size_t bool_threshold = 0;
       size_t max_f = 0;
       size_t max_f_size = 0;
-      unsigned long long local_probe_runs = 0;
-      unsigned long long local_probe_forward_apps = 0;
-      unsigned long long local_probe_skipped_over_budget = 0;
-      unsigned long long local_probe_nodes = 0;
       int forward_K = -1;
       unsigned long long forward_env_nodes = 0;
       unsigned long long forward_ctrl_nodes = 0;
@@ -271,7 +262,6 @@ namespace acacia::diagnostics {
       unsigned long long forward_index_bytes = 0;
       unsigned long long forward_total_bytes = 0;
       unsigned long long cpre_skipped = 0;
-      unsigned long long k_bumped_by_local_refutation = 0;
       unsigned long long actions_seen = 0;
       unsigned long long meets_computed = 0;
       unsigned long long meet_batches = 0;
@@ -384,10 +374,6 @@ namespace acacia::diagnostics {
          << " forced_contradiction_ms=" << m.forced_contradiction_ms
          << " profile_actions_before=" << m.profile_actions_before
          << " profile_actions_after=" << m.profile_actions_after
-         << " profile_dominance_tests=" << m.profile_dominance_tests
-         << " profile_dominance_endpoint_visits=" << m.profile_dominance_endpoint_visits
-         << " profile_dominance_declined=" << m.profile_dominance_declined
-         << " profile_dominance_ms=" << m.profile_dominance_ms
          << " translation_ms=" << m.translation_ms << " aut_states=" << m.aut_states
          << " aut_edges=" << m.aut_edges << " fast_class=" << m.fast_class
          << " fast_class_ms=" << m.fast_class_ms << " fast_solve_ms=" << m.fast_solve_ms
@@ -408,11 +394,7 @@ namespace acacia::diagnostics {
          << " bool_threshold=" << m.bool_threshold << " max_f=" << m.max_f
          << " max_f_size=" << m.max_f_size << " loops=" << m.loops
          << " k_attempts=" << m.k_attempts << " k_schedule=" << m.k_schedule
-         << " k_last_next=" << m.k_last_next << " local_probe_runs=" << m.local_probe_runs
-         << " local_probe_status=" << m.local_probe_status
-         << " local_probe_forward_apps=" << m.local_probe_forward_apps
-         << " local_probe_skipped_over_budget=" << m.local_probe_skipped_over_budget
-         << " local_probe_nodes=" << m.local_probe_nodes
+         << " k_last_next=" << m.k_last_next
          << " forward_backend=" << (m.forward_backend ? 1 : 0)
          << " forward_K=" << m.forward_K << " forward_result=" << m.forward_result
          << " forward_resource_reason=" << m.forward_resource_reason
@@ -441,7 +423,6 @@ namespace acacia::diagnostics {
          << " forward_total_ms=" << m.forward_total_ms
          << " forward_final_reason=" << m.forward_final_reason
          << " cpre_skipped=" << m.cpre_skipped
-         << " k_bumped_by_local_refutation=" << m.k_bumped_by_local_refutation
          << " cpre_ms=" << m.cpre_ms
          << " picker_ms=" << m.picker_ms << " apply_ms=" << m.apply_ms
          << " downset_ms=" << m.downset_ms << " actions_seen=" << m.actions_seen
@@ -910,38 +891,11 @@ namespace acacia::diagnostics {
     }
   }
 
-  inline void set_local_probe (std::string status, unsigned long long forward_applications,
-                               unsigned long long nodes, bool skipped_cpre,
-                               bool bumped_k) {
-    if (auto* m = current ()) {
-      ++m->local_probe_runs;
-      m->local_probe_status = std::move (status);
-      m->local_probe_forward_apps += forward_applications;
-      m->local_probe_nodes += nodes;
-      if (skipped_cpre)
-        ++m->cpre_skipped;
-      if (bumped_k)
-        ++m->k_bumped_by_local_refutation;
-    }
-  }
 
-  inline void trace_local_probe (int k, unsigned long long loop, std::size_t region_size,
-                                 const char* status, unsigned long long forward_apps,
-                                 unsigned long long nodes) {
-    static const bool enabled = [] {
-      const char* env = std::getenv ("ACACIA_LOCAL_CERTIFICATE_TRACE");
-      return env != nullptr and *env != '\0';
-    } ();
-    if (enabled)
-      std::cerr << "ACACIA_PROBE k=" << k << " loop=" << loop << " size=" << region_size
-                << " status=" << status << " fwd=" << forward_apps << " nodes=" << nodes
-                << '\n';
-  }
 
-  inline void set_local_probe_skipped_over_budget () {
-    if (auto* m = current ())
-      ++m->local_probe_skipped_over_budget;
-  }
+
+
+
 
   inline void set_forward_backend () {
     if (auto* m = current ())
@@ -1116,10 +1070,9 @@ namespace acacia::diagnostics {
                                           unsigned long long, unsigned long long,
                                           unsigned long long) {}
   inline void set_decode_census (unsigned long long, unsigned long long, unsigned long long) {}
-  inline void set_local_probe (std::string, unsigned long long, unsigned long long, bool, bool) {}
-  inline void trace_local_probe (int, unsigned long long, std::size_t, const char*,
-                                 unsigned long long, unsigned long long) {}
-  inline void set_local_probe_skipped_over_budget () {}
+
+
+
   inline void set_forward_backend () {}
   inline void set_forward_attempt (int, std::string, std::string,
                                    unsigned long long, unsigned long long,
