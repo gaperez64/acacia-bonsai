@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <tuple>
 #include <spot/tl/parse.hh>
 #include <spot/twaalgos/translate.hh>
 
@@ -47,6 +48,20 @@ namespace {
 
 int main () {
   using namespace acacia::obligation;
+  constexpr uint64_t gib = uint64_t {1024} * 1024 * 1024;
+  for (const auto& [limit, workers, equal, alone] :
+       std::vector<std::tuple<uint64_t, size_t, uint64_t, uint64_t>> {
+           {8 * gib, 6, 8 * gib / 6 / 2, 4 * gib},
+           {8 * gib, 1, 4 * gib, 4 * gib},
+           {8 * gib, 0, 4 * gib, 4 * gib},
+           {3 * gib, 6, gib / 4, 3 * gib / 2},
+           {UINT64_MAX, 6, 8 * gib / 6 / 2, 4 * gib},
+           {0, 6, 0, 0}, {101, 3, 16, 50}, {1, 1, 0, 0}}) {
+    require (rss_share_for_limit (limit, workers, memory_share::equal) == equal,
+             "equal RSS computation changed");
+    require (rss_share_for_limit (limit, workers, memory_share::alone) == alone,
+             "alone RSS computation exceeded the finite limit");
+  }
   const auto absent = solve (spot::formula::tt (), {"fresh_input"}, {"fresh_output"});
   require (absent.value == outcome::real, "absent output AP broke decision");
   for (const char* text : {"1", "0", "G o", "F o", "i U o", "i W o", "i R o", "i M o",

@@ -701,6 +701,12 @@ if enable_tlsf_frontend
     include_directories : inc,
     dependencies : tlsf_deps + [spot_dep, bddx_dep],
   )
+  if get_option ('build_research_tools')
+    test ('obligation-objective', py,
+          args : [files ('check-obligation-objective.py'), acacia_obligation_objective_exe,
+                  tlsf_frontend_inspect, meson.current_build_dir ()],
+          suite : ['unit', 'research', 'obligation'], timeout : 30)
+  endif
   if ltlsynt_exe.found () and get_option ('acacia_spot_guarded_backend')
     test ('extended-weakening-games', py,
           args : [files ('check-extended-weakening.py'), ab_exe,

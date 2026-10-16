@@ -35,6 +35,11 @@ Usage: $0 [config_name] [--tlsf] [acacia-bonsai arguments...]
                     an explicit list to use the original portfolio. Synthesis
                     (-s) uses its existing route.
 
+  --obligation-memory-share equal|alone
+                    Helper RSS share: divide half the invocation limit among
+                    launched workers (equal, default), or give the helper half
+                    the limit (alone). Ordinary worker limits stay unchanged.
+
 Available configurations:
 EOF
     for c in "${CONFIGS[@]}"; do

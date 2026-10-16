@@ -56,6 +56,16 @@ if native_test_hooks
 endif
 
 if get_option('build_research_tools')
+  obligation_objective_sources = ['research/obligation_objective.cc']
+  if enable_tlsf_frontend
+    obligation_objective_sources += 'tlsf_frontend.cc'
+  endif
+  acacia_obligation_objective_exe = executable (
+    'acacia-obligation-objective', obligation_objective_sources,
+    include_directories : inc,
+    install : false,
+    dependencies : [spot_dep, bddx_dep] + tlsf_deps,
+  )
   acacia_spot_provider_replay_exe = executable(
     'acacia-spot-provider-replay',
     'research/spot_provider_replay.cc',

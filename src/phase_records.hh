@@ -439,10 +439,12 @@ namespace acacia {
     phase_record_process_state ().writer = -1;
   }
   inline void phase_records_start_writer (size_t packet_cap = sizeof (phase_packet),
-                                          void (*writer_setup) () = nullptr) noexcept {
+                                          void (*writer_setup) () = nullptr,
+                                          bool record_invocation = false) noexcept {
     const char* dir = getenv ("ACACIA_PHASE_RECORDS");
     if (!dir || !*dir)
       return;
+    const auto invocation_ns = record_invocation ? phase_clock (CLOCK_MONOTONIC) : 0;
     int fds[2];
 #ifdef __linux__
     if (pipe2 (fds, O_CLOEXEC | O_NONBLOCK) != 0)
@@ -487,6 +489,14 @@ namespace acacia {
     sigemptyset (&ignore.sa_mask);
     sigaction (SIGPIPE, &ignore, nullptr);
     atexit (phase_records_close);
+    if (record_invocation) {
+      char line[128];
+      const int length = snprintf (line, sizeof line,
+                                   "{\"event\":\"invocation_start\",\"mono_ns\":%llu}\n",
+                                   (unsigned long long) invocation_ns);
+      if (length > 0 && size_t (length) < sizeof line)
+        phase_records_send (line, size_t (length));
+    }
   }
   inline phase_stamp phase_start () noexcept {
     if (!phase_records_enabled ())

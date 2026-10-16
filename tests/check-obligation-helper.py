@@ -26,7 +26,7 @@ def gone(pid: int) -> bool:
 
 def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
         fault: str = "", interrupt: bool = False,
-        outer_seconds: float = 0, rss_limit: bool = False,
+        outer_seconds: float = 0, rss_limit: bool = False, rss_sample_bytes: int = 0,
         gate: bool = False, helper_delay_ms: int = 0,
         release_stalls: bool = True, ready_stage: str = "", termination_seconds: float = 0
         ) -> tuple[subprocess.CompletedProcess, list[dict]]:
@@ -41,6 +41,11 @@ def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
         env["LD_PRELOAD"] = str(fault_lib)
         env["ACACIA_TEST_OBLIGATION_RECORD_ACK"] = "1"
         env["ACACIA_TEST_OBLIGATION_FAULT"] = fault
+        env.pop("ACACIA_TEST_OBLIGATION_RSS_BYTES", None)
+        env.pop("ACACIA_TEST_OBLIGATION_RSS_LOG", None)
+        if rss_sample_bytes:
+            env["ACACIA_TEST_OBLIGATION_RSS_BYTES"] = str(rss_sample_bytes)
+            env["ACACIA_TEST_OBLIGATION_RSS_LOG"] = str(directory / "rss-samples.txt")
         env["ACACIA_TEST_OBLIGATION_HELPER_DELAY_MS"] = str(helper_delay_ms)
         if "-s" in args:
             env["ACACIA_TEST_OBLIGATION_OUTPUT"] = args[args.index("-s") + 1]
@@ -74,6 +79,11 @@ def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
                                       records(directory, complete_only=True))) from error
             triggered_at, ready_pid = stage.triggered_at, stage.ready_pid
         rows = records(directory)
+        if rss_sample_bytes:
+            samples = (directory / "rss-samples.txt").read_text().splitlines()
+            expected_pid = helper_row(rows, "completion")["worker_pid"]
+            assert samples and all(line == f"{expected_pid} {rss_sample_bytes}"
+                                   for line in samples), (samples, rows)
         if ready_stage:
             assert ready_pid == helper_row(rows, "completion")["worker_pid"], (ready_stage, rows)
         for row in rows:
@@ -166,6 +176,38 @@ def main() -> None:
     ordinary_defaults = [value for value in default_arms
                          if value != arm and ":oxidd" not in value]
     previous = ["--arms", ",".join(ordinary_defaults)] if ordinary_defaults else []
+    for value in ("", "unknown", "Equal", "alone,equal", "4GiB"):
+        invalid = subprocess.run([str(binary), *source, "--obligation-memory-share=" + value],
+                                 capture_output=True, text=True, timeout=5)
+        assert invalid.returncode == 3 and "expects equal or alone" in invalid.stderr, invalid
+    missing = subprocess.run([str(binary), "--obligation-memory-share"],
+                             capture_output=True, text=True, timeout=5)
+    assert missing.returncode == 3, missing
+    for formula in ("G (i <-> o)", "G (X i <-> o)"):
+        default, _ = run(binary, ["-f", formula, "-i", "i", "-o", "o", *alone],
+                         root, library)
+        equal, _ = run(binary, ["-f", formula, "-i", "i", "-o", "o", *alone,
+                               "--obligation-memory-share=equal"], root, library)
+        assert (default.returncode, default.stdout, default.stderr) == (
+            equal.returncode, equal.stdout, equal.stderr), (default, equal)
+    # A fixed /proc fixture checks strict boundaries without allocating large memory.
+    # One ordinary worker stays gated; it answers after a helper stop or readiness.
+    page = os.sysconf("SC_PAGE_SIZE")
+    mib = 1024 * 1024
+    for policy, threshold in (("equal", 64 * mib), ("alone", 128 * mib)):
+        for sample in (64 * mib, 64 * mib + page, 128 * mib, 128 * mib + page):
+            result, rows = run(binary, [*source, *real, "--obligation-memory-share", policy],
+                               root, library, "stall", gate=True, rss_limit=True,
+                               rss_sample_bytes=sample)
+            assert result.returncode == 0, result
+            memory = [row for row in rows if row.get("event") == "helper_memory_share"]
+            assert len(memory) == 1 and memory[0]["policy"] == policy, rows
+            assert memory[0]["workers"] == 2 and memory[0]["rss_share_bytes"] == threshold, rows
+            finish = helper_row(rows, "completion")
+            assert (finish["outcome"], finish["reason"]) == (
+                ("exhausted", "rss_share") if sample > threshold
+                else ("cancelled", "winner_cancelled")), (policy, sample, rows)
+            assert winner_row(rows)["effective_backend"] != "obligation", rows
     # Explicit ordinary selections omit all obligation work.
     for selection in (previous, pair):
         result, rows = run(binary, [*source, *selection], root, library)
@@ -200,6 +242,20 @@ def main() -> None:
             assert not finish[0]["same_library_checked"], rows
             assert not finish[0]["independent_checked"], rows
             assert finish[0]["trust"] == "spot_exact", rows
+            published = helper_row(rows, "eligibility_published")
+            assert published["reason"] == "eligible", rows
+            call = [row for row in rows if row.get("stage") == "obligation_call"
+                    and row.get("event") in {"stage_entry", "stage_completion"}]
+            assert len(call) == 2, rows
+            entry = next(row for row in call if row["event"] == "stage_entry")
+            returned = next(row for row in call if row["event"] == "stage_completion")
+            assert entry["mono_ns"] <= returned["mono_ns"] <= finish[0]["mono_ns"], rows
+            assert entry["worker_pid"] == finish[0]["worker_pid"], rows
+            anchors = [row for row in rows if row.get("event") == "invocation_start"]
+            assert len(anchors) == 1 and anchors[0]["mono_ns"] <= published["mono_ns"], rows
+            prepared = [row for row in rows if row.get("stage") == "obligation_preparation"
+                        and row.get("event") == "stage_completion"]
+            assert len(prepared) == 1 and prepared[0]["mono_ns"] <= entry["mono_ns"], rows
             assert all(row["arm"] == arm for row in rows
                        if row.get("event", "").startswith("obligation_")), rows
             helper_specs = [row for row in rows if row.get("kind") == arm]
@@ -296,6 +352,20 @@ def main() -> None:
                 stable_records(default_rows)) == (
             exact.returncode, exact.stdout, exact.stderr, stable_records(exact_rows)), (
                 default_rows, exact_rows)
+        alternative, alternative_rows = run(
+            binary, [*args, "--arms", ordinary + "," + arm,
+                     "--obligation-memory-share=alone"], root, library)
+        assert not helper_rows(alternative_rows, "start"), alternative_rows
+        assert not any(row.get("event") == "helper_memory_share"
+                       for row in alternative_rows), alternative_rows
+        writer = next(row for row in alternative_rows if row.get("event") == "writer_summary")
+        writer["delivered_records"] -= 1
+        alternative_rows = [row for row in alternative_rows
+                            if row.get("event") != "obligation_eligibility"]
+        assert (alternative.returncode, alternative.stdout, alternative.stderr,
+                stable_records(alternative_rows)) == (
+            exact.returncode, exact.stdout, exact.stderr, stable_records(exact_rows)), (
+                alternative_rows, exact_rows)
 
     for route in (["-r", "small"], ["-u", "formula"]):
         result, rows = run(binary, [*source, *route], root, library)

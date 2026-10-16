@@ -2,6 +2,7 @@
 
 #include "error_msg.hh"
 #include "phase_records.hh"
+#include "solver/obligation_memory.hh"
 
 #include <atomic>
 #include <spot/tl/formula.hh>
@@ -45,8 +46,10 @@ namespace acacia::obligation {
                 const std::vector<std::string>& outputs, timing semantics = timing::mealy,
                 bool synthesis = false, conversion convert = conversion::none);
 
-  // Same global address-space cap and cgroup-aware soft RSS share as native workers.
+  // The helper's fixed RSS threshold is supervised by the parent.
   bool limit_address_space () noexcept;
-  uint64_t rss_share (size_t workers);
+  uint64_t rss_share (size_t workers, memory_share policy = memory_share::equal);
+  void record_memory_share (memory_share policy, size_t workers, uint64_t bytes,
+                            int worker, pid_t pid) noexcept;
   uint64_t resident_bytes (pid_t pid) noexcept;
 }

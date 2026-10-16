@@ -1,7 +1,7 @@
 #include "solver/obligation_helper.hh"
 
 #include "solver/mealy_to_moore.hh"
-#include <unordered_set>
+#include "solver/obligation_objective.hh"
 
 #include <algorithm>
 #include <new>
@@ -34,10 +34,13 @@ namespace acacia::obligation {
   }
 
   void publish_eligibility (control* channel, spot::formula objective) noexcept {
-    if (channel)
-      channel->eligible.store (
-          eligible (objective) ? eligibility::eligible : eligibility::inapplicable,
-          std::memory_order_release);
+    if (channel) {
+      const bool applicable = eligible (objective);
+      channel->eligible.store (applicable ? eligibility::eligible : eligibility::inapplicable,
+                               std::memory_order_release);
+      if (applicable)
+        record ("eligibility_published", outcome::pending, "eligible");
+    }
   }
 
   void record (const char* event, outcome value, const char* reason, uint64_t start_ns,
@@ -100,15 +103,12 @@ namespace acacia::obligation {
       // ltlsynt pre-registers only the first timing block in formula traversal
       // order. obligation_synthesis registers the remaining block in that order.
       const auto& first = semantics == timing::mealy ? inputs : outputs;
-      const std::unordered_set<std::string> first_names (first.begin (), first.end ());
-      objective.traverse ([&] (spot::formula ap) {
-        if (ap.is (spot::op::ap) && first_names.contains (ap.ap_name ()))
-          dict->register_proposition (ap, &owner);
-        return false;
-      });
+      register_first_block (objective, dict, first, &owner);
       // One completed decision call: no strategy allocation or re-check.
       // Partial/debug returns and exceptions never become verdicts.
+      legacy_phase synthesis_call ("obligation_call");
       auto answer = spot::obligation_synthesis (objective, dict, outputs, !synthesis, true, -1);
+      synthesis_call.finish ();
       const auto value = completed (answer, !synthesis);
       if (!synthesis)
         return {value, value == outcome::real || value == outcome::unreal ? "completed"
@@ -147,7 +147,7 @@ namespace acacia::obligation {
     return true;
   }
 
-  uint64_t rss_share (size_t workers) {
+  uint64_t rss_share (size_t workers, memory_share policy) {
     uint64_t cap = uint64_t {8} * 1024 * 1024 * 1024;
     rlimit address {};
     if (getrlimit (RLIMIT_AS, &address) == 0 && address.rlim_cur != RLIM_INFINITY)
@@ -171,7 +171,21 @@ namespace acacia::obligation {
       }
       std::fclose (membership);
     }
-    return cap / std::max<size_t> (1, workers) / 2;
+    return rss_share_for_limit (cap, workers, policy);
+  }
+
+  void record_memory_share (memory_share policy, size_t workers, uint64_t bytes,
+                            int worker, pid_t pid) noexcept {
+    if (!phase_records_enabled ())
+      return;
+    char line[384];
+    const int length = snprintf (
+        line, sizeof line,
+        "{\"event\":\"helper_memory_share\",\"worker\":%d,\"worker_pid\":%ld,"
+        "\"policy\":\"%s\",\"workers\":%zu,\"rss_share_bytes\":%llu}\n",
+        worker, long (pid), name (policy), workers, (unsigned long long) bytes);
+    if (length > 0 && size_t (length) < sizeof line)
+      phase_records_send (line, size_t (length));
   }
 
   uint64_t resident_bytes (pid_t pid) noexcept {

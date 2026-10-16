@@ -9,6 +9,7 @@
 #include "solver/solver_invoker.hh"
 #include "solver/controller_writer.hh"
 #include "solver/obligation_helper.hh"
+#include "solver/obligation_objective.hh"
 #include "solver/realizability_simplify.hh"
 #include <spot/tl/parse.hh>
 #ifdef __linux__
@@ -238,14 +239,8 @@ namespace {
     }
 #endif
     validate_ltl_partition (inputs, outputs);
-    auto parsed = spot::parse_infix_psl (formula, spot::default_environment::instance (),
-                                          false, false);
-    if (!parsed.f || !parsed.errors.empty ())
-      throw std::runtime_error ("unable to parse original obligation objective");
-    auto objective = parsed.f;
-    if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER && !args.synth_fname)
-      acacia::realizability::apply_simplifier (objective, inputs);
-    return objective;
+    return acacia::obligation::prepare_objective (
+        formula, inputs, ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER && !args.synth_fname);
   }
 
   [[noreturn]] void dispatch_helper (const arg_parse_result& args) {
@@ -253,6 +248,7 @@ namespace {
     acacia::worker_route ("original_game", "obligation", "unknown");
     acacia::worker_stage ("obligation_preprocessing");
     acacia::obligation::result result;
+    acacia::legacy_phase preparation ("obligation_preparation");
     try {
       if (!acacia::obligation::limit_address_space ())
         result = {outcome::error, "address_space_limit"};
@@ -282,6 +278,7 @@ namespace {
         if (!acacia::obligation::eligible (objective))
           result = {outcome::inapplicable, "non_obligation"};
         else {
+          preparation.finish ();
           acacia::worker_stage ("obligation_synthesis");
           result = acacia::obligation::solve (objective, inputs, outputs,
                                               acacia::obligation::timing::mealy,
@@ -303,6 +300,7 @@ namespace {
     } catch (...) {
       result = {outcome::error, "preprocessing_exception"};
     }
+    preparation.finish ();
     acacia::obligation::record ("completion", result.value, result.reason,
                                 g_obligation->start_ns);
     const int code = acacia::obligation::exit_code (result.value);
@@ -552,12 +550,17 @@ namespace {
 
     const auto launch_helper = [&] (bool prepare) {
       g_helper_index = g_child_count;
-      g_helper_rss_share = acacia::obligation::rss_share (size_t (g_child_count) + 1);
+      g_helper_rss_share = acacia::obligation::rss_share (size_t (g_child_count) + 1,
+                                                        arg_values.obligation_memory_share);
       g_obligation->start_ns = monotonic_ns ();
       const auto helper = portfolio_arm::native (false, portfolio_arm_kind::obligation, true);
       verb_do (1, vout << "Starting additional obligation worker\n" << std::flush);
       launch_child (helper, arg_values, deadline_mono_ns, block_set,
                     prepare ? g_obligation : nullptr);
+      if (g_child_count > g_helper_index)
+        acacia::obligation::record_memory_share (arg_values.obligation_memory_share,
+                                                size_t (g_child_count), g_helper_rss_share,
+                                                int (g_helper_index), g_child_pids[g_helper_index]);
       if (g_child_count == g_helper_index) {
         acacia::obligation::record ("completion", acacia::obligation::outcome::error,
                                     "fork_failed", g_obligation->start_ns);
@@ -738,7 +741,7 @@ namespace {
 }
 
 int main (int argc, char** argv) {
-  acacia::phase_records_start_writer ();
+  acacia::phase_records_start_writer (sizeof (acacia::phase_packet), nullptr, true);
   // parse all arguments that were passed
   acacia::phase_scope argument_phase ("legacy_parent", "argument_handling_total");
   auto arg_values = arg_parser (argc, argv);

@@ -113,6 +113,9 @@ void show_help (const char* program_name) {
       << "                    real:param-lift:oxidd (realizability only);\n"
       << "                    require -Dacacia_native_arms=true and -T FILE;\n"
       << "                    native arms have no provider and do not support -s\n"
+      << "  --obligation-memory-share VAL [equal|alone] (default equal)\n"
+      << "                    helper RSS: invocation limit / workers / 2, or limit / 2;\n"
+      << "                    bounded by the 8 GiB address cap; ordinary limits unchanged\n"
       << "  --r-prepass VAL   [on|off] R discovery/candidates in combined native arms (default "
          "on)\n"
       << "  --equivariance VAL [on|off] exact pre-pass in backward decision workers (default "
@@ -432,6 +435,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
+  static constexpr int OPT_OBLIGATION_MEMORY_SHARE = 1015;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
   static constexpr int OPT_REAL_BACKEND = 1002;
@@ -458,6 +462,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"real-backend", required_argument, nullptr, OPT_REAL_BACKEND},
       {"unreal-backend", required_argument, nullptr, OPT_UNREAL_BACKEND},
       {"arms", required_argument, nullptr, OPT_ARMS},
+      {"obligation-memory-share", required_argument, nullptr, OPT_OBLIGATION_MEMORY_SHARE},
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
@@ -635,6 +640,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
           retval.equivariance_budget_ns = uint64_t (ns);
         break;
       }
+      case OPT_OBLIGATION_MEMORY_SHARE:
+        if (std::string_view {optarg} == "equal")
+          retval.obligation_memory_share = acacia::obligation::memory_share::equal;
+        else if (std::string_view {optarg} == "alone")
+          retval.obligation_memory_share = acacia::obligation::memory_share::alone;
+        else
+          error (EXIT_CODE_ERROR, "Error: --obligation-memory-share expects equal or alone.\n");
+        break;
       case OPT_R_PREPASS:
       case OPT_EQUIVARIANCE: {
         const bool enabled = case_insensitive_equals (optarg, "on");
