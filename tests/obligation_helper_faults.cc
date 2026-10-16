@@ -240,6 +240,26 @@ extern "C" void preparation_fault (void* self, spot::formula formula,
 
 namespace {
   FILE* controller_fopen (const char* path, const char* mode, const char* symbol) {
+    const char* sample = std::getenv ("ACACIA_TEST_OBLIGATION_RSS_BYTES");
+    long sampled_pid = -1;
+    int consumed = 0;
+    if (sample && getpid () == supervisor_pid &&
+        std::sscanf (path, "/proc/%ld/statm%n", &sampled_pid, &consumed) == 1 &&
+        consumed && path[consumed] == '\0') {
+      const auto bytes = std::strtoull (sample, nullptr, 10);
+      const auto pages = bytes / uint64_t (sysconf (_SC_PAGESIZE));
+      static char contents[128];
+      const int length = snprintf (contents, sizeof contents, "0 %llu\n",
+                                   (unsigned long long) pages);
+      using function = FILE* (*) (const char*, const char*);
+      auto original = reinterpret_cast<function> (dlsym (RTLD_NEXT, symbol));
+      if (const char* log_path = std::getenv ("ACACIA_TEST_OBLIGATION_RSS_LOG"))
+        if (FILE* log = original (log_path, "a")) {
+          fprintf (log, "%ld %llu\n", sampled_pid, (unsigned long long) bytes);
+          fclose (log);
+        }
+      return fmemopen (contents, size_t (length), "r");
+    }
     const char* destination = std::getenv ("ACACIA_TEST_OBLIGATION_OUTPUT");
     const bool controller = destination && std::strcmp (path, destination) == 0;
     // Gate before ofstream opens/truncates the destination, not during printing.

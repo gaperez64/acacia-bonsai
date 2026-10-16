@@ -84,6 +84,9 @@ See [the panels](benchmarking/RESULTS.md) and
 
 ### Unreleased
 
+- **Oct 16:** `--obligation-memory-share alone` lets the obligation helper use its
+  whole memory allowance; equal sharing remains the default.
+
 - **Oct 16:** The default portfolio now includes exact parity game solving,
   improving coverage; see the [campaign results](benchmarking/RESULTS.md).
 

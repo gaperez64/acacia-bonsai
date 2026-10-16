@@ -6,6 +6,7 @@
 #include "solver/equivariance_budget.hh"
 #include "solver/game_backend.hh"
 #include "solver/oracle_layout.hh"
+#include "solver/obligation_memory.hh"
 #include "solver/solver_invoker.hh"
 #if ACACIA_ENABLE_TLSF_FRONTEND
 # include "tlsf_frontend.hh"
@@ -60,6 +61,8 @@ struct arg_parse_result {
     weakening_mode weakening = weakening_mode::basic;
     acacia::unreal_witnesses::allowances weakening_allowances;
     bool obligation_explicit = false;
+    acacia::obligation::memory_share obligation_memory_share =
+        acacia::obligation::memory_share::equal;
     bool r_prepass = true;
     bool equivariance = ACACIA_ENABLE_EQUIVARIANT_SOLVER;
     std::optional<double> equivariance_budget;

@@ -29,6 +29,15 @@ through AIGER export as a trusted exact Spot result. Export failure or no retain
 leaves the ordinary synthesis route running. With the arm alone and `-s`, the ordinary REAL/UNREAL routes are added as fallbacks.
 Replay and native checking retain their existing routes.
 
+`--obligation-memory-share equal|alone` controls the helper's memory allowance.
+The helper allowance is half the smaller of the run's memory limit and 8 GiB, so at
+most 4 GiB. The default, `equal`, divides it among launched workers; `alone` gives
+all of it to the helper. Both keep the separate 8 GiB address-space cap and the
+ordinary worker limits. In the measured case,
+`chomp_pb_3_6_pe_` was decided REALIZABLE in about 100 s with `alone` at a
+180 s timeout in three repetitions; the default timed out. Evidence archive:
+`otd-A-obligation20261015`.
+
 ## Driver screens and full-corpus admission (13 October 2026)
 
 The driver compared frozen helper implementation `0e6edbd9` (PMC2) with frozen post-memory

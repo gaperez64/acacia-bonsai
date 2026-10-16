@@ -149,7 +149,7 @@ namespace acacia::obligation {
     return true;
   }
 
-  uint64_t rss_share (size_t workers) {
+  uint64_t rss_share (size_t workers, memory_share policy) {
     uint64_t cap = uint64_t {8} * 1024 * 1024 * 1024;
     rlimit address {};
     if (getrlimit (RLIMIT_AS, &address) == 0 && address.rlim_cur != RLIM_INFINITY)
@@ -173,7 +173,7 @@ namespace acacia::obligation {
       }
       std::fclose (membership);
     }
-    return cap / std::max<size_t> (1, workers) / 2;
+    return rss_share_for_limit (cap, workers, policy);
   }
 
   uint64_t resident_bytes (pid_t pid) noexcept {
