@@ -107,6 +107,9 @@ void show_help (const char* program_name) {
          "trusted Spot synthesis;\n"
       << "                    membership follows the build default; starts only when eligible;\n"
       << "                    no provider\n"
+      << "                    both:parity:spot: deterministic translation, exact Buchi or parity "
+         "games;\n"
+      << "                    trusted decisions and controller synthesis; no provider\n"
       << "                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\n"
       << "                    both:gr1-real-lift:oxidd,\n"
       << "                    real:gr1:oxidd, unreal:gr1:oxidd, and\n"
@@ -359,6 +362,10 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
     case portfolio_arm_parse_error::native_backend:
       error (EXIT_CODE_ERROR, "Error: native arm %s requires the oxidd backend.\n",
              parsed.spec.c_str ());
+      break;
+    case portfolio_arm_parse_error::parity_spec:
+      error (EXIT_CODE_ERROR,
+             "Error: parity arms require both:parity:spot without a provider.\n");
       break;
     case portfolio_arm_parse_error::obligation_spec:
       error (EXIT_CODE_ERROR,
@@ -737,7 +744,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
         *retval.arms, [] (const auto& arm) { return arm.unreal || arm.both; });
     std::erase_if (*retval.arms, [&] (const portfolio_arm& arm) {
       if (arm.kind == portfolio_arm_kind::legacy ||
-          arm.kind == portfolio_arm_kind::obligation)
+          arm.kind == portfolio_arm_kind::obligation || arm.kind == portfolio_arm_kind::parity)
         return false;
       if (retval.verbose_level)
         std::cerr << "Skipping default arm " << arm.native_name ()
@@ -762,7 +769,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
         *retval.arms, [] (const auto& arm) { return arm.kind == portfolio_arm_kind::obligation; });
     if (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
           return arm.kind != portfolio_arm_kind::legacy &&
-                 arm.kind != portfolio_arm_kind::obligation;
+                 arm.kind != portfolio_arm_kind::obligation &&
+                 arm.kind != portfolio_arm_kind::parity;
         }))
       error (EXIT_CODE_ERROR, "Error: native arms do not support -s controller synthesis.\n");
     if (obligation_synthesis) {
@@ -793,7 +801,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
     if (retval.arms.has_value ()) {
       bool kept_real_arm = false;
       std::erase_if (*retval.arms, [&kept_real_arm] (const portfolio_arm& arm) {
-        if (arm.unreal || arm.kind == portfolio_arm_kind::obligation)
+        if (arm.unreal || arm.kind == portfolio_arm_kind::obligation ||
+            arm.kind == portfolio_arm_kind::parity)
           return false;
         if (not kept_real_arm) {
           kept_real_arm = true;
@@ -825,6 +834,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
       retval.obligation_explicit = explicit_arms;
       continue;
     }
+    if (arm.kind == portfolio_arm_kind::parity)
+      continue;
     if (arm.kind != portfolio_arm_kind::legacy) {
 #if !ACACIA_NATIVE_ARMS
       error (EXIT_CODE_ERROR, "Error: native arms require -Dacacia_native_arms=true.\n");

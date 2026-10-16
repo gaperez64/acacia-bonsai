@@ -84,6 +84,9 @@ See [the panels](benchmarking/RESULTS.md) and
 
 ### Unreleased
 
+- **Oct 16:** The default portfolio now includes exact parity game solving,
+  improving coverage; see the [campaign results](benchmarking/RESULTS.md).
+
 - **Oct 14:** With `-s`, the first conclusive verdict selects the worker that builds
   and writes the controller. Other workers are suspended and resume if that worker
   fails to finish. REALIZABLE is accepted only after the controller file closes

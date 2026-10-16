@@ -5,6 +5,7 @@
 #include "native_gr1_lift_arm.hh"
 #include "native_param_lift_arm.hh"
 #include "native_support.hh"
+#include "parity_arm.hh"
 #include "phase_records.hh"
 #include "solver/solver_invoker.hh"
 #include "solver/controller_writer.hh"
@@ -55,7 +56,9 @@ namespace {
   acacia::synthesis::rendezvous_slot* g_synthesis = nullptr;
   sig_atomic_t g_eligibility_source = -1, g_helper_index = -1;
   bool g_eligibility_observed = false;
-  uint64_t g_helper_rss_share = 0;
+  uint64_t g_helper_rss_share = 0, g_parity_rss_share = 0;
+  std::vector<sig_atomic_t> g_parity_workers;
+  std::vector<sig_atomic_t> g_parity_exhausted;
   acacia::obligation::outcome g_helper_forced = acacia::obligation::outcome::pending;
   const char* g_helper_stop_reason = "none";
 
@@ -85,6 +88,10 @@ namespace {
     if (!g_worker_records)
       return;
     auto& record = g_worker_records[index];
+    if (std::ranges::find (g_parity_exhausted, index) != g_parity_exhausted.end ()) {
+      reason = "rss_share";
+      acacia::parity_arm_exhausted (record);
+    }
     record.pid = pid;
     const char* telemetry = !g_worker_records_shared ? "unavailable"
                             : record.dropped         ? "dropped"
@@ -321,6 +328,20 @@ namespace {
                                     acacia::obligation::control* eligibility_channel) {
     if (arm.kind == portfolio_arm_kind::obligation)
       dispatch_helper (arg_values);
+    if (arm.kind == portfolio_arm_kind::parity) {
+      if (eligibility_channel) {
+        try {
+          acacia::obligation::publish_eligibility (eligibility_channel,
+                                                  helper_objective (arg_values));
+        } catch (...) {
+          eligibility_channel->eligible.store (acacia::obligation::eligibility::error,
+                                               std::memory_order_release);
+        }
+      }
+      const int code = acacia::run_parity_arm (arg_values);
+      acacia::worker_terminal (code);
+      _exit (code);
+    }
     if (arm.kind != portfolio_arm_kind::legacy) {
 #if ACACIA_NATIVE_ARMS
       try {
@@ -440,6 +461,7 @@ namespace {
       record.equivariance = arg_values.equivariance;
       const char* backend = arm.legacy ? acacia::game_backend_name (arm.legacy->backend)
                             : arm.kind == portfolio_arm_kind::obligation ? "obligation"
+                            : arm.kind == portfolio_arm_kind::parity ? "parity"
                                                                          : "oxidd";
       acacia::worker_record_text (record.requested_backend, backend);
       acacia::worker_record_text (record.effective_backend, backend);
@@ -454,12 +476,14 @@ namespace {
     const pid_t pid = fork ();
     if (pid == 0) {
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
-      acacia::synthesis::test_worker_started (arm.kind == portfolio_arm_kind::obligation);
+      acacia::synthesis::test_worker_started (arm.kind == portfolio_arm_kind::obligation,
+                                               arm.kind == portfolio_arm_kind::parity);
       if (g_synthesis)
         acacia::synthesis::test_before_worker_protection ();
 #endif
 #ifdef __linux__
-      if (g_synthesis || arm.kind == portfolio_arm_kind::obligation) {
+      if (g_synthesis || arm.kind == portfolio_arm_kind::obligation ||
+          arm.kind == portfolio_arm_kind::parity) {
         // SIGKILL also terminates suspended synthesis competitors. Recheck the
         // parent to cover its death between fork and installing the signal.
         if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != g_main_pid)
@@ -524,6 +548,8 @@ namespace {
           if (length > 0 && size_t (length) < sizeof specification)
             acacia::phase_records_send (specification, size_t (length));
         }
+        if (arm.kind == portfolio_arm_kind::parity)
+          g_parity_workers.push_back (sig_atomic_t (g_child_count));
         g_child_pids[g_child_count] = pid;
         g_child_count = g_child_count + 1;
       }
@@ -563,6 +589,11 @@ namespace {
         });
     verb_do (1, vout << "Starting " << child_count << " solver children\n" << std::flush);
 
+    if (std::ranges::any_of (*arg_values.arms, [] (const auto& arm) {
+          return arm.kind == portfolio_arm_kind::parity;
+        }))
+      g_parity_rss_share =
+          acacia::obligation::rss_share (child_count + size_t (g_obligation != nullptr));
     for (const auto& arm : *arg_values.arms) {
       if (arm.kind == portfolio_arm_kind::legacy && !arg_values.legacy_available)
         continue;
@@ -653,13 +684,24 @@ namespace {
           kill (helper, SIGKILL);
         }
       }
+      for (const auto index : g_parity_workers) {
+        const pid_t worker = g_child_pids[index];
+        if (worker > 0 &&
+            std::ranges::find (g_parity_exhausted, index) == g_parity_exhausted.end () &&
+            acacia::obligation::resident_bytes (worker) > g_parity_rss_share) {
+          g_parity_exhausted.push_back (index);
+          kill (-worker, SIGKILL);
+          kill (worker, SIGKILL);
+        }
+      }
       if (g_synthesis && synthesis_winner < 0) {
         check_acceptance ();
         sig_atomic_t nominee = -1;
         uint64_t first = UINT64_MAX;
         for (sig_atomic_t i = 0; i < g_child_count; ++i) {
           const auto order = g_synthesis[i].order.load (std::memory_order_acquire);
-          if (g_child_pids[i] > 0 && order && order < first) {
+          if (g_child_pids[i] > 0 && order && order < first &&
+              std::ranges::find (g_parity_exhausted, i) == g_parity_exhausted.end ()) {
             nominee = i;
             first = order;
           }
@@ -770,6 +812,8 @@ namespace {
         continue;
       }
       int ret = WEXITSTATUS (status);
+      if (std::ranges::find (g_parity_exhausted, reaped_index) != g_parity_exhausted.end ())
+        ret = EXIT_CODE_UNKNOWN;
       if (g_obligation && reaped_index == g_helper_index &&
           (g_helper_forced != acacia::obligation::outcome::pending ||
            acacia::obligation::exit_code (

@@ -4,6 +4,7 @@
 
 #include "configuration.hh"
 #include "error_msg.hh"
+#include "solver/ap_partition.hh"
 #include "solver/configured_components.hh"
 #include "solver/diagnostics.hh"
 #include "solver/solve_game.hh"
@@ -45,6 +46,11 @@ namespace {
       VECTOR_ELT_T kmin = DEFAULT_KMIN;
       VECTOR_ELT_T kinc = DEFAULT_KINC;
       SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
+#if ACACIA_FORWARD_SAFETY_SOLVER
+      acacia::game_backend backend = acacia::game_backend::forward;
+#else
+      acacia::game_backend backend = acacia::game_backend::backward;
+#endif
   };
 
   [[noreturn]] void fail (const std::string& message) {
@@ -86,6 +92,7 @@ namespace {
         << "  -K N  final bound (default " << static_cast<int> (DEFAULT_K) << ")\n"
         << "  -k N  initial bound (default " << static_cast<int> (DEFAULT_KMIN) << ")\n"
         << "  -I N  bound increment (default " << static_cast<int> (DEFAULT_KINC) << ")\n"
+        << "  --game-backend backward|forward\n"
         << "  --spot-fast off|det\n"
         << "  -v, --version, --help\n";
   }
@@ -119,6 +126,17 @@ namespace {
         result.kmin = parse_counter (need_arg (i, argc, argv), "-k");
       else if (argument == "-I")
         result.kinc = parse_counter (need_arg (i, argc, argv), "-I");
+      else if (argument == "--game-backend") {
+        const auto value = acacia::parse_game_backend (need_arg (i, argc, argv));
+        if (not value or
+            (*value != acacia::game_backend::backward and *value != acacia::game_backend::forward))
+          fail ("--game-backend must be backward or forward");
+#if !ACACIA_FORWARD_SAFETY_SOLVER
+        if (*value == acacia::game_backend::forward)
+          fail ("forward game support is not compiled");
+#endif
+        result.backend = *value;
+      }
       else if (argument == "--spot-fast") {
         const std::string value = need_arg (i, argc, argv);
         if (value == "off")
@@ -176,11 +194,30 @@ namespace {
     if (aut->num_states () == 0)
       return is_real;
 
-    auto fast = acacia::spot_fastpath::try_spot_nba_fast_path (aut, all_inputs, all_outputs, false,
-                                                               is_real, arguments.spot_fast);
+    if (aut->acc ().is_t () or aut->acc ().is_f ()) {
+      // Exact interface relabelling, including incomplete constant graphs.
+      const bool accepting = aut->acc ().is_t ();
+      const auto mark = aut->set_buchi ();
+      for (auto& edge : aut->edges ())
+        edge.acc = accepting ? mark : spot::acc_cond::mark_t {};
+      aut->prop_state_acc (true);
+    }
+    acacia::spot_fastpath::fast_path_result fast;
+    {
+      acacia::legacy_phase phase ("spot-fast");
+      fast = acacia::spot_fastpath::try_spot_nba_fast_path (
+          aut, all_inputs, all_outputs, false, is_real, arguments.spot_fast);
+      acacia::legacy_metric ("classification",
+                             acacia::spot_fastpath::detail::class_name (fast.classification).data ());
+      phase.finish (fast.conclusive ? "conclusive" : "inapplicable");
+    }
     if (fast.conclusive)
       return fast.current_output_player_wins;
     acacia::diagnostics::snapshot ("after-spot-fast");
+    if (not aut->prop_state_acc ().is_true ()) {
+      acacia::legacy_phase lowering ("state-acceptance");
+      aut = spot::sbacc (aut);
+    }
 
     {
 #if ACACIA_ENABLE_DIAGNOSTICS
@@ -192,6 +229,7 @@ namespace {
       }
       acacia::diagnostics::scoped_timer timer (diag ? &diag->preproc_ms : nullptr);
 #endif
+      acacia::legacy_phase preprocessing ("preprocessing");
       AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, arguments.kmax) ();
 #if ACACIA_ENABLE_DIAGNOSTICS
       if (diag) {
@@ -203,19 +241,19 @@ namespace {
     acacia::diagnostics::snapshot ("after-preprocessing");
     if (aut->num_states () == 0)
       return false;
-    posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, arguments.kmax)) ();
+    {
+      acacia::legacy_phase booleanizing ("booleanization");
+      posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, arguments.kmax)) ();
+    }
 #if ACACIA_ENABLE_DIAGNOSTICS
     if (auto* diag = acacia::diagnostics::current ())
       diag->bool_threshold = posets::vectors::bool_threshold;
 #endif
     acacia::diagnostics::snapshot ("before-solve");
-    return solve_game (aut, arguments.kmax, arguments.kmin, arguments.kinc, all_inputs,
-                       all_outputs, false, {},
-#if ACACIA_FORWARD_SAFETY_SOLVER
-                       acacia::game_backend::forward)
-#else
-                       acacia::game_backend::backward)
-#endif
+    const auto partition =
+        acacia::project_ap_partition (aut->ap_vars (), all_inputs, all_outputs);
+    return solve_game (aut, arguments.kmax, arguments.kmin, arguments.kinc, partition.inputs,
+                       partition.outputs, false, {}, arguments.backend)
         .has_value ();
   }
 
@@ -224,6 +262,26 @@ namespace {
 int main (int argc, char** argv) {
   try {
     options arguments = parse_options (argc, argv);
+    // Match arg_parse_result's global three-second optional symmetry allowance.
+    // This is the shipping runtime default, independent of the supplied automaton.
+    acacia::equivariance_budget::invocation = {std::nullopt, 0, 3000000000ULL};
+    acacia::equivariance_budget::invocation_allowance.reset ();
+    acacia::phase_records_start_writer ();
+    struct recording {
+        acacia::worker_record worker;
+        recording () {
+          acacia::active_worker_record () = &worker;
+          worker.pid = getpid ();
+        }
+        ~recording () {
+          acacia::active_worker_record () = nullptr;
+          acacia::phase_records_close ();
+        }
+    } records;
+    acacia::worker_record_text (records.worker.requested_backend,
+                                acacia::game_backend_name (arguments.backend));
+    acacia::worker_record_text (records.worker.effective_backend,
+                                acacia::game_backend_name (arguments.backend));
     acacia::diagnostics::scoped_child diagnostics {path_name (arguments.worker)};
 #if ACACIA_ENABLE_DIAGNOSTICS
     if (auto* diag = acacia::diagnostics::current ()) {
@@ -232,29 +290,43 @@ int main (int argc, char** argv) {
     }
 #endif
     auto dictionary = spot::make_bdd_dict ();
-    auto parsed = spot::parse_aut (arguments.hoa, dictionary);
-    if (parsed->format_errors (std::cerr) or not parsed->aut)
-      return EXIT_CODE_ERROR;
-    auto aut = parsed->aut;
-    if (not aut->acc ().is_buchi () or aut->acc ().num_sets () != 1)
-      fail ("HOA must use one-set Buchi acceptance");
-    if (not aut->prop_state_acc ().is_true ())
-      fail ("HOA must have state-based acceptance");
-
     if (arguments.worker == orientation::unreal_formula or
         arguments.worker == orientation::unreal_automaton)
       std::swap (arguments.inputs, arguments.outputs);
-    int owner = 0;
-    bdd all_inputs = bddtrue;
-    bdd all_outputs = bddtrue;
+    struct partition {
+        spot::bdd_dict_ptr dictionary;
+        bdd inputs = bddtrue, outputs = bddtrue;
+        explicit partition (spot::bdd_dict_ptr dict) : dictionary {std::move (dict)} {}
+        ~partition () {
+          inputs = bddtrue;
+          outputs = bddtrue;
+          dictionary->unregister_all_my_variables (this);
+        }
+    } interface {dictionary};
+    // The configured IO precomputer requires inputs before outputs in BDD order.
+    // Register the oriented interface before the parser registers the HOA APs.
     for (const auto& name : arguments.inputs) {
-      const int variable = dictionary->register_proposition (spot::formula::ap (name), &owner);
-      all_inputs &= bdd_ithvar (variable);
+      const int variable = dictionary->register_proposition (spot::formula::ap (name), &interface);
+      interface.inputs &= bdd_ithvar (variable);
     }
     for (const auto& name : arguments.outputs) {
-      const int variable = dictionary->register_proposition (spot::formula::ap (name), &owner);
-      all_outputs &= bdd_ithvar (variable);
+      const int variable = dictionary->register_proposition (spot::formula::ap (name), &interface);
+      interface.outputs &= bdd_ithvar (variable);
     }
+    auto parsed = spot::parse_aut (arguments.hoa, dictionary);
+    if (parsed->format_errors (std::cerr) or not parsed->aut)
+      return EXIT_CODE_ERROR;
+    auto aut = std::move (parsed->aut);
+    parsed.reset ();
+    if (not aut->is_existential ())
+      fail ("HOA must be existential before universal co-Buchi interpretation");
+    for (const auto& ap : aut->ap ())
+      if (std::ranges::find (arguments.inputs, ap.ap_name ()) == arguments.inputs.end () and
+          std::ranges::find (arguments.outputs, ap.ap_name ()) == arguments.outputs.end ())
+        fail ("HOA AP is missing from input/output partition: " + ap.ap_name ());
+    if (not (aut->acc ().is_buchi () and aut->acc ().num_sets () == 1) and
+        not aut->acc ().is_t () and not aut->acc ().is_f ())
+      fail ("HOA must use one-set Buchi or constant acceptance");
 
 #if ACACIA_ENABLE_DIAGNOSTICS
     if (auto* diag = acacia::diagnostics::current ()) {
@@ -262,12 +334,9 @@ int main (int argc, char** argv) {
       diag->aut_edges = aut->num_edges ();
     }
 #endif
-    const bool winning = solve (std::move (aut), arguments, all_inputs, all_outputs);
+    const bool winning = solve (std::move (aut), arguments, interface.inputs, interface.outputs);
     acacia::diagnostics::finish (winning,
                                  winning ? "hoa-replay-winning" : "hoa-replay-inconclusive");
-    all_inputs = bddtrue;
-    all_outputs = bddtrue;
-    dictionary->unregister_all_my_variables (&owner);
     if (not winning) {
       std::cout << "UNKNOWN\n";
       return EXIT_CODE_UNKNOWN;

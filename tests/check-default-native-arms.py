@@ -15,11 +15,11 @@ arms = sys.argv[3].split(",")
 expected_ltl_children = int(sys.argv[4])
 verbose_enabled = sys.argv[5] == "true"
 ordinary = [a for a in arms if a != "both:obligation:spot"]
-legacy = [a for a in ordinary if ":gr1:oxidd" not in a and
+legacy = [a for a in ordinary if a != "both:parity:spot" and ":gr1:oxidd" not in a and
           ":gr1-lift:oxidd" not in a and
           ":gr1-real-lift:oxidd" not in a and
           ":param-lift:oxidd" not in a]
-native = [a for a in ordinary if a not in legacy]
+native = [a for a in ordinary if a not in legacy and a != "both:parity:spot"]
 assert native
 
 
