@@ -98,7 +98,7 @@ def test_gr1_real_prepass_preset_is_six_arms():
     name = "otf_sparse_formula_gr1_real_prepass"
     data = presets["presets"][name]
     assert data["role"] == "shipping"
-    assert presets["groups"]["docker_default"][0] == name
+    assert name in presets["groups"]["docker_default"]
     assert data["inherits"] == "otf_sparse_formula"
     candidate = module.normalize_preset(options, presets, name)
     assert candidate["native_arms"] is True
@@ -115,7 +115,7 @@ def test_gr1_real_prepass_preset_is_six_arms():
     } == {"native_arms", "default_arms"}
 
 
-def test_obligation_membership_is_explicit_in_shipping_and_parity_portfolios():
+def test_obligation_membership_is_explicit_in_shipping_portfolios():
     module = load_module()
     options, presets = module.load_registry()
     shipping = presets["groups"]["docker_default"]
@@ -123,7 +123,7 @@ def test_obligation_membership_is_explicit_in_shipping_and_parity_portfolios():
     for name, data in presets["presets"].items():
         values = module.normalize_preset(options, presets, name)
         arms = values["default_arms"].split(",")
-        if name in (*shipping, "otf_sparse_formula_parity") and data.get("default_arms"):
+        if name in shipping and data.get("default_arms"):
             assert arms.count(arm) == 1, name
             assert f"-Dacacia_default_arms={values['default_arms']}" in module.meson_args(
                 options, values)
@@ -135,16 +135,16 @@ def test_obligation_membership_is_explicit_in_shipping_and_parity_portfolios():
     assert options["options"]["default_arms"]["default"] == ""
 
 
-def test_parity_preset_adds_only_one_arm_to_the_first_shipping_preset():
+def test_first_shipping_preset_adds_only_parity_to_the_previous_default():
     module = load_module()
     options, presets = module.load_registry()
-    name = "otf_sparse_formula_parity"
-    first = presets["groups"]["docker_default"][0]
-    assert presets["presets"][name]["inherits"] == first
-    baseline = module.normalize_preset(options, presets, first)
+    shipping = presets["groups"]["docker_default"]
+    name, previous = shipping[:2]
+    assert presets["presets"][name]["role"] == "shipping"
+    assert presets["presets"][name]["inherits"] == previous
+    baseline = module.normalize_preset(options, presets, previous)
     candidate = module.normalize_preset(options, presets, name)
     assert candidate["default_arms"] == baseline["default_arms"] + ",both:parity:spot"
-    assert name not in presets["groups"]["docker_default"]
     for key in baseline:
         if key not in {"_preset", "preset", "default_arms"}:
             assert candidate[key] == baseline[key], key
@@ -658,20 +658,17 @@ def test_tlsf_frontend_default_flows_through_every_preset():
         assert values["enable_tlsf_frontend"] is True
 
 
-def test_all_groups_reference_existing_presets_and_docker_defaults_are_fixed():
+def test_all_groups_reference_existing_presets_and_shipping_is_unique():
     module = load_module()
     _, presets = module.load_registry()
 
     for group in presets["groups"].values():
         assert all(name in presets["presets"] for name in group)
 
-    # docker_default is the pointer that says which configurations we ship, and
-    # it is meant to be repointed when the measurements say so.  Pin its shape,
-    # not its membership: pinning the names makes every reselection a test
-    # failure, which is what this assertion used to do.
+    # Shipping membership and order come from the registry, not a fixed menu.
     docker_default = presets["groups"]["docker_default"]
-    assert len(docker_default) == 5
-    assert len(set(docker_default)) == 5
+    assert docker_default
+    assert len(set(docker_default)) == len(docker_default)
     for name in docker_default:
         assert name in presets["presets"]
         assert not name.endswith("_diag"), f"{name} is a diagnostic build"

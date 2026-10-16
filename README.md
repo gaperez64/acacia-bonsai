@@ -45,28 +45,9 @@ decision arm: LTL `-f` input and synthesis `-s` use the regular solver arms.
 The sparse formula configuration remains available in the group as the
 non-native fallback, with the Spot obligation arm alongside its four regular arms.
 
-`both:obligation:spot` belongs to the explicit default portfolios of the shipping
-presets that can run it. Membership comes from the compile-time registry and is
-recorded in the build's Meson options; historical defaults stay unchanged.
-It races one supervised worker when the original normalized objective is a syntactic obligation.
-Decision mode makes one trusted exact Spot call, with no retained strategy or re-check, bounded
-by the invocation/race. Select
-it alone with `--arms both:obligation:spot`; the objective is then prepared in one
-supervised child, and an ineligible objective returns UNKNOWN without starting the
-helper. In a default portfolio an ineligible input starts no extra process.
-Explicit `--arms` lists run only the named arms. To use the original decision
-portfolio, select its arms explicitly or build a preset without the obligation
-arm. Synthesis (`-s`) trusts Spot's retained strategy and exports the usual ASCII AIGER
-controller with the CLI's Mealy/Moore timing, Moore initialization and strict TLSF objective.
-Both modes declare `trust: spot_exact`; controller correctness is checked offline in the tests.
-In synthesis mode the parent selects the first conclusive verdict and suspends the other
-workers before controller construction/export. Only the selected REAL worker writes to `-s`;
-the parent accepts REAL after the controller stream closes successfully, then cancels the
-competitors. Export failure resumes the existing fallback workers. UNREAL needs no controller.
-Interruption or deadline expiry may leave partial bytes but cannot publish REAL. Selecting the
-obligation arm alone with `-s` retains ordinary synthesis fallback.
-Trust boundaries and historical driver screens are in
-[the obligation arm notes](benchmarking/coverage-first/obligation-helper.md).
+The default portfolio also includes an exact [parity game arm](benchmarking/coverage-first/parity-arm.md)
+and a [Spot obligation arm](benchmarking/coverage-first/obligation-helper.md) for
+syntactic obligations; run the latter alone with `--arms both:obligation:spot`.
 
 # Dependencies
 
@@ -211,9 +192,10 @@ Inspect the registry with:
 python3 scripts/acacia-config.py validate
 python3 scripts/acacia-config.py list-presets              # names only
 python3 scripts/acacia-config.py list-presets --long       # with role and description
-python3 scripts/acacia-config.py show best_decomp_mona     # resolved options
-python3 scripts/acacia-config.py show best_decomp_mona --describe
-python3 scripts/acacia-config.py meson-args best_decomp_mona
+preset=$(python3 scripts/acacia-config.py list-group docker_default | head -1)
+python3 scripts/acacia-config.py show "$preset"            # resolved options
+python3 scripts/acacia-config.py show "$preset" --describe
+python3 scripts/acacia-config.py meson-args "$preset"
 ```
 
 The configurations we ship are whichever ones the `docker_default` group names:
