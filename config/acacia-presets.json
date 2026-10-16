@@ -502,6 +502,12 @@
       "spot_lazy_provider": true,
       "forward_safety_solver": true,
       "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward"
+    },
+    "otf_sparse_formula_parity": {
+      "description": "Seven-worker portfolio combining antichain search, sparse formula solving, a GR(1) realizability pre-pass, and exact Spot obligation and parity game solving.",
+      "role": "shipping",
+      "inherits": "otf_sparse_formula_gr1_real_prepass",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-real-lift:oxidd,both:obligation:spot,both:parity:spot"
     }
   },
   "tool_baselines": {
@@ -541,6 +547,7 @@
   },
   "groups": {
     "docker_default": [
+      "otf_sparse_formula_parity",
       "otf_sparse_formula_gr1_real_prepass",
       "otf_sparse_formula",
       "best_decomp_rank_bucketed_semantic_mona",

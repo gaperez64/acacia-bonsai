@@ -11,7 +11,9 @@
 #include <string_view>
 #include <vector>
 
-enum class portfolio_arm_kind { legacy, gr1, gr1_lift, gr1_real_lift, param_lift, obligation };
+enum class portfolio_arm_kind {
+  legacy, gr1, gr1_lift, gr1_real_lift, param_lift, obligation, parity
+};
 
 struct legacy_arm_options {
     TRANSLATION_PREF_T translation_pref;
@@ -46,6 +48,8 @@ struct portfolio_arm {
     }
 
     const char* native_name () const {
+      if (kind == portfolio_arm_kind::parity)
+        return "both:parity:spot";
       if (kind == portfolio_arm_kind::obligation)
         return "both:obligation:spot";
       if (kind == portfolio_arm_kind::gr1)
@@ -82,6 +86,7 @@ enum class portfolio_arm_parse_error {
   both_transform,
   native_backend,
   obligation_spec,
+  parity_spec,
   duplicate,
 };
 

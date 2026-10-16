@@ -5,6 +5,175 @@ the verified archives behind each historical claim. Fetch one with
 `python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
 The [measurement protocol](README.md) defines caps, gates, and noise floors.
 
+## 2026-10-16 — OTD close: ship the parity portfolio
+
+Owner decision: ship OTF, `otf_sparse_formula_parity`, as the first
+`docker_default` member; retain `otf_sparse_formula_gr1_real_prepass` second.
+OTF extends the previous shipping portfolio with `both:parity:spot`. Campaign
+`otd-OTF-owner20261016` supplies the generated rows below; closeout runs only
+unit tests and static checks. Archive publication and registry rows are the driver's
+follow-up, not a claim made by this source update.
+
+Owner exception, 2026-10-15, THIS campaign only: frozen OTF is measured on the full 1,524-input corpus at 17 s; the primary 60 s column follows the 2026-10-16 derivation disclosed below. The standing rule that the Acacia baseline is always rerun remains in force. OTF-vs-archived-master and OTF-vs-archived-ltlsynt comparisons are INDICATIVE: master is a different revision and both references are from separate sessions. Archived master is PMC4 / PR #244 head 188cef33, not frozen OTM 06e32c99. Fresh OTF and archived master use native TLSF end-to-end wall clocks (including parsing; fresh OTF also charges the policy/log wrapper). Archived ltlsynt uses preconverted LTL and excludes SyFCo conversion; its Strict-semantics limitation and conversion failures remain historical limitations. Its PAR-2 is reported separately on that historical clock, with no cross-clock timing delta, speedup, or combined score. The ltlsynt 60 s column is derived, not a fresh full-corpus 60 s pass. Selected inputs use three cooled OTF repetitions and frozen OTM according to the owner shortcut below; confirmations annotate differences and never replace primary rows or establish a full-corpus matched claim.
+
+Owner decision 2026-10-16: the primary OTF 60 s column is derived, following the archived ltlsynt labelling. Retain every measured-60 row, including existing measurements of inputs already decided at 17 s. Otherwise recycle a decided row from the complete digest-bound 17 s pass, retaining its original time and marking it recycled-17. Only 17 s undecided inputs missing a 60 s measurement are run. The report gives measured and recycled counts next to the archived-reference disclosure. Winner tally uses phase records and run indices from whichever run supplied each row. The archived ltlsynt 60 s reference likewise contains 1,270 recycled 17 s rows plus 254 measured 60 s rows.
+
+Confirmation selection per cap is the union of every coverage difference between OTF and archived master (a completed verdict on exactly one side, including timeouts, memory failures and errors on the other) and every input where either side completed a verdict in [0.8*cap, cap] inclusive. Common unsolved inputs, including common timeouts and failures, are excluded from confirmation and reported as common unsolved. The windows are [13.6,17] s and [48,60] s. Every selected input requires three cooled OTF repetitions. Frozen OTM runs repetition 1 everywhere; only after that repetition finishes normally with both treatments complete, repetitions 2 and 3 skip OTM when archived master and OTM r1 are both undecided, preserving all three OTM runs for near-cap selections, archived-master decisions and OTM r1 decisions. Skips are explicit skipped-by-rule records. A primary difference reproduced in three full pairs is confirmed-paired; an eligible skipped gain with three reproducing OTF decisions is confirmed-shortcut. The report discloses the rule and OTM skipped-invocation counts per cap.
+
+OTF 60 s: 551 measured at 60 s, 973 recycled from 17 s. Owner decision 2026-10-16: the primary 60 s OTF column is derived. Keep every measured 60 s observation; otherwise recycle a decided 17 s row from the same frozen binary, retaining its 17 s time. Run at 60 s only inputs not decided at 17 s and not already measured at 60 s. Provenance: measured-60 or recycled-17. Winning arms use phase records from the run supplying each row.
+
+Serial, 8 GiB/no swap, memory.high=max including ancestors, no deadline, cooled to 70 C before every launch. One primary treatment; paired order rotates. No same-session full-corpus comparison or noise floor is claimed. All 1,524 rows remain in coverage/PAR-2 denominators. Primary observations and failed launch attempts remain preserved.
+
+Confirmation selection (adjudication-plan schema version 2; repetition clause superseded by the owner shortcut below): Every OTF coverage gain/loss vs archived master, including timeouts, memory failures and errors on either side, OR a completed verdict by OTF or archived master in [0.8*cap, cap] inclusive. Inputs unsolved on both sides are excluded and reported as common unsolved. Selected inputs require 3 cooled frozen OTM/OTF pairs at the same cap.
+
+Owner shortcut decision 2026-10-16, per cap: OTF has 3 cooled repetitions on every selected input. OTM repetition 1 covers every selected input and must finish normally with both treatments complete before repetitions 2 or 3. In repetitions 2 and 3 skip OTM only when archived master and OTM repetition 1 are both undecided; near-cap completed-verdict selections keep all 3 OTM runs. Archived-master decisions (including OTF losses) and OTM repetition-1 decisions also keep all 3 OTM runs. Record skipped-by-rule explicitly, never as missing or a timeout. An eligible skipped input is a confirmed OTF gain only when all 3 OTF repetitions reproduce the primary gain. Remaining order, cooling and conflict stops are unchanged.
+
+OTM invocations skipped-by-rule per cap: {"17": 220, "60": 192}
+
+### 17 s native end-to-end columns
+
+| Column | Solved (R/U) | PAR-2 sum (s) | Mean (s) |
+|---|---:|---:|---:|
+| OTF (fresh-measured) | 1339 (613/726) | 6928.151 | 4.546 |
+| master-archive (measured) | 1222 (569/653) | 11156.318 | 7.320 |
+
+#### 17 s archived ltlsynt preconverted clock (separate)
+
+Conversion excluded. Historical Strict limitation and 7 conversion failures retained. No native-vs-ltlsynt PAR-2 delta or speedup.
+
+| Column | Solved (R/U) | Historical PAR-2 sum (s) | Mean (s) |
+|---|---:|---:|---:|
+| ltlsynt216-archive (measured) | 1263 (576/687) | 9421.852 | 6.182 |
+
+OTF vs master-archive: **INDICATIVE**, +118/−1 solves. Common unsolved: 184.
+Native-clock PAR-2 delta: -4228.167 s (descriptive; revision/session/wrapper differences disclosed). Confirmed vs frozen OTM in all 3 pairs: +1/−1. Confirmed OTF gains under shortcut: +110.
+
+OTF vs ltlsynt216-archive: **INDICATIVE**, +85/−9 solves. Common unsolved: 176.
+
+| Column | MEMOUT | Scope peak complete | Process RSS complete |
+|---|---:|---:|---:|
+| OTF | 0 | 1524/1524 | 1524/1524 |
+| master-archive | 0 | 1524/1524 | 1524/1524 |
+| ltlsynt216-archive | 0 | 1517/1524 | 1517/1524 |
+
+Winning arms (worker:requested:effective:route): `{'0:backward:backward:backward': 138, '1:forward:forward:solve_game': 22, '0:backward:backward:real': 247, '2:spot-guarded-sparse:spot-guarded-sparse:solve_game': 72, '2:spot-guarded-sparse:spot-guarded-sparse:unreal_formula': 199, '5:parity:spot-fast:deterministic_buchi': 173, '3:forward:forward:solve_game': 64, '5:parity:strpm-simd:acd_parity': 223, '3:forward:forward:unreal_automaton': 2, '6:obligation:obligation:original_game': 23, '0:backward:backward:equivariance': 8, '4:oxidd:oxidd:direct': 25, '4:oxidd:oxidd:R': 6, '1:forward:forward:real': 1}`; 0 missing, 136 uncertain of 1339 completed OTF solves. accepted parent_winner phase events from the run supplying each row (measured-60 uses 60 s; recycled-17 uses 17 s), no deadline and no --route-records. Memory outcomes, separate scope peaks/process RSS, completeness, exact Acacia-only/ltlsynt-only sets, per-column provenance and every paired outcome are in summary.json and per-instance.tsv.
+
+### 60 s native end-to-end columns
+
+| Column | Solved (R/U) | PAR-2 sum (s) | Mean (s) |
+|---|---:|---:|---:|
+| OTF (derived) | 1354 (622/732) | 21540.570 | 14.134 |
+| master-archive (measured) | 1255 (578/677) | 34165.000 | 22.418 |
+
+#### 60 s archived ltlsynt preconverted clock (separate)
+
+Conversion excluded. Historical Strict limitation and 7 conversion failures retained. No native-vs-ltlsynt PAR-2 delta or speedup.
+
+| Column | Solved (R/U) | Historical PAR-2 sum (s) | Mean (s) |
+|---|---:|---:|---:|
+| ltlsynt216-archive (derived) | 1286 (589/697) | 29864.297 | 19.596 |
+
+OTF vs master-archive: **INDICATIVE**, +99/−0 solves. Common unsolved: 170.
+Native-clock PAR-2 delta: -12624.430 s (descriptive; revision/session/wrapper differences disclosed). Confirmed vs frozen OTM in all 3 pairs: +0/−0. Confirmed OTF gains under shortcut: +96.
+
+OTF vs ltlsynt216-archive: **INDICATIVE**, +82/−14 solves. Common unsolved: 156.
+
+| Column | MEMOUT | Scope peak complete | Process RSS complete |
+|---|---:|---:|---:|
+| OTF | 0 | 1524/1524 | 1524/1524 |
+| master-archive | 0 | 1524/1524 | 1524/1524 |
+| ltlsynt216-archive | 2 | 1517/1524 | 1517/1524 |
+
+Winning arms (worker:requested:effective:route): `{'0:backward:backward:backward': 143, '1:forward:forward:solve_game': 22, '0:backward:backward:real': 246, '2:spot-guarded-sparse:spot-guarded-sparse:solve_game': 74, '2:spot-guarded-sparse:spot-guarded-sparse:unreal_formula': 199, '5:parity:spot-fast:deterministic_buchi': 176, '3:forward:forward:solve_game': 65, '5:parity:strpm-simd:acd_parity': 231, '3:forward:forward:unreal_automaton': 2, '6:obligation:obligation:original_game': 23, '0:backward:backward:equivariance': 9, '4:oxidd:oxidd:direct': 28, '4:oxidd:oxidd:R': 6, '1:forward:forward:real': 1}`; 0 missing, 129 uncertain of 1354 completed OTF solves. accepted parent_winner phase events from the run supplying each row (measured-60 uses 60 s; recycled-17 uses 17 s), no deadline and no --route-records. Memory outcomes, separate scope peaks/process RSS, completeness, exact Acacia-only/ltlsynt-only sets, per-column provenance and every paired outcome are in summary.json and per-instance.tsv.
+
+### Column provenance and master revision gap
+
+- master-archive 17 s: archive `postmem20261012-closing`, TSV SHA-256 `dda41008750ea430e565eb1cc0f8f0aa37aa2bc233021d3910bc8101d09b3579`, binary `b3953b437ede826eabfeb54a5d6f2deb3f79f59153189b7ae79a3c6b35b7951f`, revision `188cef33e8d5002109fca8d81becfd67c8524e70`, UTC 2026-10-12T11:04:05.731600Z–2026-10-12T15:08:38.647146Z, measured {'measured-17s': 1524}, clock `native-tlsf-end-to-end`.
+- master-archive 60 s: archive `postmem20261012-closing`, TSV SHA-256 `fb30a8c1d0b2adfe49e4324db65addc1490fe609fd5119c7756e15d33b2f2ef0`, binary `b3953b437ede826eabfeb54a5d6f2deb3f79f59153189b7ae79a3c6b35b7951f`, revision `188cef33e8d5002109fca8d81becfd67c8524e70`, UTC 2026-10-12T15:10:51.292957Z–2026-10-13T02:39:27.617094Z, measured {'measured-60s': 1524}, clock `native-tlsf-end-to-end`.
+- ltlsynt216-archive 17 s: archive `legacy20261008-closing`, TSV SHA-256 `f308a5ddf4e3ac09d44b49bfe9254a7a6f55b2bbad455144802f3a324147d678`, binary `fb05e43f140c9e546c828045c59b10df57091197130539c6a8b848ba8a437f8c`, revision `spot-2.16`, UTC 2026-10-08T22:29:32.196564Z–2026-10-09T07:29:39.940243Z, measured {'measured-17s': 1524}, clock `preconverted-ltl-conversion-excluded`.
+- ltlsynt216-archive 60 s: archive `legacy20261008-closing`, TSV SHA-256 `655bbfe5ccdb8cd41493d9f3572ed69d75ad6e47741ccb0d82bee1cf92aa2b95`, binary `fb05e43f140c9e546c828045c59b10df57091197130539c6a8b848ba8a437f8c`, revision `spot-2.16`, UTC 2026-10-08T22:29:32.196564Z–2026-10-10T08:06:03.498607Z, derived {'measured-60s': 254, 'recycled-17s': 1270}, clock `preconverted-ltl-conversion-excluded`.
+
+Fresh OTF provenance: {"flags": "", "label": "OTF", "preset": "otf_sparse_formula_parity", "revision": "74eeebee0120da7863d4c89036c4781e1d7b5dd7", "sha256": "1a846b909a10f8838d29cffc4ebc3f2dbb21f383ac9f58eba5c523759f6da32e", "tool": "acacia"}
+
+```text
+58dba0f1 Make the portfolio deadline test see every fake child
+ed666cdf Merge remote-tracking branch 'origin/master' into fix/obligation-arm-misses
+1a3f33e0 Trust the obligation arm's synthesized strategies too
+53c3521b Merge remote-tracking branch 'origin/master' into diag/memory-blocked-attribution
+c48592af Trust the obligation arm's decisions and check its controllers
+234b9d28 Attribute native and search-stage progress in phase records
+```
+
+Confirmed-paired means the primary gain/loss reproduced in all three frozen OTM/OTF pairs. Confirmed-shortcut gains use the disclosed archived-master/OTM-r1 undecided rule and three completed OTF repetitions. Reversed, mixed and unreproduced differences remain disclosed; paired results never substitute for archived full-corpus master scores. There is no automatic admission decision.
+
+### Confirmed outcomes and winner provenance
+
+At 17 s, **+110 confirmed-shortcut gains and +1/−1 confirmed-paired** reproduce
+against frozen OTM under the disclosed rules. Near-cap reversals remain disclosed:
+`collector_v2_pb_15_pe_` has OTF 0/3 versus OTM 3/3 decisions; `07`, a primary
+gain, has OTF 0/3 versus OTM 2/3. These confirmations never replace primary rows.
+At 60 s, **+96 confirmed gains and zero confirmed losses**. There are **no
+verdict conflicts**. Raw full-corpus coverage remains +118/−1 and +99/−0 against
+archived master, separately from confirmation.
+
+The parity arm produced **112 of the 118 new 17 s decisions** with complete winner telemetry; one more (`ordered-visits-choice-real`) is likely but its telemetry was dropped. Antichain arms
+provide most of the decisions that archived ltlsynt lacks, so the portfolio's
+complementarity remains useful. Winner telemetry is uncertain on **136/129 rows**
+at 17/60 s; it does not justify inferring an arm for those rows. Accepted winner
+records use the actual run supplying each primary row. Evidence:
+`otd-OTF-owner20261016`.
+
+### Gate decisions
+
+G2s's membership-default 6% per-input cycle ceiling **failed on three inputs**:
+`arbiter_with_buffer6` **+12.6%**, `arbiter_with_buffer_pb_5_pe_` **+32.9%**, and
+`lift_pb_3_pe_` **+8.2%**. Cycles sum all race workers; the owner accepted these
+regressions as the cost of the always-on parity worker, including where it does
+not win. This remains an accepted failure, not a gate pass.
+
+G5 failed only on **seven SyFCo strong-next conversions**, the
+`finding_nemo_pb_{1..7}_pe_` inputs: SyFCo 1.2.1.2 cannot express strong next in
+`ltlxba`. The owner explicitly waived that conversion exception (#265).
+The remaining comparison has 1,499 MATCH, no opposite verdicts or frontend errors,
+17 NATIVE_ONLY and one near-cap CONVERTED_ONLY; spot-check 10/10 and the conversion
+check pass. Evidence for both decisions: `otd-gates-OTF20261016`.
+
+### Package decisions and engine selection
+
+- **A — obligation memory sharing:** the measured memory-share-alone option gains
+  `chomp_pb_3_6_pe_` at 180 s, reproduced in three repetitions at about 100 s.
+  The default memory share is unchanged; this option is not shipped as the default.
+  `screen.py` had overwritten each label's summary with the last one-input call;
+  the correction regenerates the summary from all raw rows and the complete input
+  list. The original observations are retained. Evidence: `otd-A-obligation20261015`.
+- **B — implication simplification:** screen found one translation rescue that the
+  worker cannot turn into a decision; 524 deferred boundaries were not run end to end.
+  No production change. Evidence: `otd-B-implication20261014`.
+- **S — downset rescreen:** negative; no replacement of the shipping downset
+  representation. Evidence: `otd-S-downsets20261014`.
+- **C — deterministic acceptance tiers:** the experimental conversion into the
+  counting game is superseded by the parity arm's structural routing. Tiers 1–3
+  retain deterministic Büchi and Spot's game solver; tier 4 retains parity and
+  uses adaptive strpm-simd followed by Spot fallback. Evidence:
+  `otd-C-parity-route20261015`.
+
+The tier 1–3 engine comparison used 36 selected inputs at 60 s, serial 8 GiB
+scopes, with no verdict conflicts. **Spot's explicit solver beats symbolic GR(1)**
+on these tiers; keep Spot as the only production engine there.
+
+| Tier 1–3 engine | Solved / 36 | PAR-2 total (s, approximate) |
+|---|---:|---:|
+| Spot explicit game solver | 36/36 | 44 |
+| strpm-simd | 35/36 | 149 |
+| Symbolic GR(1) | 34/36 | 265 |
+| K-bounded antichain search | 33/36 | 427 |
+
+These are selected-panel engine comparisons, not full-corpus scores. Evidence:
+`otd-parity-engines20261015`. The [arm contract](coverage-first/parity-arm.md)
+describes production trust (no recheck; independent checks in tests), timing and
+GPL-3.0 port provenance; the [decision record](coverage-first/decisions.md) records
+the owner exceptions and shipped default.
+
 ## 2026-10-13 — post-memory frontend close: admit the obligation arm (#244)
 
 Campaign `postmem20261012-closing`: all 1,524 SYNTCOMP26 inputs, fresh matched
@@ -595,3 +764,13 @@ evidence: `residual-construction20261013`, `spot-implication20261013`,
 `postmem20261011-p2`, `postmem20261012-closing`, `binary-PMC4-b3953b43`.
 `obligation-trust20261013` and `binary-PMC5-0b8b9be1` preserve the separate
 trust/decision-mode screens and frozen #255 candidate without claiming admission.
+
+
+## 2026-10-15 — deterministic-Buchi solver choice for the parity arm
+
+Keep Spot's explicit co-Buchi solver for tiers 1–3. On the 36-input 60 s comparisons,
+Spot decides 36/36 (PAR-2 43–44 s), versus 33/36 (427 s) for K-bounded antichains,
+35/36 (149 s) for strpm-simd, and 34/36 (265 s) for symbolic GR(1), with zero verdict
+conflicts. The alternatives remain on `research/parity-buchi-engines`. See the
+[comparison and diagnoses](coverage-first/parity-arm.md#tiers-13-keep-spots-explicit-solver)
+for the resource regime and local evidence directories; archive IDs are pending.

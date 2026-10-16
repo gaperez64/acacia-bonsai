@@ -2946,5 +2946,49 @@
   "subprojects/tlsf-tools/src/lib/oxidd_order.c | fail | UNKNOWN | variable order | \"order_apply_mismatch\" | 0": {
     "cause": "OXIDD_FAILURE_CONFIGURATION",
     "telemetry": "STOPPED/error"
+  },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"address_space_limit\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"invalid_formula\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"controller_export_failed\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"translation_allocation\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"allocation\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"capacity\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/parity_arm.cc | worker_decline | UNKNOWN | worker | \"acceptance_capacity\" | 0": {
+    "cause": "worker_decline",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"parity_exception\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"parity_exception\" | 1": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"rss_share\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"inconclusive\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
   }
 }

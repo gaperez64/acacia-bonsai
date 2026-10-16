@@ -50,10 +50,21 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 
 ## Validator, contract and failure-origin census
 
-737 enumerated checks/origins across preparation, reduction, seeds, R, U, checking, native proof binding, OxiDD and Spot providers. A slash-separated class means the source retains a typed failure from its called operation; status matrices and runtime fault panels test the alternatives. Boolean helpers report through the named consumer; false does not itself emit telemetry.
+748 enumerated checks/origins across preparation, reduction, seeds, R, U, checking, native proof binding, OxiDD and Spot providers. A slash-separated class means the source retains a typed failure from its called operation; status matrices and runtime fault panels test the alternatives. Boolean helpers report through the named consumer; false does not itself emit telemetry.
 
 | Origin | Legacy result | Cause expression/helper | Expected telemetry | Stage | Check/message |
 |---|---|---|---|---|---|
+| src/parity_arm.cc:43 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"rss_share"` |
+| src/parity_arm.cc:53 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"address_space_limit"` |
+| src/parity_arm.cc:71 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"invalid_formula"` |
+| src/parity_arm.cc:113 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"inconclusive"` |
+| src/parity_arm.cc:123 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"controller_export_failed"` |
+| src/parity_arm.cc:130 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"translation_allocation"` |
+| src/parity_arm.cc:132 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"allocation"` |
+| src/parity_arm.cc:134 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"capacity"` |
+| src/parity_arm.cc:140 | `UNKNOWN` | `worker_decline` | DECLINE/applicability | `worker` | `"acceptance_capacity"` |
+| src/parity_arm.cc:142 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"parity_exception"` |
+| src/parity_arm.cc:144 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"parity_exception"` |
 | src/native_support.cc:91 | `UNKNOWN` | `worker_decline` | DECLINE/applicability | `worker` | `reason.c_str ()` |
 | src/native_support.cc:94 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `native_failure_reason (category)` |
 | src/native_support.cc:122 | `status` | `category` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `stage` | `message` |
@@ -215,11 +226,11 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 | src/solver/spot_guarded_forward_safety.hh:254 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
 | src/solver/spot_guarded_forward_safety.hh:324 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
 | src/solver/spot_guarded_forward_safety.hh:447 | `UNKNOWN` | `Unknown::resource_limit` | STOPPED/resource | `provider` | `Unknown::resource_limit` |
-| src/solver/solver_invoker.cc:124 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"resource"` |
-| src/solver/solver_invoker.cc:128 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `message.find ("Too many acceptance sets") != std::string_view::npos ? "resource" : "error"` |
-| src/solver/solver_invoker.cc:137 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"error"` |
-| src/solver/solver_invoker.cc:206 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
-| src/solver/solver_invoker.cc:414 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
+| src/solver/solver_invoker.cc:125 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"resource"` |
+| src/solver/solver_invoker.cc:129 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `message.find ("Too many acceptance sets") != std::string_view::npos ? "resource" : "error"` |
+| src/solver/solver_invoker.cc:138 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"error"` |
+| src/solver/solver_invoker.cc:207 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
+| src/solver/solver_invoker.cc:415 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
 | src/solver/synthesis_rendezvous.hh:69 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
 | src/solver/spot_lazy_buchi_view.hh:65 | `UNKNOWN` | `resource` | STOPPED/resource | `provider` | `"lazy Buchi BDD budget exceeded"` |
 | src/solver/spot_lazy_buchi_view.hh:86 | `UNKNOWN` | `resource` | STOPPED/resource | `provider` | `"lazy Buchi acceptance budget exceeded"` |

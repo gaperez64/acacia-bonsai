@@ -84,7 +84,11 @@ See [the panels](benchmarking/RESULTS.md) and
 
 ### Unreleased
 
-- Add `--obligation-memory-share equal|alone` to let the obligation helper use its full memory allowance; equal sharing remains the default.
+- **Oct 16:** `--obligation-memory-share alone` lets the obligation helper use its
+  whole memory allowance; equal sharing remains the default.
+
+- **Oct 16:** The default portfolio now includes exact parity game solving,
+  improving coverage; see the [campaign results](benchmarking/RESULTS.md).
 
 - **Oct 14:** With `-s`, the first conclusive verdict selects the worker that builds
   and writes the controller. Other workers are suspended and resume if that worker
