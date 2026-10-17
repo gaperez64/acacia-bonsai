@@ -6,6 +6,7 @@
 # include <cstdio>
 # include <cstdlib>
 # include <fstream>
+# include <sys/wait.h>
 # include <unistd.h>
 
 namespace acacia::synthesis {
@@ -73,6 +74,17 @@ namespace acacia::synthesis {
   }
   void test_before_publication () {
     gate ("synthesis_publishing", "ACACIA_TEST_SYNTHESIS_PUBLICATION_FD");
+  }
+  void test_before_reap (int worker_pid) {
+    if (!std::getenv ("ACACIA_TEST_SYNTHESIS_REAP_FD"))
+      return;
+    gate ("synthesis_reaping", "ACACIA_TEST_SYNTHESIS_REAP_FD");
+    // The test interrupts the parent while gated. Keep the child waitable so
+    // the ordinary loop must reap the handler's SIGKILL before checking its flag.
+    siginfo_t finished {};
+    while (waitid (P_PID, worker_pid, &finished, WEXITED | WNOWAIT) < 0)
+      if (errno != EINTR)
+        throw std::runtime_error ("test wait for interrupted worker failed");
   }
 }
 #endif
