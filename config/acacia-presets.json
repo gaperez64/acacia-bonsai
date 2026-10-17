@@ -7,48 +7,12 @@
     ],
     "grandfathered": [
       "base",
-      "base_iosprecom_mona",
-      "best",
-      "best_mona",
       "best_decomp_mona",
-      "best_decomp_mona_noequivariant",
       "best_decomp_mona_any",
-      "best_decomp_mona_race",
-      "best_decomp_kdtree_mona",
-      "best_decomp_bboxtree_mona",
-      "best_decomp_bboxtree_mona_noequivariant",
-      "best_decomp_comptrie_mona",
-      "best_decomp_sharingtrie_mona",
-      "best_decomp_simpsharingtree_mona",
-      "best_decomp_sharingtree_mona",
       "best_decomp_mona_diag",
-      "best_decomp_skiplist_mona",
-      "best_decomp_cst_mona",
       "best_decomp_rank_bucketed_mona",
-      "best_decomp_rank_bucketed_mona_diag",
-      "best_decomp_rank_bucketed_semantic_mona_local",
-      "best_decomp_rank_bucketed_semantic_mona_local_diag",
-      "best_decomp_rank_bucketed_mona_diag_eq_relaxed",
       "best_decomp_rank_bucketed_semantic_mona",
-      "best_decomp_rank_bucketed_semantic_mona_geometric",
-      "best_decomp_rank_bucketed_semantic_mona_contradiction",
-      "best_decomp_rank_bucketed_semantic_mona_dominance",
-      "best_decomp_rank_bucketed_semantic_mona_diag",
-      "best_decomp_rank_bucketed_semantic_mona_forward",
-      "best_decomp_rank_bucketed_semantic_mona_forward_covering",
-      "best_decomp_rank_bucketed_semantic_mona_forward_geometric",
-      "best_decomp_rank_bucketed_semantic_mona_forward_diag",
-      "best_decomp_rank_bucketed_mona_race",
-      "best_decomp_rank_bucketed_mona_noequivariant",
-      "best_decomp_rank_bucketed_mona_eq_baseline",
-      "best_decomp_rank_bucketed_mona_eq_min_clients_2",
-      "best_decomp_rank_bucketed_mona_eq_max_states_2048",
-      "best_decomp_rank_bucketed_mona_eq_min_blocks_2",
-      "best_decomp_filtered_vector_mona",
-      "best_decomp_filtered_vector_mona_noequivariant",
-      "best_decomp_rank_bucketed_semantic_mona_forward_contradiction",
-      "best_four_arm_contradiction",
-      "best_four_arm_bboxtree"
+      "best_decomp_rank_bucketed_mona_eq_min_blocks_2"
     ]
   },
   "aliases": {},
@@ -57,457 +21,131 @@
       "description": "Use all registry defaults as the untuned configuration reference for build and solver checks.",
       "role": "reference"
     },
-    "base_iosprecom_mona": {
-      "description": "Replace only input/output precomputation with MONA BDD traversal to isolate its effect in local tuning.",
-      "role": "sweep",
-      "ios_precomputer": "mona"
-    },
-    "best": {
-      "description": "Retain the undecomposed powerset-precomputation experiment with standard automaton preprocessing, critical input selection and SIMD maximum comparisons disabled for historical logs.",
-      "role": "legacy",
-      "aut_preprocessor": "standard",
-      "ios_precomputer": "powset",
-      "input_picker": "critical",
-      "simd_is_max": false,
-      "decompose_spec": false
-    },
-    "best_mona": {
-      "description": "Use MONA precomputation, standard automaton preprocessing, critical input selection and no SIMD maximum comparisons without decomposition to measure the effect of decomposing specifications.",
-      "role": "sweep",
-      "aut_preprocessor": "standard",
-      "ios_precomputer": "mona",
-      "input_picker": "critical",
-      "simd_is_max": false,
-      "decompose_spec": false
-    },
     "best_decomp_mona": {
       "description": "Use plain vector-backed downsets with decomposition, MONA precomputation, standard automaton preprocessing, critical input selection and no SIMD maximum comparisons as the downset comparison reference.",
       "role": "reference",
+      "simd_is_max": false,
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
-      "input_picker": "critical",
-      "simd_is_max": false,
-      "decompose_spec": true,
-      "enable_equivariant_solver": true
-    },
-    "best_decomp_mona_noequivariant": {
-      "description": "Disable the exact equivariant solver as the classic-only control for measuring symmetry solving with plain vector-backed downsets.",
-      "role": "reference",
-      "inherits": "best_decomp_mona",
-      "enable_equivariant_solver": false
+      "input_picker": "critical"
     },
     "best_decomp_mona_any": {
       "description": "Use Spot translation preference any instead of small to provide a shipped alternative translation with plain vector-backed downsets.",
-      "role": "shipping",
-      "inherits": "best_decomp_mona",
-      "translation_pref": "any"
-    },
-    "best_decomp_mona_race": {
-      "description": "Race Spot small and any translations to compare translation diversity against the plain-vector small-only reference.",
-      "role": "sweep",
-      "inherits": "best_decomp_mona",
-      "translation_pref": "small+any"
-    },
-    "best_decomp_kdtree_mona": {
-      "description": "Replace plain vector-backed downsets with a k-d tree to compare spatial indexing in the downset sweep.",
-      "role": "sweep",
-      "inherits": "best_decomp_mona",
-      "vector_downset": "kdtree_backed"
-    },
-    "best_decomp_bboxtree_mona": {
-      "description": "Replace plain vector-backed downsets with a bounding-box tree to compare dominance-query pruning in the downset sweep.",
-      "role": "sweep",
-      "inherits": "best_decomp_mona",
-      "vector_downset": "bboxtree_backed"
-    },
-    "best_decomp_bboxtree_mona_noequivariant": {
-      "description": "Disable the exact equivariant solver as the classic-only control for measuring symmetry solving with bounding-box-tree downsets.",
       "role": "reference",
-      "inherits": "best_decomp_bboxtree_mona",
-      "enable_equivariant_solver": false
-    },
-    "best_decomp_comptrie_mona": {
-      "description": "Replace plain vector-backed downsets with a compressed trie to compare compressed storage in the downset sweep.",
-      "role": "sweep",
-      "inherits": "best_decomp_mona",
-      "vector_downset": "comptrie_backed"
-    },
-    "best_decomp_sharingtrie_mona": {
-      "description": "Replace plain vector-backed downsets with a sharing trie to compare shared storage in the downset sweep.",
-      "role": "sweep",
-      "inherits": "best_decomp_mona",
-      "vector_downset": "sharingtrie_backed"
-    },
-    "best_decomp_simpsharingtree_mona": {
-      "description": "Replace plain vector-backed downsets with the simple sharing-tree implementation to compare tree storage in the downset sweep.",
-      "role": "sweep",
-      "inherits": "best_decomp_mona",
-      "vector_downset": "simple_sharingtree_backed"
-    },
-    "best_decomp_sharingtree_mona": {
-      "description": "Replace plain vector-backed downsets with the sharing-tree implementation to compare shared tree storage in the downset sweep.",
-      "role": "sweep",
-      "inherits": "best_decomp_mona",
-      "vector_downset": "sharingtree_backed"
+      "translation_pref": "any",
+      "simd_is_max": false,
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "mona",
+      "input_picker": "critical"
     },
     "best_decomp_mona_diag": {
       "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile the plain-vector downset reference.",
       "role": "diagnostic",
-      "inherits": "best_decomp_mona",
-      "enable_diagnostics": true
-    },
-    "best_decomp_skiplist_mona": {
-      "description": "Replace plain vector-backed downsets with a skip list to compare ordered indexing in the downset sweep.",
-      "role": "sweep",
-      "inherits": "best_decomp_mona",
-      "vector_downset": "skiplist_backed"
-    },
-    "best_decomp_cst_mona": {
-      "description": "Replace plain vector-backed downsets with a covering sharing tree to compare covering-based storage in the downset sweep.",
-      "role": "sweep",
-      "inherits": "best_decomp_mona",
-      "vector_downset": "cst_backed"
+      "simd_is_max": false,
+      "enable_diagnostics": true,
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "mona",
+      "input_picker": "critical"
     },
     "best_decomp_rank_bucketed_mona": {
       "description": "Replace plain vector-backed downsets with rank-bucketed vectors to compare rank-based dominance filtering in the downset sweep.",
       "role": "sweep",
-      "inherits": "best_decomp_mona",
-      "vector_downset": "rank_bucketed_vector_backed"
-    },
-    "best_decomp_rank_bucketed_mona_diag": {
-      "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile rank-bucketed downsets and MONA action construction.",
-      "role": "diagnostic",
-      "inherits": "best_decomp_rank_bucketed_mona",
-      "enable_diagnostics": true
-    },
-    "best_decomp_rank_bucketed_semantic_mona_local": {
-      "description": "Enable the bounded local winning-certificate and root-refutation probe as the S reference for comparison with the backward B configuration.",
-      "role": "reference",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona",
-      "local_certificate": true
-    },
-    "best_decomp_rank_bucketed_semantic_mona_local_diag": {
-      "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to inspect the local-certificate reference.",
-      "role": "diagnostic",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona_local",
-      "enable_diagnostics": true
-    },
-    "best_decomp_rank_bucketed_mona_diag_eq_relaxed": {
-      "description": "Lower equivariant recognition to two clients and raise its state cap to 32768, retaining the two-block gate, to diagnose symmetry excluded by admission thresholds.",
-      "role": "diagnostic",
-      "inherits": "best_decomp_rank_bucketed_mona_diag",
-      "equivariant_min_clients": 2,
-      "equivariant_min_blocks": 2,
-      "equivariant_max_states": 32768
+      "simd_is_max": false,
+      "vector_downset": "rank_bucketed_vector_backed",
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "mona",
+      "input_picker": "critical"
     },
     "best_decomp_rank_bucketed_semantic_mona": {
       "description": "Deduplicate equivalent MONA output actions before decoding to reduce action construction in the shipped backward solver with rank-bucketed downsets (B reference).",
       "role": "shipping",
-      "inherits": "best_decomp_rank_bucketed_mona",
-      "ios_precomputer": "semantic_mona"
-    },
-    "best_decomp_rank_bucketed_semantic_mona_geometric": {
-      "description": "Retain geometric K-bound raising in the backward solver to resolve historical comparisons with the linear schedule.",
-      "role": "legacy",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona",
-      "k_schedule": "geometric"
-    },
-    "best_decomp_rank_bucketed_semantic_mona_contradiction": {
-      "description": "Retain the forced-output contradiction check in the backward decision-only syntactic bypass for historical ablation logs.",
-      "role": "legacy",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona",
-      "forced_output_contradiction": true
-    },
-    "best_decomp_rank_bucketed_semantic_mona_dominance": {
-      "description": "Retain per-input pruning of globally dominated decoded semantic actions for historical action-reduction experiments.",
-      "role": "legacy",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona",
-      "profile_dominance": true
-    },
-    "best_decomp_rank_bucketed_semantic_mona_diag": {
-      "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile semantic action deduplication in the backward B reference.",
-      "role": "diagnostic",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona",
-      "enable_diagnostics": true
-    },
-    "best_decomp_rank_bucketed_semantic_mona_forward": {
-      "description": "Use on-the-fly forward safety solving and disable the exact equivariant path, with the local probe still off, as the F reference for backward-versus-forward comparisons.",
-      "role": "reference",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona",
-      "forward_safety_solver": true,
-      "local_certificate": false,
-      "enable_equivariant_solver": false
-    },
-    "best_decomp_rank_bucketed_semantic_mona_forward_covering": {
-      "description": "Retain conditional downward covering of optimistic forward successors for historical covering-ablation logs.",
-      "role": "legacy",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
-      "forward_conditional_covering": true
-    },
-    "best_decomp_rank_bucketed_semantic_mona_forward_geometric": {
-      "description": "Retain geometric K-bound raising in the forward solver to resolve historical comparisons with the linear schedule.",
-      "role": "legacy",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
-      "k_schedule": "geometric"
-    },
-    "best_decomp_rank_bucketed_semantic_mona_forward_diag": {
-      "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile the forward F reference.",
-      "role": "diagnostic",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
-      "enable_diagnostics": true
-    },
-    "best_decomp_rank_bucketed_mona_race": {
-      "description": "Race Spot small and any translations to compare translation diversity against the rank-bucketed small-only configuration.",
-      "role": "sweep",
-      "inherits": "best_decomp_rank_bucketed_mona",
-      "translation_pref": "small+any"
-    },
-    "best_decomp_rank_bucketed_mona_noequivariant": {
-      "description": "Disable the exact equivariant solver as the classic-only control for measuring symmetry solving with rank-bucketed downsets.",
-      "role": "reference",
-      "inherits": "best_decomp_rank_bucketed_mona",
-      "enable_equivariant_solver": false
-    },
-    "best_decomp_rank_bucketed_mona_eq_baseline": {
-      "description": "Raise the equivariant block gate from two to four, keeping three clients and a 512-state cap, as the control for the client, block and state threshold sweep.",
-      "role": "sweep",
-      "inherits": "best_decomp_rank_bucketed_mona",
-      "equivariant_max_states": 512,
-      "equivariant_min_clients": 3,
-      "equivariant_min_blocks": 4
-    },
-    "best_decomp_rank_bucketed_mona_eq_min_clients_2": {
-      "description": "Admit two-client symmetries with a four-block gate and 512-state cap to isolate the client threshold against the equivariant sweep control.",
-      "role": "sweep",
-      "inherits": "best_decomp_rank_bucketed_mona",
-      "equivariant_max_states": 512,
-      "equivariant_min_clients": 2,
-      "equivariant_min_blocks": 4
-    },
-    "best_decomp_rank_bucketed_mona_eq_max_states_2048": {
-      "description": "Raise the equivariant state cap to 2048 with three clients and four blocks to isolate the state threshold against the equivariant sweep control.",
-      "role": "sweep",
-      "inherits": "best_decomp_rank_bucketed_mona",
-      "equivariant_max_states": 2048,
-      "equivariant_min_clients": 3,
-      "equivariant_min_blocks": 4
+      "simd_is_max": false,
+      "vector_downset": "rank_bucketed_vector_backed",
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "semantic_mona",
+      "input_picker": "critical"
     },
     "best_decomp_rank_bucketed_mona_eq_min_blocks_2": {
       "description": "Use the parent's unchanged two-block gate, three clients and 512-state cap as the lower-block arm against the four-block equivariant sweep control.",
       "role": "sweep",
-      "inherits": "best_decomp_rank_bucketed_mona",
-      "equivariant_max_states": 512,
-      "equivariant_min_clients": 3,
-      "equivariant_min_blocks": 2
-    },
-    "best_decomp_filtered_vector_mona": {
-      "description": "Replace plain vector-backed downsets with coordinate-filtered vectors to compare dominance-candidate filtering in the downset sweep.",
-      "role": "sweep",
-      "inherits": "best_decomp_mona",
-      "vector_downset": "filtered_vector_backed"
-    },
-    "best_decomp_filtered_vector_mona_noequivariant": {
-      "description": "Disable the exact equivariant solver as the classic-only control for measuring symmetry solving with filtered-vector downsets.",
-      "role": "reference",
-      "inherits": "best_decomp_filtered_vector_mona",
-      "enable_equivariant_solver": false
-    },
-    "best_decomp_rank_bucketed_semantic_mona_forward_contradiction": {
-      "description": "Retain the forced-output contradiction check in the forward decision-only syntactic bypass for historical ablation logs.",
-      "role": "legacy",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
-      "forced_output_contradiction": true
-    },
-    "best_four_arm_contradiction": {
-      "description": "Ship backward and forward realizability arms plus formula and automaton forward unrealizability arms, re-enabling exact equivariant solving and adding forced-output contradiction checks to the F reference.",
-      "role": "reference",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
-      "enable_equivariant_solver": true,
-      "forced_output_contradiction": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
-    },
-    "best_four_arm_bboxtree": {
-      "description": "Add semantic action deduplication and forward solving to bounding-box-tree downsets, shipping backward and forward realizability arms plus formula and automaton forward unrealizability arms. Include one bounded Spot obligation decision arm for eligible objectives.",
-      "role": "shipping",
-      "inherits": "best_decomp_bboxtree_mona",
-      "ios_precomputer": "semantic_mona",
-      "forward_safety_solver": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward,both:obligation:spot"
-    },
-    "otf_contradiction": {
-      "description": "Compare Spot guarded and TAA arms using the best_four_arm_contradiction components and unchanged default arm selection.",
-      "role": "sweep",
-      "inherits": "best_four_arm_contradiction",
-      "spot_guarded_backend": true,
-      "spot_lazy_provider": true,
-      "forward_safety_solver": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
-    },
-    "otf_sparse": {
-      "description": "Candidate four-worker portfolio retaining backward and forward realizability with sparse guarded formula and automaton unrealizability workers.",
-      "role": "sweep",
-      "inherits": "otf_contradiction",
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:spot-guarded-sparse"
-    },
-    "otf_sparse_existential": {
-      "description": "otf_sparse_formula with the sparse guarded unreal worker covering inputs using existentially quantified outputs.",
-      "role": "sweep",
-      "inherits": "otf_sparse_formula",
-      "spot_guarded_existential_outputs": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward"
-    },
-    "otf_sparse_losing_input": {
-      "description": "otf_sparse_formula with the sparse guarded unreal worker searching for a losing input before sampling an uncovered input.",
-      "role": "sweep",
-      "inherits": "otf_sparse_formula",
-      "spot_guarded_losing_input_search": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward"
-    },
-    "otf_sparse_lean_verifier": {
-      "description": "otf_sparse_formula with minimal losing proof dependencies and reduced verifier preimage retention.",
-      "role": "sweep",
-      "inherits": "otf_sparse_formula",
-      "spot_guarded_lean_verifier": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward"
-    },
-    "otf_sparse_formula_inequality_covering": {
-      "description": "otf_sparse_formula with the guarded unreal worker covering inputs by the <= successor preimage rather than the exact one.",
-      "role": "sweep",
-      "inherits": "otf_sparse_formula",
-      "spot_guarded_inequality_covering": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward"
-    },
-    "otf_sparse_automaton": {
-      "description": "Retain backward and forward realizability and forward formula-unreal solving, adding a sparse guarded automaton-unreal worker.",
-      "role": "sweep",
-      "inherits": "otf_contradiction",
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:spot-guarded-sparse"
+      "simd_is_max": false,
+      "vector_downset": "rank_bucketed_vector_backed",
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "mona",
+      "input_picker": "critical"
     },
     "otf_sparse_formula": {
       "description": "Retain backward and forward realizability and forward automaton-unreal solving, adding a sparse guarded formula-unreal worker. Include one bounded Spot obligation decision arm for eligible objectives.",
       "role": "shipping",
-      "inherits": "otf_contradiction",
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:obligation:spot"
-    },
-    "otf_sparse_formula_gr1_lift": {
-      "description": "Extend the sparse guarded formula portfolio with GR(1) and parameter-lift workers for the P4 final-candidate sweep.",
-      "role": "sweep",
-      "inherits": "otf_sparse_formula",
-      "native_arms": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1:oxidd,real:param-lift:oxidd"
+      "forced_output_contradiction": true,
+      "simd_is_max": false,
+      "vector_downset": "rank_bucketed_vector_backed",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:obligation:spot",
+      "spot_lazy_provider": true,
+      "spot_guarded_backend": true,
+      "forward_safety_solver": true,
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "semantic_mona",
+      "input_picker": "critical"
     },
     "otf_sparse_formula_gr1_prepass": {
       "description": "Five-worker sparse guarded formula portfolio with one exact GR(1) worker using checked parameter pre-passes.",
       "role": "sweep",
-      "inherits": "otf_sparse_formula",
+      "forced_output_contradiction": true,
       "native_arms": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-lift:oxidd"
+      "simd_is_max": false,
+      "vector_downset": "rank_bucketed_vector_backed",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-lift:oxidd",
+      "spot_lazy_provider": true,
+      "spot_guarded_backend": true,
+      "forward_safety_solver": true,
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "semantic_mona",
+      "input_picker": "critical"
     },
     "otf_sparse_formula_gr1_real_prepass": {
       "description": "Six-arm sparse guarded formula portfolio with a checked realizability-only GR(1) pre-pass. Include one bounded Spot obligation decision arm for eligible objectives.",
       "role": "shipping",
-      "inherits": "otf_sparse_formula",
+      "forced_output_contradiction": true,
       "native_arms": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-real-lift:oxidd,both:obligation:spot"
-    },
-    "otf_sparse_formula_diag": {
-      "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile sparse guarded formula-unreal solving.",
-      "role": "diagnostic",
-      "inherits": "otf_sparse_formula",
-      "enable_diagnostics": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward"
-    },
-    "otf_taa_lazy": {
-      "description": "Candidate four-worker portfolio retaining backward and forward realizability, with sparse guarded formula-unreal and lazy TAA realizability workers.",
-      "role": "sweep",
-      "inherits": "otf_contradiction",
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,real:small:spot-guarded:spot-lazy"
-    },
-    "otf_taa_eager": {
-      "description": "Same-construction eager TAA control for the sparse formula-unreal and TAA-real candidate portfolio.",
-      "role": "sweep",
-      "inherits": "otf_taa_lazy",
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,real:small:spot-guarded:spot-eager"
-    },
-    "otf_taa_real_lazy": {
-      "description": "Retain backward and forward realizability and forward automaton-unreal solving, adding a lazy TAA realizability worker.",
-      "role": "sweep",
-      "inherits": "otf_contradiction",
-      "default_arms": "real:small:backward,real:small:forward,unreal:automaton:forward,real:small:spot-guarded:spot-lazy"
-    },
-    "otf_taa_real_eager": {
-      "description": "Same-construction eager control for the TAA-real portfolio that retains the existing forward automaton-unreal worker.",
-      "role": "sweep",
-      "inherits": "otf_taa_real_lazy",
-      "default_arms": "real:small:backward,real:small:forward,unreal:automaton:forward,real:small:spot-guarded:spot-eager"
-    },
-    "otf_taa_fallback_lazy": {
-      "description": "Try bounded lazy TAA realizability with backward fallback, retaining forward real and both original forward unreal workers.",
-      "role": "sweep",
-      "inherits": "otf_contradiction",
-      "default_candidate_mode": "fallback",
-      "spot_taa_max_rank_nodes": 1000,
-      "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward,real:small:spot-guarded:spot-lazy"
-    },
-    "otf_taa_fallback_eager": {
-      "description": "Same-construction eager control for bounded TAA realizability with backward fallback and both original unreal workers.",
-      "role": "sweep",
-      "inherits": "otf_taa_fallback_lazy",
-      "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward,real:small:spot-guarded:spot-eager"
-    },
-    "otf_mix_formula_lazy": {
-      "description": "Combine sparse guarded formula-unreal solving with bounded lazy TAA realizability and backward fallback, retaining forward real and automaton-unreal workers.",
-      "role": "sweep",
-      "inherits": "otf_taa_fallback_lazy",
-      "default_arms": "real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,real:small:spot-guarded:spot-lazy"
-    },
-    "otf_mix_formula_eager": {
-      "description": "Same-construction eager control for the sparse formula-unreal and bounded TAA realizability mixture with backward fallback.",
-      "role": "sweep",
-      "inherits": "otf_mix_formula_lazy",
-      "default_arms": "real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,real:small:spot-guarded:spot-eager"
-    },
-    "otf_semantic": {
-      "description": "Compare Spot guarded and TAA arms using the best_decomp_rank_bucketed_semantic_mona components and unchanged default arm selection.",
-      "role": "sweep",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona",
-      "spot_guarded_backend": true,
+      "simd_is_max": false,
+      "vector_downset": "rank_bucketed_vector_backed",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-real-lift:oxidd,both:obligation:spot",
       "spot_lazy_provider": true,
-      "forward_safety_solver": true,
-      "default_arms": "real:small:backward,unreal:formula:backward,unreal:automaton:backward"
-    },
-    "otf_bbox": {
-      "description": "Compare Spot guarded and TAA arms using the best_four_arm_bboxtree components and unchanged default arm selection.",
-      "role": "sweep",
-      "inherits": "best_four_arm_bboxtree",
       "spot_guarded_backend": true,
-      "spot_lazy_provider": true,
       "forward_safety_solver": true,
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
-    },
-    "otf_any": {
-      "description": "Compare Spot guarded and TAA arms using the best_decomp_mona_any components and unchanged default arm selection.",
-      "role": "sweep",
-      "inherits": "best_decomp_mona_any",
-      "spot_guarded_backend": true,
-      "spot_lazy_provider": true,
-      "forward_safety_solver": true,
-      "default_arms": "real:any:backward,unreal:formula:backward,unreal:automaton:backward"
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "semantic_mona",
+      "input_picker": "critical"
     },
     "otf_forward": {
       "description": "Compare Spot guarded and TAA arms using the best_decomp_rank_bucketed_semantic_mona_forward components and unchanged default arm selection.",
       "role": "sweep",
-      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
-      "spot_guarded_backend": true,
+      "simd_is_max": false,
+      "vector_downset": "rank_bucketed_vector_backed",
+      "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward",
       "spot_lazy_provider": true,
+      "spot_guarded_backend": true,
       "forward_safety_solver": true,
-      "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward"
+      "enable_equivariant_solver": false,
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "semantic_mona",
+      "input_picker": "critical"
     },
     "otf_sparse_formula_parity": {
       "description": "Seven-worker portfolio combining antichain search, sparse formula solving, a GR(1) realizability pre-pass, and exact Spot obligation and parity game solving.",
       "role": "shipping",
-      "inherits": "otf_sparse_formula_gr1_real_prepass",
-      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-real-lift:oxidd,both:obligation:spot,both:parity:spot"
+      "forced_output_contradiction": true,
+      "native_arms": true,
+      "simd_is_max": false,
+      "vector_downset": "rank_bucketed_vector_backed",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-real-lift:oxidd,both:obligation:spot,both:parity:spot",
+      "spot_lazy_provider": true,
+      "spot_guarded_backend": true,
+      "forward_safety_solver": true,
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "semantic_mona",
+      "input_picker": "critical"
     }
   },
   "tool_baselines": {
@@ -550,39 +188,17 @@
       "otf_sparse_formula_parity",
       "otf_sparse_formula_gr1_real_prepass",
       "otf_sparse_formula",
-      "best_decomp_rank_bucketed_semantic_mona",
-      "best_four_arm_bboxtree",
-      "best_decomp_mona_any"
+      "best_decomp_rank_bucketed_semantic_mona"
     ],
     "local_tuning_default": [
       "best_decomp_mona",
       "best_decomp_mona_any",
-      "best_mona",
-      "base_iosprecom_mona",
-      "best_decomp_kdtree_mona",
-      "best_decomp_bboxtree_mona",
-      "best_decomp_comptrie_mona",
-      "best_decomp_sharingtrie_mona",
-      "best_decomp_sharingtree_mona",
-      "best_decomp_simpsharingtree_mona",
-      "best_decomp_skiplist_mona",
-      "best_decomp_cst_mona",
-      "best_decomp_rank_bucketed_mona",
-      "best_decomp_filtered_vector_mona"
+      "best_decomp_rank_bucketed_mona"
     ],
     "posets_downset_sweep": [
       "best_decomp_mona",
       "best_decomp_mona_any",
-      "best_decomp_kdtree_mona",
-      "best_decomp_bboxtree_mona",
-      "best_decomp_comptrie_mona",
-      "best_decomp_sharingtrie_mona",
-      "best_decomp_sharingtree_mona",
-      "best_decomp_simpsharingtree_mona",
-      "best_decomp_skiplist_mona",
-      "best_decomp_cst_mona",
-      "best_decomp_rank_bucketed_mona",
-      "best_decomp_filtered_vector_mona"
+      "best_decomp_rank_bucketed_mona"
     ]
   }
 }

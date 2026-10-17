@@ -40,7 +40,7 @@ namespace {
 
   using namespace acacia::research;
   using clock_type = std::chrono::steady_clock;
-  using state = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
+  using state = posets::vectors::simd_vector_backed<VECTOR_ELT_T>;
   using SetOfStates = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<state>;
 
   [[noreturn]] void fail (const std::string& message) {

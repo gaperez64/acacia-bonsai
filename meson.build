@@ -80,316 +80,54 @@ build_conf = configuration_data ()
 if get_option ('acacia_preset') != ''
   build_conf.set_quoted ('ACACIA_PRESET', get_option ('acacia_preset'))
 endif
-build_conf.set_quoted ('ACACIA_DEFAULT_ARMS', get_option ('acacia_default_arms'))
-build_conf.set ('ACACIA_DEFAULT_CANDIDATE_MODE',
-                'acacia::candidate_mode::' + get_option ('acacia_default_candidate_mode'))
-build_conf.set ('ACACIA_SPOT_TAA_MAX_RANK_NODES',
-                get_option ('acacia_spot_taa_max_rank_nodes'))
-build_conf.set ('DEFAULT_K', get_option ('acacia_default_k'))
-build_conf.set ('DEFAULT_KMIN', get_option ('acacia_default_kmin'))
-build_conf.set ('DEFAULT_KINC', get_option ('acacia_default_kinc'))
-build_conf.set ('ACACIA_EQUIVARIANT_MAX_STATES',
-                get_option ('acacia_equivariant_max_states'))
-if get_option ('acacia_symmetry_profile')
-  build_conf.set ('ACACIA_SYMMETRY_PROFILE', 1)
-else
-  build_conf.set ('ACACIA_SYMMETRY_PROFILE', 0)
-endif
-build_conf.set ('ACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS',
-                get_option ('acacia_equivariant_max_output_letters'))
-build_conf.set ('ACACIA_EQUIVARIANT_MAX_ORBITS',
-                get_option ('acacia_equivariant_max_orbits'))
-build_conf.set ('ACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS',
-                get_option ('acacia_equivariant_max_sweep_clients'))
-if get_option ('acacia_equivariant_exhaustive_detect')
-  build_conf.set ('ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT', 1)
-else
-  build_conf.set ('ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT', 0)
-endif
-if get_option ('acacia_equivariant_validate_fast_recognition')
-  build_conf.set ('ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION', 1)
-else
-  build_conf.set ('ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION', 0)
-endif
-if get_option ('acacia_symmetry_verbose_diagnostics')
-  build_conf.set ('ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS', 1)
-else
-  build_conf.set ('ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS', 0)
-endif
-build_conf.set ('ACACIA_EQUIVARIANT_MIN_CLIENTS',
-                get_option ('acacia_equivariant_min_clients'))
-build_conf.set ('ACACIA_EQUIVARIANT_MIN_BLOCKS',
-                get_option ('acacia_equivariant_min_blocks'))
-
-if get_option ('acacia_default_unreal_x') == 'automaton'
-  build_conf.set ('DEFAULT_UNREAL_X', 'UNREAL_X_AUTOMATON')
-elif get_option ('acacia_default_unreal_x') == 'formula'
-  build_conf.set ('DEFAULT_UNREAL_X', 'UNREAL_X_FORMULA')
-else
-  build_conf.set ('DEFAULT_UNREAL_X', 'UNREAL_X_BOTH')
-endif
-
-if get_option ('acacia_default_spot_fast') == 'off'
-  build_conf.set ('DEFAULT_SPOT_FAST', 'SPOT_FAST_OFF')
-elif get_option ('acacia_default_spot_fast') == 'det_and_gfg'
-  build_conf.set ('DEFAULT_SPOT_FAST', 'SPOT_FAST_DET_AND_GFG')
-else
-  build_conf.set ('DEFAULT_SPOT_FAST', 'SPOT_FAST_DET')
-endif
-
-if get_option ('acacia_translation_pref') == 'small+any'
-  build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Small')
-  build_conf.set ('ACACIA_TRANSLATION_PREFS',
-                  'spot::postprocessor::Small, spot::postprocessor::Any')
-elif get_option ('acacia_translation_pref') == 'any'
-  build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Any')
-  build_conf.set ('ACACIA_TRANSLATION_PREFS', 'spot::postprocessor::Any')
-elif get_option ('acacia_translation_pref') == 'deterministic'
-  build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Deterministic')
-  build_conf.set ('ACACIA_TRANSLATION_PREFS', 'spot::postprocessor::Deterministic')
-else
-  build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Small')
-  build_conf.set ('ACACIA_TRANSLATION_PREFS', 'spot::postprocessor::Small')
-endif
-
-if get_option ('acacia_enable_realizability_simplifier')
-  build_conf.set ('ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER', 1)
-else
-  build_conf.set ('ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER', 0)
-endif
-if get_option ('acacia_enable_syntactic_bypass')
-  build_conf.set ('ACACIA_ENABLE_SYNTACTIC_BYPASS', 1)
-else
-  build_conf.set ('ACACIA_ENABLE_SYNTACTIC_BYPASS', 0)
-endif
-if get_option ('acacia_forced_output_contradiction')
-  build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION', 1)
-else
-  build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION', 0)
-endif
-if get_option ('acacia_profile_dominance')
-  build_conf.set ('ACACIA_PROFILE_DOMINANCE', 1)
-else
-  build_conf.set ('ACACIA_PROFILE_DOMINANCE', 0)
-endif
-if get_option ('acacia_forward_eager_minimal_successors')
-  build_conf.set ('ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS', 1)
-else
-  build_conf.set ('ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS', 0)
-endif
-if get_option ('acacia_forward_conditional_covering')
-  build_conf.set ('ACACIA_FORWARD_CONDITIONAL_COVERING', 1)
-else
-  build_conf.set ('ACACIA_FORWARD_CONDITIONAL_COVERING', 0)
-endif
-build_conf.set ('ACACIA_K_SCHEDULE',
-                'acacia::k_schedule::kind::' + get_option ('acacia_k_schedule'))
-if enable_tlsf_frontend
-  build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 1)
-else
-  build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 0)
-endif
+translation_preferences = {
+  'small' : 'spot::postprocessor::Small',
+  'any' : 'spot::postprocessor::Any',
+}
+translation_preference = translation_preferences[get_option ('acacia_translation_pref')]
+build_conf.set ('ACACIA_TRANSLATION_PREF', translation_preference)
+build_conf.set ('ACACIA_TRANSLATION_PREFS', translation_preference)
+build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION',
+                get_option ('acacia_forced_output_contradiction') ? 1 : 0)
 build_conf.set ('ACACIA_NATIVE_ARMS', get_option ('acacia_native_arms') ? 1 : 0)
-
-if get_option ('acacia_simd_is_max')
-  build_conf.set ('SIMD_IS_MAX', 'true')
-else
-  build_conf.set ('SIMD_IS_MAX', 'false')
-endif
-if get_option ('acacia_decompose_spec')
-  build_conf.set ('DECOMPOSE_SPEC', 1)
-else
-  build_conf.set ('DECOMPOSE_SPEC', 0)
-endif
-if get_option ('acacia_cpre_avoid_unions')
-  build_conf.set ('CPRE_AVOID_UNIONS', 1)
-else
-  build_conf.set ('CPRE_AVOID_UNIONS', 0)
-endif
-if get_option ('acacia_compile_all_components')
-  build_conf.set ('ACACIA_COMPILE_ALL_COMPONENTS', 1)
-else
-  build_conf.set ('ACACIA_COMPILE_ALL_COMPONENTS', 0)
-endif
-if get_option ('acacia_enable_diagnostics')
-  build_conf.set ('ACACIA_ENABLE_DIAGNOSTICS', 1)
-else
-  build_conf.set ('ACACIA_ENABLE_DIAGNOSTICS', 0)
-endif
-if get_option ('acacia_local_certificate')
-  build_conf.set ('ACACIA_LOCAL_CERTIFICATE', 1)
-else
-  build_conf.set ('ACACIA_LOCAL_CERTIFICATE', 0)
-endif
-build_conf.set ('ACACIA_SPOT_GUARDED_BACKEND',
-                get_option ('acacia_spot_guarded_backend') ? 1 : 0)
-build_conf.set ('ACACIA_REAL_BACKEND_SELECTOR',
-                get_option ('acacia_real_backend_selector') ? 1 : 0)
-build_conf.set ('ACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT',
-                get_option ('acacia_real_backend_selector_max_boolean_percent'))
-build_conf.set ('ACACIA_SPOT_GUARDED_INEQUALITY_COVERING',
-                get_option ('acacia_spot_guarded_inequality_covering') ? 1 : 0)
-build_conf.set ('ACACIA_SPOT_GUARDED_EXISTENTIAL_OUTPUTS',
-                get_option ('acacia_spot_guarded_existential_outputs') ? 1 : 0)
-build_conf.set ('ACACIA_SPOT_GUARDED_LOSING_INPUT_SEARCH',
-                get_option ('acacia_spot_guarded_losing_input_search') ? 1 : 0)
-build_conf.set ('ACACIA_SPOT_GUARDED_LEAN_VERIFIER',
-                get_option ('acacia_spot_guarded_lean_verifier') ? 1 : 0)
-build_conf.set ('ACACIA_SPOT_LAZY_PROVIDER',
-                get_option ('acacia_spot_lazy_provider') ? 1 : 0)
-if get_option ('acacia_forward_safety_solver')
-  build_conf.set ('ACACIA_FORWARD_SAFETY_SOLVER', 1)
-else
-  build_conf.set ('ACACIA_FORWARD_SAFETY_SOLVER', 0)
-endif
-if get_option ('acacia_enable_equivariant_solver')
-  build_conf.set ('ACACIA_ENABLE_EQUIVARIANT_SOLVER', 1)
-else
-  build_conf.set ('ACACIA_ENABLE_EQUIVARIANT_SOLVER', 0)
-endif
-if get_option ('acacia_transition_acceptance')
-  build_conf.set ('ACACIA_TRANSITION_ACCEPTANCE', 1)
-else
-  build_conf.set ('ACACIA_TRANSITION_ACCEPTANCE', 0)
-endif
-
-if get_option ('acacia_no_simd')
-  build_conf.set ('NO_SIMD_DEFINE', '#ifndef NO_SIMD\n# define NO_SIMD 1\n#endif')
-else
-  build_conf.set ('NO_SIMD_DEFINE', '')
-endif
+build_conf.set ('SIMD_IS_MAX', get_option ('acacia_simd_is_max') ? 'true' : 'false')
+build_conf.set ('ACACIA_ENABLE_DIAGNOSTICS', get_option ('acacia_enable_diagnostics') ? 1 : 0)
+build_conf.set_quoted ('ACACIA_DEFAULT_ARMS', get_option ('acacia_default_arms'))
+build_conf.set ('ACACIA_SPOT_LAZY_PROVIDER', get_option ('acacia_spot_lazy_provider') ? 1 : 0)
+build_conf.set ('ACACIA_SPOT_GUARDED_BACKEND', get_option ('acacia_spot_guarded_backend') ? 1 : 0)
+build_conf.set ('ACACIA_FORWARD_SAFETY_SOLVER',
+                get_option ('acacia_forward_safety_solver') ? 1 : 0)
+build_conf.set ('ACACIA_ENABLE_EQUIVARIANT_SOLVER',
+                get_option ('acacia_enable_equivariant_solver') ? 1 : 0)
+build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', enable_tlsf_frontend ? 1 : 0)
 aut_preprocessor = get_option ('acacia_aut_preprocessor')
 aut_preprocessor_types = {
   'surely_losing' : 'aut_preprocessors::surely_losing',
-  'no_preprocessing' : 'aut_preprocessors::no_preprocessing',
   'standard' : 'aut_preprocessors::standard',
-  'elevator' : 'aut_preprocessors::elevator',
-}
-aut_preprocessor_gates = {
-  'surely_losing' : 'ACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING',
-  'no_preprocessing' : 'ACACIA_ENABLE_AUT_PREPROCESSOR_NO_PREPROCESSING',
-  'standard' : 'ACACIA_ENABLE_AUT_PREPROCESSOR_STANDARD',
-  'elevator' : 'ACACIA_ENABLE_AUT_PREPROCESSOR_ELEVATOR',
 }
 build_conf.set ('AUT_PREPROCESSOR', aut_preprocessor_types[aut_preprocessor])
-foreach choice, gate : aut_preprocessor_gates
-  enabled = 0
-  if choice == aut_preprocessor
-    enabled = 1
-  endif
-  build_conf.set (gate, enabled)
-endforeach
-
-boolean_states = get_option ('acacia_boolean_states')
-boolean_states_types = {
-  'forward_saturation' : 'boolean_states::forward_saturation',
-  'no_boolean_states' : 'boolean_states::no_boolean_states',
-  'transition_core' : 'boolean_states::transition_core',
-}
-boolean_states_gates = {
-  'forward_saturation' : 'ACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION',
-  'no_boolean_states' : 'ACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES',
-  'transition_core' : 'ACACIA_ENABLE_BOOLEAN_STATES_TRANSITION_CORE',
-}
-build_conf.set ('BOOLEAN_STATES', boolean_states_types[boolean_states])
-foreach choice, gate : boolean_states_gates
-  enabled = 0
-  if choice == boolean_states
-    enabled = 1
-  endif
-  build_conf.set (gate, enabled)
-endforeach
-
+build_conf.set ('ACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING',
+                aut_preprocessor == 'surely_losing' ? 1 : 0)
+build_conf.set ('ACACIA_ENABLE_AUT_PREPROCESSOR_STANDARD', aut_preprocessor == 'standard' ? 1 : 0)
 ios_precomputer = get_option ('acacia_ios_precomputer')
 ios_precomputer_types = {
   'standard' : 'ios_precomputers::standard',
-  'delegate' : 'ios_precomputers::delegate',
-  'fake_vars' : 'ios_precomputers::fake_vars',
-  'powset' : 'ios_precomputers::powset',
   'mona' : 'ios_precomputers::mona',
   'semantic_mona' : 'ios_precomputers::semantic_mona',
 }
-ios_precomputer_gates = {
-  'standard' : 'ACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD',
-  'delegate' : 'ACACIA_ENABLE_IOS_PRECOMPUTER_DELEGATE',
-  'fake_vars' : 'ACACIA_ENABLE_IOS_PRECOMPUTER_FAKE_VARS',
-  'powset' : 'ACACIA_ENABLE_IOS_PRECOMPUTER_POWSET',
-  'mona' : 'ACACIA_ENABLE_IOS_PRECOMPUTER_MONA',
-  'semantic_mona' : 'ACACIA_ENABLE_IOS_PRECOMPUTER_SEMANTIC_MONA',
-}
 build_conf.set ('IOS_PRECOMPUTER', ios_precomputer_types[ios_precomputer])
-foreach choice, gate : ios_precomputer_gates
-  enabled = 0
-  if choice == ios_precomputer
-    enabled = 1
-  endif
-  build_conf.set (gate, enabled)
-endforeach
-
-actioner = get_option ('acacia_actioner')
-if actioner == 'no_ios_precomputation' and ios_precomputer != 'delegate'
-  error ('acacia_actioner=no_ios_precomputation requires acacia_ios_precomputer=delegate')
-endif
-# Keep the component requirements in scripts/acacia-config.py validate_preset
-# here too: direct Meson overrides do not pass through preset validation.
-# state_is_accepting calls in symmetry.hh and equivariant_k_bounded_safety_aut.hh
-# were audited but not observed to fail; enable_equivariant_solver stays allowed.
-if get_option ('acacia_transition_acceptance')
-  if boolean_states not in ['transition_core', 'no_boolean_states']
-    error ('acacia_transition_acceptance=true requires acacia_boolean_states=transition_core or no_boolean_states')
-  endif
-  if aut_preprocessor not in ['standard', 'no_preprocessing']
-    error ('acacia_transition_acceptance=true requires acacia_aut_preprocessor=standard or no_preprocessing')
-  endif
-  if actioner != 'standard'
-    error ('acacia_transition_acceptance=true requires acacia_actioner=standard')
-  endif
-  if ios_precomputer not in ['standard', 'powset', 'fake_vars']
-    error ('acacia_transition_acceptance=true requires acacia_ios_precomputer=standard, powset or fake_vars')
-  endif
-  if get_option ('acacia_spot_guarded_backend')
-    error ('acacia_transition_acceptance=true requires acacia_spot_guarded_backend=false')
-  endif
-endif
-actioner_types = {
-  'standard' : 'actioners::standard',
-  'no_ios_precomputation' : 'actioners::no_ios_precomputation',
-}
-actioner_gates = {
-  'standard' : 'ACACIA_ENABLE_ACTIONER_STANDARD',
-  'no_ios_precomputation' : 'ACACIA_ENABLE_ACTIONER_NO_IOS_PRECOMPUTATION',
-}
-build_conf.set ('ACTIONER', actioner_types[actioner])
-foreach choice, gate : actioner_gates
-  enabled = 0
-  if choice == actioner
-    enabled = 1
-  endif
-  build_conf.set (gate, enabled)
-endforeach
-
+build_conf.set ('ACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD', ios_precomputer == 'standard' ? 1 : 0)
+build_conf.set ('ACACIA_ENABLE_IOS_PRECOMPUTER_MONA', ios_precomputer == 'mona' ? 1 : 0)
+build_conf.set ('ACACIA_ENABLE_IOS_PRECOMPUTER_SEMANTIC_MONA',
+                ios_precomputer == 'semantic_mona' ? 1 : 0)
 input_picker = get_option ('acacia_input_picker')
 input_picker_types = {
   'critical_pq' : 'input_pickers::critical_pq',
   'critical' : 'input_pickers::critical',
-  'critical_rnd' : 'input_pickers::critical_rnd',
-  'critical_fullrnd' : 'input_pickers::critical_fullrnd',
-}
-input_picker_gates = {
-  'critical_pq' : 'ACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ',
-  'critical' : 'ACACIA_ENABLE_INPUT_PICKER_CRITICAL',
-  'critical_rnd' : 'ACACIA_ENABLE_INPUT_PICKER_CRITICAL_RND',
-  'critical_fullrnd' : 'ACACIA_ENABLE_INPUT_PICKER_CRITICAL_FULLRND',
 }
 build_conf.set ('INPUT_PICKER', input_picker_types[input_picker])
-foreach choice, gate : input_picker_gates
-  enabled = 0
-  if choice == input_picker
-    enabled = 1
-  endif
-  build_conf.set (gate, enabled)
-endforeach
-
+build_conf.set ('ACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ', input_picker == 'critical_pq' ? 1 : 0)
+build_conf.set ('ACACIA_ENABLE_INPUT_PICKER_CRITICAL', input_picker == 'critical' ? 1 : 0)
 build_conf.set ('VECTOR_AND_BITSET_DOWNSET_IMPL', get_option ('acacia_vector_downset'))
 
 posets_gates = [
@@ -429,47 +167,12 @@ foreach gate : posets_gates
   build_conf.set (gate, 0)
 endforeach
 
-if get_option ('acacia_compile_all_components')
-  build_conf.set ('POSETS_COMPILE_ALL_COMPONENTS', 1)
-  foreach gate : posets_gates
-    build_conf.set (gate, 1)
-  endforeach
-else
-  build_conf.set ('POSETS_COMPILE_ALL_COMPONENTS', 0)
-endif
+build_conf.set ('POSETS_COMPILE_ALL_COMPONENTS', 0)
+build_conf.set ('POSETS_ENABLE_VECTOR_SIMD_VECTOR_BACKED', 1)
 
-posets_vector_impl = get_option ('acacia_vector_impl')
-if posets_vector_impl == 'auto'
-  if get_option ('acacia_no_simd')
-    posets_vector_impl = 'vector_backed'
-  else
-    posets_vector_impl = 'simd_vector_backed'
-  endif
-endif
-build_conf.set ('VECTOR_IMPL', posets_vector_impl)
-
-posets_vector_impl_gates = {
-  'simd_array_backed_sum' : 'POSETS_ENABLE_VECTOR_SIMD_ARRAY_BACKED_SUM',
-  'array_backed_sum' : 'POSETS_ENABLE_VECTOR_ARRAY_BACKED_SUM',
-  'simd_vector_backed' : 'POSETS_ENABLE_VECTOR_SIMD_VECTOR_BACKED',
-  'simd_vector_backed_sum' : 'POSETS_ENABLE_VECTOR_SIMD_VECTOR_BACKED_SUM',
-  'vector_backed' : 'POSETS_ENABLE_VECTOR_VECTOR_BACKED',
-}
-build_conf.set (posets_vector_impl_gates[posets_vector_impl], 1)
 posets_downset_gates = {
   'vector_backed' : 'POSETS_ENABLE_DOWNSET_VECTOR_BACKED',
-  'vector_or_kdtree_backed' : 'POSETS_ENABLE_DOWNSET_VECTOR_OR_KDTREE_BACKED',
-  'kdtree_backed' : 'POSETS_ENABLE_DOWNSET_KDTREE_BACKED',
-  'bboxtree_backed' : 'POSETS_ENABLE_DOWNSET_BBOXTREE_BACKED',
-  'comptrie_backed' : 'POSETS_ENABLE_DOWNSET_COMPTRIE_BACKED',
-  'sharingtree_backed' : 'POSETS_ENABLE_DOWNSET_SHARINGTREE_BACKED',
-  'simple_sharingtree_backed' : 'POSETS_ENABLE_DOWNSET_SIMPLE_SHARINGTREE_BACKED',
-  'sharingtrie_backed' : 'POSETS_ENABLE_DOWNSET_SHARINGTRIE_BACKED',
-  'skiplist_backed' : 'POSETS_ENABLE_DOWNSET_SKIPLIST_BACKED',
-  'cst_backed' : 'POSETS_ENABLE_DOWNSET_CST_BACKED',
   'rank_bucketed_vector_backed' : 'POSETS_ENABLE_DOWNSET_RANK_BUCKETED_VECTOR_BACKED',
-  'filtered_vector_backed' : 'POSETS_ENABLE_DOWNSET_FILTERED_VECTOR_BACKED',
-  'vector_backed_bin' : 'POSETS_ENABLE_DOWNSET_VECTOR_BACKED_BIN',
 }
 foreach choice, gate : posets_downset_gates
   build_conf.set (gate, 0)

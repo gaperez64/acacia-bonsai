@@ -1,8 +1,5 @@
 #define POSETS_BBOX_STATS
 #define POSETS_RANK_STATS
-#define ACACIA_SYMMETRY_PROFILE 1
-#define ACACIA_EQUIVARIANT_MIN_BLOCKS 0
-#define ACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS 0
 
 #include "input_pickers/critical.hh"
 #include "ios_precomputers/mona.hh"
@@ -39,7 +36,7 @@ namespace posets::vectors {
 // The guarded predicate is compiled in a separate checked test translation unit.
 bool equivariant_invariant_for_test (
     const posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
-        posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>>& f,
+        posets::vectors::simd_vector_backed<VECTOR_ELT_T>>& f,
     const symmetry::group& G);
 bool check_equivariant_invariant_backends ();
 
@@ -47,7 +44,7 @@ namespace {
 
   namespace eq = acacia::solver_detail::equivariant;
 
-  using state = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
+  using state = posets::vectors::simd_vector_backed<VECTOR_ELT_T>;
   using SetOfStates = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<state>;
 
   constexpr VECTOR_ELT_T K = 3;
@@ -167,7 +164,7 @@ namespace {
     const auto shared_input_vars =
         eq::detail::shared_vars (fx.aut, fx.all_inputs, indexed_input_vars);
     const auto output_letters =
-        eq::detail::enumerate_letters (fx.all_outputs, ACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS);
+        eq::detail::enumerate_letters (fx.all_outputs, 4096);
     if (not expect ("no shared inputs in oracle automaton", shared_input_vars.empty ()) or
         not expect ("output letters enumerated", not output_letters.empty ()))
       return false;
@@ -335,12 +332,23 @@ namespace {
                          const std::vector<eq::input_orbit>& orbits) {
     bool ok = true;
     constexpr VECTOR_ELT_T solve_kmax = K;
+    acacia::worker_record record {};
+    auto* prior_record = acacia::active_worker_record ();
+    acacia::active_worker_record () = &record;
     auto result = eq::try_solve<SetOfStates> (
         fx.aut, solve_kmax, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
         actioners::standard<state> (), input_pickers::critical ());
+    if (L.num_clients > 4)
+      ok &= expect ("mona precomputer reaches representative solving loop",
+                    std::string (record.stage) == "equivariance_representative_solve");
+    record = {};
     auto standard_result = eq::try_solve<SetOfStates> (
         fx.aut, solve_kmax, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::standard (),
         actioners::standard<state> (), input_pickers::critical ());
+    acacia::active_worker_record () = prior_record;
+    if (L.num_clients > 4)
+      ok &= expect ("standard precomputer reaches representative solving loop",
+                    std::string (record.stage) == "equivariance_representative_solve");
     ok &=
         expect ("new solver attempted synthetic arbiter", result.outcome == eq::status::completed);
     ok &= expect ("new solver wins synthetic arbiter", result.win.has_value ());
@@ -382,7 +390,7 @@ namespace {
 
     const auto input_letters = eq::detail::enumerate_letters (fx.all_inputs, 1U << L.num_clients);
     const auto output_letters =
-        eq::detail::enumerate_letters (fx.all_outputs, ACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS);
+        eq::detail::enumerate_letters (fx.all_outputs, 4096);
     std::vector<std::pair<bdd, std::vector<eq::transset>>> empty_itoios;
     auto actioner = actioners::standard<state>::make (fx.aut, empty_itoios, k);
     for (bdd input : input_letters) {
@@ -417,9 +425,7 @@ namespace {
     ok &= expect ("full symmetric group detected", G.full_symmetric);
     ok &= expect ("indices size", G.indices.size () == n);
     ok &= expect ("generator pair metadata size", G.gen_pairs.size () == G.gens.size ());
-#if !ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT
     ok &= expect ("star generator count", G.gens.size () == n - 1);
-#endif
     ok &= expect ("fast and exhaustive agree on indices", G.indices == exhaustive.indices);
     if (not ok)
       return false;
@@ -450,6 +456,21 @@ namespace {
     ok &= check_closure_oracle (rng, G, *L, fx.aut->num_states ());
     ok &= check_end_to_end (fx, G, *L, *orbits);
     return ok;
+  }
+
+  bool run_representative_case (size_t bool_threshold) {
+    posets::vectors::bool_threshold = bool_threshold;
+    const fixture fx = make_aut (5);
+    const auto indexed = symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
+    const auto G = symmetry::detect_full_symmetric_generators (fx.aut, indexed);
+    const auto L = symmetry::compute_block_layout (G, fx.aut->num_states ());
+    if (not expect ("representative fixture symmetry detected",
+                    G.full_symmetric and L.has_value ()))
+      return false;
+    const auto orbits = eq::build_orbits (fx.aut, fx.all_inputs, fx.all_outputs, G, *L);
+    if (not expect ("representative fixture orbits built", orbits.has_value ()))
+      return false;
+    return check_end_to_end (fx, G, *L, *orbits);
   }
 
   bool run_partial_symmetry_case () {
@@ -523,21 +544,26 @@ namespace {
   template <typename Picker>
   struct delayed_final_picker {
       Picker picker;
+      size_t* delays;
       template <typename Downset>
       auto operator() (const Downset& f) {
         auto input = picker (f);
-        if (not input)
+        if (not input) {
           while (acacia::phase_clock (CLOCK_MONOTONIC) <
-                 acacia::equivariance_budget::active->deadline_ns ())
+                 acacia::equivariance_budget::active->deadline_ns ()) {
+            ++*delays;
             std::this_thread::sleep_for (std::chrono::milliseconds (1));
+          }
+        }
         return input;
       }
   };
 
   struct delayed_final_picker_maker {
+      size_t* delays;
       template <typename Actions, typename Actioner>
-      static auto make (Actions& actions, Actioner& actioner) {
-        return delayed_final_picker {input_pickers::critical::make (actions, actioner)};
+      auto make (Actions& actions, Actioner& actioner) const {
+        return delayed_final_picker {input_pickers::critical::make (actions, actioner), delays};
       }
   };
 
@@ -688,13 +714,21 @@ namespace {
       ok &= expect ("finite exhaustion permits same-process ordinary backward solving",
                     fallback.solve ().has_value () and budget::active == nullptr);
     }
+    // Five clients bypass the four-client sweep, which does not use the picker.
+    const fixture final_fx = make_aut (5);
+    posets::vectors::bool_threshold = final_fx.aut->num_states ();
+    size_t final_delays = 0;
     const uint64_t final_start = acacia::phase_clock (CLOCK_MONOTONIC);
     const budget::allowance final_budget {{0.25, final_start + 4000000000ULL}, final_start};
     auto proven = eq::try_solve<SetOfStates> (
-        fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
-        actioners::standard<state> (), delayed_final_picker_maker (), {}, final_budget);
+        final_fx.aut, 3, 2, 1, final_fx.all_inputs, final_fx.all_outputs,
+        ios_precomputers::mona (), actioners::standard<state> (),
+        delayed_final_picker_maker {&final_delays}, {}, final_budget);
     ok &= expect ("completed exact fixed point survives deadline crossing",
                   proven.outcome == eq::status::completed and proven.win.has_value ());
+    ok &= expect ("final representative picker executes its deadline delay",
+                  final_delays > 0 and final_budget.consumed_ns () == final_budget.total_ns ());
+    posets::vectors::bool_threshold = fx.aut->num_states ();
     auto indexed = symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
     auto group = symmetry::detect_full_symmetric_generators (fx.aut, indexed);
     auto layout = symmetry::compute_block_layout (group, fx.aut->num_states ());
@@ -761,8 +795,6 @@ namespace {
         }
       SetOfStates asymmetric {state (asymmetric_vector)};
       SetOfStates asymmetric_before = clone_downset (asymmetric);
-      auto& profile = acacia::solver_detail::symmetric::profile::global ();
-      const auto prior_profile = profile;
       acacia::worker_record record {};
       acacia::worker_record_text (record.stage, "invariant-check");
       auto* prior_record = acacia::active_worker_record ();
@@ -790,8 +822,6 @@ namespace {
                         same_downset (asymmetric, asymmetric_before));
       ok &= expect ("invariant check preserves the worker phase",
                     std::string (record.stage) == "invariant-check");
-      ok &= expect ("invariant check has no profiling effects",
-                    profile.calls == prior_profile.calls and profile.ns == prior_profile.ns);
       ok &= expect ("invariant check does not consume budget",
                     expired.consumed_ns () == prior_consumed);
     }
@@ -817,12 +847,15 @@ namespace {
       }
     }
     ok &= expect ("expired representative letter construction stops", letters_stopped);
+    // Five clients reach representative filtering above the fixed direct-sweep cutoff.
+    const fixture filter_fx = make_aut (5);
+    posets::vectors::bool_threshold = 11;
     const uint64_t filter_start = acacia::phase_clock (CLOCK_MONOTONIC);
     const uint64_t filter_outer = filter_start + 4000000000ULL;
     const budget::allowance filter_budget {{0.25, filter_outer}, filter_start};
     filter_delay delay;
     auto filtered = eq::try_solve<SetOfStates> (
-        fx.aut, 3, 2, 1, fx.all_inputs, fx.all_outputs, delayed_filter_precomputer {&delay},
+        filter_fx.aut, 3, 2, 1, filter_fx.all_inputs, filter_fx.all_outputs, delayed_filter_precomputer {&delay},
         actioners::standard<state> (), input_pickers::critical (), {}, filter_budget);
     const uint64_t handed_off = acacia::phase_clock (CLOCK_MONOTONIC);
     ok &= expect ("filter expiry returns production STOPPED",
@@ -840,7 +873,7 @@ namespace {
     auto recovered =
         k_bounded_safety_aut_detail<SetOfStates, ios_precomputers::mona,
                                     actioners::standard<state>, input_pickers::critical> (
-            fx.aut, 2, 3, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+            filter_fx.aut, 2, 3, 1, filter_fx.all_inputs, filter_fx.all_outputs, ios_precomputers::mona (),
             actioners::standard<state> (), input_pickers::critical ());
     ok &= expect (
         "delayed filter hands off to ordinary backward before outer deadline",
@@ -848,8 +881,7 @@ namespace {
     return ok;
   }
 
-  bool run_unreal_case () {
-    constexpr unsigned n = 3;
+  bool run_unreal_case (unsigned n) {
     posets::vectors::bool_threshold = 1 + 2 * n;
     const fixture fx = make_aut (n, true);
     const auto indexed = symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
@@ -861,14 +893,22 @@ namespace {
     if (not expect ("unreal fixture orbits built", orbits.has_value ()))
       return false;
 
+    acacia::worker_record record {};
+    auto* prior_record = acacia::active_worker_record ();
+    acacia::active_worker_record () = &record;
     auto result = eq::try_solve<SetOfStates> (
         fx.aut, 2, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
         actioners::standard<state> (), input_pickers::critical ());
+    acacia::active_worker_record () = prior_record;
+    bool ok = true;
+    if (n > 4)
+      ok &= expect ("losing fixture reaches representative closure",
+                    std::string (record.stage) == "equivariance_closure");
     auto production_sweep = eq::solve_orbit_sweep<SetOfStates> (
         fx.aut, 2, 2, 1, fx.all_inputs, fx.all_outputs, G, *L, actioners::standard<state> ());
     auto reference = reference_sweep (fx, *L, *orbits, 2, 2, 1);
-    return expect ("new solver attempted unreal fixture",
-                   result.outcome == eq::status::completed) and
+    return ok and
+           expect ("new solver attempted unreal fixture", result.outcome == eq::status::completed) and
            expect ("new solver rejects unreal fixture", not result.win.has_value ()) and
            expect ("production sweep attempted unreal fixture",
                    production_sweep.outcome == eq::status::completed) and
@@ -887,9 +927,12 @@ int main () {
     ok &= run_case (n, 1 + 2 * n);
     ok &= run_case (n, 1 + n);
   }
+  for (size_t bool_threshold : {11U, 6U})
+    ok &= run_representative_case (bool_threshold);
   ok &= run_partial_symmetry_case ();
   ok &= run_syntax_hint_case ();
-  ok &= run_unreal_case ();
+  for (unsigned n : {3U, 5U})
+    ok &= run_unreal_case (n);
   ok &= run_budget_cases ();
   ok &= check_equivariant_invariant_backends ();
 

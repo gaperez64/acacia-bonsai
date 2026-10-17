@@ -1,9 +1,7 @@
 #include "action_payload_reference.hh"
 #include "actioners/standard.hh"
 #include "input_pickers/critical.hh"
-#include "input_pickers/critical_fullrnd.hh"
 #include "input_pickers/critical_pq.hh"
-#include "input_pickers/critical_rnd.hh"
 #include "ios_precomputers/mona.hh"
 #include "ios_precomputers/semantic_mona.hh"
 #include "solver/solve_game_impl.hh"
@@ -27,7 +25,7 @@ namespace posets::vectors {
 }
 
 namespace {
-  using state = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
+  using state = posets::vectors::simd_vector_backed<VECTOR_ELT_T>;
   using downset = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<state>;
   using transitions = std::vector<std::pair<unsigned, unsigned>>;
   using input_table = std::list<std::pair<bdd, std::list<transitions>>>;
@@ -139,22 +137,10 @@ namespace {
   };
   using old_table = old_actioner::input_and_actions_set;
   using new_table = new_actioner::input_and_actions_set;
-  using old_random =
-      input_pickers::detail::critical_rnd<old_table, recording_actioner<old_actioner>>;
-  using new_random =
-      input_pickers::detail::critical_rnd<new_table, recording_actioner<new_actioner>>;
-  using old_full_random =
-      input_pickers::detail::critical_fullrnd<old_table, recording_actioner<old_actioner>>;
-  using new_full_random =
-      input_pickers::detail::critical_fullrnd<new_table, recording_actioner<new_actioner>>;
   using old_priority =
       input_pickers::detail::critical_pq<old_table, recording_actioner<old_actioner>>;
   using new_priority =
       input_pickers::detail::critical_pq<new_table, recording_actioner<new_actioner>>;
-  template struct rng_access<rng_tag<old_random>, &old_random::gen>;
-  template struct rng_access<rng_tag<new_random>, &new_random::gen>;
-  template struct rng_access<rng_tag<old_full_random>, &old_full_random::gen>;
-  template struct rng_access<rng_tag<new_full_random>, &new_full_random::gen>;
   template struct rng_access<rng_tag<old_priority>, &old_priority::gen>;
   template struct rng_access<rng_tag<new_priority>, &new_priority::gen>;
 
@@ -202,12 +188,12 @@ namespace {
     using factory = traced_factory<Maker>;
     using backward_solver =
         k_bounded_safety_aut_detail<downset, ios_precomputers::mona, factory,
-                                    input_pickers::critical_fullrnd>;
+                                    input_pickers::critical_pq>;
 #if ACACIA_FORWARD_SAFETY_SOLVER
     using solver_type = std::conditional_t<
         Forward,
         acacia::solver_detail::forward_k_bounded_safety_aut_detail<
-            downset, ios_precomputers::mona, factory, input_pickers::critical_fullrnd>,
+            downset, ios_precomputers::mona, factory, input_pickers::critical_pq>,
         backward_solver>;
 #else
     static_assert (not Forward);
@@ -217,7 +203,7 @@ namespace {
     active_trace = &bytes;
     ios_precomputers::mona precomputer;
     factory actioner;
-    input_pickers::critical_fullrnd picker;
+    input_pickers::critical_pq picker;
     solver_type solver (g.aut, 1, 4, 1, g.inputs, g.outputs, precomputer, actioner, picker);
     std::ostringstream execution;
     struct capture {
@@ -260,30 +246,10 @@ namespace {
     check (a == b, "action order, labels, rows or endpoints differ");
     check (trace<input_pickers::critical> (g, old) == trace<input_pickers::critical> (g, compact),
            "critical picker trace differs");
-    check (trace<input_pickers::critical_rnd> (g, old) ==
-               trace<input_pickers::critical_rnd> (g, compact),
-           "random picker trace differs");
-    check (trace<input_pickers::critical_fullrnd> (g, old) ==
-               trace<input_pickers::critical_fullrnd> (g, compact),
-           "full random trace differs");
     check (trace<input_pickers::critical_pq> (g, old) ==
                trace<input_pickers::critical_pq> (g, compact),
            "priority picker trace differs");
-    auto old_input = old.actions ().begin ();
-    for (auto& [input, actions] : compact.actions ()) {
-      const auto before = actioners::profile_dominance::prune (old_input->second);
-      const auto after = actioners::profile_dominance::prune (actions);
-      check (before.pair_tests == after.pair_tests and
-                 before.endpoint_visits == after.endpoint_visits and
-                 before.declined == after.declined,
-             "dominance traversal differs");
-      ++old_input;
-    }
-    a.clear ();
-    b.clear ();
-    serialize (a, old.actions ());
-    serialize (b, compact.actions ());
-    check (a == b, "dominance output order differs");
+
   }
 }
 

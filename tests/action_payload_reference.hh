@@ -2,7 +2,6 @@
 #pragma once
 
 #include "actioners/direction.hh"
-#include "actioners/profile_dominance.hh"
 #include "configuration.hh"
 #include "posets/utils/vector_mm.hh"
 #include "posets/vectors/traits.hh"
@@ -105,25 +104,6 @@ namespace actioners::payload_reference {
             input_output_fwd_actions.push_back (std::move (ioset.extract (it++).value ()));
           }
 
-#if ACACIA_PROFILE_DOMINANCE
-          // Keep pruning after extraction: the set's compare_actions ordering and
-          // merging are part of the measured input order.  Pruning earlier would
-          // change its sort key and confound dominance gains with order changes.
-          for (auto& input_and_actions : input_output_fwd_actions) {
-            [[maybe_unused]] const auto stats =
-                actioners::profile_dominance::prune (input_and_actions.second);
-# if ACACIA_ENABLE_DIAGNOSTICS
-            if (auto* diag = acacia::diagnostics::current ()) {
-              diag->profile_actions_before += stats.actions_before;
-              diag->profile_actions_after += stats.actions_after;
-              diag->profile_dominance_tests += stats.pair_tests;
-              diag->profile_dominance_endpoint_visits += stats.endpoint_visits;
-              diag->profile_dominance_declined += stats.declined ? 1 : 0;
-              diag->profile_dominance_ms += stats.elapsed_ms;
-            }
-# endif
-          }
-#endif
           if (observed) {
             acacia::legacy_count ("action_construction_peak_payload_bytes_estimate",
                                   observed_peak);
@@ -192,9 +172,6 @@ namespace actioners::payload_reference {
           // create action_vec and include transset.second = the IO if needed
           action_vec ret_fwd (aut->num_states ());
 
-          TODO (
-              "We have two representations of the same thing here; "
-              "see if we can narrow it down to one.");
 
           // ret_fwd: vector<vector<pair<unsigned int, bool>>>
           // first index = state q, map each state q to a list of tuples (p, increment)

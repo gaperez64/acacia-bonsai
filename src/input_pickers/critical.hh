@@ -66,7 +66,6 @@ namespace input_pickers {
                 break;
               }
 
-              TODO ("Try putting a weight, rather than pushing at the front.");
               if (it_act != actions.begin ())
                 actions.splice (actions.begin (), actions, it_act);
             }

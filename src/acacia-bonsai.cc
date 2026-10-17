@@ -251,7 +251,7 @@ namespace {
     if (!parsed.f || !parsed.errors.empty ())
       throw std::runtime_error ("unable to parse original obligation objective");
     auto objective = parsed.f;
-    if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER && !args.synth_fname)
+    if (!args.synth_fname)
       acacia::realizability::apply_simplifier (objective, inputs);
     return objective;
   }

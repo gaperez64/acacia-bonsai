@@ -36,7 +36,7 @@ namespace posets::vectors {
 
 namespace {
 
-  using state = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
+  using state = posets::vectors::simd_vector_backed<VECTOR_ELT_T>;
   using SetOfStates = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<state>;
   using transset = std::vector<std::pair<unsigned, unsigned>>;
 

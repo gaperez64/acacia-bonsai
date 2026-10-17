@@ -244,7 +244,7 @@ namespace replay {
   struct Options {
       std::string arm, formula, provider_name = "taa", export_hoa;
       std::optional<std::string> partition;
-      int k = 0, kmax = 0, kinc = DEFAULT_KINC;
+      int k = 0, kmax = 0, kinc = 3;
       unsigned timeout_seconds = 10;
       size_t max_memory_mib = 1024;
       lazy::Limits provider;
@@ -711,9 +711,7 @@ namespace replay {
         const bool loss = result.status == forward_result_status::lose_k;
         report.put ("certificate", win || loss ? "verified" : "unverified");
         const auto next =
-            loss ? acacia::k_schedule::next (ACACIA_K_SCHEDULE, k, o.k, o.kmax, o.kinc,
-                                             {static_cast<long long> (result.solve_ms),
-                                              result.proofs.size (), result.expansions, true})
+            loss ? acacia::k_schedule::next (k, o.k, o.kmax, o.kinc)
                  : std::nullopt;
         report.put ("worker_result", win ? "win" : next ? "retry" : "inconclusive");
         report.put ("stage", "attempt_complete");
@@ -879,7 +877,7 @@ namespace replay {
       f["kmin"] = std::to_string (o.k);
       f["kmax"] = std::to_string (o.kmax);
       f["kinc"] = std::to_string (o.kinc);
-      f["k_schedule"] = acacia::k_schedule::name (ACACIA_K_SCHEDULE);
+      f["k_schedule"] = "linear";
       std::ostringstream caps;
       caps << "time_s=" << o.timeout_seconds << ";memory_mib=" << o.max_memory_mib
            << ";states=" << o.provider.max_states << ";rows=" << o.provider.rows.max_rows

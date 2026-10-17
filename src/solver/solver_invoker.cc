@@ -1,3 +1,4 @@
+#include "solver/formula_input.hh"
 #include "solver/solver_invoker.hh"
 
 #include "aut_preprocessors/cap_census.hh"
@@ -13,7 +14,6 @@
 #include "solver/forced_output_contradiction.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/obligation_helper.hh"
-#include "solver/real_backend_selector.hh"
 #include "solver/realizability_simplify.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
@@ -30,7 +30,6 @@
 #include "solver/translator_options.hh"
 #include "solver/unreal_safety_core_witnesses.hh"
 #include "utils/push_aps.hh"
-#include "utils/typeinfo.hh"
 #include "utils/verbose.hh"
 #include <string_view>
 
@@ -63,14 +62,12 @@ namespace {
 #define ACACIA_DIAG_STRINGIFY(x) ACACIA_DIAG_STRINGIFY_INNER (x)
 
   spot::formula parse_ltl_string (const std::string& input) {
-    auto pf = spot::parse_infix_psl (input, spot::default_environment::instance (), false, false);
-
-    if ((not pf.f) or (not pf.errors.empty ())) {
-      pf.format_errors (std::cerr);
-      error (EXIT_CODE_ERROR, "Error parsing LTL formula");
+    try {
+      return acacia::formula_input::parse (input);
+    } catch (const std::runtime_error& e) {
+      error (EXIT_CODE_ERROR, "%s", e.what ());
+      throw;
     }
-
-    return pf.f;
   }
 
   using utils::push_aps;
@@ -453,13 +450,7 @@ namespace {
         // and is unsound (it flipped realizable instances to UNREALIZABLE).
         if (check_unreal.has_value () and *check_unreal == UNREAL_X_FORMULA) {
           verb_do (2, vout << "Mealy-to-Moore: adding X to the inputs in the formula\n");
-          auto rec = [this] (auto&& self, spot::formula m) {
-            if (m.is (spot::op::ap) and
-                (std::ranges::find (input_aps, m.ap_name ()) != input_aps.end ()))
-              return spot::formula::X (m);
-            return m.map ([&] (spot::formula t) { return self (self, t); });
-          };
-          spot_formula = spot_formula.map ([&] (spot::formula t) { return rec (rec, t); });
+          acacia::formula_input::shift_inputs (spot_formula, input_aps);
         }
 
         if (not check_unreal.has_value ())
@@ -729,7 +720,7 @@ namespace {
 
         {
           acacia::legacy_phase booleanizing ("booleanization");
-          posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
+          posets::vectors::bool_threshold = (boolean_states::forward_saturation::make (aut, opt_k)) ();
           acacia::legacy_graph (aut);
           acacia::legacy_count ("numeric_dimensions", posets::vectors::bool_threshold);
           acacia::legacy_count ("boolean_dimensions",
@@ -761,31 +752,6 @@ namespace {
         });
         verb_do (4, dict->dump (utils::vout));
 
-        // [DIAG] symmetry detection on the final game automaton. Keep this
-        // behind an explicit macro so verbose timing runs do not pay for a
-        // duplicate recognition pass before solve_game().
-#if ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS
-        {
-          const auto analysis =
-              symmetry::analyze_indexed_aps (aut, all_inputs, all_outputs, indexed_family_hints);
-          const auto sg = symmetry::detect (aut, analysis);
-          const auto report = symmetry::describe (analysis, sg, aut->num_states ());
-          acacia::diagnostics::set_symmetry_structure (report);
-          acacia::diagnostics::snapshot ("after-symmetry-diagnostics");
-
-          verb_do (1, {
-            vout << "[symmetry] generators=" << sg.size ()
-                 << " full_symmetric=" << sg.full_symmetric << " indices=" << report.indices
-                 << " subsets=" << report.subsets << " selected=" << report.selected << std::endl;
-            if (report.blocks != "-")
-              vout << "[symmetry] block_layout: blocks=" << report.blocks
-                   << " shared=" << report.shared << std::endl;
-            else
-              vout << "[symmetry] block_layout: none (declined)\n";
-          });
-        }
-#endif
-
         if (provider != acacia::automaton_provider::frozen_graph)
           std::cerr << acacia::automaton_provider_name (provider) << " fallback rebuild_ms="
                     << std::chrono::duration<double, std::milli> (
@@ -794,42 +760,6 @@ namespace {
                     << '\n';
         assert (not synth_fname.has_value () or not check_unreal.has_value () or
                 *check_unreal == UNREAL_X_FORMULA);
-#if ACACIA_REAL_BACKEND_SELECTOR && ACACIA_SPOT_GUARDED_BACKEND
-        // B2 (§8.3): selection precedes action-table construction, happens
-        // once, and never re-translates or re-preprocesses. Real-forward
-        // slot, decision-only, frozen graph, after Boolean-state renumbering
-        // -- exactly the conditions above this point. Any other job (unreal,
-        // synthesis, a non-forward backend, a research provider) bypasses
-        // the selector entirely and keeps its original backend.
-        if (not check_unreal.has_value () and not synth_fname.has_value () and
-            effective_backend == acacia::game_backend::forward and
-            provider == acacia::automaton_provider::frozen_graph) {
-          // Only already-cached counts: no edge/degree scan, no extra pass
-          // over the automaton. edges/max_out_degree are left at 0 (unused
-          // by the frozen rule, which reads only states/boolean_states).
-          acacia::RealBackendFeatures rb_features;
-          rb_features.states = aut->num_states ();
-          rb_features.inputs = input_aps.size ();
-          rb_features.outputs = output_aps.size ();
-          rb_features.boolean_states = posets::vectors::bool_threshold;
-          rb_features.available = true;
-          static constexpr acacia::RealBackendRule rb_rule {
-              true, ACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT};
-          const auto requested_backend = effective_backend;
-          effective_backend = acacia::choose_real_backend (rb_features, rb_rule);
-          acacia::spot_records::put ("real_backend_selector_requested",
-                                     acacia::game_backend_name (requested_backend));
-          acacia::spot_records::put ("real_backend_selector_effective",
-                                     acacia::game_backend_name (effective_backend));
-          acacia::spot_records::put ("real_backend_selector_rule", "b2-boolean-percent-v1");
-          acacia::spot_records::put ("real_backend_selector_states",
-                                     std::to_string (rb_features.states));
-          acacia::spot_records::put ("real_backend_selector_boolean_states",
-                                     std::to_string (rb_features.boolean_states));
-          acacia::spot_records::put ("real_backend_selector_max_boolean_percent",
-                                     std::to_string (rb_rule.max_boolean_percent));
-        }
-#endif
         if (acacia::unreal_witnesses::checking_candidate) {
           // Keep every original signal, even if deletion/translation removed
           // its last occurrence. The derived game uses the same legal letters.
@@ -952,7 +882,6 @@ namespace {
       diag->forced_contradiction = "off";
 #endif
 
-#if ACACIA_ENABLE_SYNTACTIC_BYPASS
     // Spot's direct-strategy check is defined in the original Mealy frame, so
     // it must run before the unreal children swap inputs and outputs.  It
     // returns a formula verdict; map that verdict to the role of this child so
@@ -977,14 +906,9 @@ namespace {
             child_matches ? "syntactic-bypass" : "syntactic-bypass-opposite-verdict")};
       }
     }
-#elif ACACIA_ENABLE_DIAGNOSTICS
-    if (auto* diag = acacia::diagnostics::current ())
-      diag->syntactic_bypass = "off";
-#endif
     return std::nullopt;
   }
 
-#if DECOMPOSE_SPEC == 1
   bool solve_decomposed (const spot::formula& spot_formula,
                          const std::vector<std::string>& input_aps,
                          const std::vector<std::string>& output_aps,
@@ -1013,7 +937,7 @@ namespace {
     acacia::diagnostics::snapshot ("after-decomposition");
     verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
 
-    if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER and forms.size () > 1 and
+    if (forms.size () > 1 and
         not check_unreal.has_value () and not synth_fname.has_value ()) {
       bool any_component_simplified = false;
       size_t ordinal = 0;
@@ -1083,7 +1007,6 @@ namespace {
       return acacia::diagnostics::finish (false, "decomposition");
     }
   }
-#endif
 
 }  // namespace
 
@@ -1189,7 +1112,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // component-local pass for real, decision-only children.  Skipped when
   // synthesizing a controller (-s): the removed APs would need
   // patch_mealy/patch_game on the emitted strategy, which is not wired up here.
-  if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER and not synth_fname.has_value ()) {
+  if (not synth_fname.has_value ()) {
     const bool formula_simplified =
         acacia::realizability::apply_simplifier (spot_formula, input_aps);
     rsimp_changed = formula_simplified;
@@ -1226,8 +1149,16 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     // Swap I and O.
     verb_do (2, vout << "Swapping inputs and outputs to check unrealizability\n");
     input_aps.swap (output_aps);
-    verb_do (3, vout << "Inputs: " << input_aps << std::endl);
-    verb_do (3, vout << "Outputs: " << output_aps << std::endl);
+    verb_do (3, {
+      auto print_aps = [] (const char* label, const auto& aps) {
+        vout << label << "[";
+        for (size_t i = 0; i < aps.size (); ++i)
+          vout << (i ? ", " : "") << aps[i];
+        vout << "]" << std::endl;
+      };
+      print_aps ("Inputs: ", input_aps);
+      print_aps ("Outputs: ", output_aps);
+    });
   }
 
   // We keep a bdd_dict at this level so that we can do synthesis later if
@@ -1304,23 +1235,6 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
   weakening_records.fallback (spot_formula);
 
-#if DECOMPOSE_SPEC == 0
-  // Just launch a monolithic runner.
-  if (runner (spot_formula)) {
-    if (synth_fname.has_value () && !check_unreal) {
-      std::vector<std::vector<std::string>> out_part = {output_aps};
-      runner.synthesis (spot_formula, out_part);
-    }
-    return acacia::diagnostics::finish (true, "monolithic");
-  }
-  else {
-    return acacia::diagnostics::finish (false, "monolithic");
-  }
-
-#elif DECOMPOSE_SPEC == 1
   return solve_decomposed (spot_formula, input_aps, output_aps, check_unreal, synth_fname, runner);
 
-#else
-  std::unreachable ();
-#endif
 }

@@ -39,9 +39,9 @@ struct arg_parse_result {
     std::string formula;
     std::vector<std::string> inputs;
     std::vector<std::string> outputs;
-    VECTOR_ELT_T opt_kmin = DEFAULT_KMIN;
-    VECTOR_ELT_T opt_k = DEFAULT_K;
-    VECTOR_ELT_T opt_kinc = DEFAULT_KINC;
+    VECTOR_ELT_T opt_kmin = 2;
+    VECTOR_ELT_T opt_k = 99;
+    VECTOR_ELT_T opt_kinc = 3;
     std::optional<std::vector<TRANSLATION_PREF_T>> real_strategies = std::nullopt;
     std::optional<std::vector<UNREAL_X_T>> unreal_strategies = std::nullopt;
     std::optional<std::vector<portfolio_arm>> arms = std::nullopt;
@@ -57,7 +57,7 @@ struct arg_parse_result {
     unsigned verbose_level = 0;
     acacia::automaton_provider real_provider = acacia::automaton_provider::frozen_graph;
     acacia::automaton_provider unreal_provider = acacia::automaton_provider::frozen_graph;
-    acacia::candidate_mode candidate = ACACIA_DEFAULT_CANDIDATE_MODE;
+    acacia::candidate_mode candidate = acacia::candidate_mode::only;
     weakening_mode weakening = weakening_mode::basic;
     acacia::unreal_witnesses::allowances weakening_allowances;
     bool obligation_explicit = false;
@@ -70,7 +70,7 @@ struct arg_parse_result {
     // behaviour.
     std::optional<uint64_t> equivariance_budget_ns = 3000000000ULL;
     acacia::OracleLayout oracle_layout = acacia::OracleLayout::grouped;
-    SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
+    SPOT_FAST_T spot_fast = SPOT_FAST_DET;
     std::optional<std::string> synth_fname = std::nullopt;
     specification_metadata metadata;
     bool formula_specified = false;

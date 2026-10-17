@@ -58,7 +58,7 @@ namespace input_pickers {
                 break;
               }
 
-              TODO ("Try also putting a weight, rather than pushing at the front.");
+              // A weight could replace this move to the front.
               if (it_act != actions.begin ())
                 actions.splice (actions.begin (), actions, it_act);
             }

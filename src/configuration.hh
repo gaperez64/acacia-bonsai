@@ -5,11 +5,9 @@
 #endif
 #include "acacia_build_config.hh"
 
-#include "utils/todo.hh"
-
 // Every compile-time option, its default and its rationale live in
 // config/acacia-options.json; this file deliberately states none of them, so
-// there is no second answer to "what is the default".  The DEFAULT_K /
+// there is no second answer to "what is the default".  The default K /
 // VECTOR_ELT_T overflow constraint is recorded there under constants.
 
 #include "config/derived_gates.hh"

@@ -84,11 +84,6 @@ test ('config-frontends-agree',
       args : [files ('check-config-frontends.py'), meson.project_source_root ()],
       suite : ['unit', 'config-frontends'])
 
-test ('config-transition-acceptance',
-      py,
-      args : [files ('check-transition-acceptance-config.py'), meson.project_source_root ()],
-      suite : ['unit', 'config-frontends'])
-
 if get_option ('acacia_native_arms')
   if get_option ('acacia_enable_equivariant_solver') and get_option ('acacia_forward_safety_solver')
     test ('equivariance-budget', py,
@@ -201,17 +196,6 @@ test ('guarded-event-univ-identity', py,
       args : [files ('guarded-event-univ-identity.py'), guarded_event_univ_test],
       suite : ['unit', 'translator-options'], timeout : 180)
 
-guarded_event_univ_transition_test = executable (
-    'guarded-event-univ-transition-test', 'guarded_event_univ_test.cc',
-    cpp_args : ['-DACACIA_TRANSITION_ACCEPTANCE=1'],
-    include_directories : inc,
-    dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
-test ('guarded-event-univ-transition', guarded_event_univ_transition_test,
-      suite : ['unit', 'translator-options'], timeout : 180)
-test ('guarded-event-univ-transition-identity', py,
-      args : [files ('guarded-event-univ-identity.py'), guarded_event_univ_transition_test],
-      suite : ['unit', 'translator-options'], timeout : 180)
-
 if enable_tlsf_frontend
   event_univ_census = executable ('event-univ-census',
                                  ['event_univ_census.cc', '../src/tlsf_frontend.cc'],
@@ -228,16 +212,6 @@ game_backend_test = executable ('game-backend-test',
                                 dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
 test ('game-backend',
       game_backend_test,
-      suite : ['unit', 'game-backend'])
-
-real_backend_selector_test = executable (
-  'real-backend-selector-test',
-  ['real_backend_selector_test.cc', '../src/solver/real_backend_selector.cc'],
-  link_with : closure_buchi_provider_lib,
-  include_directories : inc,
-  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
-test ('real-backend-selector',
-      real_backend_selector_test,
       suite : ['unit', 'game-backend'])
 
 spot_rows_test = executable (
@@ -273,10 +247,6 @@ test ('spot-lazy-buchi-view', spot_lazy_buchi_view_test,
 # both states. The #ifndef guards let -D override the generated defaults.
 spot_provider_replay_variants = [
   ['spot-provider-replay', []],
-  ['spot-provider-replay-leq', ['-DACACIA_SPOT_GUARDED_INEQUALITY_COVERING=1']],
-  ['spot-provider-replay-exists', ['-DACACIA_SPOT_GUARDED_EXISTENTIAL_OUTPUTS=1']],
-  ['spot-provider-replay-losing-input', ['-DACACIA_SPOT_GUARDED_LOSING_INPUT_SEARCH=1']],
-  ['spot-provider-replay-lean-verifier', ['-DACACIA_SPOT_GUARDED_LEAN_VERIFIER=1']],
 ]
 foreach variant : spot_provider_replay_variants
   spot_provider_replay_test = executable(
@@ -338,16 +308,6 @@ spot_guarded_forward_safety_test = executable (
 test ('spot-guarded-forward-safety', spot_guarded_forward_safety_test,
       suite : ['unit', 'spot-guarded'])
 
-spot_guarded_forward_safety_leq_test = executable (
-  'spot-guarded-forward-safety-leq-test',
-  'spot_guarded_forward_safety_test.cc',
-  include_directories : inc,
-  cpp_args : ['-DACACIA_SPOT_GUARDED_INEQUALITY_COVERING=1'],
-  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
-)
-test ('spot-guarded-forward-safety-leq', spot_guarded_forward_safety_leq_test,
-      suite : ['unit', 'spot-guarded'])
-
 transition_payload_test = executable (
   'transition-payload-test',
   'transition_payload_test.cc',
@@ -373,14 +333,6 @@ direct_simulation_test = executable ('direct-simulation-test',
 test ('direct-simulation',
       direct_simulation_test,
       suite : ['unit', 'direct-simulation'])
-
-transition_core_test = executable ('transition-core-test',
-                                   'transition_core_test.cc',
-                                   include_directories : inc,
-                                   dependencies : [spot_dep, bddx_dep])
-test ('transition-core',
-      transition_core_test,
-      suite : ['unit', 'transition-core'])
 
 mp_nba_test = executable ('mp-nba-test',
                           'mp_nba_test.cc',
@@ -446,16 +398,6 @@ test ('k-schedule',
       k_schedule_test,
       suite : ['unit', 'k-schedule'])
 
-profile_dominance_test = executable (
-  'profile-dominance-test',
-  'profile_dominance_test.cc',
-  include_directories : inc,
-  dependencies : [spot_dep, bddx_dep, posets_dep],
-)
-test ('profile-dominance',
-      profile_dominance_test,
-      suite : ['unit', 'profile-dominance'])
-
 forced_output_contradiction_test = executable ('forced-output-contradiction-test',
                                                'forced_output_contradiction_test.cc',
                                                include_directories : inc,
@@ -489,11 +431,9 @@ game_backend_integration_sources = [
   '../src/portfolio_arm.cc',
   '../src/version.cc',
   '../src/solver/mealy_to_moore.cc',
-  '../src/solver/real_backend_selector.cc',
   '../src/solver/solver_invoker.cc',
   '../src/solver/obligation_helper.cc',
   '../src/parity_arm.cc',
-  '../src/solver/solve_game.cc',
   '../src/solver/solve_game_vector.cc',
 ]
 if get_option ('acacia_native_arms')
@@ -514,9 +454,7 @@ game_backend_integration = executable (
   link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib],
   include_directories : inc,
   cpp_args : ['-DACACIA_PORTFOLIO_TEST_HOOKS=1',
-              '-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1',
-              '-DACACIA_REAL_BACKEND_SELECTOR=1',
-              '-DACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT=30'],
+              '-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1'],
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,
   install : false,
 )
@@ -558,9 +496,9 @@ test ('game-backend-integration', game_backend_cli,
       args : [game_backend_integration,
               get_option ('acacia_forward_safety_solver').to_string (), 'true', 'true',
               (compiler_profile == 'debug').to_string (),
-              get_option ('acacia_default_candidate_mode'),
-              get_option ('acacia_spot_taa_max_rank_nodes').to_string (),
-              'true'],  # ACACIA_REAL_BACKEND_SELECTOR=1 above
+              'only',
+              '200000',
+              'false'],
       suite : ['unit', 'game-backend'], depends : [game_backend_integration])
 if enable_tlsf_frontend
   test ('spot-worker-boundary', py,
@@ -573,8 +511,8 @@ test ('game-backend-cli',
               get_option ('acacia_spot_guarded_backend').to_string (),
               get_option ('acacia_spot_lazy_provider').to_string (),
               (compiler_profile == 'debug').to_string (),
-              get_option ('acacia_default_candidate_mode'),
-              get_option ('acacia_spot_taa_max_rank_nodes').to_string ()],
+              'only',
+              '200000'],
       suite : ['unit', 'game-backend'],
       depends : [ab_exe])
 
@@ -596,13 +534,7 @@ test ('mealy-to-moore',
 
 bash = find_program ('bash')
 default_real_children = 1
-if get_option ('acacia_translation_pref') == 'small+any'
-  default_real_children = 2
-endif
-default_unreal_children = 1
-if get_option ('acacia_default_unreal_x') == 'both'
-  default_unreal_children = 2
-endif
+default_unreal_children = 2
 default_check_children = default_real_children + default_unreal_children
 # Compiling spot-guarded leaves this default unchanged, as in arg_parser.hh.
 default_game_backend = 'backward'
@@ -661,14 +593,6 @@ test ('check-selection',
               default_game_backend],
       suite : ['unit', 'check-selection'],
       depends : [ab_exe])
-
-elevator_preprocessor_test = executable ('elevator-preprocessor-test',
-                                         'elevator_preprocessor_test.cc',
-                                         include_directories : inc,
-                                         dependencies : [spot_dep, bddx_dep])
-test ('elevator-preprocessor',
-      elevator_preprocessor_test,
-      suite : ['unit', 'elevator'])
 
 cap_census_test = executable ('cap-census-test',
                               'cap_census_test.cc',

@@ -355,22 +355,6 @@
     "cause": "invalid_query",
     "telemetry": "STOPPED/error"
   },
-  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | b.lor (kept, suffix[0]) == bddtrue | 0": {
-    "cause": "invalid_query",
-    "telemetry": "STOPPED/error"
-  },
-  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | kept == bddtrue | 0": {
-    "cause": "invalid_query",
-    "telemetry": "STOPPED/error"
-  },
-  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | requested.valid () && certificate.semantics.valid () && certificate.semantics == requested | 0": {
-    "cause": "invalid_query",
-    "telemetry": "STOPPED/error"
-  },
-  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | choice.constant_output.has_value () == (certificate.semantics.output_choice == OutputChoice::constant) | 0": {
-    "cause": "invalid_query",
-    "telemetry": "STOPPED/error"
-  },
   "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | certificate.failure == Unknown::none && not certificate.pending_loss && not certificate.pending_expansion && certificate.initial < certificate.nodes.size () | 0": {
     "cause": "invalid_query",
     "telemetry": "STOPPED/error"
@@ -451,19 +435,11 @@
     "cause": "invalid_query",
     "telemetry": "STOPPED/error"
   },
-  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | semantics_.valid () | 0": {
-    "cause": "invalid_query",
-    "telemetry": "STOPPED/error"
-  },
   "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | dep < proof_id | 0": {
     "cause": "invalid_query",
     "telemetry": "STOPPED/error"
   },
   "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | input.has_value () | 0": {
-    "cause": "invalid_query",
-    "telemetry": "STOPPED/error"
-  },
-  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | input.has_value () | 1": {
     "cause": "invalid_query",
     "telemetry": "STOPPED/error"
   },
@@ -2990,5 +2966,9 @@
   "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"inconclusive\" | 0": {
     "cause": "worker_stopped",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | choice.constant_output.has_value () | 0": {
+    "cause": "invalid_query",
+    "telemetry": "STOPPED/error"
   }
 }

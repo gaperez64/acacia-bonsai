@@ -212,7 +212,7 @@ namespace acacia::solver_detail {
       acacia::worker_route ("equivariance", "backward");
       auto eq = acacia::solver_detail::equivariant::try_solve<SpecializedDownset> (
           aut, kmax, kmin, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
-          ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints, budget);
+          actioners::standard<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints, budget);
       if (eq.outcome == acacia::solver_detail::equivariant::status::completed)
         return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut, all_inputs,
                                               all_outputs);
@@ -406,9 +406,7 @@ namespace acacia::solver_detail {
           acacia::diagnostics::set_support_backend ("backward");
           break;
         }
-        const auto next = acacia::k_schedule::next (
-            ACACIA_K_SCHEDULE, k, kmin, kmax, kinc,
-            {static_cast<long long> (result.solve_ms), result.proofs, result.expansions, true});
+        const auto next = acacia::k_schedule::next (k, kmin, kmax, kinc);
         if (not next) {
           acacia::diagnostics::set_final_reason ("spot-guarded-kmax-lose");
           return std::nullopt;
@@ -424,7 +422,7 @@ namespace acacia::solver_detail {
 #endif
 
     using IOsPrecomputationMaker = IOS_PRECOMPUTER;
-    using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
+    using ActionerMaker = actioners::standard<typename SpecializedDownset::value_type>;
     using InputPickerMaker = INPUT_PICKER;
 #if ACACIA_FORWARD_SAFETY_SOLVER
     // post_real rebuilds actions and the input/output partition for synthesis.
@@ -436,7 +434,7 @@ namespace acacia::solver_detail {
           forward_k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker,
                                               ActionerMaker, InputPickerMaker> (
               aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
-              ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
+              actioners::standard<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
       auto win = forward.solve ();
       if (not forward.should_fallback_to_backward ())
         return post_real<SpecializedDownset> (std::move (win), do_synthesis, aut, all_inputs,
@@ -451,7 +449,7 @@ namespace acacia::solver_detail {
     auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker,
                                            ActionerMaker, InputPickerMaker> (
         aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
-        ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
+        actioners::standard<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
     return post_real<SpecializedDownset> (skn.solve (), do_synthesis, aut, all_inputs,
                                           all_outputs);
   }

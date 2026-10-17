@@ -18,11 +18,9 @@ ab_sources = [
   'portfolio_arm.cc',
   'version.cc',
   'solver/mealy_to_moore.cc',
-  'solver/real_backend_selector.cc',
   'solver/solver_invoker.cc',
   'solver/obligation_helper.cc',
   'parity_arm.cc',
-  'solver/solve_game.cc',
   'solver/solve_game_vector.cc',
 ]
 if get_option ('acacia_native_arms')
@@ -106,7 +104,6 @@ if get_option('build_research_tools')
     [
       'research/hoa_replay.cc',
       'version.cc',
-      'solver/solve_game.cc',
       'solver/solve_game_vector.cc',
     ],
     version_h,

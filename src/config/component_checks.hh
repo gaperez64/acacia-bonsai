@@ -16,7 +16,7 @@ namespace acacia::config::checks {
     using State = typename SpecializedDownset::value_type;
     using Aut = spot::twa_graph_ptr;
     using SelectedIOSPrecomputer = IOS_PRECOMPUTER;
-    using SelectedActionerMaker = ACTIONER<State>;
+    using SelectedActionerMaker = actioners::standard<State>;
     using SelectedInputPickerMaker = INPUT_PICKER;
 
     static_assert (concepts::AcaciaDownset<SpecializedDownset>);

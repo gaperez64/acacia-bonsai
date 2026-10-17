@@ -296,9 +296,7 @@ namespace acacia::spot_lazy_worker {
           record_failure (store.row_error, result.failure);
           return Outcome::unknown;
         }
-        const auto next = k_schedule::next (ACACIA_K_SCHEDULE, k, kmin, kmax, kinc,
-                                            {static_cast<long long> (result.solve_ms),
-                                             result.proofs.size (), result.expansions, true});
+        const auto next = k_schedule::next (k, kmin, kmax, kinc);
         if (not next) {
           worker_stage ("k_bound");
           worker_stopped ("resource");

@@ -24,7 +24,7 @@ namespace acacia {
   }
 
   inline spot_guarded::Limits spot_taa_candidate_limits () {
-    auto limits = spot_candidate_limits (ACACIA_SPOT_TAA_MAX_RANK_NODES);
+    auto limits = spot_candidate_limits (200000);
     // Preserve the common research override; a provider-specific override has
     // final precedence and never lowers the frozen guarded worker's budget.
     limits.max_rank_nodes = diagnostics::env_size (

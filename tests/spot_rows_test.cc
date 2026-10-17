@@ -25,7 +25,7 @@ namespace posets::vectors {
 
 namespace {
   using namespace acacia::spot_rows;
-  using solver_state = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
+  using solver_state = posets::vectors::simd_vector_backed<VECTOR_ELT_T>;
   using transset = std::vector<std::pair<unsigned, unsigned>>;
   int failures = 0;
   std::size_t comparisons = 0;

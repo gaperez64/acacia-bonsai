@@ -34,20 +34,6 @@ spot::twa_graph_ptr create_automaton (
                             acacia::translation::distinct_promises (translation_formula));
   }
 
-#if ACACIA_TRANSITION_ACCEPTANCE
-  // Keep acceptance on transitions.  `BA` below is documented by Spot as
-  // implying `SBAcc`, and that lowering duplicates states precisely to move
-  // acceptance onto them -- every duplicate then becomes another numeric rank
-  // coordinate.  `Buchi` is the same ordinary Büchi acceptance without the
-  // state-based requirement, so the counting core measured by
-  // `boolean_states::transition_core` is the smaller one.
-  trans.set_type (spot::postprocessor::Buchi);
-  trans.set_pref (preference);
-  acacia::legacy_phase translating ("translation");
-  auto aut = trans.run (translation_formula);
-  acacia::legacy_graph (aut);
-  return aut;
-#else
   // To Universal co-Büchi Automaton
   trans.set_type (spot::postprocessor::BA);
   // "Desired characteristics": state-based acceptance (implied by BA) plus the
@@ -70,5 +56,4 @@ spot::twa_graph_ptr create_automaton (
                      << aut->num_states () << " states." << std::endl);
   }
   return aut;
-#endif
 }

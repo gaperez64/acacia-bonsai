@@ -8,8 +8,6 @@
 #include <vector>
 
 namespace {
-  using acacia::k_schedule::kind;
-  using acacia::k_schedule::loss_evidence;
 
   std::ostream& print_vector (std::ostream& out, const std::vector<int>& value) {
     out << '[';
@@ -121,122 +119,27 @@ namespace {
     return false;
   }
 
-  std::vector<long long> collect (kind schedule, long long kmin, long long kmax,
-                                  long long kinc,
-                                  const loss_evidence& evidence) {
-    std::vector<long long> result;
-    long long k = kmin;
-    for (std::size_t step = 0; step < 128; ++step) {
-      const auto next =
-          acacia::k_schedule::next (schedule, k, kmin, kmax, kinc, evidence);
-      if (not next)
-        return result;
-      if (*next <= k || *next > kmax) {
-        std::cerr << acacia::k_schedule::name (schedule)
-                  << ": invalid next bound " << *next << " after " << k
-                  << " with kmax=" << kmax << '\n';
-        return {};
-      }
-      result.push_back (*next);
-      k = *next;
-    }
-    std::cerr << acacia::k_schedule::name (schedule)
-              << ": did not terminate within 128 steps\n";
-    return {};
-  }
-
-  bool reaches_kmax (kind schedule, const loss_evidence& evidence) {
-    constexpr long long kmin = 2;
-    constexpr long long kmax = 99;
-    constexpr long long kinc = 3;
-    long long k = kmin;
-
-    for (std::size_t step = 0; step < 128; ++step) {
-      const auto next =
-          acacia::k_schedule::next (schedule, k, kmin, kmax, kinc, evidence);
-      if (not next)
-        return k == kmax;
-      if (*next <= k || *next > kmax)
-        return false;
-      k = *next;
-    }
-    return false;
-  }
-
-  bool check_schedules () {
-    const loss_evidence cheap {50, 1'000, 1'000, false};
-    const loss_evidence cheap_by_shape {51, 64, 8, true};
-    const loss_evidence expensive {51, 65, 9, true};
-
-    const std::vector<long long> linear_expected {
-        5,  8,  11, 14, 17, 20, 23, 26, 29, 32, 35,
-        38, 41, 44, 47, 50, 53, 56, 59, 62, 65, 68,
-        71, 74, 77, 80, 83, 86, 89, 92, 95, 98, 99};
-    const std::vector<long long> geometric_expected {5, 11, 23, 47, 95, 99};
-
+  bool check_schedule () {
+    using acacia::k_schedule::next;
     bool ok = true;
-    const auto linear = collect (kind::linear, 2, 99, 3, expensive);
-    ok &= expect ("linear exact sequence", linear == linear_expected);
-
-    auto geometric = collect (kind::geometric, 2, 99, 3, expensive);
-    ok &= expect ("geometric exact sequence", geometric == geometric_expected);
-    geometric.insert (geometric.begin (), 2);
-    ok &= expect ("geometric sequence includes 2,5,11,23,47,95,99",
-                  geometric
-                      == std::vector<long long> {2, 5, 11, 23, 47, 95, 99});
-    ok &= expect ("geometric exhausted at kmax",
-                  not acacia::k_schedule::next (kind::geometric, 99, 2, 99, 3,
-                                                expensive));
-
-    ok &= expect ("direct-max jumps from kmin to kmax",
-                  collect (kind::direct_max, 2, 99, 3, expensive)
-                      == std::vector<long long> {99});
-    ok &= expect ("adaptive cheap loss uses geometric",
-                  collect (kind::cheap_loss_adaptive, 2, 99, 3, cheap)
-                      == geometric_expected);
-    ok &= expect ("adaptive cheap shape uses geometric",
-                  collect (kind::cheap_loss_adaptive, 2, 99, 3,
-                           cheap_by_shape)
-                      == geometric_expected);
-    ok &= expect ("adaptive expensive loss uses linear",
-                  collect (kind::cheap_loss_adaptive, 2, 99, 3, expensive)
-                      == linear_expected);
-
-    ok &= expect ("linear terminates", reaches_kmax (kind::linear, expensive));
-    ok &= expect ("geometric terminates",
-                  reaches_kmax (kind::geometric, expensive));
-    ok &= expect ("adaptive-cheap terminates",
-                  reaches_kmax (kind::cheap_loss_adaptive, cheap));
-    ok &= expect ("adaptive-expensive terminates",
-                  reaches_kmax (kind::cheap_loss_adaptive, expensive));
-    ok &= expect ("direct-max terminates",
-                  reaches_kmax (kind::direct_max, expensive));
-
-    ok &= expect ("linear diagnostic name",
-                  std::string_view (acacia::k_schedule::name (kind::linear))
-                      == "linear");
-    ok &= expect ("geometric diagnostic name",
-                  std::string_view (acacia::k_schedule::name (kind::geometric))
-                      == "geometric");
-    ok &= expect (
-        "adaptive diagnostic name",
-        std::string_view (
-            acacia::k_schedule::name (kind::cheap_loss_adaptive))
-            == "cheap_loss_adaptive");
-    ok &= expect ("direct-max diagnostic name",
-                  std::string_view (acacia::k_schedule::name (kind::direct_max))
-                      == "direct_max");
-
-    if (ok)
-      std::cout << "K-schedule sequence and termination checks passed\n";
+    long long k = 2;
+    for (int i = 0; i < 33; ++i) {
+      const auto n = next (k, 2, 99, 3);
+      ok &= expect ("linear sequence", n == std::min (99LL, k + 3));
+      if (not n)
+        return false;
+      k = *n;
+    }
+    ok &= expect ("reaches maximum", k == 99 && not next (k, 2, 99, 3));
+    ok &= expect ("invalid increment", not next (2, 2, 99, 0) && not next (2, 2, 99, -1));
+    ok &= expect ("below minimum", not next (1, 2, 99, 3));
+    ok &= expect ("single bound", not next (2, 2, 2, 3));
+    constexpr auto max = std::numeric_limits<long long>::max ();
+    ok &= expect ("overflow clamps", next (max - 1, 2, max, 3) == max);
     return ok;
   }
 }  // namespace
 
 int main () {
-  // The algebra check must run before schedule tests: it decides whether a
-  // direct bound jump is semantically legal.
-  if (not check_lift_algebra ())
-    return 1;
-  return check_schedules () ? 0 : 1;
+  return check_lift_algebra () && check_schedule () ? 0 : 1;
 }
