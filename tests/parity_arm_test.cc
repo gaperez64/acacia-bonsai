@@ -23,7 +23,7 @@ spot::formula formula (const char* text) {
   return parsed.f;
 }
 
-spot::twa_graph_ptr forbidden (unsigned tier) {
+spot::twa_graph_ptr negated_spec_aut (unsigned tier) {
   auto aut = spot::make_twa_graph (spot::make_bdd_dict ());
   const auto x = bdd_ithvar (aut->register_ap (spot::formula::ap ("x")));
   const auto y = bdd_ithvar (aut->register_ap (spot::formula::ap ("y")));
@@ -83,7 +83,7 @@ int main (int argc, char** argv) {
       for (bool moore : {false, true})
         for (bool real : {false, true}) {
           route::request input;
-          input.automaton = forbidden (tier);
+          input.automaton = negated_spec_aut (tier);
           input.specification = formula (specifications[tier]);
           input.source = route::source_language::real_worker;
           input.inputs = real ? std::vector<std::string> {"unused_input"}
@@ -160,7 +160,7 @@ int main (int argc, char** argv) {
     // Selection precedes strategy extraction and encoding, in every tier.
     for (unsigned tier = 1; tier <= 4; ++tier) {
       route::request input;
-      input.automaton = forbidden (tier);
+      input.automaton = negated_spec_aut (tier);
       input.source = route::source_language::real_worker;
       input.outputs = {"x", "y"};
       bool selected = false;

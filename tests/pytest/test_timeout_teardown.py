@@ -21,6 +21,20 @@ def test_timeout_row_retains_every_terminal_and_both_summaries(monkeypatch, tmp_
         pytest.skip("set ACACIA_ATTRIBUTION_TEST_BUILD to a checked solver build")
     binary = Path(build) / "tests/game-backend-integration"
     assert binary.is_file(), binary
+    options = {option["name"]: option["value"] for option in json.loads(
+        (Path(build) / "meson-info/intro-buildoptions.json").read_text())}
+    arms = options["acacia_default_arms"].strip()
+    if arms:
+        default_arms = [arm.strip() for arm in arms.split(",")]
+    else:
+        # Empty default_arms selects the historical real/unreal portfolio.
+        default_arms = [f"real:{preference}" for preference in
+                        options["acacia_translation_pref"].split("+")]
+        default_arms.extend(f"unreal:{strategy}" for strategy in ("formula", "automaton"))
+    # The obligation helper waits for eligibility from an ordinary worker.
+    # Stalled workers never dispatch, so it starts only when selected alone.
+    ordinary_arms = [arm for arm in default_arms if arm != "both:obligation:spot"]
+    expected_workers = set(range(len(ordinary_arms or default_arms)))
     spec = importlib.util.spec_from_file_location(
         "timeout_coverage", ROOT / "benchmarking/run-syntcomp26-coverage.py")
     coverage = importlib.util.module_from_spec(spec)
@@ -38,7 +52,7 @@ def test_timeout_row_retains_every_terminal_and_both_summaries(monkeypatch, tmp_
     exceptions = tmp_path / "exceptions.tsv"
     with exceptions.open("w") as stream:
         csv.DictWriter(stream, ["instance", "annotated_status", "corrected_status", "evidence"], delimiter="\t").writeheader()
-    monkeypatch.setenv("ACACIA_TEST_CHILD_MODES", "stall,stall,stall,stall,stall")
+    monkeypatch.setenv("ACACIA_TEST_CHILD_MODES", ",".join("stall" for _ in expected_workers))
     monkeypatch.setenv("ACACIA_OUTER_DEADLINE_MONOTONIC", str(benchlib.time.monotonic() + 10))
     args = coverage.build_parser().parse_args([
         "--bin", str(binary), "--solver-label", "fixture", "--list", str(selection),
@@ -67,10 +81,13 @@ def test_timeout_row_retains_every_terminal_and_both_summaries(monkeypatch, tmp_
     assert row["cpu_seconds"] and row["scope_memory_peak_bytes"] == "4096"
     events = [dict(json.loads(line), emitter_pid=int(path.stem))
               for path in records.rglob("*.jsonl") for line in path.read_text().splitlines()]
+    specifications = [event for event in events if event.get("event") == "worker_spec"]
     spawned = [event for event in events if event.get("event") == "worker_spawn"]
     terminals = [event for event in events if event.get("event") == "parent_terminal"]
-    assert len(spawned) == len(terminals) == 5
-    assert {(event["worker"], event["worker_pid"]) for event in spawned} == {
+    assert len(specifications) == len(spawned) == len(terminals) == len(expected_workers)
+    assert {event["worker"] for event in specifications} == expected_workers
+    assert {(event["worker"], event["worker_pid"]) for event in specifications} == {
+        (event["worker"], event["worker_pid"]) for event in spawned} == {
         (event["worker"], event["worker_pid"]) for event in terminals}
     assert all(event["signal"] == signal.SIGKILL and event["reason"] == "interrupted"
                and event["telemetry"] == "incomplete" for event in terminals)

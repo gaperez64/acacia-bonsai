@@ -91,7 +91,7 @@ It was measured free on the 180-instance panel: Acacia solved 111 instances
 under both bases across four arms, with zero differing instances, matching the
 published figure. The campaign is archived at
 `syntcomp25-basis-20260828-localrest`; see
-[consolidation status](../../../../benchmarking/local-evidence-consolidation.md).
+[evidence retention](../../../../benchmarking/README.md#evidence-and-retention).
 
 `ltlsynt` is no longer fed pairs produced by Acacia's frontend. With `-T`, the
 wrapper converts the TLSF with SyFCo itself and passes an explicit

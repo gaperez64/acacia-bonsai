@@ -80,7 +80,7 @@ namespace {
     aut->new_acc_edge (0, 0, bddtrue, false);
     aut->new_acc_edge (1, 1, bddtrue);
 
-    auto res = acacia::spot_fastpath::deterministic_forbidden_fast_path (
+    auto res = acacia::spot_fastpath::deterministic_negated_spec_fast_path (
         aut, bddtrue, false, true);
     if (not res.conclusive or not res.current_output_player_winning_region.has_value ()) {
       std::cerr << "det-region: no winning region returned\n";

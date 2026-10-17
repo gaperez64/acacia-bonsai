@@ -165,7 +165,7 @@ namespace acacia::parity_route {
       output.route = "acacia";
       aut = tier.buchi;
       const bool keep_arena = config.verify or config.on_game or config.on_solution;
-      // The incumbent deterministic forbidden-Buchi shortcut, with its usual
+      // The incumbent deterministic negated-specification Buchi shortcut, with its usual
       // completion and co-Buchi game. Native Moore uses the same Spot split API
       // with output-first order; shipping callers keep the default Mealy frame.
       stage ("acacia", [&] {
@@ -175,7 +175,7 @@ namespace acacia::parity_route {
           tier.buchi->register_ap (spot::formula::ap (name));
         // Production needs only the verdict and, after selection, the controller.
         acacia::synthesis::controller_capture capture (&buchi_controller);
-        auto fast = acacia::spot_fastpath::deterministic_forbidden_fast_path (
+        auto fast = acacia::spot_fastpath::deterministic_negated_spec_fast_path (
             tier.buchi, outputs, config.synthesis and not keep_arena, keep_arena, native_moore);
         winning = fast.current_output_player_wins;
         if (keep_arena)
@@ -279,8 +279,8 @@ namespace acacia::parity_route {
           const auto controller_automaton = output.circuit->as_automaton (false);
           spot::translator checker (controller_automaton->get_dict ());
           checker.set_type (spot::postprocessor::BA);
-          auto negative = checker.run (spot::formula::Not (input.specification));
-          if (negative->intersects (controller_automaton))
+          auto negated_spec_aut = checker.run (spot::formula::Not (input.specification));
+          if (negated_spec_aut->intersects (controller_automaton))
             throw std::runtime_error ("controller violates the original specification");
         });
         output.verification = "original-specification product emptiness";
