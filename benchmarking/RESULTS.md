@@ -25,7 +25,8 @@ Exactly matched duplicate work across arms is about 160 s of CPU on the whole pa
 under 1% of the timeouts' 16.5k s. Cancelled losers stop within about 5 s of CPU in
 total; post-decline CPU is GR(1)'s exact-solve fallback and the backward arm's
 continuation after its optional pre-pass. Sharing, staging and a launch classifier
-have no measured upside on this machine; #277 asks whether to study a 4-core setting.
+have no measured upside on this machine; #277 was closed on this 8-core evidence,
+with fewer-core settings left unmeasured.
 
 ## 2026-10-17 — No default arm can be dropped (#264)
 
