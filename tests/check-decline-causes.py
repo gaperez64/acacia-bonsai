@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "benchmarking/coverage-first/decline-causes.md"
+OUTPUT = ROOT / "build_scratch/attribution/decline-causes.md"
 EXPECTATIONS = ROOT / "tests/attribution-cause-expectations.json"
 SOURCES = (
     "src/parity_arm.cc", "src/native_support.cc", "src/native_proof_binding.cc",
@@ -192,6 +192,9 @@ def identity(row: dict) -> str:
 def generate() -> str:
     import json
     expected = json.loads(EXPECTATIONS.read_text())
+    reference = (ROOT / "benchmarking/legacy-phase-records.md").read_text()
+    hooks = reference.split("<!-- attribution-hooks:start -->\n", 1)[1].split(
+        "<!-- attribution-hooks:end -->", 1)[0]
     rows = []
     for row in origins():
         entry = expected[identity(row)]
@@ -224,7 +227,7 @@ def generate() -> str:
         "CHECK_OK/CERT_FAILED or REFUTED decline. Earlier non-applicability causes survive "
         "when all retries/search alternatives fail. A successful retry clears the cause.\n\n"
         "## Fault and corruption hook census\n\n"
-        + (ROOT / "tests/attribution-hook-census.md").read_text() + "\n"
+        + hooks + "\n"
         "## Validator, contract and failure-origin census\n\n"
         f"{len(rows)} enumerated checks/origins across preparation, reduction, seeds, R, U, "
         "checking, native proof binding, OxiDD and Spot providers. A slash-separated class "
@@ -239,13 +242,15 @@ def generate() -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--output", type=Path, default=OUTPUT)
     args = parser.parse_args()
     table = generate()
     if args.check:
-        if OUTPUT.read_text() != table:
+        if args.output.read_text() != table:
             raise SystemExit("decline cause census is stale; regenerate it")
     else:
-        OUTPUT.write_text(table)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(table)
 
 
 if __name__ == "__main__":

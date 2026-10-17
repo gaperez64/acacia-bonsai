@@ -381,6 +381,7 @@ class EvidenceToolTests(unittest.TestCase):
         self.assertIn("do-not-publish", result.stderr)
         for suffix, content in (("tsv", "original_id\tobfuscated_id\nold\tnew\n"),
                                 ("csv", "original_id,obfuscated_id\nold,new\n"),
+                                ("txt", '| "original_id" | "obfuscated_id" |\n| old | new |\n'),
                                 ("jsonl", '{"original_id":"old","obfuscated_id":"new"}\n'),
                                 ("json", '{\n"original_id": "old",\n"obfuscated_id": "new"\n}\n')):
             mapping = self.work / f"relocated.{suffix}"
@@ -390,6 +391,90 @@ class EvidenceToolTests(unittest.TestCase):
                          mapping.relative_to(ROOT).as_posix(), "--out", str(self.work / "held"),
                          ok=False)
             self.assertIn("do-not-publish", result.stderr)
+
+    def test_pack_rejects_markdown_mapping_tables_including_backticked_headers(self):
+        for suffix in ("md", "py"):
+            for quote in ("", '"', "`"):
+                with self.subTest(suffix=suffix, quote=quote):
+                    source = self.work / f"table.{suffix}"
+                    source.write_text(
+                        f"# Mapping\n| {quote}original_id{quote} | {quote}obfuscated_id{quote} |\n"
+                        "| --- | --- |\n| old | new |\n")
+                    result = run("python3", "-s", str(EVIDENCE), "pack", "--campaign", "table",
+                                 "--status", "partial", "--members",
+                                 source.relative_to(ROOT).as_posix(),
+                                 "--out", str(self.work / "held"), ok=False)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn("do-not-publish", result.stderr)
+
+    def test_pack_rejects_fenced_mappings_at_any_position_and_headed_json(self):
+        mappings = {
+            "json": '{\n"original_id": "old",\n"obfuscated_id": "new"\n}\n',
+            "tsv": "original_id\tobfuscated_id\nold\tnew\n",
+            "csv": "original_id,obfuscated_id\nold,new\n",
+        }
+        cases = [(f"{position}-{fence}-{kind}",
+                  f"{prefix}{fence}{kind}\n{body}{fence}\n")
+                 for position, prefix in enumerate(("", "# Heading\n\n", "Prose first.\n\n"))
+                 for fence in ("```", "~~~") for kind, body in mappings.items()]
+        cases.append(("headed-json", "# Mapping document\n\n" + mappings["json"]))
+        for name, content in cases:
+            with self.subTest(name=name):
+                source = self.work / "mapping.md"
+                source.write_text(content)
+                result = run("python3", "-s", str(EVIDENCE), "pack", "--campaign", "blocks",
+                             "--status", "partial", "--members",
+                             source.relative_to(ROOT).as_posix(),
+                             "--out", str(self.work / "held"), ok=False)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("do-not-publish", result.stderr)
+
+    def test_source_mentions_stay_guarded_and_nested_snapshot_preserves_bytes_and_modes(self):
+        # Representative offending lines from the four closeout sources. Keep
+        # HEAD's guard; preserve reviewed sources in a manifest-bound nested member.
+        sources = {
+            "markdown/benchmarking/gr1-par2-20260923/brief-campaign-generic.md":
+                (b"# Brief\n   tlsf-sources.tsv}, and a SEPARATE sealed mapping file "
+                 b"(original id <-> obfuscated id, signal\n", 0o644),
+            "pr3-deleted/benchmarking/gr1-par2-20260923/campaign/check-obfuscated-b.py":
+                (b'    mapping = {row["obfuscated_id"]: row["original_id"] for row in\n', 0o755),
+            "pr3-deleted/benchmarking/tools/join-obfuscated-threeway.py":
+                (b'        to_obf = {row["original_id"]: row["obfuscated_id"] for row in pairs}\n',
+                 0o755),
+            "pr3-deleted/benchmarking/tools/prepare-obfuscated-corpus.py":
+                (b'        verify_writer = csv.DictWriter(verify_stream, fieldnames='
+                 b'("original_id", "obfuscated_id", "status"), delimiter="\\t")\n', 0o755),
+        }
+        nested = self.work / "source-mentions.tar.gz"
+        with tarfile.open(nested, "w:gz") as bundle:
+            for name, (data, mode) in sources.items():
+                with self.subTest(name=name):
+                    source = self.work / name
+                    source.parent.mkdir(parents=True, exist_ok=True)
+                    source.write_bytes(data)
+                    source.chmod(mode)
+                    result = run("python3", "-s", str(EVIDENCE), "pack", "--campaign", "source",
+                                 "--status", "closed", "--members",
+                                 source.relative_to(ROOT).as_posix(),
+                                 "--out", str(self.work / "held"), ok=False)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn("do-not-publish", result.stderr)
+                item = tarfile.TarInfo(name)
+                item.size, item.mode = len(data), mode
+                bundle.addfile(item, io.BytesIO(data))
+        member = nested.relative_to(ROOT).as_posix()
+        run("python3", "-s", str(EVIDENCE), "pack", "--campaign", "source-snapshot",
+            "--status", "closed", "--members", member, "--out", str(self.work / "out"))
+        archive = self.work / "out/source-snapshot.tar.gz"
+        run("python3", "-s", str(EVIDENCE), "verify", str(archive))
+        with tarfile.open(archive) as outer:
+            record = f"{member}\t{nested.stat().st_size}\t{hashlib.sha256(nested.read_bytes()).hexdigest()}\t0644"
+            self.assertIn(record, outer.extractfile("MANIFEST.tsv").read().decode().splitlines())
+            with tarfile.open(fileobj=io.BytesIO(outer.extractfile(member).read())) as bundle:
+                self.assertEqual(set(bundle.getnames()), set(sources))
+                for name, (data, mode) in sources.items():
+                    self.assertEqual(bundle.extractfile(name).read(), data)
+                    self.assertEqual(bundle.getmember(name).mode, mode)
 
     def test_fetch_checks_index_provenance_and_canonical_lists(self):
         source = self.work / "report.txt"

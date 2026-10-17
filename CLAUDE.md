@@ -60,8 +60,8 @@ reuses the old objects. Use a fresh directory when changing profile.
 
 ## Testing and gates
 
-`meson test -C build --suite unit` is the fast signal: ~40 tests, about seven
-seconds. The corpus suites (`ab/tiny`, `ab/small`, `ab/issue54`, `synthesis`)
+`meson test -C build --suite unit` runs the unit suite, including CLI tests with
+timeout allowances. The corpus suites (`ab/tiny`, `ab/small`, `ab/issue54`, `synthesis`)
 run the solver over LTL and TLSF instances and take much longer.
 
 The gate protocol — G0 correctness through G5 native TLSF parity — is defined in
