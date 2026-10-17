@@ -4,7 +4,7 @@
 // complete bounded rank domain.
 
 #include "actioners/standard.hh"
-#include "research/rank_action_replay.hh"
+#include "tiny_game_oracle.hh"
 #include "solver/local_certificate.hh"
 #include "tiny_game_oracle.hh"
 #include "utils/verbose.hh"

@@ -4,7 +4,7 @@
 #include "solver/k_bounded_safety_aut.hh"
 #include "actioners/standard.hh"
 #include "input_pickers/critical.hh"
-#include "research/explicit_forward_game.hh"
+#include "tiny_game_oracle.hh"
 #include "tiny_spot_game.hh"
 #include "utils/verbose.hh"
 #include <posets/downsets/vector_backed.hh>

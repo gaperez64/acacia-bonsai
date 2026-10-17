@@ -2,16 +2,14 @@
 """Compare baseline and candidate benchmark CSVs using Acacia's landing bar."""
 
 from __future__ import annotations
-
 import argparse
+from collections import Counter
 import csv
 import os
 import pathlib
 import shlex
 import sys
 from benchlib import par2 as par2_score
-
-from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
 

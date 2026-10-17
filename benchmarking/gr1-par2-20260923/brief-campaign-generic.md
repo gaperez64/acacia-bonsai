@@ -1,19 +1,21 @@
 # Brief CG — campaign preparation for the generic N (no timed runs by you)
 
-> Historical research note: the Python wrapper and lifting package below are retained
-> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+> Historical campaign brief: the Python wrapper and lifting package were retired.
+> Restore the campaign snapshot listed in [the evidence index](../evidence-index.tsv)
+> to follow these historical instructions. Current solver runs use native
+> `acacia-bonsai` arms.
 
-Read decisions.md (from "Owner stop" on), campaign/README.md (structure to reuse), the wrapper,
-benchmarking/gr1-par2-20260923/oracle/acacia_lift/lifting/settings.py. NEVER stage or commit by any path. No compiling, no timed
+Read the restored decisions.md (from "Owner stop" on), campaign/README.md (structure to reuse),
+the wrapper and its global lifting settings. NEVER stage or commit by any path. No compiling, no timed
 solver runs; the obfuscation step and admission census are fine (serial).
 Tools: /home/gperez/GIT-repos/tlsf-tools/build-SB-8b158d7. B, TACAS23, ltlsynt as in campaign/README.md.
-1. **Obfuscated corpus.** Using benchmarking/gr1-par2-20260923/obfuscate-tlsf.py with ONE recorded
+1. **Obfuscated corpus.** Using benchmarking/tools/obfuscate-tlsf.py with ONE recorded
    master seed, produce the full obfuscated corpus of all 1,524 TLSF inputs into a gitignored dir
    (e.g. tlsf-corpus-obf/), with random basenames and alpha-renamed signals, plus: an obfuscated
    list + source map in the same formats as tests/suites/benchmarks/syntcomp26/{all.list,
    tlsf-sources.tsv}, and a SEPARATE sealed mapping file (original id <-> obfuscated id, signal
    maps) stored outside the corpus dir, used only by the post-hoc comparison. Verify every
-   obfuscated file lowers to the renamed LTL of its original (reuse verify-obfuscation.py) and
+   obfuscated file lowers to the renamed LTL of its original (use tools/obfuscate-tlsf.py) and
    report counts. Commit-ready: list, map, mapping file hash (mapping itself committed too, it is
    evidence), the seed.
 2. **Development selection (original names).** Admission census of the generic route at 17 s and

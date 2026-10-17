@@ -13,12 +13,8 @@ USE_MDFILE_AS_MAINPAGE = README.md
 
 INPUT                  = README.md src tests
 RECURSIVE              = YES
-# src/research is one-off measurement scaffolding, not part of the interface a
-# reader is looking for. The rest are corpora that happen to live under tests/:
-# thousands of .ltl/.tlsf inputs and their READMEs, which Doxygen would
-# otherwise parse as if they were source.
-EXCLUDE                = src/research \
-                         tests/syntcomp-benchmarks \
+# Exclude benchmark corpora and their READMEs from source documentation.
+EXCLUDE                = tests/syntcomp-benchmarks \
                          tests/ltl \
                          tests/suites
 

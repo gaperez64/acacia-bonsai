@@ -8,7 +8,6 @@ import importlib.util
 import json
 import os
 import pathlib
-import subprocess
 import sys
 
 import pytest
@@ -29,7 +28,6 @@ coverage = load("p4_coverage", "benchmarking/run-syntcomp26-coverage.py")
 recycle = load("p4_recycle", "benchmarking/tools/recycle-cap.py")
 threeway = load("p4_threeway", "benchmarking/tools/threeway-join.py")
 lifting = load("p4_lifting", "benchmarking/tools/lifting-report.py")
-orchestrate = load("p4_orchestrate", "benchmarking/tools/campaign-orchestrate.py")
 capcheck = load("p4_capcheck", "benchmarking/tools/check-cap-independence.py")
 
 
@@ -526,162 +524,6 @@ def test_reporting_requires_explicit_provenance(tmp_path):
         lifting.report([row], tmp_path, "synthetic")
 
 
-def test_orchestrator_manifest_resume_and_frozen_binary(tmp_path, monkeypatch):
-    binary = tmp_path / "solver"
-    binary.write_text("#!/bin/sh\nexit 0\n")
-    binary.chmod(0o755)
-    (tmp_path / "a.tlsf").write_text("// STATUS: REALIZABLE\n")
-    (tmp_path / "all.list").write_text("a\n")
-    (tmp_path / "map.tsv").write_text("instance\ttlsf\na\ta.tlsf\n")
-    (tmp_path / "exceptions.tsv").write_text(
-        "instance\tannotated_status\tcorrected_status\tevidence\n")
-    runtime = tmp_path / "old-runtime"
-    runtime.mkdir()
-    sums = []
-    for name in ("libspot", "libbddx"):
-        target = runtime / f"{name}.so.0.0.0"
-        target.write_text(name)
-        (runtime / f"{name}.so.0").symlink_to(target.name)
-        sums.append(f"{orchestrate.sha256_file(target)}  ./lib/{target.name}\n")
-    sums_file = tmp_path / "SHA256SUMS"
-    sums_file.write_text("".join(sums))
-    comparison = tmp_path / "comparison.json"
-    spec = {"schema": 1, "memory_max": "8G", "memory_swap_max": "0",
-            "list": "all.list", "tlsf_map": "map.tsv", "tlsf_corpus": ".",
-            "status_exceptions": "exceptions.tsv", "runtime_sha256s": "SHA256SUMS",
-            "series": [{"label": "leg", "kind": "arm", "arms": ["real:one:backend"],
-                        "portfolio_size": 1,
-                        "binary": "solver", "binary_sha256": orchestrate.sha256_file(binary),
-                        "source_revision": "source", "runtime_lib_dir": "old-runtime",
-                        "pre_spot_216": True},
-                       {"label": "race", "kind": "race",
-                        "arms": ["real:one:backend", "unreal:two:backend"],
-                        "portfolio_size": 2,
-                        "binary": "solver", "binary_sha256": orchestrate.sha256_file(binary),
-                        "source_revision": "source"}]}
-    comparison.write_text(json.dumps(spec))
-    out = tmp_path / "out"
-    missing_runtime = dict(spec)
-    missing_runtime.pop("runtime_sha256s")
-    comparison.write_text(json.dumps(missing_runtime))
-    with pytest.raises(orchestrate.CampaignError, match="runtime_sha256s"):
-        orchestrate.prepare(comparison, 17, out, dry_run=True)
-    comparison.write_text(json.dumps(spec))
-    frozen, commands = orchestrate.prepare(comparison, 17, out, dry_run=True)
-    assert frozen["series"]["leg"]["runtime_identity"]["libraries"]["libspot.so.0"] == \
-        orchestrate.sha256_file(runtime / "libspot.so.0")
-    assert "unverified" in frozen["series"]["leg"]["runtime_identity"]["verification"]
-    assert "unverified" in frozen["series"]["leg"]["pre_spot_216_verification"]
-    assert len(commands) == 2 and not out.exists()
-    assert "--binary-identity" in commands[0][0]
-    assert "host sample accuracy are unverified" in frozen["verification"]
-    orchestrate.prepare(comparison, 17, out)
-    assert (out / "manifest.json").exists()
-    with pytest.raises(orchestrate.CampaignError, match="resume"):
-        orchestrate.prepare(comparison, 17, out)
-    assert orchestrate.prepare(comparison, 17, out, resume=True)[0] == frozen
-    wrapper = out / "wrappers/leg.sh"
-    original_wrapper = wrapper.read_text()
-    wrapper.write_text(original_wrapper + "# forged\n")
-    with pytest.raises(orchestrate.CampaignError, match="wrapper changed"):
-        orchestrate.prepare(comparison, 17, out, resume=True)
-    wrapper.write_text(original_wrapper)
-    runner = tmp_path / "runner.py"
-    runner.write_text("# synthetic runner\n")
-    monkeypatch.setattr(orchestrate, "NATIVE", runner)
-    orchestrate.prepare(comparison, 17, tmp_path / "runner-out")
-    runner.write_text("# forged synthetic runner\n")
-    with pytest.raises(orchestrate.CampaignError, match="resume"):
-        orchestrate.prepare(comparison, 17, tmp_path / "runner-out", resume=True)
-    spec["series"][0]["runtime_lib_dir"] = "missing"
-    comparison.write_text(json.dumps(spec))
-    with pytest.raises(orchestrate.CampaignError, match="runtime_lib_dir"):
-        orchestrate.prepare(comparison, 17, out, resume=True)
-    (tmp_path / "empty-runtime").mkdir()
-    spec["series"][0]["runtime_lib_dir"] = "empty-runtime"
-    comparison.write_text(json.dumps(spec))
-    with pytest.raises(orchestrate.CampaignError, match="preserved runtime missing"):
-        orchestrate.prepare(comparison, 17, out, resume=True)
-    spec["series"][0]["runtime_lib_dir"] = "old-runtime"
-    comparison.write_text(json.dumps(spec))
-    (runtime / "libspot.so.0.0.0").write_text("wrong")
-    with pytest.raises(orchestrate.CampaignError, match="SHA-256"):
-        orchestrate.prepare(comparison, 17, out, resume=True)
-    (runtime / "libspot.so.0.0.0").write_text("libspot")
-    binary.write_text("#!/bin/sh\nexit 1\n")
-    with pytest.raises(orchestrate.CampaignError, match="SHA-256"):
-        orchestrate.prepare(comparison, 17, out, resume=True)
-
-
-@pytest.mark.parametrize("tool", ["acacia1x", "ltlsynt"])
-def test_converted_pairs_and_syfco_are_pinned_for_resume(tmp_path, monkeypatch, tool):
-    binary, syfco = tmp_path / "solver", tmp_path / "syfco"
-    for path in (binary, syfco):
-        path.write_text("#!/bin/sh\nexit 0\n")
-        path.chmod(0o755)
-    (tmp_path / "a.tlsf").write_text("// STATUS: REALIZABLE\n")
-    (tmp_path / "all.list").write_text("a.ltl\n")
-    (tmp_path / "map.tsv").write_text("instance\ttlsf\na.ltl\ta.tlsf\n")
-    (tmp_path / "exceptions.tsv").write_text(
-        "instance\tannotated_status\tcorrected_status\tevidence\n")
-    pairs = tmp_path / "pairs"
-    pairs.mkdir()
-    (pairs / "a.ltl").write_text("G true\n")
-    (pairs / "a.part").write_text("INPUTS: x\nOUTPUTS: y\n")
-    (tmp_path / "failures.list").write_text("")
-    (tmp_path / "semantics.tsv").write_text("instance\tsemantics\na.ltl\tMealy\n")
-    runtime = tmp_path / "runtime"
-    runtime.mkdir()
-    sums = []
-    for name in ("libspot", "libbddx"):
-        target = runtime / f"{name}.so.0.0.0"
-        target.write_text(name)
-        (runtime / f"{name}.so.0").symlink_to(target.name)
-        sums.append(f"{orchestrate.sha256_file(target)}  ./lib/{target.name}\n")
-    sums_file = tmp_path / "SHA256SUMS"
-    sums_file.write_text("".join(sums))
-    comparison = tmp_path / "comparison.json"
-    spec = {"schema": 1, "memory_max": "8G", "memory_swap_max": "0",
-            "list": "all.list", "tlsf_map": "map.tsv", "tlsf_corpus": ".",
-            "status_exceptions": "exceptions.tsv", "runtime_sha256s": "SHA256SUMS",
-            "series": [
-                {"label": "legacy", "kind": "legacy", "tool": tool,
-                 "portfolio_size": None,
-                 "binary": "solver", "binary_sha256": orchestrate.sha256_file(binary),
-                 "source_revision": "source", "runtime_lib_dir": "runtime",
-                 "instances_dir": "pairs", "syfco_failures": "failures.list",
-                 "syfco": str(syfco),
-                 **({"semantics_map": "semantics.tsv"} if tool == "ltlsynt" else {})}]}
-    comparison.write_text(json.dumps(spec))
-    out = tmp_path / "out"
-    frozen, commands = orchestrate.prepare(comparison, 17, out)
-    entry = frozen["series"]["legacy"]
-    assert entry["syfco_sha256"] == orchestrate.sha256_file(syfco)
-    assert entry["converted_pairs"]["a.ltl"]["input"]["sha256"] == \
-        orchestrate.sha256_file(pairs / "a.ltl")
-    assert "unverified" in entry["conversion_verification"]
-    assert ["--syfco", str(syfco)] == commands[0][0][
-        commands[0][0].index("--syfco"):commands[0][0].index("--syfco") + 2]
-    if tool == "ltlsynt":
-        assert entry["semantics_map_sha256"] == \
-            orchestrate.sha256_file(tmp_path / "semantics.tsv")
-        assert "--semantics-map" in commands[0][0]
-    assert orchestrate.prepare(comparison, 17, out, resume=True)[0] == frozen
-    if tool == "ltlsynt":
-        semantics = tmp_path / "semantics.tsv"
-        semantics.write_text("instance\tsemantics\na.ltl\tMoore\n")
-        with pytest.raises(orchestrate.CampaignError, match="resume"):
-            orchestrate.prepare(comparison, 17, out, resume=True)
-        semantics.write_text("instance\tsemantics\na.ltl\tMealy\n")
-    (pairs / "a.ltl").write_text("F false\n")
-    with pytest.raises(orchestrate.CampaignError, match="resume"):
-        orchestrate.prepare(comparison, 17, out, resume=True)
-    (pairs / "a.ltl").write_text("G true\n")
-    syfco.write_text("#!/bin/sh\nexit 1\n")
-    with pytest.raises(orchestrate.CampaignError, match="resume"):
-        orchestrate.prepare(comparison, 17, out, resume=True)
-
-
 def test_manifest_join_checks_list_corpus_and_row_provenance(tmp_path):
     listing = tmp_path / "all.list"
     listing.write_text("a\n")
@@ -756,84 +598,8 @@ def test_join_rejects_invalid_noise_floor(tmp_path, floor):
 def test_campaign_and_join_reject_invalid_cap(tmp_path):
     with pytest.raises(threeway.JoinError, match="positive integer"):
         threeway.join(argparse.Namespace(cap=0))
-    with pytest.raises(orchestrate.CampaignError, match="positive integer"):
-        orchestrate.read_comparison(tmp_path / "unused.json", -1)
-
-
-def test_cap_gate_default_matches_head_stdout_and_exit(tmp_path):
-    old = ROOT / "benchmarking/tools/check-cap-independence-head.py"
-    new = ROOT / "benchmarking/tools/check-cap-independence.py"
-    short, long = tmp_path / "short.tsv", tmp_path / "long.tsv"
-    short_root, long_root = tmp_path / "short-records", tmp_path / "long-records"
-    arm = capcheck.ARM
-    for changed in (False, True):
-        short_root = tmp_path / f"short-records-{changed}"
-        long_root = tmp_path / f"long-records-{changed}"
-        first = observation("a", "REALIZABLE")
-        second = observation("a", "REALIZABLE", cap=60)
-        write_observations(short, [first])
-        write_observations(long, [second])
-        phase_dir(short_root, first, [{"arm": arm, "phase": "lift_method_x",
-                                      "work_count": 3},
-                                     {"arm": arm, "phase": "record_summary",
-                                      "dropped_records": 0}])
-        events = [{"arm": arm, "phase": "lift_method_y" if changed
-                   else "lift_method_x", "work_count": 4 if changed else 3}]
-        if not changed:
-            events.append({"arm": arm, "phase": "record_summary", "dropped_records": 0})
-        phase_dir(long_root, second, events)
-        argv = ["--short", str(short), "--long", str(long),
-                "--short-records", str(short_root), "--long-records", str(long_root)]
-        results = [subprocess.run([sys.executable, "-s", str(script), *argv],
-                                  capture_output=True, text=True, check=False)
-                   for script in (old, new)]
-        assert [(p.returncode, p.stdout) for p in results][:1] == \
-            [(results[1].returncode, results[1].stdout)]
-        assert results[0].returncode == (1 if changed else 0)
-
-
-@pytest.mark.parametrize("building_name", ["DRIVER-BUILDING", "TRACKB-BUILDING"])
-def test_campaign_marker_wait_collision_release_and_execute(tmp_path, building_name):
-    from benchlib import timed_run_marker
-
-    marker = tmp_path / "TIMED-RUN-ACTIVE"
-    building = tmp_path / building_name
-    building.write_text("build")
-    waits = []
-
-    def clear_build(_seconds):
-        waits.append("wait")
-        building.unlink()
-
-    with timed_run_marker(tmp_path, "test", poll=0.01, max_wait=0.1,
-                          sleep=clear_build):
-        assert marker.exists() and waits
-    assert not marker.exists()
-    marker.write_text("other")
-
-    def clear_collision(_seconds):
-        marker.unlink()
-
-    with timed_run_marker(tmp_path, "test", blocking=(), poll=0.01,
-                          max_wait=0.1, sleep=clear_collision):
-        assert marker.exists()
-    assert not marker.exists()
-    (tmp_path / "out").mkdir()
-    frozen = {"series": {"x": {"label": "x"}}, "cap_s": 17, "instances": 1}
-
-    def fake_run(_cmd, **_kwargs):
-        assert marker.exists()
-        write_observations(tmp_path / "out/x-17s.tsv", [observation("a", "REALIZABLE")])
-        return argparse.Namespace(returncode=0)
-
-    orchestrate.execute(frozen, [(["fake"], tmp_path / "out/x-17s.tsv")],
-                        tmp_path / "out", invoke=fake_run, marker_dir=tmp_path)
-    assert not marker.exists()
-    with pytest.raises(orchestrate.CampaignError):
-        orchestrate.execute(frozen, [(["fake"], tmp_path / "out/x-17s.tsv")],
-                            tmp_path / "out", invoke=lambda *_a, **_k:
-                            argparse.Namespace(returncode=1), marker_dir=tmp_path)
-    assert not marker.exists()
+    with pytest.raises(coverage.plan_CampaignError, match="positive integer"):
+        coverage.plan_read_comparison(tmp_path / "unused.json", -1)
 
 
 def test_validate_changed_native_work_refuses_merge(tmp_path):
@@ -1168,7 +934,7 @@ def mixed_comparison_fixture(tmp_path, monkeypatch):
         target = runtime / f"{name}.so.0.0.0"
         target.write_text(name)
         (runtime / f"{name}.so.0").symlink_to(target.name)
-        sums.append(f"{orchestrate.sha256_file(target)}  ./lib/{target.name}\n")
+        sums.append(f"{coverage.plan_sha256_file(target)}  ./lib/{target.name}\n")
     sums_file = tmp_path / "SHA256SUMS"
     sums_file.write_text("".join(sums))
     five = ["real:small:backward", "real:small:forward", "unreal:formula:forward",
@@ -1176,7 +942,7 @@ def mixed_comparison_fixture(tmp_path, monkeypatch):
     six = five + ["unreal:gr1:oxidd"]
     options = tmp_path / "intro-buildoptions.json"
     options.write_text(json.dumps([{"name": "acacia_default_arms", "value": ",".join(six)}]))
-    shared = {"binary": "solver", "binary_sha256": orchestrate.sha256_file(binary),
+    shared = {"binary": "solver", "binary_sha256": coverage.plan_sha256_file(binary),
               "source_revision": "source"}
     spec = {"schema": 1, "memory_max": "8G", "memory_swap_max": "0",
             "list": "all.list", "tlsf_map": "map.tsv", "tlsf_corpus": ".",
@@ -1198,130 +964,6 @@ def mixed_comparison_fixture(tmp_path, monkeypatch):
     comparison = tmp_path / "comparison.json"
     comparison.write_text(json.dumps(spec))
     return comparison, spec, options
-
-
-def test_mixed_portfolio_sizes_and_preset_default_arms(tmp_path, monkeypatch):
-    comparison, spec, options = mixed_comparison_fixture(tmp_path, monkeypatch)
-    frozen, commands = orchestrate.prepare(comparison, 17, tmp_path / "out", dry_run=True)
-    assert [frozen["series"][label]["portfolio_size"] for label in
-            ("ltlsynt", "TACAS23", "E5", "final")] == [None, None, 5, 6]
-    e5_flags = commands[2][0][commands[2][0].index("--flags") + 1]
-    final_flags = commands[3][0][commands[3][0].index("--flags") + 1]
-    assert e5_flags.startswith("--arms ") and final_flags == ""
-    assert frozen["series"]["final"]["build_options_sha256"] == \
-        orchestrate.sha256_file(options)
-    assert not (tmp_path / "out").exists()
-    assert "portfolio_size" not in spec
-
-
-def test_mixed_campaign_recycle_and_derived_join(tmp_path, monkeypatch):
-    comparison, _, _ = mixed_comparison_fixture(tmp_path, monkeypatch)
-    (tmp_path / "all.list").write_text("a.ltl\nb.ltl\n")
-    (tmp_path / "b.tlsf").write_text("// STATUS: REALIZABLE\n")
-    (tmp_path / "map.tsv").write_text(
-        "instance\ttlsf\na.ltl\ta.tlsf\nb.ltl\tb.tlsf\n")
-    (tmp_path / "pairs/b.ltl").write_text("G true\n")
-    (tmp_path / "pairs/b.part").write_text("INPUTS: x\nOUTPUTS: y\n")
-    (tmp_path / "semantics.tsv").write_text(
-        "instance\tsemantics\na.ltl\tMealy\nb.ltl\tMealy\n")
-
-    short_dir = tmp_path / "short"
-    short_manifest, short_commands = orchestrate.prepare(comparison, 17, short_dir)
-    labels = ("ltlsynt", "TACAS23", "E5", "final")
-    assert tuple(short_manifest["series"]) == labels
-    plans = tmp_path / "plans"
-    plans.mkdir()
-    derived_dir = tmp_path / "derived"
-    derived_dir.mkdir()
-    long_manifests = []
-    derived_paths = {}
-
-    for label, (short_command, short_path) in zip(labels, short_commands):
-        entry = short_manifest["series"][label]
-        native = entry["kind"] != "legacy"
-        flags = short_command[short_command.index("--flags") + 1]
-        assert flags == (orchestrate.native_flags(entry) if native else entry["flags"])
-
-        def row(name, result, cap):
-            item = observation(name, result, cap=cap, label=label,
-                               seconds="17" if result == "TIMEOUT" else "1")
-            item.update(binary_sha256=entry["binary_sha256"],
-                        acacia_sha=entry["source_revision"], flags=flags,
-                        preset=entry["preset"] if native else entry["tool"],
-                        tlsf_file=name.replace(".ltl", ".tlsf") if native else name,
-                        expectation_source="status" if native else "none")
-            return item
-
-        short_rows = [row("a.ltl", "REALIZABLE", 17), row("b.ltl", "TIMEOUT", 17)]
-        write_observations(short_path, short_rows)
-        records = short_dir / "phase-records" if native else None
-        if native:
-            events = [{"arm": entry["arms"][0], "phase": "lift_method_x", "work_count": 3},
-                      {"arm": entry["arms"][0], "phase": "record_summary",
-                       "dropped_records": 0}]
-            phase_dir(records, short_rows[0], events)
-        prefix = plans / label
-        assert recycle.plan(argparse.Namespace(
-            short=short_path, manifest=short_dir / "manifest.json", list=None,
-            long_cap=60, deadline_margin=1, deadline_stage_regex="deadline",
-            memory_max="8G", memory_swap_max="0", records=records,
-            deterministic_error_list=None, out_prefix=prefix)) == 0
-        plan = plans / f"{label}-plan.json"
-        rerun_list = plans / f"{label}-rerun.list"
-        assert rerun_list.read_text() == "b.ltl\n"
-        assert json.loads(plan.read_text())["arms"] == entry["arms"]
-
-        long_dir = tmp_path / f"long-{label}"
-        long_manifest, long_commands = orchestrate.prepare(
-            comparison, 60, long_dir, selected=[label], subset_list=rerun_list)
-        long_manifests.append(long_dir / "manifest.json")
-        long_flags = long_commands[0][0][long_commands[0][0].index("--flags") + 1]
-        assert long_flags == flags
-        if label == "final":
-            assert flags == "" and len(entry["arms"]) == 6
-        if label == "E5":
-            assert flags.startswith("--arms ") and len(entry["arms"]) == 5
-        write_observations(long_commands[0][1], [row("b.ltl", "REALIZABLE", 60)])
-
-        assert recycle.sample(argparse.Namespace(
-            plan=plan, seed=7, size=1, out_prefix=plans / f"{label}-sample")) == 0
-        sample_dir = tmp_path / f"sample-{label}"
-        _, sample_commands = orchestrate.prepare(
-            comparison, 60, sample_dir, selected=[label],
-            subset_list=plans / f"{label}-sample-sample.list")
-        assert sample_commands[0][0][sample_commands[0][0].index("--flags") + 1] == flags
-        sample_row = row("a.ltl", "REALIZABLE", 60)
-        write_observations(sample_commands[0][1], [sample_row])
-        sample_records = sample_dir / "phase-records" if native else None
-        if native:
-            phase_dir(sample_records, sample_row, events)
-        validation = plans / f"{label}-validation.json"
-        assert recycle.validate(argparse.Namespace(
-            plan=plan, sample=plans / f"{label}-sample-sample.json",
-            long=sample_commands[0][1], long_records=sample_records,
-            out=validation)) == 0
-        derived_paths[label] = derived_dir / f"{label}-60s.tsv"
-        assert recycle.merge(argparse.Namespace(
-            plan=plan, long=long_commands[0][1], validation=validation,
-            output=derived_paths[label])) == 0
-        assert [item["provenance"] for item in coverage.load_output(derived_paths[label])] == \
-            ["recycled-17s", "measured-60s"]
-        assert long_manifest["series"][label]["portfolio_size"] == entry["portfolio_size"]
-
-    args = argparse.Namespace(
-        list=tmp_path / "all.list", cap=60,
-        series=[f"{label}={derived_paths[label]}" for label in
-                ("ltlsynt", "TACAS23", "final")],
-        internal=[f"E5={derived_paths['E5']}"], new="final",
-        legacy_audit=[], untimed_conversion=[], tlsf_map=tmp_path / "map.tsv",
-        tlsf_corpus=tmp_path, status_exceptions=tmp_path / "exceptions.tsv",
-        noise_floor=None, noise_floor_source="",
-        manifest=[short_dir / "manifest.json", *long_manifests])
-    report, _ = threeway.join(args)
-    assert set(report["series"]) == set(labels)
-    assert all(report["series"][label]["derived"] and
-               report["series"][label]["recycled_rows"] == 1 and
-               len(report["series"][label]["manifest_identity"]) == 2 for label in labels)
 
 
 @pytest.mark.parametrize("change,expected", [
@@ -1352,8 +994,8 @@ def test_mixed_comparison_rejects_wrong_sizes_and_launches(tmp_path, monkeypatch
     else:
         series["final"]["flags"] = "-rsmall"
     comparison.write_text(json.dumps(spec))
-    with pytest.raises(orchestrate.CampaignError, match=expected):
-        orchestrate.read_comparison(comparison, 17)
+    with pytest.raises(coverage.plan_CampaignError, match=expected):
+        coverage.plan_read_comparison(comparison, 17)
 
 
 def test_capless_review_reproduction_is_rejected(tmp_path):
@@ -1413,104 +1055,3 @@ def test_sample_recomputes_seeded_selection_after_hash_forgery(tmp_path):
         recycle.evaluate_validation(argparse.Namespace(
             plan=plan, sample=disclosure, long=tmp_path / "not-needed.tsv",
             long_records=None))
-
-
-def test_full_manifest_rebuild_rejects_forged_binary_and_revision(tmp_path):
-    binary = tmp_path / "solver"
-    binary.write_text("#!/bin/sh\nexit 0\n")
-    binary.chmod(0o755)
-    (tmp_path / "a.tlsf").write_text("// STATUS: REALIZABLE\n")
-    listing = tmp_path / "all.list"
-    listing.write_text("a\n")
-    mapping = tmp_path / "map.tsv"
-    mapping.write_text("instance\ttlsf\na\ta.tlsf\n")
-    exceptions = tmp_path / "exceptions.tsv"
-    exceptions.write_text("instance\tannotated_status\tcorrected_status\tevidence\n")
-    comparison = tmp_path / "comparison.json"
-    comparison.write_text(json.dumps({
-        "schema": 1, "memory_max": "8G", "memory_swap_max": "0", "list": "all.list",
-        "tlsf_map": "map.tsv", "tlsf_corpus": ".", "status_exceptions": "exceptions.tsv",
-            "series": [{"label": "new", "kind": "arm", "arms": ["synthetic"],
-                        "portfolio_size": 1,
-                        "binary": "solver", "binary_sha256": orchestrate.sha256_file(binary),
-                    "source_revision": "source"}]}))
-    out = tmp_path / "campaign"
-    orchestrate.prepare(comparison, 17, out)
-    manifest = out / "manifest.json"
-    old = tmp_path / "old.tsv"
-    write_observations(old, [observation("a", "REALIZABLE", label="old")])
-    new = out / "new-17s.tsv"
-    original_row = observation("a", "REALIZABLE", label="new")
-    original_row["binary_sha256"] = orchestrate.sha256_file(binary)
-    original_row["preset"] = ""
-    original_row["expectation_source"] = "status"
-    write_observations(new, [original_row])
-    args = argparse.Namespace(list=listing, cap=17, series=[f"old={old}", f"new={new}"],
-                              internal=[], new="new", legacy_audit=[], untimed_conversion=[],
-                              tlsf_map=mapping, tlsf_corpus=tmp_path,
-                              status_exceptions=exceptions, noise_floor=None,
-                              noise_floor_source="", manifest=[manifest])
-    report, _ = threeway.join(args)
-    assert report["series"]["new"]["manifest_identity"][0]["verification"].startswith(
-        "campaign specification")
-    assert "unverified" in report["verification"]
-    assert "unverified" in json.loads(manifest.read_text())["series"]["new"][
-        "source_revision_verification"]
-    alternate_exceptions = tmp_path / "alternate-exceptions.tsv"
-    alternate_exceptions.write_text(exceptions.read_text() + "\n")
-    args.status_exceptions = alternate_exceptions
-    with pytest.raises(threeway.JoinError, match="join inputs differ"):
-        threeway.join(args)
-    args.status_exceptions = exceptions
-    alternate_map = tmp_path / "alternate-map.tsv"
-    alternate_map.write_text(mapping.read_text() + "\n")
-    args.tlsf_map = alternate_map
-    with pytest.raises(threeway.JoinError, match="join inputs differ"):
-        threeway.join(args)
-    args.tlsf_map = mapping
-    for field, forged in (("flags", "--arms other"), ("preset", "other"),
-                          ("memory_max", "4G"), ("memory_swap_max", "1G")):
-        write_observations(new, [dict(original_row, **{field: forged})])
-        with pytest.raises(threeway.JoinError, match="treatment differs"):
-            threeway.join(args)
-    for field, forged in (("tlsf_file", "other.tlsf"),
-                          ("expectation_source", "exception")):
-        write_observations(new, [dict(original_row, **{field: forged})])
-        with pytest.raises(threeway.JoinError, match="TLSF or expected-status label"):
-            threeway.join(args)
-    write_observations(new, [original_row])
-    for field, forged in (("binary_sha256", "b" * 64), ("source_revision", "forged")):
-        row = dict(original_row)
-        if field == "binary_sha256":
-            row["binary_sha256"] = forged
-        else:
-            row["acacia_sha"] = forged
-        write_observations(new, [row])
-        record = json.loads(manifest.read_text())
-        record["series"]["new"][field] = forged
-        manifest.write_text(json.dumps(record))
-        with pytest.raises(threeway.JoinError, match="campaign manifest differs"):
-            threeway.join(args)
-        original, _ = orchestrate.read_comparison(comparison, 17)
-        manifest.write_text(json.dumps(original))
-    forged_manifest = json.loads(manifest.read_text())
-    forged_manifest["series"]["new"]["arms"] = ["other"]
-    manifest.write_text(json.dumps(forged_manifest))
-    write_observations(new, [dict(original_row, flags="--arms other")])
-    with pytest.raises(recycle.RecycleError, match="campaign manifest differs"):
-        recycle.plan(argparse.Namespace(short=new, manifest=manifest, leg_kind=None,
-                                        list=None, long_cap=60, deadline_margin=1,
-                                        deadline_stage_regex="deadline", memory_max="8G",
-                                        memory_swap_max="0", records=None,
-                                        deterministic_error_list=None,
-                                        out_prefix=tmp_path / "forged-plan"))
-    original, _ = orchestrate.read_comparison(comparison, 17)
-    forged_output = dict(original_row, binary_sha256="c" * 64)
-
-    def fake_runner(_cmd, **_kwargs):
-        write_observations(new, [forged_output])
-        return argparse.Namespace(returncode=0)
-
-    with pytest.raises(orchestrate.CampaignError, match="observation identity differs"):
-        orchestrate.execute(original, [(["fake"], new)], out, invoke=fake_runner,
-                            marker_dir=tmp_path)

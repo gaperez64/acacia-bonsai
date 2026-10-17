@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "benchmarking" / "run-subset.py"
+SCRIPT = ROOT / "benchmarking" / "run-syntcomp26-coverage.py"
 
 
 def load_module():
@@ -27,13 +27,13 @@ def test_read_instance_list_ignores_comments_and_blank_lines(tmp_path):
         "# generated manifest\n\nfirst.ltl\n  # indented comment\n second.ltl \n"
     )
 
-    assert load_module().read_instance_list(manifest) == ["first.ltl", "second.ltl"]
+    assert load_module().subset_read_instance_list(manifest) == ["first.ltl", "second.ltl"]
 
 
 def test_default_source_map_is_derived_from_repository():
     module = load_module()
 
-    assert module.DEFAULT_SOURCE_MAP == (
+    assert module.subset_DEFAULT_SOURCE_MAP == (
         ROOT / "tests/suites/benchmarks/syntcomp24/sources.tsv"
     )
 
@@ -42,21 +42,21 @@ def test_read_tlsf_map_accepts_headered_input(tmp_path):
     tlsf_map = tmp_path / "tlsf-sources.tsv"
     tlsf_map.write_text("instance\ttlsf\nAlarm.ltl\tAlarm.tlsf\n")
 
-    assert load_module().read_tlsf_map(tlsf_map) == {"Alarm.ltl": "Alarm.tlsf"}
+    assert load_module().subset_read_tlsf_map(tlsf_map) == {"Alarm.ltl": "Alarm.tlsf"}
 
 
 def test_read_tlsf_map_accepts_headerless_input(tmp_path):
     tlsf_map = tmp_path / "ad-hoc.tsv"
     tlsf_map.write_text("Alarm.ltl\tAlarm.tlsf\n")
 
-    assert load_module().read_tlsf_map(tlsf_map) == {"Alarm.ltl": "Alarm.tlsf"}
+    assert load_module().subset_read_tlsf_map(tlsf_map) == {"Alarm.ltl": "Alarm.tlsf"}
 
 
 def test_read_tlsf_map_keeps_paths_relative_without_corpus(tmp_path):
     tlsf_map = tmp_path / "ad-hoc.tsv"
     tlsf_map.write_text("Alarm.ltl\tnested/Alarm.tlsf\n")
 
-    assert load_module().read_tlsf_map(tlsf_map)["Alarm.ltl"] == "nested/Alarm.tlsf"
+    assert load_module().subset_read_tlsf_map(tlsf_map)["Alarm.ltl"] == "nested/Alarm.tlsf"
 
 
 def test_read_tlsf_map_resolves_paths_from_corpus(tmp_path):
@@ -64,13 +64,13 @@ def test_read_tlsf_map_resolves_paths_from_corpus(tmp_path):
     tlsf_map.write_text("instance\ttlsf\nAlarm.ltl\tnested/Alarm.tlsf\n")
     corpus = tmp_path / "corpus"
 
-    assert load_module().read_tlsf_map(tlsf_map, corpus)["Alarm.ltl"] == str(
+    assert load_module().subset_read_tlsf_map(tlsf_map, corpus)["Alarm.ltl"] == str(
         corpus / "nested/Alarm.tlsf"
     )
 
 
 def test_parse_tlsf_semantics_is_order_insensitive():
-    parse = load_module()._parse_tlsf_semantics
+    parse = load_module().subset__parse_tlsf_semantics
 
     assert parse("Strict,Mealy") == ("Mealy", True)
     assert parse("Moore, Strict") == ("Moore", True)
@@ -90,7 +90,7 @@ def test_preconverted_ltlsynt_uses_frozen_semantics_map(monkeypatch, tmp_path):
     (tmp_path / "failures.list").write_text("")
     semantics = tmp_path / "semantics.tsv"
     semantics.write_text("instance\tsemantics\na.ltl\tMoore\n")
-    assert module.read_semantics_map(semantics) == {"a.ltl": "Moore"}
+    assert module.subset_read_semantics_map(semantics) == {"a.ltl": "Moore"}
     commands = []
 
     def fake_run(cmd, _timeout):
@@ -104,7 +104,7 @@ def test_preconverted_ltlsynt_uses_frozen_semantics_map(monkeypatch, tmp_path):
                                       "--instances-dir", str(pairs),
                                       "--syfco-failures", str(tmp_path / "failures.list"),
                                       "--semantics-map", str(semantics)])
-    module.main()
+    module.subset_main()
     assert "--semantics=Moore" in commands[0]
 
 
@@ -133,8 +133,8 @@ def test_convert_tlsf_returns_declared_model_without_overwriting_semantics(tmp_p
     syfco.chmod(0o755)
 
     expected = (output_dir / "example.ltl", "Moore")
-    assert module.convert_tlsf(str(syfco), tlsf, output_dir) == expected
-    assert module.convert_tlsf(str(syfco), tlsf, output_dir) == expected
+    assert module.subset_convert_tlsf(str(syfco), tlsf, output_dir) == expected
+    assert module.subset_convert_tlsf(str(syfco), tlsf, output_dir) == expected
 
     calls = log.read_text().splitlines()
     assert calls == [
@@ -255,6 +255,7 @@ def test_acacia1x_rejects_tlsf_map():
         [
             sys.executable,
             str(SCRIPT),
+            "subset",
             "--bin",
             "acacia-v1",
             "--tool",
@@ -282,7 +283,7 @@ def test_raw_provenance_sidecar_and_expanded_resume_preserve_master_contract(
     output = tmp_path / "raw.tsv"
     options = dict(label="candidate", tool="acacia", binary=binary, revision="frozen",
                    flags="", cap=17, memory_max="8G", memory_swap_max="0")
-    raw = module.RawObservations(output, resume=False, **options)
+    raw = module.subset_RawObservations(output, resume=False, **options)
     from benchlib import RunResult
     raw.record_run("case.ltl", "case.tlsf", RunResult(
         "REALIZABLE\n", "", 0, 0.1, False, scope_unit="acacia-test.scope",
@@ -295,7 +296,7 @@ def test_raw_provenance_sidecar_and_expanded_resume_preserve_master_contract(
                                   restored)
     output.with_name(output.name + ".memory.tsv").unlink()
     original = output.read_bytes()
-    resumed = module.RawObservations(output, resume=True, **options)
+    resumed = module.subset_RawObservations(output, resume=True, **options)
     assert output.with_name("raw-legacy.tsv").read_bytes() == original
     assert resumed.rows == restored
     resumed.record_syfco_failure("failed.ltl", "failed.tlsf")

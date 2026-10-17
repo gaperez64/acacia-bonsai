@@ -56,24 +56,24 @@ recorded outcome. Unadjudicated failures require a full long-cap rerun.
 """
 
 from __future__ import annotations
-
 import argparse
 import csv
 import hashlib
 import importlib.util
 import json
 import math
-import os
 import pathlib
-import random
 import re
-import shlex
 import sys
+import os
+import random
+import shlex
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "benchmarking"))
 from benchlib import load_phase_records, phase_record_dir  # noqa: E402
 from recycle_adjudication import adjudicate, paired_evidence, section  # noqa: E402
+
 
 
 def _load(name, path):
@@ -86,7 +86,7 @@ def _load(name, path):
 
 coverage = _load("syntcomp26_coverage", ROOT / "benchmarking/run-syntcomp26-coverage.py")
 capcheck = _load("check_cap_independence", ROOT / "benchmarking/tools/check-cap-independence.py")
-campaign = _load("p4_campaign_for_recycle", ROOT / "benchmarking/tools/campaign-orchestrate.py")
+campaign = coverage
 
 SOLVED = frozenset({"REALIZABLE", "UNREALIZABLE"})
 IDENTITY_FIELDS = ("solver_label", "acacia_sha", "binary_sha256", "preset", "flags",
@@ -206,23 +206,23 @@ def leg_identity(args, short):
         frozen = json.loads(pathlib.Path(manifest_path).read_text(encoding="utf-8"))
         if frozen.get("comparison"):
             try:
-                rebuilt, _ = campaign.read_comparison(
+                rebuilt, _ = campaign.plan_read_comparison(
                     pathlib.Path(frozen["comparison"]), frozen["cap_s"],
                     selected=list(frozen["series"]),
                     subset_list=frozen["inputs"]["list"]["path"])
-            except (campaign.CampaignError, OSError, KeyError, TypeError,
+            except (campaign.plan_CampaignError, OSError, KeyError, TypeError,
                     ValueError) as error:
                 raise RecycleError(f"{manifest_path}: cannot verify campaign inputs: {error}") \
                     from error
             if rebuilt != frozen:
                 raise RecycleError(f"{manifest_path}: campaign manifest differs from input content")
             try:
-                campaign.verify_observation_labels(
+                campaign.plan_verify_observation_labels(
                     frozen["series"][first["solver_label"]], short.values(),
                     tlsf_map=frozen["inputs"]["tlsf_map"]["path"],
                     corpus=frozen["corpus"],
                     status_exceptions=frozen["inputs"]["status_exceptions"]["path"])
-            except campaign.CampaignError as error:
+            except campaign.plan_CampaignError as error:
                 raise RecycleError(f"{manifest_path}: {error}") from error
         entry = frozen.get("series", {}).get(first["solver_label"])
         if not isinstance(entry, dict) or entry.get("kind") not in {"arm", "race", "legacy"}:
@@ -239,7 +239,7 @@ def leg_identity(args, short):
             raise RecycleError(f"{manifest_path}: short leg identity differs from manifest")
         if frozen.get("comparison"):
             native = entry["kind"] in {"arm", "race"}
-            expected_flags = campaign.native_flags(entry) if native else entry["flags"]
+            expected_flags = campaign.plan_native_flags(entry) if native else entry["flags"]
             expected_preset = entry["preset"] if native else entry["tool"]
             if first["flags"] != expected_flags or first["preset"] != expected_preset or \
                     first["memory_max"] != frozen["memory_max"] or \

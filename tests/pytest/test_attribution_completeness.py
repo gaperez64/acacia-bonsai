@@ -76,8 +76,8 @@ def test_complete_lifecycle_and_attribution_reuse(tmp_path, lifecycle):
     assert result["workers"][0]["spec"][0]["requested_polarity"] == "both"
     assert result["checkpoint_phase"] == "unknown"
     assert reader.summarize([result])["delivery"]["complete"] == 1
-    assert reader.WORKER.read_tsv.__module__ == "attribution_worker_phases"
-    assert reader.DIAG.classify_target.__module__ == "attribution_diag_phases"
+    assert reader.WORKER.read_tsv.__module__ == reader.audit_row.__module__
+    assert reader.DIAG.classify_target.__module__ == reader.audit_row.__module__
 
 
 @pytest.mark.parametrize("event,dimension,reason", [
@@ -500,7 +500,7 @@ def test_record_size_limit_covers_growth_after_fstat(tmp_path, lifecycle, monkey
     path = tmp_path / "10.jsonl"
     descriptor_stat = reader.os.fstat
     maximum = 8192
-    monkeypatch.setattr(reader, "MAX_RECORD_FILE_BYTES", maximum)
+    monkeypatch.setattr(reader._owner, "completeness_MAX_RECORD_FILE_BYTES", maximum)
 
     def grow_after_stat(descriptor):
         snapshot = descriptor_stat(descriptor)

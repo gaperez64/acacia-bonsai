@@ -3,7 +3,7 @@
 // both references small enough to compare exactly.
 
 #include "actioners/standard.hh"
-#include "research/explicit_forward_game.hh"
+#include "tiny_game_oracle.hh"
 #include "solver/certificate_verifier.hh"
 #include "solver/forward_reachable_safety.hh"
 #include "losing_proof_replay.hh"

@@ -105,11 +105,11 @@ pointers are recorded here.
   `CLAUDE.md` and `benchmarking/README.md` now define durable evidence as a verified external
   archive plus an index row.
 - **Growth guard** on 26cbb45f..HEAD: PASS, after fixing a false positive that classed the tool
-  `thermal-annotate.py` as thermal data. The owner chose CI only, with no git hook.
-- **Oracle regression found and fixed.** 12 failures in `test_acacia_lift_online.py` came from the
+  the archived thermal reader as thermal data. The owner chose CI only, with no git hook.
+- **Oracle regression found and fixed.** 12 failures in the historical online oracle tests came from the
   oracle defaulting to a stale sibling tlsf-tools build (`f213093`) whose `tlsf2tlsf` lacks
   frontend provenance.
-  - `scripts/build-oracle-toolchain.sh` now builds the oracle's CLIs from Acacia's own
+  - the archived serial toolchain build procedure now builds the oracle's CLIs from Acacia's own
     submodule, pinned and OxiDD-patch-verified, into ignored `build_oracle_tlsf/`.
   - The oracle refuses a stale toolchain.
   - Results: 17/17; pytest 976 passed and 4 skipped (the Python 3.14 binding modules are an
@@ -338,7 +338,7 @@ pointers are recorded here.
   passed, 25 timed out per test, none failed.
   - The coder's 17 pytest failures were environmental: a stale `build_oracle_tlsf` at
     `84276bf` and a scratch launcher.
-  - The oracle was rebuilt from the pin with `scripts/build-oracle-toolchain.sh`; full pytest
+  - The oracle was rebuilt from the pin with the archived serial toolchain build procedure; full pytest
     then passed with 1,017.
 - **Found for P2b §6.5: the installed Spot is a developer build.** It is compiled at `-g -O`
   (`--enable-devel`, automatic for `.dev` versions), so the acceptance-limit probe must

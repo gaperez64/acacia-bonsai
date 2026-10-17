@@ -2,8 +2,8 @@
 
 `both:parity:spot` is part of the first `docker_default` portfolio. It translates the
 original positive specification with Spot's deterministic, generic-acceptance,
-high-level translation and shares `src/solver/parity/route.{hh,cc}` with
-`acacia-parity-route`. The declared input/output partition, including unused signals,
+high-level translation through `src/solver/parity/route.{hh,cc}`.
+The declared input/output partition, including unused signals,
 is preserved. Raw LTL is Mealy; native TLSF uses the frontend's effective-Mealy
 lowering once and the ordinary controller conversion for a Moore target. No
 realizability simplification, decomposition, input/output swap or extra timing
@@ -33,7 +33,8 @@ Spot's `solve_parity_game` fallback beyond representable bounds.
 Production trusts completed REAL/UNREAL results and strategies without a post-hoc
 recheck. Checks stay in tests: exported AIGs against a fresh negated-specification
 translation, Moore output independence, the scalar oracle and the 480-game Spot
-comparison. The research tool offers `--verify on --cross-check` for diagnostics.
+comparison. The registered `parity-route` and `parity-arm` unit tests exercise
+verification and cross-checks through the same production route library.
 
 Decision-only calls do not build controllers. Synthesis uses the existing parent
 rendezvous: only a selected REAL worker constructs and writes the controller;

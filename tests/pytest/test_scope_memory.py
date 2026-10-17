@@ -1,5 +1,4 @@
 """Fake v2 files and lifecycle events; never contact the host's systemd manager."""
-import csv
 import importlib.util
 import json
 import pathlib
@@ -344,16 +343,6 @@ def test_complete_cohort_has_median_and_no_selection_bias():
     assert result["missing_reasons"] == {}
 
 
-def test_journal_annotation_keeps_authoritative_workload_peak():
-    spec = importlib.util.spec_from_file_location("memory_annotate",
-                                                 ROOT / "benchmarking/annotate-scope-results.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    row = {"result": "REALIZABLE", "scope_memory_peak_bytes": "4096",
-           "memory_cgroup": "/scope/invocation"}
-    unit = {"unit": "acacia-fake.scope", "oom": False, "cpu": 1,
-            "memory": 99999, "swap": None}
-    assert module.annotate(row, unit, "journal")["scope_memory_peak_bytes"] == "4096"
 
 
 def test_numeric_report_rows_keep_coverage_counts():
@@ -365,53 +354,6 @@ def test_numeric_report_rows_keep_coverage_counts():
     assert result["median_bytes"] == 4096
 
 
-@pytest.mark.parametrize("retained_peak", ["", "99999"])
-def test_failed_collector_cannot_become_complete_from_parent_journal(
-        monkeypatch, tmp_path, retained_peak):
-    state = tmp_path / "state"
-    state.mkdir()
-    def unavailable():
-        raise OSError("memory controller delegation failed")
-    monkeypatch.setattr(memory, "current_cgroup", unavailable)
-    observer = memory.MemoryObserver(state)
-    assert memory.own_invocation(state, ["solver"], "8G", "0") == 127
-    observer.close()
-    run = benchlib.RunResult("", "", 127, 0.1, False, **observer.snapshot)
-    row = {**dict.fromkeys(memory.MEMORY_KEYS, ""), "result": "ERROR",
-           "scope_unit": "acacia-fake.scope", **memory.memory_fields(run)}
-    assert row["memory_cgroup"] == ""
-    row["scope_memory_peak_bytes"] = retained_peak
-    spec = importlib.util.spec_from_file_location(
-        "failed_memory_annotate", ROOT / "benchmarking/annotate-scope-results.py")
-    annotation = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(annotation)
-    unit = {"unit": "acacia-fake.scope", "oom": False, "cpu": 1,
-            "memory": 99999, "swap": None}
-    annotated = annotation.annotate(row, unit, "journal")
-    assert annotated["scope_memory_peak_bytes"] == retained_peak
-    assert annotated["parent_scope_memory_peak_bytes"] == "99999"
-    statistic = memory.memory_statistic([annotated], "scope_memory_peak_bytes")
-    assert (statistic["numerator"], statistic["denominator"]) == (0, 1)
-    assert statistic["missing_reasons"] == {"memory controller delegation failed": 1}
-    assert statistic["median_bytes"] is None
-    assert statistic["max_bytes"] is None
-    primary = tmp_path / "run.tsv"
-    with primary.open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, ["result", *memory.MEMORY_KEYS], delimiter="\t")
-        writer.writeheader()
-        writer.writerow({column: row[column] for column in writer.fieldnames})
-    memory.write_memory_sidecar(primary, [row])
-    journal = tmp_path / "journal.jsonl"
-    journal.write_text(json.dumps({"USER_UNIT": "acacia-fake.scope", "MEMORY_PEAK": "99999",
-                                   "CPU_USAGE_NSEC": "1", "__REALTIME_TIMESTAMP": "1000000"}) + "\n")
-    output = tmp_path / "annotated.tsv"
-    monkeypatch.setattr(sys, "argv", ["annotate", "--journal", str(journal),
-                                      "--input", str(primary), "--output", str(output)])
-    annotation.main()
-    with output.open(newline="") as stream:
-        cli_rows = list(csv.DictReader(stream, delimiter="\t"))
-    memory.load_memory_sidecar(output, cli_rows)
-    assert memory.memory_statistic(cli_rows, "scope_memory_peak_bytes") == statistic
 
 
 @pytest.mark.parametrize("column,source,cgroup", [

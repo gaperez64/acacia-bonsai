@@ -1,5 +1,5 @@
 #define ACACIA_PROVIDER_REPLAY_TESTING
-#include "research/explicit_forward_game.hh"
+#include "tiny_game_oracle.hh"
 #include "solver/spot_lazy_game.hh"
 #include "tiny_spot_game.hh"
 #include "utils/verbose.hh"

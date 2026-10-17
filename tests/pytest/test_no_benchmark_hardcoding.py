@@ -46,19 +46,6 @@ EXCLUDED = {
     **{name: "Python interface module, not linked into acacia-bonsai" for name in (
         "src/python/python_interface.cc", "src/python/python_interface.hh")},
     "src/native_test_hooks.cc": "native-test executable only",
-    **{name: "research executable or its private header, not linked into acacia-bonsai"
-       for name in (
-           "src/research/all_input_actions.hh", "src/research/antichain_replay.cc",
-           "src/research/automata_study.cc", "src/research/bdd_cpre_replay.cc",
-           "src/research/cpre_event.hh", "src/research/cpre_replay.cc",
-           "src/research/explicit_forward_game.hh",
-           "src/research/forced_contradiction_scan.cc",
-           "src/research/forward_game_replay.cc", "src/research/hoa_replay.cc",
-           "src/research/mp_census.cc", "src/research/rank_action_replay.hh",
-           "src/research/small_invariant_replay.cc",
-           "src/research/spot_letter_oracle_replay.cc",
-           "src/research/spot_otf_probe.cc", "src/research/spot_provider_replay.cc",
-           "src/research/spot_rows_replay.cc")},
     **{name: "standalone TLSF tool, not linked into acacia-bonsai" for name in (
         "subprojects/tlsf-tools/src/tools/common/cli.c",
         "subprojects/tlsf-tools/src/tools/common/cli.h",

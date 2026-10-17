@@ -9,12 +9,20 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+SYNTHESIS=false
+if [ "${1:-}" = "--synthesis" ]; then
+    SYNTHESIS=true
+    shift
+fi
 # Checked against docker_default in the registry by test_acacia_config.py.
 mapfile -t CONFIGS < "$REPO_ROOT/config/docker-default.list"
 
 usage() {
     cat <<EOF
-Usage: $0 [config_name] [--tlsf] [acacia-bonsai arguments...]
+Usage: $0 [--synthesis] [config_name] [--tlsf] [acacia-bonsai arguments...]
+
+  --synthesis       Print a REALIZABLE controller as AAG on stdout and send
+                    the solver verdict and diagnostics to stderr.
 
   config_name       Optional. Defaults to the first configuration in the
                     docker_default group (currently ${CONFIGS[0]}). The group
@@ -91,6 +99,10 @@ fi
 USE_TLSF=false
 PASS_ARGS=()
 for arg in "$@"; do
+    if [ "$SYNTHESIS" = true ] && [ "$arg" = "-s" ]; then
+        echo "Error: -s is supplied by --synthesis; do not pass it yourself." >&2
+        exit 3
+    fi
     if [ "$arg" = "--tlsf" ]; then
         USE_TLSF=true
     else
@@ -99,7 +111,18 @@ for arg in "$@"; do
 done
 
 if [ "$USE_TLSF" = true ]; then
-    exec "$BINARY" "${PASS_ARGS[@]}" -T /dev/stdin
+    PASS_ARGS+=(-T /dev/stdin)
+fi
+
+if [ "$SYNTHESIS" = true ]; then
+    OUT_AAG=$(mktemp --suffix=.aag)
+    trap 'rm -f "$OUT_AAG"' EXIT
+    status=0
+    "$BINARY" "${PASS_ARGS[@]}" -s "$OUT_AAG" 1>&2 || status=$?
+    if [ "$status" -eq 0 ] && [ -s "$OUT_AAG" ]; then
+        cat "$OUT_AAG"
+    fi
+    exit "$status"
 fi
 
 exec "$BINARY" "${PASS_ARGS[@]}"

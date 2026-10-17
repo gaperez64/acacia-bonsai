@@ -1,6 +1,6 @@
 #include "solver/spot_letter_oracle.hh"
 #include "tiny_spot_game.hh"
-#include "research/explicit_forward_game.hh"
+#include "tiny_game_oracle.hh"
 #include "utils/verbose.hh"
 
 #include <functional>

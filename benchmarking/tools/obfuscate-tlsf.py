@@ -9,6 +9,7 @@ import json
 import pathlib
 import random
 import re
+import subprocess
 
 IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z_0-9]*")
 TOKEN = re.compile(r"//[^\n]*|/\*[\s\S]*?\*/|\"(?:\\.|[^\"\\])*\"|[A-Za-z_][A-Za-z_0-9]*|[^A-Za-z_]", re.MULTILINE)
@@ -99,6 +100,38 @@ def write_obfuscated(source: pathlib.Path, output_dir: pathlib.Path, seed: int) 
                                    "output_sha256": hashlib.sha256(changed).hexdigest(),
                                    "signals": mapping}, indent=2, sort_keys=True) + "\n")
     return target, sidecar
+
+
+def run(command: list[str], limit: float) -> str:
+    result = subprocess.run(command, capture_output=True, text=True,
+                            check=False, timeout=limit)
+    if result.returncode != 0:
+        raise RuntimeError(f"exit {result.returncode}: {result.stderr[-160:]}")
+    return result.stdout.strip()
+
+
+def expanded(tool: pathlib.Path, source: pathlib.Path, limit: float) -> list[str]:
+    values = []
+    for option in ("--expanded-ins", "--expanded-outs"):
+        values.extend(value for value in run([str(tool), option, str(source)], limit).split(",")
+                      if value)
+    return values
+
+
+def check_pair(source: pathlib.Path, target: pathlib.Path, build: pathlib.Path,
+               limit: float) -> bool:
+    ltl = build / "tlsf2ltl"
+    info = build / "tlsfinfo"
+    original_names = expanded(info, source, limit)
+    obfuscated_names = expanded(info, target, limit)
+    if len(original_names) != len(obfuscated_names):
+        return False
+    originals = run([str(ltl), "--format", "ltl", str(source)], limit)
+    changed = run([str(ltl), "--format", "ltl", str(target)], limit)
+    mapping = dict(zip(original_names, obfuscated_names, strict=True))
+    normalized = re.sub(r"[A-Za-z_][A-Za-z_0-9]*",
+                        lambda match: mapping.get(match.group(), match.group()), originals)
+    return "".join(normalized.split()) == "".join(changed.split())
 
 
 def main() -> None:

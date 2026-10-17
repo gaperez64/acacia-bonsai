@@ -950,37 +950,10 @@ duplicate the same Boolean AST-to-BDD walk; sharing a conservative Boolean
 encoder with pluggable variable lookup would reduce the chance that their
 accepted operator sets drift.
 
-### 5. Tooling findings
+### 5. Historical tooling
 
-#### [High] Portfolio selection masks verdict conflicts
-
-When two arms decide the same instance, `evaluate` retains only the faster
-answer without comparing the verdicts
-(`benchmarking/select-portfolio-arms.py:53-60`).  A REAL/UNREAL conflict can
-therefore increase the apparent union and enter the selected portfolio without
-any warning.  Current campaign notes say there were zero conflicts, but the
-selector should enforce that invariant itself: collect all verdicts per
-instance, fail loudly if the set has size greater than one, then apply the
-minimum-time rule.
-
-#### [Medium] Resume markers are not tied to campaign inputs
-
-`run-portfolio-arms.py` skips an arm solely because `<arm>.done` exists
-(`benchmarking/run-portfolio-arms.py:77-81`) and writes that marker after either
-a clean run or a conflict-collecting exit (`benchmarking/run-portfolio-arms.py:105-113`).
-The marker does not encode the binary, corpus/list, flags, cap, memory settings,
-or `--limit`, and the code does not require the output/summary files to still
-exist.  Reusing an output directory with changed parameters can silently mix or
-skip campaigns.  Store a small manifest/fingerprint beside each marker and
-validate it on resume.
-
-#### [Low] Backend-race output calls ties “slower”
-
-`compare-backend-race.py:86-89` counts only strict `<` as faster and reports all
-remaining cases as slower, so equal timings are mislabeled.  Report faster,
-equal, and slower separately.  Also reject an empty `decisive_seconds` field
-instead of coercing it to `0.0` at `benchmarking/compare-backend-race.py:32-39`,
-which would make malformed data look maximally fast.
+The campaign-specific selection and orchestration tools discussed in the
+original review are preserved in the campaign archives.
 
 ### 6. Other correctness conclusions
 
@@ -1150,10 +1123,9 @@ zero alternate-only wins and no graph-size reduction.
 The durable experiment infrastructure lives in `tlsf-tools`: source-only guard
 features, normalized TLSF and LTL artifacts, exact Acacia-oriented HOA bundles,
 per-orientation translation failures/timeouts, replay orchestration, atomic
-resume files, and zero-loss/opposite-conflict summaries. Acacia supplies
-uninstalled Spot-dependent automaton-generation and HOA-replay helpers behind
-`-Dbuild_research_tools=true`; tlsf-tools links to neither and exposes no Spot
-types. The production CLI and TLSF frontend are unchanged.
+resume files, and zero-loss/opposite-conflict summaries. The original Spot-dependent experiment helpers are preserved in campaign
+archives. The tlsf-tools implementation exposes no Spot types. The production
+CLI and TLSF frontend remain available.
 
 ### Ladder and boundary
 
