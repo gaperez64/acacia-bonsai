@@ -4,14 +4,40 @@ This is the single results-and-gaps report. [The evidence index](evidence-index.
 names published archives; [protocol](README.md) defines caps, gates and noise floors.
 [Decisions](decisions.md) records policy and [architecture](DATA-STRUCTURES.md) owns
 runtime contracts. Exact pre-closeout reports, all measured rows and retired
-narratives are in `refactor-closeout20261017`, verified locally with publication
-and registration pending with the driver. This edit runs no timing campaign.
+narratives are in the published and indexed archive `refactor-closeout20261017`.
 
 Historical rows below keep their original values and measured/derived meanings.
 Administrative statements in the retained October 13/16 reports describe their
 write-time state: their original campaign archives are now indexed. New manifests
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
+
+## 2026-10-17 — No default arm can be dropped (#264)
+
+Archive `portfolioloo20261017`; frozen OTF binary 74eeebee, SYNTCOMP26, 17 s.
+
+Leave-one-out: removing any one of the seven default arms and rerunning the inputs
+that arm alone decided loses them all, with no verdict conflicts.
+
+| Arm removed | Inputs lost |
+|---|---:|
+| `both:parity:spot` | 112 |
+| `both:gr1-real-lift:oxidd` | 17 |
+| `real:small:backward` | 8 |
+| `unreal:formula:spot-guarded-sparse` | 8 |
+| `real:small:forward` | 5 |
+| `both:obligation:spot` | 5 |
+| `unreal:automaton:forward` | 1 |
+
+Contention: the 185 default timeouts rerun with the full default, without
+`unreal:automaton:forward` and without `real:small:forward`. The fresh default
+decides none of them. Dropping `unreal:automaton:forward` decides one
+(`robot-grid-reach-repeated-with-obstacles-6d-real`, REALIZABLE at 14.7 s), which
+only offsets the one input it alone decides; dropping `real:small:forward` decides
+none. At 17 s freeing an arm's CPU and memory does not pay for the arm, so the
+default keeps all seven. Per-arm CPU and memory attribution needs instrumentation
+the frozen binary lacks; that measurement and the sharing/staging question follow
+on a new build.
 
 ## 2026-10-16 — OTD close: ship the parity portfolio
 
