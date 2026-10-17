@@ -31,6 +31,8 @@ def classify(run) -> str:
 def write_rows(path: pathlib.Path, rows: list[dict[str, object]]) -> None:
     fields = [
         "instance",
+        "converter",
+        "syfco_error",
         "native_result",
         "native_seconds",
         "native_exit",
@@ -83,6 +85,7 @@ def main() -> int:
         preparation_exit = subprocess.run(
             [sys.executable, str(scripts / "convert-tlsf-corpus.py"),
              str(args.source), str(args.converted), "--syfco", args.syfco,
+             "--fallback-inspect", str(args.native_inspect),
              "--target", "Mealy", "--canonicalizer", str(args.canonicalizer)], check=False).returncode
         spot_check_exit = subprocess.run(
             [sys.executable, str(scripts / "check-tlsf-conversion.py"),
@@ -109,6 +112,13 @@ def main() -> int:
     if not args.bin.is_file():
         parser.error(f"missing binary: {args.bin}")
 
+    conversions = {}
+    if (args.converted / "conversion.tsv").is_file():
+        with (args.converted / "conversion.tsv").open(newline="") as stream:
+            conversions = {
+                row["instance"]: {key: row.get(key, "") for key in ("converter", "syfco_error")}
+                for row in csv.DictReader(stream, delimiter="\t")
+            }
     rows: list[dict[str, object]] = []
     if args.resume and args.csv.is_file():
         with args.csv.open(newline="") as handle:
@@ -133,6 +143,7 @@ def main() -> int:
     native_resource_limits = 0
     converted_resource_limits = 0
     for row in rows:
+        row.update(conversions.get(row["instance"], {}))
         comparison = row["comparison"]
         missing_conversions += comparison == "MISSING_CONVERSION"
         opposite_verdicts += comparison == "OPPOSITE_VERDICT"
@@ -147,9 +158,10 @@ def main() -> int:
         source = args.source / f"{stem}.tlsf"
         formula = args.converted / ltl_name
         part = args.converted / f"{stem}.part"
+        provenance = conversions.get(source.name, {"converter": "unknown", "syfco_error": ""})
         if not source.is_file() or not formula.is_file() or not part.is_file():
             missing_conversions += 1
-            rows.append({"instance": source.name, "comparison": "MISSING_CONVERSION",
+            rows.append({"instance": source.name, **provenance, "comparison": "MISSING_CONVERSION",
                          "native_result": "NOT_RUN", "converted_result": "NOT_RUN"})
             write_rows(args.csv, rows)
             args.status.write_text(f"RUNNING {index}/{len(names)}\n")
@@ -158,7 +170,7 @@ def main() -> int:
             inputs, outputs = read_part(part)
         except (OSError, ValueError) as error:
             errors += 1
-            rows.append({"instance": source.name, "comparison": "ERROR",
+            rows.append({"instance": source.name, **provenance, "comparison": "ERROR",
                          "native_result": "NOT_RUN", "converted_result": "ERROR"})
             print(f"preparation error {stem}: {error}")
             write_rows(args.csv, rows)
@@ -213,6 +225,7 @@ def main() -> int:
         rows.append(
             {
                 "instance": source.name,
+                **provenance,
                 "native_result": native_result,
                 "native_seconds": f"{native.seconds:.3f}",
                 "native_exit": native.returncode,
@@ -227,12 +240,19 @@ def main() -> int:
 
     gate_pass = (opposite_verdicts == 0 and errors == 0 and missing_conversions == 0
                  and preparation_exit in (None, 0) and spot_check_exit in (None, 0))
+    fallbacks = [row for row in rows if row.get("converter") == "tlsf-tools"]
+    fallback_summary = (
+        f"tlsf-tools pairs (not independently cross-checked): {len(fallbacks)}\n" +
+        "".join(f"  {row['instance']}: " + " ".join(row["syfco_error"].split()) + "\n"
+                for row in fallbacks)
+    )
     summary = (
         f"instances: {len(rows)}\n"
         f"missing conversions: {missing_conversions}\n"
         f"preparation exit: {preparation_exit if preparation_exit is not None else 'not run'}\n"
         f"spot-check outcomes: {spot_outcomes}\n"
         f"spot-check exit: {spot_check_exit if spot_check_exit is not None else 'not run'}\n"
+        f"{fallback_summary}"
         f"opposite verdicts: {opposite_verdicts}\n"
         f"frontend errors: {errors}\n"
         f"native-only answers: {native_only}\n"

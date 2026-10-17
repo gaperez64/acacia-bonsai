@@ -268,19 +268,17 @@ both candidates. A stratified panel is a screen, not a full-corpus result.
   realizable/unrealizable suites and reads their JSON records. Timeouts are allowed;
   failed tests, false-verdict markers (including in timed-out tests), missing records
   and unexplained launcher exits fail. Meson's exit status alone is insufficient.
-- **G5, native TLSF parity:** run `tlsf-verdict-parity.py` and
-  `check-tlsf-conversion.py` against the selected TLSF corpus. Use
+- **G5, native TLSF parity:** use
   `tlsf-verdict-parity.py --prepare --native-inspect build/tests/tlsf-frontend-inspect
   --canonicalizer build/tests/ltl-formula-canonicalize` with its usual required
-  arguments. Preparation and spot-check failures do not skip parity on available
-  pairs; the summary reports those exits and missing conversions separately, and
-  any unresolved failure keeps the gate failed. No implicit known-instance waiver.
-  Raw-LTL pairs must use the effective Mealy target: `convert-tlsf-corpus.py
-  SOURCE PAIRS --target Mealy --canonicalizer build/tests/ltl-formula-canonicalize`.
-  This adapts SyFCo's plain formula once using its declared source semantics;
-  the native inspector already adapted its formula. Normalization timeout is UNKNOWN,
-  never evidence of equivalence. Plain pairs remain appropriate for tools taking
-  their own semantics flag.
+  arguments; SyFCo remains the independent converter wherever it succeeds, and only
+  its rejections use the existing tlsf-tools inspector's already-Mealy pair without
+  further adaptation. `conversion.tsv` and parity rows record each converter and
+  SyFCo error, and the summary names every fallback with its reason as **not
+  independently cross-checked**; these pairs still undergo verdict parity and need
+  no manual waiver. Preparation or spot-check failures, missing conversions,
+  frontend errors and opposite verdicts still fail the gate; normalization timeouts
+  remain UNKNOWN, and available pairs still run after preparation failures.
 
 The historical frozen G1 shipping-preset twin is
 `best_decomp_rank_bucketed_mona_eq_min_blocks_2`, whose binary SHA-256 is
