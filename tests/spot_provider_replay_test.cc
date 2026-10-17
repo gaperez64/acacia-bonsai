@@ -1,9 +1,9 @@
 // Unmeasured correctness reference only. This is not a C4/C5 timing arm.
-// Compile the research specialization in isolation without its CLI entry point.
+// Enable test access to the retained provider and sparse-game internals.
 #define ACACIA_PROVIDER_REPLAY_TESTING
-#include "research/spot_provider_replay.cc"
+#include "spot_provider_replay_support.hh"
 
-#include "research/explicit_forward_game.hh"
+#include "tiny_game_oracle.hh"
 
 #include <cstdlib>
 #include <fcntl.h>
@@ -54,8 +54,6 @@ void check_solve_counters (const SolveResult& result, const Fields& fields) {
                          "dependency_list_len_max"}) {
     expect (fields.at (key) == published.at (key),
             "destructor and SolveResult reader agree on " + std::string (key));
-    expect (std::count (columns.begin (), columns.end (), key) == 1,
-            "replay TSV contains exactly one column for " + std::string (key));
   }
   check_verifier_split (fields);
   const bool win = result.status == forward_result_status::win_k;
@@ -67,9 +65,6 @@ void check_solve_counters (const SolveResult& result, const Fields& fields) {
     if (not win)
       expect (fields.at ("verify_traversal" + suffix) == "0" &&
               fields.at ("verify_invariant" + suffix) == "0", "losing replay resets winning phases");
-    for (const auto* phase : {"traversal", "invariant", "proof_bad"})
-      expect (std::count (columns.begin (), columns.end (), "verify_" + std::string (phase) + suffix)
-                  == 1, "verifier split is retained in the replay TSV");
   }
   if (win) {
     std::size_t queries = 1;  // maximal-antichain construction
@@ -1281,71 +1276,6 @@ void closure_mutations_and_growth () {
             << growing->cache->state_count () << " states preserve saved sparse rank\n";
 }
 
-// A1/A2 CLI surface: --closure-row-expansion and --stop-after-first-row.
-Options parse (std::vector<std::string> args) {
-  args.insert (args.begin (), "acacia-spot-provider-replay");
-  std::vector<char*> argv;
-  for (auto& a : args) argv.push_back (a.data ());
-  return parse_options (int (argv.size ()), argv.data ());
-}
-bool rejected (std::vector<std::string> args) {
-  try {
-    parse (std::move (args));
-  } catch (const std::exception&) {
-    return true;
-  }
-  return false;
-}
-void cli_flags () {
-  const std::vector<std::string> base {"--arm", "c5", "--formula", "p", "--k", "1",
-                                       "--provider", "closure-buchi"};
-  auto with = [&] (std::vector<std::string> extra) {
-    auto args = base;
-    args.insert (args.end (), extra.begin (), extra.end ());
-    return args;
-  };
-  expect (parse (base).row_expansion == acacia::closure_buchi::RowExpansion::symbolic_boolean,
-          "default row expansion is symbolic-boolean");
-  expect (!parse (base).stop_after_first_row, "default is not stop-after-first-row");
-  expect (parse (with ({"--closure-row-expansion", "enumerative"})).row_expansion ==
-              acacia::closure_buchi::RowExpansion::enumerative,
-          "--closure-row-expansion enumerative parses");
-  expect (parse (with ({"--closure-row-expansion", "symbolic-boolean"})).row_expansion ==
-              acacia::closure_buchi::RowExpansion::symbolic_boolean,
-          "--closure-row-expansion symbolic-boolean parses");
-  expect (parse (with ({"--stop-after-first-row"})).stop_after_first_row,
-          "--stop-after-first-row parses");
-  expect (rejected (with ({"--closure-row-expansion", "bogus"})),
-          "an unknown --closure-row-expansion value is rejected");
-  expect (rejected (with ({"--closure-row-expansion", "enumerative",
-                          "--closure-row-expansion", "enumerative"})),
-          "a duplicate --closure-row-expansion is rejected, like every other option");
-  expect (rejected ({"--arm", "c5", "--formula", "p", "--k", "1", "--provider", "taa",
-                     "--closure-row-expansion", "enumerative"}),
-          "--closure-row-expansion is rejected for --provider taa");
-  {
-    const char* temp_dir = std::getenv ("TMPDIR");
-    const std::string path_template = std::string (temp_dir && *temp_dir ? temp_dir : ".") +
-                                      "/replay-formula-file-test-XXXXXX";
-    std::vector<char> path (path_template.begin (), path_template.end ());
-    path.push_back ('\0');
-    const int fd = mkstemp (path.data ());
-    expect (fd >= 0, "temp file for --formula-file");
-    const std::string text = "p & X q\n";
-    expect (write (fd, text.data (), text.size ()) == ssize_t (text.size ()),
-            "wrote formula file");
-    close (fd);
-    expect (parse ({"--arm", "c5", "--formula-file", path.data (), "--k", "1"}).formula == "p & X q",
-            "--formula-file reads the file and strips the trailing newline");
-    expect (rejected ({"--arm", "c5", "--formula", "p", "--formula-file", path.data (), "--k", "1"}),
-            "--formula and --formula-file are mutually exclusive");
-    expect (rejected ({"--arm", "c5", "--formula-file", "/nonexistent/path", "--k", "1"}),
-            "an unreadable --formula-file is rejected");
-    unlink (path.data ());
-  }
-  std::cout << "cli_flags: PASS\n";
-}
-
 int main (int argc, char** argv) {
   if (argc == 3 && std::string (argv[1]) == "--oracle-layout") {
     const auto layout = acacia::parse_oracle_layout (argv[2]);
@@ -1362,7 +1292,6 @@ int main (int argc, char** argv) {
       if (const int code = differential (report))
         return code;
     }
-    cli_flags ();
     closure_games ();
     closure_mutations_and_growth ();
     copy_kernels ();

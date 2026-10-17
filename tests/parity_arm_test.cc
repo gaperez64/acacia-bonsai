@@ -1,4 +1,4 @@
-#include "research/parity_route.hh"
+#include "solver/parity/route.hh"
 #include "utils/verbose.hh"
 
 #include <iostream>
@@ -10,7 +10,7 @@ unsigned utils::verbose = 0;
 utils::voutstream utils::vout;
 
 namespace route = acacia::parity_route;
-namespace reference = acacia::research::parity_route;
+namespace reference = acacia::parity_route;
 
 void require (bool value, const char* reason) {
   if (!value)

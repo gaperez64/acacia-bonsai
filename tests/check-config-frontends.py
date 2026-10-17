@@ -43,7 +43,6 @@ INTENTIONAL_DIVERGENCE = {}
 NON_SOLVER_OPTIONS = {
     "build_tests",
     "build_python",
-    "build_research_tools",
     "acacia_tlsf_corpus_dir",
     "acacia_compiler_profile",
 }

@@ -7,7 +7,7 @@
 // rather than against a hand-written expectation.
 
 #include "actioners/standard.hh"
-#include "research/rank_action_replay.hh"
+#include "tiny_game_oracle.hh"
 #include "utils/verbose.hh"
 
 #include <iostream>
@@ -112,85 +112,6 @@ namespace {
     return v;
   }
 
-  void check_domination_index () {
-    generator_index index {{vec ({2, 0}), vec ({0, 2}), vec ({1, 1})}};
-    unsigned long long checks = 0;
-
-    expect ("a dominated vector finds a dominator",
-            index.find_dominator (vec ({1, 0}), checks) != generator_index::npos);
-    expect ("an undominated vector finds none",
-            index.find_dominator (vec ({2, 2}), checks) == generator_index::npos);
-
-    // Deactivating the only dominator must make the same query fail: this is
-    // the whole point of an active-subset view, and it is what the generic
-    // Downset API cannot express.
-    const size_t found = index.find_dominator (vec ({0, 2}), checks);
-    index.deactivate (found);
-    expect ("a deactivated generator no longer dominates",
-            index.find_dominator (vec ({0, 2}), checks) == generator_index::npos);
-    expect ("the active count follows deactivation", index.active_count () == 2);
-  }
-
-  void check_rank_prefilter () {
-    const rank_vector wrong = vec ({3, -1});
-    const rank_vector right = vec ({2, 2});
-    generator_index index {{wrong, right}};
-    unsigned long long checks = 0;
-
-    // This pins the rank prefilter as a lower bound: it must skip an
-    // insufficient-rank candidate and continue to a higher-rank dominator.
-    const size_t found = index.find_dominator (vec ({2, 1}), checks);
-    expect ("the rank prefilter finds the higher-rank dominator",
-            found == 1 and checks == 1);
-  }
-
-  /// Removing a generator can cost more than itself: anything whose only
-  /// support was that generator must go too. This is the cascade the peeling
-  /// has to follow, and the reason a single pass is not enough.
-  void check_support_cascade () {
-    // Three generators on one input class. `keep` supports itself; `middle`
-    // is supported only by `tail`; `tail` is supported by nothing.
-    const rank_vector keep = vec ({2, 0, 0});
-    const rank_vector middle = vec ({0, 2, 0});
-    const rank_vector tail = vec ({0, 0, 2});
-
-    generator_index index {{keep, middle, tail}};
-    unsigned long long checks = 0;
-    expect ("all three start active", index.active_count () == 3);
-
-    index.deactivate (2);  // tail loses its support
-    expect ("middle's dominator is gone once tail is inactive",
-            index.find_dominator (tail, checks) == generator_index::npos);
-    index.deactivate (1);
-    expect ("only the self-supporting generator survives", index.active_count () == 1);
-    expect ("and it is the one that supports itself",
-            index.find_dominator (keep, checks) == 0);
-  }
-
-  /// The counterexample the sprint brief turns on: states dropped during a
-  /// contracting iteration do not come back, so a pruned branch may not be
-  /// widened by adding the omitted generators to its terminal region.
-  void check_add_back_is_unsound () {
-    // s -> a -> b -> b, every state safe. From {s,a,b} the game is winning.
-    // Dropping b gives {s,a} -> {s} -> {}, and adding b back gives {b}.
-    const rank_vector s = vec ({0, -1, -1});
-    const rank_vector a = vec ({-1, 0, -1});
-    const rank_vector b = vec ({-1, -1, 0});
-
-    generator_index full {{s, a, b}};
-    unsigned long long checks = 0;
-    expect ("the full set contains all three", full.active_count () == 3);
-
-    // The contracted branch keeps only b; re-adding s and a would claim a
-    // region the branch never justified.
-    generator_index pruned {{s, a}};
-    pruned.deactivate (0);
-    pruned.deactivate (1);
-    expect ("the pruned branch terminates empty", pruned.active_count () == 0);
-    expect ("and b is not in it",
-            pruned.find_dominator (b, checks) == generator_index::npos);
-  }
-
   void check_forward_saturation () {
     constexpr VECTOR_ELT_T K = 3;
     action_vec avec (1);
@@ -248,10 +169,6 @@ namespace {
 
 int main () {
   check_against_the_actioner ();
-  check_domination_index ();
-  check_rank_prefilter ();
-  check_support_cascade ();
-  check_add_back_is_unsound ();
   check_forward_saturation ();
   check_safe_vector ();
   check_absence_does_not_propagate ();

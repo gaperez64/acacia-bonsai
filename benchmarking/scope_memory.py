@@ -1,19 +1,17 @@
 """Retain a delegated invocation cgroup until its external observer acknowledges it."""
 from __future__ import annotations
-
 import argparse
 import csv
 import json
+import pathlib
 import math
 import os
-import pathlib
 import re
 import signal
 import sys
 import threading
 import time
 from collections import Counter
-
 
 MEMORY_COLUMNS = ["scope_memory_peak_source", "scope_memory_peak_missing_reason",
                   "scope_memory_events", "scope_memory_events_source", "scope_memory_events_missing_reason",

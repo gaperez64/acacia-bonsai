@@ -28,29 +28,92 @@ HELD_GENERIC_SELECTION = (
 )
 
 
+SYNTHETIC_HISTORY = {}
+
+
+def record_revision(repo, message, changes, first=False):
+    """Model reachable blobs and paths without writing Git objects or refs."""
+    history = SYNTHETIC_HISTORY.setdefault(Path(repo), {})
+    parent = {} if first or not history else dict(next(reversed(history.values()))["tree"])
+    delta = []
+    for name, data in changes.items():
+        old = parent.get(name, b"")
+        if data is None:
+            parent.pop(name, None)
+        else:
+            parent[name] = data
+        delta.append((name, old, data))
+    revision = f"{len(history) + 1:040x}"
+    history[revision] = {"tree": parent, "delta": delta, "message": message}
+
+
+def fixture_git(repo, *args, input_text=None):
+    history = SYNTHETIC_HISTORY[Path(repo)]
+    head = next(reversed(history))
+    def resolve(value):
+        return head if value.removesuffix("^{commit}") == "HEAD" else value.removesuffix("^{commit}")
+    if args[0] == "rev-parse":
+        return resolve(args[-1]) + "\n"
+    if args[0] == "rev-list":
+        base, target = map(resolve, args[-1].split(".."))
+        revisions = list(history)
+        return "\n".join(revisions[revisions.index(base) + 1:revisions.index(target) + 1])
+    if args[0] == "diff-tree":
+        output = []
+        for name, old, new in history[args[-1]]["delta"]:
+            old_oid = hashlib.sha256(old).hexdigest()
+            new_oid = hashlib.sha256(new).hexdigest() if new is not None else "0" * 64
+            output.extend((f":100644 100644 {old_oid} {new_oid} M", name))
+        return "\0".join(output) + ("\0" if output else "")
+    if args[0] == "cat-file":
+        objects = {hashlib.sha256(data).hexdigest(): len(data)
+                   for revision in history.values() for _, _, data in revision["delta"]
+                   if data is not None}
+        return "".join(f"{oid} blob {objects[oid]}\n" for oid in input_text.splitlines())
+    if args[0] == "ls-tree":
+        tree = history[args[4]]["tree"]
+        return "".join(f"100644 blob {hashlib.sha256(data).hexdigest()} {len(data)}\t{name}\0"
+                       for name, data in sorted(tree.items()) if name.startswith("benchmarking/"))
+    raise AssertionError(f"unexpected Git read: {args}")
+
+
+def fixture_guard(args):
+    """Exercise the real guard and raw Git-output parsers against synthetic reads."""
+    from contextlib import redirect_stdout
+    from types import SimpleNamespace
+    guard = Path(args[2])
+    repo = guard.parent.parent
+    spec = importlib.util.spec_from_file_location("fixture_growth_guard", guard)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.git = lambda *values, input_text=None: fixture_git(repo, *values, input_text=input_text)
+    options = SimpleNamespace(range=args[args.index("--range") + 1],
+                              allowlist=str(repo / "benchmarking/evidence-growth-allowlist.tsv"))
+    output = io.StringIO()
+    error, status = "", 0
+    with redirect_stdout(output):
+        try:
+            module.check(options)
+        except ValueError as exception:
+            error, status = str(exception), 1
+    return subprocess.CompletedProcess(args, status, output.getvalue(), error)
+
+
 def run(*args, cwd=ROOT, ok=True):
-    result = subprocess.run(args, cwd=cwd, text=True, capture_output=True, check=False)
+    repo = Path(cwd)
+    if args[:2] == ("git", "init") and (repo / "scripts/check-evidence-growth.py").is_file():
+        SYNTHETIC_HISTORY[repo] = {}
+        result = subprocess.CompletedProcess(args, 0, "", "")
+    elif args[0] == "git" and repo in SYNTHETIC_HISTORY:
+        result = subprocess.CompletedProcess(args, 0, fixture_git(repo, *args[1:]), "")
+    elif (len(args) > 2 and str(args[2]).endswith("scripts/check-evidence-growth.py")
+          and Path(args[2]).parent.parent in SYNTHETIC_HISTORY):
+        result = fixture_guard(args)
+    else:
+        result = subprocess.run(args, cwd=cwd, text=True, capture_output=True, check=False)
     if ok and result.returncode:
         raise AssertionError(f"{args}: {result.stdout}\n{result.stderr}")
     return result
-
-
-def fast_import_commit(repo, message, changes, first=False):
-    header = (f"commit refs/heads/master\ncommitter Test <test@example.org> "
-              f"0 +0000\ndata {len(message)}\n{message}\n")
-    if not first:
-        header += f"from {run('git', 'rev-parse', 'HEAD', cwd=repo).stdout.strip()}\n"
-    stream = bytearray(header.encode())
-    for name, data in changes.items():
-        if data is None:
-            stream.extend(f"D {name}\n".encode())
-        else:
-            stream.extend(f"M 100644 inline {name}\ndata {len(data)}\n".encode())
-            stream.extend(data + b"\n")
-    process = subprocess.run(["git", "fast-import", "--quiet"], input=bytes(stream),
-                             cwd=repo, capture_output=True, check=False)
-    if process.returncode:
-        raise AssertionError(process.stderr.decode())
 
 
 class EvidenceToolTests(unittest.TestCase):
@@ -396,23 +459,7 @@ class EvidenceToolTests(unittest.TestCase):
         run("git", "init", "-q", "-b", "master", cwd=repo)
 
         def commit(message, changes, first=False):
-            # Fast-import builds throwaway history without staging the workspace.
-            header = (f"commit refs/heads/master\ncommitter Test <test@example.org> "
-                      f"0 +0000\ndata {len(message)}\n{message}\n")
-            if not first:
-                parent = run("git", "rev-parse", "HEAD", cwd=repo).stdout.strip()
-                header += f"from {parent}\n"
-            stream = bytearray(header.encode())
-            for name, data in changes.items():
-                if data is None:
-                    stream.extend(f"D {name}\n".encode())
-                else:
-                    stream.extend(f"M 100644 inline {name}\ndata {len(data)}\n".encode())
-                    stream.extend(data + b"\n")
-            process = subprocess.run(["git", "fast-import", "--quiet"], input=bytes(stream),
-                                     cwd=repo, capture_output=True, check=False)
-            if process.returncode:
-                raise AssertionError(process.stderr.decode())
+            record_revision(repo, message, changes, first=first)
 
         commit("base", {
             "scripts/check-evidence-growth.py": GUARD.read_bytes(),
@@ -468,13 +515,13 @@ class EvidenceToolTests(unittest.TestCase):
         (repo / "benchmarking/evidence-growth-allowlist.tsv").write_text("path\treason\n")
         run("git", "init", "-q", "-b", "master", cwd=repo)
         inherited = b"inherited raw bytes\n"
-        fast_import_commit(repo, "base", {
+        record_revision(repo, "base", {
             "scripts/check-evidence-growth.py": GUARD.read_bytes(),
             "benchmarking/evidence-growth-allowlist.tsv": b"path\treason\n",
             "inherited/data.tsv": inherited,
         }, first=True)
         base = run("git", "rev-parse", "HEAD", cwd=repo).stdout.strip()
-        fast_import_commit(repo, "rename and copy inherited blob", {
+        record_revision(repo, "rename and copy inherited blob", {
             "inherited/data.tsv": None,
             "benchmarking/new-campaign/raw.tsv": inherited,
             "benchmarking/new-campaign/copy.csv": inherited,
@@ -486,7 +533,7 @@ class EvidenceToolTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
 
         raw_json = b"x" * (300 * 1024)
-        fast_import_commit(repo, "raw JSON trace", {
+        record_revision(repo, "raw JSON trace", {
             "benchmarking/gr1-par2-20260923/s0/raw-case/trace.json": raw_json,
             "benchmarking/gr1-par2-20260923/campaign/trace.json": b"{}\n",
             "benchmarking/gr1-par2-20260923/campaign/diagnostics/row.json": b"{}\n",
@@ -516,13 +563,13 @@ class EvidenceToolTests(unittest.TestCase):
         shutil.copy2(GUARD, repo / "scripts/check-evidence-growth.py")
         (repo / "benchmarking/evidence-growth-allowlist.tsv").write_text("path\treason\n")
         run("git", "init", "-q", "-b", "master", cwd=repo)
-        fast_import_commit(repo, "base", {
+        record_revision(repo, "base", {
             "scripts/check-evidence-growth.py": GUARD.read_bytes(),
             "benchmarking/evidence-growth-allowlist.tsv": b"path\treason\n",
         }, first=True)
         base = run("git", "rev-parse", "HEAD", cwd=repo).stdout.strip()
         source_names = (
-            "benchmarking/tools/thermal-annotate.py",
+            "benchmarking/tools/perarm-select.py",
             "benchmarking/tools/thermal-check.sh",
             "benchmarking/thermal/proof-bundle.cc",
             "benchmarking/proofs/thermal-helper.hh",
@@ -533,7 +580,7 @@ class EvidenceToolTests(unittest.TestCase):
             "benchmarking/tools/thermal.hpp",
             "benchmarking/tools/thermal.yaml",
         )
-        fast_import_commit(repo, "source files", {name: b"source\n" for name in source_names})
+        record_revision(repo, "source files", {name: b"source\n" for name in source_names})
         guard = repo / "scripts/check-evidence-growth.py"
         result = run("python3", "-s", str(guard), "--range", f"{base}..HEAD", ok=False)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -541,10 +588,10 @@ class EvidenceToolTests(unittest.TestCase):
 
         raw_names = (
             "benchmarking/thermal-samples.tsv",
-            "benchmarking/tools/thermal-annotate.py.log",
+            "benchmarking/tools/perarm-select.py.log",
             "benchmarking/thermal/proof-bundle.zip",
         )
-        fast_import_commit(repo, "raw thermal samples", {name: b"samples\n" for name in raw_names})
+        record_revision(repo, "raw thermal samples", {name: b"samples\n" for name in raw_names})
         result = run("python3", "-s", str(guard), "--range", f"{base}..HEAD", ok=False)
         self.assertNotEqual(result.returncode, 0)
         for name in raw_names:
@@ -559,7 +606,7 @@ class EvidenceToolTests(unittest.TestCase):
         shutil.copy2(ROOT / "benchmarking/evidence-growth-allowlist.tsv",
                      repo / "benchmarking/evidence-growth-allowlist.tsv")
         run("git", "init", "-q", "-b", "master", cwd=repo)
-        fast_import_commit(repo, "base", {"README.md": b"base\n"}, first=True)
+        record_revision(repo, "base", {"README.md": b"base\n"}, first=True)
         base = run("git", "rev-parse", "HEAD", cwd=repo).stdout.strip()
         tooling = {name: (ROOT / name).read_bytes() for name in (
             "scripts/acacia-evidence.py", "scripts/check-evidence-growth.py",
@@ -567,7 +614,7 @@ class EvidenceToolTests(unittest.TestCase):
             ".github/workflows/main.yml", "benchmarking/evidence-index.tsv",
             "benchmarking/baselines.tsv", "benchmarking/evidence-do-not-publish.txt",
             "benchmarking/evidence-growth-allowlist.tsv")}
-        fast_import_commit(repo, "tooling", tooling)
+        record_revision(repo, "tooling", tooling)
         result = run("python3", "-s", str(repo / "scripts/check-evidence-growth.py"),
                      "--range", f"{base}..HEAD", ok=False)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

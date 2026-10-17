@@ -92,8 +92,8 @@ python3 benchmarking/attribution-completeness.py RUNS.tsv \
   --output OUTPUT/rows.tsv --report OUTPUT/completeness.md --summary OUTPUT/summary.json
 ```
 
-The reader reuses `summarize-worker-phases.py` for TSV validation, numeric parsing,
-and report tables, and `summarize-diag-phases.py` for any captured checkpoints.
+The reader uses the shared TSV validation, numeric parsing, report tables and
+checkpoint classification helpers in `legacy-phase-table.py`.
 It joins every invocation by the runner's sanitized label/cap/instance/run-index
 layout, rather than merging repeated instances or selecting the largest cap.
 Inventories use explicit `--arms` or the current preset registry when available;

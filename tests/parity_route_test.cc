@@ -1,4 +1,4 @@
-#include "research/parity_route.hh"
+#include "solver/parity/route.hh"
 
 #include <algorithm>
 #include <iostream>
@@ -8,7 +8,7 @@
 #include <spot/twaalgos/translate.hh>
 #include <stdexcept>
 
-namespace route = acacia::research::parity_route;
+namespace route = acacia::parity_route;
 void require (bool condition, const char* message) {
   if (not condition)
     throw std::runtime_error (message);

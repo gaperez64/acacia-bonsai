@@ -23,12 +23,12 @@ P4 sampler can explicitly allow conclusive race truncation.
 
 import argparse
 import csv
+import json
+from pathlib import Path
+import re
 from dataclasses import dataclass
 from itertools import zip_longest
 import importlib.util
-import json
-import re
-from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -60,6 +60,7 @@ PARENT_ARM = "legacy_parent"
 ARM = "real:param-lift:oxidd"
 OUTCOME_FIELDS = ("result", "exit_code", "timed_out", "resource_reason")
 SOLVED = frozenset({"REALIZABLE", "UNREALIZABLE"})
+
 
 
 def rows(path):
@@ -560,4 +561,4 @@ def load_as_module(path=Path(__file__)):
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

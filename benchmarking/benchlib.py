@@ -2,11 +2,13 @@
 """Small shared helpers for Acacia benchmark scripts."""
 
 from __future__ import annotations
-
 import csv
+import datetime as dt
+import pathlib
+import statistics
+import importlib.util
 import json
 import os
-import pathlib
 import re
 import signal
 import subprocess
@@ -20,9 +22,40 @@ from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from typing import Callable
 
-
 VERDICT_RE = re.compile(r"(?:^|\]\s)(UNREALIZABLE|REALIZABLE)\s*$", re.MULTILINE)
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+
+def load_tool(relative: str):
+    """Load a repository tool once, including scripts with hyphenated names."""
+    path = ROOT / relative
+    name = "acacia_tool_" + relative.replace("/", "_").replace("-", "_").replace(".", "_")
+    if name not in sys.modules:
+        spec = importlib.util.spec_from_file_location(name, path)
+        if spec is None or spec.loader is None:
+            raise ValueError(f"cannot load tool {path}")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        try:
+            spec.loader.exec_module(module)
+        except BaseException:
+            del sys.modules[name]
+            raise
+    return sys.modules[name]
+
+
+def dispatch_mode(modes, argv=None):
+    """Dispatch an explicit mode, leaving a tool's original default CLI intact."""
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if not arguments or arguments[0] not in modes:
+        return None
+    mode = modes[arguments[0]]
+    previous = sys.argv
+    try:
+        sys.argv = [previous[0] + " " + arguments[0], *arguments[1:]]
+        return mode() or 0
+    finally:
+        sys.argv = previous
 
 
 def build_option(build_dir, name):
@@ -1005,7 +1038,7 @@ def timed_run_marker(marker_dir, owner: str, *, blocking=DEFAULT_BLOCKING_MARKER
 # --- Host-condition sampling (§9.1) ------------------------------------------
 #
 # A Python port of the per-arm campaign's thermal sampler: the same eight
-# leading columns, so thermal-annotate.py's metrics() and coverage() read the
+# leading columns, so the shared thermal metrics and coverage readers read the
 # output unchanged, plus mean CPU clock and swap in use.  Times are UTC.
 
 SAMPLE_COLUMNS = ["time", "pkg_c", "load1", "mem_avail_mib", "pkg_throttle",
@@ -1135,3 +1168,86 @@ class HostSampler:
             self.sample_once()
         except OSError:
             pass
+
+thermal_ARM_NAMES = ("real:small:backward", "real:small:forward",
+             "unreal:formula:spot-guarded-sparse", "unreal:automaton:forward",
+             "real:gr1:oxidd", "unreal:gr1:oxidd", "real:param-lift:oxidd")
+
+
+thermal_CAP = 60
+
+
+thermal_TOTAL = 1524
+
+
+thermal_SOLVED = {"REALIZABLE", "UNREALIZABLE"}
+
+
+def thermal_metrics(rows: list[dict]) -> tuple[float, float, int]:
+    temperatures = [float(r["pkg_c"]) for r in rows if r["pkg_c"]]
+    memory = [int(r["mem_avail_mib"]) for r in rows if r["mem_avail_mib"]]
+    events, seconds = 0, 0.0
+    for prev, curr in zip(rows, rows[1:]):
+        gap = (dt.datetime.fromisoformat(curr["time"]) - dt.datetime.fromisoformat(prev["time"])).total_seconds()
+        delta = int(curr["pkg_throttle"]) - int(prev["pkg_throttle"])
+        if 0 < gap <= 120 and delta >= 0:
+            events += delta
+            seconds += gap
+    return (statistics.median(temperatures) if temperatures else float("nan"),
+            events/seconds if seconds else float("nan"),
+            min(memory) if memory else -1)
+
+
+def thermal_read_results(path: pathlib.Path, cap: int) -> dict[str, dict[str, str]]:
+    with path.open(newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    if (len(rows) != thermal_TOTAL or len({row["instance"] for row in rows}) != thermal_TOTAL or
+            any(row["result"] in thermal_SOLVED and not 0 <= float(row["seconds"]) <= cap for row in rows)):
+        raise ValueError(f"{path}: expected {thermal_TOTAL} distinct rows with solved times within {cap} s")
+    return {row["instance"]: row for row in rows}
+
+
+
+def thermal_coverage(rows: list[dict]) -> float:
+    """Fraction of corpus row progress spanned by monitor samples."""
+    positions = [int(row["rows"]) for row in rows if row["rows"].isdigit()]
+    return (max(positions) - min(positions) + 1) / thermal_TOTAL if positions else 0.0
+
+
+def thermal_noise_by_instance(first: pathlib.Path, second: pathlib.Path, ids: list[str]) -> dict[str, float]:
+    """Absolute difference in each instance's 60 s PAR-2 contribution between B epochs."""
+    a, b = thermal_read_results(first, thermal_CAP), thermal_read_results(second, thermal_CAP)
+    if set(a) != set(ids) or set(b) != set(ids):
+        raise ValueError("B epochs must contain exactly the selected original instance IDs")
+    def contribution(row: dict[str, str]) -> float:
+        return float(row["seconds"]) if row["result"] in thermal_SOLVED else 2 * thermal_CAP
+    return {name: abs(contribution(a[name]) - contribution(b[name])) for name in ids}
+
+
+def thermal_selection_relevant(legs: dict, ids: list[str], ranked: dict,
+                       noise: dict[str, float]) -> dict[str, dict[str, set[str]]]:
+    """Union candidate reasons over the three leading subsets of each size."""
+    selected = {arm: {} for arm in thermal_ARM_NAMES}
+    for size in (4, 5):
+        for _, _, subset, _, _ in ranked[size][:3]:
+            for name in ids:
+                successes = [(arm, legs[arm][name][1]) for arm in subset
+                             if legs[arm][name][0] in thermal_SOLVED]
+                fastest = min(successes, key=lambda item: (item[1], subset.index(item[0])))[0] if successes else None
+                for arm in subset:
+                    result, seconds = legs[arm][name]
+                    reasons = set()
+                    if result in {"TIMEOUT", "RESOURCE_LIMIT", "ERROR"} and not successes:
+                        reasons.add("unsolved-subset-failure")
+                    if result in thermal_SOLVED:
+                        if .8 * thermal_CAP <= seconds <= thermal_CAP:
+                            reasons.add("near-cap")
+                        if len(successes) == 1:
+                            reasons.add("unique-solve")
+                        elif arm == fastest:
+                            next_best = min(time for other, time in successes if other != arm)
+                            if next_best - seconds > noise[name]:
+                                reasons.add("par2-credit")
+                    if reasons:
+                        selected[arm].setdefault(name, set()).update(reasons)
+    return selected

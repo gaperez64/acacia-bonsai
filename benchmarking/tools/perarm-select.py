@@ -132,28 +132,28 @@ def reference_verdicts(legs: dict, ids: list[str], main_root: pathlib.Path,
 
 def thermal_candidates(legs: dict, ids: list[str], ranked: dict, samples: pathlib.Path,
                        evidence_root: pathlib.Path) -> tuple[dict, dict]:
-    """Apply thermal-annotate.py's candidate and hot/unknown label policy."""
-    thermal = runpy.run_path(str(HERE / "thermal-annotate.py"))
+    """Apply the shared thermal candidate and hot/unknown label policy."""
+    thermal = runpy.run_path(str(HERE.parent / "benchlib.py"))
     with samples.open(newline="") as stream:
         grouped = {}
         for row in csv.DictReader(stream, delimiter="\t"):
             grouped.setdefault(row["leg"], []).append(row)
-    measures = {leg: thermal["metrics"](rows) for leg, rows in grouped.items() if len(rows) >= 2}
+    measures = {leg: thermal["thermal_metrics"](rows) for leg, rows in grouped.items() if len(rows) >= 2}
     clean_rates = [measures[f"arm-{i}"][1] for i in range(1, len(ARMS) + 1)
-                   if f"arm-{i}" in measures and thermal["coverage"](grouped[f"arm-{i}"]) >= .8
+                   if f"arm-{i}" in measures and thermal["thermal_coverage"](grouped[f"arm-{i}"]) >= .8
                    and math.isfinite(measures[f"arm-{i}"][1])]
     median = statistics.median(clean_rates) if clean_rates else float("nan")
     labels = {}
     for i, arm in enumerate(ARMS, 1):
         leg = f"arm-{i}"
         rate = measures.get(leg, (float("nan"), float("nan"), -1))[1]
-        cov = thermal["coverage"](grouped.get(leg, []))
+        cov = thermal["thermal_coverage"](grouped.get(leg, []))
         labels[arm] = ("thermal unknown" if cov < .8 or not math.isfinite(rate) or not clean_rates
                        else "anomalous" if rate > 1.25 * median else "clean")
     campaign = evidence_root / "benchmarking/gr1-par2-20260923/campaign"
-    noise = thermal["noise_by_instance"](campaign / "derived-60s/epoch-1/B-cap60-epoch1.csv",
+    noise = thermal["thermal_noise_by_instance"](campaign / "derived-60s/epoch-1/B-cap60-epoch1.csv",
                                           campaign / "derived-60s/epoch-2/B-cap60-epoch2.csv", ids)
-    relevant = thermal["selection_relevant"](legs, ids, ranked, noise)
+    relevant = thermal["thermal_selection_relevant"](legs, ids, ranked, noise)
     return {arm: set(relevant[arm]) if labels[arm] != "clean" else set() for arm in ARMS}, labels
 
 

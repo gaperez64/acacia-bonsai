@@ -128,26 +128,8 @@ enclosing intervals are not inferred from nesting. Censored durations are lower 
 not completed durations. Worker summaries
 subtract nested finished intervals (including observed stopped work) and keep censored stages separate.
 
-`benchmarking/legacy-panel.py` accepts fresh `--acacia` rows, historical
-`--comparator` rows, `--classification` structural metadata, `--phase-root`, and
-optional paired `--baseline` allowance rows. `--source-root` supplies the TLSF sources
-bound to the metadata's SHA-256 values. The sampler orders by size, AP counts, parameter
-dimension, semantics and evidence features; ties use SHA-256 of source tokens with
-comments, quoted descriptive text and whitespace removed. Names and paths never rank
-rows. Identical structural/evidence copies are exchangeable. It refreshes membership, and covers all observed missing-set
-polarities, native rejection reasons and legacy last stages. It first includes
-paired gains, four seeded both-unsolved samples, and three samples each of
-Acacia-only and near-cap common solves; evidence-stratum coverage may require
-additional both-unsolved rows. Near-cap means at least 80% of the supplied cap,
-the existing classification threshold. Remaining places use structural frontier
-sampling. Default size is 28, allowed range 24–32. Missing strata are disclosed;
-insufficient capacity fails instead of silently dropping required strata.
-Worker events are merged by monotonic time and sequence before choosing the last stage.
-Writer confirmation, failures, drop counters and sequence gaps retain their delivery state.
-Names are identity data only in the generated manifest. Seeds, selection reasons,
-input digests, phase-tree digest, structure, refreshed outcomes and binary pins
-are recorded. Historical comparator times remain historical; this tool makes no
-matched performance claim and launches no solvers.
+Historical panel construction procedures are preserved in the campaign archives.
+The retained phase reader and classification commands accept explicit restored evidence.
 
 The existing weakening census and attribution completeness reader also recognize
 compact stage packets and the separate parent snapshot sequence. Their prior
