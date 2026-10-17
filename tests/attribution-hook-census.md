@@ -36,4 +36,5 @@
 | TAA rank node cap zero, `candidate=only/fallback` | STOPPED/resource | `attribution`: both modes; retained UNKNOWN or verified incumbent fallback |
 | `ACACIA_TEST_ATTRIBUTION_PAUSE` at R/U/direct/checking; worker SIGKILL; parent SIGTERM | Parent STOPPED/deadline/signal/interrupted; incomplete child telemetry | `attribution`: selected route retained, never interpreted as applicability |
 | `ACACIA_TEST_CHILD_MODES` / `ACACIA_TEST_DELAY_AFTER_REAP` (late, failed, killed, winner) | Parent lifecycle reason; late result rejected | `native-gr1-cli`: deadline/kill/reaping/winner attribution |
+| `ACACIA_TEST_SYNTHESIS_REAP_FD` | Parent SIGKILL cancellation reaped before interruption check | `synthesis-rendezvous`: deterministic `interrupted` terminal reason |
 | Transport writer stall/delay, 512-byte pipe, full/broken/slow destination | Telemetry loss/incomplete; never a solver decline | `worker-record-transport`, `record-transport`: bounded nonblocking delivery, explicit dropped/incomplete records |

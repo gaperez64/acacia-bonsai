@@ -146,8 +146,7 @@ def main() -> None:
                    2, "proof not verified", corrupt_proof=True)
         # A previously intermittent OxiDD checker crash appeared only after
         # the solver had used the same thread on this larger certificate.
-        round_robin = (ROOT / "tests/syntcomp-benchmarks/tlsf/round_robin_arbiter" /
-                       "parametric/round_robin_arbiter.tlsf")
+        round_robin = ROOT / "tests/fixtures/native_gr1/round_robin_arbiter.tlsf"
         for _ in range(12):
             expect(binary, ["-T", str(round_robin), "--arms",
                             "real:gr1:oxidd,unreal:gr1:oxidd"], 0, "REALIZABLE",

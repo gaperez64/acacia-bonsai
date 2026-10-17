@@ -49,6 +49,7 @@ size_t posets::vectors::bool_threshold = 0;
 
 namespace {
   volatile pid_t* g_child_pids = nullptr;
+  volatile sig_atomic_t* g_child_interrupted = nullptr;
   volatile sig_atomic_t g_child_count = 0;
   volatile sig_atomic_t g_interrupted = 0;
   pid_t g_main_pid = 0;
@@ -65,6 +66,10 @@ namespace {
   const char* g_helper_stop_reason = "none";
 
   void record_parent_terminal (sig_atomic_t index, int status, const char* reason, pid_t pid) {
+    // The handler's SIGKILL can be reaped by either the ordinary loop or cleanup.
+    // Preserve that cancellation cause, but keep normally exited, rejected verdicts distinct.
+    if (g_child_interrupted[index] && WIFSIGNALED (status) && WTERMSIG (status) == SIGKILL)
+      reason = "interrupted";
     if (g_obligation && index == g_eligibility_source &&
         g_obligation->eligible.load (std::memory_order_acquire) ==
             acacia::obligation::eligibility::pending)
@@ -113,6 +118,7 @@ namespace {
       g_interrupted = 1;
       for (sig_atomic_t i = 0; i < g_child_count; ++i)
         if (g_child_pids[i] > 0) {
+          g_child_interrupted[i] = 1;
           kill (-g_child_pids[i], SIGKILL);
           kill (g_child_pids[i], SIGKILL);
         }
@@ -741,6 +747,10 @@ namespace {
         }
       if (!live_arm)
         break;
+#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
+      if (g_synthesis && synthesis_winner >= 0)
+        acacia::synthesis::test_before_reap (g_child_pids[synthesis_winner]);
+#endif
       siginfo_t finished {};
       const int observed = waitid (synthesis_winner >= 0 ? P_PID : P_ALL,
                                    synthesis_winner >= 0 ? g_child_pids[synthesis_winner] : 0,
@@ -903,6 +913,7 @@ int main (int argc, char** argv) {
   }) != 0;
   const size_t worker_slots = arg_values.arms->size () + size_t (helper_requested);
   g_child_pids = new pid_t[worker_slots];
+  g_child_interrupted = new sig_atomic_t[worker_slots] {};
   if (helper_requested) {
     void* shared = mmap (nullptr, sizeof (acacia::obligation::control), PROT_READ | PROT_WRITE,
                          MAP_SHARED | MAP_ANONYMOUS, -1, 0);
