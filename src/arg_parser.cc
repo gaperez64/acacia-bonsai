@@ -54,9 +54,7 @@ void show_help (const char* program_name) {
       << "  -V, --version     print program version and configuration\n"
       << "  -f STRING         process the formula STRING\n"
       << "  -F VAL            process formula in file VAL\n"
-#if ACACIA_ENABLE_TLSF_FRONTEND
       << "  -T, --tlsf FILE   process a TLSF specification natively\n"
-#endif
       << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) "
          "atomic propositions\n"
       << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic "
@@ -114,7 +112,7 @@ void show_help (const char* program_name) {
       << "                    both:gr1-real-lift:oxidd,\n"
       << "                    real:gr1:oxidd, unreal:gr1:oxidd, and\n"
       << "                    real:param-lift:oxidd (realizability only);\n"
-      << "                    require -Dacacia_native_arms=true and -T FILE;\n"
+      << "                    require -T FILE;\n"
       << "                    native arms have no provider and do not support -s\n"
       << "  --obligation-memory-share VAL [equal|alone] (default equal)\n"
       << "                    the helper allowance is half the smaller of the memory\n"
@@ -406,7 +404,6 @@ void process_formula_file (const std::string& arg, arg_parse_result& result) {
   result.formula = buffer.str ();
 }
 
-#if ACACIA_ENABLE_TLSF_FRONTEND
 void process_tlsf_file (const std::string& arg, arg_parse_result& result) {
   acacia::phase_scope snapshot_phase ("legacy_parent", "source_snapshot");
   std::ifstream file (arg, std::ios::binary);
@@ -424,7 +421,6 @@ void process_tlsf_file (const std::string& arg, arg_parse_result& result) {
   // structured decline. Legacy conversion retains its historical CLI error.
   result.tlsf_specified = true;
 }
-#endif
 
 /**
  * Function that parses the arguments into an ArgParseResult object.
@@ -477,17 +473,11 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"r-prepass", required_argument, nullptr, OPT_R_PREPASS},
       {"equivariance", required_argument, nullptr, OPT_EQUIVARIANCE},
       {"equivariance-budget", required_argument, nullptr, OPT_EQUIVARIANCE_BUDGET},
-#if ACACIA_ENABLE_TLSF_FRONTEND
       {"tlsf", required_argument, nullptr, 'T'},
-#endif
       {nullptr, 0, nullptr, 0},
   };
 
-#if ACACIA_ENABLE_TLSF_FRONTEND
   static constexpr const char* short_options = "hr:Vvf:F:T:i:o:I:K:M:u:s:";
-#else
-  static constexpr const char* short_options = "hr:Vvf:F:i:o:I:K:M:u:s:";
-#endif
 
   // this goes over all provided arguments and returns the argument value.
   while ((opt = getopt_long (argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -514,13 +504,11 @@ arg_parse_result arg_parser (int argc, char** argv) {
         process_formula_file (optarg, retval);
         retval.formula_specified = true;
         break;
-#if ACACIA_ENABLE_TLSF_FRONTEND
       case 'T':
         if (retval.formula_specified or retval.inputs_specified or retval.outputs_specified)
           error (EXIT_CODE_ERROR, "Error: -T/--tlsf cannot be combined with -f/-F, -i, or -o.\n");
         process_tlsf_file (optarg, retval);
         break;
-#endif
       case 'i':
         if (retval.tlsf_specified)
           error (EXIT_CODE_ERROR, "Error: -i/-o and -T/--tlsf are mutually exclusive.\n");
@@ -848,9 +836,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
     if (arm.kind == portfolio_arm_kind::parity)
       continue;
     if (arm.kind != portfolio_arm_kind::legacy) {
-#if !ACACIA_NATIVE_ARMS
-      error (EXIT_CODE_ERROR, "Error: native arms require -Dacacia_native_arms=true.\n");
-#endif
       if (not retval.tlsf_specified)
         error (EXIT_CODE_ERROR, "Error: native arms require -T FILE.\n");
       continue;
@@ -880,7 +865,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
     }
   }
 
-#if ACACIA_ENABLE_TLSF_FRONTEND
   if (retval.tlsf_specified && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
         return arm.kind == portfolio_arm_kind::legacy;
       })) {
@@ -907,7 +891,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
           << "{\"arm\":\"legacy\",\"stage\":\"tlsf_conversion\",\"status\":\"unavailable\"}\n";
     }
   }
-#endif
   if (not retval.tlsf_specified && retval.formula.empty ())
     error (EXIT_CODE_ERROR,
            "Error: a formula or TLSF specification must be specified (-f, -F, or -T).\n");

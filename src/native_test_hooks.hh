@@ -1,5 +1,5 @@
 #pragma once
-#if ACACIA_NATIVE_ARMS && defined(ACACIA_NATIVE_TEST_HOOKS)
+#if defined(ACACIA_NATIVE_TEST_HOOKS)
 # include <tlsf/gr1_lift.h>
 
 # include <string>

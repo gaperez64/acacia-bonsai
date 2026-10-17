@@ -84,72 +84,70 @@ test ('config-frontends-agree',
       args : [files ('check-config-frontends.py'), meson.project_source_root ()],
       suite : ['unit', 'config-frontends'])
 
-if get_option ('acacia_native_arms')
-  if get_option ('acacia_enable_equivariant_solver') and get_option ('acacia_forward_safety_solver')
-    test ('equivariance-budget', py,
-          args : [files ('check-equivariance-budget.py'), ab_exe, meson.project_build_root ()],
-          suite : ['unit', 'attribution'], depends : [ab_exe], timeout : 90)
-    test ('p1-ablation', py,
-          args : [files ('check-p1-ablation.py'), ab_exe, meson.project_build_root ()],
-          suite : ['unit', 'attribution', 'native-gr1'], depends : [ab_exe], timeout : 90)
-  endif
-  worker_record_transport = executable (
-    'worker-record-transport', 'worker_record_transport.cc')
-  test ('record-transport', py,
-        args : [files ('check-record-transport.py'), worker_record_transport,
-                meson.project_build_root ()],
-        suite : ['unit', 'attribution'], depends : [worker_record_transport])
-  native_attribution_api = executable (
-    'native-attribution-api', 'native_attribution_api.cc', dependencies : tlsf_deps)
-  test ('native-attribution-api', native_attribution_api,
-        suite : ['unit', 'attribution', 'native-gr1'])
-  phase_record_failure_worker = executable (
-    'phase-record-failure-worker', 'phase-record-failure-worker.cc')
-  native_json_binding_test = executable (
-    'native-json-binding-test',
-    ['native_json_binding_test.cc', '../src/native_proof_binding.cc'],
-    include_directories : inc,
-    dependencies : tlsf_deps)
-  test ('native-json-binding', native_json_binding_test,
-        suite : ['unit', 'native-gr1', 'native-param-lift'])
-  native_gr1_cli_args = [files ('check-native-gr1-cli.py'), ab_exe,
-                         meson.project_build_root (), phase_record_failure_worker]
-  native_lift_cli_args = [files ('check-native-param-lift-cli.py'), ab_exe,
-                          meson.project_build_root ()]
-  native_cli_depends = [ab_exe]
-  if native_test_hooks
-    spot_pause_hook = shared_library ('spot-translation-pause',
-                                     'spot_translation_pause.cc',
-                                     dependencies : [spot_dep], install : false)
-    native_gr1_cli_args += ['--hook-binary', native_test_exe.full_path ()]
-    native_lift_cli_args += ['--hook-binary', native_test_exe.full_path (),
-                             '--spot-hook', spot_pause_hook.full_path ()]
-    native_cli_depends += [native_test_exe, spot_pause_hook]
-  endif
-  test ('native-gr1-cli', py,
-        args : native_gr1_cli_args,
-        suite : ['unit', 'native-gr1'], depends : native_cli_depends)
-  native_gr1_lift_cli_args = [files ('check-native-gr1-lift-cli.py'), ab_exe,
-                              meson.project_build_root ()]
-  if native_test_hooks
-    native_gr1_lift_cli_args += [native_test_exe.full_path ()]
-  endif
-  test ('native-gr1-lift-cli', py,
-        args : native_gr1_lift_cli_args,
-        suite : ['unit', 'native-gr1'], timeout : 180,
-        depends : native_cli_depends)
-  test ('native-gr1-same-thread', py,
-        args : [files ('check-native-gr1-same-thread.py'), ab_exe,
-                meson.project_build_root ()],
-        suite : ['unit', 'native-gr1'], timeout : 1200, depends : [ab_exe])
-  test ('native-param-lift-cli', py,
-        args : native_lift_cli_args,
-        suite : ['unit', 'native-param-lift'], timeout : 180,
-        depends : native_cli_depends)
-  test ('native-release-no-hooks', py,
-        args : [files ('check-native-release-no-hooks.py'), ab_exe],
-        suite : ['unit', 'native-gr1', 'native-param-lift'], depends : [ab_exe])
+if get_option ('acacia_enable_equivariant_solver') and get_option ('acacia_forward_safety_solver')
+  test ('equivariance-budget', py,
+        args : [files ('check-equivariance-budget.py'), ab_exe, meson.project_build_root ()],
+        suite : ['unit', 'attribution'], depends : [ab_exe], timeout : 90)
+  test ('p1-ablation', py,
+        args : [files ('check-p1-ablation.py'), ab_exe, meson.project_build_root ()],
+        suite : ['unit', 'attribution', 'native-gr1'], depends : [ab_exe], timeout : 90)
 endif
+worker_record_transport = executable (
+  'worker-record-transport', 'worker_record_transport.cc')
+test ('record-transport', py,
+      args : [files ('check-record-transport.py'), worker_record_transport,
+              meson.project_build_root ()],
+      suite : ['unit', 'attribution'], depends : [worker_record_transport])
+native_attribution_api = executable (
+  'native-attribution-api', 'native_attribution_api.cc', dependencies : tlsf_deps)
+test ('native-attribution-api', native_attribution_api,
+      suite : ['unit', 'attribution', 'native-gr1'])
+phase_record_failure_worker = executable (
+  'phase-record-failure-worker', 'phase-record-failure-worker.cc')
+native_json_binding_test = executable (
+  'native-json-binding-test',
+  ['native_json_binding_test.cc', '../src/native_proof_binding.cc'],
+  include_directories : inc,
+  dependencies : tlsf_deps)
+test ('native-json-binding', native_json_binding_test,
+      suite : ['unit', 'native-gr1', 'native-param-lift'])
+native_gr1_cli_args = [files ('check-native-gr1-cli.py'), ab_exe,
+                       meson.project_build_root (), phase_record_failure_worker]
+native_lift_cli_args = [files ('check-native-param-lift-cli.py'), ab_exe,
+                        meson.project_build_root ()]
+native_cli_depends = [ab_exe]
+if native_test_hooks
+  spot_pause_hook = shared_library ('spot-translation-pause',
+                                   'spot_translation_pause.cc',
+                                   dependencies : [spot_dep], install : false)
+  native_gr1_cli_args += ['--hook-binary', native_test_exe.full_path ()]
+  native_lift_cli_args += ['--hook-binary', native_test_exe.full_path (),
+                           '--spot-hook', spot_pause_hook.full_path ()]
+  native_cli_depends += [native_test_exe, spot_pause_hook]
+endif
+test ('native-gr1-cli', py,
+      args : native_gr1_cli_args,
+      suite : ['unit', 'native-gr1'], depends : native_cli_depends)
+native_gr1_lift_cli_args = [files ('check-native-gr1-lift-cli.py'), ab_exe,
+                            meson.project_build_root ()]
+if native_test_hooks
+  native_gr1_lift_cli_args += [native_test_exe.full_path ()]
+endif
+test ('native-gr1-lift-cli', py,
+      args : native_gr1_lift_cli_args,
+      suite : ['unit', 'native-gr1'], timeout : 180,
+      depends : native_cli_depends)
+test ('native-gr1-same-thread', py,
+      args : [files ('check-native-gr1-same-thread.py'), ab_exe,
+              meson.project_build_root ()],
+      suite : ['unit', 'native-gr1'], timeout : 1200, depends : [ab_exe])
+test ('native-param-lift-cli', py,
+      args : native_lift_cli_args,
+      suite : ['unit', 'native-param-lift'], timeout : 180,
+      depends : native_cli_depends)
+test ('native-release-no-hooks', py,
+      args : [files ('check-native-release-no-hooks.py'), ab_exe],
+      suite : ['unit', 'native-gr1', 'native-param-lift'], depends : [ab_exe])
 
 if get_option ('build_research_tools') and get_option ('acacia_enable_diagnostics')
   cpre_replay_smoke = find_program ('check-cpre-replay.sh')
@@ -196,14 +194,12 @@ test ('guarded-event-univ-identity', py,
       args : [files ('guarded-event-univ-identity.py'), guarded_event_univ_test],
       suite : ['unit', 'translator-options'], timeout : 180)
 
-if enable_tlsf_frontend
-  event_univ_census = executable ('event-univ-census',
-                                 ['event_univ_census.cc', '../src/tlsf_frontend.cc'],
-                                 include_directories : inc,
-                                 dependencies : tlsf_deps + [spot_dep, bddx_dep])
-  test ('event-univ-census', event_univ_census, args : ['--self-test'],
-        suite : ['unit', 'translator-options'])
-endif
+event_univ_census = executable ('event-univ-census',
+                               ['event_univ_census.cc', '../src/tlsf_frontend.cc'],
+                               include_directories : inc,
+                               dependencies : tlsf_deps + [spot_dep, bddx_dep])
+test ('event-univ-census', event_univ_census, args : ['--self-test'],
+      suite : ['unit', 'translator-options'])
 
 game_backend_test = executable ('game-backend-test',
                                 ['game_backend_test.cc', '../src/portfolio_arm.cc'],
@@ -290,7 +286,7 @@ spot_lazy_oracle_test = executable (
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
 )
 test ('spot-lazy-oracle', spot_lazy_oracle_test, suite : ['unit', 'spot-lazy-oracle'])
-if get_option ('acacia_spot_guarded_backend') and enable_tlsf_frontend
+if get_option ('acacia_spot_guarded_backend')
   test ('oracle-layout-cli', py,
         args : [files ('check-oracle-layout.py'), ab_exe, meson.project_build_root ()],
         suite : ['unit', 'cli'], depends : [ab_exe], timeout : 90)
@@ -436,24 +432,21 @@ game_backend_integration_sources = [
   '../src/parity_arm.cc',
   '../src/solver/solve_game_vector.cc',
 ]
-if get_option ('acacia_native_arms')
-  game_backend_integration_sources += [
-    '../src/native_support.cc',
-    '../src/native_proof_binding.cc',
-    '../src/native_gr1_arm.cc',
-    '../src/native_gr1_lift_arm.cc',
-    '../src/native_param_lift_arm.cc',
-  ]
-endif
-if enable_tlsf_frontend
-  game_backend_integration_sources += '../src/tlsf_frontend.cc'
-endif
+game_backend_integration_sources += [
+  '../src/native_support.cc',
+  '../src/native_proof_binding.cc',
+  '../src/native_gr1_arm.cc',
+  '../src/native_gr1_lift_arm.cc',
+  '../src/native_param_lift_arm.cc',
+]
+game_backend_integration_sources += '../src/tlsf_frontend.cc'
 game_backend_integration = executable (
   'game-backend-integration', game_backend_integration_sources,
   'synthesis_rendezvous_hooks.cc', version_h,
   link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib],
   include_directories : inc,
   cpp_args : ['-DACACIA_PORTFOLIO_TEST_HOOKS=1',
+              '-DACACIA_FORWARD_SAFETY_SOLVER=1',
               '-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1'],
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,
   install : false,
@@ -461,9 +454,7 @@ game_backend_integration = executable (
 if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release')
   portfolio_deadline_args = [files ('check-portfolio-deadline.py'), game_backend_integration,
                              meson.project_build_root ()]
-  if get_option ('acacia_native_arms')
-    portfolio_deadline_args += ['--native']
-  endif
+  portfolio_deadline_args += ['--native']
   if host_machine.system () == 'linux'
     test ('synthesis-rendezvous', py,
           args : [files ('check-synthesis-rendezvous.py'), game_backend_integration,
@@ -494,17 +485,15 @@ if native_test_hooks
 endif
 test ('game-backend-integration', game_backend_cli,
       args : [game_backend_integration,
-              get_option ('acacia_forward_safety_solver').to_string (), 'true', 'true',
+              'true', 'true', 'true',
               (compiler_profile == 'debug').to_string (),
               'only',
               '200000',
               'false'],
       suite : ['unit', 'game-backend'], depends : [game_backend_integration])
-if enable_tlsf_frontend
-  test ('spot-worker-boundary', py,
-        args : [files ('check-spot-worker.py'), game_backend_integration],
-        suite : ['unit', 'tlsf', 'game-backend'], depends : [game_backend_integration])
-endif
+test ('spot-worker-boundary', py,
+      args : [files ('check-spot-worker.py'), game_backend_integration],
+      suite : ['unit', 'tlsf', 'game-backend'], depends : [game_backend_integration])
 test ('game-backend-cli',
       game_backend_cli,
       args : [ab_exe, get_option ('acacia_forward_safety_solver').to_string (),
@@ -573,7 +562,7 @@ if default_arms_opt != ''
     default_check_children += default_unreal_children
   endif
 endif
-if get_option ('acacia_native_arms') and (default_arms_opt.contains (':gr1:oxidd') or
+if (default_arms_opt.contains (':gr1:oxidd') or
     default_arms_opt.contains (':gr1-lift:oxidd') or
     default_arms_opt.contains (':gr1-real-lift:oxidd') or
     default_arms_opt.contains (':param-lift:oxidd'))
@@ -622,37 +611,43 @@ if host_machine.system () == 'linux'
   test ('phase-query-progress', phase_query_progress, suite : ['unit', 'attribution'])
 endif
 
-if enable_tlsf_frontend
-  tlsf_frontend_test = executable (
-    'tlsf-frontend-test',
-    '../src/tlsf_frontend.cc',
-    'tlsf_frontend_test.cc',
-    include_directories : inc,
-    dependencies : tlsf_deps + [spot_dep, bddx_dep],
-  )
-  test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
+tlsf_conversion_guard_sources = []
+tlsf_conversion_guard_args = []
+if host_machine.system () == 'linux'
+  tlsf_conversion_guard_sources += files ('tlsf_no_manager.cc')
+  tlsf_conversion_guard_args += '-Wl,--wrap=oxidd_bdd_manager_new'
+endif
 
-  test ('moore-synthesis-semantics',
-        py,
-        args : [files ('check-moore-synthesis.py'), ab_exe],
-        suite : ['unit', 'tlsf', 'synthesis'],
-        timeout : 60,
-        depends : [ab_exe])
+tlsf_frontend_test = executable (
+  'tlsf-frontend-test',
+  '../src/tlsf_frontend.cc',
+  'tlsf_frontend_test.cc', tlsf_conversion_guard_sources,
+  link_args : tlsf_conversion_guard_args,
+  include_directories : inc,
+  dependencies : tlsf_deps + [spot_dep, bddx_dep],
+)
+test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
 
-  tlsf_frontend_inspect = executable (
-    'tlsf-frontend-inspect',
-    '../src/tlsf_frontend.cc',
-    'tlsf_frontend_inspect.cc',
-    include_directories : inc,
-    dependencies : tlsf_deps + [spot_dep, bddx_dep],
-  )
-  if ltlsynt_exe.found () and get_option ('acacia_spot_guarded_backend')
-    test ('extended-weakening-games', py,
-          args : [files ('check-extended-weakening.py'), ab_exe,
-                  unreal_safety_core_witnesses_test, tlsf_frontend_inspect, ltlsynt_exe,
-                  meson.current_build_dir ()],
-          suite : ['unit', 'tlsf', 'translation'], timeout : 60)
-  endif
+test ('moore-synthesis-semantics',
+      py,
+      args : [files ('check-moore-synthesis.py'), ab_exe],
+      suite : ['unit', 'tlsf', 'synthesis'],
+      timeout : 60,
+      depends : [ab_exe])
+
+tlsf_frontend_inspect = executable (
+  'tlsf-frontend-inspect',
+  '../src/tlsf_frontend.cc',
+  'tlsf_frontend_inspect.cc',
+  include_directories : inc,
+  dependencies : tlsf_deps + [spot_dep, bddx_dep],
+)
+if ltlsynt_exe.found () and get_option ('acacia_spot_guarded_backend')
+  test ('extended-weakening-games', py,
+        args : [files ('check-extended-weakening.py'), ab_exe,
+                unreal_safety_core_witnesses_test, tlsf_frontend_inspect, ltlsynt_exe,
+                meson.current_build_dir ()],
+        suite : ['unit', 'tlsf', 'translation'], timeout : 60)
 endif
 
 symmetry_blocks_test = executable ('symmetry-blocks-test',
@@ -980,24 +975,18 @@ if host_machine.system () == 'linux'
   if ltlsynt_exe.found ()
     obligation_cli_args += ['--ltlsynt', ltlsynt_exe.full_path ()]
   endif
-  if enable_tlsf_frontend
-    obligation_cli_args += ['--tlsf']
-  endif
-  if get_option ('acacia_native_arms')
-    obligation_cli_args += ['--native']
-  endif
+  obligation_cli_args += ['--tlsf']
+  obligation_cli_args += ['--native']
   test ('obligation-helper-cli', py, args : obligation_cli_args,
         suite : ['unit', 'obligation', 'portfolio'], timeout : 90,
         depends : [ab_exe, obligation_helper_test, obligation_helper_faults])
-  if enable_tlsf_frontend
-    test ('obligation-helper-synthesis', py,
-          args : [files ('check-moore-synthesis.py'), ab_exe,
-                  '--ab-option=--arms', '--ab-option=both:obligation:spot',
-                  '--require-obligation'],
-          env : ['LD_PRELOAD=' + obligation_helper_faults.full_path ()],
-          suite : ['unit', 'obligation', 'synthesis'], timeout : 120,
-          depends : [ab_exe, obligation_helper_faults])
-  endif
+  test ('obligation-helper-synthesis', py,
+        args : [files ('check-moore-synthesis.py'), ab_exe,
+                '--ab-option=--arms', '--ab-option=both:obligation:spot',
+                '--require-obligation'],
+        env : ['LD_PRELOAD=' + obligation_helper_faults.full_path ()],
+        suite : ['unit', 'obligation', 'synthesis'], timeout : 120,
+        depends : [ab_exe, obligation_helper_faults])
 endif
 
 parity_strpm_test = executable ('parity-strpm-test', 'parity_strpm_test.cc',
@@ -1052,9 +1041,7 @@ if get_option ('build_research_tools')
   parity_arm_cli_args += ['--route', acacia_parity_route_exe.full_path ()]
   parity_arm_cli_depends += [acacia_parity_route_exe]
 endif
-if enable_tlsf_frontend
-  parity_arm_cli_args += ['--tlsf']
-endif
+parity_arm_cli_args += ['--tlsf']
 test ('parity-arm-cli', py, args : parity_arm_cli_args,
       suite : ['unit', 'parity', 'portfolio', 'synthesis'], timeout : 120,
       depends : parity_arm_cli_depends)
@@ -1064,4 +1051,15 @@ if host_machine.system () == 'linux' and (get_option ('b_ndebug') == 'false' or 
                 meson.current_build_dir ()],
         suite : ['unit', 'parity', 'portfolio', 'synthesis'], timeout : 120,
         depends : [game_backend_integration])
+endif
+
+first_shipping_preset = run_command (
+  py, files ('../scripts/acacia-config.py'), 'list-group', 'docker_default',
+  check : true).stdout ().strip ().split ('\n')[0]
+if host_machine.system () == 'linux' and get_option ('acacia_preset') == first_shipping_preset
+  test ('tlsf-address-space', py,
+        args : [files ('check-tlsf-address-space.py'), ab_exe,
+                meson.project_build_root ()],
+        suite : ['unit', 'tlsf'], depends : [ab_exe], timeout : 330,
+        is_parallel : false)
 endif

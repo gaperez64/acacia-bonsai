@@ -2,7 +2,7 @@
 #include "native_test_hooks.hh"
 #include "native_proof_binding.hh"
 
-#if ACACIA_NATIVE_ARMS && defined(ACACIA_NATIVE_TEST_HOOKS)
+#if defined(ACACIA_NATIVE_TEST_HOOKS)
 #include <cstring>
 #include <cstdlib>
 #include <memory>

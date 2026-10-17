@@ -4,7 +4,6 @@
 #include "error_msg.hh"
 #include "phase_records.hh"
 
-#if ACACIA_NATIVE_ARMS
 # include <algorithm>
 # include <cerrno>
 # include <cstdio>
@@ -218,4 +217,3 @@ namespace acacia {
       phase_records_send (line, size_t (n));
   }
 }
-#endif

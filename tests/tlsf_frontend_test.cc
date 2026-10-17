@@ -24,6 +24,13 @@ namespace {
 }  // namespace
 
 int main () {
+  const auto trivial = acacia::tlsf_frontend::parse (R"TLSF(
+INFO { TITLE: "no precheck" SEMANTICS: Mealy TARGET: Mealy }
+MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G o; } }
+)TLSF");
+  if (not expect ("conversion without an OxiDD manager", trivial.formula == "G o"))
+    return 1;
+
   const std::string spec = R"TLSF(
 INFO {
   TITLE: "native frontend"

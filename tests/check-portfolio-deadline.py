@@ -7,6 +7,8 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import resource
+import signal
 import sys
 import tempfile
 import time
@@ -69,6 +71,59 @@ def check(binary: Path, args: list[str], modes: str, seconds: float,
             raise AssertionError(("surviving child group", pid, modes))
 
 
+def check_native_abort_race(binary: Path, source: Path, directory: Path) -> None:
+    """Hold a real competitor until the parent has reaped the OxiDD failure."""
+    records = directory / "abort-records"
+    records.mkdir()
+    gate_read, gate_write = os.pipe()
+    env = dict(os.environ, OXIDD_STACK_SIZE=str(1024 * 1024 * 1024),
+               ACACIA_TEST_CHILD_MODES=f"wait:{gate_read},", ACACIA_PHASE_RECORDS=str(records))
+    env.pop("ACACIA_OUTER_DEADLINE_MONOTONIC", None)
+
+    def limit():
+        bound = 512 * 1024 * 1024
+        resource.setrlimit(resource.RLIMIT_AS, (bound, bound))
+        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+
+    process = subprocess.Popen(
+        [str(binary), "-T", str(source), "--arms", "real:small:backward,both:gr1:oxidd"],
+        env=env, preexec_fn=limit, pass_fds=(gate_read,), start_new_session=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+    )
+    os.close(gate_read)
+    try:
+        deadline = time.monotonic() + 15
+        while True:
+            failures = []
+            for path in records.glob("*.jsonl"):
+                for line in path.read_text().splitlines():
+                    try:
+                        row = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue  # The writer may still be appending this row.
+                    if (row.get("event") == "parent_terminal" and
+                            row.get("requested_backend") == "oxidd"):
+                        failures.append(row)
+            if failures:
+                assert failures[0]["exit_code"] == 2 or failures[0]["signal"] == signal.SIGABRT
+                break
+            assert process.poll() is None, process.communicate()
+            assert time.monotonic() < deadline, "parent did not reap native failure"
+            time.sleep(.01)
+        # The parent remains alive with no verdict until a healthy arm solves.
+        assert process.poll() is None
+        os.write(gate_write, b"1")
+        stdout, stderr = process.communicate(timeout=15)
+        assert process.returncode == 0 and stdout.strip() == "REALIZABLE", (stdout, stderr)
+        assert "panicked" in stderr, stderr
+    finally:
+        os.close(gate_write)
+        if process.poll() is None:
+            os.killpg(process.pid, signal.SIGKILL)
+            process.wait(timeout=5)
+    print("OxiDD constructor abort reaped as native failure; healthy sibling REALIZABLE")
+
+
 def main() -> None:
     binary = Path(sys.argv[1]).resolve()
     build_dir = Path(sys.argv[2]).resolve()
@@ -86,6 +141,10 @@ def main() -> None:
                 single = [*source_args, "--arms", "real:small:backward"]
                 pair = [*source_args, "--arms",
                         "unreal:formula:backward,real:small:backward"]
+            # Signal deaths have no exit verdict: WEXITSTATUS alone would
+            # misread SIGKILL as REALIZABLE. Cover both native and legacy arms.
+            check(binary, single, "signal", 2.0, 1, 2, "UNKNOWN", 1.2)
+            check(binary, pair, "signal,real-delayed", 2.0, 2, 0, "REALIZABLE", 1.0)
             check(binary, single, "stall", 0.4, 1, 2, "UNKNOWN", 1.2)
             check(binary, pair, "stall,stall", 0.4, 2, 2, "UNKNOWN", 1.2)
             check(binary, single, "real-late", 0.4, 1, 2, "UNKNOWN", 1.2)
@@ -100,6 +159,8 @@ def main() -> None:
                 check(binary, both_single, "stall", 0.4, 1, 2, "UNKNOWN", 1.2)
                 check(binary, both_pair, "stall,real-delayed", 2.0, 2, 0,
                       "REALIZABLE", 1.0)
+        if native and sys.platform == "linux":
+            check_native_abort_race(binary, source, Path(location))
     print("portfolio deadline and group cleanup checks passed")
 
 

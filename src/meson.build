@@ -23,18 +23,14 @@ ab_sources = [
   'parity_arm.cc',
   'solver/solve_game_vector.cc',
 ]
-if get_option ('acacia_native_arms')
-  ab_sources += [
-    'native_support.cc',
-    'native_proof_binding.cc',
-    'native_gr1_arm.cc',
-    'native_gr1_lift_arm.cc',
-    'native_param_lift_arm.cc',
-  ]
-endif
-if enable_tlsf_frontend
-  ab_sources += 'tlsf_frontend.cc'
-endif
+ab_sources += [
+  'native_support.cc',
+  'native_proof_binding.cc',
+  'native_gr1_arm.cc',
+  'native_gr1_lift_arm.cc',
+  'native_param_lift_arm.cc',
+]
+ab_sources += 'tlsf_frontend.cc'
 
 if get_option('build_python')
   subdir ('python')
@@ -111,20 +107,18 @@ if get_option('build_research_tools')
     install: false,
     dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
   )
-  if enable_tlsf_frontend
-    acacia_forced_contradiction_scan_exe = executable(
-      'acacia-forced-contradiction-scan',
-      [
-        'research/forced_contradiction_scan.cc',
-        'tlsf_frontend.cc',
-        'version.cc',
-      ],
-      version_h,
-      include_directories: inc,
-      install: false,
-      dependencies: [spot_dep, bddx_dep] + tlsf_deps,
-    )
-  endif
+  acacia_forced_contradiction_scan_exe = executable(
+    'acacia-forced-contradiction-scan',
+    [
+      'research/forced_contradiction_scan.cc',
+      'tlsf_frontend.cc',
+      'version.cc',
+    ],
+    version_h,
+    include_directories: inc,
+    install: false,
+    dependencies: [spot_dep, bddx_dep] + tlsf_deps,
+  )
   if get_option ('acacia_enable_diagnostics')
     acacia_antichain_replay_exe = executable(
       'acacia-antichain-replay',

@@ -21,7 +21,6 @@ fi
 cd /opt/acacia-bonsai
 
 mapfile -t CONFIG_NAMES < <(python3 scripts/acacia-config.py list-group docker_default)
-oxidd_state=unchecked
 failures=()
 
 meson_args_for_config() {
@@ -38,30 +37,6 @@ for name in "${CONFIG_NAMES[@]}"; do
     if ! meson_args=$(meson_args_for_config "$name"); then
         failures+=("$name (configuration arguments)")
         continue
-    fi
-    if [[ "$meson_args" == *"-Dacacia_native_arms=true"* ]]; then
-        if [[ "$oxidd_state" == unchecked ]]; then
-            oxidd_dir=subprojects/tlsf-tools/external/oxidd
-            if python3 subprojects/tlsf-tools/scripts/oxidd_stamp.py check \
-                "$oxidd_dir" "$oxidd_dir/target/release/liboxidd_ffi_c.a" \
-                "$oxidd_dir/build/oxidd-build-stamp" >/dev/null 2>&1; then
-                echo "OxiDD build stamp is valid, skipping rebuild."
-                oxidd_state=ready
-            else
-                echo "Building OxiDD for native arms..."
-                if subprojects/tlsf-tools/scripts/build_oxidd.sh; then
-                    oxidd_state=ready
-                else
-                    oxidd_state=failed
-                    failures+=("OxiDD build")
-                fi
-            fi
-        fi
-        if [[ "$oxidd_state" == failed ]]; then
-            echo "Skipping $name: OxiDD build failed." >&2
-            failures+=("$name (OxiDD unavailable)")
-            continue
-        fi
     fi
     echo "Building $name..."
     if ! meson setup "$build" --buildtype=release -Doptimization=3 -Db_lto=true -Ddebug=false -Db_ndebug=true -Dacacia_compiler_profile=release $meson_args; then

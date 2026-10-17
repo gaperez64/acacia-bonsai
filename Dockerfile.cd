@@ -28,7 +28,7 @@ RUN wget -q https://www.lrde.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz \
 WORKDIR /opt/acacia-bonsai
 COPY . .
 
-# Keep the source image ready for an offline native-arm build on the host.
+# Keep the source image ready for an offline build on the host.
 # The checkout includes tlsf-tools' nested external/oxidd submodule.
 RUN cargo fetch --locked --manifest-path subprojects/tlsf-tools/external/oxidd/crates/oxidd-ffi-c/Cargo.toml
 ENV CARGO_NET_OFFLINE=true

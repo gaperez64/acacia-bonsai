@@ -30,7 +30,7 @@ project_headers = include_directories('..', '../..')
 # Build the extension module
 module = py.extension_module('_acacia_boomslang',
   sources: [swig_gen, 'python_interface.cc'],
-  dependencies: [spot_dep, posets_dep],
+  dependencies: [spot_dep, posets_dep] + tlsf_deps,
   include_directories: project_headers,
   install: true,
   install_tag: 'python-runtime',

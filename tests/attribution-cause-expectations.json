@@ -2970,5 +2970,9 @@
   "src/solver/spot_lazy_game.hh | require | UNKNOWN | verifier | choice.constant_output.has_value () | 0": {
     "cause": "invalid_query",
     "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_oxidd.c | oxidd_record_failure | solver inconclusive | \"manager_create\" | \"worker_stack_unavailable\" | 0": {
+    "cause": "OXIDD_FAILURE_HOST",
+    "telemetry": "STOPPED/resource"
   }
 }

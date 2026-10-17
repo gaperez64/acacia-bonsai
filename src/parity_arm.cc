@@ -56,7 +56,6 @@ namespace acacia {
       std::string text = args.formula;
       auto inputs = args.inputs, outputs = args.outputs;
       auto metadata = args.metadata;
-#if ACACIA_ENABLE_TLSF_FRONTEND
       if (args.tlsf_specified) {
         auto spec = tlsf_frontend::parse (args.tlsf_source);
         text = std::move (spec.formula);
@@ -64,7 +63,6 @@ namespace acacia {
         outputs = std::move (spec.outputs);
         metadata = std::move (spec.metadata);
       }
-#endif
       validate_ltl_partition (inputs, outputs);
       const auto parsed = spot::parse_infix_psl (text);
       if (!parsed.f || !parsed.errors.empty ()) {
