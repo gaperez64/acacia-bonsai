@@ -4,8 +4,8 @@
 [DATA-STRUCTURES.md](DATA-STRUCTURES.md) is the retained architecture reference
 for antichains, state vectors and the forward graph. Historical campaign
 narratives and original measurements are in the archives named by
-[evidence-index.tsv](evidence-index.tsv). The active work is in
-[optimize-20260927/plan.md](optimize-20260927/plan.md).
+[evidence-index.tsv](evidence-index.tsv). Durable policies are in [decisions.md](decisions.md); runtime arm contracts are
+in [DATA-STRUCTURES.md](DATA-STRUCTURES.md). Campaign plans are archival history.
 
 ## Evidence and retention
 
@@ -50,8 +50,10 @@ Changing permissions leaves the binary's SHA-256 unchanged. The read-only/defaul
 artifacts. Do not prune active, unpublished, unadjudicated, or sole-copy local
 evidence before archive verification.
 
-The [local consolidation record](local-evidence-consolidation.md) maps historical
-local evidence to archive IDs and records the pending publication step. The
+The consolidation audit is archived as `consolidation20261011-audit`; its exact
+former narrative is in `refactor-closeout20261017`. Preserve do-not-publish holds
+in [evidence-do-not-publish.txt](evidence-do-not-publish.txt), including relocated
+mapping data. Source code and prose mentioning mapping fields are not mapping data. The
 `archive` column of `baselines.tsv` identifies each frozen executable; `path` is
 historical provenance and is relative to an explicit restore root after pruning.
 
@@ -280,10 +282,12 @@ both candidates. A stratified panel is a screen, not a full-corpus result.
   never evidence of equivalence. Plain pairs remain appropriate for tools taking
   their own semantics flag.
 
-The frozen G1 shipping-preset twin is
+The historical frozen G1 shipping-preset twin is
 `best_decomp_rank_bucketed_mona_eq_min_blocks_2`, whose binary SHA-256 is
 `6467869a4411233ec148f7136fe6a6595a43205cc2bbd412f8d8beacb55ec2e9`.
-It is pinned in [baselines.tsv](baselines.tsv). The old
+It is pinned in [baselines.tsv](baselines.tsv). The current parity-portfolio
+previous-revision pin is OTF, archive `binary-OTF-1a846b90`; choose the matching
+configuration from that registry for the change under test. The old
 `build_best_decomp_mona` default was a different configuration; substituting
 it changes the question answered by near-cap remeasurement. Verdict flips and
 row-set mismatches are configuration-independent regressions. A lost solve
@@ -310,3 +314,17 @@ Three baseline runs spanned 2778.691–2799.825 s on SYNTCOMP25 (**21.134 s**)
 and 1702.186–1714.260 s on SYNTCOMP26 (**12.074 s**). A change inside that
 spread alone is not performance evidence; coverage changes and per-instance
 losses remain gate evidence.
+
+## Documentation closeout snapshot
+
+`refactor-closeout20261017` preserves exact parent Markdown at `93e4b19e` and all
+173 PR 3 deletions from `62afb5e7`, including executable modes and PR 3's deletion
+inventory. Its verified local archive is at
+`/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.next/closeout/`.
+Publication and index registration are pending with the driver; until then use
+`verify` with the digest in that directory's `DRIVER.md`, and retain the local copy.
+After publication/index registration, `fetch --campaign refactor-closeout20261017`
+restores originals under `build_scratch/pr4-docs/snapshot/markdown/` and
+`build_scratch/pr4-docs/snapshot/pr3-deleted/`, preserving repository-relative paths.
+The snapshot's `sources.tsv` binds every captured source to its commit and digest.
+Original `gr1-par2-20260923` remains partial. This snapshot adds no measurements.

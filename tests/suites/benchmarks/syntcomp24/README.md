@@ -27,8 +27,8 @@ seed `20260804`.
 stratum, reference times, verdict, normalized family, and source campaign.
 The generating command was equivalent to:
 
-Restore `gap-plan-20260804-localrest` into `restore/gap-plan` after publication;
-see [consolidation status](../../../../benchmarking/local-evidence-consolidation.md).
+Restore `gap-plan-20260804-localrest` into `restore/gap-plan`;
+see [evidence retention](../../../../benchmarking/README.md#evidence-and-retention).
 The archive retains the original campaign paths.
 
 ```sh

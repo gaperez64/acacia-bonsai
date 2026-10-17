@@ -34,9 +34,20 @@ def test_native_fault_classification_inventory(hook: str, table: str) -> None:
     assert tested == modes, f"{hook}: missing={modes - tested}, obsolete={tested - modes}"
 
 
-def test_decline_cause_census_matches_code() -> None:
-    generator = runpy.run_path(str(ROOT / "tests/check-decline-causes.py"))
-    assert generator["OUTPUT"].read_text() == generator["generate"]()
+def test_decline_cause_census_export_and_staleness(tmp_path: Path) -> None:
+    import subprocess
+    import sys
+
+    output = tmp_path / "census.md"
+    command = [sys.executable, str(ROOT / "tests/check-decline-causes.py"),
+               "--output", str(output)]
+    subprocess.run(command, check=True)
+    subprocess.run([*command, "--check"], check=True)
+    assert "native_failure_census" in output.read_text()
+    output.write_text("stale census\n")
+    result = subprocess.run([*command, "--check"], capture_output=True, text=True)
+    assert result.returncode != 0
+    assert "census is stale" in result.stderr
 
 
 GENERATOR = runpy.run_path(str(ROOT / "tests/check-decline-causes.py"))

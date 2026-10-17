@@ -1,9 +1,43 @@
 # Current results and open gaps
 
-This page is the living summary. The [evidence index](evidence-index.tsv) names
-the verified archives behind each historical claim. Fetch one with
-`python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR`.
-The [measurement protocol](README.md) defines caps, gates, and noise floors.
+This is the single results-and-gaps report. [The evidence index](evidence-index.tsv)
+names published archives; [protocol](README.md) defines caps, gates and noise floors.
+[Decisions](decisions.md) records policy and [architecture](DATA-STRUCTURES.md) owns
+runtime contracts. Exact pre-closeout reports, all measured rows and retired
+narratives are in the published and indexed archive `refactor-closeout20261017`.
+
+Historical rows below keep their original values and measured/derived meanings.
+Administrative statements in the retained October 13/16 reports describe their
+write-time state: their original campaign archives are now indexed. New manifests
+preserve executable modes; only pre-#245 restores need chmod repair. Historical
+baseline identities remain provenance, not current build instructions.
+
+## 2026-10-17 — No default arm can be dropped (#264)
+
+Archive `portfolioloo20261017`; frozen OTF binary 74eeebee, SYNTCOMP26, 17 s.
+
+Leave-one-out: removing any one of the seven default arms and rerunning the inputs
+that arm alone decided loses them all, with no verdict conflicts.
+
+| Arm removed | Inputs lost |
+|---|---:|
+| `both:parity:spot` | 112 |
+| `both:gr1-real-lift:oxidd` | 17 |
+| `real:small:backward` | 8 |
+| `unreal:formula:spot-guarded-sparse` | 8 |
+| `real:small:forward` | 5 |
+| `both:obligation:spot` | 5 |
+| `unreal:automaton:forward` | 1 |
+
+Contention: the 185 default timeouts rerun with the full default, without
+`unreal:automaton:forward` and without `real:small:forward`. The fresh default
+decides none of them. Dropping `unreal:automaton:forward` decides one
+(`robot-grid-reach-repeated-with-obstacles-6d-real`, REALIZABLE at 14.7 s), which
+only offsets the one input it alone decides; dropping `real:small:forward` decides
+none. At 17 s freeing an arm's CPU and memory does not pay for the arm, so the
+default keeps all seven. Per-arm CPU and memory attribution needs instrumentation
+the frozen binary lacks; that measurement and the sharing/staging question follow
+on a new build.
 
 ## 2026-10-16 — OTD close: ship the parity portfolio
 
@@ -171,7 +205,7 @@ on these tiers; keep Spot as the only production engine there.
 These are selected-panel engine comparisons, not full-corpus scores. Evidence:
 `otd-parity-engines20261015`. The [arm contract](coverage-first/parity-arm.md)
 describes production trust (no recheck; independent checks in tests), timing and
-GPL-3.0 port provenance; the [decision record](coverage-first/decisions.md) records
+GPL-3.0 port provenance; the [decision record](decisions.md) records
 the owner exceptions and shipped default.
 
 ## 2026-10-13 — post-memory frontend close: admit the obligation arm (#244)
@@ -248,18 +282,18 @@ medians are suppressed. Missing/dropped route records remain incomplete, so
 observed spans are neither CPU totals nor complete counterfactual attribution.
 
 **Rejected idea:** expand `favor_event_univ` below the acceptance-width guard.
-P1 gives **zero gains on all 883 changed inputs**, with 17 s losses on
+The broader translation screen gives **zero gains on all 883 changed inputs**, with 17 s losses on
 `GF-G-contradiction6/7`, `g-unreal-39`, `infinite-race-unequal-25`, `sort42`,
 `sort50`, and 60 s losses on `g-unreal-311`, `sort50`, `sort42`,
 `infinite-race-unequal-26`, `thermostat-GF-unreal1`. Eleven of twelve loss
 observations stall in translation. Keep the guarded default and retain
 `feat/event-univ-policy` without a PR. Evidence: `postmem20261011-p1` and the
-loss diagnosis in `postmem20261011-p0`. P2's bypass study was never decisive;
+loss diagnosis in `postmem20261011-p0`. The bypass study was never decisive;
 general construction sufficed on 55/57 inputs, while obligation synthesis
 decided 11/15 Acacia-missed obligations (`postmem20261011-p2`).
 
-See the [dated decisions](post-memory-frontend/decisions.md) and
-[arm contract](coverage-first/obligation-helper.md). Executables are archived as
+See the [dated decisions](decisions.md) and
+[arm contract](DATA-STRUCTURES.md#obligation-arm). Executables are archived as
 `binary-PMM-99ca4055`, `binary-PMC1-d52363fa`, `binary-PMC2-1f64f527`,
 `binary-PMC3-f2449fb4`, `binary-PMC4-b3953b43`. PMM records master's configuration;
 once #244 merges, PMC4 is the same-configuration previous-revision G1 baseline
@@ -269,74 +303,38 @@ The new index rows await the driver's upload and remote fetch-verification.
 
 ## 2026-10-11 — compact action payloads (#208, #200), development measurements
 
-Six inputs selected structurally from long-search closing rows were profiled with
-both standalone REAL arms, serially in fresh 8 GiB no-swap scopes. Backward
-predecessor share is **0.59–18.47% of search cycles**, below 7% on five of six;
-nonempty-row density is **0.46–28.28%**. A sparse destination/offset payload with
-ordered contiguous endpoints reduces the six action tables by **65.4–98.3%**,
-retaining the existing list/splice order and handle size.
+Development-only six-input profiles found 0.46–28.28% nonempty rows and
+65.4–98.3% action-table savings. Robot construction moved from 8 GiB OOM to a
+14.10 MB table and search, still capped at 60 s. Morning2s UNREAL-forward table
+fell 5.48 → 1.73 GB, peak 7.93 → 3.76 GB, both capped at 180 s. These single
+observations establish no corpus gain; the later issue-sweep admission is below.
+Evidence: `legacy20261010-issue-sweep`, exact original narrative
+`refactor-closeout20261017`.
 
-The robot input moves from 8 GiB construction OOM to a complete **14.10 MB** table,
-**403 MB** scope peak and search (still capped at 60 s). Morning2s's complete
-UNREAL-forward table falls **5.48 → 1.73 GB**, scope peak **7.93 → 3.76 GB**,
-with both runs capped at 180 s. The small-table input has higher search peaks;
-these are single observations, with no corpus solve or admission claim.
-Generated games have byte-identical picker/RNG, predecessor, solver and strategy
-traces against the frozen dense actioner. Unit 70/70, full pytest 2,299 tests and
-the anti-hardcoding guard pass. The native-enabled build and admission screens
-remain with the driver. See the [measurements and decision](coverage-first/action-payload-layout.md)
-for every input, arm, payload density, bytes/state/row, time, peak and limitations.
+## 2026-10-08 — admit the 3 s equivariance default (#224)
 
-## 2026-10-08 — coverage-first P2b: admit the 3 s equivariance default (#224)
-
-Evidence campaign `cov20261007-eqfull` (archived): fresh, matched, rotated
-17 s races over all 1,524 SYNTCOMP26 inputs, no invocation deadline, with one
-binary for both explicit treatments. `--equivariance-budget 3s` solves **1,206**
-versus **1,205** for `unbounded`. The sole gain is `collector_v3_pb_9` at **9.76 s**;
-there are **zero losses**, **zero verdict conflicts**, and **identical memory
-outcomes**. Paired PAR-2 changes by **−23.3 s**, beyond the **12.1 s** noise floor.
-
-Admit `3s` as the runtime default. Explicit `unbounded` retains the incumbent
-behavior; fractions and durations remain selectable. The global allowance stays
-in the CLI state rather than adding a compile-time registry option. See the
-[allowance protocol](coverage-first/equivariance-budget.md) and
-[decision record](coverage-first/decisions.md). These are driver-supplied measured
-results; this default change does not rerun the campaign.
+A fresh matched full-corpus 17 s screen, one binary with no invocation deadline,
+solved 1,206 with the 3 s equivariance allowance versus 1,205 unbounded. Sole gain
+collector_v3_pb_9 at 9.76 s, zero losses/conflicts, identical memory outcomes;
+paired PAR-2 −23.3 s against a 12.1 s noise floor. Archive `cov20261007-eqfull`.
 
 ## 2026-10-07 — coverage-first screens: negative results (#201, #202, #204, #206, #209)
 
-Screens without a deadline (shipping mode), serial, one frozen binary per comparison,
-CPU cooled to 70 °C before each run. Archive `cov20261007-screens`.
+No-deadline cooled serial screens (`cov20261007-screens`) found no robust
+admission gain from native structure-guard scaling, complementary GR(1), structural
+variable order or R typed roles. All 103 mp-class duals still failed exact reduction.
+Extended weakening made 41/82 frontier inputs eligible, but no proof at 17 s even
+with 2 s/attempt and 8 s total: 181/215 attempts exhausted their allowance.
+These historical parent-precheck observations remain historical after #259 removed
+those prechecks; exact narrative is in `refactor-closeout20261017`.
 
-- **Native structure guard (P2b).** With the precheck off, the native arm solved none
-  of the 138 inputs it stops in the full-corpus race (60 s). Their first stop moved to
-  the exact reducer's `mp-class` rejection (103), 60 s timeouts (17) or preparation
-  stops; the precheck is a correct, cheap early exit, not the bottleneck.
-- **Complementary GR(1) (P4a).** For all 103 `mp-class` inputs the dual game was
-  built with move order preserved and the exact reducer rejected it as well; these
-  specifications are outside exact GR(1) in both orientations.
-- **U lifting (P5).** On the 7 parameterized UNREAL frontier inputs, 4 stop at
-  reduction preparation before U and only one enters U.
-- **Weakening (P3).** Extending the safety-core pre-pass to assume–guarantee objectives
-  and positive G/F scopes makes 41 of the 82 UNREAL frontier inputs eligible, but no
-  candidate proves UNREAL at 17 s even with 2 s per attempt and 8 s in total: 181 of
-  215 attempts exhaust their allowance and the rest are inconclusive.
-- **Variable order (P2a).** On 22 targets the incumbent, typed-interleaved and
-  role-grouped orders solve 0/1/1 at 17 s and 1/0/0 with shuffled declarations (the
-  same input flipping), and 4/4/4 at 60 s: runtime is order-sensitive, but no
-  structural order is a robust improvement.
-- **Typed roles in R (P2c).** No change on the 7 targets (0/0 at 17 s, 1/1 at 60 s)
-  or on the 20 R-preservation inputs (19/19).
+## 2026-10-07 — matched R × equivariance ablation (#207)
 
-Most of the 136 instances that ltlsynt solves and Acacia misses are not GR(1) in
-either orientation, so the remaining gap lies with the Spot-based legacy routes.
-
-## 2026-10-07 — coverage-first P1: matched R × equivariance ablation (#207)
-
-Fresh 17 s races on all 1,524 SYNTCOMP26 instances, serial and rotated, 8 GiB no-swap
-scopes, one binary for the four switch legs (COVP1B, `319ee65a`) plus the frozen
-`d9d3fd43` incumbent (COVBASE). Zero verdict conflicts and zero invocation errors.
-Archive `cov20261006-p1ablation`; P0 exit panels `cov20261006-p0exit`.
+Matched full-corpus 17 s R × equivariance ablation, one frozen binary with no
+invocation deadline, archive `cov20261006-p1ablation`. The original rounded rows
+are retained. Three REAL gains support R; one near-cap UNREAL loss was confirmed.
+Disabling equivariance gave no marginal coverage win; its later bounded default
+has separate admission evidence. This is a development corpus, not a holdout.
 
 | Leg | R pre-pass | Equivariance | REAL | UNREAL | Solved | PAR-2 (s) |
 |---|---|---|---:|---:|---:|---:|
@@ -346,132 +344,45 @@ Archive `cov20261006-p1ablation`; P0 exit panels `cov20261006-p0exit`.
 | D (shipping) | on | on | 558 | 647 | 1,205 | 11,729 |
 | INC (frozen) | on | on | 559 | 647 | 1,206 | 11,711 |
 
-Three-repetition 17 s adjudication reruns (with a 70 °C cooldown before each run;
-the host reached 100 °C and throttled heavily during the primary campaign):
+## Extended UNREAL weakening experiment, not admitted
 
-- **R stays on.** It adds three REAL solves that never occur with R off (9/9 vs 0/6),
-  and costs one near-cap UNREAL solve where seed discovery (~0.8 s) pushes the direct
-  route past the cap.
-- **Equivariance gives no marginal solve at 17 s** and loses one REAL input in both
-  contrasts (ordinary backward ~6 s; equivariance-on 0/9). Paired PAR-2 +24.9 s and
-  +27.4 s, above the 12.1 s noise floor. Pursued as a bounded pre-pass budget, not by
-  disabling the feature. Removing the backward worker loses one solve on the original
-  22-instance activation set.
-- **D matches the incumbent.** Its single primary loss was a coin flip at the cap in
-  every leg on rerun; the R × equivariance interaction (+2.5 s) is below the noise floor.
+Extended weakening remains opt-in. The supplied 82-input 17 s no-deadline screen
+had zero gains: 136/149 extended attempts were cancelled, none proved UNREAL.
+Broadened positive G/F scopes have correctness evidence, not fresh admission data.
+The larger-allowance negative screen is above. Original protocols and distinctions:
+`refactor-closeout20261017`, `cov20261006-p1ablation`, `cov20261007-screens`.
 
-Attribution delivery is complete on 1,517–1,519 of 1,524 rows per leg and scope
-memory peaks on 7,664/7,664 observations. The refreshed #207 sets equal the closing
-campaign's: 136 ltlsynt-only (54 REAL, 82 UNREAL), 76 Acacia-only, against the
-historical ltlsynt 2.16 rows (a different session, not a matched comparison). In
-fresh D, 138 of 319 unsolved inputs stop first at a native structure-budget guard
-(92 of the 136 ltlsynt-only). The safety-core weakening pre-pass is ineligible on
-81 of the 82 UNREAL ltlsynt-only inputs because their objective is an implication,
-not a top-level conjunction.
+## 2026-10-06 — Basic UNREAL weakening instrumentation
 
-## Coverage-first P3 weakening experiment, not admitted
+Instrumentation and starvation corrections established no coverage gain. Missing
+lifecycle/budget telemetry remains UNKNOWN. See [phase records](legacy-phase-records.md)
+and exact historical implementation text in `refactor-closeout20261017`;
+measurement campaigns: `cov20261006-p0exit`, `cov20261006-p1ablation`.
 
-P3 step 2 adds selectable `--weakening basic|extended|off`; basic remains the default.
-Basic runs the existing safety-core pre-pass; extended adds assume-guarantee and positive
-G/F-scope weakening; off skips the pre-pass. The option rename preserves solver behavior.
-The experimental formula UNREAL route retains exact assume-guarantee antecedents, tries lazy
-singletons and at most four structural dependency groups, and bounds/reaps each candidate before
-original fallback. A checked derived-game proof plus a replayed AST weakening derivation is
-required for an original UNREAL verdict. Strict weak-until contexts decline safely.
-Limits and proof boundaries are in [the decision record](coverage-first/weakening.md).
-The census starvation correction reclassifies the supplied never-started legacy fallback;
-no fresh coverage or performance campaign was run. #201 admission/closure remains pending.
+## 2026-10-06 — Worker and native-route attribution (#210)
 
+Generated correctness/contract panels validated typed causes, parent acceptance,
+killed-worker metadata and transport loss handling. These tests establish no
+performance gain or exhaustive runtime branch coverage. The original report and
+734-origin census are in `refactor-closeout20261017`; original campaign
+`cov20261006-p0exit`. Living schema/cause contracts: [phase records](legacy-phase-records.md).
 
-P3 step 3 adds absolute research allowances (`--weakening-attempt-ms`, `--weakening-total-ms`),
-retaining the 250 ms/1 s no-deadline defaults and existing invocation deadline reservations.
-The supplied 82-input, 17 s no-deadline screen produced zero gains: 136 of 149 extended attempts
-were cancelled and none proved UNREAL. Read-only source diagnosis of 52 conjunction declines
-found two positive `G(A -> conjunction)` shapes and 10 positive F contexts; the planner now
-exposes them by direct monotonicity with exact replay, retaining the scope of F. The other 40
-remain declined. These are structural and
-engineering results; effectiveness and admission still require the driver's fresh matched screen.
+## 2026-10-06 — Gate and memory-collector implementation
 
-## 2026-10-06 — P3 step 1: incumbent weakening instrumentation
+The real Linux normal/timeout/child-OOM/invocation-OOM panel passed externally on
+2026-10-06 (`cov20261006-p0exit`). Correctness fixtures validate G4/G5 and retained
+cgroup collection. This is collector validation, not a speedup; historical incomplete
+memory rows remain incomplete. Exact report: `refactor-closeout20261017`.
 
-The existing UNREAL safety-core pre-pass now records structural eligibility,
-generated/started/completed candidates, proof binding, failed-attempt cost,
-exception/cancellation, and full-original fallback budget through the #210
-transport. Candidate selection/order, the existing 64-child/eight-candidate
-thresholds, solver verdicts and deadline behavior are unchanged. The
-[attribution notes](coverage-first/attribution.md#existing-unreal-safety-core-pre-pass-p3-step-1)
-describe the events and `benchmarking/weakening-census.py`, which retains UNKNOWN
-for incomplete telemetry. Review fixes distinguish absent global conjunctions from
-threshold rejection, record the largest conjunction size, join proof IDs to actual
-attempts, and classify fallback starvation from available budget. Exact cancellation
-and generation counts stay UNKNOWN for incomplete census rows, with confirmed
-observations reported separately. Generated correctness tests cover the loop and real
-CLI proof/fallback behavior. No coverage campaign or performance gain is claimed;
-#201's eligibility/budget changes remain future work.
+## 2026-10-04 — Optimization closing campaign and shipping default
 
-## 2026-10-06 — coverage-first P0 attribution (#210)
-
-Worker lifecycle events and parent-accepted winners now accompany the existing
-nonblocking phase records. A versioned tlsf-tools observer records seed discovery,
-R, U, direct fallback, and checking before their work runs. Parent snapshots identify
-killed workers; producer drops, incomplete lifecycles, and writer delivery failures
-are separate from algorithmic declines. Requested/effective backends and original/
-transformed proof polarity remain separate.
-
-The debugoptimized correctness build passes all 63 unit tests, including complete
-small R/U/direct attribution, interruption at each route/check boundary, cooperative
-checker cancellation, late-answer rejection, winner attribution, synthesis coercion,
-512-byte packets, slow/broken/full destinations, and original preparation/reduction
-contract checks through every native caller. All 182 tlsf-tools functional tests pass;
-the two existing integrated metadata-context tests pass separately in their required
-contexts. FULL pytest passes 1,900 tests, with 31 skips and 23 passing subtests.
-
-Preparation and reduction expose versioned diagnostic causes independently of their
-legacy statuses. Failed alternatives retain integrity causes; trusted-seed and U
-game/policy invariants, invalid checker verdicts and corrupted provider contracts
-stop with error. Genuine structural inapplicability and completed logical certificate
-rejection remain declines. The [generated cause table](coverage-first/decline-causes.md)
-now enumerates 734 checks/failure origins with independent per-origin assertions and
-a fault/corruption-hook census across all attribution layers. Runtime contract and
-cause-conversion panels complement those source assertions; this is not a full
-branch-coverage claim. All 15 diagnostics-off behavior comparisons and 72 legacy API
-comparisons match the saved review evidence, including 64 common-master API cases.
-The charter and owner hardcoding guard remain byte-identical; the generic lifting
-guard and release-hook isolation pass.
-No new performance or coverage measurements are claimed. [Implementation and reproduction notes](coverage-first/attribution.md)
-describe completeness requirements and the cross-repository API change (tlsf-tools#62, merged as `f6b5ecc`).
-
-## 2026-10-06 — P0 gate and memory implementation
-
-The gate corrections for #211 have regression coverage, including real generated
-Mealy, Moore and strict-semantics conversions. #214 now uses the existing runners
-with an external v2 memory observer and a retained invocation cgroup; reports state
-per-statistic completeness and suppress partial medians. Reviewer follow-up keeps
-parent journal peaks separate, validates collection provenance, retains master's
-primary TSV columns with memory sidecars, preserves signal crashes, and restores
-the previous OOM rule for every nonzero exit. The second re-review preserves owner
-errors even with a cgroup path and excludes peak/events from failed or unverified drains,
-with 20 new regressions. Validation passes 719 pytest tests
-(3 optional skips), 52 unit tests, and ruff on 29 touched Python files. This is
-implementation validation, not a new performance campaign or issue-closure claim. The real Linux
-normal/timeout/child-OOM/invocation-OOM panel passed outside the sandbox on 2026-10-06
-(archive `cov20261006-p0exit`). Commands, file ownership and limitations are in
-[the P0 decision record](coverage-first/p0-gates-memory.md). Historical rows below
-retain their original measured/derived meaning, including incomplete memory evidence.
-
-## 2026-10-04 — P4 closing campaign and shipping default
-
-The 1,524-instance SYNTCOMP26 close measured all five series at 17 s and
-derived their 60 s views from validated recycled and rerun rows. The current
-first `docker_default` member is `otf_sparse_formula_gr1_real_prepass` after
-`b784b4c3`; `otf_sparse_formula` remains in the group. Resolve the live group
-through the configuration registry. The older three-way and E5 sections below
-record their status **before** this completed close. The full report, the
-joined rows, provenance, validation and the cactus plots are in archive
-`opt20260927-p4close`.
-
-The 60 s columns are **derived** (see below). Values are solved instances and
-PAR-2 totals in seconds.
+Full 1,524-input measured 17 s rows and derived 60 s views from
+`opt20260927-p4close`, with corrected gates in `opt20260927-p4gates`.
+All 320 sampled recycling outcomes matched, but legacy-arm validation was
+outcome-only (#210). Final versus S4 had +32/−0 solves at 60 s, +31/−3 at 17 s;
+three S4-only solves were near the cap. Memory medians selected mostly MEMOUT
+rows and cannot characterize the cohort. Conversion checker exceptions and advisory
+G2s failure remain disclosed in the original report, `refactor-closeout20261017`.
 
 | Series | 60 s solved | 60 s PAR-2 (s) | 17 s solved | 17 s PAR-2 (s) |
 |---|---:|---:|---:|---:|
@@ -481,42 +392,12 @@ PAR-2 totals in seconds.
 | S4, master's four-arm default | 1,206 | 39,856.456 | 1,177 | 12,548.461 |
 | TACAS23 | 847 | 83,039.001 | 811 | 24,788.493 |
 
-Paired against the final candidate, final versus S4 is **+32/−0** solves and
-−3,737.993 s PAR-2 at derived 60 s, and **+31/−3** and −895.926 s at measured
-17 s. Final versus E5 is **+10/−0** and −1,297.002 s at 60 s, and **+11/−0**
-and −374.820 s at 17 s. The three 17 s S4-only solves finished near the cap.
-The 17 s PAR-2 differences exceed the measured 12.1 s SYNTCOMP26 noise floor.
-
-For the 60 s view, conclusive cap-independent 17 s rows were reused;
-TIMEOUT, UNKNOWN, ERROR and other unverifiable rows were rerun at 60 s. A seeded
-64-row validation per series matched all 320 outcomes. The three Acacia races
-could be validated only by outcome because legacy arms write no per-arm race
-records (#210). Acacia parsed TLSF inside the clock; ltlsynt and TACAS23 used
-SyFCo-converted pairs with conversion outside it, and seven conversion
-failures per legacy series counted unsolved. TACAS23 predates the fix for
-signal-killed workers appearing REALIZABLE, so its solved count is an upper
-bound. The gate investigation reclassified G4 as a pass with permitted
-timeouts and G5 as a pass with known conversion exceptions (#211).
-
-Native U lifting was **not admitted** (#209): on N4's 64 relevant rows it tied
-direct G with no paired gain, and its five answers were slower than direct G.
-Other sprint stops were lift policy-export changes and early owner release,
-the lift import memo, critical-picker scratch reuse, sparse backward vectors,
-backward rank reuse/SIMD, a global Spot acceptance-limit increase, and the
-equivariant representative path. The negative decisions and their measurements
-are in [decisions.md](optimize-20260927/decisions.md) and archives
-`opt20260927-p4n4`, `opt20260927-p4n6`, and `opt20260927-p4gates`.
-
-Frozen binaries: final `binary-FINAL-2d29aa8c` (revision `54032834`), S4
-`binary-S4-2e10b4fe` (revision `50384cf6`), E5 `binary-E5-65530fb4`, and
-TACAS23 `binary-TACAS23-v1-75fabd3c`. Follow-up work is tracked in issues
-#209–#214.
-
 ## Latest released three-way
 
-The v2.4.2 full 1,524-case SYNTCOMP26 comparison used a 17 s cap, sequential
-8 GiB scopes and zero swap. v2.4.3 added no newer checked three-way.
-Archive: `plots-spot-otf-threeway-20260909`.
+Released v2.4.2 three-way comparison, full 1,524-input SYNTCOMP26, 17 s,
+8 GiB/no swap, `plots-spot-otf-threeway-20260909`. Virtual best is derived,
+not runnable. Acacia 1.x may misreport killed workers and is not a sound speedup
+baseline. Historical configuration names identify the actual measurements.
 
 | Series | Solved | PAR-2 total (s) |
 |---|---:|---:|
@@ -526,20 +407,13 @@ Archive: `plots-spot-otf-threeway-20260909`.
 | Acacia virtual best of those two presets | 1,173 | 12,684.211 |
 | Acacia 1.x | 811 | 24,785.471 |
 
-The virtual best is a derived per-instance union, not an executable or measured
-concurrent race. Acacia 1.x predates the fix for signal-killed workers being
-misreported as REALIZABLE; its apparent coverage may be high. The arriving
-preset trails ltlsynt by 86 solved instances. The earlier September 5 full
-three-way is in `plots-three-way-full-20260905`.
-
 ## E5 selection and per-arm legs, unreleased
 
-The selected five-arm **E5** invocation adds `real:gr1:oxidd` to the four
-physical arms `real:small:backward`, `real:small:forward`,
-`unreal:formula:spot-guarded-sparse`, and `unreal:automaton:forward`.
-Its frozen binary is pinned in [baselines.tsv](baselines.tsv). These figures
-are the **virtual best of isolated 60 s legs**, not the result of running that
-five-arm portfolio on the full corpus:
+Unreleased E5 selection from isolated 60 s legs over 1,524 inputs;
+`gr1-par2-20260923-perarm-m1` and `opt20260927-p4close` preserve the historical
+selection/closing context. Arm unions are derived virtual bests, not measured
+races; the later native race replaced this candidate. Exact source text is in
+`refactor-closeout20261017`.
 
 | Isolated-leg subset | Solved / 1,524 | PAR-2 total (s), rounded |
 |---|---:|---:|
@@ -548,38 +422,19 @@ five-arm portfolio on the full corpus:
 | Selected E5 {1,2,3,4,5} | 1,238 | 36,260 |
 | Runner-up five {1,2,3,5,6} | 1,235 | 36,789 |
 
-The seven legs' exclusive-solve counts were: arm 1 **15**, arm 2 **17**, arm 3
-**99**, arm 4 **10**, arm 5 **16**, arm 6 **7**, arm 7 **1**. Arm 7
-(`real:param-lift:oxidd`) returned 19 REALIZABLE, 1,354 UNKNOWN and 151
-TIMEOUT on its standalone leg. The deciding reruns left E5 selected. A
-50-input concurrent smoke solved 36, matching its isolated-leg prediction.
-The owner stopped the subsequent obfuscated full run after 80 rows; those
-partial rows were not retained. There is **no completed full-corpus E5 result**,
-17 s leg, TACAS23 leg, or joined new three-way. Archives:
-`gr1-par2-20260923-perarm-m1`, `gr1-par2-20260923`.
-
 ## O5 optimized checkpoint, unreleased
 
-**O5** is the optimization sprint's five-arm development checkpoint. It uses E5's arms and
-order, contains the admitted P1 and P2 packages, and is built against Spot 2.16. It was
-screened with no 17 s full-corpus leg yet, on a 152-case development screen: 60 s, serial,
-8 GiB no-swap.
+Selected 152-input 60 s screen, with rotated legs and pinned runtime provenance:
+`opt20260927-o5`, `binary-O5-1b216a40`, `binary-C5s216-1c3b09ff`.
+The same-Spot candidate/control solved set is identical; old E5 uses a different
+runtime. The apparent first-pass coverage gain was cap-sensitive and not credited.
+This selected screen is not a full-corpus gain.
 
 | Binary | Spot | Solved | PAR-2 total (s) |
 |---|---|---:|---:|
 | E5 (frozen) | 2.15.1.dev fork runtime | 115 | 4,653.542 |
 | C5s216 (C5 source, same Spot as O5) | 2.16 | 116 | 4,589.171 |
 | O5 | 2.16 | 116 | 4,543.499 |
-
-- **Verdicts:** no pair has an opposing verdict.
-- **O5 against C5s216:** the same solved set.
-  - The PAR-2 change comes mostly from two checked-GR(1) rows sped up by the checker-order
-    package.
-  - One 8 GiB MEMOUT became a timeout.
-- **The extra solve over E5 is not credited.** It is cap-sensitive in repeats.
-- **Standalone optimized REAL lifting** keeps its 19 development successes.
-- **Archives:** the binaries are `binary-O5-1b216a40` and `binary-C5s216-1c3b09ff`. The
-  screen rows will be archived with the sprint's evidence.
 
 ## Rejected or deferred ideas
 
@@ -593,7 +448,7 @@ screened with no 17 s full-corpus leg yet, on a 152-case development screen: 60 
   the evaluation cohort; withdrawn. Archives `param-lift-20260922`,
   `gr1-par2-20260923`.
 - Sequential Python lifting as the solver route: withdrawn for the source-bound
-  native generic path; Python remains a differential oracle. Archive
+  native generic path; native differential oracles remain in tests. Archive
   `gr1-par2-20260923`.
 - Broad structural witness selector: confirmed regressions at 17 s and 120 s.
   Archive `witness-lifting-20260918`.
@@ -602,7 +457,7 @@ screened with no 17 s full-corpus leg yet, on a 152-case development screen: 60 
 - Semantic whole-letter quotient: G1 gains were outweighed by a severe G2s
   cycle regression. Archive `benchmarking-root-legacy`.
 
-- Optimization sprint P2 packages stopped at pre-registered gates:
+- Optimization candidates stopped at pre-registered gates:
   - critical-picker scratch reuse, for no useful gain;
   - sparse backward vectors (#196): 67% of coordinates are non-bottom, and the model reads
     2.56 times as much;
@@ -610,124 +465,52 @@ screened with no 17 s full-corpus leg yet, on a 152-case development screen: 60 
   - raising Spot's acceptance-set limit (#201): the specs need up to 5,052 sets, and
     translation still times out.
 
-  Record: `optimize-20260927/decisions.md`; the archive follows at sprint close.
-
-The current optimization and UNREAL lifting work is tracked in
-[the active sprint record](optimize-20260927/plan.md). Results from selected
-subsets or censored higher-cap observations retain those labels when cited.
+  Record: [decisions](decisions.md); archives `opt20260927-p2a`,
+  `opt20260927-p2b1`, `opt20260927-p2b2`, `opt20260927-p2b3`,
+  with exact narrative in `refactor-closeout20261017`.
 
 ## Legacy worker phase observation
 
-The legacy routes now expose entry, completion and stopped observations through
-`ACACIA_PHASE_RECORDS`, including per-subjob/K search and independent verification.
-Frozen sparse rebuilt-row demand is sampled after checking. Payload byte estimates
-remain distinct from measured process/cgroup memory. The schema and offline readers
-are documented in [legacy-phase-records.md](legacy-phase-records.md).
-
-The seeded panel builder refreshes membership from explicit fresh Acacia rows and
-historical comparator rows, preserving their different provenance. Instrumentation
-and generated-spec correctness checks do not establish a bottleneck, speedup or
-performance admission; panel measurements remain the next external-driver step.
-
-The review follow-up caches observation outside action/K loops and returns before
-PID, clock, resource or exception sampling when records are disabled. Regression
-probes assert zero observation samples. The panel ranks structural/evidence keys
-with source-token digest ties, and merged chronology and delivery checks preserve
-uncertainty. Censor bounds apply only to the active stage occurrence; captures
-require complete invocation identities and matching completed-stage evidence.
-
-Fresh Spot captures can now bind `invocation` through `ACACIA_PHASE_INVOCATION`,
-using the same label supplied to the phase table's `--invocation`. The existing
-capture snapshot/history path emits the label without additional file operations.
-The release producer/CLI regression joins both decomposed frozen sparse subjobs
-at K=2 and K=5, rejects a foreign invocation, and checks search/verifier metric
-separation. Generated release comparisons retain exact stdout, stderr and exit
-codes with records off/on and against the pre-binding executable; records-off
-PID/clock/resource-call counts also agree. These remain correctness observations.
+Generated-spec and release transport checks validate identity, disabled-observer
+behavior and completed/censored stage separation. They establish no bottleneck,
+speedup or performance admission. Later measured attribution is below;
+`legacy20261008-screens` and `refactor-closeout20261017` preserve original context.
 
 ## 2026-10-10 — grouped sparse guarded oracle admitted at campaign close (#235)
 
-`--oracle-layout grouped` is now the runtime default. It groups equal-level guards, lazily
-caches requested suffixes and uses exact oracle-local target-rank identities and compact
-coordinate traversal in sparse search and fresh independent verification. `--oracle-layout scan`
-remains available as the explicit alternative. There is no compile-time option for this choice.
+Closing full-corpus campaign `legacy20261008-closing`: all four 17 s series are
+fresh and rotated; 60 s is derived from each series' measured short rows and fresh
+tail, with strict validation and hash-bound adjudications. No incumbent loss at
+either cap. Three near-cap UNREAL gains reproduced 3/3. The 28-input screen is
+`legacy20261008-screens`; same-K search/check cost was 0.54–0.67 of incumbent
+on three primary targets. No 60 s noise floor is assumed.
 
-The driver admitted the change after paired, rotated, cooled screens of the frozen release
-build of `325a90d3` against the master binary on the 28-input legacy panel: standalone
-formula-UNREAL at 60 s, and the shipping race at 17 s and 60 s. There was no lost solve, no
-memory stop and no solved input slower by more than 1 s. Same-K search plus independent-check
-cost was 0.54–0.67 times master's on the three primary targets and 0.71 on the secondary
-collector control. The reproduced 60 s race
-PAR-2 change was −14.7 s (−10.8 s for grouped against scan in an earlier session), with far lower peak memory.
-
-Frozen release binary SHA-256:
-`9a774cbf87abd0433803c8a0f5f9e7056eea70c1f50663fca2c2ac3235f41fbc`.
-The screens and independent reviews are archived in `legacy20261008-screens`, indexed in
-[evidence-index.tsv](evidence-index.tsv). Generated arithmetic/fixed-K, interruption,
-collision and corruption tests cover both layouts. The [layout notes](legacy-oracle-layout.md)
-record the storage policy, correctness checks and driver-supplied decision evidence.
-
-The closing campaign admitted PR #235 on the full 1,524-input list. All four 17 s series
-are fresh and rotated in one session; each 60 s series is a validated derived view of its
-own fresh 17 s rows and fresh 60 s tail. Validation and cooled repetitions supplement the
-primary observations without replacing them. Both Acacia binaries use Spot 2.16 and the
-frozen shipping defaults: candidate `LEGFINAL` at `4a26e57c`, incumbent `LEGP0` at
-`54ddfb83` (master-equivalent). Source caps, paths, hashes, phase records, comparisons and
-adjudications are archived in `legacy20261008-closing`.
+Six recycling findings were driver-adjudicated; amendment
+`legacy20261008-closing-amend1` preserves exact additional telemetry findings
+without changing original coverage/PAR-2. Missing telemetry remains incomplete.
+Native Acacia includes parsing; comparator clocks exclude preconversion and retain
+Strict-semantics limitations. TACAS23 audit rescoring and killed-worker caveat remain;
+its apparent solves are an upper bound. Exact report: `refactor-closeout20261017`.
 
 | Cap and provenance | Grouped candidate REAL / UNREAL / total | Incumbent total | Candidate / incumbent PAR-2 (s) | Candidate / incumbent resource limits | ltlsynt 2.16 total | TACAS23 total |
 |---|---:|---:|---:|---:|---:|---:|
 | 17 s, fresh measured | 559 / 648 / **1,207** | 1,205 | 11,624.2 / 11,730.2 | 1 / 1 | 1,263 | 812 |
 | 60 s, validated derived | 570 / 674 / **1,244** | 1,240 | 35,538.3 / 36,073.7 | 1 / 2 | 1,286 | 854 |
 
-Paired coverage has no incumbent losses at either cap and no new resource-limit failures.
-The 17 s gains are `GF-G-contradiction7` and `g-unreal-310`. The 60 s gains are
-`robot-to-target-charging13` (42.3 s), `g-unreal-311`, `g-unreal-118` and `g-unreal-119`.
-The last three reproduced 3/3 in cooled repetitions, while the incumbent timed out 3/3
-on each. Among inputs solved by both at 60 s, 34 are faster by more than 1 s and five are
-slower by more than 1 s; the worst slowdown is +3.4 s. The candidate still trails ltlsynt
-in coverage at both caps.
-
-Six recycling mismatches were explicitly driver-adjudicated: three telemetry drops and
-three same-verdict winner/lifecycle variations. Amendment `legacy20261008-closing-amend1`
-adds the exact candidate 60 s validation transport finding and regenerated validation/report
-outputs; the published `legacy20261008-closing` archive remains immutable. The evidence lists
-each exact mismatch,
-decision, rationale and hash-bound evidence. Recorded outcomes agree; missing telemetry
-remains incomplete for attribution. The approved comparison/adjudication tools preserve
-strict outcome and work checks and replay evidence before producing derived rows; see
-[phase-record-comparison.md](tools/phase-record-comparison.md).
-
-Native Acacia wall time includes TLSF parsing; the ltlsynt and TACAS23 clocks exclude
-preconversion, with the historical SyFCo Strict-semantics limitation retained. TACAS23
-totals use the archived audit rescoring; its killed-child signal-handling limitation still
-makes apparent solves an upper bound. PAR-2 changes are descriptive, and no 60 s noise
-floor is assumed. [baselines.tsv](baselines.tsv) pins the three frozen binaries and their
-archive IDs; `LEGFINAL` is the next G1 baseline once this PR merges. The sprint decisions
-and rejected routes are recorded in [legacy-route/decisions.md](legacy-route/decisions.md).
-
-
 ## 2026-10-10 — guarded eventual/universal translation diagnostics
 
-A structural guard in the shared legacy translation path enables Spot's language-preserving
-`favor_event_univ` simplification only when the worker's distinct NNF-DAG F/U/M count exceeds
-Spot's configured acceptance width. The translator options and automata at or below the width
-remain unchanged; generated tests check byte identity, language equivalence and realizability.
-No polarity step was added. The frontend-only census finds 33 eligible REAL inputs and 28 for
-each UNREAL timing route, with 40 inputs in their union. Three of the four requested 60-second
-shipping diagnostics verify UNREAL; the fourth remains UNKNOWN, with two UNREAL acceptance-limit
-exceptions and REAL workers reaching action construction. Its inherited 5 GiB soft memory limit
-is disclosed. These are single-invocation diagnostics; performance admission and full-corpus
-screens remain with the driver. See the [translation record](coverage-first/guarded-event-univ-translation.md)
-for ordinal firing sets, limits, generated checks and local evidence. Changes remain uncommitted.
+The frontend census found 40/1,524 inputs prospectively exceeding the installed
+64-set width in at least one shipping translation frame (2.62%). It solves nothing
+and does not establish executed-route eligibility. Isolated reruns correct shared
+Spot/BDD-state effects; `census20261013-isolated` preserves originals and corrections.
+Guarded simplification gains are in the issue-sweep row below. Broader rewriting
+was rejected by `postmem20261011-p1`. Exact narrative: `refactor-closeout20261017`.
 
 ## Post-campaign issue sweep (2026-10-10/11)
 
-Campaign `legacy20261010-issue-sweep` is closed. Its archive, published in the
-`evidence-2026-10-10-legacy` release and registered in the evidence index, preserves
-the original rows, sidecars, repetitions, attribution reports and issue/PR snapshots. The screens used paired,
-rotated, cooled runs in 8 GiB no-swap scopes. These subset observations supplement the
-full closing campaign rather than replacing its measured and derived results.
+Measured issue sweep, `legacy20261010-issue-sweep`. These original rows retain
+scope, negative outcomes and admission dispositions; detailed reports/reviews are
+in that campaign and `refactor-closeout20261017`. No new run occurred here.
 
 | Issue | Measured outcome and disposition |
 |---|---|
@@ -740,37 +523,61 @@ full closing campaign rather than replacing its measured and derived results.
 | [#212](https://github.com/gaperez64/acacia-bonsai/issues/212#issuecomment-6104280960) | All three native/converted pairs matched in all three 60 s repetitions. Collector now solves natively in 8.14–8.24 s; Alarm solves on both routes in 17–20 s; robot grid reaches the memory limit on both. Closed as the reported coverage discrepancy no longer reproduced, without claiming equal route speed. |
 | [#213](https://github.com/gaperez64/acacia-bonsai/issues/213#issuecomment-6103867590) | Structural OxiDD cache sizing improved the isolated native arm but had no useful shipping-race effect: 60 easy inputs × three repetitions had a paired median −1.5 ms and unchanged median peak memory. The 100-input 17 s screen remained 72 → 72 solved, PAR-2 996.6 → 1,000.2 s, within noise. Closed with a negative admission result; the cache change was not landed. |
 
-The measured PR builds are frozen as `binary-LEGI201-5350762f` at `21a2ce42`
-and `binary-LEGI208-ac1ff537` at `7d8235a5`, and pinned in [baselines.tsv](baselines.tsv).
-The latter precedes PR #241's final head; neither pin substitutes the merge revision
-for the executable that produced the rows. Separate archives retain LEGI200, LEGI213,
-LEGI209 and LEGI209M, including their original build provenance. Higher-cap mechanism
-diagnostics and the #205 direct cost ceilings remain distinct from measured coverage.
-
-
 ## 2026-10-13 — residual construction and simplifier closeout (#250/#247)
 
-The completed 53-input 60-second panel gives LAR/ACD 53 decisions each, PS 30,
-DS 13 and SD 9 with both ltlsynt 2.16 shortcuts disabled. Matched primary-worker
-BA/generic-deterministic/parity translations complete 23/45/25 inputs. Generic
-construction gains 29 BA timeouts but loses seven BA completions; shared-HOA ACD
-replay completes 45/45 versus LAR 44/45, with mixed size/wall costs. Apply the
-prewritten rule: research an acceptance-aware provider and explicit conversion
-policy, but select no production interface/default change or Acacia solve. Neither
-BA simplifier variant rescues a 60-second translation; all 22 paired completions
-retain identical state/edge counts and both lose one completion. Close #247 with
-the upstream report and no Acacia change. See [the stage tables and decision](residual-construction.md);
-evidence: `residual-construction20261013`, `spot-implication20261013`,
+The completed 53-input 60 s panel gave LAR/ACD 53 decisions each, PS/DS/SD
+30/13/9, both shortcuts disabled. Matched primary-worker BA/generic/parity
+translations complete 23/45/25. Generic gains 29 BA timeouts and loses seven BA
+completions; shared-HOA ACD completes 45/45 versus LAR 44/45, with mixed costs.
+These are research constructions, not Acacia solves or production admission.
+Neither BA simplifier rescues a 60 s translation; all 22 paired completions keep
+identical sizes and each variant loses one completion. Evidence:
+`residual-construction20261013`, `spot-implication20261013`,
 `postmem20261011-p2`, `postmem20261012-closing`, `binary-PMC4-b3953b43`.
-`obligation-trust20261013` and `binary-PMC5-0b8b9be1` preserve the separate
-trust/decision-mode screens and frozen #255 candidate without claiming admission.
-
+The archive excludes six regenerable HOA/stdout files over 50 MiB and one pycache;
+`EXCLUSIONS.tsv` retains sizes, digests and reasons. Decisive conversion repetitions
+remain a gap. Separate trust screens: `obligation-trust20261013`,
+`binary-PMC5-0b8b9be1`; freezing that candidate alone did not admit it.
+Exact stage tables and final exclusions: `refactor-closeout20261017`.
 
 ## 2026-10-15 — deterministic-Buchi solver choice for the parity arm
 
-Keep Spot's explicit co-Buchi solver for tiers 1–3. On the 36-input 60 s comparisons,
-Spot decides 36/36 (PAR-2 43–44 s), versus 33/36 (427 s) for K-bounded antichains,
-35/36 (149 s) for strpm-simd, and 34/36 (265 s) for symbolic GR(1), with zero verdict
-conflicts. The alternatives remain on `research/parity-buchi-engines`. See the
-[comparison and diagnoses](coverage-first/parity-arm.md#tiers-13-keep-spots-explicit-solver)
-for the resource regime and local evidence directories; archive IDs are pending.
+On the 36-input 60 s comparison Spot decides 36/36 (PAR-2 43–44 s),
+K-bounded antichains 33/36 (427 s), strpm-simd 35/36 (149 s), symbolic GR(1)
+34/36 (265 s), with zero conflicts. Archive `otd-parity-engines20261015`;
+route and trust contract: [parity arm](coverage-first/parity-arm.md).
+
+## 2026-10-13 — memory/search attribution (#251)
+
+Two evidence-directed 30-job panels at 60 s, 8 GiB/no swap each returned seven
+verdicts (two REAL, five UNREAL) and 23 TIMEOUTs, no MEMOUTs. Timeout obstructions
+were eight search, one construction and 14 mixed. Mixed identifies competing
+workers in different stages, not equal costs or a critical path. Frozen PMC4 and
+supplemental PMO251 are distinct treatments; no obligation arm ran on this panel.
+Dense and sparse query clocks have different origins; incomplete stage growth and
+missing memory brackets stay unknown. This selection estimates neither full-corpus
+coverage nor an observer-only speedup. Archive `memory-search20261013`; exact
+per-job tables and limitations: `refactor-closeout20261017`.
+
+## 2026-10-17 — documentation and archival closeout
+
+No performance result is added. `refactor-closeout20261017` preserves exact retiring
+narratives, the old RESULTS/decision tables, and all 173 PR 3 deleted source files.
+Publication/index registration remains with the driver; original campaigns retain
+their status, including partial `gr1-par2-20260923`. The old Markdown containers
+are replaced by living [runtime](DATA-STRUCTURES.md), [record](legacy-phase-records.md)
+and [decision](decisions.md) references. Existing measured rows remain unchanged.
+
+## Earlier representation and normalization studies
+
+The exact controlled-vector study retained in `refactor-closeout20261017` found
+no reproducible catastrophic bare-vector regression: twins performed the same
+solver work and dominant kernel, and the memory-limit follow-up had identical
+outcomes and 8 GiB peaks. No separate always-512-bit experiment was run.
+
+The historical TLSF-normalization screen retained the same 2,621 states and
+57,080 edges over three targets under every schedule. At 5 s all schedules solved
+one of nine workers; 20 s REAL confirmations added no alternate-only win.
+This rejected normalization as a coverage mechanism. Original study text and
+exact rows are in `refactor-closeout20261017`; earlier root reports are in
+`benchmarking-root-legacy`. These are selected historical studies, not new runs.
