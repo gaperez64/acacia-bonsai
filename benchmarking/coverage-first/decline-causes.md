@@ -290,111 +290,111 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 | subprojects/tlsf-tools/src/lib/gr1_shared.hh:153 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"candidate_allowance"` | `std::string("candidate allowance expired at ") + stage` |
 | subprojects/tlsf-tools/src/lib/gr1_shared.hh:156 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `stage` | `"deadline exceeded"` |
 | subprojects/tlsf-tools/src/lib/gr1_shared.hh:161 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `stage` | `"cancelled"` |
-| subprojects/tlsf-tools/src/lib/gr1_shared.hh:206 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"budget-memory"` | `std::string("construction RSS exceeded arm memory ") + "share at " + stage` |
-| subprojects/tlsf-tools/src/lib/gr1_shared.hh:217 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `stage` | `"artifact byte cap exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:139 | `TLSF_GR1_REDUCE_CANCELLED` | `TLSF_GR1_REDUCE_CANCELLED` | STOPPED/cancelled | `stage` | `"cancelled"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:144 | `TLSF_GR1_REDUCE_ERROR` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `stage` | `"monotonic clock failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:148 | `TLSF_GR1_REDUCE_DEADLINE` | `TLSF_GR1_REDUCE_DEADLINE` | STOPPED/deadline | `stage` | `"deadline exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:162 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"budget-memory"` | `"construction RSS peak exceeded arm memory share"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:171 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `stage` | `"artifact byte cap exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:178 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `stage` | `"construction size overflow"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:241 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"budget-structure"` | `"structural construction limit exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:335 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"lower"` | `"classification failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:339 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"lower"` | `"formula build failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:345 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"lower"` | `"out of memory"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:351 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"lower"` | `"formula output failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:504 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_UNSUPPORTED` | DECLINE/applicability | `"mp-class"` | `"not DBA reducible: " + spot::str_psl(formula)` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:521 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"translate"` | `"Spot translation reached its state limit"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:535 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"budget-translate"` | `"Spot translation exceeded state or edge limit"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:572 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `state_limit ? "budget-monitor-states" : "budget-monitor-edges"` | `"Spot determinization exceeded construction budget; " + reason.str()` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:578 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"determinize"` | `"Spot determinization failed; " + reason.str()` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:589 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_UNSUPPORTED` | DECLINE/applicability | `"determinize"` | `"Spot could not construct recurrence DBA monitor"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:605 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"budget-monitor"` | `"completed monitor exceeded state or edge limit"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:612 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"monitor"` | `"Spot produced nondeterministic or incomplete monitor"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:616 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"monitor"` | `"monitor state cap exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:629 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"monitor"` | `"Spot did not produce state-based acceptance"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:634 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"monitor"` | `"empty state"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:647 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"monitor"` | `"non-sticky safety rejecting region"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:668 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"aag-size"` | `"AAG literal overflow"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:688 | `TLSF_GR1_REDUCE_ERROR` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"aag"` | `"unknown latch"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:721 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"transition"` | `"monitor refers to undeclared AP"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:750 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"transition"` | `"non-Boolean monitor transition label"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1099 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"provenance"` | `"non-Boolean symmetric monitor body"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1160 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"symmetry"` | `"symmetric signature valuation cap exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1434 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"publish-size"` | `"text size overflow"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1507 | `TLSF_GR1_REDUCE_INVALID` | `TLSF_GR1_REDUCE_INVALID` | STOPPED/error | `"source"` | `"source snapshot SHA-256 mismatch"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1511 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_UNSUPPORTED` | DECLINE/applicability | `"semantics"` | `"unsupported non-Mealy SEMANTICS/TARGET"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1521 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"signals"` | `"expanded TLSF signal names are not unique"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1528 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"signals"` | `"expanded TLSF signal names are not unique"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1544 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"formula"` | `"lowered formula has undeclared APs"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1570 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"budget-monitor"` | `"total monitor state or edge limit exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1576 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"monitor"` | `"total monitor state cap exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1627 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"aag"` | `"cannot open memory stream"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1631 | `TLSF_GR1_REDUCE_ERROR` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"aag"` | `"generated AAG is invalid"` |
-| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1438 | `UNKNOWN` | `std::bad_alloc` | STOPPED/resource | `provider` | `` |
+| subprojects/tlsf-tools/src/lib/gr1_shared.hh:207 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"budget-memory"` | `std::string("construction RSS exceeded arm memory ") + "share at " + stage` |
+| subprojects/tlsf-tools/src/lib/gr1_shared.hh:218 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `stage` | `"artifact byte cap exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:140 | `TLSF_GR1_REDUCE_CANCELLED` | `TLSF_GR1_REDUCE_CANCELLED` | STOPPED/cancelled | `stage` | `"cancelled"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:145 | `TLSF_GR1_REDUCE_ERROR` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `stage` | `"monotonic clock failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:149 | `TLSF_GR1_REDUCE_DEADLINE` | `TLSF_GR1_REDUCE_DEADLINE` | STOPPED/deadline | `stage` | `"deadline exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:164 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"budget-memory"` | `"construction RSS peak exceeded arm memory share"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:173 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `stage` | `"artifact byte cap exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:180 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `stage` | `"construction size overflow"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:243 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"budget-structure"` | `"structural construction limit exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:337 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"lower"` | `"classification failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:341 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"lower"` | `"formula build failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:347 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"lower"` | `"out of memory"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:353 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"lower"` | `"formula output failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:506 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_UNSUPPORTED` | DECLINE/applicability | `"mp-class"` | `"not DBA reducible: " + spot::str_psl(formula)` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:523 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"translate"` | `"Spot translation reached its state limit"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:537 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"budget-translate"` | `"Spot translation exceeded state or edge limit"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:574 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `state_limit ? "budget-monitor-states" : "budget-monitor-edges"` | `"Spot determinization exceeded construction budget; " + reason.str()` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:580 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"determinize"` | `"Spot determinization failed; " + reason.str()` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:591 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_UNSUPPORTED` | DECLINE/applicability | `"determinize"` | `"Spot could not construct recurrence DBA monitor"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:607 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"budget-monitor"` | `"completed monitor exceeded state or edge limit"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:614 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"monitor"` | `"Spot produced nondeterministic or incomplete monitor"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:618 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"monitor"` | `"monitor state cap exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:631 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"monitor"` | `"Spot did not produce state-based acceptance"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:636 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"monitor"` | `"empty state"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:649 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"monitor"` | `"non-sticky safety rejecting region"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:670 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"aag-size"` | `"AAG literal overflow"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:690 | `TLSF_GR1_REDUCE_ERROR` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"aag"` | `"unknown latch"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:723 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"transition"` | `"monitor refers to undeclared AP"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:752 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"transition"` | `"non-Boolean monitor transition label"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1101 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"provenance"` | `"non-Boolean symmetric monitor body"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1162 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"symmetry"` | `"symmetric signature valuation cap exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1436 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"publish-size"` | `"text size overflow"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1509 | `TLSF_GR1_REDUCE_INVALID` | `TLSF_GR1_REDUCE_INVALID` | STOPPED/error | `"source"` | `"source snapshot SHA-256 mismatch"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1513 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_UNSUPPORTED` | DECLINE/applicability | `"semantics"` | `"unsupported non-Mealy SEMANTICS/TARGET"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1523 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"signals"` | `"expanded TLSF signal names are not unique"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1530 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"signals"` | `"expanded TLSF signal names are not unique"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1546 | `TLSF_GR1_REDUCE_UNSUPPORTED` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"formula"` | `"lowered formula has undeclared APs"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1572 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"budget-monitor"` | `"total monitor state or edge limit exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1578 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"monitor"` | `"total monitor state cap exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1629 | `TLSF_GR1_REDUCE_LIMIT` | `TLSF_GR1_REDUCE_LIMIT` | STOPPED/resource | `"aag"` | `"cannot open memory stream"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1633 | `TLSF_GR1_REDUCE_ERROR` | `TLSF_GR1_REDUCE_ERROR` | STOPPED/error | `"aag"` | `"generated AAG is invalid"` |
+| subprojects/tlsf-tools/src/lib/gr1_reduction.cc:1440 | `UNKNOWN` | `std::bad_alloc` | STOPPED/resource | `provider` | `` |
 | subprojects/tlsf-tools/src/lib/gr1_service.c:9 | `false` | `tlsf_gr1_validate_game` | STOPPED/error | `tlsf_gr1_validate_game` | ` if (message && capacity) snprintf(message, capacity, "null game"); ` |
 | subprojects/tlsf-tools/src/lib/gr1_service.c:15 | `false` | `tlsf_gr1_validate_game` | STOPPED/error | `tlsf_gr1_validate_game` | ` snprintf(message, capacity, "GR(1) requires justice and no invariant constraints"); ` |
 | subprojects/tlsf-tools/src/lib/gr1_service.c:23 | `false` | `tlsf_gr1_validate_game` | STOPPED/error | `tlsf_gr1_validate_game` | ` if (message && capacity) snprintf(message, capacity, "justice record %u is not singleton", j); ` |
 | subprojects/tlsf-tools/src/lib/gr1_service.c:32 | `false` | `tlsf_gr1_validate_game` | STOPPED/error | `tlsf_gr1_validate_game` | ` if (message && capacity) snprintf(message, capacity, "latch %u has nonconstant reset", j); ` |
 | subprojects/tlsf-tools/src/lib/gr1_lift.cc:64 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"clock"` | `"CLOCK_MONOTONIC failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:167 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"aag"` | `"cannot open memory stream"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:172 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"aag"` | `"invalid AAG artifact"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:180 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"aag"` | `"cannot allocate memory stream"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:185 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"aag"` | `"write failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:217 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"expand"` | `perr.message` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:219 | `DECLINED` | `perr.status == TLSF_PIPELINE_DECLINED ? FailureCause::applicability : FailureCause::error` | DECLINE/applicability or STOPPED/error | `perr.status == TLSF_PIPELINE_DECLINED ? "expand" : "expand_error"` | `perr.message[0] ? perr.message : "source expansion failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:284 | `mapped` | `cause` | STOPPED/error/resource/deadline/cancelled | `internal ? "reduce_error" : err.stage[0] ? err.stage : "reduce"` | `err.message[0] ? err.message : "reduction failed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:299 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"provenance"` | `"ambiguous or source-unbound frontend provenance"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:302 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"frontend provenance source hash differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:310 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"provenance"` | `"duplicate or non-frontend signal"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:320 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"provenance"` | `"duplicate source conjunct origin"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:327 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"provenance"` | `"missing monitor source origin"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:337 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"parameters"` | `"duplicate source parameter"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:354 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"declaration ABI changed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:360 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"declaration ABI changed"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:368 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"unproved encoding width"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:373 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"unproved encoding width"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:379 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"inconsistent coordinates"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:381 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"inconsistent coordinates"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:386 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"parameter does not index elements"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:474 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"bus_schema"` | `"unproved large template"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:620 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_window"` | `"invalid selected seed count"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:626 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_window"` | `"selected seed choice disagrees with artifact"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:629 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_window"` | `"selected seeds are not consecutive"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:637 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"parameters"` | `"absent"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:648 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_window"` | `"fixed seed probe budget exhausted"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:752 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_window"` | `"fixed seed probe budget exhausted"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:770 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_binding"` | `"seed reduction hash differs"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:888 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_solve"` | `reason` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:917 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_solve"` | `"deadline exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:920 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"seed_solve"` | `"cancelled"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:925 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_solve"` | `"solver capacity exhausted"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:927 | `DECLINED` | `unreal ? FailureCause::applicability : FailureCause::error` | DECLINE/applicability or STOPPED/error | `unreal ? "seed_solve" : "seed_error"` | `"no system certificate"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:938 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"certificate metadata mismatch"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:982 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_solve"` | `reason` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1018 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_solve"` | `"deadline exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1024 | `TLSF_GR1_LIFT_DECLINED` | `solver_failure_cause(failure.kind)` | STOPPED/error/resource/deadline/cancelled | `"seed_solve"` | `"exact seed certificate unavailable"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1038 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"seed certificate metadata mismatch"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1066 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_check"` | `"deadline exceeded"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1070 | `TLSF_GR1_LIFT_DECLINED` | `check_failure_cause(status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `"seed_check"` | `"independent seed proof rejected"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1107 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"monitor inventory"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1112 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate monitor latch literal"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1128 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"unmatched latch literal"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1143 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"latch inventory"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1149 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate game literal"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1152 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"signal inventory"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1158 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"game signal unmatched"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1161 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"invalid signal direction"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1178 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"certificate input mismatch"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1186 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"certificate input mismatch"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1201 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate justice ID"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1208 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"justice inventory"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1212 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing justice ID"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1217 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"multi-index goal"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1230 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"multi-member justice"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1243 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing seed predicate"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1246 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing seed predicate"` |
-| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1255 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"OxiDD allocation failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:168 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"aag"` | `"cannot open memory stream"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:173 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"aag"` | `"invalid AAG artifact"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:181 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"aag"` | `"cannot allocate memory stream"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:186 | `TLSF_GR1_LIFT_ERROR` | `FailureCause::error` | STOPPED/error | `"aag"` | `"write failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:218 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"expand"` | `perr.message` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:220 | `DECLINED` | `perr.status == TLSF_PIPELINE_DECLINED ? FailureCause::applicability : FailureCause::error` | DECLINE/applicability or STOPPED/error | `perr.status == TLSF_PIPELINE_DECLINED ? "expand" : "expand_error"` | `perr.message[0] ? perr.message : "source expansion failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:285 | `mapped` | `cause` | STOPPED/error/resource/deadline/cancelled | `internal ? "reduce_error" : err.stage[0] ? err.stage : "reduce"` | `err.message[0] ? err.message : "reduction failed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:300 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"provenance"` | `"ambiguous or source-unbound frontend provenance"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:303 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"target_binding"` | `"frontend provenance source hash differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:311 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"provenance"` | `"duplicate or non-frontend signal"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:321 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"provenance"` | `"duplicate source conjunct origin"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:328 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"provenance"` | `"missing monitor source origin"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:338 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"parameters"` | `"duplicate source parameter"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:355 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"declaration ABI changed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:361 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"declaration ABI changed"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:369 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"unproved encoding width"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:374 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"unproved encoding width"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:380 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"inconsistent coordinates"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:382 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"inconsistent coordinates"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:387 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"axis"` | `"parameter does not index elements"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:475 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"bus_schema"` | `"unproved large template"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:621 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_window"` | `"invalid selected seed count"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:627 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_window"` | `"selected seed choice disagrees with artifact"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:630 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_window"` | `"selected seeds are not consecutive"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:638 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"parameters"` | `"absent"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:649 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_window"` | `"fixed seed probe budget exhausted"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:753 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_window"` | `"fixed seed probe budget exhausted"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:771 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_binding"` | `"seed reduction hash differs"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:889 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_solve"` | `reason` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:918 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_solve"` | `"deadline exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:921 | `TLSF_GR1_LIFT_CANCELLED` | `FailureCause::cancelled` | STOPPED/cancelled | `"seed_solve"` | `"cancelled"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:926 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"seed_solve"` | `"solver capacity exhausted"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:928 | `DECLINED` | `unreal ? FailureCause::applicability : FailureCause::error` | DECLINE/applicability or STOPPED/error | `unreal ? "seed_solve" : "seed_error"` | `"no system certificate"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:939 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"certificate metadata mismatch"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:983 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_solve"` | `reason` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1019 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_solve"` | `"deadline exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1025 | `TLSF_GR1_LIFT_DECLINED` | `solver_failure_cause(failure.kind)` | STOPPED/error/resource/deadline/cancelled | `"seed_solve"` | `"exact seed certificate unavailable"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1039 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"seed_metadata"` | `"seed certificate metadata mismatch"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1067 | `TLSF_GR1_LIFT_DEADLINE` | `FailureCause::deadline` | STOPPED/deadline | `"seed_check"` | `"deadline exceeded"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1071 | `TLSF_GR1_LIFT_DECLINED` | `check_failure_cause(status, verdict)` | DECLINE/applicability or STOPPED/error/resource/deadline/cancelled | `"seed_check"` | `"independent seed proof rejected"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1108 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"monitor inventory"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1113 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate monitor latch literal"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1129 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"unmatched latch literal"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1144 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"latch inventory"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1150 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate game literal"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1153 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"signal inventory"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1159 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"game signal unmatched"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1162 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"invalid signal direction"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1179 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"certificate input mismatch"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1187 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"certificate input mismatch"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1202 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"duplicate justice ID"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1209 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"justice inventory"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1213 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing justice ID"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1218 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"multi-index goal"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1231 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `"schema_abi"` | `"multi-member justice"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1244 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing seed predicate"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1247 | `DECLINED` | `FailureCause::error` | STOPPED/error | `"schema_abi"` | `"missing seed predicate"` |
+| subprojects/tlsf-tools/src/lib/gr1_lift.cc:1256 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"OxiDD allocation failed"` |
 | subprojects/tlsf-tools/src/lib/gr1_lift.cc:1292 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"cannot create OxiDD manager"` |
 | subprojects/tlsf-tools/src/lib/gr1_lift.cc:1301 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `stage` | `"fixed BDD operation budget exhausted"` |
 | subprojects/tlsf-tools/src/lib/gr1_lift.cc:1307 | `TLSF_GR1_LIFT_LIMIT` | `FailureCause::resource` | STOPPED/resource | `"schema_capacity"` | `"node cap exceeded"` |
