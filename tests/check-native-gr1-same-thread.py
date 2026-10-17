@@ -13,8 +13,6 @@ import time
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CORPUS_REAL = (ROOT / "tests/syntcomp-benchmarks/tlsf/round_robin_arbiter" /
-               "parametric/round_robin_arbiter.tlsf")
 FIXTURE_REAL = ROOT / "tests/fixtures/native_gr1/round_robin_arbiter.tlsf"
 UNREAL = '''INFO { TITLE: "unreal" SEMANTICS: Mealy TARGET: Mealy }
 MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G i; } }
@@ -54,7 +52,7 @@ def repeat(binary: Path, source: Path, arm: str, count: int,
 def main() -> None:
     binary = Path(sys.argv[1]).resolve()
     build_dir = Path(sys.argv[2]).resolve()
-    source = CORPUS_REAL if CORPUS_REAL.is_file() else FIXTURE_REAL
+    source = FIXTURE_REAL
     if not source.is_file():
         raise AssertionError("round-robin TLSF fixture is missing")
     with tempfile.TemporaryDirectory(dir=build_dir) as location:

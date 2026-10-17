@@ -8,11 +8,9 @@
 #include "solver/oracle_layout.hh"
 #include "solver/obligation_memory.hh"
 #include "solver/solver_invoker.hh"
-#if ACACIA_ENABLE_TLSF_FRONTEND
 # include "tlsf_frontend.hh"
 
 # include <tlsf/pipeline.h>
-#endif
 #include "utils/verbose.hh"
 #include "version.hh"
 #include <string_view>

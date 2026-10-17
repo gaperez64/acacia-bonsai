@@ -1,7 +1,6 @@
 #include "configuration.hh"
 #include "native_proof_binding.hh"
 
-#if ACACIA_NATIVE_ARMS
 #include <unordered_set>
 #include <vector>
 
@@ -82,4 +81,3 @@ namespace acacia {
            native_json_field (pol, "reduction_semantics", semantics);
   }
 }
-#endif

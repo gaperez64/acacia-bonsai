@@ -94,32 +94,6 @@
         }
       ]
     },
-    "enable_tlsf_frontend": {
-      "meson": "acacia_enable_tlsf_frontend",
-      "type": "boolean",
-      "default": true,
-      "description": "Build the optional native TLSF frontend (requires flex and bison)",
-      "macros": [
-        {
-          "name": "ACACIA_ENABLE_TLSF_FRONTEND",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
-    "native_arms": {
-      "meson": "acacia_native_arms",
-      "type": "boolean",
-      "default": false,
-      "description": "Build opt-in exact GR(1) arms, including the both-polarity arm, with the pinned tlsf-tools OxiDD API",
-      "macros": [
-        {
-          "name": "ACACIA_NATIVE_ARMS",
-          "emit": "always",
-          "encoding": "bool_int"
-        }
-      ]
-    },
     "simd_is_max": {
       "meson": "acacia_simd_is_max",
       "type": "boolean",

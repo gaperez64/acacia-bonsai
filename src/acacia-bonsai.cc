@@ -12,6 +12,7 @@
 #include "solver/obligation_helper.hh"
 #include "solver/realizability_simplify.hh"
 #include <spot/tl/parse.hh>
+#include <tlsf/process.h>
 #ifdef __linux__
 # include <sys/prctl.h>
 #endif
@@ -23,6 +24,7 @@
 #include <cerrno>
 #include <cmath>
 #include <csignal>
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <memory>
@@ -47,6 +49,7 @@ size_t posets::vectors::bool_threshold = 0;
 
 namespace {
   volatile pid_t* g_child_pids = nullptr;
+  volatile sig_atomic_t* g_child_interrupted = nullptr;
   volatile sig_atomic_t g_child_count = 0;
   volatile sig_atomic_t g_interrupted = 0;
   pid_t g_main_pid = 0;
@@ -63,6 +66,10 @@ namespace {
   const char* g_helper_stop_reason = "none";
 
   void record_parent_terminal (sig_atomic_t index, int status, const char* reason, pid_t pid) {
+    // The handler's SIGKILL can be reaped by either the ordinary loop or cleanup.
+    // Preserve that cancellation cause, but keep normally exited, rejected verdicts distinct.
+    if (g_child_interrupted[index] && WIFSIGNALED (status) && WTERMSIG (status) == SIGKILL)
+      reason = "interrupted";
     if (g_obligation && index == g_eligibility_source &&
         g_obligation->eligible.load (std::memory_order_acquire) ==
             acacia::obligation::eligibility::pending)
@@ -111,6 +118,7 @@ namespace {
       g_interrupted = 1;
       for (sig_atomic_t i = 0; i < g_child_count; ++i)
         if (g_child_pids[i] > 0) {
+          g_child_interrupted[i] = 1;
           kill (-g_child_pids[i], SIGKILL);
           kill (g_child_pids[i], SIGKILL);
         }
@@ -229,6 +237,19 @@ namespace {
       }
       _exit (EXIT_CODE_REAL);
     }
+    if (mode.starts_with ("wait:")) {
+      char byte;
+      ssize_t count;
+      do {
+        count = read (std::atoi (mode.data () + 5), &byte, 1);
+      } while (count < 0 && errno == EINTR);
+      if (count != 1)
+        _exit (EXIT_CODE_ERROR);
+    }
+    if (mode == "signal") {
+      raise (SIGKILL);
+      _exit (EXIT_CODE_ERROR);
+    }
     if (mode == "real")
       _exit (EXIT_CODE_REAL);
   }
@@ -237,14 +258,12 @@ namespace {
   spot::formula helper_objective (const arg_parse_result& args) {
     std::string formula = args.formula;
     auto inputs = args.inputs, outputs = args.outputs;
-#if ACACIA_ENABLE_TLSF_FRONTEND
     if (args.tlsf_specified && !args.formula_specified) {
       auto spec = acacia::tlsf_frontend::parse (args.tlsf_source);
       formula = std::move (spec.formula);
       inputs = std::move (spec.inputs);
       outputs = std::move (spec.outputs);
     }
-#endif
     validate_ltl_partition (inputs, outputs);
     auto parsed = spot::parse_infix_psl (formula, spot::default_environment::instance (),
                                           false, false);
@@ -267,7 +286,6 @@ namespace {
       else {
         auto inputs = args.inputs, outputs = args.outputs;
         auto conversion = acacia::obligation::conversion::none;
-#if ACACIA_ENABLE_TLSF_FRONTEND
         if (args.tlsf_specified && (!args.formula_specified || args.synth_fname)) {
           auto spec = acacia::tlsf_frontend::parse (args.tlsf_source);
           inputs = std::move (spec.inputs);
@@ -279,7 +297,6 @@ namespace {
                                : acacia::obligation::conversion::delay_outputs;
           }
         }
-#endif
         // The linked frontend already lowered Moore/strict TLSF to effective
         // Mealy. Solve that positive normalized objective once, without a swap
         // or another X shift. Raw API Moore order is exercised in unit tests.
@@ -343,7 +360,6 @@ namespace {
       _exit (code);
     }
     if (arm.kind != portfolio_arm_kind::legacy) {
-#if ACACIA_NATIVE_ARMS
       try {
         // A native-only portfolio has no legacy normalization boundary. Use one
         // existing child to prepare eligibility, while its siblings already run.
@@ -388,9 +404,6 @@ namespace {
       acacia::worker_terminal (EXIT_CODE_UNKNOWN);
       acacia::phase_records_summary ("native");
       _exit (EXIT_CODE_UNKNOWN);
-#else
-      _exit (EXIT_CODE_ERROR);
-#endif
     }
     acacia::selected_oracle_layout = arg_values.oracle_layout;
     auto backend = arm.legacy->backend;
@@ -734,6 +747,10 @@ namespace {
         }
       if (!live_arm)
         break;
+#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
+      if (g_synthesis && synthesis_winner >= 0)
+        acacia::synthesis::test_before_reap (g_child_pids[synthesis_winner]);
+#endif
       siginfo_t finished {};
       const int observed = waitid (synthesis_winner >= 0 ? P_PID : P_ALL,
                                    synthesis_winner >= 0 ? g_child_pids[synthesis_winner] : 0,
@@ -873,6 +890,10 @@ namespace {
 }
 
 int main (int argc, char** argv) {
+  if (tlsf_oxidd_configure_process_stack () != 0) {
+    std::perror ("configure OxiDD process stack");
+    return EXIT_CODE_ERROR;
+  }
   acacia::phase_records_start_writer ();
   // parse all arguments that were passed
   acacia::phase_scope argument_phase ("legacy_parent", "argument_handling_total");
@@ -892,6 +913,7 @@ int main (int argc, char** argv) {
   }) != 0;
   const size_t worker_slots = arg_values.arms->size () + size_t (helper_requested);
   g_child_pids = new pid_t[worker_slots];
+  g_child_interrupted = new sig_atomic_t[worker_slots] {};
   if (helper_requested) {
     void* shared = mmap (nullptr, sizeof (acacia::obligation::control), PROT_READ | PROT_WRITE,
                          MAP_SHARED | MAP_ANONYMOUS, -1, 0);

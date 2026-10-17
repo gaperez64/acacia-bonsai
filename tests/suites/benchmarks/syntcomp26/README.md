@@ -81,7 +81,7 @@ materialized and enabled with:
 ```sh
 python3 benchmarking/syntcomp-corpus.py init
 python3 benchmarking/syntcomp-corpus.py materialize --out /tmp/syntcomp-tlsf
-meson setup build -Dacacia_enable_tlsf_frontend=true \
+meson setup build \
   -Dacacia_tlsf_corpus_dir=/tmp/syntcomp-tlsf
 ```
 

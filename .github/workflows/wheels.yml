@@ -62,7 +62,7 @@ jobs:
             LD_LIBRARY_PATH=/opt/spot_install/lib
             CC=/opt/rh/gcc-toolset-14/root/usr/bin/gcc
             CXX=/opt/rh/gcc-toolset-14/root/usr/bin/g++
-            PATH=/opt/rh/gcc-toolset-14/root/usr/bin:$PATH
+            PATH=$HOME/.cargo/bin:/opt/rh/gcc-toolset-14/root/usr/bin:$PATH
           # auditwheel needs to see libspot.so.* at repair time to vendor
           # them into the wheel. Default search path in the container
           # doesn't include /opt/spot_install/lib.
@@ -79,7 +79,7 @@ jobs:
             DYLD_LIBRARY_PATH=/opt/spot_install/lib
             CC=/opt/homebrew/bin/gcc-14
             CXX=/opt/homebrew/bin/g++-14
-            PATH=/opt/homebrew/bin:$PATH
+            PATH=$HOME/.cargo/bin:/opt/homebrew/opt/bison/bin:/opt/homebrew/opt/flex/bin:/opt/homebrew/bin:$PATH
             MACOSX_DEPLOYMENT_TARGET=15.0
             LDFLAGS="-static-libstdc++ -static-libgcc"
           # delocate finds libspot.dylib via the LC_LOAD_DYLIB path embedded
@@ -147,11 +147,20 @@ jobs:
           sudo make install
           sudo ldconfig
 
+      - uses: ./.github/actions/setup-packages
+
       - name: Install build
         run: python -m pip install --upgrade build
 
       - name: Build sdist
         run: python -m build --sdist
+
+      - name: Build wheel from unpacked sdist without Git metadata
+        run: |
+          mkdir sdist-smoke
+          tar -xf dist/*.tar.gz -C sdist-smoke --strip-components=1
+          test -z "$(find sdist-smoke -name .git -print -quit)"
+          python -m build --wheel sdist-smoke
 
       - name: Upload sdist
         uses: actions/upload-artifact@v7

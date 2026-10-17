@@ -14,7 +14,7 @@ set -euo pipefail
 : "${SPOT_VERSION:=2.16}"
 
 echo "== Installing build dependencies =="
-brew install autoconf automake libtool bison flex pkg-config git swig wget gcc@14
+brew install autoconf automake libtool bison flex pkg-config git swig wget curl gcc@14
 
 # bison and flex are keg-only on macOS (avoids shadowing the system tools);
 # prepend their Homebrew prefix so Spot's configure uses the current versions.
@@ -24,6 +24,11 @@ export CXX=/opt/homebrew/bin/g++-14
 
 # Match Homebrew libstdc++.6.dylib's minimum target so delocate accepts the wheel.
 export MACOSX_DEPLOYMENT_TARGET=15.0
+
+# Match Dockerfile.cd; Meson builds the locked OxiDD FFI for each wheel.
+curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.91.0
+export PATH="$HOME/.cargo/bin:$PATH"
+cargo install cbindgen --version 0.29.4 --locked
 
 echo "== Building Spot ${SPOT_VERSION} =="
 workdir=$(mktemp -d)

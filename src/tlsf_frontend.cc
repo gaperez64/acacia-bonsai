@@ -19,6 +19,7 @@ namespace acacia::tlsf_frontend {
 
     tlsf::Options options () {
       tlsf::Options value;
+      value.precheck = false; // Conversion consumes formulas, not precheck verdicts.
       value.format = tlsf::Format::Ltlxba;
       // Match the checked-in ltlxba/.part identifier convention.  TLSF
       // semantics remain specification-defined.

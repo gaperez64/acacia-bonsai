@@ -30,3 +30,13 @@ runs:
                             libffi-dev libtool flex bison ccache \
                             ${{ inputs.extra }}
         sudo pip install --upgrade meson
+    - uses: dtolnay/rust-toolchain@stable
+      with: {toolchain: '1.91.0'}
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: subprojects/tlsf-tools/external/oxidd -> target
+        cache-targets: false
+        key: oxidd-${{ runner.os }}-${{ runner.arch }}-1.91.0-0.29.4-${{ hashFiles('subprojects/tlsf-tools/external/oxidd/Cargo.lock') }}
+    - name: Install cbindgen
+      shell: bash
+      run: cargo install cbindgen --version 0.29.4 --locked

@@ -80,7 +80,7 @@ def check_records(directory, result, workers, *, cancelled=()):
 
 
 def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False, fast="off",
-        helper_first=False):
+        helper_first=False, interrupt_before_reap=False):
     with tempfile.TemporaryDirectory(dir=root) as temporary:
         directory = Path(temporary)
         controller = directory / 'controller.aag'
@@ -89,6 +89,7 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
         ready_read, ready_write = os.pipe()
         export_read, export_write = os.pipe()
         helper_read, helper_write = os.pipe()
+        reap_read, reap_write = os.pipe()
         phases = directory / "phases"
         phases.mkdir()
         env = dict(os.environ, ACACIA_TEST_SYNTHESIS_VERDICT_FD=str(ready_read),
@@ -97,18 +98,22 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
                    ACACIA_TEST_SYNTHESIS_FAIL_PID=str(fail_pid),
                    ACACIA_PHASE_RECORDS=str(phases), ACACIA_TEST_RECORD_ACK="1",
                    LD_PRELOAD=ack_library)
+        if interrupt_before_reap:
+            assert interrupt
+            env["ACACIA_TEST_SYNTHESIS_REAP_FD"] = str(reap_read)
         arms = ('unreal:formula:backward' if unreal else
                 'real:small:backward,both:obligation:spot')
         # The UNREAL fixture must reach a worker verdict even with the base preset.
         formula = 'F G o & G (i -> X !o)' if unreal else 'G (o <-> i)'
         process = subprocess.Popen([binary, '-f', formula, '-i', 'i', '-o', 'o',
                                     '--arms', arms, '--spot-fast', fast, '-s', str(controller)], env=env,
-                                   pass_fds=(ready_read, export_read, helper_read),
+                                   pass_fds=(ready_read, export_read, helper_read, reap_read),
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         os.close(ready_read)
         os.close(export_read)
         os.close(helper_read)
+        os.close(reap_read)
         rows = []
         pending = b''
         stderr_seen = bytearray()
@@ -178,7 +183,11 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
                     os.close(ready_write)
                     ready_write = None
             if interrupt:
+                if interrupt_before_reap:
+                    stage('synthesis_reaping', 1)
                 process.send_signal(signal.SIGTERM)
+                os.close(reap_write)
+                reap_write = None
             else:
                 os.close(export_write)
                 export_write = None
@@ -201,7 +210,10 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
                                if line.startswith(b'{') and b'synthesis_selected' in line]
                     assert any(row['pid'] == loser for row in resumed), resumed
             cancelled = ([winner, *losers] if interrupt else [] if failure else losers)
-            check_records(phases, process.returncode, len(ready), cancelled=cancelled)
+            records = check_records(phases, process.returncode, len(ready), cancelled=cancelled)
+            if interrupt:
+                assert all(row["reason"] == "interrupted" for row in records
+                           if row.get("event") == "parent_terminal"), records
             for row in ready:
                 try:
                     os.kill(row['pid'], 0)
@@ -213,7 +225,7 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
             if process.poll() is None:
                 process.terminate()
                 process.communicate(timeout=5)
-            for fd in (ready_write, export_write, helper_write):
+            for fd in (ready_write, export_write, helper_write, reap_write):
                 if fd is not None:
                     os.close(fd)
 
@@ -227,6 +239,40 @@ def failed_output(binary, root):
                                      capture_output=True, timeout=15)
             assert process.returncode in (2, 3), process
             assert b"REALIZABLE" not in process.stdout, process
+
+
+def interrupted_after_reap(binary, root, ack_library):
+    """A verdict reaped before interruption is rejected, not a killed worker."""
+    with tempfile.TemporaryDirectory(dir=root) as temporary:
+        phases = Path(temporary)
+        env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases), ACACIA_TEST_RECORD_ACK="1",
+                   LD_PRELOAD=ack_library, ACACIA_TEST_CHILD_MODES="real",
+                   ACACIA_TEST_DELAY_AFTER_REAP="1")
+        process = subprocess.Popen(
+            [binary, '-f', 'G o', '-i', 'i', '-o', 'o', '--arms', 'real:small:backward'],
+            env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            pending = b''
+            end = time.monotonic() + 15
+            while b'"stage":"test_reaped"' not in pending:
+                remaining = end - time.monotonic()
+                assert remaining > 0 and select.select([process.stderr], [], [], remaining)[0]
+                chunk = os.read(process.stderr.fileno(), 4096)
+                assert chunk, (process.poll(), pending)
+                pending += chunk
+            process.send_signal(signal.SIGTERM)
+            stdout, stderr = process.communicate(timeout=15)
+            assert process.returncode == 2 and stdout == b'', (stdout, stderr)
+            records = [json.loads(line) for path in phases.glob('*.jsonl')
+                       for line in path.read_text().splitlines()]
+            terminal, = [row for row in records if row.get('event') == 'parent_terminal']
+            assert terminal['reason'] == 'interrupted_rejected', terminal
+            assert terminal['signal'] == 0 and terminal['exit_code'] == 0, terminal
+            assert not any(row.get('event') == 'parent_winner' for row in records), records
+        finally:
+            if process.poll() is None:
+                process.terminate()
+                process.communicate(timeout=5)
 
 
 def decomposed_controller(binary, root, ack_library):
@@ -289,6 +335,8 @@ def main():
     run(binary, root, ack_library, failure=True)
     run(binary, root, ack_library, failure=True, helper_first=True)
     run(binary, root, ack_library, interrupt=True)
+    run(binary, root, ack_library, interrupt=True, interrupt_before_reap=True)
+    interrupted_after_reap(binary, root, ack_library)
     run(binary, root, ack_library, unreal=True)
     failed_output(binary, root)
     decomposed_controller(binary, root, ack_library)
