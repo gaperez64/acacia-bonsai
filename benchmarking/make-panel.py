@@ -8,22 +8,16 @@ returned UNKNOWN, hit a resource limit, or laundered an exception.
 """
 
 from __future__ import annotations
-
 import argparse
-import collections
 import csv
-import math
 import pathlib
+from suite_paths import load_source_map
+import math
+from dataclasses import dataclass
 import random
 import re
-from dataclasses import dataclass
-
-# Shared with the coverage-frontier tooling so the two cannot drift apart.
-from family_names import family_of
-
+import collections
 from benchlib import load_meson_jsonl, verdict_from_output
-from suite_paths import load_source_map
-
 
 STRATA = ("easy", "border", "gap", "open")
 
@@ -354,6 +348,117 @@ def main() -> int:
     print(f"wrote {len(selected)} entries to {args.output.with_suffix('.list')}")
     print(f"wrote provenance to {args.output.with_suffix('.tsv')}")
     return 0
+
+
+def family_of(instance: str) -> str:
+    """Collapse common parameterized benchmark names into stable families."""
+    stem = pathlib.Path(instance).stem
+    stem = re.sub(r"_[0-9a-f]{8}$", "", stem, flags=re.IGNORECASE)
+
+    patterns = (
+        (r"^(prioritized_arbiter_unreal)", 1),
+        (r"^(round_robin_arbiter_unreal)", 1),
+        (r"^(full_arbiter_unreal)", 1),
+        (r"^(ltl2dba_[A-Za-z]+)", 1),
+        (r"^(ltl2dpa)", 1),
+        (r"^(robot_grid)", 1),
+        (r"^(collector)_v", 1),
+    )
+    for pattern, group in patterns:
+        match = re.match(pattern, stem)
+        if match:
+            return match.group(group)
+
+    # Strip a trailing sequence of numeric parameters without a nested
+    # repetition regex.  The previous expression could backtrack
+    # exponentially on long digit runs that did not match at the end.
+    suffix_start = len(stem)
+    if suffix_start and stem[-1].isdigit():
+        while suffix_start:
+            while suffix_start and stem[suffix_start - 1].isdigit():
+                suffix_start -= 1
+            if suffix_start == 0 or stem[suffix_start - 1] not in "_-":
+                break
+            suffix_start -= 1
+            if suffix_start == 0 or not stem[suffix_start - 1].isdigit():
+                break
+    family = stem[:suffix_start].rstrip("_-")
+    return family or "numeric"
+
+
+def metadata_read_tsv(path: pathlib.Path, key: str) -> dict[str, dict[str, str]]:
+    """Index a headered TSV by `key`, rejecting duplicate or conflicting rows."""
+    table: dict[str, dict[str, str]] = {}
+    with open(path, newline="") as handle:
+        for row in csv.DictReader(handle, delimiter="\t"):
+            name = row[key]
+            previous = table.get(name)
+            if previous is not None and previous != row:
+                raise ValueError(f"duplicate conflicting row for {name} in {path}")
+            table[name] = row
+    return table
+
+
+def metadata_parse_scalar(text: str):
+    """Integer if it is one, else a finite decimal, else the original string."""
+    try:
+        return int(text)
+    except ValueError:
+        pass
+    try:
+        value = float(text)
+    except ValueError:
+        return text
+    if value != value or value in (float("inf"), float("-inf")):
+        return text
+    return value
+
+
+def metadata_parse_origin(origin: str, logical_instance: str) -> dict:
+    """Split a manifest origin into family identity and parameter assignment."""
+    kind, _, rest = origin.partition(":")
+    if kind == "param":
+        template, _, raw_parameters = rest.partition(":")
+        names: list[str] = []
+        values: dict[str, object] = {}
+        for item in raw_parameters.split(",") if raw_parameters else []:
+            name, sep, text = item.partition("=")
+            if not sep:
+                raise ValueError(f"malformed parameter {item!r} in origin {origin!r}")
+            if name in values:
+                raise ValueError(f"repeated parameter {name!r} in origin {origin!r}")
+            names.append(name)
+            values[name] = metadata_parse_scalar(text)
+        return {
+            "origin_kind": "param",
+            "family_key": "param:" + template,
+            "family_display": pathlib.PurePosixPath(template).name.removesuffix(".tlsf"),
+            "parameter_confidence": "exact",
+            "parameter_names": names,
+            "parameter_values": values,
+            "parameters_numeric": all(
+                isinstance(v, (int, float)) for v in values.values()
+            ) and bool(values),
+        }
+    if kind == "direct":
+        parent = str(pathlib.PurePosixPath(rest).parent)
+        fallback = family_of(logical_instance)
+        return {
+            "origin_kind": "direct",
+            "family_key": f"direct:{parent}:{fallback}",
+            "family_display": fallback,
+            # A direct file records no parameters.  Saying "heuristic" here
+            # would overstate it: the family grouping is heuristic, the
+            # parameters simply do not exist.
+            "parameter_confidence": "none",
+            "parameter_names": [],
+            "parameter_values": {},
+            "parameters_numeric": False,
+        }
+    raise ValueError(f"unknown origin kind {kind!r} in {origin!r}")
+
+
+
 
 
 if __name__ == "__main__":

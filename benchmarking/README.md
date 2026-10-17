@@ -68,17 +68,58 @@ verdict, wall time, exit code, cap, binary SHA-256 and resource regime. For
 example:
 
 ```sh
-python3 -s benchmarking/run-subset.py \
-  --bin build_best_decomp_mona/src/acacia-bonsai \
+preset=$(python3 scripts/acacia-config.py list-group docker_default | head -n1)
+python3 -s benchmarking/run-syntcomp26-coverage.py subset \
+  --bin "build_${preset}/src/acacia-bonsai" \
   --list tests/suites/benchmarks/syntcomp26/all.list \
+  --tlsf-map tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv \
+  --tlsf-corpus tlsf-corpus --flags=--tlsf-only \
   --timeout 17 --systemd-scope --memory-max 8G \
-  --csv _bm-logs/best_decomp_mona.csv
+  --csv _bm-logs/baseline.csv
 python3 -s benchmarking/cactus-report.py \
-  --csv baseline=_bm-logs/best_decomp_mona.csv \
-  --csv candidate=_bm-logs/otf_sparse_formula.csv \
-  --timeout 17 --out-prefix _bm-logs/comparison \
+  --csv baseline=_bm-logs/baseline.csv \
+  --csv candidate=_bm-logs/candidate.csv \
+  --title "Baseline and candidate" --timeout 17 --out-prefix _bm-logs/comparison \
   --markdown _bm-logs/comparison.md
 ```
+
+`run-syntcomp26-coverage.py` is the coverage scheduling entry point. Its
+native default CLI retains staged caps and resume. The `subset` command accepts
+native or converted-pair input, including ltlsynt; conversion remains untimed.
+`summarize` and `export-cactus` rebuild reports from saved observations without
+entering a campaign guard or invoking a solver.
+
+The default `<output>-summary.tsv` covers the sorted union of every instance
+observed for the current label in the accumulated raw TSV **and its conflicts
+sidecar**, regardless of the latest execution `--list`, `--limit`, or
+`--start-after`. Its overall cap is the maximum of the requested campaign caps
+and all recorded caps for that label; a shorter resume cannot lower it. Requested
+caps are saved per label in `<output>-requested-caps.tsv` before execution,
+including stages skipped after an early solve. The
+first deciding cap supplies the decisive verdict/time. Failure fields describe
+an actual observation at the overall cap and remain empty if none exists.
+Raw rows, route fields, memory sidecars and derived provenance are preserved.
+
+Rebuild summaries without a solver (all labels by default):
+
+```sh
+python3 -s benchmarking/run-syntcomp26-coverage.py summarize --runs RUN.tsv
+python3 -s benchmarking/run-syntcomp26-coverage.py summarize --runs RUN.tsv \
+  --solver-label LABEL --list PANEL.list --cap 60
+```
+
+An explicit panel keeps its declared order and includes requested but unobserved
+IDs as unsolved with unknown failure fields. Duplicate panel IDs are rejected.
+Without `--cap`, reconstruction uses the largest saved requested or observed cap
+per label. Older campaigns without the requested-caps sidecar use their observed
+maximum; pass their original requested maximum when final stages were never
+reached. `--cap` is a floor and cannot hide longer observations or saved requests.
+Unresolved conflicts remain in their original sidecar and make summarization
+and collect-policy resumes exit 3, even when the current list omits those IDs.
+Stop-policy runs also save their conflict and summary before returning nonzero.
+Conflicting observations across caps are also retained, with
+`expectation_source=observation` in the conflicts sidecar. No summary or
+successful rebuild adjudicates a conflict.
 
 For `run-syntcomp26-coverage.py` observations, export a uniform-cap CSV with
 `benchmarking/run-syntcomp26-coverage.py export-cactus --summary SUMMARY --runs RUNS --list LIST
@@ -91,12 +132,38 @@ cap or source identity. `cactus-report.py` reports PAR-2, solved REAL/UNREAL,
 TIMEOUT, RESOURCE_LIMIT, UNKNOWN, ERROR, and SYFCO-FAIL separately. A virtual
 best is a derived per-instance best of named series, never a measured runner.
 
-`rank_bm_logs.py` scores `_bm-logs/` configurations by PAR-2. For Meson
-`--slice=N/M` runs, first use `aggregate_bm_slices.py` with `--min-slices` to
-exclude incomplete sets. `loss-set.py`, `ltlsynt_ablation_report.py`,
-`run_diag_targets.py`, and `summarize-diag-phases.py` inspect individual losses
-and phase stalls. `speedup-scatter.py` provides a paired per-instance view.
-These tools read explicit input paths and write to an ignored output directory.
+`landing-bar.py` supplies the retained admission gate. `cactus-report.py` also
+exposes `classify` and `threeway` for winner attribution and closing comparisons.
+Virtual-best results remain explicitly derived; they cannot establish which arm
+won a measured race.
+
+`legacy-phase-table.py` owns phase intervals, native attribution, checkpoint
+classification, and the `completeness` and `weakening` commands. Transport
+completeness and censored durations remain distinct outputs. `make-panel.py`
+retains deterministic panel selection and shared origin metadata readers; exact
+manifest parameter provenance remains distinct from filename heuristics.
+
+The shared thermal readers in `benchlib.py` support `tools/perarm-select.py`.
+`recycle_adjudication.py` remains the shared adjudication reader.
+`convert-tlsf-corpus.py native` keeps the native inspector route separate from
+SyFCo conversion and independent G5 cross-checks. The `convert-tlsf-corpus*.py`
+entry points remain available. Docker synthesis uses
+`scripts/acacia-bonsai.sh --synthesis`; `acacia-synthesis.sh` forwards to it.
+
+Historical tool versions and their dedicated tests are preserved in campaign
+archives listed in [evidence-index.tsv](evidence-index.tsv). Restore those
+snapshots to reproduce historical procedures. Retirement does not change partial
+or stopped campaign status. Native GR(1)/lifting arms, source maps, baseline pins,
+archive indexes, and independent correctness tests remain available.
+
+Route readers and winner attribution remain available through
+`gr1-par2-20260923/campaign/posthoc-generic.py`, `tools/compare-selection.py`,
+`tools/lifting-report.py`, `tools/perarm-select.py`, and `tools/stagec-summarize.py`.
+
+Independent alpha-equivalence fixtures in `tests/pytest/test_acacia_lift_obfuscation.py`
+use `ACACIA_TLSF_TOOLS_BUILD` for optional `tlsfinfo`/`tlsf2ltl` executables
+(default: `build/subprojects/tlsf-tools`). These are ordinary tlsf-tools Meson
+targets; the retired Python oracle/toolchain wrapper is not required.
 
 ## Memory collection
 
@@ -126,14 +193,12 @@ runs report unsupported cgroup/RSS fields and cannot supply the Linux memory gat
 Unscoped/campaign-shared runs carry explicit missing reasons; G3's instance mode
 is required for per-invocation memory evidence.
 
-Native coverage, portfolio-pair and `run-subset.py --raw-tsv FILE` keep their existing
+Native coverage and `run-subset.py --raw-tsv FILE` keep their existing
 primary columns and write sources, cgroup path, OOM setting and missing reasons to
 `FILE.memory.tsv`. Current readers join this sidecar by observation identity and
 measurements; master readers can still read the primary TSV. `run-subset.py --csv FILE`
 also writes `FILE.memory.tsv` by default. Resuming an expanded primary TSV preserves
 its original bytes in `*-legacy.tsv` before moving provenance into the sidecar.
-Journal annotation records parent accounting in `parent_scope_memory_peak_bytes`
-and `parent_scope_memory_swap_peak_bytes`, separately from workload collection.
 
 Joins and paired reports give numerator/denominator and missing reasons separately
 for scope peak and process RSS. Explicit missing reasons and absent/invalid collection

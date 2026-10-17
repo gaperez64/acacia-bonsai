@@ -19,6 +19,7 @@ def module():
     spec = importlib.util.spec_from_file_location(
         'legacy_phase_table', ROOT / 'benchmarking/legacy-phase-table.py')
     result = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = result
     spec.loader.exec_module(result)
     return result
 

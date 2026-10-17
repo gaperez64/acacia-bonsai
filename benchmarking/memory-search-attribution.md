@@ -1,50 +1,10 @@
 # Attributing games after compact action construction
 
-`memory-search-panel.py` prepares a panel without running a solver, runs its jobs
-serially when asked, and writes a per-job table and recommendation template. Raw
-outputs belong in `_bm-logs.i251/`. The frozen closing candidate's executable digest
-comes from `candidate-freeze.json`; inputs are bound to their current source bytes.
-Fresh 60 s records are joined through the measured row's `source_run` and verified
-source digest, never through the derived or validation series.
-
-Prepare with explicit restored locations:
-
-```sh
-PYTHON=/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python3
-$PYTHON benchmarking/memory-search-panel.py prepare \
-  --campaign <closing>/build_scratch/cov/wt-pm-p0/_bm-logs.pm-final \
-  --legacy <issue-sweep>/_bm-logs.legacy \
-  --corpus <TLSF-corpus> --binary <restored-PMC4>/src/acacia-bonsai \
-  --output _bm-logs.i251/panel
-$PYTHON benchmarking/memory-search-panel.py run \
-  --panel _bm-logs.i251/panel/panel.json --output _bm-logs.i251/run-plan
-```
-
-The final command prints commands and writes a plan. Add `--execute` to launch the
-60 s panel. For the authorized single-input smoke, use `--one --cap 10 --execute`
-and a separate output directory. Each invocation uses the existing scope runner,
-8 GiB, zero swap, no solver-visible deadline, phase records, invocation-bound Spot
-captures and their milestone history. The binary's default portfolio and all K,
-row and memo limits are preserved. The campaign scope guard rejects overlapping
-solver campaigns. Scratch for the scope owner goes in `build_scratch/i251/`.
-
-Before every invocation (including the first launch and resumed retries), the driver
-uses the closing campaign's package sensor `/sys/class/hwmon/hwmon6/temp1_input` and
-waits until it reads at most 70 C. It polls every second for at most 180 seconds;
-unreadable/invalid temperatures or an expired wait stop before solver launch. This
-policy is recorded in `run-plan.json`; timestamped readings and readiness/failure
-states go to `cooldown.jsonl`. Cooldown is outside the solver's cap.
-
-Resume an executed panel by repeating the same command with `--resume --execute`.
-The saved plan must match the panel digest, executable path/digest, treatment, cap,
-flags, selected job count, observation settings and cooldown policy. Current source
-bytes and every saved attempt's provenance are checked before any launch. Matching
-completed jobs (including TIMEOUT/MEMOUT observations) are skipped. Interrupted
-attempts retain their files in `job-NN`; retries use `job-NN-attempt-NN` and distinct
-invocation IDs. Each attempt gets an `attempt.json` before launch; only a finished
-scope with memory-cgroup evidence publishes `run.json`. Analysis includes completed
-attempts and leaves interrupted raw evidence separate. Existing plans are preserved;
-a changed treatment or a plan created before this policy needs a fresh output directory.
+The closed panel driver and its execution procedures are preserved in the
+campaign archive. The recorded runs used serial invocations at 60 s, 8 GiB and
+zero swap, with phase records and invocation-bound captures. Historical plans
+bind executable and source digests, flags, resource settings and cooldown policy.
+Restore the archived tool snapshot when reproducing this campaign.
 
 Selection requires a legacy construction/search stage still unfinished at a fresh
 17 or 60 s cap, or a paired nonsolve-to-solve gain in an i208 screen. Native declines
@@ -60,11 +20,12 @@ both closing observations, old-screen evidence, source hashes and selection flag
 The shared P0 mapping is `benchlib.phase_plan_stage`; `PhaseRecords.worker_events`
 joins native summaries by emitting PID and explicit native arm without changing raw
 wire objects. `legacy-phase-table.py` adds native lifecycle intervals and `plan_stage`.
-`classify-coverage.py` exposes `last_plan_stage`. Refresh an old P0 table with:
+`classify-coverage.py` exposes `last_plan_stage`. The retained phase reader can
+refresh interval tables from explicit invocation directories:
 
 ```sh
-$PYTHON benchmarking/phase_attribution.py --rows <campaign>/17/candidate-17s.tsv \
-  --phase-root <campaign>/17/phase-records --output _bm-logs.i251/p0-reclassification.tsv
+python3 benchmarking/legacy-phase-table.py \
+  --invocation candidate=RESTORED_PHASE_DIRECTORY --output _bm-logs.i251/phases
 ```
 
 Native preparation maps to IO/action construction, direct/seed solver work to
@@ -135,7 +96,7 @@ evidence-based template; it changes no K, row or memo setting.
 
 ## 2026-10-13 — 60 s attribution results (#251)
 
-The driver completed both 30-job panels and ran `memory-search-panel.py analyze` on
+The driver completed both 30-job panels and analyzed
 both result directories. This section only interprets those retained records. Each
 binary returned the same seven verdicts (two REALIZABLE, five UNREALIZABLE) and 23
 TIMEOUTs; neither panel recorded a MEMOUT. The timeout attribution is identical:

@@ -31,26 +31,24 @@ The scope layout/observer overhead needs fresh matched timing, not recycled camp
 
 The implementation checks are complete. #211 has all four regression tests; #214's
 closure evidence is still partial until the driver runs the real Linux panel in
-[the protocol](README.md#memory-collection). Fakes test normal, timeout, child OOM,
+[the protocol](../README.md#memory-collection). Fakes test normal, timeout, child OOM,
 invocation OOM, fresh scopes, collection before deletion, missing/sentinel files,
-non-Linux fields, journal protection, and biased report inputs. No `systemd-run` or
+non-Linux fields and biased report inputs. No `systemd-run` or
 benchmark campaign was run in the sandbox.
 
 ## Reviewer follow-up
 
-All four findings have regressions and are corrected. Parent journal peaks and swap
-peaks use separate `parent_scope_memory_*` fields. The annotation CLI carries the
-input memory sidecar into its output, preserving collector failures. Statistics and
-paired memory gates exclude explicit missing reasons and missing/invalid collection
+The retained statistics and paired memory gates exclude explicit missing reasons
+and missing/invalid collection
 provenance, even when a numeric value is present. The failed-delegation regression
-remains 0/1 with its original missing reason and no median after journal annotation.
+remains 0/1 with its original missing reason and no median.
 
-Primary coverage, portfolio-pair and raw-subset columns match `d9d3fd43` exactly.
+Primary coverage and raw-subset columns match `d9d3fd43` exactly.
 Additional provenance is fsync'd to `FILE.memory.tsv` and joined by observation
 identity, binary, scope and measurements. Regression tests obtain the pinned master
 reader with read-only `git show` and feed it new output. Resuming expanded files saves
 original bytes in `*-legacy.tsv`; sidecar round trips preserve provenance without
-rerunning completed rows. Recycled and annotated rows also carry their sidecars;
+rerunning completed rows. Recycled rows also carry their sidecars;
 stale sidecars cannot supply provenance for different observations.
 
 The owner publishes `os.waitstatus_to_exitcode` through its final state. The observer
@@ -81,7 +79,7 @@ campaign's fake scope now publishes its empty state explicitly.
 | Issue | Files |
 |---|---|
 | #211 | `benchmarking/corpus-correctness-gate.py`, `benchmarking/check-tlsf-conversion.py`, `benchmarking/convert-tlsf-corpus.py`, `benchmarking/tlsf_pairs.py`, `benchmarking/tlsf-verdict-parity.py`, `benchmarking/solver-profile-gate.sh`, `benchmarking/solver-profile-score.py`, `tests/ltl_formula_canonicalize.cc`, `tests/pytest/test_p0_gates.py` |
-| #214 | `benchmarking/scope_memory.py`, `benchmarking/benchlib.py`, `benchmarking/run-syntcomp26-coverage.py`, `benchmarking/run-subset.py`, `benchmarking/run-portfolio-pairs.py`, `benchmarking/tools/threeway-join.py`, `benchmarking/tools/recycle-cap.py`, `benchmarking/paired-admission.py`, `benchmarking/compare-backend-race.py`, `benchmarking/annotate-scope-results.py`, `tests/check-scope-memory.py`, `tests/pytest/test_scope_memory.py`, `tests/pytest/test_scope_accounting.py`, `tests/pytest/test_coverage_runner.py`, `tests/pytest/test_run_subset.py`, `tests/pytest/test_p4_tools.py`, `tests/pytest/test_paired_admission.py`, `tests/pytest/test_backend_comparison.py`, `tests/pytest/conftest.py`, `tests/pytest/test_benchlib_scopes.py`, `tests/pytest/test_portfolio_pairs.py`, `tests/pytest/test_landing_campaign.py` |
+| #214 | `benchmarking/scope_memory.py`, `benchmarking/benchlib.py`, `benchmarking/run-syntcomp26-coverage.py`, `benchmarking/run-subset.py`, `benchmarking/tools/threeway-join.py`, `benchmarking/tools/recycle-cap.py`, `tests/check-scope-memory.py`, `tests/pytest/test_scope_memory.py`, `tests/pytest/test_coverage_runner.py`, `tests/pytest/test_run_subset.py`, `tests/pytest/test_p4_tools.py`, `tests/pytest/conftest.py`, `tests/pytest/test_benchlib_scopes.py`, `tests/pytest/test_landing_campaign.py` |
 | Shared documentation | `benchmarking/README.md`, `benchmarking/RESULTS.md`, `benchmarking/coverage-first/p0-gates-memory.md` |
 
 ## Reproduction
@@ -96,15 +94,15 @@ no dependency source was edited. Large scratch build objects are removed at hand
 
 ```sh
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-meson setup build_scratch/p0-drain-followup/checked build_scratch/p0-drain-followup/source \
+nice -n 19 meson setup build_scratch/p0-drain-followup/checked build_scratch/p0-drain-followup/source \
   --wrap-mode=nodownload \
   --buildtype=debugoptimized -Dacacia_enable_tlsf_frontend=true -Dbuild_tests=true
-meson compile -C build_scratch/p0-drain-followup/checked -j 4
-meson test -C build_scratch/p0-drain-followup/checked --suite unit --num-processes 4
+nice -n 19 meson compile -C build_scratch/p0-drain-followup/checked -j 1
+nice -n 19 meson test -C build_scratch/p0-drain-followup/checked --suite unit -j 1
 ACACIA_GATE_TEST_BUILD=build_scratch/p0-drain-followup/checked \
-/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/pytest -q \
+nice -n 19 /home/gperez/GIT-repos/acacia-bonsai/.venv/bin/pytest -q \
   --basetemp=build_scratch/p0-drain-followup/pytest-final \
-  tests/pytest/test_{p0_gates,tlsf_verdict_parity,solver_profile_score,solver_profile_targets,scope_memory,benchlib_scopes,benchlib_classify,coverage_runner,run_subset,portfolio_pairs,p4_tools,paired_admission,backend_comparison,scope_accounting,no_benchmark_hardcoding,landing_campaign,run_diag_targets,run_diag_targets_tlsf,censor_to_cap,cactus_report,landing_bar,spot_demand_campaign,small_invariant_campaign,run_witness_sprint}.py
+  tests/pytest/test_{p0_gates,tlsf_verdict_parity,solver_profile_score,solver_profile_targets,scope_memory,benchlib_scopes,benchlib_classify,coverage_runner,run_subset,p4_tools,no_benchmark_hardcoding,landing_campaign,cactus_report,landing_bar}.py
 ```
 
 Run ruff on the Python files in the ownership table. No Meson options changed.
@@ -116,7 +114,8 @@ substitute legacy journal/virtual-memory observations for missing invocation pea
 
 - `meson test -C build_scratch/p0-drain-followup/checked --suite unit --num-processes 4`:
   52 passed, 0 failed.
-- The 24-suite pytest command above: 719 passed, 3 skipped. Skips are one optional
+- The original 24-suite pytest panel: 719 passed, 3 skipped. The command above now
+  selects the retained suites. Skips were one optional
   corpus check and two optional matplotlib plot checks. All new gate/lifecycle and
   reviewer regressions ran, including the pinned master readers.
 - The 20 second-review regressions: passed; all 20 fail against the previous

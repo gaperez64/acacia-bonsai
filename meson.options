@@ -2,8 +2,6 @@ option('build_tests', type: 'boolean', value: true,
        description: 'Build the test suite')
 option('build_python', type: 'boolean', value: false,
        description: 'Build the Python interface (requires swig)')
-option('build_research_tools', type: 'boolean', value: false,
-       description: 'Build uninstalled experiment helpers such as HOA replay')
 option('acacia_tlsf_corpus_dir', type: 'string', value: '',
        description: 'Path to the directory produced by benchmarking/syntcomp-corpus.py materialize')
 option('acacia_compiler_profile', type: 'combo',

@@ -572,3 +572,181 @@ while True:
     assert run.seconds >= .25
     assert coverage.normalize_result(run) == ("TIMEOUT", "timeout")
     assert benchlib.par2(0, 1, .2) == .4
+
+
+def read_summary(output):
+    with pathlib.Path(output).with_name(pathlib.Path(output).stem + "-summary.tsv").open() as stream:
+        return list(csv.DictReader(stream, delimiter="\t"))
+
+
+def add_second_target(campaign, tmp_path):
+    (tmp_path / "other.tlsf").write_text("//STATUS: realizable\n")
+    pathlib.Path(campaign.list).write_text("other.ltl\n")
+    pathlib.Path(campaign.tlsf_map).write_text(
+        "instance\ttlsf\ncase.ltl\tcase.tlsf\nother.ltl\tother.tlsf\n")
+    campaign.resume = True
+
+
+def test_resume_disjoint_lists_summary_rebuild_and_export(monkeypatch, campaign, tmp_path):
+    calls = []
+    def invoke(*args, **kwargs):
+        calls.append(args)
+        return coverage.RunResult("REALIZABLE\n", "", 0, 0.25, False)
+    monkeypatch.setattr(coverage, "run_systemd_scope", invoke)
+    assert coverage.run(campaign) == 0
+    add_second_target(campaign, tmp_path)
+    assert coverage.run(campaign) == 0
+    assert coverage.run(campaign) == 0  # unchanged resume does not run either input again
+    assert len(calls) == 2
+    raw = pathlib.Path(campaign.output)
+    original = raw.read_bytes()
+    assert [r["instance"] for r in coverage.load_output(raw)] == ["case.ltl", "other.ltl"]
+    expected = read_summary(raw)
+    assert [r["instance"] for r in expected] == ["case.ltl", "other.ltl"]
+    monkeypatch.setattr(coverage, "campaign_main", lambda *a: pytest.fail("report entered guard"))
+    assert coverage.main(["summarize", "--runs", str(raw)]) == 0
+    assert read_summary(raw) == expected
+    assert raw.read_bytes() == original
+    panel = tmp_path / "panel.list"
+    panel.write_text("case.ltl\nother.ltl\n")
+    summary = raw.with_name(raw.stem + "-summary.tsv")
+    exported = coverage.export_cactus_csv(summary, raw, panel, 17, tmp_path / "result.csv")
+    with exported.open() as stream:
+        assert [r["instance"] for r in csv.DictReader(stream, delimiter="\t")] == [
+            "case.ltl", "other.ltl"]
+
+
+def test_shorter_resume_preserves_old_cap_and_failures(monkeypatch, campaign, tmp_path):
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **k:
+                        coverage.RunResult("", "", -15, 17.01, True))
+    assert coverage.run(campaign) == 0
+    add_second_target(campaign, tmp_path)
+    campaign.caps = [1]
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **k:
+                        coverage.RunResult("REALIZABLE\n", "", 0, 0.1, False))
+    assert coverage.run(campaign) == 0
+    a, b = read_summary(campaign.output)
+    assert a["max_cap_s"] == b["max_cap_s"] == "17"
+    assert a["failure_kind_at_max_cap"] == "TIMEOUT"
+    assert a["still_unsolved_at_max_cap"] == "true"
+    assert b["smallest_cap_solved"] == "1"
+    assert b["still_unsolved_at_max_cap"] == "false"
+    assert b["failure_kind_at_max_cap"] == ""  # no fabricated 17 s observation
+
+
+
+def test_resume_preserves_requested_caps_that_were_never_executed(monkeypatch, campaign, tmp_path):
+    campaign.caps = [1, 5, 17, 60]
+    replies = iter([coverage.RunResult("", "", -15, 1.01, True),
+                    coverage.RunResult("REALIZABLE\n", "", 0, 2.0, False)])
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **k: next(replies))
+    assert coverage.run(campaign) == 0
+    assert read_summary(campaign.output)[0]["max_cap_s"] == "60"
+    add_second_target(campaign, tmp_path)
+    campaign.caps = [1]
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **k:
+                        coverage.RunResult("REALIZABLE\n", "", 0, 0.1, False))
+    assert coverage.run(campaign) == 0
+    first, second = read_summary(campaign.output)
+    assert first["max_cap_s"] == second["max_cap_s"] == "60"
+    assert first["smallest_cap_solved"] == "5"
+    assert first["failure_kind_at_max_cap"] == second["failure_kind_at_max_cap"] == ""
+    output = pathlib.Path(campaign.output)
+    assert coverage.load_requested_caps(output) == {campaign.solver_label: {1, 5, 17, 60}}
+    output.with_name(f"{output.stem}-summary.tsv").unlink()
+    assert coverage.main(["summarize", "--runs", str(output), "--cap", "1"]) == 0
+    assert read_summary(output) == [first, second]
+
+def test_staged_summary_earliest_decision_and_explicit_missing_panel(monkeypatch, campaign, tmp_path):
+    campaign.caps = [1, 5, 17, 60]
+    replies = iter([coverage.RunResult("", "", -15, 1.01, True),
+                    coverage.RunResult("REALIZABLE\n", "", 0, 2.0, False)])
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **k: next(replies))
+    assert coverage.run(campaign) == 0
+    row, = read_summary(campaign.output)
+    assert row["max_cap_s"] == "60" and row["smallest_cap_solved"] == "5"
+    assert row["decisive_seconds"] == "2.0" and row["failure_kind_at_max_cap"] == ""
+    panel = tmp_path / "panel.list"
+    panel.write_text("unobserved.ltl\ncase.ltl\n")
+    assert coverage.main(["summarize", "--runs", campaign.output,
+                          "--list", str(panel), "--cap", "60"]) == 0
+    missing, solved = read_summary(campaign.output)
+    assert missing["instance"] == "unobserved.ltl"
+    assert missing["still_unsolved_at_max_cap"] == "true"
+    assert missing["failure_kind_at_max_cap"] == missing["decisive_result"] == ""
+    assert solved == row
+    with pytest.raises(coverage.CoverageError, match="expected uniform cap"):
+        coverage.load_uniform_observations(
+            pathlib.Path(campaign.output).with_name("out-summary.tsv"),
+            pathlib.Path(campaign.output), panel, 60)
+
+
+def test_summary_label_isolation_duplicate_and_provenance_checks(saved_export):
+    a = saved_export.raw[0]
+    b = {**a, "solver_label": "other", "cap_s": "60", "binary_sha256": "b" * 64}
+    result = coverage.summary_rows("saved", [a, b])
+    assert len(result) == 1 and result[0]["max_cap_s"] == "17"
+    with pytest.raises(coverage.CoverageError, match="duplicate"):
+        coverage.summary_rows("saved", [a, a])
+    with pytest.raises(coverage.CoverageError, match="duplicate"):
+        coverage.summary_rows("saved", [a], instances=[a["instance"], a["instance"]])
+    with pytest.raises(coverage.CoverageError, match="mixed provenance"):
+        coverage.summary_rows("saved", [a, {**a, "instance": "other", "flags": "changed"}])
+
+
+def test_conflicts_survive_disjoint_resume_and_block_export(monkeypatch, campaign, tmp_path):
+    campaign.conflict_policy = "collect"
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **k:
+                        coverage.RunResult("UNREALIZABLE\n", "", 1, 0.1, False))
+    assert coverage.run(campaign) == 3
+    add_second_target(campaign, tmp_path)
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **k:
+                        coverage.RunResult("REALIZABLE\n", "", 0, 0.1, False))
+    assert coverage.run(campaign) == 3
+    raw = pathlib.Path(campaign.output)
+    conflicts = raw.with_name("out-conflicts.tsv")
+    before = conflicts.read_bytes()
+    assert coverage.main(["summarize", "--runs", str(raw)]) == 3
+    assert conflicts.read_bytes() == before
+    assert len(read_summary(raw)) == 2
+    panel = tmp_path / "panel.list"
+    panel.write_text("case.ltl\nother.ltl\n")
+    with pytest.raises(coverage.CoverageError, match="unresolved verdict conflicts"):
+        coverage.load_uniform_observations(raw.with_name("out-summary.tsv"), raw, panel, 17)
+    campaign.conflict_policy = "stop"
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **k: pytest.fail("unresolved run"))
+    assert coverage.run(campaign) == 1
+
+
+def test_summary_includes_conflict_only_ids_and_all_labels(saved_export):
+    f = saved_export
+    coverage.atomic_write_tsv(f.runs, coverage.OUTPUT_COLUMNS, f.raw[:1])
+    conflict = dict(zip(coverage.CONFLICT_COLUMNS,
+                        ["other", "sidecar-only", "x.tlsf", "60", "REALIZABLE", "status",
+                         "UNREALIZABLE", "0.1"]))
+    coverage.atomic_write_tsv(f.runs.with_name("saved-conflicts.tsv"),
+                              coverage.CONFLICT_COLUMNS, [conflict])
+    assert coverage.main(["summarize", "--runs", str(f.runs)]) == 3
+    rows = read_summary(f.runs)
+    assert [(r["solver_label"], r["instance"], r["max_cap_s"]) for r in rows] == [
+        ("other", "sidecar-only", "60"), ("saved", "real.ltl", "17")]
+
+
+def test_opposing_unannotated_resumes_are_durable_conflicts(monkeypatch, campaign, tmp_path):
+    (tmp_path / "case.tlsf").write_text("//STATUS: unknown\n")
+    campaign.conflict_policy = "collect"
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **k:
+                        coverage.RunResult("REALIZABLE\n", "", 0, 0.1, False))
+    assert coverage.run(campaign) == 0
+    campaign.resume, campaign.caps = True, [1]
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **k:
+                        coverage.RunResult("UNREALIZABLE\n", "", 1, 0.1, False))
+    assert coverage.run(campaign) == 3
+    conflicts = coverage.load_conflicts(tmp_path / "out-conflicts.tsv")
+    assert len(conflicts) == 1
+    assert conflicts[0]["expected"] == "REALIZABLE"
+    assert conflicts[0]["actual"] == "UNREALIZABLE"
+    assert coverage.main(["summarize", "--runs", campaign.output]) == 3
+    (tmp_path / "out-conflicts.tsv").unlink()
+    with pytest.raises(coverage.CoverageError, match="opposing verdicts"):
+        coverage.summary_rows("candidate", coverage.load_output(pathlib.Path(campaign.output)))

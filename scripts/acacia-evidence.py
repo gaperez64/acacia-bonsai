@@ -2,22 +2,21 @@
 """Pack, verify, retrieve, and index immutable campaign evidence."""
 
 import argparse
+import hashlib
+import re
+import subprocess
+import json
+import os
+from datetime import datetime, timezone
 import csv
 import fcntl
 import fnmatch
 import gzip
-import hashlib
 import io
-import json
-import os
 from pathlib import Path, PurePosixPath
-import re
-import subprocess
 import tarfile
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
-
 
 ROOT = Path(__file__).resolve().parent.parent
 INDEX_COLUMNS = ("campaign_id", "status", "asset_name", "url", "sha256", "bytes",
@@ -431,7 +430,12 @@ def fetch(args):
         archive.unlink(missing_ok=True)
 
 
-def main():
+def verify(args):
+    verify_archive(args.archive, args.sha256, args.max_bytes)
+    return 0
+
+
+def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("pack")
@@ -446,7 +450,7 @@ def main():
     p.add_argument("archive", type=Path)
     p.add_argument("--sha256")
     p.add_argument("--max-bytes", type=int)
-    p.set_defaults(func=lambda a: verify_archive(a.archive, a.sha256, a.max_bytes))
+    p.set_defaults(func=verify)
     p = sub.add_parser("fetch")
     p.add_argument("--index", default=str(ROOT / "benchmarking/evidence-index.tsv"))
     p.add_argument("--campaign", required=True)
@@ -468,10 +472,10 @@ def main():
     p.set_defaults(func=index_add)
     args = parser.parse_args()
     try:
-        args.func(args)
+        return args.func(args) or 0
     except (ValueError, OSError, tarfile.TarError, json.JSONDecodeError) as exc:
         parser.exit(1, f"error: {exc}\n")
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

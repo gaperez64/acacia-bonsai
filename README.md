@@ -140,9 +140,7 @@ The GR(1) reduction is exact, so one solve decides the winner: `both:gr1:oxidd` 
 shared seeds and falls back to the same exact game solve.
 `both:gr1-real-lift:oxidd` tries only the checked system lift; unreal seeds and
 declined lifts go directly to the exact game solve. The `real` and
-`unreal` forms answer only for their own side. The former Python lifting route lives only in
-[the research oracle](benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py) for
-differential tests.
+`unreal` forms answer only for their own side. Historical Python lifting implementations are preserved in campaign archives.
 
 Correctness and performance gates, including the sequential measurement
 protocol, are documented in [benchmarking/README.md](benchmarking/README.md).

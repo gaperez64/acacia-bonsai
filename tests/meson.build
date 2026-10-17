@@ -149,24 +149,7 @@ test ('native-release-no-hooks', py,
       args : [files ('check-native-release-no-hooks.py'), ab_exe],
       suite : ['unit', 'native-gr1', 'native-param-lift'], depends : [ab_exe])
 
-if get_option ('build_research_tools') and get_option ('acacia_enable_diagnostics')
-  cpre_replay_smoke = find_program ('check-cpre-replay.sh')
-  test ('cpre-replay-smoke',
-        cpre_replay_smoke,
-        args : [ab_exe, acacia_cpre_replay_exe,
-                files ('ltl/realizable/06.ltl')],
-        suite : ['unit', 'research'],
-        depends : [ab_exe, acacia_cpre_replay_exe])
-endif
 
-if get_option ('build_research_tools')
-  research_tools_smoke = find_program ('check-research-tools.sh')
-  test ('research-tools-smoke',
-        research_tools_smoke,
-        args : [acacia_automata_study_exe, acacia_hoa_replay_exe],
-        suite : ['unit', 'research'],
-        depends : [acacia_automata_study_exe, acacia_hoa_replay_exe])
-endif
 
 spot_nba_fastpath_test = executable ('spot-nba-fastpath-test',
                                      'spot_nba_fastpath_test.cc',
@@ -368,6 +351,14 @@ diagnostics_attempt_test = executable (
 test ('diagnostics-attempt',
       diagnostics_attempt_test,
       suite : ['unit', 'diagnostics'])
+
+cpre_snapshot_test = executable ('cpre-snapshot-test', 'cpre_snapshot_test.cc',
+  cpp_args : ['-DACACIA_ENABLE_DIAGNOSTICS=1'],
+  include_directories : inc,
+  dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('cpre-snapshot', py,
+      args : [files ('check-cpre-snapshot.py'), cpre_snapshot_test],
+      depends : cpre_snapshot_test, suite : ['unit', 'diagnostics'], timeout : 60)
 
 support_demand_test = executable (
   'support-demand-test',
@@ -997,37 +988,16 @@ parity_portable_test = executable ('parity-portable-test',
   include_directories : inc, dependencies : [spot_dep, bddx_dep])
 test ('parity-portable', parity_portable_test, suite : ['unit', 'parity'], timeout : 120)
 
-if get_option ('build_research_tools')
-  parity_route_test = executable ('parity-route-test',
-    ['parity_route_test.cc', '../src/research/parity_route_impl.cc',
-     '../src/solver/mealy_to_moore.cc'],
-    link_with : [parity_route_lib, parity_lib], include_directories : inc,
-    dependencies : [spot_dep, bddx_dep])
-  test ('parity-route', parity_route_test, suite : ['unit', 'parity'], timeout : 120)
-  test ('parity-events', py,
-    args : [files ('check-parity-events.py'), acacia_parity_route_exe],
-    suite : ['unit', 'parity'], timeout : 120, depends : [acacia_parity_route_exe])
-  test ('parity-route-acacia', py,
-    args : [files ('check-parity-route.py'), acacia_parity_route_exe, ab_exe],
-    suite : ['unit', 'parity'], timeout : 120,
-    depends : [acacia_parity_route_exe, ab_exe])
-endif
+parity_route_test = executable ('parity-route-test',
+  ['parity_route_test.cc', 'parity_route_test_support.cc',
+   '../src/solver/mealy_to_moore.cc'],
+  link_with : [parity_route_lib, parity_lib], include_directories : inc,
+  dependencies : [spot_dep, bddx_dep])
+test ('parity-route', parity_route_test, suite : ['unit', 'parity'], timeout : 120)
 parity_lifting_test = executable ('parity-lifting-test',
   ['parity_lifting_test.cc', '../src/solver/parity/lifting.cc'],
   include_directories : inc)
 test ('parity-lifting', parity_lifting_test, suite : ['unit', 'parity'], timeout : 120)
-exact_buchi_test = executable (
-  'exact-buchi-test', 'exact_buchi_test.cc', include_directories : inc,
-  dependencies : [spot_dep, bddx_dep])
-test ('exact-buchi-equivalence', exact_buchi_test,
-      suite : ['unit', 'research', 'translation'], timeout : 120)
-if get_option ('build_research_tools')
-  test ('exact-buchi-games', py,
-        args : [files ('check-exact-buchi.py'), exact_buchi_test, acacia_tela_to_buchi_exe,
-                acacia_hoa_replay_exe, meson.current_build_dir () / 'exact-buchi-scratch'],
-        suite : ['unit', 'research', 'translation'], timeout : 120,
-        depends : [exact_buchi_test, acacia_tela_to_buchi_exe, acacia_hoa_replay_exe])
-endif
 
 parity_arm_test = executable ('parity-arm-test',
   ['parity_arm_test.cc', '../src/solver/mealy_to_moore.cc'],
@@ -1037,10 +1007,6 @@ test ('parity-arm', parity_arm_test, suite : ['unit', 'parity'], timeout : 120)
 parity_arm_cli_depends = [ab_exe, parity_arm_test]
 parity_arm_cli_args = [files ('check-parity-arm.py'), ab_exe, parity_arm_test,
                        meson.current_build_dir ()]
-if get_option ('build_research_tools')
-  parity_arm_cli_args += ['--route', acacia_parity_route_exe.full_path ()]
-  parity_arm_cli_depends += [acacia_parity_route_exe]
-endif
 parity_arm_cli_args += ['--tlsf']
 test ('parity-arm-cli', py, args : parity_arm_cli_args,
       suite : ['unit', 'parity', 'portfolio', 'synthesis'], timeout : 120,
