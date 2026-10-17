@@ -1,5 +1,6 @@
 #include "solver/obligation_helper.hh"
 
+#include "solver/accounting_identity.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/synthesis_rendezvous.hh"
 #include <unordered_set>
@@ -85,12 +86,19 @@ namespace acacia::obligation {
     if (!eligible (objective))
       return {outcome::inapplicable, "non_obligation"};
     try {
+      accounting_phase preparation ("obligation_preprocessing");
       // Spot 2.16 sizes its output-AP bitmap before constructing names from
       // outvars. Keep even absent output APs alive first, without BDD registration.
       std::vector<spot::formula> output_aps;
       output_aps.reserve (outputs.size ());
       for (const auto& output : outputs)
         output_aps.push_back (spot::formula::ap (output));
+      if (phase_records_enabled ())
+        accounting_identity (
+            objective, inputs, outputs, "spot-mtdswa",
+            synthesis ? "obligation:simplify_terms=true:debug=-1:decision=false"
+                      : "obligation:simplify_terms=true:debug=-1:decision=true",
+            semantics == timing::mealy ? "mealy:inputs-first" : "moore:outputs-first");
       auto dict = spot::make_bdd_dict ();
       int owner = 0;
       struct cleanup {
@@ -109,7 +117,11 @@ namespace acacia::obligation {
       });
       // One completed decision call: no strategy allocation or re-check.
       // Partial/debug returns and exceptions never become verdicts.
-      auto answer = spot::obligation_synthesis (objective, dict, outputs, !synthesis, true, -1);
+      preparation.finish ();
+      accounting_phase spot_call ("obligation_spot");
+      const auto answer =
+          spot::obligation_synthesis (objective, dict, outputs, !synthesis, true, -1);
+      spot_call.finish ();
       const auto value = completed (answer, !synthesis);
       if (!synthesis)
         return {value, value == outcome::real || value == outcome::unreal ? "completed"
@@ -119,6 +131,7 @@ namespace acacia::obligation {
                 value == outcome::unreal ? "no_strategy" : "invalid_return"};
       acacia::synthesis::await_selection (EXIT_CODE_REAL);
       worker_stage ("obligation_export");
+      accounting_phase strategy ("obligation_strategy");
       const auto mealy = spot::mtdswa_strategy_to_mealy (answer, false, false);
       if (!mealy || !mealy->num_states ())
         return {outcome::error, "strategy_export_failed"};

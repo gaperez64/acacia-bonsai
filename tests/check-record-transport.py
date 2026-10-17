@@ -39,6 +39,9 @@ def main():
             metric = next(row for row in records if row.get("event") == "stage_metric")
             assert entry["subjob"] == 1 and entry["subjobs"] == 2 and entry["k"] == 3
             assert entry["stage_id"] == end["stage_id"] == metric["stage_id"]
+            accounting = next(row for row in records if row.get("event") == "accounting_entry")
+            assert accounting["phase_id"] == entry["stage_id"] and accounting["parent_phase_id"] == 0
+            assert accounting["subjob"] == entry["subjob"] and accounting["run_id"] == entry["run_id"]
             assert metric["key"] == "states" and metric["value"] == "7"
         directory = root / "full"
         directory.mkdir()
@@ -96,7 +99,9 @@ def main():
                                if row.get("event") == "writer_summary")
                 assert summary["failed_records"] > 0, summary
             if mode == "slow":
-                assert not list(directory.iterdir())
+                summaries = rows(directory)
+                assert len(summaries) == 1 and summaries[0]['event'] == 'parent_record_summary', summaries
+                assert not any(r.get('event') == 'writer_summary' for r in summaries)
     print("record transport, 512-byte packets, and destination failures passed")
 
 

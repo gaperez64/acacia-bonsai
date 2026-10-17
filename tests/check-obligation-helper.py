@@ -282,7 +282,7 @@ def main() -> None:
                 baseline.returncode, baseline.stdout)
             def specs(records):
                 return sorted(({key: value for key, value in row.items()
-                                if key != "worker_pid"} for row in records
+                                if key not in {"worker_pid", "mono_ns", "start_mono_ns"}} for row in records
                                if row.get("event") == "worker_spec"),
                               key=lambda row: row["worker"])
             assert specs(rows) == specs(baseline_rows), (rows, baseline_rows)
@@ -292,7 +292,7 @@ def main() -> None:
     # One ordinary arm makes every record deterministic apart from sampled runtime values.
     # Compare ineligible helper selection with the same ordinary arm alone, including
     # phases, metrics, terminal records and the parent winner.
-    sampled = {"worker_pid", "pid", "mono_ns", "entry_ns", "deadline_ns",
+    sampled = {"user_ns", "sys_ns", "self_cpu_ns", "pid", "start_ticks", "start_mono_ns", "entry_ns", "entry_cpu_ns", "process_cpu_ns", "worker_pid", "pid", "mono_ns", "entry_ns", "deadline_ns",
                "wall_ns", "cpu_ns", "rss_kb",
                "peak_rss_kb", "mallinfo2"}
 

@@ -38,6 +38,7 @@ int main () {
   if (pipe2 (descriptors, O_NONBLOCK) != 0)
     return 1;
   transport.write_fd = descriptors[1];
+  transport.enabled = true;
   acacia::worker_record worker;
   worker.pid = getpid ();
   worker.stage_id = 1;
@@ -71,7 +72,25 @@ int main () {
   drain ();
   if (occurrences (records, "first_useful_action_query_ns") != 2 || worker.dropped)
     return 1;
+  {
+    acacia::legacy_phase search ("search");
+    const auto search_id = worker.stage_id;
+    {
+      acacia::accounting_phase native ("native_direct_solve");
+      {
+        acacia::legacy_phase detail ("preprocessing");
+        if (worker.accounting[2].parent != worker.accounting[1].id ||
+            worker.stage_id != worker.accounting[2].id)
+          return 1;
+      }
+      if (worker.stage_id != search_id || strcmp (worker.observed_stage, "search") != 0)
+        return 1;
+    }
+  }
+  if (worker.accounting_depth)
+    return 1;
   acacia::active_worker_record () = nullptr;
+  transport.enabled = false;
   transport.write_fd = -1;
   close (descriptors[0]);
   close (descriptors[1]);

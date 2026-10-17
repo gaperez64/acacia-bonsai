@@ -531,3 +531,20 @@ def test_compact_stage_records_reuse_physical_identity(tmp_path, lifecycle):
     write_records(tmp_path, lifecycle)
     result = reader.audit_row(row(), tmp_path)
     assert result['delivery'] == 'complete', result['issues']
+
+
+def test_durable_parent_records_and_accounting_share_delivery_audit(tmp_path, lifecycle):
+    # Durable parent records bypass the writer pipe; phase/resource records still
+    # count toward its delivered total but have a separate schema.
+    parent = lifecycle.pop(10)
+    lifecycle[20].extend([
+        dict(event="accounting_entry", worker_pid=20, phase_id=1, phase="obligation_spot"),
+        dict(event="work_identity", worker_pid=20),
+        dict(event="descendant_reap", worker_pid=20, descendant_pid=21),
+    ])
+    write_records(tmp_path, lifecycle)
+    (tmp_path / "10-final.jsonl").write_text(
+        "".join(json.dumps(record) + "\n" for record in parent), encoding="utf-8")
+    result = reader.audit_row(row(), tmp_path)
+    assert result["complete"], result["issues"]
+    assert result["accepted_winners"][0]["route"] == "R"

@@ -1,6 +1,7 @@
 #include "parity_arm.hh"
 
 #include "phase_records.hh"
+#include "solver/accounting_identity.hh"
 #include "solver/controller_writer.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/obligation_helper.hh"
@@ -75,6 +76,11 @@ namespace acacia {
       input.formula = parsed.f;
       input.inputs = std::move (inputs);
       input.outputs = std::move (outputs);
+      if (phase_records_enabled ())
+        accounting_identity (
+            input.formula, input.inputs, input.outputs, "spot-parity",
+            "Generic:Deterministic:High:simul=0:ba-simul=0:det-simul=0:tls-impl=1:wdba-minimize=2",
+            "parity-route");
       parity_route::options config;
       config.synthesis = args.synth_fname.has_value ();
       unsigned tier = 0;
