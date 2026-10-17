@@ -24,13 +24,13 @@ spec.loader.exec_module(phase_completeness)
 
 
 def check_records(directory, result, workers, *, cancelled=()):
-    records = [dict(json.loads(line), emitter_pid=int(path.stem))
+    records = [dict(json.loads(line), emitter_pid=int(path.stem.removesuffix("-final")), durable=path.stem.endswith("-final"))
                for path in directory.glob("*.jsonl")
                for line in path.read_text().splitlines()]
     assert all(row.get("dropped_records", 0) == 0 for row in records), records
     writer, = [row for row in records if row.get("event") == "writer_summary"]
     assert writer["failed_records"] == 0 and not writer["incomplete_packet"], writer
-    assert writer["delivered_records"] == len(records) - 1, writer
+    assert writer["delivered_records"] == sum(not r.get("durable", False) for r in records) - 1, writer
     starts = [row for row in records if row.get("event") == "worker_start"]
     assert len(starts) == workers, starts
     assert len([row for row in records if row.get("event") == "worker_spec"]) == workers
@@ -41,7 +41,7 @@ def check_records(directory, result, workers, *, cancelled=()):
                    and row["emitter_pid"] == pid and "event" in row]
         # Obligation diagnostics have their own unsequenced schema. Every worker
         # lifecycle and phase event must carry the ordinary contiguous sequence.
-        assert all("seq" in row or row["event"].startswith("obligation_")
+        assert all("seq" in row or row["event"].startswith(("obligation_", "accounting_", "descendant_")) or row["event"] in {"worker_resource", "work_identity", "native_work_identity"}
                    for row in emitted), emitted
         child = [row for row in emitted if "seq" in row]
         assert [row["seq"] for row in child] == list(range(1, len(child) + 1)), child
@@ -60,7 +60,7 @@ def check_records(directory, result, workers, *, cancelled=()):
             assert not any(row["event"] == "terminal_result" for row in child), child
         else:
             assert terminal["telemetry"] == "complete" and terminal["signal"] == 0, terminal
-            assert child[-1]["event"] == "terminal_result", child
+            assert child[-1]["event"] in {"terminal_result", "exit"}, child
             assert not snapshots, snapshots
         assert terminal["seq"] == len(child) + len(snapshots) + 1, terminal
         for selection in (row for row in records if row.get("event") == "parent_verdict"

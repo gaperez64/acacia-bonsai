@@ -782,9 +782,9 @@ namespace acacia::solver_detail::equivariant {
       const IOsPrecomputerMaker& ios_precomputer_maker, const ActionerMaker& actioner_maker,
       const InputPickerMaker& input_picker_maker,
       const std::vector<symmetry::indexed_family_hint>& hints = {}) {
+    acacia::accounting_phase recognition ("equivariance_recognition");
     using state = typename SetOfStates::value_type;
     const unsigned num_states = aut->num_states ();
-
 
     auto decline = [] (const char* reason) {
       verb_do (1, vout << "[equivariant] declining: " << reason << "\n");
@@ -852,8 +852,9 @@ namespace acacia::solver_detail::equivariant {
     if (not boolean_side_consistent (G))
       return decline ("generator crosses boolean/counting threshold");
 
-    if (4 > 0 and
-        L->num_clients <= 4)
+    recognition.finish ();
+    acacia::accounting_phase solving ("equivariance_solve");
+    if (4 > 0 and L->num_clients <= 4)
       return solve_orbit_sweep<SetOfStates> (aut, kmax, kmin, kinc, all_inputs, all_outputs, G, *L,
                                              actioner_maker);
 

@@ -216,12 +216,13 @@ def check_record_failures(worker: Path, binary: Path, real: Path,
         # The worker waits on stdin after recorder setup. This checks that
         # records-off creates no writer child or pipe.
         children = Path(f"/proc/{process.pid}/task/{process.pid}/children")
+        enabled = record_dir is not None and os.access(record_dir, os.W_OK)
         for _ in range(100):
             count = len(children.read_text().split())
-            if count or record_dir is None:
+            if count or not enabled:
                 break
             time.sleep(.001)
-        assert count == (1 if record_dir is not None else 0), count
+        assert count == int(enabled), count
         if kill_writer:
             assert count == 1
             os.kill(int(children.read_text().split()[0]), signal.SIGKILL)
@@ -230,7 +231,10 @@ def check_record_failures(worker: Path, binary: Path, real: Path,
         finally:
             if reader_fd is not None:
                 os.close(reader_fd)
-        assert not stderr, stderr
+        if file_limit or record_dir is not None and not os.access(record_dir, os.W_OK):
+            assert stderr == "acacia: phase recording failed; accounting disabled or incomplete\n", stderr
+        else:
+            assert not stderr, stderr
         return process.returncode, stdout, time.monotonic() - before
 
     baseline = execute(None)
@@ -267,7 +271,10 @@ def check_record_failures(worker: Path, binary: Path, real: Path,
     assert result[:2] == baseline[:2] and result[2] < 1, result
     flood_result = execute(stalled, stall=True, flood=True)
     assert flood_result[:2] == baseline[:2] and flood_result[2] < 1, flood_result
-    assert not list(stalled.iterdir())
+    stalled_records = [json.loads(line) for path in stalled.glob("*-final.jsonl")
+                       for line in path.read_text().splitlines()]
+    assert stalled_records and all(r['event'] == 'parent_record_summary' for r in stalled_records), stalled_records
+    assert not list(stalled.glob("[0-9]*.jsonl")) or all(path.stem.endswith("-final") for path in stalled.glob("*.jsonl"))
     # The production single-arm path has the same parent/writer lifecycle.
     def run_real(record_dir: Path | None, deadline: float,
                  arm: str = "real:gr1:oxidd") -> tuple[int, str, float]:

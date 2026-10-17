@@ -7,10 +7,11 @@
 #include "native_support.hh"
 #include "parity_arm.hh"
 #include "phase_records.hh"
-#include "solver/solver_invoker.hh"
 #include "solver/controller_writer.hh"
 #include "solver/obligation_helper.hh"
 #include "solver/realizability_simplify.hh"
+#include "solver/solver_invoker.hh"
+
 #include <spot/tl/parse.hh>
 #include <tlsf/process.h>
 #ifdef __linux__
@@ -54,7 +55,6 @@ namespace {
   volatile sig_atomic_t g_interrupted = 0;
   pid_t g_main_pid = 0;
   acacia::worker_record* g_worker_records = nullptr;
-  bool g_worker_records_shared = false;
   acacia::obligation::control* g_obligation = nullptr;
   acacia::synthesis::rendezvous_slot* g_synthesis = nullptr;
   sig_atomic_t g_eligibility_source = -1, g_helper_index = -1;
@@ -65,8 +65,11 @@ namespace {
   acacia::obligation::outcome g_helper_forced = acacia::obligation::outcome::pending;
   const char* g_helper_stop_reason = "none";
 
-  void record_parent_terminal (sig_atomic_t index, int status, const char* reason, pid_t pid) {
-    // The handler's SIGKILL can be reaped by either the ordinary loop or cleanup.
+  void reap_worker_descendant (acacia::worker_record& record);
+
+  void record_parent_terminal (sig_atomic_t index, int status, const char* reason, pid_t pid,
+                               const rusage* usage, uint64_t reaped_mono_ns) {
+    // Interrupted workers can be reaped by either the ordinary loop or cleanup.
     // Preserve that cancellation cause, but keep normally exited, rejected verdicts distinct.
     if (g_child_interrupted[index] && WIFSIGNALED (status) && WTERMSIG (status) == SIGKILL)
       reason = "interrupted";
@@ -100,10 +103,15 @@ namespace {
       acacia::parity_arm_exhausted (record);
     }
     record.pid = pid;
-    const char* telemetry = !g_worker_records_shared ? "unavailable"
-                            : record.dropped         ? "dropped"
-                            : record.terminal        ? "complete"
-                                                     : "incomplete";
+    const char* telemetry = record.dropped    ? "dropped"
+                            : record.terminal ? "complete"
+                                              : "incomplete";
+    reap_worker_descendant (record);
+    if (record.interruption.mono_ns) {
+      acacia::resource_event (record, "interrupted", true, &record.interruption);
+      record.interruption.mono_ns = 0;
+    }
+    acacia::worker_reaped (record, usage, status, reason, reaped_mono_ns);
     acacia::weakening_cancelled (record, reason);
     acacia::worker_event (record, "parent_terminal", reason,
                           WIFEXITED (status) ? WEXITSTATUS (status) : -1,
@@ -119,6 +127,8 @@ namespace {
       for (sig_atomic_t i = 0; i < g_child_count; ++i)
         if (g_child_pids[i] > 0) {
           g_child_interrupted[i] = 1;
+          if (g_worker_records && !g_worker_records[i].interruption.mono_ns)
+            g_worker_records[i].interruption = acacia::resource_snapshot (g_child_pids[i]);
           kill (-g_child_pids[i], SIGKILL);
           kill (g_child_pids[i], SIGKILL);
         }
@@ -128,13 +138,74 @@ namespace {
     errno = saved_errno;
   }
 
-  void kill_child_groups () {
+  void kill_child_groups (const char* reason) {
     for (sig_atomic_t i = 0; i < g_child_count; ++i)
       if (g_child_pids[i] > 0) {
+        if (g_worker_records) {
+          auto record = g_worker_records[i];
+          record.pid = g_child_pids[i];
+          if (std::strcmp (reason, "interrupted") == 0 && record.interruption.mono_ns) {
+            acacia::resource_event (record, reason, true, &record.interruption);
+            g_worker_records[i].interruption.mono_ns = 0;
+          }
+          else
+            acacia::resource_event (record, reason, true);
+        }
         kill (-g_child_pids[i], SIGKILL);
         // Also cover the fork-to-setpgid window if group creation failed.
         kill (g_child_pids[i], SIGKILL);
       }
+  }
+
+  void reap_worker_descendant (acacia::worker_record& record) {
+    const pid_t pid = record.descendant_pid;
+    if (pid <= 0)
+      return;
+    int status = 0;
+    rusage usage {};
+    pid_t got;
+    do {
+      got = wait4 (pid, &status, 0, &usage);
+    } while (got < 0 && errno == EINTR);
+    if (got != pid)
+      record.descendant_usage_complete = false;
+    acacia::descendant_record (record, pid, got == pid ? &usage : nullptr, status, got != pid);
+    record.descendant_pid = -1;
+  }
+
+  void reap_descendants () {
+    if (!g_worker_records)
+      return;
+    for (sig_atomic_t i = 0; i < g_child_count; ++i)
+      reap_worker_descendant (g_worker_records[i]);
+#ifdef __linux__
+    // Also cover death between fork() and publishing descendant_pid. An adopted
+    // child's process group still identifies its arm even after its PPID changes.
+    char path[96];
+    snprintf (path, sizeof path, "/proc/self/task/%ld/children", long (getpid ()));
+    if (FILE* children = fopen (path, "r")) {
+      long pid;
+      while (fscanf (children, "%ld", &pid) == 1) {
+        if (pid == acacia::phase_records_writer_pid ())
+          continue;
+        const pid_t group = getpgid (pid);
+        for (sig_atomic_t i = 0; i < g_child_count; ++i)
+          if (g_worker_records[i].pid == group) {
+            kill (pid, SIGKILL);
+            int status = 0;
+            rusage usage {};
+            pid_t got;
+            do {
+              got = wait4 (pid, &status, 0, &usage);
+            } while (got < 0 && errno == EINTR);
+            acacia::descendant_record (g_worker_records[i], pid, got == pid ? &usage : nullptr,
+                                       status, got != pid);
+            break;
+          }
+      }
+      fclose (children);
+    }
+#endif
   }
 
   void reap_remaining_children (const char* reason) {
@@ -147,23 +218,28 @@ namespace {
         if (pid <= 0)
           continue;
         int status = 0;
-        const pid_t reaped = waitpid (pid, &status, WNOHANG);
+        rusage usage {};
+        const pid_t reaped = wait4 (pid, &status, WNOHANG, &usage);
         if (reaped == pid || (reaped == -1 && errno == ECHILD)) {
-          record_parent_terminal (i, reaped == pid ? status : 0xffff, reason, pid);
+          record_parent_terminal (i, reaped == pid ? status : 0xffff, reason, pid,
+                                  reaped == pid ? &usage : nullptr,
+                                  g_worker_records ? acacia::phase_clock (CLOCK_MONOTONIC) : 0);
           g_child_pids[i] = 0;
         }
         else
           remaining = true;
       }
-      if (!remaining)
+      if (!remaining) {
+        reap_descendants ();
         return;
+      }
       timespec pause {0, 1000000};
       nanosleep (&pause, nullptr);
     }
   }
 
   void stop_children (const char* reason) {
-    kill_child_groups ();
+    kill_child_groups (reason);
     reap_remaining_children (reason);
   }
 
@@ -211,7 +287,7 @@ namespace {
       written = write (STDERR_FILENO, report, size_t (length));
     } while (written < 0 && errno == EINTR);
     if (written != length)
-      _exit (EXIT_CODE_ERROR);
+      acacia::worker_exit (EXIT_CODE_ERROR);
     std::string_view mode {value};
     for (sig_atomic_t i = 0; i < index; ++i) {
       const auto comma = mode.find (',');
@@ -220,7 +296,34 @@ namespace {
       mode.remove_prefix (comma + 1);
     }
     mode = mode.substr (0, mode.find (','));
+    if (mode == "decline") {
+      acacia::accounting_phase phase ("fake_decline_phase");
+      acacia::worker_decline ("optional_route_unavailable");
+      phase.finish ();
+      acacia::worker_terminal (EXIT_CODE_UNKNOWN);
+      acacia::worker_exit (EXIT_CODE_UNKNOWN);
+    }
+    if (mode == "descendant-stall") {
+      const pid_t descendant = fork ();
+      if (descendant == 0)
+        while (true)
+          pause ();
+      if (descendant < 0)
+        acacia::worker_exit (EXIT_CODE_ERROR);
+      if (auto* w = acacia::active_worker_record ()) {
+        w->descendant_pid = descendant;
+        acacia::descendant_record (*w, descendant, nullptr);
+      }
+      mode = "stall";
+    }
+    if (mode == "flood-stall") {
+      constexpr char flood[] = "{\"event\":\"flood\"}\n";
+      for (unsigned i = 0; i < 20000; ++i)
+        acacia::phase_records_send (flood, sizeof flood - 1);
+      mode = "stall";
+    }
     if (mode == "stall") {
+      acacia::accounting_phase phase ("fake_unfinished_phase");
       signal (SIGTERM, SIG_IGN);
       while (true)
         pause ();
@@ -228,14 +331,14 @@ namespace {
     if (mode == "real-delayed") {
       timespec delay {0, 100000000};
       nanosleep (&delay, nullptr);
-      _exit (EXIT_CODE_REAL);
+      acacia::worker_exit (EXIT_CODE_REAL);
     }
     if (mode == "real-late" && deadline_mono_ns) {
       while (monotonic_ns () < deadline_mono_ns + 20000000ULL) {
         timespec delay {0, 1000000};
         nanosleep (&delay, nullptr);
       }
-      _exit (EXIT_CODE_REAL);
+      acacia::worker_exit (EXIT_CODE_REAL);
     }
     if (mode.starts_with ("wait:")) {
       char byte;
@@ -244,14 +347,14 @@ namespace {
         count = read (std::atoi (mode.data () + 5), &byte, 1);
       } while (count < 0 && errno == EINTR);
       if (count != 1)
-        _exit (EXIT_CODE_ERROR);
+        acacia::worker_exit (EXIT_CODE_ERROR);
     }
     if (mode == "signal") {
       raise (SIGKILL);
-      _exit (EXIT_CODE_ERROR);
+      acacia::worker_exit (EXIT_CODE_ERROR);
     }
     if (mode == "real")
-      _exit (EXIT_CODE_REAL);
+      acacia::worker_exit (EXIT_CODE_REAL);
   }
 #endif
 
@@ -284,6 +387,7 @@ namespace {
       if (!acacia::obligation::limit_address_space ())
         result = {outcome::error, "address_space_limit"};
       else {
+        acacia::accounting_phase preparation ("obligation_preprocessing");
         auto inputs = args.inputs, outputs = args.outputs;
         auto conversion = acacia::obligation::conversion::none;
         if (args.tlsf_specified && (!args.formula_specified || args.synth_fname)) {
@@ -301,6 +405,7 @@ namespace {
         // Mealy. Solve that positive normalized objective once, without a swap
         // or another X shift. Raw API Moore order is exercised in unit tests.
         const auto objective = helper_objective (args);
+        preparation.finish ();
         if (g_obligation->eligible.load (std::memory_order_acquire) ==
             acacia::obligation::eligibility::pending)
           acacia::obligation::publish_eligibility (g_obligation, objective);
@@ -312,6 +417,7 @@ namespace {
                                               acacia::obligation::timing::mealy,
                                               args.synth_fname.has_value (), conversion);
           if (result.value == outcome::real && args.synth_fname) {
+            acacia::accounting_phase output ("obligation_output");
             try {
               if (!acacia::synthesis::write_controller (*args.synth_fname, result.controller))
                 result = {outcome::error, "controller_export_failed"};
@@ -337,7 +443,7 @@ namespace {
                                                             : "unknown");
     acacia::worker_terminal (code, result.reason);
     g_obligation->result.store (result.value, std::memory_order_release);
-    _exit (code);
+    acacia::worker_exit (code);
   }
 
   [[noreturn]] void dispatch_child (const portfolio_arm& arm, const arg_parse_result& arg_values,
@@ -357,7 +463,7 @@ namespace {
       }
       const int code = acacia::run_parity_arm (arg_values);
       acacia::worker_terminal (code);
-      _exit (code);
+      acacia::worker_exit (code);
     }
     if (arm.kind != portfolio_arm_kind::legacy) {
       try {
@@ -389,7 +495,7 @@ namespace {
           acacia::worker_stopped ("inconclusive");
         acacia::worker_terminal (result);
         acacia::phase_records_summary (arm.native_name ());
-        _exit (result);
+        acacia::worker_exit (result);
       } catch (const std::bad_alloc& exception) {
         acacia::native_arm_diagnostic (arm.native_name (), "native_exception", -1,
                                        exception.what (),
@@ -403,7 +509,7 @@ namespace {
       }
       acacia::worker_terminal (EXIT_CODE_UNKNOWN);
       acacia::phase_records_summary ("native");
-      _exit (EXIT_CODE_UNKNOWN);
+      acacia::worker_exit (EXIT_CODE_UNKNOWN);
     }
     acacia::selected_oracle_layout = arg_values.oracle_layout;
     auto backend = arm.legacy->backend;
@@ -484,6 +590,8 @@ namespace {
       acacia::worker_record_text (record.proof_polarity, arm.legacy ? "REAL" : "unknown");
     }
     const acacia::phase_stamp fork_start = acacia::phase_start ();
+    if (g_worker_records)
+      g_worker_records[g_child_count].start_mono_ns = fork_start.wall;
     const auto parent_context =
         g_worker_records ? g_worker_records[g_child_count] : acacia::worker_record {};
     const pid_t pid = fork ();
@@ -500,7 +608,7 @@ namespace {
         // SIGKILL also terminates suspended synthesis competitors. Recheck the
         // parent to cover its death between fork and installing the signal.
         if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != g_main_pid)
-          _exit (EXIT_CODE_UNKNOWN);
+          acacia::worker_exit (EXIT_CODE_UNKNOWN);
       }
 #endif
       if (g_synthesis) {
@@ -511,6 +619,10 @@ namespace {
       if (g_worker_records) {
         acacia::active_worker_record () = &g_worker_records[g_child_count];
         acacia::active_worker_record ()->pid = getpid ();
+        atexit ([] {
+          if (auto* w = acacia::active_worker_record ())
+            acacia::worker_event (*w, "exit");
+        });
         acacia::worker_event (*acacia::active_worker_record (), "worker_start");
         acacia::worker_route ("dispatch");
       }
@@ -519,7 +631,7 @@ namespace {
                                                  acacia::phase_clock (CLOCK_PROCESS_CPUTIME_ID)}
                           : acacia::phase_stamp {};
       if (setpgid (0, 0) != 0)
-        _exit (EXIT_CODE_ERROR);
+        acacia::worker_exit (EXIT_CODE_ERROR);
       sigprocmask (SIG_SETMASK, &old_mask, nullptr);
       if (child_start.wall) {
         const char* name = arm.kind == portfolio_arm_kind::legacy ? "legacy" : arm.native_name ();
@@ -544,22 +656,26 @@ namespace {
           auto spawned = parent_context;
           spawned.pid = pid;
           acacia::worker_event (spawned, "worker_spawn");
-          char specification[512];
+          char specification[768];
           const int length = snprintf (
               specification, sizeof specification,
               "{\"event\":\"worker_spec\",\"worker\":%u,\"worker_pid\":%ld,"
-              "\"kind\":\"%s\",\"requested_polarity\":\"%s\","
+              "\"mono_ns\":%llu,\"start_mono_ns\":%llu,\"requested_backend\":\"%s\",\"kind\":\"%"
+              "s\",\"requested_polarity\":\"%s\","
               "\"translation\":\"%s\",\"transform\":\"%s\",\"provider\":\"%s\","
               "\"r_prepass\":%s,\"equivariance\":%s}\n",
-              spawned.index, long (pid), arm.legacy ? "legacy" : arm.native_name (),
-              spawned.original_polarity,
+              spawned.index, long (pid), (unsigned long long) fork_start.wall,
+              (unsigned long long) fork_start.wall, spawned.requested_backend,
+              arm.legacy ? "legacy" : arm.native_name (), spawned.original_polarity,
               arm.legacy ? translation_pref_name (arm.legacy->translation_pref) : "native",
               arm.legacy ? (arm.unreal ? unreal_strategy_name (arm.legacy->unreal_x) : "real")
                          : "exact",
               arm.legacy ? acacia::automaton_provider_name (arm.legacy->provider) : "native",
               spawned.r_prepass ? "true" : "false", spawned.equivariance ? "true" : "false");
           if (length > 0 && size_t (length) < sizeof specification)
-            acacia::phase_records_send (specification, size_t (length));
+            acacia::phase_records_final (specification, size_t (length));
+          else
+            acacia::phase_records_drop ();
         }
         if (arm.kind == portfolio_arm_kind::parity)
           g_parity_workers.push_back (sig_atomic_t (g_child_count));
@@ -694,6 +810,11 @@ namespace {
         if (memory) {
           g_helper_forced = acacia::obligation::outcome::exhausted;
           g_helper_stop_reason = "rss_share";
+          if (g_worker_records) {
+            auto r = g_worker_records[g_helper_index];
+            r.pid = helper;
+            acacia::resource_event (r, "rss_share", true);
+          }
           kill (-helper, SIGKILL);
           kill (helper, SIGKILL);
         }
@@ -704,6 +825,11 @@ namespace {
             std::ranges::find (g_parity_exhausted, index) == g_parity_exhausted.end () &&
             acacia::obligation::resident_bytes (worker) > g_parity_rss_share) {
           g_parity_exhausted.push_back (index);
+          if (g_worker_records) {
+            auto r = g_worker_records[index];
+            r.pid = worker;
+            acacia::resource_event (r, "rss_share", true);
+          }
           kill (-worker, SIGKILL);
           kill (worker, SIGKILL);
         }
@@ -755,6 +881,10 @@ namespace {
       const int observed = waitid (synthesis_winner >= 0 ? P_PID : P_ALL,
                                    synthesis_winner >= 0 ? g_child_pids[synthesis_winner] : 0,
                                    &finished, WEXITED | WNOHANG | WNOWAIT);
+      rusage reaped_usage {};
+      uint64_t reaped_mono_ns = 0;
+      const pid_t finished_group =
+          g_worker_records && finished.si_pid > 0 ? getpgid (finished.si_pid) : -1;
       pid_t reaped = observed == -1 ? -1 : 0;
       int wait_error = errno;
       if (observed == 0 && finished.si_pid == acacia::phase_records_writer_pid ()) {
@@ -766,8 +896,31 @@ namespace {
         // WNOWAIT keeps the group leader's PID reserved until descendants in
         // its group have been killed, even if the leader exited earlier.
         kill (-finished.si_pid, SIGKILL);
-        reaped = waitpid (finished.si_pid, &status, WNOHANG);
+        if (g_worker_records)
+          for (sig_atomic_t i = 0; i < g_child_count; ++i)
+            if (g_child_pids[i] == finished.si_pid) {
+              auto record = g_worker_records[i];
+              record.pid = finished.si_pid;
+              acacia::resource_event (record, "exit_observed", true);
+              break;
+            }
+        reaped = wait4 (finished.si_pid, &status, WNOHANG, &reaped_usage);
         wait_error = errno;
+        if (reaped > 0 && g_worker_records)
+          reaped_mono_ns = acacia::phase_clock (CLOCK_MONOTONIC);
+      }
+      if (reaped > 0 && g_worker_records) {
+        bool descendant = false;
+        for (sig_atomic_t i = 0; i < g_child_count; ++i)
+          if (g_worker_records[i].descendant_pid == reaped ||
+              (g_worker_records[i].pid == finished_group && reaped != finished_group)) {
+            acacia::descendant_record (g_worker_records[i], reaped, &reaped_usage, status);
+            g_worker_records[i].descendant_pid = -1;
+            descendant = true;
+            break;
+          }
+        if (descendant)
+          continue;
       }
       sig_atomic_t reaped_index = -1;
       if (reaped > 0) {
@@ -790,16 +943,21 @@ namespace {
       if (deadline_mono_ns && now_ns >= deadline_mono_ns) {
         std::cerr << "{\"stage\":\"deadline\",\"status\":\"expired\"}\n";
         if (reaped_index >= 0)
-          record_parent_terminal (reaped_index, status, "deadline_rejected", reaped);
+          record_parent_terminal (reaped_index, status, "deadline_rejected", reaped, &reaped_usage,
+                                  reaped_mono_ns);
         stop_children ("deadline");
         error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
       }
       if (g_interrupted) {
         if (reaped_index >= 0)
-          record_parent_terminal (reaped_index, status, "interrupted_rejected", reaped);
+          record_parent_terminal (reaped_index, status, "interrupted_rejected", reaped,
+                                  &reaped_usage, reaped_mono_ns);
         stop_children ("interrupted");
         error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
       }
+      if (reaped_index >= 0)
+        record_parent_terminal (reaped_index, status, WIFSIGNALED (status) ? "signal" : "exit",
+                                reaped, &reaped_usage, reaped_mono_ns);
       if (reaped == 0) {
         const uint64_t pause_ns =
             deadline_mono_ns ? std::min<uint64_t> (10000000, deadline_mono_ns - now_ns) : 10000000;
@@ -812,10 +970,6 @@ namespace {
           continue;
         break;
       }
-
-      if (reaped_index >= 0)
-        record_parent_terminal (reaped_index, status, WIFSIGNALED (status) ? "signal" : "exit",
-                                reaped);
 
       // A child killed by a signal (SIGSEGV, SIGABRT, ...) has WIFEXITED
       // false; WEXITSTATUS would then return 0, which equals EXIT_CODE_REAL
@@ -881,6 +1035,7 @@ namespace {
         return ret;
       }
     }
+    reap_descendants ();
     if (child_reported_error)
       error (EXIT_CODE_ERROR, "ERROR\n");
     error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
@@ -954,14 +1109,20 @@ int main (int argc, char** argv) {
     const size_t bytes = worker_slots * sizeof (acacia::worker_record);
     void* shared =
         mmap (nullptr, bytes, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    g_worker_records_shared = shared != MAP_FAILED;
-    g_worker_records = g_worker_records_shared
-                           ? static_cast<acacia::worker_record*> (shared)
-                           : new (std::nothrow) acacia::worker_record[worker_slots];
-    if (!g_worker_records) {
-      constexpr char unavailable[] =
-          "{\"event\":\"attribution_unavailable\",\"reason\":\"allocation\"}\n";
-      acacia::phase_records_send (unavailable, sizeof unavailable - 1);
+    if (shared == MAP_FAILED)
+      acacia::phase_records_disable ();
+    else {
+#ifdef __linux__
+      // Adopt the safety-core subprocess only after its accounting area exists.
+      if (prctl (PR_SET_CHILD_SUBREAPER, 1) != 0) {
+        munmap (shared, bytes);
+        acacia::phase_records_disable ();
+      }
+      else
+#endif
+      {
+        g_worker_records = static_cast<acacia::worker_record*> (shared);
+      }
     }
   }
 
@@ -977,6 +1138,7 @@ int main (int argc, char** argv) {
   struct sigaction action;
   memset (&action, 0, sizeof (struct sigaction));
   action.sa_handler = terminate;
+  action.sa_mask = block_set;
   sigaction (SIGTERM, &action, nullptr);
   sigaction (SIGINT, &action, nullptr);
   sigaction (SIGQUIT, &action, nullptr);

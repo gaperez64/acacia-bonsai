@@ -60,15 +60,21 @@ namespace {
     active_worker_record () = nullptr;
     close (fds[1]);
     std::vector<std::string> events;
+    unsigned resources = 0;
     phase_packet packet;
     while (read (fds[0], &packet, offsetof (phase_packet, line)) > 0) {
       const auto bytes = read (fds[0], packet.line, packet.length);
       if (not expect ("complete lifecycle packet", bytes == packet.length))
         break;
-      events.emplace_back (packet.line, packet.length);
+      const std::string line (packet.line, packet.length);
+      if (line.find ("\"event\":\"worker_resource\"") != std::string::npos)
+        ++resources;
+      else
+        events.push_back (line);
     }
     close (fds[0]);
     transport = saved;
+    expect ("failure and terminal resource boundaries", resources == 2);
     if (not expect ("one complete failure lifecycle", events.size () == 5))
       return;
     const std::vector<std::string> names {"worker_start", "route_selected", "route_start",

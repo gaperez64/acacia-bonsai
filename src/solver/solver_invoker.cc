@@ -1,17 +1,18 @@
-#include "solver/formula_input.hh"
 #include "solver/solver_invoker.hh"
 
 #include "aut_preprocessors/cap_census.hh"
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
+#include "solver/accounting_identity.hh"
 #include "solver/ap_partition.hh"
 #include "solver/configured_components.hh"
-#include "solver/create_automaton.hh"
-#include "solver/degenerate_io.hh"
 #include "solver/controller_check.hh"
 #include "solver/controller_writer.hh"
+#include "solver/create_automaton.hh"
+#include "solver/degenerate_io.hh"
 #include "solver/diagnostics.hh"
 #include "solver/forced_output_contradiction.hh"
+#include "solver/formula_input.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/obligation_helper.hh"
 #include "solver/realizability_simplify.hh"
@@ -113,11 +114,11 @@ namespace {
     return "unknown";
   }
 
-  spot::twa_graph_ptr translate_with_diagnostics (spot::formula& formula,
-                                                  spot::translator& translator,
-                                                  TRANSLATION_PREF_T preference) {
+  spot::twa_graph_ptr translate_with_diagnostics (
+      spot::formula& formula, spot::translator& translator, TRANSLATION_PREF_T preference,
+      const acacia::translation_identity* identity = nullptr) {
     try {
-      return create_automaton (formula, translator, preference);
+      return create_automaton (formula, translator, preference, identity);
     } catch (const std::bad_alloc&) {
       acacia::worker_stopped ("resource");
       throw;
@@ -420,7 +421,11 @@ namespace {
         spot::twa_graph_ptr aut;
         {
           ACACIA_DIAG_SCOPED_TIMER (translation_ms);
-          aut = translate_with_diagnostics (spot_formula, trans, translation_pref);
+          const acacia::translation_identity identity {
+              input_aps, output_aps, translation_pref_name (translation_pref),
+              ACACIA_DIAG_STRINGIFY (AUT_PREPROCESSOR),
+              check_unreal && *check_unreal == UNREAL_X_AUTOMATON};
+          aut = translate_with_diagnostics (spot_formula, trans, translation_pref, &identity);
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("synthesis-check-after-translation");
@@ -539,7 +544,11 @@ namespace {
         spot::twa_graph_ptr aut;
         {
           ACACIA_DIAG_SCOPED_TIMER (translation_ms);
-          aut = translate_with_diagnostics (spot_formula, trans, translation_pref);
+          const acacia::translation_identity identity {
+              input_aps, output_aps, translation_pref_name (translation_pref),
+              ACACIA_DIAG_STRINGIFY (AUT_PREPROCESSOR),
+              check_unreal && *check_unreal == UNREAL_X_AUTOMATON};
+          aut = translate_with_diagnostics (spot_formula, trans, translation_pref, &identity);
         }
         if (provider != acacia::automaton_provider::frozen_graph)
           std::cerr << acacia::automaton_provider_name (provider) << " fallback translation_ms="
@@ -1236,5 +1245,4 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   weakening_records.fallback (spot_formula);
 
   return solve_decomposed (spot_formula, input_aps, output_aps, check_unreal, synth_fname, runner);
-
 }

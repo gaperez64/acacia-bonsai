@@ -46,7 +46,7 @@ namespace acacia::unreal_witnesses {
       worker_record* worker_ = nullptr;
       uint64_t source_ = 0, alphabet_ = 0;
       std::string alphabet_text_;
-      phase_stamp entered_;
+      phase_stamp entered_ {};
       bool extended_ = false;
 
       // Invocation-local artifact binding only, following the existing Spot

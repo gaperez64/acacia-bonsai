@@ -17,6 +17,22 @@
 
 namespace acacia {
   namespace {
+    void record_phase (void*, const char* name, int entering, const char* artifact) noexcept {
+      if (entering) {
+        const auto id = accounting_begin (name);
+        if (id && artifact && *artifact) {
+          char line[256];
+          const int n = snprintf (line, sizeof line,
+                                  "{\"event\":\"accounting_artifact\",\"worker_pid\":%ld,"
+                                  "\"phase_id\":%llu,\"artifact_sha256\":\"%s\"}\n",
+                                  long (getpid ()), (unsigned long long) id, artifact);
+          if (n > 0 && size_t (n) < sizeof line)
+            phase_records_send (line, size_t (n));
+        }
+      }
+      else
+        accounting_end ();
+    }
     void record_combined_event (void*, TlsfGr1BothEventKind kind, TlsfGr1BothEventRoute route,
                                 int proof_unreal, const char* stage, const char*,
                                 TlsfGr1LiftStatus failure) {
@@ -74,7 +90,30 @@ namespace acacia {
     options.stats = &stats;
 # ifdef ACACIA_NATIVE_TEST_HOOKS
     native_lift_test_options (options);
-# endif
+#endif
+    if (phase_records_enabled ()) {
+      char configuration[512], options_hash[65], line[512];
+      const int count =
+          snprintf (configuration, sizeof configuration,
+                    "exact:proof_order=%d:env=%d:r_prepass=%d:solver_nodes=%zu:solver_cache=%zu:"
+                    "checker_nodes=%zu:checker_cache=%zu:env_candidate_ns=%llu",
+                    int (options.proof_order), !options.disable_env_lift, args.r_prepass,
+                    size_t (options.solver_nodes), size_t (options.solver_cache),
+                    size_t (options.checker_nodes), size_t (options.checker_cache),
+                    (unsigned long long) options.env_candidate_ns);
+      tlsf_pipeline_source_sha256 (configuration, size_t (count), options_hash);
+      const int n = snprintf (
+          line, sizeof line,
+          "{\"event\":\"native_work_identity\",\"worker_pid\":%ld,\"subjob\":0,\"run_id\":0,"
+          "\"source_sha256\":\"%s\","
+          "\"provider\":\"oxidd\",\"translation_options\":\"tlsf-exact\",\"preprocessing_options_"
+          "sha256\":\"%s\"}\n",
+          long (getpid ()), args.tlsf_sha256.c_str (), options_hash);
+      if (n > 0 && size_t (n) < sizeof line)
+        phase_records_send (line, size_t (n));
+      else
+        phase_records_drop ();
+    }
     TlsfGr1LiftError error {};
     TlsfGr1LiftTarget* raw_target = nullptr;
     TlsfGr1LiftOptions prepare_options = options;
@@ -102,7 +141,7 @@ namespace acacia {
         ~ResultGuard () { tlsf_gr1_both_result_clear (&value); }
     } guard {result};
     phase_scope combined_phase (arm, "combined_call");
-    const TlsfGr1BothObserverV1 observer {record_combined_event, nullptr};
+    const TlsfGr1BothObserverV1 observer {record_combined_event, nullptr, record_phase};
     const TlsfGr1BothOptionsV2 routing {&options, phase_records_enabled () ? &observer : nullptr,
                                         !args.r_prepass};
     status = tlsf_gr1_both_from_target_v2 (target.get (), &routing, &result, &error);

@@ -20,10 +20,11 @@ def rows(directory: Path) -> list[dict]:
         for line in path.read_text().splitlines():
             try:
                 row = json.loads(line)
-                row["emitter_pid"] = int(path.stem)
+                row["emitter_pid"] = int(path.stem.removesuffix("-final"))
+                row["durable"] = path.stem.endswith("-final")
                 result.append(row)
             except json.JSONDecodeError:
-                result.append({"event": "incomplete_json", "emitter_pid": int(path.stem)})
+                result.append({"event": "incomplete_json", "emitter_pid": int(path.stem.removesuffix("-final"))})
     return result
 
 
@@ -55,7 +56,7 @@ def complete_records(records: list[dict], expected_workers: int = 1,
         assert terminal["dropped_records"] == 0, terminal
         worker = terminal["worker_pid"]
         events = [row for row in records if row.get("worker_pid") == worker
-                  and row["emitter_pid"] == worker]
+                  and row["emitter_pid"] == worker and "seq" in row]
         sequences = [row["seq"] for row in events]
         assert sequences == list(range(1, len(sequences) + 1)), events
         for index, row in enumerate(events):
@@ -71,7 +72,7 @@ def complete_records(records: list[dict], expected_workers: int = 1,
     writers = [row for row in records if row.get("event") == "writer_summary"]
     assert len(writers) == 1 and writers[0]["failed_records"] == 0, records
     assert not writers[0]["incomplete_packet"], writers
-    assert writers[0]["delivered_records"] == len(records) - 1, records
+    assert writers[0]["delivered_records"] == sum(not r.get("durable", False) for r in records) - 1, records
     winners = [row for row in records if row.get("event") == "parent_winner"]
     assert len(winners) == expected_winners, records
     for winner in winners:
@@ -138,7 +139,7 @@ def complete_timeout_delivery(records: list[dict], expected_workers: int,
     writers = [row for row in records if row.get("event") == "writer_summary"]
     assert len(writers) == 1 and writers[0]["failed_records"] == 0, records
     assert not writers[0]["incomplete_packet"], writers
-    assert writers[0]["delivered_records"] == len(records) - 1, records
+    assert writers[0]["delivered_records"] == sum(not r.get("durable", False) for r in records) - 1, records
 
 
 def timeout_portfolio(binary: Path, directory: Path, signum: int | None = None,

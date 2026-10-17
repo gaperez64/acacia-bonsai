@@ -953,7 +953,7 @@ obligation_helper_test = executable (
   'obligation-helper-test',
   ['obligation_helper_test.cc', '../src/solver/obligation_helper.cc',
    '../src/solver/mealy_to_moore.cc'],
-  include_directories : inc, dependencies : [spot_dep, bddx_dep])
+  include_directories : inc, dependencies : [spot_dep, bddx_dep] + tlsf_deps)
 test ('obligation-helper', obligation_helper_test, suite : ['unit', 'obligation'])
 if host_machine.system () == 'linux'
   obligation_helper_faults = shared_library (
@@ -1028,4 +1028,23 @@ if host_machine.system () == 'linux' and get_option ('acacia_preset') == first_s
                 meson.project_build_root ()],
         suite : ['unit', 'tlsf'], depends : [ab_exe], timeout : 330,
         is_parallel : false)
+endif
+
+if get_option ('buildtype') == 'debug' and host_machine.system () == 'linux'
+  record_setup_faults = shared_library ('record-setup-faults', 'phase_record_setup_faults.c',
+                                        dependencies : cpp.find_library ('dl'))
+  test ('worker-accounting', py,
+    args : [files ('check-worker-accounting.py'), game_backend_integration,
+            meson.project_build_root (), ab_exe, record_setup_faults],
+    suite : ['unit', 'attribution'],
+    depends : [game_backend_integration, ab_exe, record_setup_faults], timeout : 60)
+endif
+test ('accounting-analyzers', py, args : [files ('test_accounting_analyzers.py')],
+      suite : ['unit', 'attribution'])
+if host_machine.system () == 'linux'
+  test ('obligation-recorded', py,
+        args : [files ('check-obligation-recorded.py'), obligation_helper_test,
+                meson.project_build_root (), record_transport_ack],
+        suite : ['unit', 'attribution', 'obligation'],
+        depends : [obligation_helper_test, record_transport_ack], timeout : 90)
 endif

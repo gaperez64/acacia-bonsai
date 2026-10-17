@@ -47,6 +47,12 @@ namespace {
 }
 
 int main () {
+  acacia::phase_records_start_writer ();
+  acacia::worker_record accounting;
+  accounting.pid = getpid ();
+  if (acacia::phase_records_enabled ())
+    acacia::active_worker_record () = &accounting;
+
   using namespace acacia::obligation;
   constexpr uint64_t gib = uint64_t {1024} * 1024 * 1024;
   for (const auto& [limit, workers, equal, alone] :
@@ -227,5 +233,6 @@ int main () {
   require (!invalid_moore, "Moore controller used current inputs");
   empty.reset ();
   dict->unregister_all_my_variables (&owner);
+  acacia::active_worker_record () = nullptr;
   std::cout << "obligation helper checks passed\n";
 }

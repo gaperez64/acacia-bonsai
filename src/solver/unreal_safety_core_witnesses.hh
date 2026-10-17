@@ -513,21 +513,31 @@ namespace acacia::unreal_witnesses {
       result.state = attempt_result::unavailable;
       return result;
     }
+    auto* accounting = phase_records_enabled () ? active_worker_record () : nullptr;
+    if (accounting) {
+      accounting->descendant_pid = pid;
+      descendant_record (*accounting, pid, nullptr);
+    }
     int status = 0;
     rusage usage {};
-    bool cancelled = false;
+    bool cancelled = false, have_usage = false;
     while (true) {
       const auto reaped = wait4 (pid, &status, WNOHANG, &usage);
-      if (reaped == pid)
+      if (reaped == pid) {
+        have_usage = true;
         break;
+      }
       if (reaped < 0 && errno != EINTR)
         break;
       const auto now = phase_clock (CLOCK_MONOTONIC);
       if (now >= deadline) {
         cancelled = true;
         kill (pid, SIGKILL);
-        while (wait4 (pid, &status, 0, &usage) < 0 && errno == EINTR) {
-        }
+        pid_t got;
+        do {
+          got = wait4 (pid, &status, 0, &usage);
+        } while (got < 0 && errno == EINTR);
+        have_usage = got == pid;
         break;
       }
       // Global polling granularity: at most 1 ms, shortened near the deadline.
@@ -547,6 +557,19 @@ namespace acacia::unreal_witnesses {
       }
     }
     close (channel[0]);
+    if (accounting) {
+      if (have_usage)
+        accounting->descendant_user_ns +=
+            uint64_t (usage.ru_utime.tv_sec) * 1000000000ULL + usage.ru_utime.tv_usec * 1000ULL;
+      if (have_usage)
+        accounting->descendant_sys_ns +=
+            uint64_t (usage.ru_stime.tv_sec) * 1000000000ULL + usage.ru_stime.tv_usec * 1000ULL;
+      if (!have_usage)
+        accounting->descendant_usage_complete = false;
+      descendant_record (*accounting, pid, have_usage ? &usage : nullptr, status, !have_usage);
+      std::atomic_thread_fence (std::memory_order_release);
+      accounting->descendant_pid = -1;
+    }
     result.usage = usage;
     return result;
   }
