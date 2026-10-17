@@ -293,10 +293,10 @@ namespace acacia::spot_fastpath {
       return spot::solve_parity_game (game);
     }
 
-    inline spot::twa_graph_ptr build_gfg_decision_arena (const spot::twa_graph_ptr& aut_forbid,
+    inline spot::twa_graph_ptr build_gfg_decision_arena (const spot::twa_graph_ptr& negated_spec_aut,
                                                          const bdd& all_inputs,
                                                          const bdd& all_outputs) {
-      auto completed = complete_copy_with_rejecting_sink (aut_forbid);
+      auto completed = complete_copy_with_rejecting_sink (negated_spec_aut);
 
       auto arena = spot::make_twa_graph (completed->get_dict ());
       arena->copy_ap_of (completed);
@@ -379,12 +379,12 @@ namespace acacia::spot_fastpath {
     return classify_nba_for_fast_path (aut, true);
   }
 
-  inline fast_path_result deterministic_forbidden_fast_path (
-      const spot::twa_graph_ptr& aut_forbid, const bdd& all_outputs,
+  inline fast_path_result deterministic_negated_spec_fast_path (
+      const spot::twa_graph_ptr& negated_spec_aut, const bdd& all_outputs,
       bool want_strategy, bool want_winning_region = false, bool moore = false) {
     fast_path_result res;
 
-    auto good = complete_copy_with_rejecting_sink (aut_forbid);
+    auto good = complete_copy_with_rejecting_sink (negated_spec_aut);
     good->set_acceptance (1, spot::acc_cond::acc_code::cobuchi ());
     spot::set_synthesis_outputs (good, all_outputs);
 
@@ -400,8 +400,8 @@ namespace acacia::spot_fastpath {
     res.current_output_player_wins = p_out_wins;
     if (want_winning_region) {
       const auto& arena_winners = spot::get_state_winners (arena);
-      spot::region_t original_winners (aut_forbid->num_states (), false);
-      for (unsigned s = 0; s < aut_forbid->num_states (); ++s)
+      spot::region_t original_winners (negated_spec_aut->num_states (), false);
+      for (unsigned s = 0; s < negated_spec_aut->num_states (); ++s)
         original_winners[s] = arena_winners[s];
       res.current_output_player_winning_region = std::move (original_winners);
       res.solved_arena = arena;
@@ -411,7 +411,7 @@ namespace acacia::spot_fastpath {
         *acacia::synthesis::deferred_controller = [arena, gi] () mutable {
           return spot::solved_game_to_separated_mealy (arena, gi);
         };
-        res.strategy = aut_forbid;
+        res.strategy = negated_spec_aut;
       }
       else
         res.strategy = spot::solved_game_to_separated_mealy (arena, gi);
@@ -420,12 +420,12 @@ namespace acacia::spot_fastpath {
     return res;
   }
 
-  inline fast_path_result gfg_forbidden_decision_only_fast_path (
-      const spot::twa_graph_ptr& aut_forbid, const bdd& all_inputs,
+  inline fast_path_result gfg_negated_spec_decision_only_fast_path (
+      const spot::twa_graph_ptr& negated_spec_aut, const bdd& all_inputs,
       const bdd& all_outputs) {
     fast_path_result res;
 
-    auto arena = detail::build_gfg_decision_arena (aut_forbid, all_inputs, all_outputs);
+    auto arena = detail::build_gfg_decision_arena (negated_spec_aut, all_inputs, all_outputs);
     arena->set_acceptance (1, spot::acc_cond::acc_code::cobuchi ());
     const bool p_out_wins = spot::solve_game (arena);
 
@@ -434,7 +434,7 @@ namespace acacia::spot_fastpath {
     return res;
   }
 
-  inline fast_path_result try_spot_nba_fast_path (const spot::twa_graph_ptr& aut_forbid,
+  inline fast_path_result try_spot_nba_fast_path (const spot::twa_graph_ptr& negated_spec_aut,
                                                   const bdd& all_inputs,
                                                   const bdd& all_outputs,
                                                   bool want_controller_strategy,
@@ -451,21 +451,21 @@ namespace acacia::spot_fastpath {
     result.gfg_disabled = not can_use_gfg_decision;
 
     const auto class_started = detail::clock::now ();
-    if (not is_plain_existential_buchi (aut_forbid)) {
+    if (not is_plain_existential_buchi (negated_spec_aut)) {
       result.classification = nba_fast_class::unsupported;
     }
-    else if (is_syntactically_deterministic (aut_forbid)) {
+    else if (is_syntactically_deterministic (negated_spec_aut)) {
       result.classification = nba_fast_class::deterministic_buchi;
     }
     else if (not can_use_gfg_decision) {
       result.classification = nba_fast_class::gfg_disabled;
     }
-    else if (not detail::within_two_token_runtime_budget (aut_forbid->num_states ())) {
+    else if (not detail::within_two_token_runtime_budget (negated_spec_aut->num_states ())) {
       result.classification = nba_fast_class::gfg_budget_declined;
       result.gfg_budget_declined = true;
     }
     else {
-      result.classification = detail::two_token_game_eve_wins (aut_forbid)
+      result.classification = detail::two_token_game_eve_wins (negated_spec_aut)
           ? nba_fast_class::gfg_buchi
           : nba_fast_class::non_gfg_buchi;
     }
@@ -477,7 +477,7 @@ namespace acacia::spot_fastpath {
 
     if (c == nba_fast_class::deterministic_buchi and detail::has_mode (mode, SPOT_FAST_DET)) {
       const auto solve_started = detail::clock::now ();
-      auto res = deterministic_forbidden_fast_path (aut_forbid, all_outputs,
+      auto res = deterministic_negated_spec_fast_path (negated_spec_aut, all_outputs,
                                                     want_controller_strategy);
       res.classification = result.classification;
       res.classification_ran = result.classification_ran;
@@ -493,7 +493,7 @@ namespace acacia::spot_fastpath {
     if (c == nba_fast_class::gfg_buchi and
         can_use_gfg_decision) {
       const auto solve_started = detail::clock::now ();
-      auto res = gfg_forbidden_decision_only_fast_path (aut_forbid, all_inputs, all_outputs);
+      auto res = gfg_negated_spec_decision_only_fast_path (negated_spec_aut, all_inputs, all_outputs);
       res.classification = result.classification;
       res.classification_ran = result.classification_ran;
       res.gfg_disabled = result.gfg_disabled;

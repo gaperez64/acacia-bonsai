@@ -11,7 +11,7 @@ shift precedes translation.
 
 ## Structural tiers and engines
 
-Classify the worker's forbidden language using acceptance structure alone:
+Classify the worker's negated-specification language using acceptance structure alone:
 
 | Tier | Acceptance | Production route |
 |---|---|---|

@@ -22,6 +22,12 @@ Each fixed-K forward search owns its graph, rank interner, losing antichain and
 queues, and discards them before changing K. Long-lived components must own their
 state; builders must not retain references to temporary makers or moved objects.
 
+The REAL worker translates ¬φ directly to a Büchi automaton, called the
+**negated-specification automaton** (`negated_spec_aut`), and reads it universally
+as co-Büchi for φ. Reserve “complement” for an actual complementation of an existing
+automaton: parity tier 4 uses `spot::dualize` to complement a captured REAL worker's
+automaton; original-formula mode reuses its positive translation.
+
 ## Ranks, losing sets and graph identities
 
 The ordinary dense state uses the bare Vector, without a zero-length tail wrapper.
