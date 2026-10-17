@@ -46,6 +46,7 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 | TAA rank node cap zero, `candidate=only/fallback` | STOPPED/resource | `attribution`: both modes; retained UNKNOWN or verified incumbent fallback |
 | `ACACIA_TEST_ATTRIBUTION_PAUSE` at R/U/direct/checking; worker SIGKILL; parent SIGTERM | Parent STOPPED/deadline/signal/interrupted; incomplete child telemetry | `attribution`: selected route retained, never interpreted as applicability |
 | `ACACIA_TEST_CHILD_MODES` / `ACACIA_TEST_DELAY_AFTER_REAP` (late, failed, killed, winner) | Parent lifecycle reason; late result rejected | `native-gr1-cli`: deadline/kill/reaping/winner attribution |
+| `ACACIA_TEST_SYNTHESIS_REAP_FD` | Parent SIGKILL cancellation reaped before interruption check | `synthesis-rendezvous`: deterministic `interrupted` terminal reason |
 | Transport writer stall/delay, 512-byte pipe, full/broken/slow destination | Telemetry loss/incomplete; never a solver decline | `worker-record-transport`, `record-transport`: bounded nonblocking delivery, explicit dropped/incomplete records |
 
 ## Validator, contract and failure-origin census
@@ -226,7 +227,7 @@ DECLINE means genuine applicability/unsupported input or a completed logical cer
 | src/solver/solver_invoker.cc:135 | `UNKNOWN` | `worker_stopped` | STOPPED/error/resource/deadline/cancelled | `worker` | `"error"` |
 | src/solver/solver_invoker.cc:204 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
 | src/solver/solver_invoker.cc:412 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
-| src/solver/synthesis_rendezvous.hh:69 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
+| src/solver/synthesis_rendezvous.hh:70 | `UNKNOWN` | `std::runtime_error` | STOPPED/error | `provider` | `"failed to write controller"` |
 | src/solver/spot_lazy_buchi_view.hh:65 | `UNKNOWN` | `resource` | STOPPED/resource | `provider` | `"lazy Buchi BDD budget exceeded"` |
 | src/solver/spot_lazy_buchi_view.hh:86 | `UNKNOWN` | `resource` | STOPPED/resource | `provider` | `"lazy Buchi acceptance budget exceeded"` |
 | src/solver/spot_lazy_buchi_view.hh:91 | `DECLINED` | `FailureCause::applicability` | DECLINE/applicability | `provider` | `"lazy Buchi requires a conjunction of all Inf sets or false"` |
