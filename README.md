@@ -61,21 +61,12 @@ This program depends on:
   `g++` too (set `CXX` before configuring, compiling, and installing).
 - [The Z shell](https://www.zsh.org/), for some scripts.
 
-Initialize the vendored Posets and TLSF-tools dependencies after cloning:
+Every build includes OxiDD and native GR(1), and requires Cargo (Rust 1.91+),
+`cbindgen` (0.29.4), `flex` and `bison`; Meson builds the native library automatically.
+Initialize the nested sources after cloning:
 ```
-git submodule update --init
+git submodule update --init --recursive
 ```
-This is deliberately non-recursive. To compile a `docker_default` preset with
-native GR(1) arms, also initialize TLSF-tools' nested OxiDD submodule, install
-Rust 1.91 or newer with Cargo and `cbindgen`, and build its stamped C library
-before Meson setup:
-```
-git -C subprojects/tlsf-tools submodule update --init external/oxidd
-subprojects/tlsf-tools/scripts/build_oxidd.sh
-```
-Meson checks the OxiDD source commit and archive hash recorded in that stamp.
-The Docker CLI release checkout includes the nested submodule, and
-`scripts/compile.sh` builds its library.
 
 The corpus test driver (`tests/check-real-correct.sh`) can optionally run the
 solver under Valgrind (`-V`) or Callgrind (`-c`); no test does so by default,
@@ -121,9 +112,7 @@ benchmarking step, so that only setup and compilation are done; the build lands
 in `build_<preset>`. If compilation memory is tight, add `-L` to use the
 low-memory compile profile.
 
-The Meson option `acacia_enable_tlsf_frontend` is off by default, so a bare
-`meson setup build` does not require Flex and Bison. Every configuration preset
-enables the frontend, so any `self-benchmark.sh -c NAME` build includes it:
+Every build includes the native TLSF frontend and requires Flex and Bison:
 ```
 build_$preset/src/acacia-bonsai -T spec.tlsf
 ```
@@ -131,15 +120,22 @@ build_$preset/src/acacia-bonsai -T spec.tlsf
 input with `--tlsf`. No external TLSF converter is needed at runtime, and
 Moore-target controller conversion happens inside Acacia.
 
-The first `docker_default` preset enables `acacia_native_arms` and includes
-`both:gr1-real-lift:oxidd` in its default TLSF decision portfolio. With
-`-Dacacia_native_arms=true`, the same `acacia-bonsai` binary accepts
+The first `docker_default` preset includes `both:gr1-real-lift:oxidd` in its
+default TLSF decision portfolio. Every `acacia-bonsai` build accepts
 `--arms real:gr1:oxidd`, `--arms unreal:gr1:oxidd`, `--arms both:gr1:oxidd`,
 `--arms both:gr1-lift:oxidd`, `--arms both:gr1-real-lift:oxidd`,
 and `--arms real:param-lift:oxidd` with `-T spec.tlsf`. These arms run in
-process and can also be selected explicitly. The GR(1) reduction is exact, so
-one solve decides
-the winner: `both:gr1:oxidd` reports whichever side it proves, while
+forked worker processes and can also be selected explicitly. A worker that
+terminates on a signal contributes no verdict; the remaining arms continue.
+
+At process start, before any threads exist, Acacia and the tlsf-tools CLIs set
+`OXIDD_STACK_SIZE` when it is unset and `RLIMIT_AS` is finite, using
+`min(1 GiB, max(8 MiB, RLIMIT_AS / 16))`. An explicit `OXIDD_STACK_SIZE` always
+wins. Library manager construction does not change the environment. Python
+module imports may occur after other threads have started, so the module does
+not set this default; Python hosts can set the variable before starting threads.
+
+The GR(1) reduction is exact, so one solve decides the winner: `both:gr1:oxidd` reports whichever side it proves, while
 `both:gr1-lift:oxidd` first tries a checked system or environment lift from
 shared seeds and falls back to the same exact game solve.
 `both:gr1-real-lift:oxidd` tries only the checked system lift; unreal seeds and

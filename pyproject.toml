@@ -1,5 +1,5 @@
 [build-system]
-requires = ["meson-python>=0.16.0", "meson>=1.5.0", "ninja"]
+requires = ["meson-python>=0.16.0", "meson>=1.7.0", "ninja"]
 build-backend = "mesonpy"
 
 [project]
@@ -38,9 +38,9 @@ Issues = "https://github.com/gaperez64/acacia-bonsai/issues"
 [tool.meson-python.args]
 setup = ["-Dbuild_python=true", "-Dbuild_tests=false"]
 install = ["--tags=python-runtime"]
-# Bundle subproject sources (posets, std-simd) into the sdist so it's
-# self-contained — otherwise `pip install` from sdist can't resolve
-# dependency('posets') via its wrap fallback.
+# Include tlsf-tools, its nested OxiDD Rust sources/lockfile/source identity
+# (via its Meson dist script), Posets, std-simd and yyjson in the sdist.
+# Builds need Cargo + cbindgen on PATH; Meson generates all native artifacts.
 dist = ["--include-subprojects"]
 
 [tool.ruff]

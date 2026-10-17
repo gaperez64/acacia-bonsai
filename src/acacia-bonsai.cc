@@ -12,6 +12,7 @@
 #include "solver/obligation_helper.hh"
 #include "solver/realizability_simplify.hh"
 #include <spot/tl/parse.hh>
+#include <tlsf/process.h>
 #ifdef __linux__
 # include <sys/prctl.h>
 #endif
@@ -23,6 +24,7 @@
 #include <cerrno>
 #include <cmath>
 #include <csignal>
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <memory>
@@ -229,6 +231,19 @@ namespace {
       }
       _exit (EXIT_CODE_REAL);
     }
+    if (mode.starts_with ("wait:")) {
+      char byte;
+      ssize_t count;
+      do {
+        count = read (std::atoi (mode.data () + 5), &byte, 1);
+      } while (count < 0 && errno == EINTR);
+      if (count != 1)
+        _exit (EXIT_CODE_ERROR);
+    }
+    if (mode == "signal") {
+      raise (SIGKILL);
+      _exit (EXIT_CODE_ERROR);
+    }
     if (mode == "real")
       _exit (EXIT_CODE_REAL);
   }
@@ -237,14 +252,12 @@ namespace {
   spot::formula helper_objective (const arg_parse_result& args) {
     std::string formula = args.formula;
     auto inputs = args.inputs, outputs = args.outputs;
-#if ACACIA_ENABLE_TLSF_FRONTEND
     if (args.tlsf_specified && !args.formula_specified) {
       auto spec = acacia::tlsf_frontend::parse (args.tlsf_source);
       formula = std::move (spec.formula);
       inputs = std::move (spec.inputs);
       outputs = std::move (spec.outputs);
     }
-#endif
     validate_ltl_partition (inputs, outputs);
     auto parsed = spot::parse_infix_psl (formula, spot::default_environment::instance (),
                                           false, false);
@@ -267,7 +280,6 @@ namespace {
       else {
         auto inputs = args.inputs, outputs = args.outputs;
         auto conversion = acacia::obligation::conversion::none;
-#if ACACIA_ENABLE_TLSF_FRONTEND
         if (args.tlsf_specified && (!args.formula_specified || args.synth_fname)) {
           auto spec = acacia::tlsf_frontend::parse (args.tlsf_source);
           inputs = std::move (spec.inputs);
@@ -279,7 +291,6 @@ namespace {
                                : acacia::obligation::conversion::delay_outputs;
           }
         }
-#endif
         // The linked frontend already lowered Moore/strict TLSF to effective
         // Mealy. Solve that positive normalized objective once, without a swap
         // or another X shift. Raw API Moore order is exercised in unit tests.
@@ -343,7 +354,6 @@ namespace {
       _exit (code);
     }
     if (arm.kind != portfolio_arm_kind::legacy) {
-#if ACACIA_NATIVE_ARMS
       try {
         // A native-only portfolio has no legacy normalization boundary. Use one
         // existing child to prepare eligibility, while its siblings already run.
@@ -388,9 +398,6 @@ namespace {
       acacia::worker_terminal (EXIT_CODE_UNKNOWN);
       acacia::phase_records_summary ("native");
       _exit (EXIT_CODE_UNKNOWN);
-#else
-      _exit (EXIT_CODE_ERROR);
-#endif
     }
     acacia::selected_oracle_layout = arg_values.oracle_layout;
     auto backend = arm.legacy->backend;
@@ -873,6 +880,10 @@ namespace {
 }
 
 int main (int argc, char** argv) {
+  if (tlsf_oxidd_configure_process_stack () != 0) {
+    std::perror ("configure OxiDD process stack");
+    return EXIT_CODE_ERROR;
+  }
   acacia::phase_records_start_writer ();
   // parse all arguments that were passed
   acacia::phase_scope argument_phase ("legacy_parent", "argument_handling_total");

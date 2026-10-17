@@ -1,4 +1,5 @@
 project ('Acacia Bonsai', ['c', 'cpp'],
+         meson_version : '>=1.7.0',
          version : run_command ('scripts/git-version.py', '--pep440',
                                 check : true).stdout ().strip (),
          default_options : ['cpp_std=c++23', 'b_ndebug=if-release'],
@@ -15,28 +16,12 @@ add_global_arguments (cpp.get_supported_arguments (extra_args), language: 'cpp')
 spot_dep = dependency ('libspot')
 bddx_dep = dependency ('libbddx')  # Spot's copy of BuDDy
 posets_dep = dependency ('posets')
-tlsf_deps = []
-enable_tlsf_frontend = get_option ('acacia_enable_tlsf_frontend') or get_option ('acacia_native_arms')
-native_test_hooks = get_option ('acacia_native_arms') and \
-  get_option ('buildtype') in ['debug', 'debugoptimized'] and \
+tlsf_native = subproject ('tlsf-tools', default_options : [
+  'cpp_std=c++23', 'research_tools=false',
+])
+tlsf_deps = [tlsf_native.get_variable ('tlsf_dep')]
+native_test_hooks = get_option ('buildtype') in ['debug', 'debugoptimized'] and \
   get_option ('acacia_compiler_profile') == 'debug'
-if get_option ('acacia_native_arms')
-  tlsf_native = subproject ('tlsf-tools', default_options : [
-    'cpp_std=c++23', 'native_gr1=enabled', 'oxidd=enabled',
-    'research_tools=false',
-  ])
-  tlsf_deps += tlsf_native.get_variable ('tlsf_dep')
-elif enable_tlsf_frontend
-  tlsf_deps += dependency (
-    'tlsf',
-    fallback : ['tlsf-tools', 'tlsf_dep'],
-    default_options : [
-      'cpp_std=c++23',
-      'oxidd=disabled',
-      'research_tools=false',
-    ],
-  )
-endif
 
 compiler_profile = get_option ('acacia_compiler_profile')
 compiler_profile_args = []
@@ -89,7 +74,6 @@ build_conf.set ('ACACIA_TRANSLATION_PREF', translation_preference)
 build_conf.set ('ACACIA_TRANSLATION_PREFS', translation_preference)
 build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION',
                 get_option ('acacia_forced_output_contradiction') ? 1 : 0)
-build_conf.set ('ACACIA_NATIVE_ARMS', get_option ('acacia_native_arms') ? 1 : 0)
 build_conf.set ('SIMD_IS_MAX', get_option ('acacia_simd_is_max') ? 'true' : 'false')
 build_conf.set ('ACACIA_ENABLE_DIAGNOSTICS', get_option ('acacia_enable_diagnostics') ? 1 : 0)
 build_conf.set_quoted ('ACACIA_DEFAULT_ARMS', get_option ('acacia_default_arms'))
@@ -99,7 +83,6 @@ build_conf.set ('ACACIA_FORWARD_SAFETY_SOLVER',
                 get_option ('acacia_forward_safety_solver') ? 1 : 0)
 build_conf.set ('ACACIA_ENABLE_EQUIVARIANT_SOLVER',
                 get_option ('acacia_enable_equivariant_solver') ? 1 : 0)
-build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', enable_tlsf_frontend ? 1 : 0)
 aut_preprocessor = get_option ('acacia_aut_preprocessor')
 aut_preprocessor_types = {
   'surely_losing' : 'aut_preprocessors::surely_losing',

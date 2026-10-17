@@ -2,7 +2,6 @@
 
 #include "configuration.hh"
 
-#if ACACIA_NATIVE_ARMS
 # include <string_view>
 # include <tlsf/gr1_check.h>
 # include <tlsf/gr1_lift.h>
@@ -50,4 +49,3 @@ namespace acacia {
   void native_budget_record (std::string_view arm, std::string_view stage,
                              const TlsfGr1ConstructionWork& work, uint64_t started_ns) noexcept;
 }
-#endif

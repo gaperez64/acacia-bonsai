@@ -12,13 +12,12 @@ if [ "$oxidd_commit" != "$expected_oxidd" ]; then
   echo "oracle toolchain: OxiDD is at $oxidd_commit, expected $expected_oxidd" >&2
   exit 1
 fi
-CARGO_NET_OFFLINE=true "$source_dir/scripts/build_oxidd.sh"
 mkdir -p "$build_dir"
 mkdir -p "$build_dir/tmp"
 export TMPDIR="$build_dir/tmp"
 if [ ! -f "$build_dir/build.ninja" ]; then
   meson setup "$build_dir" "$source_dir" --buildtype=release \
-    -Doxidd=enabled -Dresearch_tools=true -Dcpu=baseline --wrap-mode=nodownload
+    -Dresearch_tools=true -Dcpu=baseline --wrap-mode=nodownload
 else
   meson setup "$build_dir" "$source_dir" --reconfigure --wrap-mode=nodownload
 fi

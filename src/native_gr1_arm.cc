@@ -10,7 +10,6 @@
 # include "native_test_hooks.hh"
 #endif
 
-#if ACACIA_NATIVE_ARMS
 # include <tlsf/gr1_check.h>
 # include <tlsf/gr1_oxidd.h>
 # include <tlsf/gr1_reduction.h>
@@ -260,4 +259,3 @@ namespace acacia {
     return proof_unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL;
   }
 }
-#endif

@@ -9,7 +9,6 @@
 # include "native_test_hooks.hh"
 #endif
 
-#if ACACIA_NATIVE_ARMS
 # include <tlsf/gr1_lift.h>
 
 # include <cstring>
@@ -194,4 +193,3 @@ namespace acacia {
     return unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL;
   }
 }
-#endif

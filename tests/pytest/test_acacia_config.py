@@ -40,7 +40,6 @@ def test_gr1_prepass_preset_is_five_arms():
     options, presets = module.load_registry()
     candidate = module.normalize_preset(options, presets,
                                         "otf_sparse_formula_gr1_prepass")
-    assert candidate["native_arms"] is True
     assert candidate["default_arms"].split(",") == [
         "real:small:backward",
         "real:small:forward",
@@ -60,7 +59,6 @@ def test_gr1_real_prepass_preset_is_six_arms():
     assert data["role"] == "shipping"
     assert name in presets["groups"]["docker_default"]
     candidate = module.normalize_preset(options, presets, name)
-    assert candidate["native_arms"] is True
     assert candidate["default_arms"].split(",") == [
         "real:small:backward",
         "real:small:forward",
@@ -71,7 +69,7 @@ def test_gr1_real_prepass_preset_is_six_arms():
     ]
     assert {
         key for key in candidate if key not in {"_preset", "preset"} and candidate[key] != parent[key]
-    } == {"native_arms", "default_arms"}
+    } == {"default_arms"}
 
 
 def test_obligation_membership_is_explicit_in_shipping_portfolios():
@@ -90,7 +88,6 @@ def test_obligation_membership_is_explicit_in_shipping_portfolios():
             assert arm not in arms, name
     fallback = module.normalize_preset(
         options, presets, presets["groups"]["docker_default"][2])
-    assert fallback["native_arms"] is False
     assert arm in fallback["default_arms"].split(",")
     assert options["options"]["default_arms"]["default"] == ""
 
@@ -535,14 +532,13 @@ def test_normalize_preset_resolves_inheritance():
     assert values["_preset"] == "best_decomp_rank_bucketed_mona"
 
 
-def test_tlsf_frontend_default_flows_through_every_preset():
+def test_native_dependencies_have_no_feature_options():
     module = load_module()
     options, presets = module.load_registry()
-
-    # This shared default is what makes the retired *_tlsf presets redundant.
+    removed = {"enable_tlsf_frontend", "native_arms"}
+    assert removed.isdisjoint(options["options"])
     for name in presets["presets"]:
-        values = module.normalize_preset(options, presets, name)
-        assert values["enable_tlsf_frontend"] is True
+        assert removed.isdisjoint(module.normalize_preset(options, presets, name))
 
 
 def test_all_groups_reference_existing_presets_and_shipping_is_unique():
@@ -585,7 +581,6 @@ def test_meson_args_emit_every_option_with_lowercase_booleans():
             expected = "true" if values[key] else "false"
             assert f"-D{meson_name}={expected}" in args
     assert not any("=True" in arg or "=False" in arg for arg in args)
-    assert "-Dacacia_enable_tlsf_frontend=true" in args
 
     values["spot_lazy_provider"] = True
     assert "-Dacacia_spot_lazy_provider=true" in module.meson_args(options, values)
@@ -606,8 +601,6 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         "-DACACIA_TRANSLATION_PREF=spot::postprocessor::Any",
         "-DACACIA_TRANSLATION_PREFS=spot::postprocessor::Any",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",
-        "-DACACIA_ENABLE_TLSF_FRONTEND=1",
-        "-DACACIA_NATIVE_ARMS=0",
         "-DSIMD_IS_MAX=false",
         "-DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed",
         "-DACACIA_ENABLE_DIAGNOSTICS=1",
@@ -620,18 +613,6 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     assert flags[:len(expected)] == expected
     assert flags[len(expected)] == "-DAUT_PREPROCESSOR=aut_preprocessors::surely_losing"
 
-
-@pytest.mark.parametrize("enabled", [False, True])
-def test_native_arms_preprocessor_flag_follows_option(enabled):
-    module = load_module()
-    options, _ = module.load_registry()
-    values = module.defaults(options)
-    values["native_arms"] = enabled
-
-    flags = module.preprocessor_flags(options, values)
-    assert [flag for flag in flags if flag.startswith("-DACACIA_NATIVE_ARMS=")] == [
-        f"-DACACIA_NATIVE_ARMS={int(enabled)}"
-    ]
 
 
 def test_preprocessor_flags_omit_disabled_conditional_macros():
@@ -734,6 +715,6 @@ def test_kept_presets_are_flat_and_each_selector_varies():
     resolved = [module.normalize_preset(options, presets, name) for name in presets["presets"]]
     for section in ("options", "families"):
         for name, option in options[section].items():
-            if name in {"native_arms", "enable_tlsf_frontend", "preset"}:
+            if name in {"preset"}:
                 continue
             assert any(values[name] != option["default"] for values in resolved), name

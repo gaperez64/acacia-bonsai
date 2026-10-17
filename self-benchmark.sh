@@ -1,6 +1,9 @@
 #!/bin/zsh -f
 
-mkdir -p _bm-logs
+benchmark_source_root=$PWD
+benchmark_build_root=${BENCHMARK_BUILD_ROOT:-.}
+benchmark_log_root=$PWD/_bm-logs
+mkdir -p "$benchmark_build_root" "$benchmark_log_root"
 
 BENCHMARK_SUITE=ab/syntcomp21/crit
 TIMEOUT_FACTOR=1.7
@@ -87,6 +90,7 @@ Environment:
   BENCHMARK_CGROUP_MEMORY_MAX=MEMORY     Same as -m.
   BENCHMARK_CGROUP_SWAP_MAX=MEMORY       systemd MemorySwapMax value (default: 0).
   BENCHMARK_COMPILE_PROFILE=normal|lowmem|checked
+  BENCHMARK_BUILD_ROOT=DIR              Build directory parent (default: .).
   BENCHMARK_COMPILE_JOBS=N               Meson compile parallelism (default: 1).
   BENCHMARK_TEST_JOBS=N                  Meson benchmark/test parallelism (default: 1).
 EOF
@@ -277,7 +281,7 @@ build_config_matches() {
 benchmark_build_for() {
     local name=$1
     if ! is_tool_config $name; then
-        echo "build_$name"
+        echo "$benchmark_build_root/build_$name"
         return
     fi
 
@@ -344,8 +348,8 @@ if ! (( $donot[(Ie)build] )); then
             continue
         fi
         meson_param=(${(z)meson_confs[$name]})
-        build=build_$name
-        log=_bm-logs/$name.log
+        build=$benchmark_build_root/build_$name
+        log=$benchmark_log_root/$name.log
         rm -f $log
         current_config="$(python3 "$config_helper" show "$name")"
         if [[ -e $build ]]; then
@@ -364,7 +368,7 @@ if ! (( $donot[(Ie)build] )); then
             echo -n "building $build (logfile: $log)... "
             native_flag=()
             [[ -n $native_file ]] && native_flag=(--native-file "$native_file")
-            if meson setup $build $setup_args $native_flag $meson_param &>> $log; then
+            if meson setup $build "$benchmark_source_root" $setup_args $native_flag $meson_param &>> $log; then
                 print -r -- "$current_config" > $build/.acacia-config.json
                 echo "done."
             else
@@ -388,8 +392,8 @@ if ! (( $donot[(Ie)compile] )); then
             echo "$name is an external benchmark backend, not compiling an Acacia config."
             continue
         fi
-        build=build_$name
-        log=_bm-logs/$name.log
+        build=$benchmark_build_root/build_$name
+        log=$benchmark_log_root/$name.log
         if [[ -e $build/compiled ]]; then
             if [[ ! -x $build/src/acacia-bonsai ]]; then
                 echo "$name has a stale compiled marker, but $build/src/acacia-bonsai is missing or not executable"
@@ -410,15 +414,15 @@ if ! (( $donot[(Ie)compile] )); then
         fi
         cd $build
         echo -n "compiling $name (logfile: $log)... "
-        if meson compile $compile_args &>> ../$log; then
+        if meson compile $compile_args &>> $log; then
             echo "done"
             touch compiled
         else
             echo "FAILED."
-            cat ../$log
+            cat $log
             $force || exit 3
         fi
-        cd ..
+        cd "$benchmark_source_root"
     done
 fi
 
@@ -442,8 +446,8 @@ if ! (( $donot[(Ie)benchmark] )); then
             slice_label=${meson_slice[1]#--slice=}
             log_suffix=-slice-${slice_label/\//-of-}
         fi
-        log=_bm-logs/$name$log_suffix.log
-        meta=_bm-logs/$name$log_suffix.meta
+        log=$benchmark_log_root/$name$log_suffix.log
+        meta=$benchmark_log_root/$name$log_suffix.meta
         marker=$build/benchmarked$log_suffix
         is_tool_config $name && marker=$build/benchmarked-$name$log_suffix
         if [[ ! -e $build/compiled ]]; then
@@ -466,7 +470,7 @@ if ! (( $donot[(Ie)benchmark] )); then
             continue
         fi
         cd $build
-	rm -f ../$log
+	rm -f $log
 	## For external benchmark backends, redirect every --suite=ab/…
 	## argument to the backend's Meson suite prefix so that the same meson
 	## run picks up the tool-backed benchmarks instead of the ab ones.
@@ -488,7 +492,7 @@ if ! (( $donot[(Ie)benchmark] )); then
 	else
 	    this_suites=($benchsuites)
 	fi
-	rm -f ../$meta
+	rm -f $meta
 	{
 	    print -r -- "config=$name"
 	    if is_tool_config $name; then
@@ -521,22 +525,22 @@ if ! (( $donot[(Ie)benchmark] )); then
 	    print -r -- "benchmark_compile_profile=$BENCHMARK_COMPILE_PROFILE"
 	    print -r -- "benchmark_compile_jobs=$BENCHMARK_COMPILE_JOBS"
 	    print -r -- "benchmark_test_jobs=$BENCHMARK_TEST_JOBS"
-	    python3 ../scripts/spot-metadata.py
-	} > ../$meta
+	    python3 "$benchmark_source_root/scripts/spot-metadata.py"
+	} > $meta
 	rm -f meson-logs/testlog.json
 	test_status=0
 	meson_jobs=(--num-processes "$BENCHMARK_TEST_JOBS")
 	if $justtest; then
 	    echo -n "testing $name on $this_suites (logfile: $log)... "
-	    run_benchmark_command $name $run_prefix meson test --no-rebuild $meson_jobs $this_suites $meson_slice -t $TIMEOUT_FACTOR &>> ../$log || test_status=$?
+	    run_benchmark_command $name $run_prefix meson test --no-rebuild $meson_jobs $this_suites $meson_slice -t $TIMEOUT_FACTOR &>> $log || test_status=$?
 	else
 	    echo -n "benchmarking $name on $this_suites (logfile: $log)... "
-	    run_benchmark_command $name $run_prefix meson test --no-rebuild --benchmark $meson_jobs $this_suites $meson_slice -t $TIMEOUT_FACTOR &>> ../$log || test_status=$?
+	    run_benchmark_command $name $run_prefix meson test --no-rebuild --benchmark $meson_jobs $this_suites $meson_slice -t $TIMEOUT_FACTOR &>> $log || test_status=$?
 	fi
         if [[ ! -s meson-logs/testlog.json ]]; then
             echo "FAILED; Meson did not produce meson-logs/testlog.json for $this_suites"
             $force || exit 5
-            cd ..
+            cd "$benchmark_source_root"
             continue
         fi
 	# In benchmark mode, Meson status 1 is outcome data: strict UNKNOWN,
@@ -545,10 +549,10 @@ if ! (( $donot[(Ie)benchmark] )); then
 	# a runner/infrastructure failure and remain fatal.  Quick test mode keeps
 	# the historical policy of accepting timeout-only suites while still
 	# rejecting wrong answers, explicit failures, and non-timeout runner errors.
-	if { $justtest && { grep -q '^Fail:[[:space:]]*[1-9]' ../$log ||
-	                    grep -q 'FAILED:' ../$log ||
+	if { $justtest && { grep -q '^Fail:[[:space:]]*[1-9]' $log ||
+	                    grep -q 'FAILED:' $log ||
 	                    { (( test_status != 0 )) &&
-	                      ! grep -q '^Timeout:[[:space:]]*[1-9]' ../$log; }; }; } ||
+	                      ! grep -q '^Timeout:[[:space:]]*[1-9]' $log; }; }; } ||
 	   { ! $justtest && (( test_status > 1 )); }; then
 	    echo "FAILED; testlog stored at $log, _bm-logs/$name$log_suffix.json left untouched"
 	    $force || exit 5
@@ -560,7 +564,7 @@ if ! (( $donot[(Ie)benchmark] )); then
 	    fi
 	    touch $marker:t
 	fi
-        cd ..
+        cd "$benchmark_source_root"
         cp $build/meson-logs/testlog.json _bm-logs/$name$log_suffix.json
     done
 fi

@@ -36,15 +36,7 @@ import sys
 # not how it SOLVES, and it must fail loudly when it matters.  A solver-behaviour
 # option must never appear in this list -- that divergence is silent by nature,
 # which is what made the local_certificate one survive as long as it did.
-INTENTIONAL_DIVERGENCE = {
-    "acacia_enable_tlsf_frontend":
-        "meson=false keeps a plain `meson setup` free of the flex/bison "
-        "dependency -- .github/workflows/main.yml covers the frontend in a "
-        "separate job that sets the option explicitly.  json=true because every "
-        "binary scripts/acacia-config.py builds drives the benchmark harness "
-        "through -T.  A binary without it rejects -T outright, so the mismatch "
-        "surfaces immediately instead of changing an answer.",
-}
+INTENTIONAL_DIVERGENCE = {}
 
 # Build products, benchmark inputs and compiler flags are outside the solver
 # registry. Keep this list explicit so a new solver option cannot escape checks.

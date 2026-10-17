@@ -17,7 +17,7 @@ set -euo pipefail
 echo "== Installing build dependencies =="
 yum install -y --setopt=install_weak_deps=False \
     autoconf automake libtool bison flex \
-    git swig wget \
+    git swig wget curl \
     gcc-toolset-14 gcc-toolset-14-gcc gcc-toolset-14-gcc-c++
 
 # Use GCC 14 for both Spot and the wheel compilation — the acacia-bonsai
@@ -26,6 +26,11 @@ yum install -y --setopt=install_weak_deps=False \
 source /opt/rh/gcc-toolset-14/enable
 export CC=gcc
 export CXX=g++
+
+# Match Dockerfile.cd; Meson builds the locked OxiDD FFI for each wheel.
+curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.91.0
+export PATH="$HOME/.cargo/bin:$PATH"
+cargo install cbindgen --version 0.29.4 --locked
 
 echo "== Building Spot ${SPOT_VERSION} =="
 workdir=$(mktemp -d)

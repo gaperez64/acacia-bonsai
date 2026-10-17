@@ -1,6 +1,5 @@
 #pragma once
 
-#if ACACIA_NATIVE_ARMS
 #include <memory>
 #include <string_view>
 #include <tlsf/pipeline.h>
@@ -19,4 +18,3 @@ namespace acacia {
                               std::string_view semantics, bool needs_policy,
                               bool unreal = false);
 }
-#endif

@@ -1,5 +1,7 @@
 # Acacia-Bonsai changelog
 
+Every build now includes OxiDD and native GR(1); Cargo and cbindgen are required.
+
 From the Acacia 1.x `TACAS23` snapshot (`5ffd8f99`, 2022-11-11) through
 2026-09-25. Release dates below follow the release record; other dates follow
 the commits and PRs. PAR-2 charges every unanswered case twice the time cap.
