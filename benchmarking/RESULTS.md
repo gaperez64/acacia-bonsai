@@ -12,6 +12,22 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-18 — Tier 4 needs no strpm-simd (#282)
+
+Archive `tier4-spot282-20261018`; one diagnostics build of 176b321c, tier 4 forced to
+Spot's `solve_parity_game` or left on strpm-simd, paired per input with rotated order,
+serial 8 GiB scopes, cooled.
+
+| Inputs | strpm-simd | Spot only |
+|---|---:|---:|
+| 223 tier-4 wins of `otd-OTF-owner20261016` at 17 s | 223 decided, PAR-2 202.8 s | 223 decided, PAR-2 201.3 s |
+| 8 further tier-4 wins at 60 s | 8 decided | 8 decided |
+
+No verdict conflicts. Game construction and solve took 41.6 s with strpm-simd and
+39.5 s with Spot (per-input geometric mean 0.88); no input is more than 1 s slower
+either way. strpm-simd needed Spot's fallback on 28 of the 223. The port is removed
+and tier 4 solves with Spot directly.
+
 ## 2026-10-18 — Shipping selection: keep the four members
 
 Archive `ship-select20261018`: fresh 17 s full-corpus rows on master 45840ec3 for the
