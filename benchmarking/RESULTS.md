@@ -28,6 +28,40 @@ continuation after its optional pre-pass. Sharing, staging and a launch classifi
 have no measured upside on this machine; #277 was closed on this 8-core evidence,
 with fewer-core settings left unmeasured.
 
+## 2026-10-17 — Parity arm translation: no general setting wins (#261)
+
+Archive `parity261-translation20261017`; Spot 2.16 `ltl2tgba`, the 36 tier 1–3 inputs
+of `otd-parity-engines20261015` (5 tier 1, 1 tier 2, 30 tier 3), 60 s per command.
+Each variant changes one setting of the production translation and is checked
+against it for tier, verdict and language. The automaton dumps (39 GB) are not
+packed; `large-outputs.sha256` lists them and `experiment/run.sh` regenerates them.
+
+| Variant | Translation, matched inputs | Failures | Tier/verdict changes |
+|---|---|---:|---:|
+| production (`--high`) | 26.8 s on 36 | 0 | — |
+| `--medium` | 7.0 s vs 19.4 s on 35 | 1 | 0 |
+| `--low` | 15.0 s vs 3.2 s on 34 | 2 | 0 |
+| `tls-impl=0` | 27.9 s vs 26.8 s on 36 | 0 | 0 |
+| simplification off | 47.4 s vs 19.3 s on 32 | 4 | 0 |
+| `--any` (no determinization) | — | 34 nondeterministic | — |
+
+Translation is concentrated in three inputs: `workstation_resupply_pb_5` (16.3 s),
+`robot-grid-reach-repeated-with-obstacles-6d-real` (7.4 s) and
+`workstation_resupply_pb_4` (1.5 s); the other 33 take under 0.4 s each.
+`--medium` cuts the two workstation inputs to 4.1 s and 0.4 s but the robot-grid
+input no longer finishes in 60 s, so it trades one input for another rather than
+dominating. Splitting construction from determinization is far slower (30–60+ s
+per input) than Spot's integrated deterministic translation.
+
+Tier-3 conversion effort (`autfilt` low/medium/high) makes no measurable difference, and
+8 of the 30 tier-3 inputs are outside its scope. Going straight to tier 4 (no
+Büchi conversion, strpm solve) is 0.79× overall; on `pb_5` the solve takes 50 s
+against 0.1 s for the Büchi game. The separate-process probe's orient/classify/game
+times are dominated by HOA re-parsing and are not production costs; only
+translation is compared.
+
+No setting changes. A medium-then-high fallback would be fitted to two inputs.
+
 ## 2026-10-17 — No default arm can be dropped (#264)
 
 Archive `portfolioloo20261017`; frozen OTF binary 74eeebee, SYNTCOMP26, 17 s.
