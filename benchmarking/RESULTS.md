@@ -12,6 +12,25 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-18 — Shipping selection: keep the four members
+
+Archive `ship-select20261018`: fresh 17 s full-corpus rows on master 45840ec3 for the
+three non-default `docker_default` members. The first member's row is
+`otd-OTF-owner20261016` (frozen 74eeebee), so this is not a same-session comparison.
+
+| Member | Arms | Solved (R/U) | PAR-2 (s) | Timeout CPU/wall | Scope peak p90 / max |
+|---|---:|---:|---:|---:|---:|
+| `otf_sparse_formula_parity` | 7 | 1339 (613/726) | 6928 | — | 0.92 / 5.24 GiB |
+| `otf_sparse_formula_gr1_real_prepass` | 6 | 1226 (573/653) | 11031 | 4.1 | 0.86 / 5.11 GiB |
+| `otf_sparse_formula` | 5 | 1199 (552/647) | 11880 | 3.6 | 0.80 / 2.52 GiB |
+| `best_decomp_rank_bucketed_semantic_mona` | 0 | 1067 (517/550) | 16358 | 2.7 | 0.80 / 1.70 GiB |
+
+No verdict conflicts. The four together decide 1,340: the only addition over the first
+member is `round_robin_arbiter_unreal1_pb_4_7_pe_` at 16.4 s, inside the near-cap
+window. Owner decision: keep the four in this order. The second is the no-parity
+fallback, the third the lean member, the fourth the synthesis member. Synthesis
+success and controller size are unmeasured (#280).
+
 ## 2026-10-18 — G5 passes without a waiver (#265)
 
 Archive `g5-tlsf-tools20261018`; shipping preset built from 232f3fe8, SYNTCOMP26, 17 s.
