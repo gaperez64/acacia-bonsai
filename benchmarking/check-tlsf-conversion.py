@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Spot-check generated .ltl/.part pairs by rerunning SyFCo exactly."""
+"""Spot-check pairs with SyFCo; label native fallbacks as lacking an independent check."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 
 from benchlib import ROOT, read_part
-from tlsf_pairs import convert_pair
+from tlsf_pairs import convert_pair, native_inspect
 
 
 def canonicalize_formula(
@@ -71,17 +71,7 @@ def formula_keys(
 def inspect_native(
     executable: pathlib.Path, source: pathlib.Path, timeout: float
 ) -> tuple[str, str, str]:
-    result = subprocess.run(
-        [str(executable), str(source)],
-        check=True,
-        capture_output=True,
-        timeout=timeout,
-    )
-    fields = result.stdout.split(b"\0")
-    if len(fields) != 7 or fields[-1]:
-        raise RuntimeError(f"malformed native inspector output for {source.name}")
-    formula, inputs, outputs = (field.decode() for field in fields[:3])
-    return formula, inputs, outputs
+    return native_inspect(executable, source, timeout)[:3]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -127,7 +117,8 @@ def main(argv: list[str] | None = None) -> int:
         tmp = pathlib.Path(raw_tmp)
         for index, source in enumerate(sorted(selected), 1):
             row = {"instance": source.name, "outcome": "ERROR",
-                   "comparison_target": target or "source target", "error": ""}
+                   "comparison_target": target or "source target", "error": "",
+                   "converter": "", "syfco_error": "", "independently_cross_checked": 0}
             actual_ltl = args.converted / f"{source.stem}.ltl"
             actual_part = args.converted / f"{source.stem}.part"
             expected_part = tmp / f"{source.stem}.part"
@@ -135,12 +126,20 @@ def main(argv: list[str] | None = None) -> int:
                 if not actual_ltl.is_file() or not actual_part.is_file():
                     row.update(outcome="MISSING_CONVERSION", error="formula or partition absent")
                     continue
-                expected_ltl = convert_pair(args.syfco, source, expected_part,
-                                            args.stage_timeout, target, args.canonicalizer)
-                row["syfco_pair_match"] = int(
+                expected_ltl, converter, reason = convert_pair(
+                    args.syfco, source, expected_part, args.stage_timeout, target,
+                    args.canonicalizer, args.native_inspect)
+                row.update(converter=converter, syfco_error=reason)
+                pair_match = int(
                     actual_ltl.read_text() == expected_ltl
                     and actual_part.read_text() == expected_part.read_text())
-                row["outcome"] = "PASS" if row["syfco_pair_match"] else "FAIL"
+                row["outcome"] = "PASS" if pair_match else "FAIL"
+                if converter == "tlsf-tools":
+                    row["fallback_pair_match"] = pair_match
+                    if pair_match:
+                        row["outcome"] = "NOT_INDEPENDENTLY_CHECKED"
+                    continue
+                row["syfco_pair_match"] = pair_match
                 if args.native_inspect:
                     native, inputs, outputs = inspect_native(
                         args.native_inspect, source, args.stage_timeout)
@@ -148,6 +147,7 @@ def main(argv: list[str] | None = None) -> int:
                     native_key, syfco_key = formula_keys(
                         args.ltlfilt, args.canonicalizer, native, expected_ltl, args.stage_timeout)
                     row.update(
+                        independently_cross_checked=1,
                         formula_ast_match=int(native_key == syfco_key),
                         formula_bytes_match=int(native + "\n" == expected_ltl),
                         inputs_match=int(set(inputs.split(",")) == set(syfco_inputs.split(","))),
@@ -169,12 +169,13 @@ def main(argv: list[str] | None = None) -> int:
                 row.update(outcome="ERROR", error=str(error))
             finally:
                 rows.append(row)
-                print(f"{row['outcome']} {source.name} {row['error']}")
+                print(f"{row['outcome']} {source.name} {row['error'] or row['syfco_error']}")
                 if args.status:
                     args.status.parent.mkdir(parents=True, exist_ok=True)
                     args.status.write_text(f"RUNNING {index}/{len(selected)}\n")
     if args.report:
-        fields = ["instance", "outcome", "comparison_target", "syfco_pair_match",
+        fields = ["instance", "outcome", "comparison_target", "converter", "syfco_error",
+                  "independently_cross_checked", "syfco_pair_match", "fallback_pair_match",
                   "formula_ast_match", "formula_bytes_match", "inputs_match", "outputs_match",
                   "native_formula_key_sha256", "syfco_formula_key_sha256",
                   "native_formula_bytes_sha256", "syfco_formula_bytes_sha256", "error"]
@@ -183,7 +184,7 @@ def main(argv: list[str] | None = None) -> int:
             writer = csv.DictWriter(stream, fields, dialect="excel-tab")
             writer.writeheader()
             writer.writerows(rows)
-    passed = all(row["outcome"] == "PASS" for row in rows)
+    passed = all(row["outcome"] in ("PASS", "NOT_INDEPENDENTLY_CHECKED") for row in rows)
     if args.status:
         args.status.write_text(f"COMPLETE {'PASS' if passed else 'FAIL'}\n")
     return 0 if passed else 1

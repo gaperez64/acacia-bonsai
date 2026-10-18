@@ -12,6 +12,15 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-18 — G5 passes without a waiver (#265)
+
+Archive `g5-tlsf-tools20261018`; shipping preset built from 232f3fe8, SYNTCOMP26, 17 s.
+
+All 1,524 inputs convert: SyFCo for 1,517, the tlsf-tools inspector for the seven
+`finding_nemo` inputs whose strong next SyFCo rejects (listed as not independently
+cross-checked). 0 opposite verdicts, 0 frontend errors, spot checks 10/10;
+17 native-only and 1 converted-only answers. GATE PASS.
+
 ## 2026-10-17 — Arms do not contend on 8 cores (#277)
 
 Archive `armaccounting20261017`; build be2cdef0 with `ACACIA_PHASE_RECORDS`, 300-input

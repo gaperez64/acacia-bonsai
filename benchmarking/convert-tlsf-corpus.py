@@ -3,7 +3,8 @@
 
 The native frontend remains distinct from the independent SyFCo G5 cross-check.
 Pass source and output directories for SyFCo conversion; use `--target Mealy`
-for source-target adaptation. Use `native` with `--native-inspect` for the native frontend.
+for source-target adaptation and `--fallback-inspect` for SyFCo rejections.
+Use `native` with `--native-inspect` for the native frontend.
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ import pathlib
 import subprocess
 import sys
 
-from tlsf_pairs import convert_pair
+from tlsf_pairs import convert_pair, native_inspect
 
 
 def failure_reason(stderr: str, stdout: str) -> str:
@@ -47,20 +48,10 @@ def selected_sources(source: pathlib.Path, selection: pathlib.Path | None) -> li
     return paths
 
 
-def native_inspect(executable: pathlib.Path, source: pathlib.Path, timeout: float) -> tuple[str, ...]:
-    result = subprocess.run([str(executable), str(source)], check=True, capture_output=True,
-                            timeout=timeout)
-    fields = result.stdout.split(b"\0")
-    if len(fields) != 7 or fields[-1]:
-        raise RuntimeError(f"malformed native inspector output for {source.name}")
-    return tuple(field.decode("utf-8") for field in fields[:-1])
-
-
 def convert_source(source, output, stem, args):
     """One traversal/output contract, with explicitly different converter routes."""
     ltl, part = output / f"{stem}.ltl", output / f"{stem}.part"
     try:
-        metadata = None
         if args.native_inspect:
             formula, inputs, outputs, semantics, source_target, effective_target = native_inspect(
                 args.native_inspect, source, args.stage_timeout)
@@ -68,14 +59,17 @@ def convert_source(source, output, stem, args):
             output_names = [name for name in outputs.split(",") if name]
             part.write_text(".inputs" + (" " + " ".join(input_names) if input_names else "") +
                             "\n.outputs" + (" " + " ".join(output_names) if output_names else "") + "\n")
-            metadata = dict(instance=source.name, source_sha256=sha256(source.read_bytes()),
+            metadata = dict(instance=source.name, converter="tlsf-tools", syfco_error="",
+                            source_sha256=sha256(source.read_bytes()),
                             inputs=len(input_names), outputs=len(output_names), semantics=semantics,
                             source_target=source_target, effective_target=effective_target)
         else:
-            formula = convert_pair(args.syfco, source, part, args.stage_timeout,
-                                   args.target, args.canonicalizer)
+            formula, converter, reason = convert_pair(
+                args.syfco, source, part, args.stage_timeout,
+                args.target, args.canonicalizer, args.fallback_inspect)
+            metadata = dict(instance=source.name, converter=converter, syfco_error=reason)
         ltl.write_text(formula.rstrip() + "\n")
-        if metadata is not None:
+        if args.native_inspect:
             metadata.update(formula_sha256=sha256(ltl.read_bytes()), part_sha256=sha256(part.read_bytes()))
         return metadata
     except (OSError, ValueError, RuntimeError, UnicodeError, subprocess.SubprocessError):
@@ -84,18 +78,17 @@ def convert_source(source, output, stem, args):
         raise
 
 
-def write_outcomes(output, converted, skipped, source, list_output=None, native_rows=None):
+def write_outcomes(output, converted, skipped, source, list_output=None, conversion_rows=()):
     with (output / "skipped.tsv").open("w", encoding="utf-8", newline="") as stream:
         writer = csv.DictWriter(stream, ["instance", "reason"], delimiter="\t", lineterminator="\n")
         writer.writeheader()
         writer.writerows(skipped)
-    if native_rows is not None:
-        fields = ["instance", "source_sha256", "formula_sha256", "part_sha256", "inputs", "outputs",
-                  "semantics", "source_target", "effective_target"]
-        with (output / "conversion.tsv").open("w", encoding="utf-8", newline="") as stream:
-            writer = csv.DictWriter(stream, fields, delimiter="\t", lineterminator="\n")
-            writer.writeheader()
-            writer.writerows(native_rows)
+    fields = ["instance", "converter", "syfco_error", "source_sha256", "formula_sha256",
+              "part_sha256", "inputs", "outputs", "semantics", "source_target", "effective_target"]
+    with (output / "conversion.tsv").open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, fields, delimiter="\t", lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(conversion_rows)
     if list_output:
         list_output.parent.mkdir(parents=True, exist_ok=True)
         list_output.write_text(
@@ -120,6 +113,8 @@ def main(argv=None, *, require_native=False) -> int:
     parser.add_argument("output", type=pathlib.Path)
     parser.add_argument("--syfco", default="syfco")
     parser.add_argument("--native-inspect", type=pathlib.Path, required=require_native)
+    parser.add_argument("--fallback-inspect", type=pathlib.Path,
+                        help="use the native inspector only when SyFCo rejects an input (Mealy)")
     parser.add_argument("--selection", type=pathlib.Path)
     parser.add_argument("--list-output", type=pathlib.Path)
     parser.add_argument("--target", choices=("Mealy", "Moore"))
@@ -132,6 +127,8 @@ def main(argv=None, *, require_native=False) -> int:
         parser.error(f"native inspector not found: {args.native_inspect}")
     if args.native_inspect and args.target not in (None, "Mealy"):
         parser.error("the native frontend already adapts to the Mealy solver target")
+    if args.fallback_inspect and (args.native_inspect or args.target != "Mealy"):
+        parser.error("--fallback-inspect requires SyFCo conversion with --target Mealy")
     try:
         sources = selected_sources(args.source, args.selection)
     except (OSError, ValueError) as error:
@@ -139,17 +136,17 @@ def main(argv=None, *, require_native=False) -> int:
     if not sources:
         parser.error(f"no TLSF files selected under {args.source}")
     args.output.mkdir(parents=True, exist_ok=True)
-    converted, skipped, native_rows = [], [], []
+    converted, skipped, conversion_rows = [], [], []
     for source in sources:
         try:
             metadata = convert_source(source, args.output, source.stem, args)
             converted.append(f"{source.stem}.ltl")
-            if metadata is not None:
-                native_rows.append(metadata)
+            conversion_rows.append(metadata)
         except (OSError, ValueError, RuntimeError, UnicodeError, subprocess.SubprocessError) as error:
-            skipped.append(dict(instance=source.name, reason=failure_reason(str(error), "")))
+            skipped.append(dict(instance=source.name, reason=failure_reason(
+                getattr(error, "stderr", "") or str(error), getattr(error, "stdout", "") or "")))
     write_outcomes(args.output, converted, skipped, args.source, args.list_output,
-                   native_rows if args.native_inspect else None)
+                   conversion_rows)
     return int(bool(skipped))
 
 

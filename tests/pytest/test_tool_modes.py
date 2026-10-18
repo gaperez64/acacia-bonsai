@@ -44,11 +44,11 @@ def test_conversion_routes_share_selection_cleanup_and_skip_contract(tmp_path, m
         if path.stem == "bad":
             raise RuntimeError("synthetic parse failure")
         return "G out", "inp", "out", "Moore", "Moore", "Mealy"
-    def syfco(executable, path, part, timeout, target, canonicalizer):
+    def syfco(executable, path, part, timeout, target, canonicalizer, fallback_inspect):
         if path.stem == "bad":
             raise ValueError("synthetic parse failure")
         part.write_text(".inputs inp\n.outputs out\n")
-        return "G out"
+        return "G out", "syfco", ""
     monkeypatch.setattr(converter, "native_inspect", inspect)
     monkeypatch.setattr(converter, "convert_pair", syfco)
     args = [str(source), str(output), "--selection", str(selection)]
@@ -64,9 +64,11 @@ def test_conversion_routes_share_selection_cleanup_and_skip_contract(tmp_path, m
     with (output / "skipped.tsv").open() as stream:
         skipped, = csv.DictReader(stream, delimiter="\t")
     assert skipped == {"instance": "bad.tlsf", "reason": "synthetic parse failure"}
+    with (output / "conversion.tsv").open() as stream:
+        row, = csv.DictReader(stream, delimiter="\t")
+    assert row["converter"] == ("tlsf-tools" if native else "syfco")
+    assert row["syfco_error"] == ""
     if native:
-        with (output / "conversion.tsv").open() as stream:
-            row, = csv.DictReader(stream, delimiter="\t")
         assert row["source_target"] == "Moore" and row["effective_target"] == "Mealy"
         assert row["formula_sha256"] == converter.sha256((output / "good.ltl").read_bytes())
 
