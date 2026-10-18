@@ -35,7 +35,6 @@ namespace acacia::parity {
         size () >= no_vertex)
       throw std::runtime_error ("invalid parity game dimensions");
     out_begin.push_back (0);
-    in_begin.resize (size () + 1);
     for (unsigned v = 0; v < size (); ++v) {
       if (owner[v] > 1 or edges[v].empty ())
         throw std::runtime_error ("parity game must have two owners and no dead ends");
@@ -43,49 +42,9 @@ namespace acacia::parity {
         if (to >= size ())
           throw std::runtime_error ("parity edge destination is out of range");
         successors.push_back (to);
-        ++in_begin[to + 1];
       }
       out_begin.push_back (successors.size ());
     }
-    for (unsigned v = 0; v < size (); ++v)
-      in_begin[v + 1] += in_begin[v];
-    auto next = in_begin;
-    predecessors.resize (successors.size ());
-    for (unsigned v = 0; v < size (); ++v)
-      for (unsigned to : out (v))
-        predecessors[next[to]++] = v;
-  }
-
-  spot::twa_graph_ptr to_spot (const game& g, spot::bdd_dict_ptr dict) {
-    const auto priority = compact_priorities (g);
-    const auto maximum = *std::max_element (priority.begin (), priority.end ());
-    if (maximum >= spot::acc_cond::mark_t::max_accsets ())
-      throw std::runtime_error ("priorities exceed Spot's acceptance width");
-    auto aut = spot::make_twa_graph (std::move (dict));
-    aut->new_states (g.size ());
-    aut->set_init_state (0);
-    aut->set_acceptance (maximum + 1, spot::acc_cond::acc_code::parity (true, true, maximum + 1));
-    spot::region_t owners;
-    for (unsigned v = 0; v < g.size (); ++v) {
-      owners.push_back (g.owner[v]);
-      for (unsigned to : g.out (v))
-        aut->new_edge (v, to, bddtrue, {priority[v]});
-    }
-    spot::set_state_players (aut, std::move (owners));
-    return aut;
-  }
-
-  solution solve_spot (const game& g, const spot::twa_graph_ptr& same_game) {
-    spot::solve_parity_game (same_game, true);
-    solution result;
-    const auto& winners = spot::get_state_winners (same_game);
-    const auto& strategies = spot::get_strategy (same_game);
-    result.winner.assign (winners.begin (), winners.end ());
-    result.strategy.assign (g.size (), no_vertex);
-    for (unsigned v = 0; v < g.size (); ++v)
-      if (g.owner[v] == result.winner[v])
-        result.strategy[v] = same_game->edge_storage (strategies[v]).dst;
-    return result;
   }
 
   bool check_strategy (const game& g, const solution& result, std::string* reason) {
@@ -190,17 +149,5 @@ namespace acacia::parity {
         result.strategy[v] = to;
     }
     return result;
-  }
-
-  void arena_game::install (const solution& result) {
-    spot::region_t winners;
-    spot::strategy_t strategy (arena->num_states (), 0);
-    for (unsigned v = 0; v < arena->num_states (); ++v) {
-      winners.push_back (result.winner[v]);
-      if (explicit_game.owner[v] == result.winner[v])
-        strategy[v] = edge_for_vertex.at (result.strategy[v]);
-    }
-    spot::set_state_winners (arena, std::move (winners));
-    spot::set_strategy (arena, std::move (strategy));
   }
 }

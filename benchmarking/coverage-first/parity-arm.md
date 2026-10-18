@@ -23,18 +23,17 @@ Classify the worker's negated-specification language using acceptance structure 
 Tiers 1–3 use **Spot's explicit game solver only**, through
 `src/solver/spot_nba_fastpath.hh`: complete the deterministic Büchi automaton,
 build the co-Büchi game and solve it with Spot. The explicit Spot solver beats the
-symbolic GR(1) route on these tiers; neither symbolic GR(1), strpm-simd nor the
+symbolic GR(1) route on these tiers; neither symbolic GR(1) nor the
 K-bounded antichain search is an alternative production engine for tiers 1–3.
-Tier 4 uses the ported **strpm-simd** solver with adaptive `(k,t)` bounds, then
-Spot's `solve_parity_game` fallback beyond representable bounds.
+Tier 4 solves the split ACD parity game directly with Spot's `solve_parity_game`.
 
 ## Trust, synthesis and supervision
 
 Production trusts completed REAL/UNREAL results and strategies without a post-hoc
 recheck. Checks stay in tests: exported AIGs against a fresh negated-specification
-translation, Moore output independence, the scalar oracle and the 480-game Spot
-comparison. The registered `parity-route` and `parity-arm` unit tests exercise
-verification and cross-checks through the same production route library.
+translation, Moore output independence and game strategy checks. The registered
+`parity-route` and `parity-arm` unit tests exercise verification through the same
+production route library.
 
 Decision-only calls do not build controllers. Synthesis uses the existing parent
 rendezvous: only a selected REAL worker constructs and writes the controller;
@@ -43,16 +42,10 @@ The existing process-group supervisor handles cancellation and the outer invocat
 deadline. There is no local wall allowance or solver-visible deadline. The worker
 uses the obligation helper's address-space cap and cgroup-aware soft RSS share
 (half the available cap divided by scheduled workers). Resource stops and declines
-are never verdicts. Phase records identify tiers, game construction, solving,
-adaptive bounds, fallback and trust; missing records remain uncertain.
+are never verdicts. Phase records identify tiers, game construction, solving
+and trust; missing records remain uncertain.
 
-## Provenance and evidence
-
-The Strahler-tree progress-measures port derives from V. Flügel and G. A. Pérez's
-`strpm_simd` in `vanessas-oink` revision `872be945`, relicensed by its authors under
-this project's **GPL-3.0**. Each ported file retains its provenance line. It adds no
-Oink/Knor/Sylvan dependency and copies no logic from other Oink files; that condition
-is part of the authors' relicensing permission.
+## Evidence
 
 Developer measurements and admission history live in the evidence archives and
 [RESULTS.md](../RESULTS.md): `otd-C-parity-route20261015` (routing),

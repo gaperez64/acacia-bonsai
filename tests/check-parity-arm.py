@@ -26,42 +26,20 @@ def check_records(directory):
     verdict, = [row for row in rows if row.get("event") == "parity_verdict"]
     assert tier["tier"] == solved["tier"] == verdict["tier"] in range(1, 5), rows
     expected_route, expected_backend = (("deterministic_buchi", "spot-fast")
-                                        if tier["tier"] < 4 else ("acd_parity", "strpm-simd"))
+                                        if tier["tier"] < 4 else ("acd_parity", "spot"))
     selected, = [row for row in rows if row.get("event") == "route_selected"
                  and row.get("route") == expected_route]
     assert selected["effective_backend"] == expected_backend, rows
     assert selected["seq"] < tier["seq"] < solved["seq"] < verdict["seq"], rows
-    parameters = [row for row in rows if row.get("event") == "parity_parameters"]
     if tier["tier"] == 4:
-        assert parameters, rows
         solve, = [row for row in rows if row.get("event") == "stage_entry"
                   and row.get("stage") == "solve"]
-        assert tier["seq"] < solve["seq"] < parameters[0]["seq"], rows
-        assert parameters[-1]["seq"] < solved["seq"], rows
-        assert [row["pairs"] for row in parameters] == list(range(1, len(parameters) + 1)), rows
-        assert all(row["k"] > 0 and row["t"] > 0 and row["tier"] == 4
-                   for row in parameters), rows
-        assert tuple(parameters[-1][key] for key in ("k", "t", "pairs")) == tuple(
-            solved[key] for key in ("k", "t", "pairs")), rows
-    else:
-        assert not parameters, rows
-    fallback = [row for row in rows if row.get("event", "").startswith("parity_fallback_")]
-    if solved["fallback"]:
-        assert [row["event"] for row in fallback] == ["parity_fallback_start",
-                                                     "parity_fallback_end"], rows
-        assert fallback[0]["seq"] < fallback[1]["seq"] < solved["seq"], rows
-        assert fallback[0]["mono_ns"] <= fallback[1]["mono_ns"], rows
-        for row in fallback:
-            assert row["fallback"] and row["fallback_reason"], row
-            assert all(row[key] == solved[key] for key in ("k", "t", "pairs", "tier",
-                                                          "fallback_reason")), rows
-    else:
-        assert not fallback, rows
+        assert tier["seq"] < solve["seq"] < solved["seq"], rows
     assert not any(row.get("phase", row.get("stage")) in {"strategy", "encode-controller"}
                    for row in rows), rows
     assert not any(row.get("event") == "verification_complete"
                    or row.get("stage", "").startswith("verify-") for row in rows), rows
-    for row in [tier, *parameters, *fallback, solved, verdict]:
+    for row in [tier, solved, verdict]:
         assert row["trust"] == "exact_game", row
         assert not row["same_library_checked"] and not row["independent_checked"], row
         assert row["worker_pid"] == solved["worker_pid"], row

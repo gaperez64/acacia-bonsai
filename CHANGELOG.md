@@ -1,5 +1,9 @@
 # Acacia-Bonsai changelog
 
+## Unreleased
+
+- Tier 4 of the parity arm solves its ACD parity game directly with Spot.
+
 ## 2.6.0 (2026-10-18)
 
 - **New default: the parity portfolio.** The first `docker_default` configuration

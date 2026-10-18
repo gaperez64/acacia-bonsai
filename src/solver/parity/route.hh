@@ -22,13 +22,10 @@ namespace acacia::parity_route {
   };
   struct options {
       bool synthesis = true;
-      bool use_spot = false;
       bool use_lar = false;
       bool verify = false;
-      bool cross_check = false;
-      parity::limits bounds;
       std::function<void (bool)> on_verdict;
-      std::function<void (const parity::statistics&)> on_solved;
+      std::function<void ()> on_solved;
       std::function<void (unsigned, const std::string&)> on_classified;
       std::function<void (const parity::arena_game&)> on_game;
       std::function<void (const parity::arena_game&, const parity::solution&)> on_solution;

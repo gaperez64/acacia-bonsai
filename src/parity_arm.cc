@@ -14,7 +14,7 @@
 
 namespace acacia {
   namespace {
-    void record (const char* event, unsigned tier, const parity::statistics& stats = {}) {
+    void record (const char* event, unsigned tier) {
       if (!phase_records_enabled ())
         return;
       auto* worker = active_worker_record ();
@@ -24,12 +24,10 @@ namespace acacia {
       const int length = snprintf (
           line, sizeof line,
           "{\"arm\":\"both:parity:spot\",\"event\":\"%s\",\"worker\":%u,"
-          "\"worker_pid\":%ld,\"seq\":%llu,\"tier\":%u,\"k\":%u,\"t\":%u,"
-          "\"pairs\":%u,\"fallback\":%s,\"fallback_reason\":\"%s\","
+          "\"worker_pid\":%ld,\"seq\":%llu,\"tier\":%u,"
           "\"mono_ns\":%llu,\"trust\":\"exact_game\",\"same_library_checked\":false,"
           "\"independent_checked\":false}\n",
-          event, worker->index, long (worker->pid), ++worker->sequence, tier, stats.k, stats.t,
-          stats.pairs, stats.fallback ? "true" : "false", stats.fallback_reason.c_str (),
+          event, worker->index, long (worker->pid), ++worker->sequence, tier,
           (unsigned long long) phase_clock (CLOCK_MONOTONIC));
       if (length > 0 && size_t (length) < sizeof line)
         phase_records_send (line, size_t (length));
@@ -87,16 +85,10 @@ namespace acacia {
       config.on_classified = [&] (unsigned value, const std::string&) {
         tier = value;
         worker_route (value < 4 ? "deterministic_buchi" : "acd_parity",
-                      value < 4 ? "spot-fast" : "strpm-simd", "unknown");
+                      value < 4 ? "spot-fast" : "spot", "unknown");
         record ("parity_tier", tier);
       };
-      config.bounds.parameter_observer = [&] (const auto& stats) {
-        record ("parity_parameters", tier, stats);
-      };
-      config.bounds.fallback_observer = [&] (const auto& stats, double seconds) {
-        record (seconds < 0 ? "parity_fallback_start" : "parity_fallback_end", tier, stats);
-      };
-      config.on_solved = [&] (const auto& stats) { record ("parity_solved", tier, stats); };
+      config.on_solved = [&] { record ("parity_solved", tier); };
       config.on_verdict = [&] (bool real) {
         if (auto* worker = active_worker_record ())
           worker_record_text (worker->proof_polarity, real ? "REAL" : "UNREAL");
