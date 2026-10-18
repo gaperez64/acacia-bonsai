@@ -1008,6 +1008,9 @@ parity_arm_cli_depends = [ab_exe, parity_arm_test]
 parity_arm_cli_args = [files ('check-parity-arm.py'), ab_exe, parity_arm_test,
                        meson.current_build_dir ()]
 parity_arm_cli_args += ['--tlsf']
+if get_option ('acacia_enable_diagnostics')
+  parity_arm_cli_args += ['--diagnostics']
+endif
 test ('parity-arm-cli', py, args : parity_arm_cli_args,
       suite : ['unit', 'parity', 'portfolio', 'synthesis'], timeout : 120,
       depends : parity_arm_cli_depends)

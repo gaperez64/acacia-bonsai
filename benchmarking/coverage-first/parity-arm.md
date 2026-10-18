@@ -28,6 +28,11 @@ K-bounded antichain search is an alternative production engine for tiers 1–3.
 Tier 4 uses the ported **strpm-simd** solver with adaptive `(k,t)` bounds, then
 Spot's `solve_parity_game` fallback beyond representable bounds.
 
+For measurements, build with `-Dacacia_enable_diagnostics=true` and set
+`ACACIA_DIAG_PARITY_SPOT=1` to send tier 4 directly to Spot; unset it to keep the
+default strpm-simd route in the same build. Diagnostics-disabled builds ignore
+the variable, and phase records label the forced solver as `spot`.
+
 ## Trust, synthesis and supervision
 
 Production trusts completed REAL/UNREAL results and strategies without a post-hoc

@@ -18,7 +18,7 @@ def execute(command, env=None):
     return result
 
 
-def check_records(directory):
+def check_records(directory, spot_only=False):
     rows = [json.loads(line) for path in directory.glob("*.jsonl")
             for line in path.read_text().splitlines()]
     tier, = [row for row in rows if row.get("event") == "parity_tier"]
@@ -26,13 +26,14 @@ def check_records(directory):
     verdict, = [row for row in rows if row.get("event") == "parity_verdict"]
     assert tier["tier"] == solved["tier"] == verdict["tier"] in range(1, 5), rows
     expected_route, expected_backend = (("deterministic_buchi", "spot-fast")
-                                        if tier["tier"] < 4 else ("acd_parity", "strpm-simd"))
+                                        if tier["tier"] < 4 else
+                                        ("acd_parity", "spot" if spot_only else "strpm-simd"))
     selected, = [row for row in rows if row.get("event") == "route_selected"
                  and row.get("route") == expected_route]
     assert selected["effective_backend"] == expected_backend, rows
     assert selected["seq"] < tier["seq"] < solved["seq"] < verdict["seq"], rows
     parameters = [row for row in rows if row.get("event") == "parity_parameters"]
-    if tier["tier"] == 4:
+    if tier["tier"] == 4 and not spot_only:
         assert parameters, rows
         solve, = [row for row in rows if row.get("event") == "stage_entry"
                   and row.get("stage") == "solve"]
@@ -45,6 +46,8 @@ def check_records(directory):
             solved[key] for key in ("k", "t", "pairs")), rows
     else:
         assert not parameters, rows
+    if spot_only:
+        assert not solved["fallback"] and not any(solved[key] for key in ("k", "t", "pairs")), rows
     fallback = [row for row in rows if row.get("event", "").startswith("parity_fallback_")]
     if solved["fallback"]:
         assert [row["event"] for row in fallback] == ["parity_fallback_start",
@@ -74,6 +77,7 @@ def main():
     parser.add_argument("checker", type=Path)
     parser.add_argument("scratch", type=Path)
     parser.add_argument("--tlsf", action="store_true")
+    parser.add_argument("--diagnostics", action="store_true")
     args = parser.parse_args()
     binary, checker = str(args.binary.resolve()), str(args.checker.resolve())
     fixtures = ["1", "0", "G o", "F o", "GF o", "GF i", "FG o", "FG i", "G(i <-> o)",
@@ -87,6 +91,7 @@ def main():
                 phases = root / "phases"
                 phases.mkdir(exist_ok=True)
                 env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases))
+                env.pop("ACACIA_DIAG_PARITY_SPOT", None)
                 effective = formula.replace("i", "X i").replace("j", "X j") if moore else formula
                 interface = ["-i", "i,j,unused_input", "-o", "o,p,unused_output"]
                 source = ["-f", formula, *interface]
@@ -102,7 +107,14 @@ GUARANTEES {{ {guarantee}; }} }}
                     source = ["-T", str(tlsf)]
                 command = [binary, *source, "--arms", "both:parity:spot"]
                 decision = execute(command, env)
-                seen_tiers.add(check_records(phases))
+                tier = check_records(phases)
+                seen_tiers.add(tier)
+                if tier == 4:
+                    for path in phases.glob("*.jsonl"):
+                        path.unlink()
+                    forced = execute(command, dict(env, ACACIA_DIAG_PARITY_SPOT="1"))
+                    assert forced.returncode == decision.returncode, (formula, forced, decision)
+                    assert check_records(phases, spot_only=args.diagnostics) == tier
                 reference = execute([binary, "-f", effective, *interface, "--arms",
                                      "real:small:backward,unreal:formula:backward"])
                 assert reference.returncode == decision.returncode, (moore, formula,

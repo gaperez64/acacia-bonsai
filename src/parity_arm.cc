@@ -82,12 +82,16 @@ namespace acacia {
             "Generic:Deterministic:High:simul=0:ba-simul=0:det-simul=0:tls-impl=1:wdba-minimize=2",
             "parity-route");
       parity_route::options config;
+#if ACACIA_ENABLE_DIAGNOSTICS
+      config.use_spot = std::getenv ("ACACIA_DIAG_PARITY_SPOT") != nullptr;
+#endif
       config.synthesis = args.synth_fname.has_value ();
       unsigned tier = 0;
       config.on_classified = [&] (unsigned value, const std::string&) {
         tier = value;
         worker_route (value < 4 ? "deterministic_buchi" : "acd_parity",
-                      value < 4 ? "spot-fast" : "strpm-simd", "unknown");
+                      value < 4 ? "spot-fast" : config.use_spot ? "spot" : "strpm-simd",
+                      "unknown");
         record ("parity_tier", tier);
       };
       config.bounds.parameter_observer = [&] (const auto& stats) {
