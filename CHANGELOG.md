@@ -1,8 +1,11 @@
 # Acacia-Bonsai changelog
 
-## Unreleased
+## 2.6.1 (2026-10-18)
 
-- Tier 4 of the parity arm solves its ACD parity game directly with Spot.
+- Tier 4 of the parity arm solves its ACD parity game directly with Spot; the
+  strpm-simd port is removed (#282, evidence `tier4-spot282-20261018`).
+- Python wheels build again (Bison 3.8.2 on manylinux, no `std::print`), so 2.6
+  reaches PyPI.
 
 ## 2.6.0 (2026-10-18)
 
