@@ -1,7 +1,7 @@
 #pragma once
 
+#include <cstdint>
 #include <cstdlib>
-#include <print>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -27,7 +27,7 @@ inline void error (int status, const char* format, ...) {
 inline void error_at_line (int status, const char* filename, unsigned int linenum,
                            const char* format, ...) {
   va_list args;
-  std::print (stderr, "{}:{}: ", filename, linenum);
+  fprintf (stderr, "%s:%u: ", filename, linenum);
   va_start (args, format);
   vfprintf (stderr, format, args);
   va_end (args);

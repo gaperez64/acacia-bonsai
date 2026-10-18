@@ -1,8 +1,8 @@
 #!/bin/bash
 # Run inside the manylinux_2_28 container by cibuildwheel, once per arch
 # before any wheel is built. Installs the build toolchain needed for the
-# acacia-boomslang wheel (SWIG, GCC 14 for C++23) and compiles Spot
-# from source into /opt/spot_install. The install prefix matches what
+# acacia-boomslang wheel (SWIG, GCC 14 for C++23) and compiles Bison and Spot
+# from source into /usr/local and /opt/spot_install. The Spot prefix matches what
 # python-test.yml and Dockerfile.boomslang use so PKG_CONFIG_PATH stays
 # consistent across the project.
 #
@@ -17,7 +17,7 @@ set -euo pipefail
 echo "== Installing build dependencies =="
 yum install -y --setopt=install_weak_deps=False \
     autoconf automake libtool bison flex \
-    git swig wget curl \
+    git swig wget curl xz \
     gcc-toolset-14 gcc-toolset-14-gcc gcc-toolset-14-gcc-c++
 
 # Use GCC 14 for both Spot and the wheel compilation — the acacia-bonsai
@@ -32,8 +32,21 @@ curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolcha
 export PATH="$HOME/.cargo/bin:$PATH"
 cargo install cbindgen --version 0.29.4 --locked
 
-echo "== Building Spot ${SPOT_VERSION} =="
 workdir=$(mktemp -d)
+cd "$workdir"
+
+# AlmaLinux 8's Bison 3.0.4 cannot handle tlsf-tools' parse.error detailed.
+echo "== Building Bison 3.8.2 =="
+wget -q https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz
+echo "9bba0214ccf7f1079c5d59210045227bcf619519840ebfa80cd3849cff5a5bf2  bison-3.8.2.tar.xz" | sha256sum -c -
+tar -xf bison-3.8.2.tar.xz
+cd bison-3.8.2
+./configure --prefix=/usr/local
+make -j"$(nproc)"
+make install
+export PATH="/usr/local/bin:$PATH"
+
+echo "== Building Spot ${SPOT_VERSION} =="
 cd "$workdir"
 wget -q "http://www.lrde.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz"
 tar -xzf "spot-${SPOT_VERSION}.tar.gz"
