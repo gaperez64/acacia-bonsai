@@ -39,15 +39,11 @@ int main () {
         input.moore = moore;
         route::options options;
         options.verify = true;
-        options.cross_check = true;
         auto answer = route::run (input, options);
         require (answer.checked, "route did not verify its verdict");
-        require (answer.route == (answer.tier == 4 ? "strpm-simd" : "acacia"),
+        require (answer.route == (answer.tier == 4 ? "spot" : "acacia"),
                  "tier routing is incorrect");
         tier_four += answer.tier == 4;
-        options.use_spot = true;
-        auto spot_answer = route::run (input, options);
-        require (answer.verdict == spot_answer.verdict, "route solvers disagree");
         options.use_lar = true;
         auto lar_answer = route::run (input, options);
         require (answer.verdict == lar_answer.verdict, "ACD and LAR disagree");
@@ -55,7 +51,6 @@ int main () {
         input.source = route::source_language::real_worker;
         input.frame = route::timing_frame::effective_mealy;
         input.formula = spot::formula::Not (moore ? shift_inputs (f, input.inputs) : f);
-        options.use_spot = false;
         options.use_lar = false;
         auto worker_answer = route::run (input, options);
         require (answer.verdict == worker_answer.verdict, "worker polarity or frame differs");
@@ -120,7 +115,7 @@ int main () {
     partial.automaton->new_edge (0, 0, !o & i, {0});
     partial.automaton->new_edge (0, 0, !o & !i);
     partial.automaton->prop_complete (true);
-    require (route::run (partial, {.verify = true, .cross_check = true}).verdict == "REALIZABLE",
+    require (route::run (partial, {.verify = true}).verdict == "REALIZABLE",
              "false completeness claim changed the verdict");
     auto malformed = spot::make_twa_graph (buchi, spot::twa::prop_set::all ());
     malformed->new_edge (0, 0, bddtrue);
@@ -137,7 +132,7 @@ int main () {
     renamed.specification = renamed.formula;
     renamed.inputs = {"unused", "request"};
     renamed.outputs = {"response", "extra"};
-    require (route::run (renamed, {.verify = true, .cross_check = true}).verdict == "REALIZABLE",
+    require (route::run (renamed, {.verify = true}).verdict == "REALIZABLE",
              "renamed and permuted interface differs");
     for (const auto& partition :
          {std::pair {std::vector<std::string> {}, std::vector<std::string> {"o"}},
@@ -147,7 +142,7 @@ int main () {
       input.outputs = partition.second;
       input.formula = formula (input.outputs.empty () ? "GF i" : "GF o");
       input.specification = input.formula;
-      auto result = route::run (input, {.verify = true, .cross_check = true});
+      auto result = route::run (input, {.verify = true});
       require (result.checked, "empty-partition result failed verification");
     }
     // A mismatched original specification must decline a proposed REAL result.
@@ -178,7 +173,7 @@ int main () {
     }
     require (route::run (wrong).verdict == "REALIZABLE",
              "default route verified the original specification");
-    std::cout << "Original/worker, Mealy/Moore, ACD/LAR, both solvers and HOA routes passed\n";
+    std::cout << "Original/worker, Mealy/Moore, ACD/LAR and HOA routes passed\n";
     return 0;
   } catch (const std::exception& error) {
     std::cerr << error.what () << '\n';

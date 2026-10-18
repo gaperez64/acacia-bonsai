@@ -10,7 +10,6 @@ unsigned utils::verbose = 0;
 utils::voutstream utils::vout;
 
 namespace route = acacia::parity_route;
-namespace reference = acacia::parity_route;
 
 void require (bool value, const char* reason) {
   if (!value)
@@ -108,53 +107,47 @@ int main (int argc, char** argv) {
           require (answer.tier == tier, "fixture missed its tier");
           require (answer.verdict == (real ? "REALIZABLE" : "UNREALIZABLE"),
                    "decision disagrees with the fixture oracle");
-          if (tier < 4) {
-            require (!answer.game && answer.solution.winner.empty (),
-                     "production decision retained an explicit game or winning region");
-            bool selected = false;
-            auto synthesis = decision;
-            synthesis.synthesis = true;
-            synthesis.on_verdict = [&] (bool winner) {
-              require (winner == real, "synthesis published wrong verdict");
-              selected = true;
+          require (!answer.game && answer.solution.winner.empty (),
+                   "production decision retained an explicit game or winning region");
+          bool selected = false;
+          auto synthesis = decision;
+          synthesis.synthesis = true;
+          synthesis.on_verdict = [&] (bool winner) {
+            require (winner == real, "synthesis published wrong verdict");
+            selected = true;
+          };
+          auto made =
+              route::run (input, synthesis, [&] (const char* stage, const auto&, double) {
+                if (std::string (stage) == "strategy" ||
+                    std::string (stage) == "encode-controller")
+                  require (selected, "controller construction preceded selection");
+              });
+          require (selected && made.verdict == answer.verdict &&
+                       bool (made.circuit) == real && !made.game &&
+                       made.solution.winner.empty (),
+                   "production synthesis changed the verdict or retained diagnostics");
+          if (real)
+            check_controller (made.circuit, input.specification, moore);
+          for (bool solution_output : {false, true}) {
+            auto observed = decision;
+            bool visited = false;
+            auto check_game = [&] (const auto& game) {
+              require (!game.extract ().winner.empty (), "diagnostic lost its winning region");
+              visited = true;
             };
-            auto made =
-                route::run (input, synthesis, [&] (const char* stage, const auto&, double) {
-                  if (std::string (stage) == "strategy" ||
-                      std::string (stage) == "encode-controller")
-                    require (selected, "controller construction preceded selection");
-                });
-            require (selected && made.verdict == answer.verdict &&
-                         bool (made.circuit) == real && !made.game &&
-                         made.solution.winner.empty (),
-                     "production synthesis changed the verdict or retained diagnostics");
-            if (real)
-              check_controller (made.circuit, input.specification, moore);
-            for (bool solution_output : {false, true}) {
-              auto observed = decision;
-              bool visited = false;
-              auto check_game = [&] (const auto& game) {
-                require (!game.extract ().winner.empty (), "diagnostic lost its winning region");
-                visited = true;
-              };
-              if (solution_output)
-                observed.on_solution = [&] (const auto& game, const auto&) { check_game (game); };
-              else
-                observed.on_game = check_game;
-              auto diagnostic = route::run (input, observed);
-              require (visited && diagnostic.game && diagnostic.verdict == answer.verdict,
-                       "game or solution observer changed the verdict or lost the arena");
-            }
+            if (solution_output)
+              observed.on_solution = [&] (const auto& game, const auto&) { check_game (game); };
+            else
+              observed.on_game = check_game;
+            auto diagnostic = route::run (input, observed);
+            require (visited && diagnostic.game && diagnostic.verdict == answer.verdict,
+                     "game or solution observer changed the verdict or lost the arena");
           }
-          reference::options diagnostic;
+          route::options diagnostic;
           diagnostic.verify = true;
-          diagnostic.cross_check = true;
-          auto checked = reference::run (input, diagnostic);
+          auto checked = route::run (input, diagnostic);
           require (checked.verdict == answer.verdict && checked.checked,
-                   "production decision differs from the checked research route");
-          diagnostic.use_spot = true;
-          require (reference::run (input, diagnostic).verdict == answer.verdict,
-                   "Spot disagrees on the same arena");
+                   "production decision differs from the checked route");
           require (bool (checked.circuit) == real, "incorrect controller presence");
         }
     // Selection precedes strategy extraction and encoding, in every tier.

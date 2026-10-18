@@ -1,6 +1,4 @@
-parity_sources = files ('solver/parity/game.cc', 'solver/parity/lifting.cc',
-                       'solver/parity/strpm.cc')
-parity_lib = static_library ('parity', parity_sources,
+parity_lib = static_library ('parity', 'solver/parity/game.cc',
   include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
 parity_route_lib = static_library ('parity-route', 'solver/parity/route.cc',
   include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)

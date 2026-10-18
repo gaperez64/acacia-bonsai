@@ -12,6 +12,7 @@
 #include <spot/twaalgos/cleanacc.hh>
 #include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/dualize.hh>
+#include <spot/twaalgos/game.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/parity.hh>
 #include <spot/twaalgos/remfin.hh>
@@ -191,7 +192,7 @@ namespace acacia::parity_route {
         });
     }
     else {
-      output.route = config.use_spot ? "spot" : "strpm-simd";
+      output.route = "spot";
       stage ("parity", [&] {
         // For captured REAL workers, complement exactly once after classification.
         // Original-formula mode reuses its positive translation for the game.
@@ -209,30 +210,17 @@ namespace acacia::parity_route {
         spot::set_synthesis_outputs (arena, outputs);
         aut = arena;
       });
-      spot::twa_graph_ptr same_game;
-      stage ("explicit", [&] {
-        output.game = std::make_unique<parity::arena_game> (arena);
-        if (config.use_spot or config.cross_check)
-          same_game = parity::to_spot (output.game->explicit_game, dictionary);
-        if (config.on_game)
-          config.on_game (*output.game);
-      });
-      stage ("solve", [&] {
-        output.solution = config.use_spot
-                              ? parity::solve_spot (output.game->explicit_game, same_game)
-                              : parity::solve_strpm (output.game->explicit_game, config.bounds);
-        winning = output.solution.winner[arena->get_init_state_number ()];
-      });
-      if (config.cross_check)
-        stage ("cross-check", [&] {
-          if (output.solution.winner !=
-              parity::solve_spot (output.game->explicit_game, same_game).winner)
-            throw std::runtime_error ("winning regions disagree with Spot on the same game");
+      stage ("solve", [&] { winning = spot::solve_parity_game (arena, true); });
+      if (config.verify or config.on_game or config.on_solution)
+        stage ("explicit", [&] {
+          output.game = std::make_unique<parity::arena_game> (arena);
+          output.solution = output.game->extract ();
+          if (config.on_game)
+            config.on_game (*output.game);
         });
-      output.game->install (output.solution);
     }
     if (config.on_solved)
-      config.on_solved (output.solution.stats);
+      config.on_solved ();
     if (config.on_solution)
       stage ("solution-output", [&] { config.on_solution (*output.game, output.solution); });
     if (config.verify)
