@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration.hh"
+#include "phase_records.hh"
 #include "solver/spot_fast_mode.hh"
 #include "utils/verbose.hh"
 
@@ -450,6 +451,7 @@ namespace acacia::spot_fastpath {
     result.classification_ran = true;
     result.gfg_disabled = not can_use_gfg_decision;
 
+    acacia::accounting_phase classification ("spot_fast_classification");
     const auto class_started = detail::clock::now ();
     if (not is_plain_existential_buchi (negated_spec_aut)) {
       result.classification = nba_fast_class::unsupported;
@@ -470,12 +472,14 @@ namespace acacia::spot_fastpath {
           : nba_fast_class::non_gfg_buchi;
     }
     result.classification_ms = detail::elapsed_ms (class_started);
+    classification.finish ();
 
     nba_fast_class c = result.classification;
     verb_do (1, utils::vout << "Spot NBA fast path classification: "
                             << detail::class_name (c) << std::endl);
 
     if (c == nba_fast_class::deterministic_buchi and detail::has_mode (mode, SPOT_FAST_DET)) {
+      acacia::accounting_phase solving ("spot_fast_solve");
       const auto solve_started = detail::clock::now ();
       auto res = deterministic_negated_spec_fast_path (negated_spec_aut, all_outputs,
                                                     want_controller_strategy);
@@ -492,6 +496,7 @@ namespace acacia::spot_fastpath {
 
     if (c == nba_fast_class::gfg_buchi and
         can_use_gfg_decision) {
+      acacia::accounting_phase solving ("spot_fast_solve");
       const auto solve_started = detail::clock::now ();
       auto res = gfg_negated_spec_decision_only_fast_path (negated_spec_aut, all_inputs, all_outputs);
       res.classification = result.classification;

@@ -12,6 +12,22 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-17 — Arms do not contend on 8 cores (#277)
+
+Archive `armaccounting20261017`; build be2cdef0 with `ACACIA_PHASE_RECORDS`, 300-input
+panel at 17 s (185 default timeouts, 15 near-cap, 100 controls), 8-core i7-11850H.
+Recording overhead on the controls: median wall 0.97–0.98x, CPU 1.05–1.06x, no
+verdict change.
+
+On the timeouts every arm's worker uses about 16.9 s of CPU in 17 s and a median of
+0.2–0.3 GiB (GR(1) up to 4.1 GiB); the cgroup peak has median 1.2 GiB, max 5.2 GiB.
+Exactly matched duplicate work across arms is about 160 s of CPU on the whole panel,
+under 1% of the timeouts' 16.5k s. Cancelled losers stop within about 5 s of CPU in
+total; post-decline CPU is GR(1)'s exact-solve fallback and the backward arm's
+continuation after its optional pre-pass. Sharing, staging and a launch classifier
+have no measured upside on this machine; #277 was closed on this 8-core evidence,
+with fewer-core settings left unmeasured.
+
 ## 2026-10-17 — No default arm can be dropped (#264)
 
 Archive `portfolioloo20261017`; frozen OTF binary 74eeebee, SYNTCOMP26, 17 s.

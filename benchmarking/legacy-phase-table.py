@@ -822,7 +822,7 @@ def completeness_audit_row(row, directory, expected_workers=None):
         issue("delivery", "missing_phase_directory", directory)
     for path in sorted(directory.glob("*.jsonl")):
         try:
-            emitter = int(path.stem)
+            emitter = int(path.stem.removesuffix("-final"))
             if emitter <= 0:
                 raise ValueError("emitter PID must be positive")
             before = path.lstat()
@@ -865,7 +865,8 @@ def completeness_audit_row(row, directory, expected_workers=None):
             except (UnicodeError, ValueError) as error:
                 issue("delivery", "malformed_json", f"{source}: {error}")
                 continue
-            record.update(_emitter_pid=emitter, _path=str(path), _line=index)
+            record.update(_emitter_pid=emitter, _path=str(path), _line=index,
+                          _durable=path.stem.endswith("-final"))
             records.append(record)
             if "dropped_records" in record:
                 drops = record["dropped_records"]
@@ -890,10 +891,11 @@ def completeness_audit_row(row, directory, expected_workers=None):
         if writer.get("incomplete_packet") is not False:
             issue("delivery", "writer_incomplete_packet", source)
         delivered = writer.get("delivered_records")
-        if not completeness_nonnegative_int(delivered) or delivered != len(records) - len(writers):
+        confirmed = sum(not r.get("_durable", False) for r in records) - len(writers)
+        if not completeness_nonnegative_int(delivered) or delivered != confirmed:
             issue("delivery", "delivered_count_mismatch",
                   f"{source}: delivered_records={delivered}, "
-                  f"confirmed={len(records)-len(writers)}")
+                  f"confirmed={confirmed}")
 
     workers = defaultdict(list)
     worker_indices = {r['worker_pid']: r['worker'] for r in records
@@ -906,6 +908,12 @@ def completeness_audit_row(row, directory, expected_workers=None):
             continue
         if not isinstance(event, str):
             issue("delivery", "invalid_event", completeness_location(record))
+            continue
+        # Accounting has its own phase/resource schema, audited by prof_lib.
+        # Its records still participate in delivery validation above.
+        if event in {"worker_reap", "worker_resource", "parent_record_summary",
+                     "work_identity", "native_work_identity"} or event.startswith(
+                         ("accounting_", "descendant_")):
             continue
         stage_record = event in {'stage_entry', 'stage_completion', 'stage_stopped',
                                  'stage_metric', 'stage_censored'}
@@ -1052,7 +1060,7 @@ def completeness_audit_row(row, directory, expected_workers=None):
             last = sequences[-1] if sequences and completeness_nonnegative_int(sequences[-1]) else 0
             snapshots = [r for r in group if r['event'] == 'stage_censored' or
                          r['event'].startswith('weakening_') and r.get('observer') == 'parent']
-            snapshots.sort(key=lambda r: r['_line'])
+            snapshots.sort(key=lambda r: (r.get('mono_ns', 0), r['_line']))
             for offset, snapshot in enumerate(snapshots, 1):
                 if snapshot.get('seq') != last + offset:
                     issue('delivery', 'sequence_gap', completeness_location(snapshot))

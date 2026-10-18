@@ -4,7 +4,9 @@
 #include "solver/transition_payload.hh"
 #include "solver/translator_options.hh"
 #include "utils/verbose.hh"
+#include <type_traits>
 
+#include <cstddef>
 #include <iostream>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/sbacc.hh>
@@ -17,9 +19,11 @@
 # define ACACIA_TRANSLATION_PREF spot::postprocessor::Small
 #endif
 
+template <class Identity = std::nullptr_t>
 spot::twa_graph_ptr create_automaton (
     spot::formula& f, spot::translator& trans,
-    spot::postprocessor::output_pref preference = ACACIA_TRANSLATION_PREF) {
+    spot::postprocessor::output_pref preference = ACACIA_TRANSLATION_PREF,
+    Identity identity = nullptr) {
   verb_do (1, vout << "Formula: " << f << std::endl);
 
   auto translation_formula = f;
@@ -42,6 +46,10 @@ spot::twa_graph_ptr create_automaton (
       preference |
       // spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
       spot::postprocessor::SBAcc);  // state-based acceptacen
+  if constexpr (!std::is_same_v<Identity, std::nullptr_t>) {
+    if (identity)
+      (*identity) (translation_formula);
+  }
   acacia::legacy_phase translating ("translation");
   auto aut = trans.run (translation_formula);
   acacia::legacy_graph (aut);
