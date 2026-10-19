@@ -201,7 +201,7 @@ def legacy_resource_stops(binary: Path, root: Path,
     for mode in modes:
         directory = root / f"legacy-resource-{mode}"
         directory.mkdir()
-        args = ["-f", "G (i <-> X o)", "-i", "i", "-o", "o", "--spot-fast", "off", "--arms",
+        args = ["-f", "G (i <-> X o)", "-i", "i", "-o", "o", "--arms",
                 "real:small:spot-guarded:spot-lazy", "--candidate", mode]
         env = {"ACACIA_SPOT_TAA_MAX_RANK_NODES": "0"}
         baseline = execute(binary, args, None, env)
@@ -220,7 +220,8 @@ def legacy_resource_stops(binary: Path, root: Path,
         else:
             winner = next(row for row in records if row.get("event") == "parent_winner")
             assert winner["requested_backend"] == "spot-guarded", winner
-            assert winner["effective_backend"] == "backward", winner
+            # The rebuilt frozen graph is decided by the Spot shortcut.
+            assert winner["effective_backend"] == "spot", winner
             assert terminal["reason"] == "none", terminal
 
 
