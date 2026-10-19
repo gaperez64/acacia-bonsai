@@ -220,7 +220,8 @@ def legacy_resource_stops(binary: Path, root: Path,
         else:
             winner = next(row for row in records if row.get("event") == "parent_winner")
             assert winner["requested_backend"] == "spot-guarded", winner
-            assert winner["effective_backend"] == "backward", winner
+            # The rebuilt frozen graph is decided by the Spot shortcut.
+            assert winner["effective_backend"] == "spot", winner
             assert terminal["reason"] == "none", terminal
 
 
@@ -385,8 +386,8 @@ def main() -> None:
         directory = root / "synthesis"
         directory.mkdir()
         result = execute(integration, ["-f", "G (i <-> X o)", "-i", "i", "-o", "o",
-                                      "-s", str(root / "controller.aag"), "--arms",
-                                      "real:small:forward"], directory)
+                                      "-s", str(root / "controller.aag"), "--spot-fast", "off",
+                                      "--arms", "real:small:forward"], directory)
         assert result.returncode == 0 and (root / "controller.aag").stat().st_size > 0, result
         complete_records(rows(directory))
         winner = next(row for row in rows(directory) if row.get("event") == "parent_winner")

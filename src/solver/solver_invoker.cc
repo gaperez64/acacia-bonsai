@@ -645,6 +645,8 @@ namespace {
         }
 #endif
         if (fast.conclusive) {
+          // Credit the verdict to Spot rather than to the arm's starting route.
+          acacia::spot_records::route ("spot_fast", "spot");
           if (fast.strategy.has_value ()) {
             assert (want_controller_strategy);
             strats.push_back (builder ? std::move (builder)
