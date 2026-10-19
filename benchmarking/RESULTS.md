@@ -12,6 +12,54 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-19 — Same-session three-way on SYNTCOMP26 (v2.6.0)
+
+Archive `threeway-syntcomp26-20261019`; ltlsynt 2.16, Acacia-Bonsai 1.x (TACAS'23) and
+v2.6.0 (d2870f79, frozen 7db1df7b) in one session on the 1,524 SYNTCOMP26 inputs,
+native TLSF, serial 8 GiB scopes. The 60 s column reruns only inputs undecided at 17 s
+and recycles the rest. The 1.x rows that hit the memory cap and printed REALIZABLE
+(3 at 17 s, 17 at 60 s) are counted as resource limits, not solves. Plots and tables
+are on the v2.6.0 release.
+
+| Tool | 17 s solved (R/U) | 17 s PAR-2 (s) | 60 s solved (R/U) | 60 s PAR-2 (s) |
+|---|---:|---:|---:|---:|
+| ltlsynt 2.16 | 1264 (581/683) | 9421 | 1290 (594/696) | 29524 |
+| Acacia-Bonsai 1.x | 812 (457/355) | 24779 | 854 (480/374) | 82407 |
+| Acacia-Bonsai 2.6.0 | 1335 (610/725) | 6985 | 1353 (622/731) | 21583 |
+
+Against ltlsynt, v2.6.0 alone decides 81 inputs and ltlsynt alone 10 at 17 s (79 and 16
+at 60 s); no verdict disagreements.
+
+## 2026-10-19 — The antichain arms' Spot shortcut adds nothing to the default
+
+Archive `spotfast-ablation-20261019`; one release build of 8c77fcfc (d68568db), the
+first `docker_default` member, with `--spot-fast` at its default and `off`, paired at
+17 s on the full panel.
+
+| `--spot-fast` | Solved (R/U) | PAR-2 (s) |
+|---|---:|---:|
+| default (`det`) | 1334 (609/725) | 6995.4 |
+| `off` | 1334 (609/725) | 6996.4 |
+
+No input is decided by only one side and no verdicts disagree; per-input time ratio
+geomean 1.000. The parity arm covers what the shortcut decides. The default is kept.
+
+The same archive holds a 17 s attribution pass with `--route-records` (shortcut wins
+labelled `spot_fast` since #287), plus the 18 inputs v2.6 decides only at 60 s. Of the
+1,335 inputs decided at 17 s, 511 are won by Spot (parity or obligation arm, or the
+shortcut) and 823 by the antichain or OxiDD arms; 1 has no winner record. 146 of these
+winners have dropped phase records and are counted by their recorded route. The
+shortcut wins 90; all 90 are decided with it off. The 60 s additions split 10 Spot and
+8 antichain/OxiDD.
+
+## 2026-10-19 — Gates for the strpm removal (#284)
+
+Archive `gates-284-20261019`; candidate 36c0fcdf (6fd831be) against v2.6.0 (d2870f79).
+G1 40/40, PAR-2 101.9 to 34.9 s; G2s 7.3% fewer cycles; G3 solved counts 149→150,
+163→162 and 167→167, where the SYNTCOMP25 difference is one input at the cap that both
+decide on a 51 s remeasurement (17.4 vs 16.8 s), so no coverage loss; G4 593 ok and 31
+permitted timeouts; G5 no opposite verdicts.
+
 ## 2026-10-18 — Tier 4 needs no strpm-simd (#282)
 
 Archive `tier4-spot282-20261018`; one diagnostics build of 176b321c, tier 4 forced to
@@ -486,7 +534,7 @@ G2s failure remain disclosed in the original report, `refactor-closeout20261017`
 | S4, master's four-arm default | 1,206 | 39,856.456 | 1,177 | 12,548.461 |
 | TACAS23 | 847 | 83,039.001 | 811 | 24,788.493 |
 
-## Latest released three-way
+## v2.4.2 released three-way
 
 Released v2.4.2 three-way comparison, full 1,524-input SYNTCOMP26, 17 s,
 8 GiB/no swap, `plots-spot-otf-threeway-20260909`. Virtual best is derived,
