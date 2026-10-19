@@ -201,7 +201,7 @@ def legacy_resource_stops(binary: Path, root: Path,
     for mode in modes:
         directory = root / f"legacy-resource-{mode}"
         directory.mkdir()
-        args = ["-f", "G (i <-> X o)", "-i", "i", "-o", "o", "--arms",
+        args = ["-f", "G (i <-> X o)", "-i", "i", "-o", "o", "--spot-fast", "off", "--arms",
                 "real:small:spot-guarded:spot-lazy", "--candidate", mode]
         env = {"ACACIA_SPOT_TAA_MAX_RANK_NODES": "0"}
         baseline = execute(binary, args, None, env)
