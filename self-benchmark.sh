@@ -532,7 +532,7 @@ if ! (( $donot[(Ie)benchmark] )); then
 	meson_jobs=(--num-processes "$BENCHMARK_TEST_JOBS")
 	if $justtest; then
 	    echo -n "testing $name on $this_suites (logfile: $log)... "
-	    run_benchmark_command $name $run_prefix meson test --no-rebuild $meson_jobs $this_suites $meson_slice -t $TIMEOUT_FACTOR &>> $log || test_status=$?
+	    run_benchmark_command $name $run_prefix meson test --no-rebuild --print-errorlogs $meson_jobs $this_suites $meson_slice -t $TIMEOUT_FACTOR &>> $log || test_status=$?
 	else
 	    echo -n "benchmarking $name on $this_suites (logfile: $log)... "
 	    run_benchmark_command $name $run_prefix meson test --no-rebuild --benchmark $meson_jobs $this_suites $meson_slice -t $TIMEOUT_FACTOR &>> $log || test_status=$?
