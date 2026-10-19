@@ -12,6 +12,7 @@
 
 # include <tlsf/gr1_lift.h>
 
+# include <cstdio>
 # include <cstring>
 # include <memory>
 
@@ -66,6 +67,9 @@ namespace acacia {
     options.deadline_mono_ns = deadline_mono_ns;
     const auto budget = native_construction_budget (
         args.memory_share_workers.value_or (args.arms ? args.arms->size () : 1));
+    if (args.memory_share_workers && args.verbose_level >= 1)
+      std::fprintf (stderr, "memory share (bytes): %s=%llu\n", arm,
+                    (unsigned long long) budget.max_rss_bytes);
     TlsfGr1LiftStats stats {};
     options.budget = budget;
     options.proof_order = TLSF_GR1_LIFT_REGION_FIRST;

@@ -16,6 +16,7 @@
 
 # include <array>
 # include <cerrno>
+# include <cstdio>
 # include <cstdlib>
 # include <memory>
 # include <string>
@@ -84,6 +85,9 @@ namespace acacia {
     reduction_options.max_monitor_states = 10000;
     const auto budget = native_construction_budget (
         args.memory_share_workers.value_or (args.arms ? args.arms->size () : 1));
+    if (args.memory_share_workers && args.verbose_level >= 1)
+      std::fprintf (stderr, "memory share (bytes): %s=%llu\n", arm,
+                    (unsigned long long) budget.max_rss_bytes);
     TlsfGr1ReductionStats reduction_stats {};
     reduction_options.budget = budget;
     reduction_options.stats = &reduction_stats;

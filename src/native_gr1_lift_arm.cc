@@ -11,6 +11,7 @@
 
 # include <tlsf/gr1_lift.h>
 
+# include <cstdio>
 # include <cstring>
 # include <memory>
 # include <string>
@@ -80,6 +81,9 @@ namespace acacia {
     const uint64_t construction_started_ns = phase_clock (CLOCK_MONOTONIC);
     const auto budget = native_construction_budget (
         args.memory_share_workers.value_or (args.arms ? args.arms->size () : 1));
+    if (args.memory_share_workers && args.verbose_level >= 1)
+      std::fprintf (stderr, "memory share (bytes): %s=%llu\n", arm,
+                    (unsigned long long) budget.max_rss_bytes);
     TlsfGr1LiftStats stats {};
     TlsfGr1LiftOptions options {};
     options.deadline_mono_ns = deadline_mono_ns;

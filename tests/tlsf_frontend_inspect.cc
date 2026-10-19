@@ -39,6 +39,15 @@ int main (int argc, char** argv) {
       return 2;
     }
     const auto parsed = acacia::tlsf_frontend::load (argv[at], policy);
+    if (policy != acacia::tlsf_frontend::normalization_policy::off) {
+      const auto& metadata = parsed.metadata;
+      std::cerr << "normalization\t" << metadata.tlsf_normalization_schedule << '\t'
+                << metadata.tlsf_normalization_changed << '\t'
+                << metadata.tlsf_normalization_bounds_rejected << '\t'
+                << metadata.tlsf_normalization_nodes_before << '\t'
+                << metadata.tlsf_normalization_nodes_after << '\t'
+                << metadata.tlsf_normalization_time_ns << '\n';
+    }
     if (apply_rsimp) {
       auto formula = spot::parse_infix_psl (
           parsed.formula, spot::default_environment::instance (), false, false);

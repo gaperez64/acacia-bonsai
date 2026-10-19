@@ -723,16 +723,11 @@ namespace {
                                       : child_count + size_t (g_obligation != nullptr);
     if (std::ranges::any_of (*arg_values.arms, [] (const auto& arm) {
           return arm.kind == portfolio_arm_kind::parity;
-        }))
+        })) {
       g_parity_rss_share = acacia::obligation::rss_share (parity_workers);
-    if (arg_values.verbose_level >= 1) {
-      const size_t count = arg_values.memory_share_workers.value_or (arg_values.arms->size ());
-      std::fprintf (stderr, "memory shares (bytes): native=%llu parity=%llu obligation=%llu\n",
-                    (unsigned long long) acacia::native_construction_budget (count).max_rss_bytes,
-                    (unsigned long long) acacia::obligation::rss_share (parity_workers),
-                    (unsigned long long) acacia::obligation::rss_share (
-                        arg_values.memory_share_workers.value_or (child_count) + 1,
-                        arg_values.obligation_memory_share));
+      if (arg_values.memory_share_workers && arg_values.verbose_level >= 1)
+        std::fprintf (stderr, "memory share (bytes): parity=%llu\n",
+                      (unsigned long long) g_parity_rss_share);
     }
     for (const auto& arm : *arg_values.arms) {
       if (arm.kind == portfolio_arm_kind::legacy && !arg_values.legacy_available)
@@ -756,6 +751,9 @@ namespace {
       g_helper_rss_share = acacia::obligation::rss_share (
           arg_values.memory_share_workers.value_or (size_t (g_child_count)) + 1,
           arg_values.obligation_memory_share);
+      if (arg_values.memory_share_workers && arg_values.verbose_level >= 1)
+        std::fprintf (stderr, "memory share (bytes): obligation=%llu\n",
+                      (unsigned long long) g_helper_rss_share);
       g_obligation->start_ns = monotonic_ns ();
       const auto helper = portfolio_arm::native (false, portfolio_arm_kind::obligation, true);
       verb_do (1, vout << "Starting additional obligation worker\n" << std::flush);
