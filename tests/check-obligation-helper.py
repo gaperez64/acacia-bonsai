@@ -464,7 +464,7 @@ def main() -> None:
         for inputs in (["-i", ""], ["-i", "i"]):
             outputs = []
             for selection, backend in ((alone, "obligation"),
-                                       (["--arms", "real:small:backward"], "backward")):
+                                       (["--arms", "real:small:backward", "--spot-fast", "off"], "backward")):
                 result, rows = run(binary, ["-f", "G o", *inputs, "-o", "o", *selection,
                                            "-s", str(controller)],
                                    root, library, "writer-contract",
