@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdio>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -61,7 +62,31 @@ namespace acacia::tlsf_frontend {
     }
   }  // namespace
 
-  specification parse (std::string_view text) {
+  normalization_policy parse_normalization_policy (std::string_view policy) {
+    if (policy == "off")
+      return normalization_policy::off;
+    if (policy == "match-safe")
+      return normalization_policy::match_safe;
+    if (policy == "route-safe")
+      return normalization_policy::route_safe;
+    throw std::invalid_argument ("normalization expects off, match-safe, or route-safe");
+  }
+
+  void report_normalization (const specification_metadata& metadata, const char* route) {
+    // Canonical schedules contain only pass names, commas, colons and digits.
+    std::fprintf (stderr,
+                  "{\"stage\":\"tlsf_normalization\",\"route\":\"%s\",\"schedule\":\"%s\","
+                  "\"changed\":%s,\"bounds_rejected\":%s,\"nodes_before\":%llu,"
+                  "\"nodes_after\":%llu,\"time_ns\":%llu}\n",
+                  route, metadata.tlsf_normalization_schedule.c_str (),
+                  metadata.tlsf_normalization_changed ? "true" : "false",
+                  metadata.tlsf_normalization_bounds_rejected ? "true" : "false",
+                  (unsigned long long) metadata.tlsf_normalization_nodes_before,
+                  (unsigned long long) metadata.tlsf_normalization_nodes_after,
+                  (unsigned long long) metadata.tlsf_normalization_time_ns);
+  }
+
+  specification parse (std::string_view text, normalization_policy policy) {
     const std::string owned {text};
     tlsf::Options conversion_options = options ();
     tlsf::Result result = tlsf::decompose (owned, conversion_options);
@@ -72,8 +97,16 @@ namespace acacia::tlsf_frontend {
     // synthesis metadata, but ask the linked frontend for an effective Mealy
     // formula so solving and controller conversion share one internal path.
     const std::string source_target = result.target;
-    if (source_target != "Mealy") {
+    if (source_target != "Mealy" || policy != normalization_policy::off) {
       conversion_options.overwrite_target = "Mealy";
+      if (policy != normalization_policy::off) {
+        conversion_options.normalization_schedule =
+            policy == normalization_policy::match_safe ? "match-safe:1" : "route-safe:1";
+        conversion_options.normalization_phase =
+            policy == normalization_policy::match_safe ? TLSF_NORM_PHASE_MATCH : TLSF_NORM_PHASE_ROUTE;
+        conversion_options.normalization_max_growth_percent = 200;
+        conversion_options.normalization_max_nodes = 20000;
+      }
       result = tlsf::decompose (owned, conversion_options);
     }
 
@@ -86,6 +119,14 @@ namespace acacia::tlsf_frontend {
     value.metadata.tlsf_target = source_target;
     value.metadata.tlsf_effective_target = result.target;
     value.metadata.tlsf_gr_level = result.gr_level;
+    if (policy != normalization_policy::off) {
+      value.metadata.tlsf_normalization_schedule = std::move (result.normalization_schedule);
+      value.metadata.tlsf_normalization_nodes_before = result.normalization_nodes_before;
+      value.metadata.tlsf_normalization_nodes_after = result.normalization_nodes_after;
+      value.metadata.tlsf_normalization_time_ns = result.normalization_time_ns;
+      value.metadata.tlsf_normalization_changed = result.normalization_changed;
+      value.metadata.tlsf_normalization_bounds_rejected = result.normalization_bounds_rejected;
+    }
     if (has_indexed_conjunction (text)) {
       value.metadata.tlsf_indexed_families.reserve (result.indexed_families.size ());
       for (auto& family : result.indexed_families) {
@@ -111,14 +152,14 @@ namespace acacia::tlsf_frontend {
     return value;
   }
 
-  specification load (const std::string& path) {
+  specification load (const std::string& path, normalization_policy policy) {
     std::ifstream input {path};
     if (not input)
       throw std::runtime_error ("unable to open TLSF file: " + path);
     std::ostringstream contents;
     contents << input.rdbuf ();
     try {
-      return parse (contents.str ());
+      return parse (contents.str (), policy);
     } catch (const std::exception& error) {
       throw std::runtime_error ("unable to convert TLSF file " + path + ": " + error.what ());
     }

@@ -56,7 +56,9 @@ namespace acacia {
       auto inputs = args.inputs, outputs = args.outputs;
       auto metadata = args.metadata;
       if (args.tlsf_specified) {
-        auto spec = tlsf_frontend::parse (args.tlsf_source);
+        auto spec = tlsf_frontend::parse (args.tlsf_source, args.parity_normalization);
+        if (args.verbose_level >= 1 && !spec.metadata.tlsf_normalization_schedule.empty ())
+          tlsf_frontend::report_normalization (spec.metadata, "parity");
         text = std::move (spec.formula);
         inputs = std::move (spec.inputs);
         outputs = std::move (spec.outputs);
@@ -74,11 +76,18 @@ namespace acacia {
       input.formula = parsed.f;
       input.inputs = std::move (inputs);
       input.outputs = std::move (outputs);
-      if (phase_records_enabled ())
-        accounting_identity (
-            input.formula, input.inputs, input.outputs, "spot-parity",
-            "Generic:Deterministic:High:simul=0:ba-simul=0:det-simul=0:tls-impl=1:wdba-minimize=2",
-            "parity-route");
+      if (phase_records_enabled ()) {
+        const auto identity = [&] (std::string_view preprocessing) {
+          accounting_identity (
+              input.formula, input.inputs, input.outputs, "spot-parity",
+              "Generic:Deterministic:High:simul=0:ba-simul=0:det-simul=0:tls-impl=1:wdba-minimize=2",
+              preprocessing);
+        };
+        if (metadata.tlsf_normalization_schedule.empty ())
+          identity ("parity-route");
+        else
+          identity ("parity-route:tlsf-normalization=" + metadata.tlsf_normalization_schedule);
+      }
       parity_route::options config;
       config.synthesis = args.synth_fname.has_value ();
       unsigned tier = 0;

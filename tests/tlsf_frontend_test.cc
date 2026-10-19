@@ -54,6 +54,17 @@ MAIN {
   ok &= expect ("original semantics", parsed.metadata.tlsf_semantics == "Mealy");
   ok &= expect ("original target", parsed.metadata.tlsf_target == "Moore");
   ok &= expect ("effective target", parsed.metadata.tlsf_effective_target == "Mealy");
+  for (auto policy : {acacia::tlsf_frontend::normalization_policy::match_safe,
+                      acacia::tlsf_frontend::normalization_policy::route_safe}) {
+    const auto normalized = acacia::tlsf_frontend::parse (spec, policy);
+    ok &= expect ("normalization follows target adaptation",
+                  normalized.formula == "G (req -> grant)" ||
+                  normalized.formula == "G (!req || grant)");
+    ok &= expect ("normalization measures the effective Mealy objective",
+                  normalized.metadata.tlsf_normalization_nodes_before == 4 &&
+                  normalized.metadata.tlsf_target == "Moore" &&
+                  normalized.metadata.tlsf_effective_target == "Mealy");
+  }
 
   const auto strict = acacia::tlsf_frontend::parse (R"TLSF(
 INFO {

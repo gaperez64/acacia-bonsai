@@ -77,6 +77,11 @@ struct arg_parse_result {
     bool tlsf_specified = false;
     std::string tlsf_source;
     std::string tlsf_sha256;
+    acacia::tlsf_frontend::normalization_policy parity_normalization =
+        acacia::tlsf_frontend::normalization_policy::off;
+    acacia::tlsf_frontend::normalization_policy legacy_normalization =
+        acacia::tlsf_frontend::normalization_policy::off;
+    std::optional<size_t> memory_share_workers;
     bool legacy_available = true;
 };
 

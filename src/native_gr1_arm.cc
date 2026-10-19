@@ -82,7 +82,8 @@ namespace acacia {
     reduction_options.deadline_mono_ns = deadline_mono_ns;
     reduction_options.max_artifact_bytes = artifact_cap;
     reduction_options.max_monitor_states = 10000;
-    const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
+    const auto budget = native_construction_budget (
+        args.memory_share_workers.value_or (args.arms ? args.arms->size () : 1));
     TlsfGr1ReductionStats reduction_stats {};
     reduction_options.budget = budget;
     reduction_options.stats = &reduction_stats;

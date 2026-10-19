@@ -24,6 +24,9 @@ with tempfile.TemporaryDirectory(dir=Path.cwd(), prefix="check-help-") as direct
             assert result.returncode == 0, (option, invalid_deadline, result)
             assert result.stdout.startswith("Usage:"), (option, invalid_deadline, result)
             assert "--arms LIST" in result.stdout, (option, invalid_deadline, result)
+            assert "--parity-normalization VAL [off|match-safe|route-safe] (default off)" in result.stdout
+            assert "--legacy-normalization VAL [off|match-safe|route-safe] (default off)" in result.stdout
+            assert "--memory-share-workers N" in result.stdout
             assert "--equivariance-budget F|DURATION|unbounded (default 3s)" in result.stdout
             assert "[scan|grouped] (default: grouped)" in result.stdout
             assert "--obligation-helper" not in result.stdout

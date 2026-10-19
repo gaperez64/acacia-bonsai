@@ -63,15 +63,20 @@ namespace acacia {
       const char* preference;
       const char* preprocessing;
       bool push_inputs;
+      std::string_view normalization_schedule;
       void operator() (spot::formula actual) const noexcept {
         if (!phase_records_enabled ())
           return;
         try {
+          std::string options = std::string (preprocessing) +
+                                (push_inputs ? ":push-inputs" : ":no-input-push");
+          if (!normalization_schedule.empty ())
+            options += ":tlsf-normalization=" + std::string (normalization_schedule);
           accounting_identity (
               actual, inputs, outputs, "frozen-graph",
               std::string (preference) +
                   ":BA:SBAcc:simul=0:ba-simul=0:det-simul=0:tls-impl=1:wdba-minimize=2",
-              std::string (preprocessing) + (push_inputs ? ":push-inputs" : ":no-input-push"));
+              options);
         } catch (...) {
           phase_records_drop ();
         }

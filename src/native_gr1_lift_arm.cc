@@ -78,7 +78,8 @@ namespace acacia {
     if (!native_limit_address_space (arm))
       return EXIT_CODE_UNKNOWN;
     const uint64_t construction_started_ns = phase_clock (CLOCK_MONOTONIC);
-    const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
+    const auto budget = native_construction_budget (
+        args.memory_share_workers.value_or (args.arms ? args.arms->size () : 1));
     TlsfGr1LiftStats stats {};
     TlsfGr1LiftOptions options {};
     options.deadline_mono_ns = deadline_mono_ns;

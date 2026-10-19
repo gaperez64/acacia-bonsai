@@ -313,6 +313,7 @@ namespace {
       const controller_conversion conversion;
       const std::string target_semantics;
       const std::vector<symmetry::indexed_family_hint>& indexed_family_hints;
+      const std::string& normalization_schedule;
       std::vector<acacia::synthesis::controller_builder> strats;
       const acacia::unreal_witnesses::records& weakening_records;
 
@@ -332,6 +333,7 @@ namespace {
                    bool equivariance, const std::optional<std::string>& synth_fname,
                    controller_conversion conversion,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints,
+                   const std::string& normalization_schedule,
                    std::string target_semantics,
                    const acacia::unreal_witnesses::records& weakening_records)
         : dict {dict},
@@ -351,6 +353,7 @@ namespace {
           conversion {conversion},
           target_semantics {std::move (target_semantics)},
           indexed_family_hints {indexed_family_hints},
+          normalization_schedule {normalization_schedule},
           weakening_records {weakening_records} {
         // Create BDD "cubes" that represent the sets of inputs and outputs,
         // respectively. We associate them with this object when registering
@@ -424,7 +427,8 @@ namespace {
           const acacia::translation_identity identity {
               input_aps, output_aps, translation_pref_name (translation_pref),
               ACACIA_DIAG_STRINGIFY (AUT_PREPROCESSOR),
-              check_unreal && *check_unreal == UNREAL_X_AUTOMATON};
+              check_unreal && *check_unreal == UNREAL_X_AUTOMATON,
+              normalization_schedule};
           aut = translate_with_diagnostics (spot_formula, trans, translation_pref, &identity);
         }
         observe_translated_automaton (aut);
@@ -547,7 +551,8 @@ namespace {
           const acacia::translation_identity identity {
               input_aps, output_aps, translation_pref_name (translation_pref),
               ACACIA_DIAG_STRINGIFY (AUT_PREPROCESSOR),
-              check_unreal && *check_unreal == UNREAL_X_AUTOMATON};
+              check_unreal && *check_unreal == UNREAL_X_AUTOMATON,
+              normalization_schedule};
           aut = translate_with_diagnostics (spot_formula, trans, translation_pref, &identity);
         }
         if (provider != acacia::automaton_provider::frozen_graph)
@@ -1189,7 +1194,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   run_one_ltl runner (
       dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal, translation_pref,
       spot_fast, backend, provider, candidate, equivariance, synth_fname, conversion,
-      indexed_family_hints,
+      indexed_family_hints, metadata.tlsf_normalization_schedule,
       metadata.source_format + ";semantics=" + metadata.tlsf_semantics +
           ";target=" + metadata.tlsf_target + ";effective=" +
           ((metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-")

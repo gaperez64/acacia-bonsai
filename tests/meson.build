@@ -633,6 +633,11 @@ tlsf_frontend_inspect = executable (
   include_directories : inc,
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
+test ('tlsf-normalization-cli', py,
+      args : [files ('check-tlsf-normalization.py'), ab_exe, tlsf_frontend_inspect,
+              meson.current_build_dir (), default_arms_opt],
+      suite : ['unit', 'tlsf', 'parity'], timeout : 120,
+      depends : [ab_exe, tlsf_frontend_inspect])
 if ltlsynt_exe.found () and get_option ('acacia_spot_guarded_backend')
   test ('extended-weakening-games', py,
         args : [files ('check-extended-weakening.py'), ab_exe,

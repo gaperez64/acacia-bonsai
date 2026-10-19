@@ -20,13 +20,25 @@ namespace {
 }  // namespace
 
 int main (int argc, char** argv) {
-  const bool apply_rsimp = argc == 3 and std::string (argv[1]) == "--rsimp";
-  if (argc != 2 and not apply_rsimp) {
-    std::cerr << "usage: tlsf-frontend-inspect [--rsimp] FILE.tlsf\n";
-    return 2;
-  }
   try {
-    const auto parsed = acacia::tlsf_frontend::load (argv[apply_rsimp ? 2 : 1]);
+    bool apply_rsimp = false;
+    auto policy = acacia::tlsf_frontend::normalization_policy::off;
+    int at = 1;
+    while (at < argc - 1) {
+      const std::string_view option {argv[at++]};
+      if (option == "--rsimp")
+        apply_rsimp = true;
+      else if (option == "--normalization" && at < argc - 1)
+        policy = acacia::tlsf_frontend::parse_normalization_policy (argv[at++]);
+      else
+        throw std::invalid_argument ("unknown or incomplete option");
+    }
+    if (at != argc - 1) {
+      std::cerr << "usage: tlsf-frontend-inspect [--rsimp] "
+                   "[--normalization off|match-safe|route-safe] FILE.tlsf\n";
+      return 2;
+    }
+    const auto parsed = acacia::tlsf_frontend::load (argv[at], policy);
     if (apply_rsimp) {
       auto formula = spot::parse_infix_psl (
           parsed.formula, spot::default_environment::instance (), false, false);

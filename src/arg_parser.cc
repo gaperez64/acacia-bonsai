@@ -55,6 +55,13 @@ void show_help (const char* program_name) {
       << "  -f STRING         process the formula STRING\n"
       << "  -F VAL            process formula in file VAL\n"
       << "  -T, --tlsf FILE   process a TLSF specification natively\n"
+      << "  --parity-normalization VAL [off|match-safe|route-safe] (default off)\n"
+      << "                    experimental TLSF normalization in the parity worker\n"
+      << "  --legacy-normalization VAL [off|match-safe|route-safe] (default off)\n"
+      << "                    experimental TLSF normalization for legacy arms\n"
+      << "  --memory-share-workers N  share memory as if N ordinary workers\n"
+      << "                    plus the obligation helper ran\n"
+      << "                    experimental; default: actual count\n"
       << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) "
          "atomic propositions\n"
       << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic "
@@ -437,6 +444,10 @@ arg_parse_result arg_parser (int argc, char** argv) {
   std::optional<int> sgn_kmin = std::nullopt;
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_OBLIGATION_MEMORY_SHARE = 1015;
+  static constexpr int OPT_PARITY_NORMALIZATION = 1016;
+  static constexpr int OPT_LEGACY_NORMALIZATION = 1017;
+  static constexpr int OPT_MEMORY_SHARE_WORKERS = 1018;
+  bool normalization_specified = false;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
   static constexpr int OPT_REAL_BACKEND = 1002;
@@ -455,6 +466,9 @@ arg_parse_result arg_parser (int argc, char** argv) {
   bool real_backend_specified = false;
   bool unreal_backend_specified = false;
   static option long_options[] = {
+      {"parity-normalization", required_argument, nullptr, OPT_PARITY_NORMALIZATION},
+      {"legacy-normalization", required_argument, nullptr, OPT_LEGACY_NORMALIZATION},
+      {"memory-share-workers", required_argument, nullptr, OPT_MEMORY_SHARE_WORKERS},
       {"version", no_argument, nullptr, 'V'},
       {"help", no_argument, nullptr, 'h'},
       {"oracle-layout", required_argument, nullptr, OPT_ORACLE_LAYOUT},
@@ -641,6 +655,29 @@ arg_parse_result arg_parser (int argc, char** argv) {
         else
           error (EXIT_CODE_ERROR, "Error: --obligation-memory-share expects equal or alone.\n");
         break;
+      case OPT_PARITY_NORMALIZATION:
+      case OPT_LEGACY_NORMALIZATION:
+        normalization_specified = true;
+        try {
+          (opt == OPT_PARITY_NORMALIZATION ? retval.parity_normalization
+                                          : retval.legacy_normalization) =
+              acacia::tlsf_frontend::parse_normalization_policy (optarg);
+        } catch (const std::invalid_argument& exception) {
+          error (EXIT_CODE_ERROR, "Error: --%s: %s.\n",
+                 opt == OPT_PARITY_NORMALIZATION ? "parity-normalization" : "legacy-normalization",
+                 exception.what ());
+        }
+        break;
+      case OPT_MEMORY_SHARE_WORKERS: {
+        size_t count = 0;
+        const std::string_view value {optarg};
+        const auto [end, ec] = std::from_chars (value.data (), value.data () + value.size (), count);
+        if (ec != std::errc {} || end != value.data () + value.size () || count == 0 ||
+            count == std::numeric_limits<size_t>::max ())
+          error (EXIT_CODE_ERROR, "Error: --memory-share-workers expects a positive integer.\n");
+        retval.memory_share_workers = count;
+        break;
+      }
       case OPT_R_PREPASS:
       case OPT_EQUIVARIANCE: {
         const bool enabled = case_insensitive_equals (optarg, "on");
@@ -703,6 +740,9 @@ arg_parse_result arg_parser (int argc, char** argv) {
       default: show_help (argv[0]); exit (EXIT_CODE_ERROR);
     }
   }
+
+  if (normalization_specified && retval.synth_fname)
+    error (EXIT_CODE_ERROR, "Error: normalization options cannot be used with -s controller synthesis.\n");
 
   // --unreal-translation-pref selects no arms by itself: it only overrides
   // primary_translation_pref, and has an effect only when -u also runs an
@@ -870,7 +910,9 @@ arg_parse_result arg_parser (int argc, char** argv) {
       })) {
     acacia::phase_scope conversion_phase ("legacy_parent", "frontend_conversion");
     try {
-      auto spec = acacia::tlsf_frontend::parse (retval.tlsf_source);
+      auto spec = acacia::tlsf_frontend::parse (retval.tlsf_source, retval.legacy_normalization);
+      if (retval.verbose_level >= 1 && !spec.metadata.tlsf_normalization_schedule.empty ())
+        acacia::tlsf_frontend::report_normalization (spec.metadata, "legacy");
       retval.formula = std::move (spec.formula);
       retval.inputs = std::move (spec.inputs);
       retval.outputs = std::move (spec.outputs);

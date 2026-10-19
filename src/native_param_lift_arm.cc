@@ -64,7 +64,8 @@ namespace acacia {
 
     TlsfGr1LiftOptions options {};
     options.deadline_mono_ns = deadline_mono_ns;
-    const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
+    const auto budget = native_construction_budget (
+        args.memory_share_workers.value_or (args.arms ? args.arms->size () : 1));
     TlsfGr1LiftStats stats {};
     options.budget = budget;
     options.proof_order = TLSF_GR1_LIFT_REGION_FIRST;

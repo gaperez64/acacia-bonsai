@@ -28,6 +28,10 @@ struct specification_metadata {
     int tlsf_gr_level = -1;
     // Exact linked-frontend normalization, before any realizability simplification.
     std::string tlsf_normalized_objective;
+    std::string tlsf_normalization_schedule;
+    uint64_t tlsf_normalization_nodes_before = 0, tlsf_normalization_nodes_after = 0;
+    uint64_t tlsf_normalization_time_ns = 0;
+    bool tlsf_normalization_changed = false, tlsf_normalization_bounds_rejected = false;
     std::vector<symmetry::indexed_family_hint> tlsf_indexed_families;
 };
 
