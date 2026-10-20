@@ -2,7 +2,8 @@ project ('Acacia Bonsai', ['c', 'cpp'],
          meson_version : '>=1.7.0',
          version : run_command ('scripts/git-version.py', '--pep440',
                                 check : true).stdout ().strip (),
-         default_options : ['cpp_std=c++23', 'b_ndebug=if-release'],
+         default_options : ['cpp_std=c++23', 'b_ndebug=if-release',
+                            'yyjson:default_library=static'],
          license : 'GPL-3.0')
 
 extra_args = ['-ftrack-macro-expansion=0',
