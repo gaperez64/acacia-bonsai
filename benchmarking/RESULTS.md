@@ -12,6 +12,31 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-20 — isl does not compress Acacia's downsets
+
+Archive `islprobe-20261020`; offline only, no build of Acacia. The question was whether a downset backed by isl, Verdoolaege's integer set library, could hold an antichain more compactly as a union of boxes merged by `isl_set_coalesce`. Winning-region antichains were captured through the published Python bindings (acacia-boomslang 2026.2.2) on the 40 slowest inputs the backward arm decides as realizable, and coalesced with islpy 2026.2.2.
+
+The bindings returned 13 realizable regions; 21 came back unrealizable through their simpler pipeline and 6 ran past 60 s. Twelve of the 13 regions are a single maximal vector (5 to 10480 dimensions), so there is nothing to merge. The remaining one, `collector_v1_pb_9_pe_`, has 512 maximal vectors in 2827 dimensions with entries in {−1, 0, 1}. On its 531 distinct coordinates, coalescing 8 boxes leaves 8 basic sets (43 s) and 32 boxes leave 32 (197 s); 128 boxes did not finish in 600 s. A staircase of boxes is not convex, so isl keeps one piece per element, and each operation costs seconds where the dominance check costs microseconds. Not pursued; isl would also have been a new dependency.
+
+## 2026-10-20 — A feature-based arm selector finds no coverage on 4 cores
+
+Archive `costmodel-20261020`; frozen d68568db (revision 8c77fcfc), SYNTCOMP26, serial 8 GiB scopes, CPU time collected. Each of the seven default arms was run alone through `--arms`: on all 1524 inputs at 2 s, and on the 311 hard inputs (race at least 0.5 s or undecided in `spotfast-ablation-20261019`) at 17 s. No two arms gave opposite verdicts; 1352 inputs are decided by some arm alone. Features are the TLSF source counts from `tlsfbenchgraph --source-features` (interface sizes and `guard_*` operator counts and depths); models are random forests evaluated with 5-fold cross-validation grouped by family.
+
+The race on four cores was simulated as the fastest chosen arm's solo time. Without a contention penalty, the simulation reproduces the measured gap between the seven-arm default and the four-arm subset in `route-20261019` (4 hard inputs in both), so arms do not slow each other enough to matter.
+
+| Arms per input (4 cores, 17 s) | Solved | Lost vs. all seven | PAR-2 (s) |
+|---|---:|---:|---:|
+| All seven | 1352 | 0 | 6459 |
+| Four-arm subset of `route-20261019` | 1338 | 14 | 6954 |
+| Best four chosen on the training folds | 1326 | 26 | 7359 |
+| Model's top four | 1336 | 16 | 6990 |
+| Parity plus the model's top three | 1339 | 13 | 6888 |
+| Best four per input (oracle) | 1352 | 0 | 6459 |
+
+No selector gains an input. The oracle shows four arms would suffice on every input, so the limit is prediction, not core count.
+
+Dropping only the arms the model gives under 3% chance of deciding (the threshold chosen on the other folds) loses no input and cuts simulated race CPU by 10.8%, mostly on the hard inputs and mostly the obligation, GR(1) and backward arms. At 4% it loses 5. Rules shallow enough to write as a few comparisons save at most 3.2% without a loss. Not admitted: it is simulated rather than measured, depends on an embedded forest, and sits one threshold step from losing inputs.
+
 ## 2026-10-20 — Neither TLSF normalization nor a 4-core arm subset helps
 
 Archive `route-20261019`; release build of fc229b77 (9e56d40d) carrying opt-in
