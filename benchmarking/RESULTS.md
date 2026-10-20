@@ -12,6 +12,12 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-20 — isl does not compress Acacia's downsets
+
+Archive `islprobe-20261020`; offline only, no build of Acacia. The question was whether a downset backed by isl, Verdoolaege's integer set library, could hold an antichain more compactly as a union of boxes merged by `isl_set_coalesce`. Winning-region antichains were captured through the published Python bindings (acacia-boomslang 2026.2.2) on the 40 slowest inputs the backward arm decides as realizable, and coalesced with islpy 2026.2.2.
+
+The bindings returned 13 realizable regions; 21 came back unrealizable through their simpler pipeline and 6 ran past 60 s. Twelve of the 13 regions are a single maximal vector (5 to 10480 dimensions), so there is nothing to merge. The remaining one, `collector_v1_pb_9_pe_`, has 512 maximal vectors in 2827 dimensions with entries in {−1, 0, 1}. On its 531 distinct coordinates, coalescing 8 boxes leaves 8 basic sets (43 s) and 32 boxes leave 32 (197 s); 128 boxes did not finish in 600 s. A staircase of boxes is not convex, so isl keeps one piece per element, and each operation costs seconds where the dominance check costs microseconds. Not pursued; isl would also have been a new dependency.
+
 ## 2026-10-20 — A feature-based arm selector finds no coverage on 4 cores
 
 Archive `costmodel-20261020`; frozen d68568db (revision 8c77fcfc), SYNTCOMP26, serial 8 GiB scopes, CPU time collected. Each of the seven default arms was run alone through `--arms`: on all 1524 inputs at 2 s, and on the 311 hard inputs (race at least 0.5 s or undecided in `spotfast-ablation-20261019`) at 17 s. No two arms gave opposite verdicts; 1352 inputs are decided by some arm alone. Features are the TLSF source counts from `tlsfbenchgraph --source-features` (interface sizes and `guard_*` operator counts and depths); models are random forests evaluated with 5-fold cross-validation grouped by family.
