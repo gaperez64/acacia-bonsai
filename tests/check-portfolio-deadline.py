@@ -160,7 +160,10 @@ def main() -> None:
                 check(binary, both_pair, "stall,real-delayed", 2.0, 2, 0,
                       "REALIZABLE", 1.0)
         if native and sys.platform == "linux":
-            check_native_abort_race(binary, source, Path(location))
+            if os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1":
+                print("Skipping RLIMIT_AS case: incompatible with ASan shadow memory")
+            else:
+                check_native_abort_race(binary, source, Path(location))
     print("portfolio deadline and group cleanup checks passed")
 
 

@@ -185,7 +185,10 @@ def main():
     run(binary, args.scratch, interrupt=True)
     run(binary, args.scratch, parent_death=True)
     run(binary, args.scratch, unreal=True)
-    memory_limit(binary, args.scratch)
+    if os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1":
+        print("Skipping RLIMIT_AS case: incompatible with ASan shadow memory")
+    else:
+        memory_limit(binary, args.scratch)
     print("Parity selection, fallback, cancellation, parent death and RSS supervision passed")
 
 

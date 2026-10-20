@@ -60,6 +60,8 @@ reuses the old objects. Use a fresh directory when changing profile.
 
 ## Testing and gates
 
+CI gates first-party Python with ruff; weekly sanitizer and clang-tidy workflows run tests and report warnings.
+
 `meson test -C build --suite unit` runs the unit suite, including CLI tests with
 timeout allowances. The corpus suites (`ab/tiny`, `ab/small`, `ab/issue54`, `synthesis`)
 run the solver over LTL and TLSF instances and take much longer.

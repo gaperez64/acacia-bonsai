@@ -122,6 +122,10 @@ namespace acacia {
   }
 
   bool native_limit_address_space (std::string_view arm) {
+#ifdef __SANITIZE_ADDRESS__
+    // ASan's shadow mapping exceeds RLIMIT_AS; cgroups still bound resident memory.
+    return true;
+#else
     rlimit address {};
     if (getrlimit (RLIMIT_AS, &address) != 0) {
       native_arm_diagnostic (arm, "memory", errno, "could not read address-space cap");
@@ -136,6 +140,7 @@ namespace acacia {
       }
     }
     return true;
+#endif
   }
 
   TlsfGr1ConstructionBudget native_construction_budget (size_t arm_count) {

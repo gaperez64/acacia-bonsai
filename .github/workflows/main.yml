@@ -17,6 +17,29 @@ env:
   CXX: g++-14
 
 jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - name: Lint first-party Python
+        run: |
+          sudo pip install ruff==0.16.9
+          ruff check
+      - name: Report formatting of changed C/C++ lines
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          clang-format-18 --version
+          if ! git-clang-format-18 --binary clang-format-18 --diff "$PR_BASE_SHA" HEAD \
+              -- '*.c' '*.h' '*.cc' '*.hh' '*.cpp' '*.hpp' '*.cxx' '*.hxx' \
+              > clang-format.diff; then
+            echo '::warning::clang-format-18 reported formatting differences or could not finish; see the diff below.'
+          fi
+          cat clang-format.diff
+
   evidence-growth:
     runs-on: ubuntu-24.04
     steps:

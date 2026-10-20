@@ -1,0 +1,77 @@
+name: Clang-Tidy report
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+  pull_request:
+    paths: [.github/workflows/clang-tidy-report.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: clang-tidy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CXX: g++-14
+
+jobs:
+  report:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0, submodules: recursive}
+      - uses: ./.github/actions/setup-packages
+        with: {extra: clang-tidy-18}
+      - uses: ./.github/actions/setup-spot
+      - name: Configure debug and generate the version header
+        run: |
+          read -r -a preset_args <<< "$(python3 scripts/acacia-config.py meson-args base)"
+          meson setup build_clang_tidy --buildtype=debug -Dbuild_tests=false "${preset_args[@]}"
+          # acacia_build_config.hh is generated at setup; vcs_tag needs its target run.
+          meson compile -C build_clang_tidy acacia_version.hh
+          # Clang cannot parse these GCC-only diagnostic flags from Meson's database.
+          python3 - <<'PY'
+          import json
+          import shlex
+          from pathlib import Path
+          path = Path('build_clang_tidy/compile_commands.json')
+          commands = json.loads(path.read_text())
+          for command in commands:
+              if 'arguments' not in command:
+                  command['arguments'] = shlex.split(command.pop('command'))
+              command['arguments'] = [arg for arg in command['arguments'] if not arg.startswith(
+                  ('-fconcepts-diagnostics-depth=', '-ftrack-macro-expansion=',
+                   '-fno-diagnostics-show-caret'))]
+          path.write_text(json.dumps(commands))
+          PY
+      - name: Report clang-tidy warnings in src
+        id: tidy
+        run: |
+          set -o pipefail
+          clang-tidy-18 --version
+          # Override WarningsAsErrors in .clang-tidy; compiler/tool errors still fail.
+          run-clang-tidy-18 -p build_clang_tidy -clang-tidy-binary clang-tidy-18 \
+            -config-file .clang-tidy -warnings-as-errors=-* \
+            -header-filter="^${PWD}/src/" "^${PWD}/src/" 2>&1 | tee clang-tidy.log
+      - name: Summarize warnings by check
+        if: always() && steps.tidy.outcome != 'skipped'
+        run: |
+          {
+            echo '## Clang-Tidy warnings'
+            echo
+            echo '| Check | Count |'
+            echo '| --- | ---: |'
+            sed -n 's/.*warning:.*\[\([^]]*\)\]$/\1/p' clang-tidy.log \
+              | tr ',' '\n' | sort | uniq -c | sort -nr \
+              | awk '{printf "| %s | %s |\n", $2, $1}'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: clang-tidy-report
+          path: |
+            clang-tidy.log
+            build_clang_tidy/meson-logs/

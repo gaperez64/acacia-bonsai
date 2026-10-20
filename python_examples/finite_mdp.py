@@ -278,8 +278,13 @@ def guarantees(model: GridWorld | None = None) -> dict[str, str]:
     world = model or paper_gridworld()
     cell_bits = OUTPUT_APS[:5]
     stage_bits = OUTPUT_APS[5:7]
-    cell = lambda value: _encoding(cell_bits, value)
-    stage = lambda value: _encoding(stage_bits, value)
+
+    def cell(value):
+        return _encoding(cell_bits, value)
+
+    def stage(value):
+        return _encoding(stage_bits, value)
+
     valid_cell = _disjunction(cell(value) for value in world.physical_states)
     valid_stage = _disjunction(stage(value) for value in range(4))
 
