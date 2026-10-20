@@ -151,6 +151,10 @@ namespace acacia::obligation {
   }
 
   bool limit_address_space () noexcept {
+#ifdef __SANITIZE_ADDRESS__
+    // ASan's shadow mapping exceeds RLIMIT_AS; cgroups still bound resident memory.
+    return true;
+#else
     rlimit address {};
     if (getrlimit (RLIMIT_AS, &address) != 0)
       return false;
@@ -160,6 +164,7 @@ namespace acacia::obligation {
       return setrlimit (RLIMIT_AS, &address) == 0;
     }
     return true;
+#endif
   }
 
   uint64_t rss_share (size_t workers, memory_share policy) {

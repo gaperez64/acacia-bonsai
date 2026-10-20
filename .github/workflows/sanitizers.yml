@@ -1,0 +1,66 @@
+name: Sanitizers
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+  pull_request:
+    paths: [.github/workflows/sanitizers.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sanitizers-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CXX: g++-14
+  # Unit tests preload instrumented fault-injection libraries ahead of libasan.
+  ASAN_OPTIONS: detect_leaks=0:abort_on_error=1:verify_asan_link_order=0
+  UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+  # ASan reserves terabytes of virtual memory; normal debug CI covers these cases.
+  ACACIA_TEST_SKIP_RLIMIT_AS: '1'
+
+jobs:
+  debug:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0, submodules: recursive}
+      - uses: ./.github/actions/setup-packages
+      - uses: ./.github/actions/setup-spot
+      - uses: hendrikmuhs/ccache-action@v1
+        with: {key: ci-sanitizers, max-size: 500M}
+      - name: Configure the base debug preset with ASan and UBSan
+        run: |
+          read -r -a preset_args <<< "$(python3 scripts/acacia-config.py meson-args base)"
+          meson setup build_base --buildtype=debug -Db_sanitize=address,undefined \
+            -Db_lundef=false "${preset_args[@]}"
+          python3 scripts/acacia-config.py show base > build_base/.acacia-config.json
+      - name: Compile and test the debug configuration
+        run: |
+          mkdir -p "$RUNNER_TEMP/sanitizers"
+          export ASAN_OPTIONS="$ASAN_OPTIONS:log_path=$RUNNER_TEMP/sanitizers/asan"
+          export UBSAN_OPTIONS="$UBSAN_OPTIONS:log_path=$RUNNER_TEMP/sanitizers/ubsan"
+          export BENCHMARK_COMPILE_JOBS="$(nproc)"
+          # Reuse main.yml's driver, including its user-systemd preflight and
+          # fallback when solver cgroups (ACACIA_TEST_CGROUP) are unavailable.
+          ./self-benchmark.sh -c base -j -b unit,ab/tiny
+      - name: Fail on sanitizer reports from any worker
+        if: always()
+        run: |
+          shopt -s nullglob
+          reports=("$RUNNER_TEMP"/sanitizers/*)
+          if ((${#reports[@]})); then
+            head -n 40 -v "${reports[@]}"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: logs-sanitizers
+          path: |
+            build_base/meson-logs/
+            _bm-logs/
+            ${{ runner.temp }}/sanitizers/

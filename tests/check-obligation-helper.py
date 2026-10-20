@@ -194,7 +194,11 @@ def main() -> None:
     # One ordinary worker stays gated; it answers after a helper stop or readiness.
     page = os.sysconf("SC_PAGE_SIZE")
     mib = 1024 * 1024
-    for policy, threshold in (("", 64 * mib), ("equal", 64 * mib), ("alone", 128 * mib)):
+    policies = (("", 64 * mib), ("equal", 64 * mib), ("alone", 128 * mib))
+    if os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1":
+        print("Skipping RLIMIT_AS cases: incompatible with ASan shadow memory")
+        policies = ()
+    for policy, threshold in policies:
         for sample in (64 * mib, 64 * mib + page, 128 * mib, 128 * mib + page):
             flags = ["--obligation-memory-share", policy] if policy else []
             result, rows = run(binary, [*source, *real, *flags],
@@ -417,13 +421,14 @@ def main() -> None:
     assert len(finish) == 1, rows
     assert finish[0]["outcome"] == "cancelled", rows
     assert finish[0]["reason"] == "winner_cancelled" and finish[0]["wall_ns"] > 5_000_000_000, rows
-    result, rows = run(binary, [*source, *real], root, library, "memory", gate=True,
-                       rss_limit=True)
-    assert result.returncode == 0, result
-    finish = helper_rows(rows, "completion")
-    assert len(finish) == 1, rows
-    assert finish[0]["outcome"] == "exhausted", rows
-    assert finish[0]["reason"] == "rss_share", rows
+    if os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") != "1":
+        result, rows = run(binary, [*source, *real], root, library, "memory", gate=True,
+                           rss_limit=True)
+        assert result.returncode == 0, result
+        finish = helper_rows(rows, "completion")
+        assert len(finish) == 1, rows
+        assert finish[0]["outcome"] == "exhausted", rows
+        assert finish[0]["reason"] == "rss_share", rows
     result, rows = run(binary, [*source, *real], root, library, "stall", gate=True,
                        release_stalls=False, outer_seconds=0.2, ready_stage="decision")
     assert result.returncode == 2, result

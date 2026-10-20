@@ -54,6 +54,7 @@ dist = ["--include-subprojects"]
 # the pyupgrade/refurb families, which together flag around 190 further places.
 # Those are worth doing, but as their own change rather than smuggled in here.
 line-length = 100
+extend-exclude = ["tests/syntcomp-benchmarks", "subprojects", "build*", "_bm-logs*", "virtenv"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "E402"]
