@@ -1018,8 +1018,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="revision recorded in output (default: git rev-parse HEAD)",
     )
     parser.add_argument("--preset", default="", metavar="S")
-    parser.add_argument("--collect-rusage", action="store_true",
-                        help="collect CPU time and max process RSS (Linux wait4; GNU time elsewhere)")
+    parser.add_argument("--collect-rusage", action=argparse.BooleanOptionalAction,
+                        default=sys.platform == "linux",
+                        help="collect CPU time (Linux wait4, GNU time elsewhere; default: Linux only); "
+                             "--no-collect-rusage disables CPU time only (RSS is still recorded on Linux)")
     parser.add_argument("--worker-records-dir", type=pathlib.Path,
                         help="diagnostic run: capture transformed workers below this directory")
     parser.add_argument("--phase-records-dir", type=pathlib.Path,

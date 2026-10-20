@@ -319,7 +319,7 @@ def test_negative_return_code_normalizes_to_signal_crash():
 
 
 @pytest.fixture
-def campaign(tmp_path):
+def campaign(tmp_path, request):
     binary = tmp_path / "solver"
     binary.write_text("#!/bin/sh\necho REALIZABLE\n")
     binary.chmod(0o755)
@@ -337,25 +337,36 @@ def campaign(tmp_path):
         "--status-exceptions", str(tmp_path / "exceptions.tsv"),
         "--caps", "17", "--memory-max", "8G", "--memory-swap-max", "0",
         "--output", str(tmp_path / "out.tsv"), "--acacia-sha", "frozen-sha",
-        "--preset", "test-preset", "--collect-rusage",
+        "--preset", "test-preset", *getattr(request, "param", ["--collect-rusage"]),
     ])
 
 
+@pytest.mark.parametrize("platform,collect_rusage", [("linux", True), ("darwin", False)])
+def test_collect_rusage_default(monkeypatch, platform, collect_rusage):
+    monkeypatch.setattr(coverage.sys, "platform", platform)
+    assert coverage.build_parser().get_default("collect_rusage") is collect_rusage
+
+
 @pytest.mark.parametrize("platform", ["linux", "darwin"])
-def test_scoped_rusage_and_worker_capture(monkeypatch, campaign, tmp_path, platform):
+@pytest.mark.parametrize("campaign,collect_rusage", [
+    (["--collect-rusage"], True), (["--no-collect-rusage"], False),
+], indirect=["campaign"])
+def test_scoped_rusage_and_worker_capture(monkeypatch, campaign, tmp_path, platform, collect_rusage):
+    assert campaign.collect_rusage is collect_rusage
     monkeypatch.setattr(coverage.sys, "platform", platform)
     calls = []
     def scoped(cmd, **kwargs):
         calls.append((cmd, kwargs))
         return coverage.RunResult("REALIZABLE\n",
-                                  "ACACIA_RUSAGE 1.23 0.07 2048\n" if platform != "linux" else "",
+                                  "ACACIA_RUSAGE 1.23 0.07 2048\n"
+                                  if platform != "linux" and collect_rusage else "",
                                   0, 1.5, False, memory_peak_bytes=4096, scope_unit="acacia-test.scope",
                                   cpu_seconds=1.3, max_process_rss_bytes=2048 * 1024)
     monkeypatch.setattr(coverage, "run_systemd_scope", scoped)
     campaign.worker_records_dir = tmp_path / "records"
     assert coverage.run(campaign) == 0
     cmd, options = calls[0]
-    if platform == "linux":
+    if platform == "linux" or not collect_rusage:
         assert cmd[0] == str(pathlib.Path(campaign.bin).resolve())
         assert "/usr/bin/time" not in cmd
     else:
@@ -366,7 +377,8 @@ def test_scoped_rusage_and_worker_capture(monkeypatch, campaign, tmp_path, platf
     with open(campaign.output) as source:
         row, = csv.DictReader(source, delimiter="\t")
     assert row["result"] == "REALIZABLE"
-    assert row["cpu_seconds"] == "1.300000"
+    assert row["collect_rusage"] == str(collect_rusage).lower()
+    assert row["cpu_seconds"] == ("1.300000" if collect_rusage else "")
     assert row["max_process_rss_bytes"] == str(2048 * 1024)
     assert row["scope_memory_peak_bytes"] == "4096"
     assert row["scope_unit"] == "acacia-test.scope"
