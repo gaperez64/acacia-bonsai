@@ -12,6 +12,42 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-20 — Neither TLSF normalization nor a 4-core arm subset helps
+
+Archive `route-20261019`; release build of fc229b77 (9e56d40d) carrying opt-in
+`--parity-normalization`, `--legacy-normalization` and `--memory-share-workers`, kept
+unmerged at tag `provenance/fc229b771a7e` (tlsf-tools `provenance/61f3a4f77a4f`); control the frozen d68568db (src identical
+to master 6c8067ef). SYNTCOMP26, 17 s, serial 8 GiB scopes, cooled to 70 °C, rotated order.
+
+**Normalization.** A 40-input panel (37 family groups, seeded, drawn from the
+`spotfast-ablation-20261019` attribution rows) was run alone on three routes
+(`both:parity:spot`, `real:small:backward`, `unreal:formula:spot-guarded-sparse`)
+under off, match-safe and route-safe. Match-safe changes 39 of the 40 objectives and
+route-safe 36; inputs whose effective objective equals the off one were skipped
+(1 and 4 per route). No route changes a decision under either policy. Paired PAR-2
+moves by at most 1.0 s per route, and the largest per-input change is 1.3 s.
+Normalization itself costs at most 61 ms. The candidate with every option off
+reproduces the frozen control (30/40 at 17 s, PAR-2 377.1 vs 376.9 s, identical results).
+CPU time was not collected in this screen; wall time and scope memory peaks were.
+
+**Four cores.** On CPUs 0–3 (four physical cores), memory allowances held at the
+seven-arm values. Parity alone and parity with GR(1) lifting each lose 6 of the 40 panel
+inputs. The four-arm subset (parity, GR(1) lifting, backward, sparse formula) solves
+31 against 30 on the panel; the extra input, `robot-grid-reach-repeated-with-obstacles-6d-real`,
+repeats in three alternating runs (13.0–13.2 s against three timeouts). On 348 targeted
+inputs (the 190 eight-core timeouts, 32 inputs decided after 4 s, and every input a
+dropped arm won):
+
+| 4 cores | Solved | PAR-2 (s) | CPU (s) | Sum of memory peaks (GiB) |
+|---|---:|---:|---:|---:|
+| Seven-arm default | 157 | 6816 | 13998 | 272.6 |
+| Four-arm subset | 153 | 7015 | 12812 | 233.7 |
+
+The subset gains 8 inputs, all decided between 12.3 and 16.9 s, and loses 12 that
+the default decides in 0.1–1.8 s (two in 6.5 and 13.8 s), all decided only by the
+dropped forward and obligation arms. Freeing cores saves 8.5% CPU and 14% memory but
+costs coverage, so nothing is admitted and the flags stay unmerged.
+
 ## 2026-10-19 — Same-session three-way on SYNTCOMP26 (v2.6.0)
 
 Archive `threeway-syntcomp26-20261019`; ltlsynt 2.16, Acacia-Bonsai 1.x (TACAS'23) and
