@@ -188,7 +188,11 @@ measurement overhead and scope layout: use fresh matched runs, not old timings.
 cgroup peak, including all solver children. `max_process_rss_bytes` is the Linux
 `wait4.ru_maxrss` maximum for the reaped process tree, recorded by default; descendants
 that the solver did not reap may not contribute to this RSS statistic. RSS is never
-the concurrent scope peak. GNU time remains an optional CPU/RSS diagnostic. A missing
+the concurrent scope peak. Native coverage records CPU time by default on Linux
+via `wait4`, without a wrapper; `--no-collect-rusage` disables CPU time only,
+leaving RSS unchanged. Elsewhere collection defaults to off; `--collect-rusage`
+enables the existing GNU time CPU/RSS diagnostics. Resuming output written without
+collection requires `--no-collect-rusage` on Linux to pass the provenance guard. A missing
 peak, zero/sentinel read, unsupported platform or failed collector carries a reason;
 virtual reservations and OOM-only observations cannot replace a peak. Non-Linux
 runs report unsupported cgroup/RSS fields and cannot supply the Linux memory gate.
