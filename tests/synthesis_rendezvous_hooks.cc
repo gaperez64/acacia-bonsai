@@ -3,19 +3,18 @@
 
 #ifdef ACACIA_TLSF_PREPARATION_TEST_HOOKS
 # include <cstdlib>
+# include <tlsf/convert.h>
 # include <unistd.h>
-# include <tlsf/decompose.h>
 
 namespace {
   const pid_t preparation_parent = getpid ();
 }
-extern "C" TlsfDecomposeResult*
-__real_tlsf_decompose_string (const char*, const TlsfDecomposeOptions*);
-extern "C" TlsfDecomposeResult*
-__wrap_tlsf_decompose_string (const char* source, const TlsfDecomposeOptions* options) {
+extern "C" TlsfConversionResult* __real_tlsf_convert (const char*, const char*);
+extern "C" TlsfConversionResult* __wrap_tlsf_convert (const char* source,
+                                                      const char* effective_target) {
   if (getpid () == preparation_parent && std::getenv ("ACACIA_TEST_TLSF_PARENT_FAILURE"))
     return nullptr;
-  return __real_tlsf_decompose_string (source, options);
+  return __real_tlsf_convert (source, effective_target);
 }
 #endif
 

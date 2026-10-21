@@ -1,14 +1,11 @@
 #include "tlsf_frontend.hh"
+
 #include "phase_records.hh"
 
-#include <unordered_set>
-
-#include <algorithm>
-#include <cctype>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
-#include <tlsf/decompose.hpp>
+#include <tlsf/convert.hpp>
 #include <utility>
 
 namespace acacia::tlsf_frontend {
@@ -26,93 +23,33 @@ namespace acacia::tlsf_frontend {
       }
       const auto* worker = active_worker_record ();
       char line[256];
-      const int length = snprintf (
-          line, sizeof line,
-          "{\"event\":\"tlsf_parse\",\"pid\":%ld,\"role\":\"%s\",\"call\":%u,"
-          "\"mono_ns\":%llu}\n",
-          long (pid), worker ? worker->requested_backend : "parent", ++calls,
-          (unsigned long long) phase_clock (CLOCK_MONOTONIC));
+      const int length =
+          snprintf (line, sizeof line,
+                    "{\"event\":\"tlsf_parse\",\"pid\":%ld,\"role\":\"%s\",\"call\":%u,"
+                    "\"mono_ns\":%llu}\n",
+                    long (pid), worker ? worker->requested_backend : "parent", ++calls,
+                    (unsigned long long) phase_clock (CLOCK_MONOTONIC));
       if (length > 0 && size_t (length) < sizeof line)
         phase_records_send (line, size_t (length));
       else
         phase_records_drop ();
     }
 
-    bool finite_semantics (const std::string& semantics) {
-      return semantics.find ("Finite") != std::string::npos;
-    }
-
-    tlsf::Options options () {
-      tlsf::Options value;
-      value.precheck = false; // Conversion consumes formulas, not precheck verdicts.
-      value.format = tlsf::Format::Ltlxba;
-      // Match the checked-in ltlxba/.part identifier convention.  TLSF
-      // semantics remain specification-defined.
-      value.lowercase = true;
-      return value;
-    }
-
-    bool has_indexed_conjunction (std::string_view text) {
-      size_t at = 0;
-      while ((at = text.find ("&&", at)) != std::string_view::npos) {
-        at += 2;
-        while (at < text.size () and std::isspace (static_cast<unsigned char> (text[at])))
-          ++at;
-        if (at < text.size () and text[at] == '[')
-          return true;
-      }
-      return false;
-    }
-
-    void stable_signal_order (std::vector<std::string>& signals,
-                              const std::vector<tlsf::IndexedFamily>& families, bool outputs) {
-      std::unordered_set<std::string_view> bus_members;
-      for (const auto& family : families)
-        if (family.is_output == outputs)
-          bus_members.insert (family.members.begin (), family.members.end ());
-
-      std::vector<std::string> ordered;
-      ordered.reserve (signals.size ());
-      for (auto it = signals.rbegin (); it != signals.rend (); ++it)
-        if (not bus_members.contains (*it))
-          ordered.push_back (std::move (*it));
-      for (auto family = families.rbegin (); family != families.rend (); ++family)
-        if (family->is_output == outputs and not family->is_enum)
-          ordered.insert (ordered.end (), family->members.begin (), family->members.end ());
-      for (auto family = families.rbegin (); family != families.rend (); ++family)
-        if (family->is_output == outputs and family->is_enum)
-          ordered.insert (ordered.end (), family->members.begin (), family->members.end ());
-      signals = std::move (ordered);
-    }
   }  // namespace
 
   specification parse (std::string_view text) {
     record_parse_call ();
     const std::string owned {text};
-    tlsf::Options conversion_options = options ();
-    tlsf::Result result = tlsf::decompose (owned, conversion_options);
-    if (finite_semantics (result.semantics))
-      throw std::runtime_error ("finite TLSF semantics are not supported");
-
-    // Acacia solves in the Mealy frame.  Preserve the requested target for
-    // synthesis metadata, but ask the linked frontend for an effective Mealy
-    // formula so solving and controller conversion share one internal path.
-    const std::string source_target = result.target;
-    if (source_target != "Mealy") {
-      conversion_options.overwrite_target = "Mealy";
-      result = tlsf::decompose (owned, conversion_options);
-    }
-
-    stable_signal_order (result.inputs, result.indexed_families, false);
-    stable_signal_order (result.outputs, result.indexed_families, true);
+    // Keep source INFO while lowering directly to Acacia's Mealy frame.
+    auto result = tlsf::convert (owned, "Mealy");
 
     specification value;
     value.metadata.source_format = "tlsf";
     value.metadata.tlsf_semantics = result.semantics;
-    value.metadata.tlsf_target = source_target;
-    value.metadata.tlsf_effective_target = result.target;
+    value.metadata.tlsf_target = result.original_target;
+    value.metadata.tlsf_effective_target = result.effective_target;
     value.metadata.tlsf_gr_level = result.gr_level;
-    if (has_indexed_conjunction (text)) {
+    if (result.has_indexed_conjunction) {
       value.metadata.tlsf_indexed_families.reserve (result.indexed_families.size ());
       for (auto& family : result.indexed_families) {
         symmetry::indexed_family_hint hint;

@@ -434,7 +434,7 @@ game_backend_integration_sources += '../src/tlsf_frontend.cc'
 preparation_fault_link_args = []
 preparation_fault_cpp_args = []
 if host_machine.system () == 'linux' and (get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release'))
-  preparation_fault_link_args = ['-Wl,--wrap=tlsf_decompose_string']
+  preparation_fault_link_args = ['-Wl,--wrap=tlsf_convert']
   preparation_fault_cpp_args = ['-DACACIA_TLSF_PREPARATION_TEST_HOOKS=1']
 endif
 game_backend_integration = executable (
@@ -614,6 +614,7 @@ tlsf_conversion_guard_args = []
 if host_machine.system () == 'linux'
   tlsf_conversion_guard_sources += files ('tlsf_no_manager.cc')
   tlsf_conversion_guard_args += '-Wl,--wrap=oxidd_bdd_manager_new'
+  tlsf_conversion_guard_args += '-Wl,--wrap=cover_build'
 endif
 
 tlsf_frontend_test = executable (
@@ -640,6 +641,12 @@ tlsf_frontend_inspect = executable (
   include_directories : inc,
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
+tlsf_conversion_compare = executable (
+  'tlsf-conversion-compare',
+  ['tlsf_conversion_compare.cc', '../src/tlsf_frontend.cc'],
+  include_directories : inc, dependencies : tlsf_deps + [spot_dep, bddx_dep])
+test ('tlsf-conversion-focused', tlsf_conversion_compare, args : ['--focused'],
+      suite : ['unit', 'tlsf'])
 if ltlsynt_exe.found () and get_option ('acacia_spot_guarded_backend')
   test ('extended-weakening-games', py,
         args : [files ('check-extended-weakening.py'), ab_exe,

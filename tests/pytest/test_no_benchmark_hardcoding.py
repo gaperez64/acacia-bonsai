@@ -320,6 +320,8 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'generic formula-format diagnostic',
     ('src/solver/spot_worker_record.hh', '.tmp'):
         'temporary file suffix for atomic diagnostic writes',
+    ('subprojects/tlsf-tools/src/lib/conversion.c', 'gr.h'):
+        'included GR fragment recognition header',
     ('subprojects/tlsf-tools/src/lib/decompose.c', 'gr.h'):
         'included GR solver header',
     ('subprojects/tlsf-tools/src/lib/gr.c', 'gr.h'):
