@@ -28,6 +28,8 @@ void check_verifier_split (const Fields& fields) {
 }
 
 void check_solve_counters (const SolveResult& result, const Fields& fields) {
+  expect (result.proofs_in_initial_cone && result.dependency_list_len_sum &&
+          result.dependency_list_len_max, "report sink requests derived statistics");
   expect (result.scan_tombstones + result.scan_prefilter_rejects + result.scan_exact_compares ==
               result.subsumption_nodes_checked, "scan buckets partition every loop iteration");
   expect (result.scan_exact_compares >= result.subsumption_nodes_invalidated,
@@ -662,11 +664,31 @@ void verifier_phase_metrics () {
   loss.graph->new_edge (1, 1, bddtrue, {0});
   RowStore losing_store {loss.view (), {}, store.report};
   losing_store.enumerate_and_freeze ();
-  const auto result = Search {losing_store, loss.alphabet, 1}.solve ();
+  std::size_t verifier_steps = 0;
+  Limits limits;
+  limits.verifier_queries.aborted = [] (void* data) {
+    ++*static_cast<std::size_t*> (data);
+    return false;
+  };
+  limits.verifier_queries.abort_data = &verifier_steps;
+  const auto result = Search {losing_store, loss.alphabet, 1, limits}.solve ();
   expect (result.status == forward_result_status::lose_k, "proof-loop fixture loses");
   check_solve_counters (result, observed);
   const auto successful = observed;
-  auto corrupt = result;
+  const auto observed_steps = verifier_steps;
+  losing_store.report = {};
+  verifier_steps = 0;
+  const auto unobserved = Search {losing_store, loss.alphabet, 1, limits}.solve ();
+  expect (not unobserved.proofs_in_initial_cone && not unobserved.dependency_list_len_sum &&
+          not unobserved.dependency_list_len_max, "unrequested derived statistics are absent");
+  expect (unobserved.status == result.status && unobserved.failure == result.failure &&
+          unobserved.proofs_total == result.proofs_total &&
+          unobserved.expansions == result.expansions &&
+          unobserved.choices_created == result.choices_created &&
+          verifier_steps == observed_steps && verifier_steps > 0,
+          "disabled observation preserves the decision, cheap counters and verifier work");
+  losing_store.report = store.report;
+  auto corrupt = unobserved;
   // An orphan proof must still be checked, even though it cannot be in the
   // initial proof's transitive cone. Fail on its missing input after all the
   // original Bad obligations have completed.
@@ -695,28 +717,35 @@ void certificate_shape_metrics () {
           "scan classifies tombstones, both prefilters, equal-mass rejection and merge-join success");
   expect (observed.at ("scan_tombstones") == "2" && observed.at ("scan_prefilter_rejects") == "2" &&
           observed.at ("scan_exact_compares") == "2", "scan reporting survives moving the result");
-  for (bool has_root : {false, true}) {
-    SolveResult published;
-    {
-      Search search {store, k.alphabet, 1};
-      auto& result = SearchTestAccess::result (search);
-      // Diamond sharing proof 0, plus orphan proof 1. Closure counts shared
-      // dependencies once, while list lengths count every recorded edge.
-      const std::vector<std::vector<std::size_t>> deps {{}, {}, {0}, {0}, {2, 3}};
-      for (std::size_t id = 0; id < deps.size (); ++id)
-        result.proofs.push_back ({{id, losing_reason::env_subsumed, 0, 0, deps[id]},
-                                 Rank {{{0, 0}}, 1}, {}, {}});
-      if (has_root) result.initial_proof = 4;
-      search.publish_counters ();
-      published = std::move (result);
+  const auto report = store.report;
+  for (bool with_sink : {false, true}) {
+    store.report = with_sink ? report : Reporter {};
+    for (bool has_root : {false, true}) {
+      SolveResult published;
+      {
+        Limits limits;
+        limits.collect_derived_statistics = not with_sink;
+        Search search {store, k.alphabet, 1, limits};
+        auto& result = SearchTestAccess::result (search);
+        // Diamond sharing proof 0, plus orphan proof 1. Closure counts shared
+        // dependencies once, while list lengths count every recorded edge.
+        const std::vector<std::vector<std::size_t>> deps {{}, {}, {0}, {0}, {2, 3}};
+        for (std::size_t id = 0; id < deps.size (); ++id)
+          result.proofs.push_back ({{id, losing_reason::env_subsumed, 0, 0, deps[id]},
+                                   Rank {{{0, 0}}, 1}, {}, {}});
+        if (has_root) result.initial_proof = 4;
+        search.publish_counters ();
+        published = std::move (result);
+      }
+      expect (published.proofs_total == 5 && published.proofs_in_initial_cone == (has_root ? 4 : 0) &&
+              published.dependency_list_len_sum == 4 && published.dependency_list_len_max == 2,
+              "diamond closure excludes orphans, deduplicates shared dependencies and handles no root");
+      if (with_sink)
+        expect (observed.at ("proofs_total") == "5" &&
+                observed.at ("proofs_in_initial_cone") == (has_root ? "4" : "0") &&
+                observed.at ("dependency_list_len_sum") == "4" &&
+                observed.at ("dependency_list_len_max") == "2", "shape reporting survives moving the result");
     }
-    expect (published.proofs_total == 5 && published.proofs_in_initial_cone == (has_root ? 4 : 0) &&
-            published.dependency_list_len_sum == 4 && published.dependency_list_len_max == 2,
-            "diamond closure excludes orphans, deduplicates shared dependencies and handles no root");
-    expect (observed.at ("proofs_total") == "5" &&
-            observed.at ("proofs_in_initial_cone") == (has_root ? "4" : "0") &&
-            observed.at ("dependency_list_len_sum") == "4" &&
-            observed.at ("dependency_list_len_max") == "2", "shape reporting survives moving the result");
   }
 }
 

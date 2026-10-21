@@ -1142,6 +1142,8 @@ namespace acacia::spot_lazy_game {
   };
   struct Limits : guarded::Limits {
       size_t max_oracle_memo_bytes;
+      // A report sink also requests these observational proof-graph scans.
+      bool collect_derived_statistics = false;
       Limits (guarded::Limits limits = {})
         : guarded::Limits (limits),
           max_oracle_memo_bytes (default_oracle_memo_budget (limits)) {}
@@ -1171,8 +1173,10 @@ namespace acacia::spot_lazy_game {
       std::size_t subsumption_prefilter_skips = 0;
       std::size_t losing_insertions = 0, losing_removals = 0;
       std::size_t losing_antichain_size = 0, losing_antichain_peak = 0;
-      std::size_t proofs_total = 0, proofs_in_initial_cone = 0;
-      std::size_t dependency_list_len_sum = 0, dependency_list_len_max = 0;
+      std::size_t proofs_total = 0;
+      // Absent unless a report sink or Limits explicitly requests observation.
+      std::optional<std::size_t> proofs_in_initial_cone;
+      std::optional<std::size_t> dependency_list_len_sum, dependency_list_len_max;
       double prep_ms = 0, solve_ms = 0, verify_ms = 0;
   };
 
@@ -1426,29 +1430,34 @@ namespace acacia::spot_lazy_game {
           view_.report.count ("rank_support_max", maximum);
         }
         proofs_total_ = result_.proofs.size ();
-        proofs_in_initial_cone_ = dependency_list_len_sum_ = dependency_list_len_max_ = 0;
-        for (const auto& proof : result_.proofs) {
-          const auto length = proof.record.dependencies.size ();
-          dependency_list_len_sum_ += length;
-          dependency_list_len_max_ = std::max (dependency_list_len_max_, length);
-        }
-        // Observe the recorded graph only. The verifier still visits EVERY
-        // proof in chronological order, including proofs outside this cone.
-        // No initial proof (including a winning solve) means an empty cone.
-        if (result_.initial_proof) {
-          std::vector<bool> seen (proofs_total_, false);
-          std::vector<std::size_t> todo {*result_.initial_proof};
-          seen[*result_.initial_proof] = true;
-          while (not todo.empty ()) {
-            const auto id = todo.back ();
-            todo.pop_back ();
-            ++proofs_in_initial_cone_;
-            for (const auto dep : result_.proofs[id].record.dependencies)
-              if (not seen[dep]) {
-                seen[dep] = true;
-                todo.push_back (dep);
-              }
+        if (view_.report.sink || limits_.collect_derived_statistics) {
+          proofs_in_initial_cone_ = dependency_list_len_sum_ = dependency_list_len_max_ = 0;
+          for (const auto& proof : result_.proofs) {
+            const auto length = proof.record.dependencies.size ();
+            dependency_list_len_sum_ += length;
+            dependency_list_len_max_ = std::max (dependency_list_len_max_, length);
           }
+          // Observe the recorded graph only. The verifier still visits EVERY
+          // proof in chronological order, including proofs outside this cone.
+          // No initial proof (including a winning solve) means an empty cone.
+          if (result_.initial_proof) {
+            std::vector<bool> seen (proofs_total_, false);
+            std::vector<std::size_t> todo {*result_.initial_proof};
+            seen[*result_.initial_proof] = true;
+            while (not todo.empty ()) {
+              const auto id = todo.back ();
+              todo.pop_back ();
+              ++proofs_in_initial_cone_;
+              for (const auto dep : result_.proofs[id].record.dependencies)
+                if (not seen[dep]) {
+                  seen[dep] = true;
+                  todo.push_back (dep);
+                }
+            }
+          }
+          result_.proofs_in_initial_cone = proofs_in_initial_cone_;
+          result_.dependency_list_len_sum = dependency_list_len_sum_;
+          result_.dependency_list_len_max = dependency_list_len_max_;
         }
         result_.subsumption_scans = subsumption_scans_;
         result_.subsumption_nodes_checked = nodes_checked_;
@@ -1465,9 +1474,6 @@ namespace acacia::spot_lazy_game {
         result_.losing_antichain_size = losing_.size ();
         result_.losing_antichain_peak = losing_.peak;
         result_.proofs_total = proofs_total_;
-        result_.proofs_in_initial_cone = proofs_in_initial_cone_;
-        result_.dependency_list_len_sum = dependency_list_len_sum_;
-        result_.dependency_list_len_max = dependency_list_len_max_;
       }
       size_t retained_bytes_estimate () const {
         size_t bytes =

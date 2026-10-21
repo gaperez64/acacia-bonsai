@@ -142,8 +142,8 @@ namespace replay {
     report.count ("losing_antichain_size", r.losing_antichain_size);
     report.count ("losing_antichain_peak", r.losing_antichain_peak);
     report.count ("proofs_total", r.proofs_total);
-    report.count ("proofs_in_initial_cone", r.proofs_in_initial_cone);
-    report.count ("dependency_list_len_sum", r.dependency_list_len_sum);
-    report.count ("dependency_list_len_max", r.dependency_list_len_max);
+    report.count ("proofs_in_initial_cone", r.proofs_in_initial_cone.value ());
+    report.count ("dependency_list_len_sum", r.dependency_list_len_sum.value ());
+    report.count ("dependency_list_len_max", r.dependency_list_len_max.value ());
   }
 }  // namespace replay
