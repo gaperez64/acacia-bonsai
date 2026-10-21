@@ -1,6 +1,24 @@
 #include "phase_records.hh"
 #include "solver/synthesis_rendezvous.hh"
 
+#ifdef ACACIA_TLSF_PREPARATION_TEST_HOOKS
+# include <cstdlib>
+# include <unistd.h>
+# include <tlsf/decompose.h>
+
+namespace {
+  const pid_t preparation_parent = getpid ();
+}
+extern "C" TlsfDecomposeResult*
+__real_tlsf_decompose_string (const char*, const TlsfDecomposeOptions*);
+extern "C" TlsfDecomposeResult*
+__wrap_tlsf_decompose_string (const char* source, const TlsfDecomposeOptions* options) {
+  if (getpid () == preparation_parent && std::getenv ("ACACIA_TEST_TLSF_PARENT_FAILURE"))
+    return nullptr;
+  return __real_tlsf_decompose_string (source, options);
+}
+#endif
+
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
 # include <cerrno>
 # include <cstdio>

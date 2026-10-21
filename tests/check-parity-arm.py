@@ -8,6 +8,9 @@ from pathlib import Path
 import subprocess
 import tempfile
 
+from moore_aiger_oracle import Aiger
+from obligation_test_support import assert_parse_calls
+
 
 def execute(command, env=None):
     result = subprocess.run(command, capture_output=True, text=True, env=env, timeout=20)
@@ -18,9 +21,10 @@ def execute(command, env=None):
     return result
 
 
-def check_records(directory):
+def check_records(directory, expected_calls=None, synthesis=False):
     rows = [json.loads(line) for path in directory.glob("*.jsonl")
             for line in path.read_text().splitlines()]
+    assert_parse_calls(rows, expected_calls or {})
     tier, = [row for row in rows if row.get("event") == "parity_tier"]
     solved, = [row for row in rows if row.get("event") == "parity_solved"]
     verdict, = [row for row in rows if row.get("event") == "parity_verdict"]
@@ -35,15 +39,18 @@ def check_records(directory):
         solve, = [row for row in rows if row.get("event") == "stage_entry"
                   and row.get("stage") == "solve"]
         assert tier["seq"] < solve["seq"] < solved["seq"], rows
-    assert not any(row.get("phase", row.get("stage")) in {"strategy", "encode-controller"}
-                   for row in rows), rows
+    if not synthesis:
+        assert not any(row.get("phase", row.get("stage")) in {"strategy", "encode-controller"}
+                       for row in rows), rows
     assert not any(row.get("event") == "verification_complete"
                    or row.get("stage", "").startswith("verify-") for row in rows), rows
     for row in [tier, solved, verdict]:
         assert row["trust"] == "exact_game", row
         assert not row["same_library_checked"] and not row["independent_checked"], row
         assert row["worker_pid"] == solved["worker_pid"], row
-    return tier["tier"]
+    identity, = [row for row in rows if row.get("event") == "work_identity"
+                 and row.get("provider") == "spot-parity"]
+    return tier["tier"], (identity["formula_sha256"], identity["alphabet_sha256"])
 
 
 def main():
@@ -52,6 +59,7 @@ def main():
     parser.add_argument("checker", type=Path)
     parser.add_argument("scratch", type=Path)
     parser.add_argument("--tlsf", action="store_true")
+    parser.add_argument("--integration-binary", type=Path)
     args = parser.parse_args()
     binary, checker = str(args.binary.resolve()), str(args.checker.resolve())
     fixtures = ["1", "0", "G o", "F o", "GF o", "GF i", "FG o", "FG i", "G(i <-> o)",
@@ -80,7 +88,8 @@ GUARANTEES {{ {guarantee}; }} }}
                     source = ["-T", str(tlsf)]
                 command = [binary, *source, "--arms", "both:parity:spot"]
                 decision = execute(command, env)
-                seen_tiers.add(check_records(phases))
+                tier, _ = check_records(phases, {"parity": 1} if moore else {})
+                seen_tiers.add(tier)
                 reference = execute([binary, "-f", effective, *interface, "--arms",
                                      "real:small:backward,unreal:formula:backward"])
                 assert reference.returncode == decision.returncode, (moore, formula,
@@ -102,10 +111,10 @@ GUARANTEES {{ {guarantee}; }} }}
                                     capture_output=True, text=True, timeout=20)
             assert result.returncode == 3 and "parity arms require" in result.stderr, result
         if args.tlsf:
-            for semantics in ("Mealy", "Moore"):
+            for semantics in ("Mealy", "Moore", "Strict,Mealy", "Strict,Moore"):
                 for target in ("Mealy", "Moore"):
                     for guarantee, original, real in (
-                            ("G (o <-> i)", "G(o <-> i)", semantics == "Mealy"),
+                            ("G (o <-> i)", "G(o <-> i)", semantics.endswith("Mealy")),
                             ("G (i -> X o)", "G(i -> X o)", True),
                             ("G F o", "GF o", True),
                             ("G F i", "GF i", False)):
@@ -117,22 +126,55 @@ GUARANTEES {{ {guarantee}; }} }}
 ''')
                         controller = root / "timing.aag"
                         controller.unlink(missing_ok=True)
-                        made = execute([binary, "-T", str(source), "--arms", "both:parity:spot",
-                                        "-s", str(controller)])
-                        assert (made.returncode == 0) == real, (semantics, target, guarantee, made)
-                        if real:
-                            # Changing target preserves source semantics by shifting one block.
-                            specification = original
-                            if semantics != target:
-                                if target == "Moore":
-                                    specification = specification.replace("o", "X o")
+                        selections = [(binary, "both:parity:spot", {}, {"parity": 1})]
+                        if args.integration_binary:
+                            portfolio = "real:small:backward,both:parity:spot"
+                            integration = str(args.integration_binary.resolve())
+                            selections += [
+                                (integration, portfolio, {"ACACIA_TEST_CHILD_MODES": "stall,"},
+                                 {"parent": 1}),
+                                (integration, portfolio, {"ACACIA_TEST_TLSF_PARENT_FAILURE": "1"},
+                                 {"parent": 1, "parity": 1}),
+                            ]
+                        original_identity = None
+                        original_alphabet = None
+                        for executable, arms, extra_env, expected_calls in selections:
+                            for synthesis in (False, True):
+                                for path in phases.glob("*.jsonl"):
+                                    path.unlink()
+                                controller.unlink(missing_ok=True)
+                                env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases), **extra_env)
+                                command = [executable, "-T", str(source), "--arms", arms]
+                                if synthesis:
+                                    command += ["-s", str(controller)]
+                                made = execute(command, env)
+                                assert (made.returncode == 0) == real, (
+                                    semantics, target, guarantee, made)
+                                _, identity = check_records(phases, expected_calls, synthesis)
+                                if original_identity is None:
+                                    original_identity = identity
+                                assert identity == original_identity, (identity, original_identity)
+                                if synthesis and real:
+                                    circuit = Aiger.read(controller)
+                                    alphabet = circuit.input_names, circuit.output_names
+                                    assert set(alphabet[0]) == {"i", "unused_input"}, alphabet
+                                    assert set(alphabet[1]) == {"o", "unused_output"}, alphabet
+                                    if original_alphabet is None:
+                                        original_alphabet = alphabet
+                                    assert alphabet == original_alphabet, (
+                                        alphabet, original_alphabet)
+                                    # Check original target timing independently of the solver.
+                                    specification = original
+                                    if not semantics.endswith(target):
+                                        if target == "Moore":
+                                            specification = specification.replace("o", "X o")
+                                        else:
+                                            specification = specification.replace("i", "X i")
+                                    subprocess.run([checker, "--check-controller", str(controller),
+                                                    specification, target.lower()], check=True,
+                                                   capture_output=True, text=True, timeout=20)
                                 else:
-                                    specification = specification.replace("i", "X i")
-                            subprocess.run([checker, "--check-controller", str(controller),
-                                            specification, target.lower()], check=True,
-                                           capture_output=True, text=True, timeout=20)
-                        else:
-                            assert not controller.exists(), made
+                                    assert not controller.exists(), made
     print("Production route records, Acacia agreement, controller products and TLSF timing passed")
 
 

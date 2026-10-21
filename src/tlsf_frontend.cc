@@ -1,4 +1,5 @@
 #include "tlsf_frontend.hh"
+#include "phase_records.hh"
 
 #include <unordered_set>
 
@@ -13,6 +14,30 @@
 namespace acacia::tlsf_frontend {
 
   namespace {
+    void record_parse_call () noexcept {
+      if (!phase_records_enabled ())
+        return;
+      static pid_t owner = -1;
+      static unsigned calls = 0;
+      const auto pid = getpid ();
+      if (owner != pid) {
+        owner = pid;
+        calls = 0;
+      }
+      const auto* worker = active_worker_record ();
+      char line[256];
+      const int length = snprintf (
+          line, sizeof line,
+          "{\"event\":\"tlsf_parse\",\"pid\":%ld,\"role\":\"%s\",\"call\":%u,"
+          "\"mono_ns\":%llu}\n",
+          long (pid), worker ? worker->requested_backend : "parent", ++calls,
+          (unsigned long long) phase_clock (CLOCK_MONOTONIC));
+      if (length > 0 && size_t (length) < sizeof line)
+        phase_records_send (line, size_t (length));
+      else
+        phase_records_drop ();
+    }
+
     bool finite_semantics (const std::string& semantics) {
       return semantics.find ("Finite") != std::string::npos;
     }
@@ -62,6 +87,7 @@ namespace acacia::tlsf_frontend {
   }  // namespace
 
   specification parse (std::string_view text) {
+    record_parse_call ();
     const std::string owned {text};
     tlsf::Options conversion_options = options ();
     tlsf::Result result = tlsf::decompose (owned, conversion_options);

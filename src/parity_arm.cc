@@ -52,18 +52,11 @@ namespace acacia {
         worker_stopped ("address_space_limit");
         return EXIT_CODE_UNKNOWN;
       }
-      std::string text = args.formula;
-      auto inputs = args.inputs, outputs = args.outputs;
-      auto metadata = args.metadata;
-      if (args.tlsf_specified) {
-        auto spec = tlsf_frontend::parse (args.tlsf_source);
-        text = std::move (spec.formula);
-        inputs = std::move (spec.inputs);
-        outputs = std::move (spec.outputs);
-        metadata = std::move (spec.metadata);
-      }
-      validate_ltl_partition (inputs, outputs);
-      const auto parsed = spot::parse_infix_psl (text);
+      tlsf_frontend::specification child_local;
+      const auto& objective = args.prepare_objective (child_local);
+      const auto& metadata = objective.metadata;
+      validate_ltl_partition (objective.inputs, objective.outputs);
+      const auto parsed = spot::parse_infix_psl (objective.formula);
       if (!parsed.f || !parsed.errors.empty ()) {
         worker_stopped ("invalid_formula");
         return EXIT_CODE_UNKNOWN;
@@ -72,8 +65,8 @@ namespace acacia {
       // original positive objective, without simplification, swapping or another X.
       parity_route::request input;
       input.formula = parsed.f;
-      input.inputs = std::move (inputs);
-      input.outputs = std::move (outputs);
+      input.inputs = objective.inputs;
+      input.outputs = objective.outputs;
       if (phase_records_enabled ())
         accounting_identity (
             input.formula, input.inputs, input.outputs, "spot-parity",

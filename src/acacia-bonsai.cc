@@ -358,24 +358,22 @@ namespace {
   }
 #endif
 
-  spot::formula helper_objective (const arg_parse_result& args) {
-    std::string formula = args.formula;
-    auto inputs = args.inputs, outputs = args.outputs;
-    if (args.tlsf_specified && !args.formula_specified) {
-      auto spec = acacia::tlsf_frontend::parse (args.tlsf_source);
-      formula = std::move (spec.formula);
-      inputs = std::move (spec.inputs);
-      outputs = std::move (spec.outputs);
-    }
-    validate_ltl_partition (inputs, outputs);
-    auto parsed = spot::parse_infix_psl (formula, spot::default_environment::instance (),
-                                          false, false);
+  spot::formula helper_objective (const arg_parse_result& args,
+                                 const acacia::tlsf_frontend::specification& spec) {
+    validate_ltl_partition (spec.inputs, spec.outputs);
+    auto parsed = spot::parse_infix_psl (spec.formula, spot::default_environment::instance (),
+                                       false, false);
     if (!parsed.f || !parsed.errors.empty ())
       throw std::runtime_error ("unable to parse original obligation objective");
     auto objective = parsed.f;
     if (!args.synth_fname)
-      acacia::realizability::apply_simplifier (objective, inputs);
+      acacia::realizability::apply_simplifier (objective, spec.inputs);
     return objective;
+  }
+
+  spot::formula helper_objective (const arg_parse_result& args) {
+    acacia::tlsf_frontend::specification child_local;
+    return helper_objective (args, args.prepare_objective (child_local));
   }
 
   [[noreturn]] void dispatch_helper (const arg_parse_result& args) {
@@ -388,23 +386,17 @@ namespace {
         result = {outcome::error, "address_space_limit"};
       else {
         acacia::accounting_phase preparation ("obligation_preprocessing");
-        auto inputs = args.inputs, outputs = args.outputs;
+        acacia::tlsf_frontend::specification child_local;
+        const auto& spec = args.prepare_objective (child_local);
         auto conversion = acacia::obligation::conversion::none;
-        if (args.tlsf_specified && (!args.formula_specified || args.synth_fname)) {
-          auto spec = acacia::tlsf_frontend::parse (args.tlsf_source);
-          inputs = std::move (spec.inputs);
-          outputs = std::move (spec.outputs);
-          if (args.synth_fname) {
-            if (spec.metadata.tlsf_target == "Moore")
-              conversion = spec.metadata.tlsf_semantics.find ("Moore") != std::string::npos
-                               ? acacia::obligation::conversion::undo_input_shift
-                               : acacia::obligation::conversion::delay_outputs;
-          }
-        }
+        if (args.tlsf_specified && args.synth_fname && spec.metadata.tlsf_target == "Moore")
+          conversion = spec.metadata.tlsf_semantics.find ("Moore") != std::string::npos
+                           ? acacia::obligation::conversion::undo_input_shift
+                           : acacia::obligation::conversion::delay_outputs;
         // The linked frontend already lowered Moore/strict TLSF to effective
         // Mealy. Solve that positive normalized objective once, without a swap
         // or another X shift. Raw API Moore order is exercised in unit tests.
-        const auto objective = helper_objective (args);
+        const auto objective = helper_objective (args, spec);
         preparation.finish ();
         if (g_obligation->eligible.load (std::memory_order_acquire) ==
             acacia::obligation::eligibility::pending)
@@ -413,7 +405,7 @@ namespace {
           result = {outcome::inapplicable, "non_obligation"};
         else {
           acacia::worker_stage ("obligation_synthesis");
-          result = acacia::obligation::solve (objective, inputs, outputs,
+          result = acacia::obligation::solve (objective, spec.inputs, spec.outputs,
                                               acacia::obligation::timing::mealy,
                                               args.synth_fname.has_value (), conversion);
           if (result.value == outcome::real && args.synth_fname) {
@@ -540,13 +532,14 @@ namespace {
         1, vout << "Starting solver child provider=" << acacia::automaton_provider_name (provider)
                 << " candidate_mode=" << acacia::candidate_mode_name (arg_values.candidate) << "\n"
                 << std::flush);
-    const bool res = run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k,
-                              arg_values.opt_kmin, arg_values.opt_kinc, arg_values.formula,
+    const bool res = run_ltl (arg_values.objective.inputs, arg_values.objective.outputs,
+                              arg_values.opt_k, arg_values.opt_kmin, arg_values.opt_kinc,
+                              arg_values.objective.formula,
                               unreal_x, translation_pref, arg_values.spot_fast, backend,
                               (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA)
                                   ? std::nullopt
                                   : arg_values.synth_fname,
-                              arg_values.metadata, provider, arg_values.candidate,
+                              arg_values.objective.metadata, provider, arg_values.candidate,
                               arg_values.equivariance, deadline_mono_ns, arg_values.tlsf_sha256,
                               arg_values.weakening, arg_values.weakening_allowances,
                               eligibility_channel);
@@ -756,7 +749,7 @@ namespace {
       }
     };
     if (g_obligation && g_child_count == 0) {
-      validate_ltl_partition (arg_values.inputs, arg_values.outputs);
+      validate_ltl_partition (arg_values.objective.inputs, arg_values.objective.outputs);
       // With this arm alone, its existing limits cover preparation as well as solving.
       if (!g_interrupted && (!deadline_mono_ns || monotonic_ns () < deadline_mono_ns))
         launch_helper (true);

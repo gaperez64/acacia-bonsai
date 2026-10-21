@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 
 from moore_aiger_oracle import Aiger, check, delayed_table_monitor
-from obligation_test_support import LegacyGate, records as phase_records
+from obligation_test_support import LegacyGate, assert_parse_calls, records as phase_records
 
 
 def boolean_formula(inputs, table):
@@ -147,6 +147,9 @@ def run(binary, directory, exhaustive=False, extra=(), require_obligation=False)
             continue
         if require_obligation:
             records = phase_records(phases)
+            # Obligation synthesis retains ordinary fallback arms, hence the
+            # successful parent preparation also owns synthesis metadata.
+            assert_parse_calls(records, {"parent": 1})
             winners = [row for row in records if row.get("event") == "parent_winner"]
             checks = [row for row in records if row.get("event") == "obligation_completion"]
             if (len(winners) != 1 or winners[0]["effective_backend"] != "obligation"
