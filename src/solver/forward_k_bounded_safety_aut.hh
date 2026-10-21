@@ -106,7 +106,8 @@ namespace acacia::solver_detail {
             w->k = k;
           acacia::legacy_phase searching ("search");
           auto result = solve_forward_reachable_safety<SetOfStates> (
-              initial, safe, input_output_fwd_actions, actioner, limits, use_antichain);
+              initial, safe, input_output_fwd_actions, actioner, limits, use_antichain,
+              forward_snapshot::omit);
           acacia::diagnostics::set_forward_attempt (
               static_cast<int> (k), forward_result_name (result.status),
               result.status == forward_result_status::resource_limit
@@ -118,7 +119,8 @@ namespace acacia::solver_detail {
               result.forward_actions_skipped, result.forward_covers_created,
               result.forward_covers_resolved, result.forward_cover_search_visits,
               result.distinct_successors, result.minimal_successors, result.strategy_ranks.size (),
-              result.rank_bytes, result.node_bytes, result.index_bytes, result.total_bytes);
+              result.rank_bytes, result.node_bytes, result.index_bytes, result.total_bytes,
+              result.export_bytes);
 
           acacia::legacy_count ("expansions", result.env_expanded + result.ctrl_expanded);
           searching.finish (forward_result_name (result.status),

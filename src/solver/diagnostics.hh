@@ -261,6 +261,7 @@ namespace acacia::diagnostics {
       unsigned long long forward_node_bytes = 0;
       unsigned long long forward_index_bytes = 0;
       unsigned long long forward_total_bytes = 0;
+      unsigned long long forward_export_bytes = 0;
       unsigned long long cpre_skipped = 0;
       unsigned long long actions_seen = 0;
       unsigned long long meets_computed = 0;
@@ -419,6 +420,7 @@ namespace acacia::diagnostics {
          << " forward_node_bytes=" << m.forward_node_bytes
          << " forward_index_bytes=" << m.forward_index_bytes
          << " forward_total_bytes=" << m.forward_total_bytes
+         << " forward_export_bytes=" << m.forward_export_bytes
          << " forward_certificate_verify_ms=" << m.forward_certificate_verify_ms
          << " forward_total_ms=" << m.forward_total_ms
          << " forward_final_reason=" << m.forward_final_reason
@@ -924,7 +926,8 @@ namespace acacia::diagnostics {
                                    unsigned long long rank_bytes,
                                    unsigned long long node_bytes,
                                    unsigned long long index_bytes,
-                                   unsigned long long total_bytes) {
+                                   unsigned long long total_bytes,
+                                   unsigned long long export_bytes) {
     if (auto* m = current ()) {
       m->observe_k (k);
       m->forward_K = k;
@@ -951,6 +954,7 @@ namespace acacia::diagnostics {
       m->forward_node_bytes = node_bytes;
       m->forward_index_bytes = index_bytes;
       m->forward_total_bytes = total_bytes;
+      m->forward_export_bytes = export_bytes;
     }
   }
 
@@ -1085,7 +1089,8 @@ namespace acacia::diagnostics {
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
-                                   unsigned long long, unsigned long long) {}
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long) {}
   inline void set_forward_certificate_verify_ms (double) {}
   inline void set_forward_total_ms (double) {}
   inline void set_forward_final_reason (std::string) {}

@@ -85,6 +85,8 @@ namespace {
         }
         expect ("wrapper verdict", solved != losing);
         const auto* m = diag::current ();
+        if (forward)
+          expect ("production wrapper exports no replay payload", m->forward_export_bytes == 0);
         result[next++] = solved;
         result[next++] = m->forward_env_nodes;
         result[next++] = m->forward_ctrl_nodes;
