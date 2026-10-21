@@ -22,7 +22,7 @@ The bindings returned 13 realizable regions; 21 came back unrealizable through t
 
 Archive `costmodel-20261020`; frozen d68568db (revision 8c77fcfc), SYNTCOMP26, serial 8 GiB scopes, CPU time collected. Each of the seven default arms was run alone through `--arms`: on all 1524 inputs at 2 s, and on the 311 hard inputs (race at least 0.5 s or undecided in `spotfast-ablation-20261019`) at 17 s. No two arms gave opposite verdicts; 1352 inputs are decided by some arm alone. Features are the TLSF source counts from `tlsfbenchgraph --source-features` (interface sizes and `guard_*` operator counts and depths); models are random forests evaluated with 5-fold cross-validation grouped by family.
 
-The race on four cores was simulated as the fastest chosen arm's solo time. Without a contention penalty, the simulation reproduces the measured gap between the seven-arm default and the four-arm subset in `route-20261019` (4 hard inputs in both), so arms do not slow each other enough to matter.
+The race on four cores was simulated as the fastest chosen arm's solo time. Without a contention penalty, the simulation reproduces the measured gap between the seven-arm default and the four-arm subset in `route-20261019` (4 hard inputs in both). *Corrected 2026-10-21:* this agreement on one aggregate number does not show that arms do not slow each other; the measured four-arm subset's 8 subset-only solves in `route-20261019` are real race effects that a minimum-of-solo-times model cannot produce.
 
 | Arms per input (4 cores, 17 s) | Solved | Lost vs. all seven | PAR-2 (s) |
 |---|---:|---:|---:|
@@ -33,7 +33,7 @@ The race on four cores was simulated as the fastest chosen arm's solo time. With
 | Parity plus the model's top three | 1339 | 13 | 6888 |
 | Best four per input (oracle) | 1352 | 0 | 6459 |
 
-No selector gains an input. The oracle shows four arms would suffice on every input, so the limit is prediction, not core count.
+No selector gains an input. *Corrected 2026-10-21:* the oracle row follows from the model, not the data: scoring a set by the minimum of its solo times makes all seven arms weakly dominate every subset, and even an oracle choosing one arm per input matches them. The supported conclusion is narrower: the tested source-feature predictors do not justify pruning arms.
 
 Dropping only the arms the model gives under 3% chance of deciding (the threshold chosen on the other folds) loses no input and cuts simulated race CPU by 10.8%, mostly on the hard inputs and mostly the obligation, GR(1) and backward arms. At 4% it loses 5. Rules shallow enough to write as a few comparisons save at most 3.2% without a loss. Not admitted: it is simulated rather than measured, depends on an embedded forest, and sits one threshold step from losing inputs.
 
