@@ -12,6 +12,30 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-21 — Leaner TLSF preparation and forward results, no corpus speedup
+
+Archive `refopt-20261021`; master d3746918 frozen as the control (B0), the shipping configuration `otf_sparse_formula_parity`, serial 8 GiB scopes, CPU time collected. Screens used a 24-input panel picked from `costmodel-20261020` and `spotfast-ablation-20261019` labels (forward-search, sparse-proof, large-source, Moore, near-cap and control inputs), full portfolio, 17 s, three rotated reps per binary.
+
+| Change | Screen against B0 | Outcome |
+|---|---|---|
+| Forward safety builds its dense replay snapshot only on request (#295) | 20/24 solved by both; −1.01% allocated bytes on both forward-search inputs (DHAT), peak unchanged; instructions −0.15% to 0% | kept |
+| Sparse derived statistics computed only on request | ≈0 bytes and ≈1e-7 instructions | rejected, tag `provenance/refopt-p1b-70d1eca7` |
+| Parity and obligation workers reuse the parent's TLSF preparation (#296) | 20/20 solved, no opposite verdict, per-input CPU geometric mean 0.964; separated on large sources only: CPU −31%/−23%/−7%/−7.5%, wall −24%/−20%/−7%/−7% on the four largest | kept |
+| TLSF converted through tlsf-tools' conversion-only entry point (#297, tlsf-tools#75) | old and new paths byte-identical on 1586 TLSF files; conversion of the largest sources 33% faster with 20% lower peak RSS (0.244 → 0.163 s, 206 → 163 MB) | kept |
+
+The parse count falls from 80 to 56 over 64 invocations with the reuse. The conversion-only change saves 0.03–0.08 s per conversion, below the panel's noise, so it was measured directly instead of screened.
+
+Paired full corpus (1524 SYNTCOMP26 inputs, 17 s, eight chunks alternating which binary runs first), master B0 against the combined stack 5e7a4bb1 (C3):
+
+| | Solved | PAR-2 (s) | CPU (s) |
+|---|---:|---:|---:|
+| B0 | 1336 | 6979.2 | 19162 |
+| C3 | 1335 | 7003.2 | 19197 |
+
+No opposite verdict and no conflict. The single difference is `06.ltl`, solved by B0 at 16.81 s. In three more paired runs at 17 s, B0 solved it each time (16.57–16.96 s) and C3 did not; in the six panel runs earlier the same day B0 timed out each time. At 60 s both solve it every time with overlapping times (B0 17.26–18.51 s, C3 17.53–18.71 s), so it is a near-cap input, not a separated loss, though C3 may be up to about 2% slower on it. The rest of the PAR-2 gap is within the 12.1 s noise floor. The stack saves resources where TLSF preparation dominates and simplifies the frontend; it does not speed up the corpus.
+
+Gates on C3: G0, G1 (40/40 against B0, no verdict change or coverage loss), G3 (both panels tied: 163/180 and 167/180), G4 and G5 (1579 inputs, no opposite verdict) pass. G2s fails its preselected optimization rule at −0.20% geometric: its LTL targets do not touch TLSF preparation, and no target regresses past the ceiling.
+
 ## 2026-10-20 — isl does not compress Acacia's downsets
 
 Archive `islprobe-20261020`; offline only, no build of Acacia. The question was whether a downset backed by isl, Verdoolaege's integer set library, could hold an antichain more compactly as a union of boxes merged by `isl_set_coalesce`. Winning-region antichains were captured through the published Python bindings (acacia-boomslang 2026.2.2) on the 40 slowest inputs the backward arm decides as realizable, and coalesced with islpy 2026.2.2.

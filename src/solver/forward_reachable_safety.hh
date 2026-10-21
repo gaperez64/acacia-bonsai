@@ -50,6 +50,19 @@ namespace acacia::solver_detail {
       std::size_t max_total_bytes = std::numeric_limits<std::size_t>::max ();
   };
 
+  enum class forward_snapshot { omit, capture };
+
+  /// Owned replay data, independent of the search lifetime.
+  template <typename State>
+  struct forward_replay_snapshot {
+      std::vector<losing_proof> losing_proofs;
+      /// Environment ranks indexed by node id and controller (parent, input) pairs.
+      std::vector<State> env_ranks;
+      std::vector<std::pair<std::size_t, std::size_t>> ctrl_parents;
+      std::vector<State> losing_antichain_ranks;
+      std::size_t initial_env = 0;
+  };
+
   template <typename State>
   struct forward_solve_result {
       forward_result_status status;
@@ -92,19 +105,14 @@ namespace acacia::solver_detail {
       std::size_t node_bytes = 0;
       std::size_t index_bytes = 0;
       std::size_t total_bytes = 0;
+      /// Logical snapshot records and payload, excluding capacity/allocator
+      /// overhead and strategy_ranks.  Exports are excluded from total_bytes.
+      std::size_t export_bytes = 0;
       double minimisation_ms = 0.0;
       /// Retention ratios; an empty sample is reported as no reduction (1.0).
       double equality_reduction = 1.0;
       double dominance_reduction = 1.0;
-      std::vector<losing_proof> losing_proofs;
-      /// Rank vector of every environment node, indexed by node id, and the
-      /// (parent env, input index) of every controller node.  A replayer needs
-      /// these to recompute a losing proof from the game rather than trusting
-      /// the solver's own status flags.
-      std::vector<State> env_ranks;
-      std::vector<std::pair<std::size_t, std::size_t>> ctrl_parents;
-      std::vector<State> losing_antichain_ranks;
-      std::size_t initial_env = 0;
+      std::optional<forward_replay_snapshot<State>> snapshot;
       std::vector<State> strategy_ranks;
   };
 
@@ -142,13 +150,14 @@ namespace acacia::solver_detail {
         forward_search (const state& initial, const state& safe,
                         const InputOutputFwdActions& input_output_fwd_actions,
                         Actioner& actioner, const forward_limits& limits,
-                        bool use_losing_antichain)
+                        bool use_losing_antichain, forward_snapshot snapshot)
           : initial {initial},
             safe {safe},
             input_output_fwd_actions {input_output_fwd_actions},
             actioner {actioner},
             limits {limits},
-            use_losing_antichain {use_losing_antichain} {}
+            use_losing_antichain {use_losing_antichain},
+            snapshot {snapshot} {}
 
         forward_solve_result<state> solve () {
           const std::size_t initial_id = intern_env (initial.copy ());
@@ -184,6 +193,7 @@ namespace acacia::solver_detail {
         Actioner& actioner;
         const forward_limits& limits;
         const bool use_losing_antichain;
+        const forward_snapshot snapshot;
 
         std::vector<forward_env_node<state>> env_nodes;
         std::vector<forward_ctrl_node<state>> ctrl_nodes;
@@ -747,20 +757,30 @@ namespace acacia::solver_detail {
                           result.index_bytes})
                          == total_bytes);
           result.minimisation_ms = minimisation_ms;
-          result.losing_proofs = losing_proofs;
-          result.env_ranks.reserve (env_nodes.size ());
-          for (const auto& node : env_nodes)
-            result.env_ranks.push_back (node.rank.copy ());
-          result.ctrl_parents.reserve (ctrl_nodes.size ());
-          for (const auto& node : ctrl_nodes)
-            result.ctrl_parents.emplace_back (node.parent_env, node.input_index);
-          result.losing_antichain_ranks.reserve (
-              losing_antichain_generators.size ());
-          for (const std::size_t generator : losing_antichain_generators)
-            result.losing_antichain_ranks.push_back (
-                env_nodes[generator].rank.copy ());
-          if (initial_id.has_value ())
-            result.initial_env = *initial_id;
+          if (snapshot == forward_snapshot::capture) {
+            auto& replay = result.snapshot.emplace ();
+            replay.losing_proofs = losing_proofs;
+            replay.env_ranks.reserve (env_nodes.size ());
+            for (const auto& node : env_nodes)
+              replay.env_ranks.push_back (node.rank.copy ());
+            replay.ctrl_parents.reserve (ctrl_nodes.size ());
+            for (const auto& node : ctrl_nodes)
+              replay.ctrl_parents.emplace_back (node.parent_env, node.input_index);
+            replay.losing_antichain_ranks.reserve (
+                losing_antichain_generators.size ());
+            result.export_bytes = saturated_sum (
+                {proof_bytes, rank_bytes, replay.env_ranks.size () * sizeof (state),
+                 replay.ctrl_parents.size () * sizeof (replay.ctrl_parents[0])});
+            for (const std::size_t generator : losing_antichain_generators) {
+              const auto& rank = env_nodes[generator].rank;
+              replay.losing_antichain_ranks.push_back (rank.copy ());
+              result.export_bytes = saturated_sum (
+                  {result.export_bytes, sizeof (state),
+                   rank.size () * sizeof (coordinate_type<state>)});
+            }
+            if (initial_id.has_value ())
+              replay.initial_env = *initial_id;
+          }
           if (raw_actions != 0)
             result.equality_reduction =
                 static_cast<double> (distinct_successors) / raw_actions;
@@ -785,6 +805,7 @@ namespace acacia::solver_detail {
   /// expanded and every such controller still selects a safe, non-losing
   /// successor.
   ///
+  /// Replay data is copied only on an explicit snapshot capture request.
   /// A resource limit only interrupts that proof process.  It is deliberately
   /// returned as `resource_limit`, never converted into either game verdict.
   template <typename SetOfStates,
@@ -794,11 +815,12 @@ namespace acacia::solver_detail {
       const typename SetOfStates::value_type& initial,
       const typename SetOfStates::value_type& safe,
       const InputOutputFwdActions& input_output_fwd_actions, Actioner& actioner,
-      const forward_limits& limits = {}, bool use_losing_antichain = false) {
+      const forward_limits& limits = {}, bool use_losing_antichain = false,
+      forward_snapshot snapshot = forward_snapshot::omit) {
     forward_reachable_detail::forward_search<
         SetOfStates, InputOutputFwdActions, Actioner>
         search {initial, safe, input_output_fwd_actions, actioner, limits,
-                use_losing_antichain};
+                use_losing_antichain, snapshot};
     return search.solve ();
   }
 
@@ -810,10 +832,11 @@ namespace acacia::solver_detail {
       const typename SetOfStates::value_type& initial,
       const typename SetOfStates::value_type& safe,
       const InputOutputFwdActions& input_output_fwd_actions, Actioner& actioner,
-      const forward_limits& limits = {}, bool use_losing_antichain = false) {
+      const forward_limits& limits = {}, bool use_losing_antichain = false,
+      forward_snapshot snapshot = forward_snapshot::omit) {
     return solve_forward_reachable_safety<SetOfStates> (
         initial, safe, input_output_fwd_actions, actioner, limits,
-        use_losing_antichain);
+        use_losing_antichain, snapshot);
   }
 
 }  // namespace acacia::solver_detail

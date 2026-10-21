@@ -6,12 +6,22 @@ import select
 import struct
 import subprocess
 import time
+from collections import Counter
 
 
 def records(directory, complete_only=False):
     return [json.loads(line) for path in directory.glob("*.jsonl")
             for line in path.read_text().splitlines(keepends=True)
             if line.strip() and (not complete_only or line.endswith("\n"))]
+
+
+def assert_parse_calls(rows, expected):
+    calls = [row for row in rows if row.get("event") == "tlsf_parse"]
+    assert Counter(row["role"] for row in calls) == expected, calls
+    # A fork inherits the observer, but never the parent's call count.
+    for pid in {row["pid"] for row in calls}:
+        sequence = sorted(row["call"] for row in calls if row["pid"] == pid)
+        assert sequence == list(range(1, len(sequence) + 1)), calls
 
 
 class LegacyGate:

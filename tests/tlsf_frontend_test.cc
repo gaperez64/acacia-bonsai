@@ -1,4 +1,5 @@
 #include "tlsf_frontend.hh"
+#include "arg_parser.hh"
 
 #include "solver/symmetry.hh"
 #include "solver/unreal_safety_core_witnesses.hh"
@@ -54,6 +55,28 @@ MAIN {
   ok &= expect ("original semantics", parsed.metadata.tlsf_semantics == "Mealy");
   ok &= expect ("original target", parsed.metadata.tlsf_target == "Moore");
   ok &= expect ("effective target", parsed.metadata.tlsf_effective_target == "Mealy");
+
+  arg_parse_result args;
+  args.tlsf_source = spec;
+  args.tlsf_specified = true;
+  args.formula_specified = true;
+  args.objective.formula = "!grant"; // A worker-transformed formula is not reusable.
+  acacia::tlsf_frontend::specification child_local;
+  const auto& prepared = args.prepare_objective (child_local);
+  ok &= expect ("formula_specified does not identify preparation",
+                &prepared == &child_local && prepared.formula == parsed.formula &&
+                    prepared.inputs == parsed.inputs && prepared.outputs == parsed.outputs);
+  args.objective = std::move (child_local);
+  args.original_tlsf_prepared = true;
+  const auto& inherited = args.prepare_objective (child_local);
+  ok &= expect ("successful original objective is borrowed with source metadata",
+                &inherited == &args.objective && inherited.metadata.tlsf_target == "Moore" &&
+                    inherited.inputs == parsed.inputs && inherited.outputs == parsed.outputs &&
+                    inherited.metadata.tlsf_effective_target == "Mealy" &&
+                    inherited.metadata.tlsf_semantics == "Mealy" &&
+                    inherited.metadata.tlsf_gr_level == parsed.metadata.tlsf_gr_level &&
+                    inherited.metadata.tlsf_normalized_objective == parsed.formula &&
+                    args.tlsf_source == spec);
 
   const auto strict = acacia::tlsf_frontend::parse (R"TLSF(
 INFO {

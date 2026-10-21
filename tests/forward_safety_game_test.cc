@@ -43,6 +43,7 @@ namespace {
   unsigned explicit_games_compared = 0;
 
   using f1_result = acacia::solver_detail::forward_solve_result<state>;
+  using acacia::solver_detail::forward_snapshot;
   void check_certificate (const std::string& label, const tiny_game& game,
                           size_t bool_threshold, const rank_vector& initial,
                           const f1_result& result);
@@ -114,36 +115,44 @@ namespace {
       const tiny_game& game, size_t bool_threshold,
       const rank_vector& initial,
       const acacia::solver_detail::forward_limits& limits = {},
-      bool use_losing_antichain = false) {
+      bool use_losing_antichain = false,
+      forward_snapshot snapshot = forward_snapshot::omit) {
     return with_actioner (game, bool_threshold, [&] (auto& actioner) {
       const state initial_state = as_solver_state (initial);
       const state safe_state = as_solver_state (safe_vector (game.states, game.K, bool_threshold));
       return acacia::solver_detail::solve_forward_reachable_safety<SetOfStates> (
-          initial_state, safe_state, game.inputs, actioner, limits, use_losing_antichain);
+          initial_state, safe_state, game.inputs, actioner, limits, use_losing_antichain,
+          snapshot);
     });
   }
 
   bool replay_losing_proof (
       const tiny_game& game, size_t bool_threshold, const f1_result& result,
       const std::vector<acacia::solver_detail::losing_proof>& proofs) {
+    if (not result.snapshot.has_value ())
+      return false;
+    const auto& replay = *result.snapshot;
     return with_actioner (game, bool_threshold, [&] (auto& actioner) {
       const state safe_state = as_solver_state (
           safe_vector (game.states, game.K, bool_threshold));
       return acacia::solver_detail::replay_losing_proofs (
-          proofs, result.env_ranks, result.ctrl_parents, safe_state,
-          game.inputs, actioner, result.initial_env);
+          proofs, replay.env_ranks, replay.ctrl_parents, safe_state,
+          game.inputs, actioner, replay.initial_env);
     });
   }
 
   bool replay_losing_proof (const tiny_game& game, size_t bool_threshold,
                             const f1_result& result) {
+    if (not result.snapshot.has_value ())
+      return false;
     return replay_losing_proof (
-        game, bool_threshold, result, result.losing_proofs);
+        game, bool_threshold, result, result.snapshot->losing_proofs);
   }
 
   void compare_with_explicit (const std::string& label, const tiny_game& game,
                                std::size_t bool_threshold, const rank_vector& initial) {
-    const auto lazy = solve_f1 (game, bool_threshold, initial, {}, true);
+    const auto lazy = solve_f1 (
+        game, bool_threshold, initial, {}, true, forward_snapshot::capture);
     const auto ref = solve_explicit_forward_game (initial, game.inputs, game.K, bool_threshold);
     expect (label + ": forward verdict agrees with independent explicit game",
             (lazy.status == acacia::solver_detail::forward_result_status::win_k)
@@ -288,7 +297,23 @@ namespace {
             oracle_wins == (expected == forward_status::win_k));
     check_certificate (label, game, bool_threshold, initial, result);
 
-    const f1_result lazy = solve_f1 (game, bool_threshold, initial);
+    const f1_result lazy = solve_f1 (game, bool_threshold, initial, {}, true);
+    const f1_result captured = solve_f1 (
+        game, bool_threshold, initial, {}, true, forward_snapshot::capture);
+    expect (label + ": compact result omits replay and export bytes",
+            not lazy.snapshot.has_value () and lazy.export_bytes == 0);
+    expect (label + ": captured result owns replay after search destruction",
+            captured.snapshot.has_value () and captured.export_bytes > 0);
+    expect (label + ": capture preserves status, search bytes and strategy",
+            captured.status == lazy.status and captured.total_bytes == lazy.total_bytes
+                and captured.strategy_ranks == lazy.strategy_ranks);
+    check_certificate (label + ": captured", game, bool_threshold, initial, captured);
+    if (captured.status == acacia::solver_detail::forward_result_status::lose_k)
+      expect (label + ": captured losing proof replays after search destruction",
+              replay_losing_proof (game, bool_threshold, captured));
+    else if (captured.snapshot.has_value () and captured.proof_bytes == 0)
+      expect (label + ": requested empty proof log is present",
+              captured.snapshot->losing_proofs.empty ());
     const bool expected_win = expected == forward_status::win_k;
     expect (label + ": F1 status",
             (lazy.status
@@ -431,9 +456,10 @@ namespace {
       const exact_region truth = brute_force_winning_region (game, bool_threshold);
       const forward_result result = solve_explicit_forward_game (
           initial, game.inputs, game.K, bool_threshold);
-      const f1_result f3 = solve_f1 (game, bool_threshold, initial);
+      const f1_result f3 = solve_f1 (
+          game, bool_threshold, initial, {}, false, forward_snapshot::capture);
       const f1_result pruned =
-          solve_f1 (game, bool_threshold, initial, {}, true);
+          solve_f1 (game, bool_threshold, initial, {}, true, forward_snapshot::capture);
       const std::string label = "random game " + std::to_string (trial);
 
       expect (label + ": forward with antichain status agrees with forward baseline",
@@ -487,7 +513,8 @@ namespace {
         // game, so a proof missing a dependency is still a true proof.  What
         // must be rejected is a claim that does not hold -- here, an env_unsafe
         // record redirected onto a node that is actually safe.
-        auto corrupted = candidate.losing_proofs;
+        const auto& replay = *candidate.snapshot;
+        auto corrupted = replay.losing_proofs;
         const state safe_state = as_solver_state (
             safe_vector (game.states, game.K, bool_threshold));
         bool corrupted_something = false;
@@ -497,11 +524,11 @@ namespace {
         // does not actually sit below the node it is said to subsume.
         for (auto& proof : corrupted) {
           if (proof.reason != acacia::solver_detail::losing_reason::env_subsumed
-              or proof.node >= candidate.env_ranks.size ())
+              or proof.node >= replay.env_ranks.size ())
             continue;
-          for (std::size_t id = 0; id < candidate.env_ranks.size (); ++id)
-            if (not candidate.env_ranks[id]
-                        .partial_order (candidate.env_ranks[proof.node])
+          for (std::size_t id = 0; id < replay.env_ranks.size (); ++id)
+            if (not replay.env_ranks[id]
+                        .partial_order (replay.env_ranks[proof.node])
                         .leq ()) {
               proof.witness = id;      // claim a non-dominating witness subsumes
               corrupted_something = true;
@@ -514,8 +541,8 @@ namespace {
           if (corrupted_something
               or proof.reason != acacia::solver_detail::losing_reason::env_unsafe)
             continue;
-          for (std::size_t id = 0; id < candidate.env_ranks.size (); ++id)
-            if (candidate.env_ranks[id].partial_order (safe_state).leq ()) {
+          for (std::size_t id = 0; id < replay.env_ranks.size (); ++id)
+            if (replay.env_ranks[id].partial_order (safe_state).leq ()) {
               proof.node = id;          // claim a safe node is unsafe
               corrupted_something = true;
               break;
@@ -677,6 +704,30 @@ namespace {
                 and total_byte_limited.status
                     != acacia::solver_detail::forward_result_status::lose_k
                 and total_byte_limited.strategy_ranks.empty ());
+
+    for (const auto& cap : {f1_limits, env_limits, edge_limits,
+                            rank_byte_limits, total_byte_limits}) {
+      const auto compact = solve_f1 (game, 1, vec ({0}), cap);
+      const auto captured = solve_f1 (
+          game, 1, vec ({0}), cap, false, forward_snapshot::capture);
+      expect ("F1 resource limit: compact result omits replay and export bytes",
+              not compact.snapshot.has_value () and compact.export_bytes == 0);
+      expect ("F1 resource limit: capture preserves stop reason and search bytes",
+              captured.status == compact.status
+                  and captured.resource_limit == compact.resource_limit
+                  and captured.total_bytes == compact.total_bytes
+                  and captured.strategy_ranks.empty ());
+      if (expect ("F1 resource limit: snapshot survives search destruction",
+                  captured.snapshot.has_value ())) {
+        expect ("F1 resource limit: snapshot contains the stopped graph",
+                captured.snapshot->env_ranks.size () == captured.env_nodes
+                    and captured.snapshot->ctrl_parents.size () == captured.ctrl_nodes);
+        expect ("F1 resource limit: export counts only materialized records and coordinates",
+                captured.export_bytes
+                    == captured.env_nodes * (sizeof (state) + sizeof (VECTOR_ELT_T))
+                           + captured.ctrl_nodes * sizeof (std::pair<std::size_t, std::size_t>));
+      }
+    }
   }
 
 }  // namespace

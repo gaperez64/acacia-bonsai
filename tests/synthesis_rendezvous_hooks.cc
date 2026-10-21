@@ -1,6 +1,23 @@
 #include "phase_records.hh"
 #include "solver/synthesis_rendezvous.hh"
 
+#ifdef ACACIA_TLSF_PREPARATION_TEST_HOOKS
+# include <cstdlib>
+# include <tlsf/convert.h>
+# include <unistd.h>
+
+namespace {
+  const pid_t preparation_parent = getpid ();
+}
+extern "C" TlsfConversionResult* __real_tlsf_convert (const char*, const char*);
+extern "C" TlsfConversionResult* __wrap_tlsf_convert (const char* source,
+                                                      const char* effective_target) {
+  if (getpid () == preparation_parent && std::getenv ("ACACIA_TEST_TLSF_PARENT_FAILURE"))
+    return nullptr;
+  return __real_tlsf_convert (source, effective_target);
+}
+#endif
+
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
 # include <cerrno>
 # include <cstdio>

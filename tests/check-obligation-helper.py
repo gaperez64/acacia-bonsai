@@ -13,7 +13,7 @@ import tempfile
 import time
 
 from moore_aiger_oracle import Aiger, check
-from obligation_test_support import LegacyGate, StageGate, records
+from obligation_test_support import LegacyGate, StageGate, assert_parse_calls, records
 
 
 def gone(pid: int) -> bool:
@@ -79,6 +79,8 @@ def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
                                       records(directory, complete_only=True))) from error
             triggered_at, ready_pid = stage.triggered_at, stage.ready_pid
         rows = records(directory)
+        if "-T" not in args:
+            assert_parse_calls(rows, {})
         if rss_sample_bytes:
             samples = (directory / "rss-samples.txt").read_text().splitlines()
             expected_pid = helper_row(rows, "completion")["worker_pid"]
@@ -584,11 +586,16 @@ def main() -> None:
                 tlsf.write_text(f'''INFO {{ TITLE: "generated" SEMANTICS: {semantics} TARGET: Moore }}
 MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ G (i <-> o); }} }}
 ''')
-                exact, _ = run(binary, ["-T", str(tlsf), *pair], root, library)
-                result, rows = run(binary, ["-T", str(tlsf), *race], root, library, gate=True)
-                assert exact.returncode == result.returncode == expected, (exact, result)
-                assert helper_row(rows, "completion")["outcome"] == (
-                    "completed_REAL" if expected == 0 else "completed_UNREAL"), rows
+                exact, exact_rows = run(binary, ["-T", str(tlsf), *pair], root, library)
+                assert_parse_calls(exact_rows, {"parent": 1})
+                for selection, expected_calls in ((race, {"parent": 1}),
+                                                   (alone, {"obligation": 1})):
+                    result, rows = run(binary, ["-T", str(tlsf), *selection],
+                                       root, library, gate=True)
+                    assert exact.returncode == result.returncode == expected, (exact, result)
+                    assert helper_row(rows, "completion")["outcome"] == (
+                        "completed_REAL" if expected == 0 else "completed_UNREAL"), rows
+                    assert_parse_calls(rows, expected_calls)
             # Safety assumptions exercise the strict normalized objective too,
             # rather than only using a strict label on an assumption-free game.
             for semantics in ("Mealy", "Moore", "Strict,Mealy", "Strict,Moore"):
@@ -611,6 +618,7 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G (i <-> o); } }
                 selected, selected_rows = run(
                     binary, ["-T", str(tlsf), "--arms", "both:gr1:oxidd"], root, library)
                 assert selected.returncode == 0, selected
+                assert_parse_calls(selected_rows, {})
                 assert not helper_rows(selected_rows, "eligibility"), selected_rows
                 assert len([row for row in selected_rows
                             if row.get("event") == "worker_spawn"]) == 1, selected_rows

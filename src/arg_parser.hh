@@ -34,9 +34,9 @@
  * Struct that will hold the parsed argument values.
  */
 struct arg_parse_result {
-    std::string formula;
-    std::vector<std::string> inputs;
-    std::vector<std::string> outputs;
+    // One owner for the whole original objective, including frontend metadata.
+    // After argument parsing, workers only borrow it; run_ltl transforms its own copy.
+    acacia::tlsf_frontend::specification objective;
     VECTOR_ELT_T opt_kmin = 2;
     VECTOR_ELT_T opt_k = 99;
     VECTOR_ELT_T opt_kinc = 3;
@@ -70,14 +70,25 @@ struct arg_parse_result {
     acacia::OracleLayout oracle_layout = acacia::OracleLayout::grouped;
     SPOT_FAST_T spot_fast = SPOT_FAST_DET;
     std::optional<std::string> synth_fname = std::nullopt;
-    specification_metadata metadata;
     bool formula_specified = false;
     bool inputs_specified = false;
     bool outputs_specified = false;
     bool tlsf_specified = false;
     std::string tlsf_source;
     std::string tlsf_sha256;
+    // Successful preparation of tlsf_source with the current effective-Mealy policy.
+    // formula_specified also covers direct LTL and is not a preparation identity.
+    bool original_tlsf_prepared = false;
     bool legacy_available = true;
+
+    const acacia::tlsf_frontend::specification&
+    prepare_objective (acacia::tlsf_frontend::specification& child_local) const {
+      if (tlsf_specified && !original_tlsf_prepared) {
+        child_local = acacia::tlsf_frontend::parse (tlsf_source);
+        return child_local;
+      }
+      return objective;
+    }
 };
 
 arg_parse_result arg_parser (int argc, char** argv);

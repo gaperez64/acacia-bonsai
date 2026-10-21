@@ -19,7 +19,7 @@ void process_arg_input (const std::string& arg, arg_parse_result& result) {
   while (std::getline (props, prop, ',')) {
     prop.erase (std::remove_if (prop.begin (), prop.end (), isspace), prop.end ());
     if (not prop.empty ())
-      result.inputs.push_back (prop);
+      result.objective.inputs.push_back (prop);
   }
 }
 
@@ -37,7 +37,7 @@ void process_arg_output (const std::string& arg, arg_parse_result& result) {
   while (std::getline (props, prop, ',')) {
     prop.erase (std::remove_if (prop.begin (), prop.end (), isspace), prop.end ());
     if (not prop.empty ())
-      result.outputs.push_back (prop);
+      result.objective.outputs.push_back (prop);
   }
 }
 
@@ -401,7 +401,7 @@ void process_formula_file (const std::string& arg, arg_parse_result& result) {
     error (EXIT_CODE_ERROR, "Error: unable to open file %s\n", arg.c_str ());
   std::stringstream buffer;
   buffer << file.rdbuf ();
-  result.formula = buffer.str ();
+  result.objective.formula = buffer.str ();
 }
 
 void process_tlsf_file (const std::string& arg, arg_parse_result& result) {
@@ -487,7 +487,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'f':
         if (retval.tlsf_specified)
           error (EXIT_CODE_ERROR, "Error: -f/-F and -T/--tlsf are mutually exclusive.\n");
-        retval.formula = optarg;
+        retval.objective.formula = optarg;
         retval.formula_specified = true;
         break;
       case 'r':
@@ -870,11 +870,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
       })) {
     acacia::phase_scope conversion_phase ("legacy_parent", "frontend_conversion");
     try {
-      auto spec = acacia::tlsf_frontend::parse (retval.tlsf_source);
-      retval.formula = std::move (spec.formula);
-      retval.inputs = std::move (spec.inputs);
-      retval.outputs = std::move (spec.outputs);
-      retval.metadata = std::move (spec.metadata);
+      retval.objective = acacia::tlsf_frontend::parse (retval.tlsf_source);
+      retval.original_tlsf_prepared = true;
       retval.formula_specified = true;
       retval.inputs_specified = true;
       retval.outputs_specified = true;
@@ -891,7 +888,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
           << "{\"arm\":\"legacy\",\"stage\":\"tlsf_conversion\",\"status\":\"unavailable\"}\n";
     }
   }
-  if (not retval.tlsf_specified && retval.formula.empty ())
+  if (not retval.tlsf_specified && retval.objective.formula.empty ())
     error (EXIT_CODE_ERROR,
            "Error: a formula or TLSF specification must be specified (-f, -F, or -T).\n");
   if (not retval.tlsf_specified && not retval.inputs_specified)
