@@ -22,7 +22,7 @@
       "role": "reference"
     },
     "best_decomp_mona": {
-      "description": "Use plain vector-backed downsets with decomposition, MONA precomputation, standard automaton preprocessing, critical input selection and no SIMD maximum comparisons as the downset comparison reference.",
+      "description": "Use plain vector-backed downsets with decomposition, MONA precomputation, standard automaton preprocessing, critical input selection and the native SIMD register width as the downset comparison reference.",
       "role": "reference",
       "simd_is_max": false,
       "aut_preprocessor": "standard",

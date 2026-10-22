@@ -18,6 +18,8 @@
 #ifndef ACACIA_FORCED_OUTPUT_CONTRADICTION
 # define ACACIA_FORCED_OUTPUT_CONTRADICTION @ACACIA_FORCED_OUTPUT_CONTRADICTION@
 #endif
+// Vector width for SIMD comparisons: the widest fixed size the library allows if true, the
+// native register width if false. It does not choose an instruction set at run time.
 #ifndef SIMD_IS_MAX
 # define SIMD_IS_MAX @SIMD_IS_MAX@
 #endif

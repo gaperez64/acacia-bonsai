@@ -98,7 +98,7 @@
       "meson": "acacia_simd_is_max",
       "type": "boolean",
       "default": true,
-      "description": "Use SIMD maximum operations for vector comparisons",
+      "description": "Vector width for SIMD comparisons: the widest fixed size the library allows if true, the native register width if false",
       "macros": [
         {
           "name": "SIMD_IS_MAX",
