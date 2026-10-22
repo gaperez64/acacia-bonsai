@@ -237,6 +237,40 @@ namespace {
     return bytes;
   }
 
+  void check_row_boundaries () {
+    game g;
+    g.aut->new_states (4);
+    const input_table inputs;
+    const old_actioner::action_vec rows = {
+        {}, {{0, true}, {0, false}, {1, true}, {2, true}, {3, false}},
+        {{3, true}, {1, false}, {2, true}}, {{1, false}}};
+    const auto payload = actioners::compact_payload::from_rows (rows);
+    for (const size_t threshold : {0, 2, 4}) {
+      posets::vectors::bool_threshold = threshold;
+      auto current = actioners::standard<state>::make (g.aut, inputs, 1);
+      auto reference = actioners::payload_reference::standard<state>::make (g.aut, inputs, 1);
+      for (const VECTOR_ELT_T k : {1, 2, 126}) {
+        current.setK (k);
+        reference.setK (k);
+        const VECTOR_ELT_T levels[] = {-1, 0, static_cast<VECTOR_ELT_T> (k - 1), k};
+        for (unsigned code = 0; code < 256; ++code) {
+          posets::utils::vector_mm<VECTOR_ELT_T> v (4);
+          unsigned rest = code;
+          for (size_t p = 0; p < v.size (); ++p) {
+            v[p] = levels[rest % 4];
+            rest /= 4;
+          }
+          const state rank (v);
+          for (const auto dir : {actioners::direction::forward, actioners::direction::backward}) {
+            const auto expected = reference.apply (rank, rows, dir);
+            check (current.apply (rank, payload, dir) == expected, "compact row boundary differs");
+            check (current.apply (rank, rows, dir) == expected, "dense row boundary differs");
+          }
+        }
+      }
+    }
+  }
+
   void compare (const game& g, const input_table& inputs) {
     auto old = actioners::payload_reference::standard<state>::make (g.aut, inputs, 3);
     auto compact = actioners::standard<state>::make (g.aut, inputs, 3);
@@ -256,6 +290,7 @@ namespace {
 int main () {
   try {
     static_assert (sizeof (actioners::compact_payload) == sizeof (std::vector<int>));
+    check_row_boundaries ();
     for (unsigned seed = 0; seed < 64; ++seed) {
       const auto g = generated (seed);
       posets::vectors::bool_threshold = seed % (g.aut->num_states () + 1);

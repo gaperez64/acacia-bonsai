@@ -150,28 +150,35 @@ namespace actioners {
         State apply (const State& m, const Payload& avec,
                      direction dir) /* __attribute__((pure)) */ {
           acacia::equivariance_budget::checkpoint ();
+          const VECTOR_ELT_T bound = K;
           if (dir == direction::forward)
             apply_out.assign (m.size (), (VECTOR_ELT_T) -1);
           else
             apply_out = backward_reset;
 
           const auto apply_row = [&] (size_t p, const auto& endpoints) {
-            for (const auto& [q, p_final] : endpoints) {
-              if (dir == direction::forward) {
+            if (dir == direction::forward) {
+              VECTOR_ELT_T value = -1;
+              for (const auto& [q, p_final] : endpoints) {
                 if (m[q] != -1)
-                  apply_out[p] = std::max (
-                      apply_out[p],
-                      std::min (K, (VECTOR_ELT_T) (m[q] + (VECTOR_ELT_T) (p_final ? 1 : 0))));
-              }
-              else if (apply_out[q] != -1)
-                apply_out[q] =
-                    std::min (apply_out[q],
-                              std::max ((VECTOR_ELT_T) -1,
-                                        (VECTOR_ELT_T) (m[p] - (VECTOR_ELT_T) (p_final ? 1 : 0))));
+                  value = std::max (
+                      value,
+                      std::min (bound, (VECTOR_ELT_T) (m[q] + (VECTOR_ELT_T) (p_final ? 1 : 0))));
 
-              // If we reached the extreme value, stop going through states.
-              if (dir == direction::forward && apply_out[p] == K)
-                break;
+                // If we reached the extreme value, stop going through states.
+                if (value == bound)
+                  break;
+              }
+              apply_out[p] = value;
+            }
+            else {
+              for (const auto& [q, p_final] : endpoints)
+                if (apply_out[q] != -1)
+                  apply_out[q] =
+                      std::min (
+                          apply_out[q],
+                          std::max ((VECTOR_ELT_T) -1,
+                                    (VECTOR_ELT_T) (m[p] - (VECTOR_ELT_T) (p_final ? 1 : 0))));
             }
           };
 
