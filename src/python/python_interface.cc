@@ -6,6 +6,7 @@
 #include "aut_preprocessors/surely_losing.hh"
 #include "boolean_states/forward_saturation.hh"
 #include "boolean_states/no_boolean_states.hh"
+#include "solver/bdd_config.hh"
 #include "solver/configured_components.hh"
 #include "solver/create_automaton.hh"
 #include "solver/k_bounded_safety_aut.hh"
@@ -46,6 +47,8 @@ Game* create_twa (const std::string& formula_str, const std::vector<std::string>
     acacia::formula_input::shift_inputs (formula, input_aps);
 
   auto dict = spot::make_bdd_dict ();
+  if constexpr (ACACIA_BDD_MAX_INCREASE > 0)
+    acacia::configure_bdd ();
 
   // Build the automaton first so all APs that appear in the formula are
   // already registered before we register the input/output sets.

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "solver/bdd_config.hh"
 #include "solver/create_automaton.hh"
 #include "solver/syntactic_bypass.hh"
 #include "solver/translator_options.hh"
@@ -31,6 +32,8 @@ namespace acacia::degenerate_io {
       formula = spot::formula::Not (formula);
 
     auto dict = spot::make_bdd_dict ();
+    if constexpr (ACACIA_BDD_MAX_INCREASE > 0)
+      configure_bdd ();
     auto options = translation::make_options ();
     spot::translator trans (dict, &options);
     translation::validate_options (options);

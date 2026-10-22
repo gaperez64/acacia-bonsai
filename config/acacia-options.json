@@ -81,6 +81,21 @@
         }
       ]
     },
+    "bdd_max_increase": {
+      "meson": "acacia_bdd_max_increase",
+      "type": "integer",
+      "default": 0,
+      "min": 0,
+      "max": 16777216,
+      "description": "Maximum BDD nodes added when the node table grows; 0 keeps Spot's default",
+      "macros": [
+        {
+          "name": "ACACIA_BDD_MAX_INCREASE",
+          "emit": "always",
+          "encoding": "value"
+        }
+      ]
+    },
     "forced_output_contradiction": {
       "meson": "acacia_forced_output_contradiction",
       "type": "boolean",

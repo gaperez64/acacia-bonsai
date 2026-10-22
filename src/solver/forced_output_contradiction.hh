@@ -1,5 +1,6 @@
 #pragma once
 
+#include "solver/bdd_config.hh"
 #include "solver/bounded_input_pattern.hh"
 
 #include <bddx.h>
@@ -226,6 +227,8 @@ namespace acacia::forced_output_contradiction {
     // Guarantee BuDDy initialization because this checker runs before the
     // solver creates its own dictionary.
     const spot::bdd_dict_ptr bdd_lifetime = spot::make_bdd_dict ();
+    if constexpr (ACACIA_BDD_MAX_INCREASE > 0)
+      configure_bdd ();
     spot::formula ignored_left;
     spot::formula ignored_right;
     if (detail::split_implication (effective_mealy_formula, ignored_left,

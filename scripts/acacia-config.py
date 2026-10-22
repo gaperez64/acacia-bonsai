@@ -102,6 +102,11 @@ def validate_preset(options: dict[str, Any], presets: dict[str, Any], name: str)
         value = values[option_name]
         if option["type"] == "combo" and value not in option["choices"]:
             raise SystemExit(f"{name}: invalid {option_name}={value}")
+        if option["type"] == "integer":
+            if (type(value) is not int
+                    or ("min" in option and value < option["min"])
+                    or ("max" in option and value > option["max"])):
+                raise SystemExit(f"{name}: invalid {option_name}={value}")
 
 
 
