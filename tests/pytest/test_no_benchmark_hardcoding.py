@@ -121,7 +121,7 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'included header, test control, or diagnostic record',
     ('src/acacia-bonsai.cc', 'native_gr1_lift_arm.hh'):
         'included native arm header',
-    ('src/acacia-bonsai.cc', '{\\"stage\\":\\"test_reaped\\",\\"before_deadline\\":'):
+    ('src/acacia-bonsai.cc', '{\\"stage\\":\\"test_reaped\\",\\"before_deadline\\":%s}\\n'):
         'included header, test control, or diagnostic record',
     ('src/arg_parser.cc', '                    real:param-lift:oxidd (realizability only);\\n'):
         'user-facing option syntax or error help',
