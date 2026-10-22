@@ -361,12 +361,6 @@ namespace acacia::solver_detail {
           return std::nullopt;
         }
 
-        [[nodiscard]] std::optional<std::size_t> find_env (
-            const state& rank) const {
-          return find_env (rank, coordinate_hash (rank));
-        }
-
-
         std::size_t append_losing_proof (
             losing_reason reason, std::size_t node, std::size_t witness = 0,
             std::vector<std::size_t> dependencies = {}) {
@@ -456,6 +450,11 @@ namespace acacia::solver_detail {
         std::size_t intern_env (state rank) {
           const std::uint64_t hash = coordinate_hash (rank);
           const auto found = find_env (rank, hash);
+          return intern_env (std::move (rank), hash, found);
+        }
+
+        std::size_t intern_env (state rank, std::uint64_t hash,
+                                std::optional<std::size_t> found) {
           if (found.has_value ()) {
             ++intern_hits;
             return *found;
@@ -599,7 +598,8 @@ namespace acacia::solver_detail {
               continue;
             }
 
-            const auto known_env = find_env (successor);
+            const std::uint64_t hash = coordinate_hash (successor);
+            const auto known_env = find_env (successor, hash);
             if (known_env.has_value ()
                 and std::ranges::contains (ctrl.tried_env_ids, *known_env)) {
               ++choice_switches;
@@ -621,7 +621,7 @@ namespace acacia::solver_detail {
               return false;
 
 
-            const std::size_t env_id = intern_env (std::move (successor));
+            const std::size_t env_id = intern_env (std::move (successor), hash, known_env);
             ctrl.tried_env_ids.push_back (env_id);
             account_bytes (
                 reverse_dependency_bytes, sizeof (std::size_t));
