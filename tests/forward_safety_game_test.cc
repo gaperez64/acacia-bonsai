@@ -614,6 +614,9 @@ namespace {
                   and result.env_nodes == 127);
       expect ("hash collision: self loops reuse existing states",
               result.intern_hits == 126);
+      expect ("hash collision: index accounts for every colliding entry",
+              result.hash_index_bytes
+                  == result.env_nodes * sizeof (std::pair<const std::uint64_t, std::size_t>));
       if (expect ("hash collision: replay retains all states", result.snapshot.has_value ())) {
         const auto& ranks = result.snapshot->env_ranks;
         if (expect ("hash collision: snapshot preserves node count", ranks.size () == 127))
@@ -712,6 +715,20 @@ namespace {
     expect ("F1 byte accounting: initial rank and hash index are counted",
             lazy.rank_bytes != 0 and lazy.environment_node_bytes != 0
                 and lazy.hash_index_bytes != 0);
+    expect ("F1 byte accounting: hash index stores one pair per environment",
+            lazy.hash_index_bytes
+                == lazy.env_nodes * sizeof (std::pair<const std::uint64_t, std::size_t>));
+
+    const f1_result complete = solve_f1 (game, 1, vec ({0}));
+    for (const bool below : {false, true}) {
+      acacia::solver_detail::forward_limits boundary;
+      boundary.max_total_bytes = complete.total_bytes - (below ? 1 : 0);
+      const auto result = solve_f1 (game, 1, vec ({0}), boundary);
+      expect ("F1 byte accounting: exact total-byte cap boundary",
+              result.status == (below
+                                    ? acacia::solver_detail::forward_result_status::resource_limit
+                                    : acacia::solver_detail::forward_result_status::win_k));
+    }
 
     acacia::solver_detail::forward_limits rank_byte_limits;
     rank_byte_limits.max_rank_bytes = 0;

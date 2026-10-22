@@ -137,9 +137,8 @@ namespace acacia::solver_detail {
               typename Actioner>
     class forward_search {
         using state = typename SetOfStates::value_type;
-        using env_id_bucket = std::vector<std::size_t>;
         using env_hash_index =
-            std::unordered_map<std::uint64_t, env_id_bucket>;
+            std::unordered_multimap<std::uint64_t, std::size_t>;
 
         struct queued_node {
             bool controller;
@@ -296,14 +295,6 @@ namespace acacia::solver_detail {
         }
 
 
-        void account_hash_index_entry (bool new_bucket) {
-          if (new_bucket)
-            account_bytes (hash_index_bytes,
-                           sizeof (typename env_hash_index::value_type));
-          account_bytes (hash_index_bytes, sizeof (std::size_t));
-        }
-
-
         [[nodiscard]] static std::size_t saturated_sum (
             std::initializer_list<std::size_t> terms) {
           const auto maximum = std::numeric_limits<std::size_t>::max ();
@@ -349,15 +340,13 @@ namespace acacia::solver_detail {
 
         [[nodiscard]] std::optional<std::size_t> find_env (
             const state& rank, std::uint64_t hash) const {
-          const auto found = interned_envs.find (hash);
-          if (found == interned_envs.end ())
-            return std::nullopt;
+          const auto [first, last] = interned_envs.equal_range (hash);
           // The hash selects only a small candidate bucket.  Identity is
           // decided by this exact coordinate comparison; it cannot be skipped,
           // because a 64-bit hash collision must never merge unequal states.
-          for (const std::size_t env_id : found->second)
-            if (env_nodes[env_id].rank == rank)
-              return env_id;
+          for (auto entry = first; entry != last; ++entry)
+            if (env_nodes[entry->second].rank == rank)
+              return entry->second;
           return std::nullopt;
         }
 
@@ -466,9 +455,8 @@ namespace acacia::solver_detail {
           account_bytes (
               environment_node_bytes, sizeof (forward_env_node<state>));
           account_rank (env_nodes[env_id].rank);
-          auto [bucket, new_bucket] = interned_envs.try_emplace (hash);
-          bucket->second.push_back (env_id);
-          account_hash_index_entry (new_bucket);
+          interned_envs.emplace (hash, env_id);
+          account_bytes (hash_index_bytes, sizeof (typename env_hash_index::value_type));
           if (not is_safe (env_nodes[env_id].rank))
             mark_environment_losing (env_id, losing_reason::env_unsafe);
           else {
