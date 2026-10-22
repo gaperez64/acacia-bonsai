@@ -305,6 +305,12 @@ test ('acceptance-core',
       acceptance_core_test,
       suite : ['unit', 'acceptance-core'])
 
+forward_saturation_test = executable ('forward-saturation-test',
+                                     'forward_saturation_test.cc',
+                                     include_directories : inc,
+                                     dependencies : [spot_dep, bddx_dep])
+test ('forward-saturation', forward_saturation_test, suite : ['unit', 'boolean-states'])
+
 direct_simulation_test = executable ('direct-simulation-test',
                                    'direct_simulation_test.cc',
                                    include_directories : inc,
