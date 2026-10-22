@@ -330,8 +330,20 @@ namespace {
     (void) take (oracle.evaluate (source, a.inputs));
     Fields fields;
     Reporter report {[&] (const auto& k, const auto& v) { fields[k] = v; }};
+    store.report = report;
     oracle.report (report, "");
     expect (fields.at ("cached_thresholds") == "0", "prepare never eagerly constructs suffix ORs");
+    for (int repeat = 0; repeat < 2; ++repeat)
+      for (unsigned q : {1u, 2u})
+        for (int h = 0; h <= 64; ++h)
+          expect (take (oracle.threshold (source, q, h)) == bddfalse,
+                  "absent destinations return false on repeated requests at every threshold");
+    oracle.report (report, "");
+    expect (fields.at ("cached_thresholds") == "0" &&
+                fields.at ("oracle_memo_bytes_estimate") == "0" &&
+                fields.at ("cache_evictions") == "0" &&
+                fields.at ("threshold_shortcuts") == fields.at ("threshold_calls"),
+            "absent thresholds are constant shortcuts with no memo storage or eviction");
     expect (take (oracle.threshold (source, 0, 1)) == a.inputs, "first requested suffix is exact");
     oracle.report (report, "");
     expect (fields.at ("cached_thresholds") == "1", "only the requested threshold is cached");

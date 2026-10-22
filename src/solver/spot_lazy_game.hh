@@ -608,16 +608,8 @@ namespace acacia::spot_lazy_game {
               p.compact->destinations.begin (), p.compact->destinations.end (), q,
               [] (const Destination& d, StateId id) { return d.coordinate < id; });
           if (dest == p.compact->destinations.end () || dest->coordinate != q) {
-            if (const auto cached = p.thresholds.find ({q, h}); cached != p.thresholds.end ()) {
-              ++threshold_hits_;
-              return cached->second;
-            }
             if (store_.report.sink)
-              ++threshold_misses_;
-            b.nodes (bddfalse);
-            p.thresholds.emplace (std::make_pair (q, h), bddfalse);
-            memo_bytes_ += sizeof (decltype (p.thresholds)::value_type) + tree_links;
-            enforce_memo_budget ();
+              ++threshold_shortcuts_;
             return bddfalse;
           }
           auto& memo = dest->thresholds;
