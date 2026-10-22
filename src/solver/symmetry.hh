@@ -146,8 +146,7 @@ namespace symmetry {
         unsigned n;
         const std::vector<std::vector<out_edge>>& A;
         const std::vector<std::vector<out_edge>>& B;
-        const std::vector<std::string>& sigA;
-        const std::vector<std::string>& sigB;
+        std::vector<unsigned> classA, classB, available;
         // For B, index out-edges of each state by (cond,acc) -> set of dsts.
         std::vector<std::multimap<std::pair<int, size_t>, unsigned>> bindex;
         std::vector<unsigned> phi, inv;
@@ -155,8 +154,14 @@ namespace symmetry {
         iso_finder (unsigned n_, const std::vector<std::vector<out_edge>>& A_,
                     const std::vector<std::vector<out_edge>>& B_,
                     const std::vector<std::string>& sA, const std::vector<std::string>& sB)
-          : n (n_), A (A_), B (B_), sigA (sA), sigB (sB), bindex (n_),
+          : n (n_), A (A_), B (B_), classA (n_), classB (n_), bindex (n_),
             phi (n_, -1U), inv (n_, -1U) {
+          std::map<std::string, unsigned> classes;
+          for (unsigned q = 0; q < n; ++q) {
+            classA[q] = classes.try_emplace (sA[q], classes.size ()).first->second;
+            classB[q] = classes.try_emplace (sB[q], classes.size ()).first->second;
+          }
+          available.resize (classes.size ());
           for (unsigned q = 0; q < n; ++q)
             for (const auto& e : B[q])
               bindex[q].emplace (std::pair {e.cond_id, e.acc_hash}, e.dst);
@@ -165,7 +170,7 @@ namespace symmetry {
         // Can qA map to qB given current partial assignment? Check that every
         // already-assigned A-out-edge of qA has a matching B-out-edge of qB.
         bool consistent (unsigned qA, unsigned qB) {
-          if (sigA[qA] != sigB[qB] or A[qA].size () != B[qB].size ())
+          if (classA[qA] != classB[qB] or A[qA].size () != B[qB].size ())
             return false;
           // Count B out-edges per label to compare as multisets.
           std::map<std::pair<int, size_t>, int> need;
@@ -201,14 +206,16 @@ namespace symmetry {
 
         bool search () {
           acacia::equivariance_budget::checkpoint ();
+          // Scratch counts are needed only until pick is chosen, not across recursion.
+          std::fill (available.begin (), available.end (), 0);
+          for (unsigned q = 0; q < n; ++q)
+            if (inv[q] == -1U) ++available[classB[q]];
           // pick unassigned A-state with fewest candidates (MRV)
           unsigned pick = -1U;
           size_t best = SIZE_MAX;
           for (unsigned q = 0; q < n; ++q) {
             if (phi[q] != -1U) continue;
-            size_t c = 0;
-            for (unsigned q2 = 0; q2 < n; ++q2)
-              if (inv[q2] == -1U and sigB[q2] == sigA[q]) ++c;
+            const size_t c = available[classA[q]];
             if (c == 0) return false;
             if (c < best) { best = c; pick = q; }
           }
@@ -216,7 +223,7 @@ namespace symmetry {
             return verify_full ();
           for (unsigned q2 = 0; q2 < n; ++q2) {
             acacia::equivariance_budget::checkpoint ();
-            if (inv[q2] != -1U or sigB[q2] != sigA[pick]) continue;
+            if (inv[q2] != -1U or classB[q2] != classA[pick]) continue;
             if (not consistent (pick, q2)) continue;
             assign (pick, q2);
             if (search ()) return true;
