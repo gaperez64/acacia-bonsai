@@ -926,8 +926,11 @@ namespace {
       }
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
       if (reaped > 0 && std::getenv ("ACACIA_TEST_DELAY_AFTER_REAP")) {
-        std::cerr << "{\"stage\":\"test_reaped\",\"before_deadline\":"
-                  << (monotonic_ns () < deadline_mono_ns ? "true" : "false") << "}\n";
+        char line[64];
+        const int length = snprintf (line, sizeof line,
+                                     "{\"stage\":\"test_reaped\",\"before_deadline\":%s}\n",
+                                     monotonic_ns () < deadline_mono_ns ? "true" : "false");
+        (void) ::write (STDERR_FILENO, line, size_t (length));
         timespec delay {0, 500000000};
         nanosleep (&delay, nullptr);
       }
@@ -972,8 +975,14 @@ namespace {
       if (not WIFEXITED (status)) {
         if (g_synthesis && reaped_index == synthesis_winner)
           resume_competitors ();
-        if (WIFSIGNALED (status))
-          std::cerr << "{\"stage\":\"child_signal\",\"status\":" << WTERMSIG (status) << "}\n";
+        if (WIFSIGNALED (status)) {
+          // One write per record: a child's own stderr line must not land inside this one.
+          char line[64];
+          const int length = snprintf (line, sizeof line,
+                                       "{\"stage\":\"child_signal\",\"status\":%d}\n",
+                                       WTERMSIG (status));
+          (void) ::write (STDERR_FILENO, line, size_t (length));
+        }
         continue;
       }
       int ret = WEXITSTATUS (status);
