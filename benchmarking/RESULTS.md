@@ -12,6 +12,36 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-23 — Cheaper MONA decoding solves five more inputs
+
+Archive `perf-20261022` (release `evidence-2026-10-23-perf`). This sprint resolved the SIMD and memory review issues (#301–#311, #314; review evidence `perfreview-20261022` and `perfreview-followup-20261022`). Control B0 is master 1ee199bf, frozen; configuration `otf_sparse_formula_parity`. Every solver call ran in its own 8 GiB scope with no swap, serially, with CPU time collected. Each candidate was screened on a 42-input panel picked from the review's measured behaviour (precompute-bound, translation-bound, forward and backward search, sparse UNREAL, large-AP and fast controls) with the full portfolio at 17 s and three alternating reps per binary. The keep rule asked for no verdict change, no new resource failure, and a CPU or peak gain that separates across reps on the inputs the issue targets.
+
+| Change | Screen against B0 | Outcome |
+|---|---|---|
+| Decode MONA endpoints straight from minterm assignments (#302, PR #320) | 33 vs 31 solved (06 and Alarm_a5f99bc6 newly solved), PAR-2 572.0 → 514.6 s; CPU −21% to −46% on seven precompute-bound inputs. Peaks rise on four inputs without a wall-time change, the largest 566 → ~990 MiB. Byte-identical action output on 1163 of 1524 corpus inputs at 17 s, the rest not comparable (timeout or translation OOM on both) | kept |
+| Explicit guard letters for at most 12 active APs (#314, PR #321) | Against #302: 06 9.1 → 6.5 s, collector_v3_pb_9 7.3 → 5.5 s, CPU −12% to −26% and peak −12% to −35% on four inputs. Byte-identical to #302 on 1167 corpus inputs, 0 mismatches; 10 not comparable, 3 of them one-sided near-cap at 17 s | kept |
+| Forward hash reuse, multimap state index, local row sums (#303, #306, #307, PR #317) | Same 31 solved; CPU −28% robot_grid_pb_4_4, −7% collector_v1_pb_9, −6% 05 | kept |
+| Integer class IDs in the symmetry search (#310, PR #318) | Same 31 solved; CPU −15% on collector_v1/v3_pb_9 | kept |
+| BuDDy node-table growth step as a build option (#301, PR #319) | At 4M nodes: 32 solved, PAR-2 530.8 s, CPU −6%; peaks +11% to +95% on 26 inputs (largest 2.23 → 2.93 GiB). 1M and 16M bracket it | kept off by default |
+| One SCC pass for saturation (#304) | Identical masks on 1524 automata; no gain; peak +21% on collector_v1_pb_9 | rejected, tag `provenance/perf-304-d9e85224` |
+| Absent thresholds returned uncached (#309) | CPU −6% on one input and +10% on another | rejected, tag `provenance/perf-309-d400ecc8` |
+| posets move storage and dropped bucket index (#305, #308; merged upstream as posets eb41f3d) | No separated gain; peak +19% on one timeout row | pin not bumped, tag `provenance/perf-305-308-72c545f5` |
+
+The SIMD switch description (#311, PR #315) changed text only and was not measured.
+
+Paired full corpus (1524 SYNTCOMP26 inputs, 17 s, eight chunks alternating which binary runs first), B0 against master 50a12cc7 with every kept change (CINT):
+
+| | Solved | Timeouts | PAR-2 (s) | CPU (s) | Largest peak |
+|---|---:|---:|---:|---:|---:|
+| B0 | 1334 | 190 | 7020.2 | 19193 | 5.22 GiB |
+| CINT | 1339 | 185 | 6878.5 | 18881 | 5.13 GiB |
+
+CINT gains 06, 07, Alarm_a5f99bc6, amba_case_study_unreal_pb_2 and collector_v2_pb_15, and loses none. No verdict is opposite, and no input is more than 1 s and 10% slower. The 142 s PAR-2 drop is far outside the 12.1 s noise floor. Wall times halve on several precompute-bound solves: 06 17.0 → 6.7 s, collector_v3_pb_9 9.2 → 3.8 s, 05 12.1 → 5.8 s, 09 7.4 → 3.7 s. Without a regression to resolve, no 60 s pass was run. The byte-identity checks beyond 17 s were stopped early by the owner's call. #302's 60 s rerun finished 101 of its 356 undecided inputs: 19 newly identical, 79 still timing out on both sides, 3 finishing on one side only, no mismatch. #314's check skipped the 347 inputs on which #302's own 17 s check timed out on both sides.
+
+Gates on CINT: G0, G1 (40/40 against B0, no verdict change or coverage loss), G2s (proxy pass to G3: geometric mean 2.35% better, best target 10.24%), G3 (both panels pass), G4 and G5 (1579 inputs, no opposite verdict or frontend error) pass.
+
+BDD node creation inside Spot's translation still dominates the slow grid and workstation inputs, which none of these changes touch.
+
 ## 2026-10-21 — Leaner TLSF preparation and forward results, no corpus speedup
 
 Archive `refopt-20261021`; master d3746918 frozen as the control (B0), the shipping configuration `otf_sparse_formula_parity`, serial 8 GiB scopes, CPU time collected. Screens used a 24-input panel picked from `costmodel-20261020` and `spotfast-ablation-20261019` labels (forward-search, sparse-proof, large-source, Moore, near-cap and control inputs), full portfolio, 17 s, three rotated reps per binary.
