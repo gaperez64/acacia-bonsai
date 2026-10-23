@@ -298,6 +298,19 @@ int main () {
                       g.aut, g.inputs, g.outputs) ());
       compare (g, ios_precomputers::detail::mona<spot::twa_graph_ptr, transitions, true> (
                       g.aut, g.inputs, g.outputs) ());
+      auto computer = ios_precomputers::detail::mona<spot::twa_graph_ptr, transitions, true> (
+          g.aut, g.inputs, g.outputs);
+      const auto baseline = computer.symbolic ();
+      const auto letters = computer ();
+      check (baseline == letters, "explicit letter input/action/endpoint order differs");
+      auto reference = actioners::standard<state>::make (g.aut, baseline, 3);
+      auto explicit_actions = actioners::standard<state>::make (g.aut, letters, 3);
+      check (trace<input_pickers::critical> (g, reference) ==
+                 trace<input_pickers::critical> (g, explicit_actions),
+             "explicit letter critical picker/splice trace differs");
+      check (trace<input_pickers::critical_pq> (g, reference) ==
+                 trace<input_pickers::critical_pq> (g, explicit_actions),
+             "explicit letter priority picker/splice/RNG trace differs");
       using old = actioners::payload_reference::standard<state>;
       using compact = actioners::standard<state>;
       check (solve_trace<old, false> (g) == solve_trace<compact, false> (g),

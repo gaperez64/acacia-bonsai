@@ -144,6 +144,83 @@ namespace {
             precompute<ios_precomputers::semantic_mona> (empty).empty ());
   }
 
+  void check_explicit_letters () {
+    auto check = [&] (const std::string& name, const fixture& fx, bool admitted = true) {
+      auto computer = ios_precomputers::detail::mona<spot::twa_graph_ptr, transset, true> (
+          fx.aut, fx.all_inputs, fx.all_outputs);
+      const auto letters = computer.explicit_letters ();
+      expect (name + ": admission", letters.has_value () == admitted);
+      const auto baseline = computer.symbolic ();
+      expect (name + ": ordered identity", computer () == baseline);
+      if (letters)
+        expect (name + ": explicit ordered identity", *letters == baseline);
+    };
+    fixture fx;
+    fx.aut = spot::make_twa_graph (spot::make_bdd_dict ());
+    fx.aut->new_states (3);
+    fx.all_inputs &= bdd_ithvar (fx.aut->register_ap ("unused-input"));
+    const bdd x = bdd_ithvar (fx.aut->register_ap ("x"));
+    const bdd y = bdd_ithvar (fx.aut->register_ap ("y"));
+    fx.all_inputs &= x & y;
+    fx.all_outputs &= bdd_ithvar (fx.aut->register_ap ("unused-output"));
+    fx.aut->new_edge (0, 1, bddtrue);
+    fx.aut->new_edge (0, 2, x | y);
+    fx.aut->new_edge (0, 2, x);
+    fx.aut->new_edge (1, 0, bddfalse);
+    check ("unused APs, overlapping guards and conditional input split", fx);
+    expect ("conditional split keeps three cubes",
+            precompute<ios_precomputers::semantic_mona> (fx).size () == 3);
+
+    fixture different_outputs = make_aut (2, false);
+    check ("output and endpoint order", different_outputs);
+    fixture duplicating = make_aut (3, true);
+    check ("first occurrence of disjunctive outputs", duplicating);
+
+    fixture empty;
+    empty.aut = spot::make_twa_graph (spot::make_bdd_dict ());
+    empty.aut->new_state ();
+    check ("empty alphabet and relation", empty);
+    empty.aut->new_edge (0, 0, bddtrue);
+    check ("true guard and empty letter", empty);
+    const int unused0 = empty.aut->register_ap ("unused0");
+    const int unused1 = empty.aut->register_ap ("unused1");
+    bdd_swapvar (unused0, unused1);
+    check ("reordered BDD fallback", empty, false);
+    bdd_swapvar (unused0, unused1);
+
+    fixture large;
+    large.aut = spot::make_twa_graph (spot::make_bdd_dict ());
+    large.aut->new_state ();
+    for (unsigned j = 0; j < 12; ++j)
+      large.all_inputs &= bdd_ithvar (large.aut->register_ap ("i" + std::to_string (j)));
+    large.aut->new_edge (0, 0, large.all_inputs);
+    check ("twelve active APs", large);
+    for (unsigned j = 0; j < 2200; ++j)
+      large.aut->new_edge (0, 0, bddtrue);
+    check ("endpoint byte bound fallback", large, false);
+    large.all_inputs &= bdd_ithvar (large.aut->register_ap ("thirteenth"));
+    large.aut->new_edge (0, 0, large.all_inputs);
+    check ("active AP bound fallback", large, false);
+  }
+
+  void check_large_global_pool () {
+    const auto dict = spot::make_bdd_dict ();
+    int owner = 0;
+    dict->register_anonymous_variables (1100, &owner);
+    dict->unregister_all_my_variables (&owner);
+    const auto aut = spot::make_twa_graph (dict);
+    aut->new_state ();
+    const bdd x = bdd_ithvar (aut->register_ap ("x"));
+    const bdd y = bdd_ithvar (aut->register_ap ("y"));
+    aut->new_edge (0, 0, x | y);
+    auto computer = ios_precomputers::detail::mona<spot::twa_graph_ptr, transset, true> (
+        aut, x & y, bddtrue);
+    expect ("large global pool: symbolic fallback", not computer.explicit_letters ());
+    const auto baseline = computer.symbolic ();
+    expect ("large global pool: two ordered input classes", baseline.size () == 2);
+    expect ("large global pool: ordered identity", computer () == baseline);
+  }
+
   /// Every input class of `full`, with its transition sets, keeping the first
   /// occurrence of each distinct set and preserving order.
   std::vector<std::vector<transset>> dedup_first (
@@ -288,6 +365,7 @@ namespace {
 
 int main () {
   check_endpoint_order ();
+  check_explicit_letters ();
   // A disjunctive grant: three output branches reach one endpoint relation.
   const fixture duplicating = make_aut (3, true);
   // Partitioned destinations: every branch reaches a different relation.
@@ -323,6 +401,8 @@ int main () {
   check_verdicts_agree ("duplicating", duplicating);
   check_verdicts_agree ("distinct", distinct);
   check_verdicts_agree ("with-tail", with_tail);
+
+  check_large_global_pool ();
 
   if (failures != 0) {
     std::cerr << failures << " check(s) failed\n";

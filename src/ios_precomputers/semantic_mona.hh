@@ -8,8 +8,8 @@
 // residual BDD node.  BuDDy nodes are canonical, so those paths denote the same
 // endpoint relation and decode to identical transition sets; the controller
 // predecessor unions over outputs and union is idempotent, so keeping one copy
-// cannot change the fixed point.  This selects that behaviour on the shared
-// traversal, so there is one implementation of the descent and not two.
+// cannot change the fixed point. The symbolic fallback shares MONA's traversal;
+// the bounded letter path preserves its reductions and first-occurrence order.
 //
 // The quotient keeps the FIRST occurrence of each residual root, which leaves a
 // subsequence of the order `mona` already produces.  That matters: the input
