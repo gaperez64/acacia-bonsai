@@ -600,7 +600,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     expected = [
         "-DACACIA_TRANSLATION_PREF=spot::postprocessor::Any",
         "-DACACIA_TRANSLATION_PREFS=spot::postprocessor::Any",
-        "-DACACIA_BDD_MAX_INCREASE=0",
+        "-DACACIA_BDD_MAX_INCREASE=4194304",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",
         "-DSIMD_IS_MAX=false",
         "-DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed",

@@ -12,6 +12,19 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-23 — A 4M-node BuDDy growth step solves four more inputs
+
+Archive `bddgrowth-20261023` (release `evidence-2026-10-23-bddgrowth`). The sprint above left BuDDy's node-table growth step (#301) off by default. To choose one, the owner asked for a full-corpus run that ships 4M nodes only if no input loses a solve, flips its verdict or gains a resource failure. Paired full corpus (1524 SYNTCOMP26 inputs, 17 s, eight chunks alternating which binary runs first, each call in its own 8 GiB scope with no swap), master 50a12cc7 (step off) against 327c23db (default 4M nodes), configuration `otf_sparse_formula_parity`:
+
+| | Solved | Timeouts | PAR-2 (s) | CPU (s) | Largest peak |
+|---|---:|---:|---:|---:|---:|
+| step off (50a12cc7) | 1338 | 186 | 6895.6 | 18887 | 5.11 GiB |
+| 4M nodes (327c23db) | 1342 | 182 | 6792.7 | 18468 | 5.38 GiB |
+
+The 4M build gains 08, amba_case_study_unreal_pb_2, robot-grid-reach-repeated-with-obstacles-6d-real and round_robin_arbiter_unreal1_pb_4_7, all solved between 15.3 and 16.7 s, and loses none. No verdict is opposite and no input hits a resource limit. The 103 s PAR-2 drop is outside the 12.1 s noise floor, but it rests on near-cap solves: amba_case_study_unreal_pb_2 was also solved by 50a12cc7 in the sprint run above (1339 there, 1338 here). Wall time improves by 4–5 s on finding_nemo_pb_5, collector_v2_pb_15, ltl2dba_theta_pb_16 and load_balancer_unreal1_pb_5_5. One input is more than 1 s and 10% slower (amba_decomposed_arbiter_pb_6, 3.1 → 4.4 s). Memory is the cost: scope peaks rise more than 10% and 64 MiB on 205 inputs and fall on one. The median ratio is 1.31 on inputs that peaked above 256 MiB, and the largest ratio is 2.45, and the largest rise is finding_nemo_pb_7 at 1.36 → 3.32 GiB. All peaks stay below 5.4 GiB.
+
+The default is now 4M nodes; `-Dacacia_bdd_max_increase=0` keeps Spot's own step.
+
 ## 2026-10-23 — Cheaper MONA decoding solves five more inputs
 
 Archive `perf-20261022` (release `evidence-2026-10-23-perf`). This sprint resolved the SIMD and memory review issues (#301–#311, #314; review evidence `perfreview-20261022` and `perfreview-followup-20261022`). Control B0 is master 1ee199bf, frozen; configuration `otf_sparse_formula_parity`. Every solver call ran in its own 8 GiB scope with no swap, serially, with CPU time collected. Each candidate was screened on a 42-input panel picked from the review's measured behaviour (precompute-bound, translation-bound, forward and backward search, sparse UNREAL, large-AP and fast controls) with the full portfolio at 17 s and three alternating reps per binary. The keep rule asked for no verdict change, no new resource failure, and a CPU or peak gain that separates across reps on the inputs the issue targets.

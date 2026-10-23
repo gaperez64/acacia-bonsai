@@ -29,7 +29,7 @@ option('acacia_translation_pref', type: 'combo',
        value: 'small',
        description: 'Spot translator postprocessor preference list for realizability checks')
 
-option('acacia_bdd_max_increase', type: 'integer', value: 0, min: 0, max: 16777216,
+option('acacia_bdd_max_increase', type: 'integer', value: 4194304, min: 0, max: 16777216,
        description: 'Maximum BDD nodes added when the node table grows; ' +
                     '0 keeps Spot\'s default')
 

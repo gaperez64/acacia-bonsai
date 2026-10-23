@@ -115,13 +115,13 @@ def check_native_abort_race(binary: Path, source: Path, directory: Path) -> None
         os.write(gate_write, b"1")
         stdout, stderr = process.communicate(timeout=15)
         assert process.returncode == 0 and stdout.strip() == "REALIZABLE", (stdout, stderr)
-        assert "panicked" in stderr, stderr
+        assert "panicked" not in stderr, stderr
     finally:
         os.close(gate_write)
         if process.poll() is None:
             os.killpg(process.pid, signal.SIGKILL)
             process.wait(timeout=5)
-    print("OxiDD constructor abort reaped as native failure; healthy sibling REALIZABLE")
+    print("OxiDD constructor failure reaped as native failure; healthy sibling REALIZABLE")
 
 
 def main() -> None:
