@@ -403,7 +403,8 @@ namespace {
             lazy_duplicate.raw_actions == 1
                 and lazy_duplicate.forward_actions_skipped == 2
                 and lazy_duplicate.distinct_successors == 1
-                and lazy_duplicate.minimal_successors == 1);
+                and lazy_duplicate.minimal_successors == 1
+                and lazy_duplicate.intern_hits == 1);
     const action_vec unsafe_boolean =
         make_action (3, {{1, 0, true}, {1, 1, true}});
     const action_vec safe_boolean =
@@ -595,6 +596,42 @@ namespace {
               << '\n';
   }
 
+  void check_hash_collisions () {
+    using acacia::solver_detail::forward_reachable_detail::coordinate_hash;
+    const state first = as_solver_state (vec ({0, -1}));
+    const state collision = as_solver_state (vec ({-1, 62}));
+    expect ("hash collision: unequal ranks have the same coordinate hash",
+            first != collision and coordinate_hash (first) == coordinate_hash (collision));
+
+    const action_vec step = make_action (2, {{0, 1, false}, {1, 0, true}});
+    const action_vec self = make_action (2, {{0, 0, false}, {1, 1, false}});
+    const tiny_game game = make_game (2, static_cast<VECTOR_ELT_T> (64), {{step, step}, {self}});
+    for (const bool antichain : {false, true}) {
+      const auto result = solve_f1 (
+          game, 2, vec ({0, -1}), {}, antichain, forward_snapshot::capture);
+      expect ("hash collision: distinct ranks still reach the losing boundary",
+              result.status == acacia::solver_detail::forward_result_status::lose_k
+                  and result.env_nodes == 127);
+      expect ("hash collision: self loops reuse existing states",
+              result.intern_hits == 126);
+      expect ("hash collision: index accounts for every colliding entry",
+              result.hash_index_bytes
+                  == result.env_nodes * sizeof (std::pair<const std::uint64_t, std::size_t>));
+      if (expect ("hash collision: replay retains all states", result.snapshot.has_value ())) {
+        const auto& ranks = result.snapshot->env_ranks;
+        if (expect ("hash collision: snapshot preserves node count", ranks.size () == 127))
+          for (std::size_t id = 0; id < ranks.size (); ++id) {
+            const auto expected = id % 2 == 0
+                                      ? vec ({static_cast<int> (id / 2), -1})
+                                      : vec ({-1, static_cast<int> ((id + 1) / 2)});
+            expect ("hash collision: state IDs retain discovery order",
+                    ranks[id] == as_solver_state (expected));
+          }
+      }
+      expect ("hash collision: losing proof replays", replay_losing_proof (game, 2, result));
+    }
+  }
+
   void check_resource_limit_is_inconclusive () {
     const action_vec self = make_action (1, {{0, 0, false}});
     const tiny_game game =
@@ -678,6 +715,20 @@ namespace {
     expect ("F1 byte accounting: initial rank and hash index are counted",
             lazy.rank_bytes != 0 and lazy.environment_node_bytes != 0
                 and lazy.hash_index_bytes != 0);
+    expect ("F1 byte accounting: hash index stores one pair per environment",
+            lazy.hash_index_bytes
+                == lazy.env_nodes * sizeof (std::pair<const std::uint64_t, std::size_t>));
+
+    const f1_result complete = solve_f1 (game, 1, vec ({0}));
+    for (const bool below : {false, true}) {
+      acacia::solver_detail::forward_limits boundary;
+      boundary.max_total_bytes = complete.total_bytes - (below ? 1 : 0);
+      const auto result = solve_f1 (game, 1, vec ({0}), boundary);
+      expect ("F1 byte accounting: exact total-byte cap boundary",
+              result.status == (below
+                                    ? acacia::solver_detail::forward_result_status::resource_limit
+                                    : acacia::solver_detail::forward_result_status::win_k));
+    }
 
     acacia::solver_detail::forward_limits rank_byte_limits;
     rank_byte_limits.max_rank_bytes = 0;
@@ -737,6 +788,7 @@ int main () {
   check_antichain_rank_prefilter ();
   check_hand_written_games ();
   check_random_agreement ();
+  check_hash_collisions ();
   check_resource_limit_is_inconclusive ();
 
   if (failures != 0) {

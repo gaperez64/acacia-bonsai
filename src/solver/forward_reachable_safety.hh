@@ -137,9 +137,8 @@ namespace acacia::solver_detail {
               typename Actioner>
     class forward_search {
         using state = typename SetOfStates::value_type;
-        using env_id_bucket = std::vector<std::size_t>;
         using env_hash_index =
-            std::unordered_map<std::uint64_t, env_id_bucket>;
+            std::unordered_multimap<std::uint64_t, std::size_t>;
 
         struct queued_node {
             bool controller;
@@ -296,14 +295,6 @@ namespace acacia::solver_detail {
         }
 
 
-        void account_hash_index_entry (bool new_bucket) {
-          if (new_bucket)
-            account_bytes (hash_index_bytes,
-                           sizeof (typename env_hash_index::value_type));
-          account_bytes (hash_index_bytes, sizeof (std::size_t));
-        }
-
-
         [[nodiscard]] static std::size_t saturated_sum (
             std::initializer_list<std::size_t> terms) {
           const auto maximum = std::numeric_limits<std::size_t>::max ();
@@ -349,23 +340,15 @@ namespace acacia::solver_detail {
 
         [[nodiscard]] std::optional<std::size_t> find_env (
             const state& rank, std::uint64_t hash) const {
-          const auto found = interned_envs.find (hash);
-          if (found == interned_envs.end ())
-            return std::nullopt;
+          const auto [first, last] = interned_envs.equal_range (hash);
           // The hash selects only a small candidate bucket.  Identity is
           // decided by this exact coordinate comparison; it cannot be skipped,
           // because a 64-bit hash collision must never merge unequal states.
-          for (const std::size_t env_id : found->second)
-            if (env_nodes[env_id].rank == rank)
-              return env_id;
+          for (auto entry = first; entry != last; ++entry)
+            if (env_nodes[entry->second].rank == rank)
+              return entry->second;
           return std::nullopt;
         }
-
-        [[nodiscard]] std::optional<std::size_t> find_env (
-            const state& rank) const {
-          return find_env (rank, coordinate_hash (rank));
-        }
-
 
         std::size_t append_losing_proof (
             losing_reason reason, std::size_t node, std::size_t witness = 0,
@@ -456,6 +439,11 @@ namespace acacia::solver_detail {
         std::size_t intern_env (state rank) {
           const std::uint64_t hash = coordinate_hash (rank);
           const auto found = find_env (rank, hash);
+          return intern_env (std::move (rank), hash, found);
+        }
+
+        std::size_t intern_env (state rank, std::uint64_t hash,
+                                std::optional<std::size_t> found) {
           if (found.has_value ()) {
             ++intern_hits;
             return *found;
@@ -467,9 +455,8 @@ namespace acacia::solver_detail {
           account_bytes (
               environment_node_bytes, sizeof (forward_env_node<state>));
           account_rank (env_nodes[env_id].rank);
-          auto [bucket, new_bucket] = interned_envs.try_emplace (hash);
-          bucket->second.push_back (env_id);
-          account_hash_index_entry (new_bucket);
+          interned_envs.emplace (hash, env_id);
+          account_bytes (hash_index_bytes, sizeof (typename env_hash_index::value_type));
           if (not is_safe (env_nodes[env_id].rank))
             mark_environment_losing (env_id, losing_reason::env_unsafe);
           else {
@@ -599,7 +586,8 @@ namespace acacia::solver_detail {
               continue;
             }
 
-            const auto known_env = find_env (successor);
+            const std::uint64_t hash = coordinate_hash (successor);
+            const auto known_env = find_env (successor, hash);
             if (known_env.has_value ()
                 and std::ranges::contains (ctrl.tried_env_ids, *known_env)) {
               ++choice_switches;
@@ -621,7 +609,7 @@ namespace acacia::solver_detail {
               return false;
 
 
-            const std::size_t env_id = intern_env (std::move (successor));
+            const std::size_t env_id = intern_env (std::move (successor), hash, known_env);
             ctrl.tried_env_ids.push_back (env_id);
             account_bytes (
                 reverse_dependency_bytes, sizeof (std::size_t));
