@@ -11,6 +11,7 @@
 #include <bit>
 #include <chrono>
 #include <list>
+#include <memory>
 #include <numeric>
 #include <spot/twa/bdddict.hh>
 #include <vector>
@@ -90,17 +91,20 @@ namespace ios_precomputers {
 
           // When the pq part of the BDD is reached, iterate through all its
           // satisfying valuations, decode the src and dst.
-          auto add_src_dst = [&] (this const auto& self, TransSet& ts, bdd src_dsts) {
-            for (auto mt : minterms_of (src_dsts, bdd_state_vars)) {
+          auto add_src_dst = [&] (TransSet& ts, bdd src_dsts) {
+            std::unique_ptr<mintermEnumerator, decltype (&bdd_free_minterm)> mt (
+                bdd_init_minterm (src_dsts, bdd_state_vars), bdd_free_minterm);
+            if (not mt)
+              throw std::bad_alloc ();
+            for (int more = bdd_first_minterm (mt.get ()); more;
+                 more = bdd_next_minterm (mt.get ())) {
               acacia::equivariance_budget::checkpoint ();
               unsigned from = 0, to = 0;
-              while (mt != bddtrue) {
-                bool true_lit = (bdd_low (mt) == bddfalse);
-                if (bdd_var (mt) < first_dst_var)
-                  from = (from << 1) | true_lit;
-                else
-                  to = (to << 1) | true_lit;
-                mt = true_lit ? bdd_high (mt) : bdd_low (mt);
+              for (int i = 0; i < mt->nvars; ++i) {
+                // BuDDy encodes false as ~var, true as var, in BDD level order.
+                const int var = mt->vars[i];
+                auto& endpoint = (var < 0 ? ~var : var) < first_dst_var ? from : to;
+                endpoint = (endpoint << 1) | (var >= 0);
               }
               ts.emplace_back (from, to);
             }

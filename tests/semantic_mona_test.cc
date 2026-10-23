@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <map>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -112,6 +113,35 @@ namespace {
   auto precompute (const fixture& fx) {
     return (Precomputer::template make<spot::twa_graph_ptr, transset> (
         fx.aut, fx.all_inputs, fx.all_outputs)) ();
+  }
+
+  void check_endpoint_order () {
+    for (unsigned n : {1, 2, 3, 4, 5, 8, 9, 257}) {
+      fixture fx;
+      fx.aut = spot::make_twa_graph (spot::make_bdd_dict ());
+      fx.aut->new_states (n);
+      // Exercise variable zero as well as unused APs before the state variables.
+      if (n > 3)
+        fx.all_inputs = bdd_ithvar (fx.aut->register_ap ("unused"));
+      transset expected;
+      for (unsigned from = 0; from < n; ++from)
+        for (unsigned to = 0; to < n; ++to)
+          if (n < 257 or (from % 128 == 0 and to % 128 == 0))
+            expected.emplace_back (from, to);
+      for (auto [from, to] : std::views::reverse (expected))
+        fx.aut->new_edge (from, to, bddtrue);
+
+      const auto full = precompute<ios_precomputers::mona> (fx);
+      const auto quot = precompute<ios_precomputers::semantic_mona> (fx);
+      expect ("ordered endpoints at " + std::to_string (n) + " states",
+              full == quot and full.size () == 1 and full.front ().first == bddtrue and
+                  full.front ().second == std::list<transset> {expected});
+    }
+    fixture empty;
+    empty.aut = spot::make_twa_graph (spot::make_bdd_dict ());
+    empty.aut->new_state ();
+    expect ("false endpoint relation",
+            precompute<ios_precomputers::semantic_mona> (empty).empty ());
   }
 
   /// Every input class of `full`, with its transition sets, keeping the first
@@ -257,6 +287,7 @@ namespace {
 }  // namespace
 
 int main () {
+  check_endpoint_order ();
   // A disjunctive grant: three output branches reach one endpoint relation.
   const fixture duplicating = make_aut (3, true);
   // Partitioned destinations: every branch reaches a different relation.
