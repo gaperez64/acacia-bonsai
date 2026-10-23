@@ -5,6 +5,7 @@
 #include "posets/vectors/traits.hh"
 #include "solver/accounting_identity.hh"
 #include "solver/ap_partition.hh"
+#include "solver/bdd_config.hh"
 #include "solver/configured_components.hh"
 #include "solver/controller_check.hh"
 #include "solver/controller_writer.hh"
@@ -211,6 +212,8 @@ namespace {
                          const std::optional<std::string>& synth_fname,
                          controller_conversion conversion) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
+    if constexpr (ACACIA_BDD_MAX_INCREASE > 0)
+      acacia::configure_bdd ();
     int owner = 0;
     struct owner_cleanup {
         spot::bdd_dict_ptr dict;
@@ -1175,6 +1178,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // We keep a bdd_dict at this level so that we can do synthesis later if
   // needed. We want BDDs for APs to be consistent through subformula/automata.
   spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
+  if constexpr (ACACIA_BDD_MAX_INCREASE > 0)
+    acacia::configure_bdd ();
 
 #if ACACIA_SPOT_GUARDED_BACKEND
   // bdd_init installs its own hook. Install ours after manager initialization

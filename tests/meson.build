@@ -167,6 +167,14 @@ test ('translator-options',
       translator_options_test,
       suite : ['unit', 'translator-options'])
 
+foreach increase : [0, 16777216]
+  bdd_config_test = executable ('bdd-config-' + increase.to_string (), 'bdd_config_test.cc',
+                               include_directories : inc,
+                               dependencies : [spot_dep, bddx_dep],
+                               cpp_args : ['-DACACIA_BDD_MAX_INCREASE=' + increase.to_string ()])
+  test ('bdd-config-' + increase.to_string (), bdd_config_test, suite : ['unit', 'bdd-config'])
+endforeach
+
 guarded_event_univ_test = executable ('guarded-event-univ-test',
                                       'guarded_event_univ_test.cc',
                                       include_directories : inc,

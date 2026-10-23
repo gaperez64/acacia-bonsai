@@ -1,6 +1,7 @@
 #include "solver/obligation_helper.hh"
 
 #include "solver/accounting_identity.hh"
+#include "solver/bdd_config.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/synthesis_rendezvous.hh"
 #include <unordered_set>
@@ -100,6 +101,8 @@ namespace acacia::obligation {
                       : "obligation:simplify_terms=true:debug=-1:decision=true",
             semantics == timing::mealy ? "mealy:inputs-first" : "moore:outputs-first");
       auto dict = spot::make_bdd_dict ();
+      if constexpr (ACACIA_BDD_MAX_INCREASE > 0)
+        configure_bdd ();
       int owner = 0;
       struct cleanup {
           spot::bdd_dict_ptr dict;

@@ -1,5 +1,6 @@
 #include "solver/parity/route.hh"
 
+#include "solver/bdd_config.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/spot_nba_fastpath.hh"
 #include "solver/synthesis_rendezvous.hh"
@@ -109,6 +110,8 @@ namespace acacia::parity_route {
       check_aps (input.formula);
     spot::twa_graph_ptr aut = input.automaton;
     auto dictionary = aut ? aut->get_dict () : spot::make_bdd_dict ();
+    if constexpr (ACACIA_BDD_MAX_INCREASE > 0)
+      configure_bdd ();
     input.automaton.reset ();
     auto stage = [&] (const char* name, auto action) {
       if (observe)

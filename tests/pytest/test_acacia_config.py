@@ -600,6 +600,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     expected = [
         "-DACACIA_TRANSLATION_PREF=spot::postprocessor::Any",
         "-DACACIA_TRANSLATION_PREFS=spot::postprocessor::Any",
+        "-DACACIA_BDD_MAX_INCREASE=0",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",
         "-DSIMD_IS_MAX=false",
         "-DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed",
@@ -689,6 +690,18 @@ def test_validate_preset_rejects_invalid_choice_value():
                 module.validate_preset(options, presets, "bad")
 
 
+@pytest.mark.parametrize("value", [0, 16777216, -1, 16777217, 2147483647, True, "1"])
+def test_bdd_growth_bounds(value):
+    module = load_module()
+    options, _ = module.load_registry()
+    presets = {"presets": {"growth": {"bdd_max_increase": value}}}
+    if type(value) is int and 0 <= value <= 16777216:
+        module.validate_preset(options, presets, "growth")
+    else:
+        with pytest.raises(SystemExit, match="growth: invalid bdd_max_increase="):
+            module.validate_preset(options, presets, "growth")
+
+
 @pytest.mark.parametrize("count", [0, 3, 5])
 def test_config_validation_requires_exactly_four_shipping_members(count):
     module = load_module()
@@ -715,6 +728,7 @@ def test_kept_presets_are_flat_and_each_selector_varies():
     resolved = [module.normalize_preset(options, presets, name) for name in presets["presets"]]
     for section in ("options", "families"):
         for name, option in options[section].items():
-            if name in {"preset"}:
+            # BDD growth remains an opt-in experiment pending memory/coverage gates.
+            if name in {"preset", "bdd_max_increase"}:
                 continue
             assert any(values[name] != option["default"] for values in resolved), name
