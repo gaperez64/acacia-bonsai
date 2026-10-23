@@ -1,5 +1,24 @@
 # Acacia-Bonsai changelog
 
+## 2.7.0 (2026-10-23)
+
+- **Faster MONA preparation.** The semantic MONA precomputer reads transition
+  endpoints straight from BuDDy's minterm assignments (#320) and, with at most 12
+  active APs, builds actions from explicit guard letters (#321); output is
+  byte-identical. Paired with the code before these changes at 17 s on the
+  1,524-input SYNTCOMP26 corpus, five more inputs are decided (1,334 → 1,339) and
+  none are lost (evidence `perf-20261022`).
+- **BuDDy grows its node table by up to 4M nodes** instead of Spot's 512K
+  (`-Dacacia_bdd_max_increase`, 0 keeps Spot's step; #319, #324). Four more
+  inputs are decided in the same paired setting (1,338 → 1,342), none lost; peak
+  memory rises on 205 inputs, at most 5.4 GiB (evidence `bddgrowth-20261023`).
+- Smaller forward-search and symmetry-search costs (#317, #318).
+- OxiDD moves to upstream main: worker stacks fit `RLIMIT_AS`, and a failed
+  manager construction is a clean native failure instead of a panic.
+  tlsf-tools and posets move to their main branches.
+- The bundled yyjson links statically (#291); child-signal records are written
+  atomically (#316).
+
 ## 2.6.1 (2026-10-18)
 
 - Tier 4 of the parity arm solves its ACD parity game directly with Spot; the
