@@ -655,6 +655,14 @@ if ltlsynt_exe.found () and get_option ('acacia_spot_guarded_backend')
         suite : ['unit', 'tlsf', 'translation'], timeout : 60)
 endif
 
+symmetry_search_test = executable ('symmetry-search-test',
+                                    'symmetry_search_test.cc',
+                                    include_directories : inc,
+                                    dependencies : [spot_dep, bddx_dep])
+test ('symmetry-search',
+      symmetry_search_test,
+      suite : ['unit', 'symmetry'])
+
 symmetry_blocks_test = executable ('symmetry-blocks-test',
                                     'symmetry_blocks_test.cc',
                                     include_directories : inc,
