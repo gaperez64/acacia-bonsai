@@ -13,7 +13,6 @@
 #include "solver/solver_invoker.hh"
 
 #include <spot/tl/parse.hh>
-#include <tlsf/process.h>
 #ifdef __linux__
 # include <sys/prctl.h>
 #endif
@@ -1047,10 +1046,6 @@ namespace {
 }
 
 int main (int argc, char** argv) {
-  if (tlsf_oxidd_configure_process_stack () != 0) {
-    std::perror ("configure OxiDD process stack");
-    return EXIT_CODE_ERROR;
-  }
   acacia::phase_records_start_writer ();
   // parse all arguments that were passed
   acacia::phase_scope argument_phase ("legacy_parent", "argument_handling_total");

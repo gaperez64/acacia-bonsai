@@ -65,21 +65,21 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G o; } }
         assert "panicked" not in result.stderr, result
         print("RLIMIT_AS=512 MiB, OXIDD_STACK_SIZE=8 MiB, both:gr1:oxidd: REALIZABLE")
 
-        # The infallible Rust constructor aborts when its stack cannot fit.
-        # The inherited child SIGABRT handler exits UNKNOWN (code 2); a lone
-        # native arm must contribute no verdict. The portfolio-deadline test
+        # OxiDD returns an invalid manager when its stack cannot fit, so the
+        # lone native arm fails cleanly, exits UNKNOWN (code 2) and contributes
+        # no verdict. The portfolio-deadline test
         # separately covers workers killed by an unhandled signal.
         impossible_stack = 1024 * 1024 * 1024
         result = run(512, stack=impossible_stack, selected_arms="both:gr1:oxidd")
         assert result.returncode == 2, result
         assert result.stdout.strip() == "", result
         assert result.stderr.rstrip().endswith("UNKNOWN"), result
-        assert "panicked" in result.stderr, result
-        print("native-only OxiDD abort: parent exits normally with UNKNOWN")
+        assert "panicked" not in result.stderr, result
+        print("native-only OxiDD failure: parent exits normally with UNKNOWN")
 
         # Under the same conditions, the shipping race must accept a clean
         # sibling's verdict. A fast sibling may cancel native work before it
-        # reaches the constructor, so require the abort in the lone-arm case
+        # reaches the constructor, so require the failure in the lone-arm case
         # above and identify the actual default-portfolio winner here.
         assert "oxidd" in arms, arms
         records = Path(temporary) / "worker-records"
