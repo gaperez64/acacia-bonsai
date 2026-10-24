@@ -12,6 +12,18 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-24 — 2.7.0 against ltlsynt and 1.x at 60 s
+
+Archive `rel27-60-20261023` (release `evidence-2026-10-24-rel27`). For the v2.7.0 release notes, the release binary (ed481505, `otf_sparse_formula_parity`) reran the 182 inputs that timed out at 17 s in `bddgrowth-20261023`, at 60 s, each call in its own 8 GiB scope with no swap. The 17 s rows of 327c23db keep their verdicts and times; 327c23db and ed481505 differ only in the dependency pins and the changelog. The ltlsynt 2.16 and 1.x (TACAS'23) rows are the archived 60 s rows from `threeway-syntcomp26-20261019`, derived the same way.
+
+| | Solved | REAL | UNREAL | Timeouts | PAR-2 (s) |
+|---|---:|---:|---:|---:|---:|
+| 2.7.0 | 1358 | 624 | 734 | 166 | 21057.3 |
+| ltlsynt 2.16 | 1290 | 594 | 696 | 230 | 29523.6 |
+| 1.x (TACAS'23) | 854 | 480 | 374 | 574 | 82407.0 |
+
+The rerun solves 16 more inputs (9 REAL, 7 UNREAL) with no resource failure. 2.7.0 decides 80 inputs ltlsynt does not and ltlsynt decides 12 that 2.7.0 does not; against 1.x the split is 513 to 9. No verdict disagrees with either tool or with the 2.6.0 rows.
+
 ## 2026-10-23 — A 4M-node BuDDy growth step solves four more inputs
 
 Archive `bddgrowth-20261023` (release `evidence-2026-10-23-bddgrowth`). The sprint above left BuDDy's node-table growth step (#301) off by default. To choose one, the owner asked for a full-corpus run that ships 4M nodes only if no input loses a solve, flips its verdict or gains a resource failure. Paired full corpus (1524 SYNTCOMP26 inputs, 17 s, eight chunks alternating which binary runs first, each call in its own 8 GiB scope with no swap), master 50a12cc7 (step off) against 327c23db (default 4M nodes), configuration `otf_sparse_formula_parity`:
