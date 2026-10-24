@@ -12,6 +12,19 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-24 — SemML decides fewer inputs than 2.7.0 at both caps
+
+Archive `semml-syntcomp26-20261024` (release `evidence-2026-10-24-semml`). SemML (gitlab.com/live-lab/software/semml at 20ad6ec7, default preset, `--target real`) was built with Temurin JDK 21 and run on the 1524 SYNTCOMP26 TLSF inputs at 17 s, then at 60 s on the 253 it left undecided, each call in its own 8 GiB scope with no swap. Its launcher asks for a 60 GiB heap; a wrapper caps it at 7 GiB and maps the printed verdict to exit codes, because SemML exits 0 on both. The 2.7.0, ltlsynt 2.16 and 1.x rows are those of the entry below.
+
+| | 17 s solved | 17 s PAR-2 (s) | 60 s solved | 60 s REAL | 60 s UNREAL | 60 s PAR-2 (s) |
+|---|---:|---:|---:|---:|---:|---:|
+| 2.7.0 | 1342 | 6792.7 | 1358 | 624 | 734 | 21057.3 |
+| SemML | 1271 | 11690.0 | 1334 | 591 | 743 | 27788.0 |
+| ltlsynt 2.16 | 1264 | 9420.7 | 1290 | 594 | 696 | 29523.6 |
+| 1.x (TACAS'23) | 812 | 24778.5 | 854 | 480 | 374 | 82407.0 |
+
+At 60 s, 2.7.0 decides 90 inputs SemML does not and SemML decides 66 that 2.7.0 does not (111 to 40 at 17 s). SemML decides more unrealizable inputs than 2.7.0 (743 to 734). Its fastest solve takes 0.47 s, mostly JVM start-up, which accounts for much of its PAR-2 gap on the easy inputs. No resource failure; the largest scope peak is 7.89 GiB. No verdict disagrees with any of the other three tools.
+
 ## 2026-10-24 — 2.7.0 against ltlsynt and 1.x at 60 s
 
 Archive `rel27-60-20261023` (release `evidence-2026-10-24-rel27`). For the v2.7.0 release notes, the release binary (ed481505, `otf_sparse_formula_parity`) reran the 182 inputs that timed out at 17 s in `bddgrowth-20261023`, at 60 s, each call in its own 8 GiB scope with no swap. The 17 s rows of 327c23db keep their verdicts and times; 327c23db and ed481505 differ only in the dependency pins and the changelog. The ltlsynt 2.16 and 1.x (TACAS'23) rows are the archived 60 s rows from `threeway-syntcomp26-20261019`, derived the same way.
