@@ -180,6 +180,19 @@
         }
       ]
     },
+    "spot_fm_otf_provider": {
+      "meson": "acacia_spot_fm_otf_provider",
+      "type": "boolean",
+      "default": true,
+      "description": "Compile the explicitly selected Spot 2.16 FM demand provider (requires the guarded backend)",
+      "macros": [
+        {
+          "name": "ACACIA_SPOT_FM_OTF_PROVIDER",
+          "emit": "always",
+          "encoding": "bool_int"
+        }
+      ]
+    },
     "spot_guarded_backend": {
       "meson": "acacia_spot_guarded_backend",
       "type": "boolean",

@@ -505,8 +505,8 @@ namespace {
         if (provider != acacia::automaton_provider::frozen_graph) {
           assert ((!check_unreal || *check_unreal == UNREAL_X_FORMULA) && !synth_fname);
           // This is the EXACT spot::formula the eager worker passes below to
-          // create_automaton(). The lazy branch performs no further adaptation.
-          if (acacia::is_closure_provider (provider))
+          // create_automaton(). FM also reproduces its translator preprocessing.
+          if (acacia::is_sparse_provider (provider))
             acacia::spot_lazy_worker::capture_boundary (
                 spot_formula, input_aps, output_aps, target_semantics,
                 acacia::spot_lazy_game::Reporter {[] (const auto& key, const auto& value) {
@@ -516,14 +516,14 @@ namespace {
                                        acacia::game_backend_name (effective_backend));
           const auto result = acacia::spot_lazy_worker::solve (
               spot_formula, dict, all_inputs, all_outputs, opt_kmin, opt_k, opt_kinc,
-              acacia::is_closure_provider (provider) ? acacia::spot_candidate_limits ()
+              acacia::is_sparse_provider (provider) ? acacia::spot_candidate_limits ()
                                                      : acacia::spot_taa_candidate_limits (),
               provider);
           if (result == acacia::spot_lazy_worker::Outcome::win)
             return acacia::diagnostics::finish (
                 true, std::string (acacia::automaton_provider_name (provider)) + "-verified-win");
           if (result != acacia::spot_lazy_worker::Outcome::unknown or
-              candidate == acacia::candidate_mode::only || acacia::is_closure_provider (provider))
+              candidate == acacia::candidate_mode::only || acacia::is_sparse_provider (provider))
             return acacia::diagnostics::finish (
                 false, std::string (acacia::automaton_provider_name (provider)) + "-inconclusive");
           // Release all candidate objects before rebuilding the existing graph
@@ -1054,10 +1054,14 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   }
   if (provider != acacia::automaton_provider::frozen_graph and
       ((check_unreal && *check_unreal != UNREAL_X_FORMULA) or
-       backend != (acacia::is_closure_provider (provider)
+       backend != (acacia::is_sparse_provider (provider)
                        ? acacia::game_backend::spot_guarded_sparse
                        : acacia::game_backend::spot_guarded)))
     std::abort ();
+#if !ACACIA_SPOT_FM_OTF_PROVIDER
+  if (provider == acacia::automaton_provider::spot_fm_otf)
+    std::abort ();
+#endif
 #if !ACACIA_SPOT_LAZY_PROVIDER
   if (provider == acacia::automaton_provider::spot_lazy ||
       provider == acacia::automaton_provider::spot_eager)

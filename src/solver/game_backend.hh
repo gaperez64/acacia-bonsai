@@ -16,13 +16,16 @@ namespace acacia {
 
   // Independent of the rank-game algorithm. Compiling a provider never
   // selects it for an existing arm.
-  enum class automaton_provider : unsigned char { frozen_graph, spot_lazy, spot_eager, closure_buchi, closure_buchi_eager };
+  enum class automaton_provider : unsigned char { frozen_graph, spot_lazy, spot_eager, closure_buchi, closure_buchi_eager, spot_fm_otf };
 
   inline bool is_closure_provider (automaton_provider p) {
     return p == automaton_provider::closure_buchi || p == automaton_provider::closure_buchi_eager;
   }
   inline bool is_eager_provider (automaton_provider p) {
     return p == automaton_provider::spot_eager || p == automaton_provider::closure_buchi_eager;
+  }
+  inline bool is_sparse_provider (automaton_provider p) {
+    return is_closure_provider (p) || p == automaton_provider::spot_fm_otf;
   }
   enum class candidate_mode : unsigned char { only, fallback };
 
@@ -33,6 +36,7 @@ namespace acacia {
       case automaton_provider::spot_eager: return "spot-eager";
       case automaton_provider::closure_buchi: return "closure-buchi";
       case automaton_provider::closure_buchi_eager: return "closure-buchi-eager";
+      case automaton_provider::spot_fm_otf: return "spot-fm-otf";
     }
     return "unknown";
   }
@@ -43,6 +47,7 @@ namespace acacia {
     if (name == "spot-eager") return automaton_provider::spot_eager;
     if (name == "closure-buchi") return automaton_provider::closure_buchi;
     if (name == "closure-buchi-eager") return automaton_provider::closure_buchi_eager;
+    if (name == "spot-fm-otf") return automaton_provider::spot_fm_otf;
     return std::nullopt;
   }
 

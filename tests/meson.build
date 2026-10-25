@@ -229,6 +229,14 @@ spot_lazy_buchi_view_test = executable (
 test ('spot-lazy-buchi-view', spot_lazy_buchi_view_test,
       suite : ['unit', 'spot-lazy'])
 
+if get_option ('acacia_spot_fm_otf_provider')
+  spot_fm_otf_test = executable (
+    'spot-fm-otf-provider-test', 'spot_fm_otf_provider_test.cc',
+    include_directories : inc,
+    dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
+  test ('spot-fm-otf-provider', spot_fm_otf_test, suite : ['unit', 'spot-fm-otf'])
+endif
+
 # The previous sprint's shared P6 engine compiles without either production
 # dispatch gate. Variants force each option on; internal callers also exercise
 # both states. The #ifndef guards let -D override the generated defaults.
@@ -457,6 +465,15 @@ game_backend_integration = executable (
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,
   install : false,
 )
+if get_option ('acacia_spot_fm_otf_provider')
+  foreach corpus_suite : ['tiny', 'small']
+    test ('spot-fm-otf-' + corpus_suite, py,
+          args : [files ('check-spot-fm-otf.py'), game_backend_integration,
+                  meson.project_source_root (), corpus_suite],
+          suite : ['unit', 'spot-fm-otf'], timeout : 900,
+          is_parallel : false, depends : [game_backend_integration])
+  endforeach
+endif
 if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release')
   portfolio_deadline_args = [files ('check-portfolio-deadline.py'), game_backend_integration,
                              meson.project_build_root ()]
@@ -495,7 +512,7 @@ test ('game-backend-integration', game_backend_cli,
               (compiler_profile == 'debug').to_string (),
               'only',
               '200000',
-              'false'],
+              get_option ('acacia_spot_fm_otf_provider').to_string ()],
       suite : ['unit', 'game-backend'], depends : [game_backend_integration])
 test ('spot-worker-boundary', py,
       args : [files ('check-spot-worker.py'), game_backend_integration],
@@ -507,7 +524,8 @@ test ('game-backend-cli',
               get_option ('acacia_spot_lazy_provider').to_string (),
               (compiler_profile == 'debug').to_string (),
               'only',
-              '200000'],
+              '200000',
+              get_option ('acacia_spot_fm_otf_provider').to_string ()],
       suite : ['unit', 'game-backend'],
       depends : [ab_exe])
 

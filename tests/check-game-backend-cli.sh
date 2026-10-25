@@ -11,6 +11,7 @@ verbose_enabled=${5:-true}
 # their configured defaults, so the same harness can check those end to end.
 candidate_default=${6:-only}
 taa_cap_default=${7:-}
+fm_enabled=${8:-false}
 
 run() {
     local wanted_status=$1
@@ -293,9 +294,13 @@ PY
     fi
 fi
 
-# Closure selection is independent of TAA and never falls back, even with the
+# Sparse provider selection is independent of TAA and never falls back, even with the
 # legacy fallback policy requested. Validate before workers or synthesis start.
-for provider in closure-buchi closure-buchi-eager; do
+sparse_providers=(closure-buchi closure-buchi-eager)
+if [[ $fm_enabled == true ]]; then
+    sparse_providers+=(spot-fm-otf)
+fi
+for provider in "${sparse_providers[@]}"; do
     if [[ $guarded_enabled == true ]]; then
         for transform in small any; do
             output=$(run 0 -f 'G(i <-> X(o))' -i i -o o -K 5 \
@@ -323,11 +328,11 @@ for provider in closure-buchi closure-buchi-eager; do
                 -f 'G(i <-> X(o))' -i i -o o -v --candidate-mode "$mode" \
                 --arms "real:small:spot-guarded-sparse:$provider")
             [[ $output != *'fallback provider='* && $output != *'REALIZABLE'* ]]
-            [[ $verbose_enabled != true || $output == *'closure-buchi:state_limit'* ]]
+            [[ $verbose_enabled != true || $provider == spot-fm-otf || $output == *'closure-buchi:state_limit'* ]]
         done
     else
         output=$(run 3 --real-provider "$provider")
         [[ $output == *'acacia_spot_guarded_backend=true'* ]]
     fi
 done
-printf '%s\n' 'PASS closure arm validation, TAA-independent selection, typed decline, no fallback'
+printf '%s\n' 'PASS sparse provider validation, TAA-independent selection, typed decline, no fallback'

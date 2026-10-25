@@ -78,7 +78,7 @@ void show_help (const char* program_name) {
       << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] "
          "game backend for real arms\n"
       << "  --real-provider VAL      use "
-         "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager] automaton "
+         "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager|spot-fm-otf] automaton "
          "provider (default frozen-graph)\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
          "requires frozen-graph\n"
@@ -99,7 +99,7 @@ void show_help (const char* program_name) {
       << "                    primary translation preference; mutually exclusive\n"
       << "                    with -r, -u, and per-polarity backend/translation options\n"
       << "                    provider options apply to arms without an explicit provider\n"
-      << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, "
+      << "                    closure-buchi[-eager]/spot-fm-otf: spot-guarded-sparse, real or unreal:formula, "
          "decision only\n"
       << "                    both:obligation:spot: syntactic obligations, "
          "trusted Spot synthesis;\n"
@@ -249,14 +249,20 @@ void process_arg_provider (const std::string& arg, acacia::automaton_provider& p
   if (not parsed)
     error (EXIT_CODE_ERROR,
            "Error: unexpected value %s for --%s; expected frozen-graph, spot-lazy or spot-eager, "
-           "closure-buchi or closure-buchi-eager.\n",
+           "closure-buchi, closure-buchi-eager or spot-fm-otf.\n",
            arg.c_str (), option);
   provider = *parsed;
 #if !ACACIA_SPOT_GUARDED_BACKEND
-  if (acacia::is_closure_provider (provider))
+  if (acacia::is_sparse_provider (provider))
     error (EXIT_CODE_ERROR,
-           "Error: closure-buchi requires a binary built with "
-           "-Dacacia_spot_guarded_backend=true.\n");
+           "Error: %s requires a binary built with "
+           "-Dacacia_spot_guarded_backend=true.\n",
+           acacia::automaton_provider_name (provider));
+#endif
+#if !ACACIA_SPOT_FM_OTF_PROVIDER
+  if (provider == acacia::automaton_provider::spot_fm_otf)
+    error (EXIT_CODE_ERROR,
+           "Error: spot-fm-otf requires -Dacacia_spot_fm_otf_provider=true.\n");
 #endif
 #if !ACACIA_SPOT_LAZY_PROVIDER
   if (provider == acacia::automaton_provider::spot_lazy ||
@@ -789,14 +795,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
           retval.arms->emplace_back (true, retval.primary_translation_pref, strategy,
                                      retval.unreal_backend);
     }
-    const bool closure =
-        acacia::is_closure_provider (retval.real_provider) ||
-        acacia::is_closure_provider (retval.unreal_provider) ||
+    const bool decision_only_provider =
+        acacia::is_sparse_provider (retval.real_provider) ||
+        acacia::is_sparse_provider (retval.unreal_provider) ||
         (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-           return arm.legacy && acacia::is_closure_provider (arm.legacy->provider);
+           return arm.legacy && acacia::is_sparse_provider (arm.legacy->provider);
          }));
-    if (closure)
-      error (EXIT_CODE_ERROR, "Error: closure-buchi does not support controller synthesis.\n");
+    if (decision_only_provider)
+      error (EXIT_CODE_ERROR, "Error: the selected provider does not support controller synthesis.\n");
     if (retval.arms.has_value ()) {
       bool kept_real_arm = false;
       std::erase_if (*retval.arms, [&kept_real_arm] (const portfolio_arm& arm) {
@@ -853,9 +859,10 @@ arg_parse_result arg_parser (int argc, char** argv) {
         error (EXIT_CODE_ERROR,
                "Error: unsupported configuration: the automaton-unreal route must remain eager; "
                "use frozen-graph or the formula-unreal route.\n");
-      if (acacia::is_closure_provider (legacy.provider)) {
+      if (acacia::is_sparse_provider (legacy.provider)) {
         if (legacy.backend != acacia::game_backend::spot_guarded_sparse)
-          error (EXIT_CODE_ERROR, "Error: closure-buchi requires spot-guarded-sparse.\n");
+          error (EXIT_CODE_ERROR, "Error: %s requires spot-guarded-sparse.\n",
+                 acacia::automaton_provider_name (legacy.provider));
       }
       else if (legacy.backend != acacia::game_backend::spot_guarded)
         error (EXIT_CODE_ERROR,

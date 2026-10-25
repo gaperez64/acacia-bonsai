@@ -6,6 +6,9 @@
 #include "solver/spot_candidate_limits.hh"
 #include "solver/spot_lazy_game.hh"
 #include "solver/spot_worker_record.hh"
+#if ACACIA_SPOT_FM_OTF_PROVIDER
+# include "solver/spot_fm_otf_provider.hh"
+#endif
 #include "utils/verbose.hh"
 
 #include <iomanip>
@@ -176,6 +179,7 @@ namespace acacia::spot_lazy_worker {
     const auto started = game::Clock::now ();
     game::Reporter report;
     const bool closure = is_closure_provider (selected);
+    const bool fm = selected == automaton_provider::spot_fm_otf;
     const bool eager = is_eager_provider (selected);
     const char* provider_name = automaton_provider_name (selected);
     const auto sink = [provider_name, closure] (const std::string& key, const std::string& value) {
@@ -203,10 +207,12 @@ namespace acacia::spot_lazy_worker {
       report.put ("worker_formula", text.str ());
     }
     report.put ("provider", provider_name);
-    report.put ("backend", closure ? "spot-guarded-sparse" : "spot-guarded");
-    report.put ("construction", closure
+    report.put ("backend", is_sparse_provider (selected) ? "spot-guarded-sparse" : "spot-guarded");
+    report.put ("construction", fm ? "ltl_to_tgba_fm_otf,cursor=P5,initial_rank=0" : closure
                                     ? "closure-buchi,cursor=one-obligation,initial_rank=0"
                                     : "ltl_to_taa,refined_rules=false,cursor=P5,initial_rank=0");
+    if (fm)
+      report.count ("provider_rows_explored", 0);
     report.count ("max_expansions", limits.max_expansions);
     report.count ("max_rows", limits.rows.max_rows);
     report.count ("max_rank_nodes", limits.max_rank_nodes);
@@ -226,6 +232,23 @@ namespace acacia::spot_lazy_worker {
         options.max_states = provider_limits.max_states;
         owned_store = make_closure_store (worker_formula, dict, limits.rows, report, options);
       }
+#if ACACIA_SPOT_FM_OTF_PROVIDER
+      else if (fm) {
+        std::shared_ptr<spot_fm_otf::Provider> provider;
+        auto built = spot_lazy::make_view ([&] {
+          provider = std::make_shared<spot_fm_otf::Provider> (worker_formula, dict, provider_limits);
+          return provider;
+        }, provider_limits);
+        if (!built.value)
+          std::rethrow_exception (built.error);
+        owned_store = std::make_unique<game::RowStore> (*built.value, limits.rows, report);
+        owned_store->provider_snapshot = [provider] (const game::Reporter& r) {
+          r.count ("provider_rows_explored", provider->rows_explored ());
+          r.count ("provider_acceptance_sets", provider->allocated_sets ());
+          r.count ("provider_n_max", provider->num_sets ());
+        };
+      }
+#endif
       else {
         auto built = spot_lazy::make_view (
             [&] () -> spot::const_twa_ptr {

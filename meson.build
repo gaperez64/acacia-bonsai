@@ -80,6 +80,10 @@ build_conf.set ('SIMD_IS_MAX', get_option ('acacia_simd_is_max') ? 'true' : 'fal
 build_conf.set ('ACACIA_ENABLE_DIAGNOSTICS', get_option ('acacia_enable_diagnostics') ? 1 : 0)
 build_conf.set_quoted ('ACACIA_DEFAULT_ARMS', get_option ('acacia_default_arms'))
 build_conf.set ('ACACIA_SPOT_LAZY_PROVIDER', get_option ('acacia_spot_lazy_provider') ? 1 : 0)
+build_conf.set ('ACACIA_SPOT_FM_OTF_PROVIDER', get_option ('acacia_spot_fm_otf_provider') ? 1 : 0)
+if get_option ('acacia_spot_fm_otf_provider') and not spot_dep.version ().version_compare ('>=2.16')
+  error ('The FM demand provider requires Spot >=2.16; disable acacia_spot_fm_otf_provider for older Spot')
+endif
 build_conf.set ('ACACIA_SPOT_GUARDED_BACKEND', get_option ('acacia_spot_guarded_backend') ? 1 : 0)
 build_conf.set ('ACACIA_FORWARD_SAFETY_SOLVER',
                 get_option ('acacia_forward_safety_solver') ? 1 : 0)
