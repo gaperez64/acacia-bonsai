@@ -183,7 +183,7 @@
     "spot_fm_otf_provider": {
       "meson": "acacia_spot_fm_otf_provider",
       "type": "boolean",
-      "default": true,
+      "default": false,
       "description": "Compile the explicitly selected Spot 2.16 FM demand provider (requires the guarded backend)",
       "macros": [
         {

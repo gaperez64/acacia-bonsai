@@ -54,7 +54,7 @@ option('acacia_spot_guarded_backend', type: 'boolean', value: false,
 
 option('acacia_spot_lazy_provider', type: 'boolean', value: false,
        description: 'Compile the explicitly selected Spot TAA provider for real and formula-unreal workers')
-option('acacia_spot_fm_otf_provider', type: 'boolean', value: true,
+option('acacia_spot_fm_otf_provider', type: 'boolean', value: false,
        description: 'Compile the explicitly selected Spot 2.16 FM demand provider (requires the guarded backend)')
 option('acacia_forward_safety_solver', type: 'boolean', value: false,
        description: 'Use the on-the-fly forward safety-game solver instead of the backward antichain fixed point')
