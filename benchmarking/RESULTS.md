@@ -12,6 +12,17 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-25 — SemML narrows the gap to 2.7.0 at 120 s but does not close it
+
+Archive `c120-syntcomp26-20261024` (release `evidence-2026-10-25-c120`). SemML's deficit to 2.7.0 shrank from 71 inputs at 17 s to 24 at 60 s, so the owner asked whether it overtakes with more time. The v2.7.0 release binary (ed481505) and SemML 20ad6ec7 reran at 120 s the inputs each left undecided at 60 s (166 and 190), four chunks per tool with the tools alternating, each call in its own 8 GiB scope with no swap. Earlier verdicts are recycled, as at 60 s; the SemML wrapper and heap cap are those of the entry below.
+
+| | Solved | REAL | UNREAL | Timeouts | Memory cap | No verdict | PAR-2 (s) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 2.7.0 | 1366 | 630 | 736 | 154 | 4 | 0 | 39637.7 |
+| SemML | 1355 | 603 | 752 | 156 | 12 | 1 | 47408.9 |
+
+The extra minute gives 2.7.0 eight more solves and SemML 21, so the gap is now 11 (71, 24, 11 at 17, 60, 120 s). 2.7.0 alone decides 80 inputs and SemML alone 69; no verdict disagrees. Memory starts to bind: SemML hits the 8 GiB cap on 12 inputs (none at 17 or 60 s, where its largest peak was 7.89 GiB), 2.7.0 on four round_robin_arbiter inputs, and one SemML run ends without a verdict at 7.47 GiB, which looks like Java heap exhaustion but was not confirmed because solver output is not kept. A higher cap or more memory could change the order; this run does not say.
+
 ## 2026-10-24 — SemML decides fewer inputs than 2.7.0 at both caps
 
 Archive `semml-syntcomp26-20261024` (release `evidence-2026-10-24-semml`). SemML (gitlab.com/live-lab/software/semml at 20ad6ec7, default preset, `--target real`) was built with Temurin JDK 21 and run on the 1524 SYNTCOMP26 TLSF inputs at 17 s, then at 60 s on the 253 it left undecided, each call in its own 8 GiB scope with no swap. Its launcher asks for a 60 GiB heap; a wrapper caps it at 7 GiB and maps the printed verdict to exit codes, because SemML exits 0 on both. The 2.7.0, ltlsynt 2.16 and 1.x rows are those of the entry below.
