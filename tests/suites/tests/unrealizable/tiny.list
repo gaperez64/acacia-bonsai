@@ -9,3 +9,6 @@ ltl2dba_psi_4.ltl
 UnderapproxDemo.ltl
 ltl2dba_psi_3.ltl
 lilydemo11.ltl
+# Expected UNREALIZABLE from /usr/local/bin/ltlsynt --realizability, independently
+# confirmed by the original solver with --equivariance off. Inputs can stay false.
+equivariance_io_swap.ltl

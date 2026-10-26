@@ -507,6 +507,51 @@ namespace {
     return ok;
   }
 
+  bool run_mixed_io_family_case () {
+    bool ok = true;
+    // The seven-state automaton from shipped-detector.cc has S_3 structural
+    // symmetry. Only the all-input and all-output partitions permit S_3 in
+    // the synthesis game; skip the family for every mixed partition.
+    for (bool reverse : {false, true}) {
+      auto aut = spot::make_twa_graph (spot::make_bdd_dict ());
+      aut->set_buchi ();
+      aut->prop_state_acc (true);
+      aut->new_states (7);
+      aut->set_init_state (0);
+      std::vector<bdd> r (3);
+      for (unsigned j = 0; j < 3; ++j) {
+        const unsigned i = reverse ? 2 - j : j;
+        r[i] = bdd_ithvar (aut->register_ap ("r_" + std::to_string (i)));
+      }
+      for (unsigned i = 0; i < 3; ++i) {
+        aut->new_edge (0, 1 + i, r[i]);
+        aut->new_edge (1 + i, 4 + i, r[i]);
+        aut->new_edge (4 + i, 4 + i, bddtrue);
+      }
+      for (unsigned mask = 0; mask < 8; ++mask) {
+        bdd inputs = bddtrue, outputs = bddtrue;
+        for (unsigned i = 0; i < 3; ++i)
+          ((mask & (1U << i)) ? inputs : outputs) &= r[i];
+        const bool pure = mask == 0 or mask == 7;
+        const auto indexed = symmetry::analyze_indexed_aps (aut, inputs, outputs);
+        ok &= expect ("mixed I/O families are skipped", indexed.empty () == not pure);
+        const auto exhaustive = symmetry::detect (aut, indexed);
+        const auto fast = symmetry::detect_full_symmetric_generators (aut, indexed);
+        for (const auto& G : {exhaustive, fast}) {
+          ok &= expect ("mixed I/O permutations are rejected", G.empty () == not pure);
+          const auto layout = symmetry::compute_block_layout (G, aut->num_states ());
+          ok &= expect ("only pure families have a block layout", layout.has_value () == pure);
+          if (layout)
+            ok &= expect ("pure family generators match layout",
+                          symmetry::generators_match_layout (G, *layout));
+        }
+        ok &= expect ("pure exhaustive generator count", exhaustive.size () == (pure ? 3U : 0U));
+        ok &= expect ("pure fast generator count", fast.size () == (pure ? 2U : 0U));
+      }
+    }
+    return ok;
+  }
+
   bool run_syntax_hint_case () {
     fixture fx = make_aut (3);
     std::vector<symmetry::indexed_family_hint> hints {
@@ -930,6 +975,7 @@ int main () {
   for (size_t bool_threshold : {11U, 6U})
     ok &= run_representative_case (bool_threshold);
   ok &= run_partial_symmetry_case ();
+  ok &= run_mixed_io_family_case ();
   ok &= run_syntax_hint_case ();
   for (unsigned n : {3U, 5U})
     ok &= run_unreal_case (n);
