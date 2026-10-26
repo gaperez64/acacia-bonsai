@@ -1,0 +1,7 @@
+name = "symmetryProofs"
+version = "0.1.0"
+defaultTargets = ["SymmetryProofs"]
+
+[[lean_lib]]
+name = "SymmetryProofs"
+leanOptions = { warningAsError = true }
