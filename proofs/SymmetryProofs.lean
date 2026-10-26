@@ -1,1 +1,3 @@
-import SymmetryProofs.OrbitWitnesses
+import SymmetryProofs.BuilderWitnesses
+import SymmetryProofs.PickerWitnesses
+import SymmetryProofs.RepresentativeWitness

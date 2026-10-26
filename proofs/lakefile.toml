@@ -4,4 +4,5 @@ defaultTargets = ["SymmetryProofs"]
 
 [[lean_lib]]
 name = "SymmetryProofs"
+weakLeanArgs = ["-j1", "-s2048", "-DElab.async=false"]
 leanOptions = { warningAsError = true }

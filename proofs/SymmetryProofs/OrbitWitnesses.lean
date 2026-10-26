@@ -6,20 +6,24 @@ open Witnesses (finiteForall)
 /-- Three clients with requests 0..2 and grants 3..5. This is the smallest
     client count accepted by the C++ block-layout path (symmetry_blocks.hh:74–88).
     Like the two-client fixture, it has rejecting and Boolean coordinates. -/
-def aut : Automaton 4 6 where
+def aut : Automaton 7 6 where
   init := 0
-  rejecting := fun q => q != 0
-  counting := fun q => q != 0
+  rejecting := fun q => q.val > 0 && q.val < 4
+  counting := fun q => q.val > 0 && q.val < 4
   isInput := fun p => p.val < 3
   edges := [⟨0, .conj (.atom 0) (.neg (.atom 3)), 1⟩,
     ⟨0, .conj (.atom 1) (.neg (.atom 4)), 2⟩,
     ⟨0, .conj (.atom 2) (.neg (.atom 5)), 3⟩,
-    ⟨1, .neg (.atom 3), 1⟩, ⟨2, .neg (.atom 4), 2⟩, ⟨3, .neg (.atom 5), 3⟩]
+    ⟨1, .neg (.atom 3), 1⟩, ⟨2, .neg (.atom 4), 2⟩, ⟨3, .neg (.atom 5), 3⟩,
+    ⟨4, .top, 4⟩, ⟨5, .top, 5⟩, ⟨6, .top, 6⟩]
 
-/-- C++: symmetry_blocks.hh:36–48. One client-state block, initial state shared. -/
-def stateLayout : BlockLayout 4 3 1 where
-  locate q := if h : q.val > 0 then some (0, ⟨q.val - 1, by have := q.isLt; omega⟩) else none
-  state _ j := ⟨j.val + 1, by have := j.isLt; omega⟩
+/-- C++: symmetry_blocks.hh:36–48; equivariant:839–843. Two client-state
+    blocks meet the production payoff gate; the initial state is shared. -/
+def stateLayout : BlockLayout 7 3 2 where
+  locate q := if h : q.val > 0 then some
+    (⟨(q.val - 1) / 3, by have := q.isLt; omega⟩,
+      ⟨(q.val - 1) % 3, by omega⟩) else none
+  state b j := ⟨b.val * 3 + j.val + 1, by have := b.isLt; have := j.isLt; omega⟩
   locate_state := by decide
   state_locate := by decide
 
@@ -32,7 +36,7 @@ def apLayout : BlockLayout 6 3 2 where
   state_locate := by decide
 
 /-- C++: symmetry.hh:260–277,532–559. A star swap constructed from the layout. -/
-def candidate (j : Fin 3) : Candidate 4 6 where
+def candidate (j : Fin 3) : Candidate 7 6 where
   phi := stateLayout.phiFromSigma (transposition 0 j)
   phiInv := (stateLayout.phiFromSigma (transposition 0 j)).invFun
   pi := apLayout.phiFromSigma (transposition 0 j)
@@ -72,8 +76,8 @@ theorem missing_transport : GeneratedBy generators s12.states s12.aps ∧ s12 �
       · exact List.not_mem_nil h
 
 /-- A kernel-checked nonempty invariant region exercises composition invariance. -/
-theorem composition_invariant : ∀ f : State 4 1,
-    safe aut 1 (act s12.states f) = safe aut 1 f := by decide
+theorem composition_invariant : ∀ f : State 7 1,
+    safe aut 1 (act s12.states f) = safe aut 1 f := safe_commutes s12 1
 
 /-- The stored swaps satisfy the exact layout-agreement hypothesis. -/
 theorem stars : ∀ j : Fin 3, j ≠ 0 → ∃ s ∈ generators,
@@ -183,9 +187,9 @@ theorem verdicts (side : Bool) :
   verdicts_equal 1 side (plan side)
 
 theorem executed (side : Bool) :
-    runUntilInitialOut (initial aut 1) (sweep aut 1 side (plan side)) (safe aut 1) (states 4 1).length =
+    runUntilInitialOut (initial aut 1) (sweep aut 1 side (plan side)) (safe aut 1) (states 7 1).length =
       winner aut 1 side ∧
-    runUntilInitialOut (initial aut 1) (representativeRound 1 side (plan side)) (safe aut 1) (states 4 1).length =
+    runUntilInitialOut (initial aut 1) (representativeRound 1 side (plan side)) (safe aut 1) (states 7 1).length =
       winner aut 1 side :=
   executed_verdicts_equal 1 side (plan side)
 

@@ -1,4 +1,4 @@
-import Std
+import Init
 
 namespace Symmetry
 
