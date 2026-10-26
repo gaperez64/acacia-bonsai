@@ -7,7 +7,11 @@
 #include "solver/translator_options.hh"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <set>
 #include <spot/tl/apcollect.hh>
 #include <spot/twaalgos/cleanacc.hh>
@@ -49,6 +53,57 @@ namespace acacia::parity_route {
       if (not aut->acc ().is_buchi ())
         throw std::runtime_error ("deterministic conversion did not produce Buchi acceptance");
       return aut;
+    }
+  }
+
+  namespace {
+    // Research diagnostics (ACACIA_PARITY_DIAG): stage sizes, and with "cone" the
+    // part of the solved arena reachable when the initial winner follows its strategy.
+    const char* diag_mode () {
+      static const char* mode = [] {
+        const char* v = std::getenv ("ACACIA_PARITY_DIAG");
+        return v and *v ? v : nullptr;
+      }();
+      return mode;
+    }
+    void diag_cone (const spot::twa_graph_ptr& arena, unsigned automaton_states, double t) {
+      const auto& owners = spot::get_state_players (arena);
+      const auto& winners = spot::get_state_winners (arena);
+      const auto& strategy = spot::get_strategy (arena);
+      const unsigned n = arena->num_states (), init = arena->get_init_state_number ();
+      const bool winner = winners[init];
+      const auto bfs = [&] (bool cone) {
+        std::vector<bool> seen (n);
+        std::vector<unsigned> todo {init};
+        seen[init] = true;
+        unsigned count = 0, states = 0, unset = 0;
+        while (not todo.empty ()) {
+          const unsigned v = todo.back ();
+          todo.pop_back ();
+          ++count;
+          states += v < automaton_states;
+          const bool follow = cone and owners[v] == winner;
+          if (follow and (v >= strategy.size () or strategy[v] == 0))
+            ++unset;
+          for (const auto& e : arena->out (v)) {
+            if (follow and v < strategy.size () and strategy[v] != 0 and
+                arena->edge_number (e) != strategy[v])
+              continue;
+            if (not seen[e.dst]) {
+              seen[e.dst] = true;
+              todo.push_back (e.dst);
+            }
+          }
+        }
+        return std::array<unsigned, 3> {count, states, unset};
+      };
+      const auto reach = bfs (false), cone = bfs (true);
+      std::fprintf (stderr,
+                    "{\"parity_diag\":\"cone\",\"t\":%.3f,\"arena\":%u,\"reachable\":%u,"
+                    "\"reachable_states\":%u,\"winner\":%d,\"cone\":%u,\"cone_states\":%u,"
+                    "\"automaton_states\":%u,\"strategy_unset\":%u}\n",
+                    t, n, reach[0], reach[1], winner, cone[0], cone[1], automaton_states, cone[2]);
+      std::fflush (stderr);
     }
   }
 
@@ -113,11 +168,28 @@ namespace acacia::parity_route {
     if constexpr (ACACIA_BDD_MAX_INCREASE > 0)
       configure_bdd ();
     input.automaton.reset ();
+    const auto route_start = std::chrono::steady_clock::now ();
+    const auto elapsed = [&] {
+      return std::chrono::duration<double> (std::chrono::steady_clock::now () - route_start).count ();
+    };
+    const auto diag = [&] (const char* name, const char* event, const spot::twa_graph_ptr& a) {
+      if (not diag_mode ())
+        return;
+      std::fprintf (stderr, "{\"parity_diag\":\"%s\",\"event\":\"%s\",\"t\":%.3f", name, event,
+                    elapsed ());
+      if (a)
+        std::fprintf (stderr, ",\"states\":%u,\"edges\":%u,\"sets\":%u", a->num_states (),
+                      a->num_edges (), a->num_sets ());
+      std::fprintf (stderr, "}\n");
+      std::fflush (stderr);
+    };
     auto stage = [&] (const char* name, auto action) {
       if (observe)
         observe (name, aut, -1);
+      diag (name, "begin", aut);
       const auto start = std::chrono::steady_clock::now ();
       action ();
+      diag (name, "end", aut);
       if (observe)
         observe (
             name, aut,
@@ -153,6 +225,11 @@ namespace acacia::parity_route {
     classification tier;
     stage ("classify", [&] { tier = classify (worker); });
     worker.reset ();
+    if (diag_mode ()) {
+      std::fprintf (stderr, "{\"parity_diag\":\"tier\",\"tier\":%u,\"reason\":\"%s\"}\n",
+                    tier.tier, tier.reason.c_str ());
+      diag ("tier-automaton", "end", tier.buchi);
+    }
     output.tier = tier.tier;
     output.tier_reason = tier.reason;
     if (config.on_classified)
@@ -168,7 +245,9 @@ namespace acacia::parity_route {
     if (output.tier < 4) {
       output.route = "acacia";
       aut = tier.buchi;
-      const bool keep_arena = config.verify or config.on_game or config.on_solution;
+      const bool cone =
+          diag_mode () and std::strcmp (diag_mode (), "cone") == 0 and not config.synthesis;
+      const bool keep_arena = config.verify or config.on_game or config.on_solution or cone;
       // The incumbent deterministic negated-specification Buchi shortcut, with its usual
       // completion and co-Buchi game. Native Moore uses the same Spot split API
       // with output-first order; shipping callers keep the default Mealy frame.
@@ -185,6 +264,8 @@ namespace acacia::parity_route {
         if (keep_arena)
           arena = *fast.solved_arena;
       });
+      if (cone)
+        diag_cone (arena, tier.buchi->num_states (), elapsed ());
       if (keep_arena)
         stage ("explicit", [&] {
           output.game = std::make_unique<parity::arena_game> (arena);
@@ -208,12 +289,15 @@ namespace acacia::parity_route {
           aut = spot::acd_transform (objective);
         }
       });
+      const unsigned automaton_states = aut->num_states ();
       stage ("split", [&] {
         arena = spot::split_2step (aut, outputs, true, synthesis.sp, native_moore);
         spot::set_synthesis_outputs (arena, outputs);
         aut = arena;
       });
       stage ("solve", [&] { winning = spot::solve_parity_game (arena, true); });
+      if (diag_mode () and std::strcmp (diag_mode (), "cone") == 0)
+        diag_cone (arena, automaton_states, elapsed ());
       if (config.verify or config.on_game or config.on_solution)
         stage ("explicit", [&] {
           output.game = std::make_unique<parity::arena_game> (arena);
