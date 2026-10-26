@@ -1328,6 +1328,16 @@ namespace acacia::spot_lazy_game {
         detail::require (covered == bddtrue && covered == node.covered_inputs);
         reached.push_back (node.rank);
       }
+#if ACACIA_FWD_ORACLES
+      if (rows->oracles ())
+        reached = detail::take (oracle.query<std::vector<Rank>> ([&] (auto& b) {
+          std::vector<Rank> lifted;
+          for (const auto& rank : reached)
+            for (auto& r : rows->oracles ()->lift (rank, K, b))
+              lifted.push_back (std::move (r));
+          return lifted;
+        }));
+#endif
       auto generators = detail::take (oracle.query<std::vector<Rank>> ([&] (auto& b) {
         std::vector<Rank> result;
         for (const auto& r : reached) {
@@ -1350,6 +1360,20 @@ namespace acacia::spot_lazy_game {
       // Building the maximal antichain above belongs to traversal; this bucket
       // measures only the final invariant query, with the existing warm cache.
       phases.next_phase ("invariant");
+#if ACACIA_FWD_ORACLES
+      if (rows->oracles ()) {
+        // K=0 disables all reductions in this fresh Reader. The quotient only
+        // proposes the lifted invariant; original transitions, safety caps and
+        // initial state decide whether it proves a win.
+        Reader original {view, true, limits.verifier_rows};
+        Oracle exact {original, view, alphabet, K, layout, limits.max_oracle_memo_bytes};
+        exact.set_limits (limits.verifier_queries);
+        MetricReport metrics {exact, view.report, "verify_lifted_"};
+        detail::require (detail::take (exact.invariant (original.initial_rank (), generators,
+                                                        0)) == letters::Invariant::verified);
+        return generators;
+      }
+#endif
       detail::require (detail::take (oracle.invariant (rows->initial_rank (), generators, 0)) ==
                        letters::Invariant::verified);
       return generators;
@@ -1436,7 +1460,9 @@ namespace acacia::spot_lazy_game {
                                           alphabet_.inputs, alphabet_.outputs)),
           oracle_ (*rows_, view_, alphabet_, K, layout, limits.max_oracle_memo_bytes) {
         result_.provider = view_.provider;
+#if ACACIA_FWD_ORACLES
         view_.report.put ("fwd_oracles", rows_->active_oracles ());
+#endif
         oracle_.set_limits (limits_.queries);
       }
       ~Search () { report_counters (); }

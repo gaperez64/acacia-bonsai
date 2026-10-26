@@ -10,12 +10,12 @@
 # include <unordered_set>
 
 # include <cstdlib>
+# include <tuple>
 
 namespace acacia::spot_lazy_game {
   // P0 diagnostics only. These facts describe the immutable *final* frozen
-  // graph, never an explored prefix of a demand provider. Each verifier Reader
-  // recomputes them, then rebuilds the guarded successor predicates from fresh
-  // rows. No search memo, canonicalization claim or symmetry witness is trusted.
+  // graph, never an explored prefix of a demand provider. Winning certificates
+  // are lifted and checked against the original, unquotiented game.
   class FrozenRankOracles {
       using Rank = spot_rows::SparseForwardRank<>;
       using StateId = spot_rows::StateId;
@@ -23,6 +23,48 @@ namespace acacia::spot_lazy_game {
       std::vector<int> headroom_;
       direct_simulation::relation simulation_;
       std::vector<std::vector<unsigned>> generators_;
+
+      static bool verified_symmetry (spot_rows::FrozenAcacia view, bdd inputs, bdd outputs,
+                                     const std::vector<unsigned>& g,
+                                     spot::relabeling_map& rename) {
+        const auto& graph = view.graph;
+        const unsigned n = graph->num_states ();
+        if (g.size () != n ||
+            g[graph->get_init_state_number ()] != graph->get_init_state_number ())
+          return false;
+        std::vector<bool> seen (n, false);
+        for (unsigned q = 0; q < n; ++q) {
+          if (g[q] >= n || seen[g[q]] ||
+              (q < view.bool_threshold) != (g[q] < view.bool_threshold) ||
+              graph->state_is_accepting (q) != graph->state_is_accepting (g[q]))
+            return false;
+          seen[g[q]] = true;
+        }
+        // The shared detector supplies candidates only: its family I/O tag can
+        // hide mixed membership. Check the actual APs against BOTH cubes.
+        for (const auto& [from, to] : rename) {
+          const bdd a = bdd_ithvar (graph->get_dict ()->varnum (from));
+          const bdd c = bdd_ithvar (graph->get_dict ()->varnum (to));
+          for (const bdd& side : {inputs, outputs})
+            if ((bdd_exist (side, a) != side) != (bdd_exist (side, c) != side))
+              return false;
+        }
+        auto renamed = spot::make_twa_graph (graph, spot::twa::prop_set::all ());
+        spot::relabel_here (renamed, &rename);
+        using Edge = std::tuple<unsigned, int, spot::acc_cond::mark_t>;
+        for (unsigned q = 0; q < n; ++q) {
+          std::vector<Edge> expected, actual;
+          for (const auto& e : graph->out (q))
+            expected.emplace_back (g[e.dst], e.cond.id (), e.acc);
+          for (const auto& e : renamed->out (g[q]))
+            actual.emplace_back (e.dst, e.cond.id (), e.acc);
+          std::sort (expected.begin (), expected.end ());
+          std::sort (actual.begin (), actual.end ());
+          if (expected != actual)
+            return false;
+        }
+        return true;
+      }
 
       bool simulates (StateId p, StateId q) const {
         const auto& qs = simulation_.simulators[p];
@@ -112,20 +154,19 @@ namespace acacia::spot_lazy_game {
           simulation_ = direct_simulation::compute (marked, n, view.bool_threshold);
         }
         if (sym_) {
-          // The existing detector verifies graph automorphisms fixing init and
-          // preserving acceptance and the input/output AP partition. Also
-          // require preservation of the Boolean safe envelope. Renaming both
-          // players' letters is a game isomorphism, so rank orbits have one
-          // winner. Canonicalize keys; preimages below include the full target
-          // orbit (without enumerating letters). Fresh verification checks
-          // these orbit-lifted obligations, including the final invariant.
+          // Recheck every candidate at this boundary; do not trust the shipped
+          // detector's I/O classification or structural verification.
           auto copy = spot::make_twa_graph (graph, spot::twa::prop_set::all ());
-          for (auto& g : symmetry::detect (copy, inputs, outputs).gens) {
-            bool valid = true;
-            for (unsigned q = 0; q < n; ++q)
-              valid &= (q < view.bool_threshold) == (g[q] < view.bool_threshold);
-            if (valid)
-              generators_.push_back (std::move (g));
+          auto candidates = symmetry::detect (copy, inputs, outputs);
+          for (size_t i = 0; i < candidates.gens.size (); ++i) {
+            const auto [a, c] = candidates.gen_pairs.at (i);
+            spot::relabeling_map rename;
+            for (const auto& [prefix, family] : candidates.families) {
+              rename[family.idx2ap.at (a)] = family.idx2ap.at (c);
+              rename[family.idx2ap.at (c)] = family.idx2ap.at (a);
+            }
+            if (verified_symmetry (view, inputs, outputs, candidates.gens[i], rename))
+              generators_.push_back (std::move (candidates.gens[i]));
           }
         }
       }
@@ -192,6 +233,34 @@ namespace acacia::spot_lazy_game {
             if (seen.insert (next).second)
               result.push_back (std::move (next));
           }
+        return result;
+      }
+      template <typename Budget>
+      std::vector<Rank> lift (const Rank& r, int K, Budget& b) const {
+        auto result = orbit (r, K, b);
+        if (!reduces_levels ())
+          return result;
+        for (auto& rank : result) {
+          std::vector<Rank::Entry> entries;
+          for (StateId p = 0; p < std::max (headroom_.size (), simulation_.simulators.size ());
+               ++p) {
+            b.step ();
+            int value = rank.at (p);
+            // Restore every universally safe count and every count covered by
+            // a retained simulator. This is only an invariant candidate: the
+            // verifier checks its safety and closure without any reductions.
+            if (cap_)
+              value = std::max (value, headroom_[p]);
+            if (sim_)
+              for (auto q : simulation_.simulators[p]) {
+                b.step ();
+                value = std::max (value, int (rank.at (q)));
+              }
+            if (value >= 0)
+              entries.emplace_back (p, value);
+          }
+          rank = Rank {std::move (entries), K};
+        }
         return result;
       }
       template <typename Budget>
