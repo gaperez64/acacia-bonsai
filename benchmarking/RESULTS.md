@@ -12,6 +12,12 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-26 — Backward reductions add little to the forward unreal engine, even computed from the whole automaton
+
+Archive `fwdp-20261026` (release `evidence-2026-10-26-fwdp`), branch `research/fwd-prune` at 510b1ed6, not merged. The guarded sparse forward game streams the automaton and so skips the reductions the backward engine applies first. It already has the surely-losing purge and Boolean states; cap census, direct simulation and symmetry were missing. Before writing on-the-fly versions, this measured a ceiling: the three computed from the whole frozen automaton and applied inside the sparse search (opt-in diagnostic build option, lifted winning certificates verified against the original automaton). An on-the-fly version knows at most as much.
+
+On the 105 targets of `otf2-20261026` at 120 s, single-arm `unreal:formula:spot-guarded-sparse:frozen-graph`, every call in its own 8 GiB scope, serially, the oracles decide 25 inputs against 26 without them. Nothing is decided only with them and no verdict disagrees; the one difference is a run that finishes at 119.99 s without them. At equal K, game states fall by at most 5x (by 2–5x on 5 inputs), and by at most 1.3x on the 51 inputs with cheap on-the-fly states, against a 10x gate. Cap census bounds no state on any input and symmetry applies on one. On-the-fly versions of these reductions are not pursued.
+
 ## 2026-10-26 — Building Spot's FM automaton on demand does not help; the guarded game is the bottleneck
 
 Archive `otf2-20261026` (release `evidence-2026-10-26-otf2`), branch `research/fm-otf` at cc154734, not merged. On 3 of 4 inputs only SemML decides at 120 s, a phase profile showed every legacy worker still translating at the cap, so this sprint tried Spot 2.16's on-the-fly FM translator (`ltl_to_tgba_fm_otf`), which neither earlier lazy provider (f0006568, e5fa8d08) used. Every call ran in its own 8 GiB scope, serially.
