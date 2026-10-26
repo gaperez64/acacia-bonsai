@@ -12,6 +12,21 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-26 — Building Spot's FM automaton on demand does not help; the guarded game is the bottleneck
+
+Archive `otf2-20261026` (release `evidence-2026-10-26-otf2`), branch `research/fm-otf` at cc154734, not merged. On 3 of 4 inputs only SemML decides at 120 s, a phase profile showed every legacy worker still translating at the cap, so this sprint tried Spot 2.16's on-the-fly FM translator (`ltl_to_tgba_fm_otf`), which neither earlier lazy provider (f0006568, e5fa8d08) used. Every call ran in its own 8 GiB scope, serially.
+
+A probe at 30 s per call on 105 inputs (the 69 inputs only SemML decides at 120 s plus the 46-input translation frontier of f0006568) compared, per worker formula, the worker's translation, bare `ltl_to_tgba_fm`, and a full breadth-first `ltl_to_tgba_fm_otf` exploration. All three agreed (67 finish, 137 time out) except two formulas that finish only without postprocessing, so postprocessing is not the cost. Of the timed-out explorations, 95 on 38 inputs never reached 1000 states (each state is expensive), and 87 on 51 inputs reached 1k–1.3M states (cheap states, too many), which is where a demand-driven provider could pay.
+
+The provider `spot-fm-otf` (opt-in compile option, demand route of the guarded sparse game, fixed promise bound with a decline on overflow) passed language-equivalence and overflow tests and agreed with frozen-graph on `ab/tiny` and `ab/small`. On the 51 cheap-state inputs at 120 s, single-arm, against the same arm with frozen-graph:
+
+| Worker | frozen-graph decided | spot-fm-otf decided | Only spot-fm-otf |
+|---|---:|---:|---:|
+| unreal:formula, spot-guarded-sparse | 10 | 6 | 0 |
+| real:small, spot-guarded-sparse | 6 | 4 | 0 |
+
+No verdict disagrees. The guarded game exhausts its 200k-rank budget after 100–200 automaton rows on most inputs (34 acceptance sets on 06 and 07 multiply it further), so automaton construction was not what bound these runs. Rerunning every UNKNOWN of either provider with game and provider limits raised 25x decided nothing new. The provider is rejected; a lazy automaton only helps a solver whose game grows with the automaton.
+
 ## 2026-10-25 — SemML narrows the gap to 2.7.0 at 120 s but does not close it
 
 Archive `c120-syntcomp26-20261024` (release `evidence-2026-10-25-c120`). SemML's deficit to 2.7.0 shrank from 71 inputs at 17 s to 24 at 60 s, so the owner asked whether it overtakes with more time. The v2.7.0 release binary (ed481505) and SemML 20ad6ec7 reran at 120 s the inputs each left undecided at 60 s (166 and 190), four chunks per tool with the tools alternating, each call in its own 8 GiB scope with no swap. Earlier verdicts are recycled, as at 60 s; the SemML wrapper and heap cap are those of the entry below.
