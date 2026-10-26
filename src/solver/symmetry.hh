@@ -323,6 +323,16 @@ namespace symmetry {
       f.is_input = is_in;
       f.idx2ap[idx] = ap;
     }
+    // A family-wide tag is valid only if every AP belongs exclusively to
+    // that side of the actual I/O partition. Leave mixed families fixed.
+    std::erase_if (analysis.families, [&] (const auto& entry) {
+      const auto& f = entry.second;
+      return std::any_of (f.idx2ap.begin (), f.idx2ap.end (), [&] (const auto& member) {
+        const bdd v = bdd_ithvar (dict->varnum (member.second));
+        return (bdd_exist (all_inputs, v) != all_inputs) != f.is_input or
+               (bdd_exist (all_outputs, v) != all_outputs) == f.is_input;
+      });
+    });
     if (not hints.empty ()) {
       std::map<std::string, const indexed_family_hint*> hinted;
       for (const auto& hint : hints) {
