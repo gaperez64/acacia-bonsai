@@ -5,7 +5,8 @@
 #include <cstdint>
 
 namespace acacia::obligation {
-  enum class memory_share { equal, alone };
+  // pressure (parity only): the equal share, exceeded while the scope has headroom.
+  enum class memory_share { equal, alone, pressure };
 
   constexpr uint64_t rss_share_for_limit (uint64_t limit, size_t workers,
                                          memory_share policy) noexcept {
