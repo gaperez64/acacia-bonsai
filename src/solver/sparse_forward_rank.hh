@@ -8,10 +8,10 @@
 
 namespace acacia::spot_rows {
   // This is an Acacia value type, not a Posets container. In C4/C5 every
-  // coordinate is numeric. boolean_states::forward_saturation materializes
-  // states, mutates the automaton in place AND sets the global
-  // posets::vectors::bool_threshold defining the safe envelope. It cannot run
-  // here: the lazy path is structurally Boolean-state-free, unlike C0/C3.
+  // coordinate is numeric. The frozen provider separately preserves the
+  // Boolean safe envelope computed before search; demand providers have no
+  // whole-graph forward_saturation pass. P0 frozen rank oracles also operate
+  // outside this value type, without mutating the graph or global threshold.
   template <std::signed_integral Value = std::int32_t>
     requires (sizeof (Value) <= sizeof (std::int32_t))
   class SparseForwardRank {

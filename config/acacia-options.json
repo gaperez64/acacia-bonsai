@@ -139,6 +139,19 @@
         }
       ]
     },
+    "fwd_oracles": {
+      "meson": "acacia_fwd_oracles",
+      "type": "boolean",
+      "default": false,
+      "description": "Compile frozen sparse rank oracle diagnostics selected by ACACIA_FWD_ORACLE",
+      "macros": [
+        {
+          "name": "ACACIA_FWD_ORACLES",
+          "emit": "always",
+          "encoding": "bool_int"
+        }
+      ]
+    },
     "enable_diagnostics": {
       "meson": "acacia_enable_diagnostics",
       "type": "boolean",

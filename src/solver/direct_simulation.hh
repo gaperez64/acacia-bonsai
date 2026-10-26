@@ -2,6 +2,7 @@
 
 #include <bddx.h>
 #include <cstddef>
+#include <limits>
 #include <spot/twa/twagraph.hh>
 #include <vector>
 
@@ -18,9 +19,9 @@
 //
 //     q --(h, nu)--> q'      with   nu >= mu   and   p' <= q'.
 //
-// Acacia's increments are 0/1, so `nu >= mu` means an accepting edge may match
-// an accepting or a non-accepting one, but not the reverse: a step that costs a
-// rank increase cannot be simulated by one that does not.
+// Acacia's increments are 0/1: an accepting edge must match an accepting one;
+// a non-accepting edge may match either. A step that costs a rank increase
+// cannot be simulated by one that does not.
 //
 // The greatest fixed point is computed by starting from all pairs and deleting
 // violating ones until stable.  That is quadratic in states and needs a BDD
@@ -45,7 +46,8 @@ namespace acacia::direct_simulation {
       unsigned iterations = 0;
   };
 
-  inline relation compute (const spot::const_twa_graph_ptr& aut, size_t state_cap = 400) {
+  inline relation compute (const spot::const_twa_graph_ptr& aut, size_t state_cap = 400,
+                           size_t bool_threshold = std::numeric_limits<size_t>::max ()) {
     relation result;
     if (not aut)
       return result;
@@ -56,6 +58,13 @@ namespace acacia::direct_simulation {
     const unsigned n = aut->num_states ();
     // candidate[p * n + q] is true while p <= q is still possible.
     std::vector<bool> candidate (static_cast<size_t> (n) * n, true);
+    // A Boolean coordinate has safe cap 0, versus K-1 for a numeric one.
+    // Its simulator must have an equally restrictive safe cap, including at
+    // every related successor. The default leaves the old relation unchanged.
+    for (unsigned p = 0; p < n; ++p)
+      for (unsigned q = 0; q < n; ++q)
+        if (p >= bool_threshold && q < bool_threshold)
+          candidate[static_cast<size_t> (p) * n + q] = false;
 
     bool changed = true;
     while (changed) {

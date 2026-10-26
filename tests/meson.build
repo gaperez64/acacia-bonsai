@@ -285,6 +285,22 @@ spot_lazy_oracle_test = executable (
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
 )
 test ('spot-lazy-oracle', spot_lazy_oracle_test, suite : ['unit', 'spot-lazy-oracle'])
+if get_option ('acacia_fwd_oracles')
+  frozen_rank_oracles_test = executable (
+    'frozen-rank-oracles-test', 'frozen_rank_oracles_test.cc',
+    include_directories : inc,
+    dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+  )
+  test ('frozen-rank-oracles', frozen_rank_oracles_test,
+        suite : ['unit', 'fwd-oracles'], is_parallel : false)
+  if get_option ('acacia_spot_guarded_backend')
+    foreach corpus_suite : ['tiny', 'small']
+      test ('fwd-oracles-' + corpus_suite, py,
+            args : [files ('check-fwd-oracles.py'), ab_exe, meson.project_source_root (), corpus_suite],
+            suite : ['fwd-oracles'], timeout : 900, is_parallel : false, depends : [ab_exe])
+    endforeach
+  endif
+endif
 if get_option ('acacia_spot_guarded_backend')
   test ('oracle-layout-cli', py,
         args : [files ('check-oracle-layout.py'), ab_exe, meson.project_build_root ()],

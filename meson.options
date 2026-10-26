@@ -41,6 +41,8 @@ option('acacia_simd_is_max', type: 'boolean', value: true,
 
 option('acacia_enable_diagnostics', type: 'boolean', value: false,
        description: 'Compile compact Acacia phase diagnostics, gated at runtime by ACACIA_DIAG')
+option('acacia_fwd_oracles', type: 'boolean', value: false,
+       description: 'Compile frozen sparse rank oracle diagnostics selected by ACACIA_FWD_ORACLE')
 # A portfolio the build ships by default, in --arms syntax
 # (polarity:transform:backend, comma separated).  Empty keeps the historical
 # default portfolio, so every existing build is unaffected.  This exists because

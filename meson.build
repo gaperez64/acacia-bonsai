@@ -78,6 +78,7 @@ build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION',
                 get_option ('acacia_forced_output_contradiction') ? 1 : 0)
 build_conf.set ('SIMD_IS_MAX', get_option ('acacia_simd_is_max') ? 'true' : 'false')
 build_conf.set ('ACACIA_ENABLE_DIAGNOSTICS', get_option ('acacia_enable_diagnostics') ? 1 : 0)
+build_conf.set ('ACACIA_FWD_ORACLES', get_option ('acacia_fwd_oracles') ? 1 : 0)
 build_conf.set_quoted ('ACACIA_DEFAULT_ARMS', get_option ('acacia_default_arms'))
 build_conf.set ('ACACIA_SPOT_LAZY_PROVIDER', get_option ('acacia_spot_lazy_provider') ? 1 : 0)
 build_conf.set ('ACACIA_SPOT_FM_OTF_PROVIDER', get_option ('acacia_spot_fm_otf_provider') ? 1 : 0)

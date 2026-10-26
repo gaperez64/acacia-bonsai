@@ -7,6 +7,7 @@
 #include "solver/sparse_forward_rank.hh"
 #include "solver/spot_guarded_forward_safety.hh"
 #include "solver/spot_lazy_buchi_view.hh"
+#include "solver/frozen_rank_oracles.hh"
 #include <unordered_map>
 #include <unordered_set>
 
@@ -385,13 +386,46 @@ namespace acacia::spot_lazy_game {
       rows::RowLimits limits_;
       std::map<StateId, rows::CompleteRankRow> rebuilt_;
       std::shared_ptr<rows::SpotRows> frozen_verifier_;
+#if ACACIA_FWD_ORACLES
+      std::unique_ptr<FrozenRankOracles> oracles_;
+#endif
 
     public:
-      Reader (RowStore& s, bool v, rows::RowLimits l) : store_ (s), verifier_ (v), limits_ (l) {
+      Reader (RowStore& s, bool v, rows::RowLimits l, int K = 0,
+              bdd inputs = bddtrue, bdd outputs = bddtrue)
+        : store_ (s), verifier_ (v), limits_ (l) {
         if (v && s.frozen_view)
           frozen_verifier_ = std::make_shared<rows::SpotRows> (*s.frozen_view, l);
+#if ACACIA_FWD_ORACLES
+        if (K > 0 && s.frozen_view) {
+          oracles_ = std::make_unique<FrozenRankOracles> (*s.frozen_view, K, inputs, outputs);
+          const std::string prefix = v ? "verify_fwd_oracle_" : "fwd_oracle_";
+          s.report.count (prefix + "cap_states", oracles_->capped_states);
+          s.report.count (prefix + "sim_pairs", oracles_->simulation_pairs ());
+          s.report.count (prefix + "sym_generators", oracles_->symmetry_generators ());
+          if (oracles_->active.empty ()) oracles_.reset ();
+        }
+#else
+        (void) K;
+        (void) inputs;
+        (void) outputs;
+#endif
       }
-      Rank initial_rank () const { return Rank {{{store_.cache->initial_id (), 0}}, 1}; }
+#if ACACIA_FWD_ORACLES
+      const FrozenRankOracles* oracles () const { return oracles_.get (); }
+#endif
+      std::string active_oracles () const {
+#if ACACIA_FWD_ORACLES
+        if (oracles_ && !oracles_->active.empty ()) return oracles_->active;
+#endif
+        return "none";
+      }
+      Rank initial_rank () const {
+#if ACACIA_FWD_ORACLES
+        if (oracles_) return oracles_->initial (store_.cache->initial_id (), 1);
+#endif
+        return Rank {{{store_.cache->initial_id (), 0}}, 1};
+      }
       bool is_safe (const Rank& r, int K) const {
         (void) r.is_safe (K);
         for (auto [q, value] : r.entries ()) {
@@ -539,18 +573,39 @@ namespace acacia::spot_lazy_game {
           active.emplace_back (value, &rows_.row (q));
         }
         Prepared p;
-        if (layout_ == OracleLayout::scan) {
+        // One symbolic contribution stream for both predicate layouts. With
+        // diagnostics off this is exactly the original active-row traversal.
+        const auto visit = [&] (auto emit) {
           for (auto [value, row] : active)
             for (const auto& e : row->edges) {
               b.step ();
               b.require_support (e.condition, boundary_.alphabet ().ap_vars);
-              p.destinations[e.destination].emplace_back (int64_t (value) + int (e.increment),
-                                                          e.condition);
-              if (store_.report.sink) {
-                ++prepared_edges_;
-                ++prepared_levels_;
-              }
+              emit (e.destination, int64_t (value) + int (e.increment), e.condition);
             }
+        };
+#if ACACIA_FWD_ORACLES
+        decltype (p.destinations) reduced;
+        const bool reducing = rows_.oracles () && rows_.oracles ()->reduces_levels ();
+        if (reducing) {
+          visit ([&] (StateId q, int64_t v, bdd guard) { reduced[q].emplace_back (v, guard); });
+          rows_.oracles ()->reduce_levels (reduced, K_, b);
+        }
+        const auto emit_all = [&] (auto emit) {
+          if (!reducing) return visit (emit);
+          for (const auto& [q, entries] : reduced)
+            for (const auto& [v, guard] : entries) emit (q, v, guard);
+        };
+#else
+        const auto& emit_all = visit;
+#endif
+        if (layout_ == OracleLayout::scan) {
+          emit_all ([&] (StateId q, int64_t v, bdd guard) {
+            p.destinations[q].emplace_back (v, guard);
+            if (store_.report.sink) {
+              ++prepared_edges_;
+              ++prepared_levels_;
+            }
+          });
         }
         else {
           p.compact = std::make_unique<Grouped> ();
@@ -560,14 +615,11 @@ namespace acacia::spot_lazy_game {
               bdd guard;
           };
           std::vector<Contribution> edges;
-          for (auto [value, row] : active)
-            for (const auto& e : row->edges) {
-              b.step ();
-              b.require_support (e.condition, boundary_.alphabet ().ap_vars);
-              edges.push_back ({e.destination, int64_t (value) + int (e.increment), e.condition});
-              if (store_.report.sink)
-                ++prepared_edges_;
-            }
+          emit_all ([&] (StateId q, int64_t v, bdd guard) {
+            edges.push_back ({q, v, guard});
+            if (store_.report.sink)
+              ++prepared_edges_;
+          });
           std::sort (edges.begin (), edges.end (), [] (const auto& a, const auto& c) {
             return std::tie (a.coordinate, a.level) < std::tie (c.coordinate, c.level);
           });
@@ -670,7 +722,7 @@ namespace acacia::spot_lazy_game {
         return result;
       }
       // kind: 0 upward, 1 downward, 2 equality (P3's exact same boundaries).
-      bdd preimage (Prepared& p, const Rank& target, int kind, letters::detail::Letters& b) {
+      bdd raw_preimage (Prepared& p, const Rank& target, int kind, letters::detail::Letters& b) {
         if (store_.report.sink)
           ++preimage_calls_;
         (void) target.is_safe (K_);
@@ -775,6 +827,17 @@ namespace acacia::spot_lazy_game {
                        entry->first.second.capacity () * sizeof (Rank::Entry);
         enforce_memo_budget ();
         return result;
+      }
+      bdd preimage (Prepared& p, const Rank& target, int kind, letters::detail::Letters& b) {
+#if ACACIA_FWD_ORACLES
+        if (rows_.oracles () && rows_.oracles ()->symmetry_generators ()) {
+          bdd result = bddfalse;
+          for (const auto& rank : rows_.oracles ()->orbit (target, K_, b))
+            result = b.lor (result, raw_preimage (p, rank, kind, b));
+          return result;
+        }
+#endif
+        return raw_preimage (p, target, kind, b);
       }
       bdd aggregate (const Rank& r, const std::vector<Rank>& targets, bool bad,
                      letters::detail::Letters& b) {
@@ -881,7 +944,12 @@ namespace acacia::spot_lazy_game {
             for (const auto& [level, guard] : edges)
               if (b.land (valuation, guard) != bddfalse)
                 result.emplace_back (q, int32_t (std::min (int64_t (K_), level)));
-          return Rank {std::move (result), K_};
+          Rank next {std::move (result), K_};
+#if ACACIA_FWD_ORACLES
+          if (rows_.oracles () && rows_.oracles ()->symmetry_generators ())
+            return rows_.oracles ()->canonical (next, K_, b);
+#endif
+          return next;
         });
       }
       letters::Result<bdd> restrict_total (bdd f, bdd v, Variables vars) {
@@ -1213,7 +1281,8 @@ namespace acacia::spot_lazy_game {
       OracleLayout layout = selected_oracle_layout) {
     return detail::checked<std::vector<Rank>> ([&] {
       detail::validate_outputs (certificate);
-      auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows);
+      auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows, K,
+                                           alphabet.inputs, alphabet.outputs);
       Oracle oracle {*rows, view, alphabet, K, layout, limits.max_oracle_memo_bytes};
       MetricReport metrics {oracle, view.report, "verify_"};
       VerifierMetricReport phases {oracle, view.report, "traversal"};
@@ -1293,7 +1362,8 @@ namespace acacia::spot_lazy_game {
       OracleLayout layout = selected_oracle_layout) {
     return detail::checked<bool> ([&] {
       detail::validate_outputs (certificate);
-      auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows);
+      auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows, K,
+                                           alphabet.inputs, alphabet.outputs);
       Oracle oracle {*rows, view, alphabet, K, layout, limits.max_oracle_memo_bytes};
       MetricReport metrics {oracle, view.report, "verify_"};
       // Includes chronology, rebuilt rows and input restriction around each
@@ -1362,9 +1432,11 @@ namespace acacia::spot_lazy_game {
           K_ (K),
           limits_ (limits),
           oracle_layout_ (layout),
-          rows_ (std::make_shared<Reader> (view_, false, limits.rows)),
+          rows_ (std::make_shared<Reader> (view_, false, limits.rows, K,
+                                          alphabet_.inputs, alphabet_.outputs)),
           oracle_ (*rows_, view_, alphabet_, K, layout, limits.max_oracle_memo_bytes) {
         result_.provider = view_.provider;
+        view_.report.put ("fwd_oracles", rows_->active_oracles ());
         oracle_.set_limits (limits_.queries);
       }
       ~Search () { report_counters (); }
