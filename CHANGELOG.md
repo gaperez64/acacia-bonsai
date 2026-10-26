@@ -1,5 +1,15 @@
 # Acacia-Bonsai changelog
 
+## 2.7.1 (2026-10-26)
+
+- **Soundness fix: equivariance could answer REALIZABLE wrongly.** The symmetry
+  detector accepted permutations that swap an input with an output, so a
+  specification could be reduced to one with a different answer. Symmetries
+  now keep inputs and outputs apart (#330). The default configuration was
+  affected; 2.7.0 is confirmed, and earlier releases with equivariance on are
+  likely affected too. `--equivariance off` avoids it on older versions.
+  No disagreement with ltlsynt was seen on the benchmark corpora.
+
 ## 2.7.0 (2026-10-23)
 
 - **Faster MONA preparation.** The semantic MONA precomputer reads transition
