@@ -197,6 +197,27 @@ namespace acacia::obligation {
     return rss_share_for_limit (cap, workers, policy);
   }
 
+  uint64_t scope_memory (const char* file) noexcept {
+    uint64_t value = 0;
+    if (FILE* membership = std::fopen ("/proc/self/cgroup", "r")) {
+      char line[4096] {};
+      if (std::fgets (line, sizeof line, membership))
+        if (const char* group = std::strstr (line, "::/")) {
+          char path[4608];
+          snprintf (path, sizeof path, "/sys/fs/cgroup%.*s/%s", int (std::strcspn (group + 2, "\n")),
+                    group + 2, file);
+          if (FILE* f = std::fopen (path, "r")) {
+            unsigned long long v = 0;
+            if (std::fscanf (f, "%llu", &v) == 1)
+              value = v;
+            std::fclose (f);
+          }
+        }
+      std::fclose (membership);
+    }
+    return value;
+  }
+
   uint64_t resident_bytes (pid_t pid) noexcept {
 #ifdef __linux__
     char path[64];

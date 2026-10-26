@@ -50,4 +50,6 @@ namespace acacia::obligation {
   bool limit_address_space () noexcept;
   uint64_t rss_share (size_t workers, memory_share policy = memory_share::equal);
   uint64_t resident_bytes (pid_t pid) noexcept;
+  // This process's cgroup memory.max and memory.current; 0 when unbounded or unreadable.
+  uint64_t scope_memory (const char* file) noexcept;
 }
