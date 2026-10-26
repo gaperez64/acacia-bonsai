@@ -60,8 +60,8 @@ def below (f m : State n K) : Bool := decide (∀ q, (f q).val ≤ (m q).val)
 def downset (maxima : List (State n K)) : Region n K :=
   fun f => maxima.any fun m => below f m
 
-/-- C++: equivariant_k_bounded_safety_aut.hh:434–466. The actual apply-to-maxima
-    union. Duplicate outputs/actions have no effect on this membership predicate. -/
+/-- C++: equivariant_k_bounded_safety_aut.hh:434–466. Apply-to-maxima union.
+    Duplicate outputs/actions have no effect on this membership predicate. -/
 def backwardT (A : Automaton n a) (K : Nat) (side : Bool)
     (maxima : List (State n K)) (i : Fin a → Bool) : Region n K :=
   fun f => (letters a).any fun o => maxima.any fun m => below f (backward A K m (merge A side i o))
@@ -82,10 +82,9 @@ private theorem contribution_preimage (A : Automaton n a) (K : Nat)
     have := (f q).isLt
     omega
 
-/-- The ported min/subtract backward operation is exactly the preimage of the
-    max/increment successor, on the safe box. This connects antichain apply to
-    game CPre rather than assuming that connection. K≥1 is the C++ bound contract;
-    symmetry.hh:14–17, issue #331. -/
+/-- On the safe box, the ported min/subtract backward operation is the preimage
+    of the max/increment successor, connecting antichain apply to game CPre.
+    K≥1 is the C++ bound contract; symmetry.hh:14–17, issue #331. -/
 theorem backward_preimage (K : Nat) (hk : 1 ≤ K) (f m : State n K)
     (hm : safe A K m = true) (v : Fin a → Bool) :
     below f (backward A K m v) = true ↔
@@ -116,8 +115,8 @@ theorem backward_preimage (K : Nat) (hk : 1 ≤ K) (f m : State n K)
       exact Nat.le_trans (le_maxStates (fun q => contribution A K f v q r) q) (h r)
 
 /-- Applying backward to maximal elements and unioning over outputs computes
-    precisely the game's predecessor on safe vectors. This discharges the
-    downset semantic bridge for compute_T, equivariant:434–466; symmetry.hh:14–17, #331. -/
+    the game's predecessor on safe vectors. This proves the downset semantics
+    of compute_T, equivariant:434–466; symmetry.hh:14–17, #331. -/
 theorem backwardT_exact (K : Nat) (hk : 1 ≤ K) (side : Bool)
     (maxima : List (State n K)) (hm : ∀ m ∈ maxima, safe A K m = true)
     (i : Fin a → Bool) (f : State n K) :
@@ -131,9 +130,9 @@ theorem backwardT_exact (K : Nat) (hk : 1 ≤ K) (side : Bool)
   · intro ⟨hs, o, m, hmem, hp⟩
     exact ⟨o, mem_letters o, m, hmem, (backward_preimage K hk f m (hm m hmem) _).mpr ⟨hs, hp⟩⟩
 
-/-- The literal backward min/subtract computation also commutes, including the
-    bool/counting reset caps. This checks the implementation operation used by
-    both solvers; symmetry.hh:9–17, equivariant:434–466, issue #331. -/
+/-- The backward min/subtract computation used by both solvers commutes,
+    including the bool/counting reset caps;
+    symmetry.hh:9–17, equivariant:434–466, issue #331. -/
 theorem backward_commutes (s : Verified A) (K : Nat) (m : State n K) (v : Fin a → Bool) :
     backward A K (act s.states m) (act s.aps v) = act s.states (backward A K m v) := by
   funext q
@@ -177,9 +176,9 @@ theorem downset_safe (K : Nat) (maxima : List (State n K))
   intro q
   exact Nat.le_trans ((of_decide_eq_true hb) q) ((of_decide_eq_true (hm m hmem)) q)
 
-/-- The literal antichain apply/union/intersection update equals the game's
-    shrinking input update. This is k_bounded:244–301 and equivariant:597–628,
-    with the backward preimage obligation of #331, symmetry.hh:14–17. -/
+/-- The antichain apply/union/intersection update equals the game's shrinking
+    input update at k_bounded:244–301 and equivariant:597–628. This proves the
+    backward preimage obligation of #331, symmetry.hh:14–17. -/
 theorem backward_update_exact (K : Nat) (hk : 1 ≤ K) (side : Bool)
     (maxima : List (State n K)) (hm : ∀ m ∈ maxima, safe A K m = true)
     (i : Fin a → Bool) (f : State n K) :

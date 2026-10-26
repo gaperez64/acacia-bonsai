@@ -4,8 +4,8 @@ namespace Symmetry
 variable {A : Automaton n a}
 
 /-- All universally enabled successors, including rejecting increments and
-    saturation, commute with a verified symmetry. This is the game obligation
-    in symmetry.hh:9–17 and #331, for either choice of protagonist. -/
+    saturation, commute with a verified symmetry for either choice of
+    protagonist, as required by symmetry.hh:9–17 and #331. -/
 theorem succ_commutes (s : Verified A) (K : Nat) (f : State n K) (v : Fin a → Bool) :
     succ A K (act s.states f) (act s.aps v) = act s.states (succ A K f v) := by
   funext r
@@ -49,8 +49,8 @@ theorem initial_fixed (s : Verified A) (K : Nat) :
     · intro h; simpa [h] using hi
   simp only [act, initial, he]
 
-/-- Partition preservation makes the input/output composition commute. It is
-    the missing #330 hypothesis exposed by #331, symmetry.hh:9–17. -/
+/-- Partition preservation makes the input/output composition commute.
+    PR #330 supplies this hypothesis, required by #331, symmetry.hh:9–17. -/
 theorem merge_commutes (s : Verified A) (side : Bool) (i o : Fin a → Bool) :
     merge A side (act s.aps i) (act s.aps o) = act s.aps (merge A side i o) := by
   funext p
@@ -80,8 +80,8 @@ theorem computeT_commutes (s : Verified A) (K : Nat) (side : Bool)
     simpa [image] using ho
 
 /-- CPre commutes in either frame: environment choices remain universal and
-    protagonist choices existential because pi preserves I/O. This is the
-    central claim of symmetry.hh:14–17 and issue #331. -/
+    protagonist choices existential because pi preserves I/O, as required by
+    symmetry.hh:14–17 and issue #331. -/
 theorem cpre_commutes (s : Verified A) (K : Nat) (side : Bool) (X : Region n K) :
     cpre A K side (image s.states X) = image s.states (cpre A K side X) := by
   have h : ∀ g : State n K,
@@ -116,7 +116,7 @@ theorem image_eq (p : Perm (Fin n)) (X : Region n K) (h : Invariant p X) : image
   simpa [image] using this.symm
 
 /-- Every descending simultaneous stage is symmetric, starting at the safe
-    box. This is symmetry.hh:14–17 and the stage obligation of issue #331. -/
+    box, as required by symmetry.hh:14–17 and the stage obligation of issue #331. -/
 theorem stage_invariant (s : Verified A) (K : Nat) (side : Bool) (k : Nat) :
     Invariant s.states (stage A K side k) := by
   induction k with

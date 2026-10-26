@@ -19,7 +19,7 @@ theorem unique_nodup [DecidableEq α] (xs : List α) : (unique xs).Nodup := by
   | cons x xs ih => by_cases h : x ∈ unique xs <;> simp_all [unique, List.nodup_cons]
 
 /-- A one-way check suffices on a finite edge set: an injective image cannot
-    omit an edge. This discharges #331's converse obligation, symmetry.hh:9–17. -/
+    omit an edge. This proves #331's converse obligation, symmetry.hh:9–17. -/
 theorem finite_closed_iff (xs : List α) (p : Perm α)
     (closed : ∀ x ∈ xs, p x ∈ xs) (x : α) : p x ∈ xs ↔ x ∈ xs := by
   classical

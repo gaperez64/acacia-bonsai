@@ -57,8 +57,8 @@ theorem fold_meets (ss : List β) (T : β → α → Bool) (X : α → Bool) :
     funext f
     simp only [List.all_cons, Bool.and_assoc]
 
-/-- An orbit sweep computes the exact intersection of all its member input
-    predecessors using the SAME source snapshot. This is the literal reuse
+/-- An orbit sweep computes the intersection of all its member input
+    predecessors using the same source snapshot. This is the reuse
     step at equivariant:727–744, symmetry.hh:14–17, issue #331. -/
 theorem orbitUpdate_exact (K : Nat) (side : Bool) (O : InputOrbit A) (X : Region n K)
     (h : ∀ s ∈ O.members, Invariant s.states X) :
@@ -248,9 +248,9 @@ theorem sweep_fixed_cpre (K : Nat) (side : Bool) (P : SweepPlan A side) (X : Reg
   rw [computeT_projected] at hp
   exact (computeT_iff _ _ _ _ _ _).mp hp
 
-/-- The actual snapshot-and-intersection sweep has exactly the same final set
-    and verdict as plain CPre, in BOTH frames. Intermediate orbit snapshots are
-    preserved; no simultaneous-update assumption is used. symmetry.hh:14–17, #331. -/
+/-- The snapshot-and-intersection sweep has the same final set and verdict as
+    plain CPre in both frames. The proof retains intermediate orbit snapshots
+    and requires no simultaneous-update assumption. symmetry.hh:14–17, #331. -/
 theorem sweepFinal_eq (K : Nat) (side : Bool) (P : SweepPlan A side) :
     sweepFinal A K side P = final A K side := by
   let F := sweep A K side P

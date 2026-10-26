@@ -23,9 +23,9 @@ def candidate (i j : Fin 3) : Candidate 7 3 where
   piInv := swap i j
   families := [(true, [0, 1, 2])]
 
-/-- All structurally valid client transpositions really pass the old detector,
-    including those crossing I/O. A nonvacuous distinguishing mutant for
-    symmetry.hh:9–17 and the #331 reproducer, without PR #330. -/
+/-- All structurally valid client transpositions pass the old detector,
+    including those crossing I/O. This distinguishes the unguarded detector
+    from the PR #330 check on the #331 reproducer; symmetry.hh:9–17. -/
 theorem old_accepts_all : ∀ i j : Fin 3, unguardedCheck aut (candidate i j) = true := by
   decide
 
@@ -36,18 +36,18 @@ theorem family_rejected : ∀ tag : Bool,
     familyGuard aut { candidate 0 1 with families := [(tag, [0, 1, 2])] } = false := by
   decide
 
-/-- EVERY crossing transposition is rejected, including both orders of its
+/-- Every crossing transposition is rejected, including both orders of its
     endpoints. #331, PR #330:326–335, symmetry.hh:9–17. -/
 theorem guarded_rejects_crossing : ∀ i j : Fin 3, aut.isInput i ≠ aut.isInput j →
     check aut (candidate i j) = false := by
   decide
 
-/-- Even the same-side swap in a mixed family is skipped by the actual C++
-    family filter; the port does not weaken this to just a moved-AP check. -/
+/-- The C++ family filter also skips same-side swaps in a mixed family.
+    The port retains this whole-family check. -/
 theorem whole_mixed_family_rejected : ∀ i j : Fin 3, check aut (candidate i j) = false := by
   decide
 
-/-- Issue #331: the old (unguarded) state/AP maps are genuine bijections. -/
+/-- Issue #331: the old (unguarded) state/AP maps are bijections. -/
 def stateSwap : Perm (Fin 7) where
   toFun := (candidate 0 1).phi
   invFun := (candidate 0 1).phiInv
@@ -62,8 +62,8 @@ def apSwap : Perm (Fin 3) := transposition 0 1
 def avoid0 : Region 7 1 := fun f => (f 1).val == 0
 
 /-- An environment can force r_0; a protagonist can choose r_1 false. Swapping
-    these roles breaks CPre although structural automorphism holds. This is a
-    concrete failure of the #331 conclusion when PR #330's hypothesis is removed;
+    these roles breaks CPre although structural automorphism holds, violating
+    the #331 conclusion when PR #330's hypothesis is removed;
     symmetry.hh:9–17. -/
 theorem old_cpre_fails :
     cpre aut 1 false (image stateSwap avoid0) (initial aut 1) = true ∧

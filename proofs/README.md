@@ -13,14 +13,9 @@ reproducer. Warnings are errors. Proofs are checked by the kernel; the project
 contains no admitted proofs, custom axioms, native decision procedure, or partial
 functions.
 
-The source reference is master `aa37a244` plus PR #330, commit `35a8723a`.
-The latter is modeled without applying it to the C++ working tree. Line numbers
-below refer to master, except the new family filter, whose numbers refer to
-`git show 35a8723a:src/solver/symmetry.hh`.
-
-`gh issue view 331 --comments` and the web fallback could not retrieve the issue.
-The issue obligations, seven-state reproducer, and follow-up findings here come
-from the task description; additional issue comments were unavailable.
+The model follows master `df5b2c28`, which includes merged PR #330, commit
+`35a8723a`. All C++ line numbers below refer to this master revision, including
+the family filter.
 
 ## What is proved
 
@@ -32,9 +27,9 @@ are harmless for universal transition semantics; the degree and label-multiset
 checks still retain their multiplicities.
 
 The max/increment successor, safe box, and shrinking CPre commute with the
-symmetry. Every simultaneous fixed-point stage is invariant. Iteration reaches
-the greatest safe fixed point within the number of concrete game states; this
-bound is proved, rather than assumed as fuel. Initial membership is invariant.
+symmetry. Every simultaneous fixed-point stage is invariant. Iteration is proved
+to reach the greatest safe fixed point within the number of concrete game states.
+Initial membership is invariant.
 
 The min/subtract backward operation is ported separately. Its preimage theorem
 connects the C++ operation on maximal vectors to the game's successor, for
@@ -53,7 +48,7 @@ point and verdict. Its transport evidence is `GeneratedBy`: a composition of
 stored swaps, including identity. `close` still iterates the original generator
 list. `generated_invariant` extends invariance to these compositions.
 `phiFromSigma_comp` and `phiFromSigma_generated` prove that every slot
-permutation lifts to a composition of the stored star swaps, when the state
+permutation lifts to a composition of the stored star swaps when the state
 and AP layouts agree with those swaps. `generated_verified` also supplies the
 resulting automorphism certificate.
 
@@ -83,9 +78,9 @@ translation are outside this symmetry proof.
 
 Names below are in namespace `Symmetry` unless prefixed otherwise. Unqualified
 witnesses are in `Symmetry.Witnesses`; `OrbitWitnesses` adds the three-client
-star plan. Concrete finite hypotheses use `decide`, not assumed
-certificates. The final-set examples instantiate the general theorems on those
-checked hypotheses rather than exponentially unfolding the reference solver.
+star plan. Concrete finite hypotheses are checked with `decide`. The final-set
+examples apply the general theorems to these checked hypotheses, avoiding
+exponential unfolding of the reference solver.
 
 | Obligation | Lean definition or theorem | Concrete witness |
 | --- | --- | --- |
@@ -159,25 +154,25 @@ Paths in the first column are relative to `src/`.
 | `solver/solver_invoker.cc:1159–1165` | `swapFrame`, `swapped_engine_cpre` |
 
 `Finite.lean` contains the finite-set converse argument. `FixedPoint.lean`
-contains termination and greatestness. These are proof helpers, not extra C++
-algorithms. `Transports.lean` proves the composition/layout bridge. The two
+contains termination and greatestness. They contain helper proofs without adding
+C++ algorithms. `Transports.lean` proves the composition/layout bridge. The two
 `*Witnesses.lean` modules contain concrete fixtures and their checks.
 
 ## Trusted gap
 
-This is a proof of the Lean port and its stated interfaces, not a verified
-compiler or an extraction of the C++ binary. In particular, the orbit-plan
-interface below is a substantive remaining correspondence obligation.
+The proofs cover the Lean port and its stated interfaces. Compiler verification
+and extraction from the C++ binary are outside their scope. The orbit-plan
+interface still requires a proof of correspondence with C++.
 
-- **Orbit construction and layout.** The star-generator bridge is proved:
-  `phiFromSigma_generated` covers every slot `Perm`, using exactly the original
+- Orbit construction and layout. `phiFromSigma_generated` proves that every
+  slot `Perm` is generated using exactly the original
   stored star list. It assumes inverse block/slot tables (`BlockLayout`) for
   states and indexed AP families, and agreement of every root swap with both
-  tables. It does not assume every transport is stored. The concrete
-  three-client mixed-I/O plan proves these hypotheses and projected coverage
+  tables. Transports need not be stored. The concrete three-client mixed-I/O
+  plan proves these hypotheses and projected coverage
   in both frames, without adding output assignments or closure generators.
 
-  What remains is proving that successful C++ builders supply these premises:
+  Successful C++ builders must still be proved to supply these premises:
   (1) `compute_block_layout` and `generators_match_layout` establish the inverse
   tables and simultaneous state/AP star agreement (`symmetry_blocks.hh:74–187,
   274–302`; family/index lookup at equivariant `:81–121`);
@@ -187,47 +182,48 @@ interface below is a substantive remaining correspondence obligation.
   (3) `match_slots` returns a bijective slot map taking canonical types to the
   current sequence, and `next_permutation` covers the whole orbit, establishing
   projected orbit closure (`equivariant:358–383,731–744`). The fixture supplies
-  the stable matching maps by hand; it does not verify those algorithms, their
-  order, or their decline/cap checks. The final-set and verdict theorems thus
-  cover plans with generated transports and projected coverage, but remain
-  conditional on these builder premises for arbitrary C++ invocations.
-- **BDDs and supports.** BDD labels become Boolean formulas and truth-table
+  the stable matching maps by hand. Those algorithms, their order, and their
+  decline/cap checks remain unverified. The final-set and verdict theorems
+  cover plans with generated transports and projected coverage; applying them
+  to arbitrary C++ invocations requires these builder premises.
+- BDDs and supports. BDD labels become Boolean formulas and truth-table
   equality (`symmetry.hh:112–117,260–269`). `eval_rename` proves substitution
   semantics. Spot/BuDDy label construction and canonical BDD identity are
   trusted. `isInput` assumes a total disjoint I/O partition; malformed supports
   containing an AP on both/neither side are outside this model
   (PR #330 `symmetry.hh:310–335`). `computeT_projected` proves that enumerating
   full letters instead of partial cubes adds only redundant unused bits.
-- **Candidate search and hints.** The completed candidate check includes the
+- Candidate search and hints. The completed candidate check includes the
   source's degree/label-multiset tests and explicit inverse-table validation.
   Backtracking order, signature strings, hash implementation, name parsing,
   frontend hints, time budgets, and search caps are not implemented
   (`symmetry.hh:96–277,304–384`; `symmetry_certificate.hh:8–17`). The latter
-  contains declaration hints, not a validated symmetry certificate. Only
+  contains declaration hints; these still require validation. Only
   checked candidates enter the game proofs. `Generated` records the
   within-family, involutive AP maps constructed by source transpositions;
-  `check_matches_source` proves the extra direct partition assertion redundant
-  there. The Lean soundness gate also includes the downstream cap guard.
-- **Acceptance and counters.** Acceptance is state based, as used by
+  `check_matches_source` proves that the extra direct partition assertion is
+  redundant there. The Lean soundness check also includes the downstream cap
+  guard.
+- Acceptance and counters. Acceptance is state based, as used by
   `equivariant_k_bounded_safety_aut.hh:190–201`. Transition-based acceptance
   configurations are outside this port. Shifted counters encode C++ `-1..K`
   as `0..K+1`; safe counting bounds are `<=K` and Boolean bounds are `<=1`.
-  The successor retains scalar overflow before Boolean storage. We do not
-  claim equivalence with the compressed *forward* solver. Instead,
+  The successor retains scalar overflow before Boolean storage. Equivalence
+  with the compressed *forward* solver is outside this proof.
   `backward_preimage` proves exact agreement with the backward operation used
   here (`actioners/standard.hh:153–195`). Its outputs obey the Boolean cap, so
   Boolean storage preserves them (`posets/vectors/X_and_boolvec.hh:21–30,69–71`).
   Naturals replace machine integers; C++ overflow/range validation is trusted.
-- **Downsets.** Regions use concrete membership, and `downset` interprets a
+- Downsets. Regions use concrete membership, and `downset` interprets a
   finite list of maximal bounds. Backward apply, union over outputs, and
   coordinate permutation are connected by theorems. Correctness of the posets
   container's insertion, intersection, maximal-element pruning, SIMD storage,
-  and unchecked bulk factory is not a binary-level proof
+  and unchecked bulk factory remains unproved at the binary level
   (`k_bounded_safety_aut.hh:278–308`; equivariant `:388–432,473–506`).
-- **Iteration and bounds.** The proof is for arbitrary fixed K; the backward
+- Iteration and bounds. The proof is for arbitrary fixed K; the backward
   bridge assumes `K>=1`. Finite complete rounds replace the picker/while-loop
   stopping machinery (`k_bounded_safety_aut.hh:129–165`; equivariant
-  `:721–774,923–977`). The real snapshot/intersection orders within those rounds
+  `:721–774,923–977`). The C++ snapshot/intersection orders within those rounds
   are retained. `bump` ports maximal-vector widening and proves it commutes;
   fixed-K early initial-out exits are proved exact by `early_exit_exact`.
   Adaptive K scheduling, fallback routing, and end-to-end LTL synthesis are

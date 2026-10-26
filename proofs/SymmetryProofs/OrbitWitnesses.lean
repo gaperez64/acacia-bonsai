@@ -54,7 +54,8 @@ def generators : List (Verified aut) := [s01, s02]
 /-- C++: equivariant:734–736. This transport is absent from the stored list. -/
 def s12 : Verified aut := s01.comp (s02.comp s01)
 
-/-- The review's missing (1,2) transport is generated, but is not stored. -/
+/-- The (1,2) transport identified in the review is generated and absent from
+    the stored list. -/
 theorem missing_transport : GeneratedBy generators s12.states s12.aps ∧ s12 ∉ generators := by
   constructor
   · exact .comp (.generator s01 (by simp [generators]))
@@ -84,13 +85,13 @@ theorem stars : ∀ j : Fin 3, j ≠ 0 → ∃ s ∈ generators,
   · exact ⟨s01, by simp [generators], rfl, rfl⟩
   · exact ⟨s02, by simp [generators], rfl, rfl⟩
 
-/-- The bridge covers every slot permutation, including match_slots results
-    absent from the generator list; symmetry.hh:14–17, #331. -/
+/-- The generation theorem covers every slot permutation, including match_slots
+    results absent from the generator list; symmetry.hh:14–17, #331. -/
 theorem layout_generated (sigma : Perm (Fin 3)) :
     GeneratedBy generators (stateLayout.phiFromSigma sigma) (apLayout.phiFromSigma sigma) :=
   phiFromSigma_generated stateLayout apLayout generators 0 stars sigma
 
-/-- A checked witness that phi_from_sigma for (1,2) is exactly the composed
+/-- A checked witness that phi_from_sigma for (1,2) equals the composed
     transport used below, on both states and APs. -/
 theorem layout_transport :
     (∀ q, s12.states q = stateLayout.phiFromSigma (transposition 1 2) q) ∧
@@ -112,8 +113,8 @@ def orbits (side : Bool) : List (InputOrbit aut) :=
    ⟨representative side true true true, [Verified.identity aut]⟩]
 
 /-- Every concrete orbit member is the layout-induced map of its slot
-    permutation, on both states and APs. This supplies the transport bridge
-    used by `plan`, rather than assuming literal generator membership. -/
+    permutation, on both states and APs. This proves the transport property
+    used by `plan`; members need not occur in the stored generator list. -/
 theorem member_layout (side : Bool) (O : InputOrbit aut) (ho : O ∈ orbits side)
     (s : Verified aut) (hs : s ∈ O.members) :
     ∃ sigma : Perm (Fin 3), s.states = stateLayout.phiFromSigma sigma ∧
@@ -139,9 +140,10 @@ theorem member_layout (side : Bool) (O : InputOrbit aut) (ho : O ∈ orbits side
   · simp only [List.mem_cons, List.not_mem_nil, or_false] at hs
     subst s; exact hid
 
-/-- Every hypothesis of the final solver theorems has a concrete witness with
-    three clients, non-stored transports, and input AND output APs, in BOTH
-    frames. Coverage is only after opponentProjection, as #331 requires. -/
+/-- Every hypothesis of the final solver theorems has a concrete witness in
+    both frames, using three clients, transports absent from the stored list,
+    and input and output APs. Coverage is required only after opponentProjection,
+    as #331 requires. -/
 def plan (side : Bool) : SweepPlan aut side where
   generators := generators
   orbits := orbits side
@@ -160,21 +162,21 @@ def plan (side : Bool) : SweepPlan aut side where
         opponentProjection aut side i ∈ orbitLetters side O := by cases side <;> decide
     exact h
 
-/-- Coverage does not invent extra output assignments: every representative
-    leaves protagonist APs false, and each frame has APs on both sides. -/
+/-- Every representative leaves protagonist APs false, so coverage requires
+    no extra output assignments. Each frame has APs on both sides. -/
 theorem input_only : ∀ side : Bool,
     (∀ O ∈ orbits side, ∀ p, aut.isInput p = side → O.representative p = false) ∧
     (∃ p, aut.isInput p = side) ∧ (∃ p, aut.isInput p ≠ side) := by decide
 
-/-- The corrected plan is used by the actual final-set theorems, retaining
-    the original two-star list for generator closure. symmetry.hh:14–17, #331. -/
+/-- The final-set theorems use this plan with the original two-star list for
+    generator closure. symmetry.hh:14–17, #331. -/
 theorem final_sets (side : Bool) :
     sweepFinal aut 1 side (plan side) = final aut 1 side ∧
     representativeFinal 1 side (plan side) = final aut 1 side :=
   ⟨sweepFinal_eq 1 side (plan side), representativeFinal_eq 1 side (plan side)⟩
 
-/-- Both verdict corollaries are inhabited with engine-input representatives
-    and a genuine star generator list, in either frame. symmetry.hh:14–17, #331. -/
+/-- Both verdict corollaries use engine-input representatives and the stored
+    star generator list, in either frame. symmetry.hh:14–17, #331. -/
 theorem verdicts (side : Bool) :
     sweepFinal aut 1 side (plan side) (initial aut 1) = winner aut 1 side ∧
     representativeFinal 1 side (plan side) (initial aut 1) = winner aut 1 side :=

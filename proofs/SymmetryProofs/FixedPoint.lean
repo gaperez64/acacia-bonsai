@@ -50,9 +50,9 @@ theorem filter_strict (U : List α) (full : ∀ f, f ∈ U) (X Y : α → Bool)
   apply List.length_filter_lt_length_iff_exists.mpr
   exact ⟨f, by simp [full f, hx], by simp [hy]⟩
 
-/-- Descending iteration terminates within the number of concrete game states;
-    this proves the stopping condition, rather than assuming it. It justifies
-    the finite executable loop, symmetry.hh:14–17 and issue #331. -/
+/-- Descending iteration terminates within the number of concrete game states.
+    This bound justifies the finite executable loop,
+    symmetry.hh:14–17 and issue #331. -/
 theorem iterate_stable (U : List α) (full : ∀ f, f ∈ U)
     (F : (α → Bool) → α → Bool) (shrink : ∀ X, Subset (F X) X)
     (fuel : Nat) (X : α → Bool) (bound : (U.filter X).length ≤ fuel) :
@@ -95,8 +95,8 @@ theorem iterate_stable (U : List α) (full : ∀ f, f ∈ U)
 
 variable {A : Automaton n a}
 
-/-- The final stage really is a fixed point, not merely a bounded approximation.
-    This is the final-fixpoint obligation in symmetry.hh:14–17 and issue #331. -/
+/-- The final stage is a fixed point, satisfying the final-fixpoint obligation
+    in symmetry.hh:14–17 and issue #331. -/
 theorem final_fixed (K : Nat) (side : Bool) :
     cpre A K side (final A K side) = final A K side :=
   iterate_stable (states n K) mem_states (cpre A K side) (cpre_shrinks A K side)

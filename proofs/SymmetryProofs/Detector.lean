@@ -35,7 +35,7 @@ def structuralCheck (A : Automaton n a) (c : Candidate n a) : Bool :=
     d.src == c.phi e.src && d.dst == c.phi e.dst &&
     (letters a).all fun v => d.label.eval (fun p => v (c.piInv p)) == e.label.eval v)
 
-/-- C++ at 35a8723a: symmetry.hh:326–335. The actual family-wide filter. -/
+/-- C++ at 35a8723a: symmetry.hh:326–335. Family-wide I/O filter. -/
 def familyGuard (A : Automaton n a) (c : Candidate n a) : Bool :=
   c.families.all fun family => family.2.all fun p => A.isInput p == family.1
 
@@ -59,12 +59,12 @@ def unguardedCheck (A : Automaton n a) (c : Candidate n a) : Bool :=
   structuralCheck A c && capGuard A c && shapeCheck A c
 
 /-- C++: symmetry.hh:235–277 plus 35a8723a:326–335; equivariant:851–853.
-    Effective soundness gate, including the downstream boolean-coordinate guard. -/
+    Combined candidate check, including the downstream Boolean-coordinate guard. -/
 def check (A : Automaton n a) (c : Candidate n a) : Bool :=
   structuralCheck A c && partitionGuard A c && capGuard A c && familyGuard A c && shapeCheck A c
 
 /-- Pure families and within-family moves imply the per-AP guard, so its
-    explicit validation does not strengthen the C++ gate on generated candidates.
+    explicit validation does not strengthen the C++ check on generated candidates.
     PR #330:326–335, symmetry.hh:9–17, issue #331. -/
 theorem generated_partition (A : Automaton n a) (c : Candidate n a)
     (hg : Generated c) (hf : familyGuard A c = true) : partitionGuard A c = true := by
@@ -77,7 +77,7 @@ theorem generated_partition (A : Automaton n a) (c : Candidate n a)
     have h2 := beq_iff_eq.mp (List.all_eq_true.mp hall (c.pi p) ho)
     exact h2.trans h1.symm
 
-/-- The port's effective gate equals the guarded C++ gate on generated candidates;
+/-- The port's candidate check equals the guarded C++ check on generated candidates;
     the extra per-AP assertion is redundant. PR #330 and issue #331. -/
 theorem check_matches_source (A : Automaton n a) (c : Candidate n a) (hg : Generated c) :
     check A c = (structuralCheck A c && capGuard A c && familyGuard A c && shapeCheck A c) := by
@@ -100,8 +100,8 @@ structure Verified (A : Automaton n a) where
       ∀ v, d.label.eval (act aps v) = e.label.eval v
 
 /-- Every accepted candidate is bijective, fixes init, preserves acceptance,
-    I/O and caps, and maps every edge to a matching edge. These are precisely
-    the soundness conditions in symmetry.hh:9–17 and issue #331. -/
+    I/O and caps, and maps every edge to a matching edge, satisfying the
+    soundness conditions in symmetry.hh:9–17 and issue #331. -/
 def accepted_sound (A : Automaton n a) (c : Candidate n a) (h : check A c = true) :
     Verified A := by
   simp only [check, structuralCheck, partitionGuard, capGuard, Bool.and_eq_true,
@@ -117,7 +117,7 @@ def accepted_sound (A : Automaton n a) (c : Candidate n a) (h : check A c = true
   intro v
   exact beq_iff_eq.mp (List.all_eq_true.mp hm.2 v (mem_letters v))
 
-/-- State and AP maps accepted by the executable gate are injective AND
+/-- State and AP maps accepted by the executable check are injective and
     surjective; init, rejecting status, I/O and caps are preserved. The inverse
     tables encode the source's assign/inv construction, symmetry.hh:144–277;
     these are the first obligations of symmetry.hh:9–17 and issue #331. -/
@@ -168,8 +168,8 @@ theorem edges_both_directions (s : Verified A) (x : EdgeKey n a) :
     keyPerm s x ∈ A.edges.map edgeKey ↔ x ∈ A.edges.map edgeKey :=
   finite_closed_iff _ _ (key_closed s) x
 
-/-- Enabled transitions match in both directions, so a universal successor
-    loses and gains no branch under renaming; symmetry.hh:9–17, issue #331. -/
+/-- Enabled transitions match in both directions, so renaming preserves all
+    branches of a universal successor; symmetry.hh:9–17, issue #331. -/
 theorem enabled_commutes (s : Verified A) (q r : Fin n) (v : Fin a → Bool) :
     A.enabled (s.states q) (s.states r) (act s.aps v) = A.enabled q r v := by
   apply Bool.eq_iff_iff.mpr

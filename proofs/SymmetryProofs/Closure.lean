@@ -48,8 +48,8 @@ theorem closePass_fixed_invariant (G : List (Verified A)) (X : Region n K)
     simpa [actionPerm, mem_states] using he
   exact hh.symm
 
-/-- The literal generator-closure loop terminates and yields an invariant raw
-    region. Its tightening is intersection, as the C++ says, not orbit union;
+/-- The generator-closure loop terminates with an invariant raw region.
+    It tightens the region by intersection with generator images, as in C++;
     equivariant:558–581, symmetry.hh:14–17, issue #331. -/
 theorem close_invariant (G : List (Verified A)) (X : Region n K) : Symmetric G (close G X) := by
   apply closePass_fixed_invariant
@@ -158,9 +158,9 @@ theorem representativeRound_fixed_cpre (K : Nat) (side : Bool) (P : SweepPlan A 
 def representativeFinal (K : Nat) (side : Bool) (P : SweepPlan A side) : Region n K :=
   iterate (representativeRound K side P) (safe A K) (states n K).length
 
-/-- The representative-picker plus generator-closure path returns the SAME
-    greatest fixed point as plain CPre, not just an invariant subset. Together
-    with sweepFinal_eq this covers both shipped paths, symmetry.hh:14–17, #331. -/
+/-- The representative-picker and generator-closure path returns the same
+    greatest fixed point as plain CPre. Together with sweepFinal_eq, this covers
+    both shipped paths, symmetry.hh:14–17, #331. -/
 theorem representativeFinal_eq (K : Nat) (side : Bool) (P : SweepPlan A side) :
     representativeFinal K side P = final A K side := by
   let F := representativeRound K side P
@@ -185,8 +185,8 @@ theorem representativeFinal_eq (K : Nat) (side : Bool) (P : SweepPlan A side) :
     rw [post]; exact h
   · exact contains _
 
-/-- Both equivariant implementations give the plain verdict, for the original
-    or swapped protagonist side. This is the end-to-end #331 reduction claim,
+/-- Both equivariant implementations give the plain verdict for the original
+    or swapped protagonist side, proving the #331 reduction claim;
     symmetry.hh:14–17. -/
 theorem verdicts_equal (K : Nat) (side : Bool) (P : SweepPlan A side) :
     sweepFinal A K side P (initial A K) = winner A K side ∧

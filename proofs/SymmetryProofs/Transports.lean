@@ -37,7 +37,7 @@ inductive GeneratedBy (G : List (Verified A)) : Perm (Fin n) → Perm (Fin a) �
   | comp {p q r t} : GeneratedBy G p r → GeneratedBy G q t →
       GeneratedBy G (p.comp q) (r.comp t)
 
-/-- Generation evidence can itself supply the verified certificate for a
+/-- Generation evidence supplies the verified certificate for a
     layout-induced transport. Soundness note symmetry.hh:9–17 and #331. -/
 theorem generated_verified {G : List (Verified A)} {p r} (h : GeneratedBy G p r) :
     ∃ s : Verified A, s.states = p ∧ s.aps = r := by
@@ -163,10 +163,10 @@ theorem transposition_star [DecidableEq α] (pivot x y : α) (hx : x ≠ pivot) 
   by_cases hp : z = pivot <;> by_cases hzx : z = x <;> by_cases hzy : z = y <;>
     simp_all [transposition, swap, Perm.comp, Ne.symm hne]
 
-/-- Every slot permutation induces a composition of the ORIGINAL stored star
-    swaps, if the stored swaps agree with the layout. This proves the claim at
-    symmetry_blocks.hh:274–302 and symmetry.hh:14–17 needed by #331. No orbit
-    transport has to occur literally in the closure generator list. -/
+/-- Every slot permutation induces a composition of the original stored star
+    swaps if those swaps agree with the layout. This proves the claim at
+    symmetry_blocks.hh:274–302 and symmetry.hh:14–17 needed by #331. Orbit
+    transports need not occur in the closure generator list. -/
 theorem phiFromSigma_generated (S : BlockLayout n c bs) (I : BlockLayout a c bi)
     (G : List (Verified A)) (pivot : Fin c)
     (stars : ∀ j, j ≠ pivot → ∃ s ∈ G,

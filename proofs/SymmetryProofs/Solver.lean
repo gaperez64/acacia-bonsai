@@ -15,9 +15,9 @@ theorem iterate_shrinks (F : (α → Bool) → α → Bool) (shrink : ∀ X, Sub
   | zero => exact fun _ h => h
   | succ k ih => exact fun f h => ih f (shrink _ f h)
 
-/-- Stopping when init disappears gives exactly the verdict of the completed
-    descending iteration. This covers the C++ early exit, without assuming it
-    preserves the result; symmetry.hh:14–17 and issue #331. -/
+/-- Stopping when init disappears gives the verdict of the completed descending
+    iteration, proving that the C++ early exit preserves the result;
+    symmetry.hh:14–17 and issue #331. -/
 theorem early_exit_exact (init : α) (F : (α → Bool) → α → Bool)
     (shrink : ∀ X, Subset (F X) X) (X : α → Bool) (k : Nat) :
     runUntilInitialOut init F X k = iterate F X k init := by
@@ -37,7 +37,7 @@ theorem early_exit_exact (init : α) (F : (α → Bool) → α → Bool)
       rw [hx] at this
       contradiction
 
-/-- Both actual fixed-K reuse loops, including the early-initial-out branch,
+/-- Both fixed-K reuse loops, including the early-initial-out branch,
     have the plain verdict in either frame. The plan's obligations are explicit;
     symmetry.hh:14–17, equivariant:721–774,923–956, issue #331. -/
 theorem executed_verdicts_equal (K : Nat) (side : Bool) (P : SweepPlan A side) :

@@ -100,9 +100,9 @@ theorem computeT_iff (A : Automaton n a) (K : Nat) (side : Bool) (X : Region n K
 def opponentProjection (A : Automaton n a) (side : Bool) (i : Fin a → Bool) : Fin a → Bool :=
   fun p => if A.isInput p = side then false else i p
 
-/-- Enumerating full valuations only duplicates unused bits. Its T sets equal
-    those obtained from the input cubes enumerated by C++, so this
-    representation change does not alter the game; symmetry.hh:14–17, #331. -/
+/-- Enumerating full valuations duplicates unused bits but gives the same T
+    sets as the input cubes enumerated by C++, preserving the game;
+    symmetry.hh:14–17, #331. -/
 theorem computeT_projected (K : Nat) (side : Bool) (X : Region n K) (i : Fin a → Bool) :
     computeT A K side X (opponentProjection A side i) = computeT A K side X i := by
   have hm : ∀ o, merge A side (opponentProjection A side i) o = merge A side i o := by

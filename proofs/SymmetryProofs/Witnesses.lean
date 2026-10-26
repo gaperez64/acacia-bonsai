@@ -61,7 +61,7 @@ theorem guard_mutants :
     check aut { candidate with pi := fun p => p, piInv := fun p => p } = false ∧
     check { aut with isInput := fun p => p == 0 } candidate = false := by decide
 
-/-- Two pure I/O families exercise a nonidentity permutation on BOTH sides. -/
+/-- Two pure I/O families exercise a nonidentity permutation on both sides. -/
 def ioAut : Automaton 3 4 where
   init := 0
   rejecting := fun q => q != 0
@@ -79,7 +79,7 @@ def ioCandidate : Candidate 3 4 where
   piInv := fun p => swap 0 1 (swap 2 3 p)
   families := [(true, [0, 1]), (false, [2, 3])]
 
-/-- Positive guard witness with actual inputs AND outputs. -/
+/-- Positive guard witness with both inputs and outputs. -/
 theorem ioAccepted : check ioAut ioCandidate = true ∧ Generated ioCandidate := by
   unfold Generated
   decide
@@ -136,7 +136,7 @@ theorem successor : ∀ f : State 3 1, ∀ v : Fin 2 → Bool,
 theorem safety : (∀ f : State 3 1, safe aut 1 (act sym.states f) = safe aut 1 f) ∧
     act sym.states (initial aut 1) = initial aut 1 := by decide
 
-/-- Witness for CPre in BOTH frames on an asymmetric source. -/
+/-- Witness for CPre in both frames on an asymmetric source. -/
 theorem predecessor : ∀ side : Bool, ∀ f : State 3 1,
     cpre aut 1 side (image sym.states region) f = image sym.states (cpre aut 1 side region) f := by decide
 
@@ -180,12 +180,12 @@ theorem greatest_hypotheses : ∀ side : Bool,
   unfold Subset
   decide
 
-/-- Final-region invariance is instantiated on a genuine accepted state swap. -/
+/-- Final-region invariance for an accepted state swap. -/
 theorem final_region (side : Bool) : Invariant sym.states (final aut 1 side) :=
   final_invariant sym 1 side
 
-/-- Concrete fixed-point and greatest-point obligations; all hypotheses above
-    were proved by decide, without assumed certificates or empty regions. -/
+/-- Concrete fixed-point and greatest-point obligations; decide proves all
+    hypotheses above, using nonempty regions and checked certificates. -/
 theorem fixed (side : Bool) : cpre aut 1 side (final aut 1 side) = final aut 1 side :=
   final_fixed 1 side
 
