@@ -48,16 +48,18 @@ theorem picker_reach_invariants (h : PickerReach A K side G X) :
     forward scan, exhaustion at a reachable call implies every representative
     backward constraint and the exact winning verdict. K and safe maxima feed
     the backward bridge; the history supplies the success-branch invariants. -/
-theorem picker_completed (closed : BooleanClosed A) (K : Nat) (positive : 1 ≤ K)
+theorem picker_completed_of_invariants (closed : BooleanClosed A) (K : Nat) (positive : 1 ≤ K)
     (side : Bool) (P : SweepPlan A side) (maxima : List (State n K))
-    (reached : PickerReach A K side P.generators (downset maxima))
+    (invariants : Subset (final A K side) (downset maxima) ∧
+      Subset (downset maxima) (safe A K) ∧ Symmetric P.generators (downset maxima) ∧
+      downset maxima (initial A K) = true)
     (rows : List ((Fin a → Bool) × List (Fin a → Bool)))
     (retained : ∀ O ∈ P.orbits, ∃ row ∈ rows, row.1 = O.representative)
     (compatible : ∀ row ∈ rows, ∀ v ∈ row.2, ∃ o, v = merge A side row.1 o)
     (exhausted : (criticalCached (fun f v => storedSucc A K f v) maxima rows).1 = none) :
     (∀ row ∈ rows, (fun f => downset maxima f && backwardT A K side maxima row.1 f) = downset maxima) ∧
       downset maxima = final A K side ∧ winner A K side = true := by
-  obtain ⟨contains, safeRegion, symmetric, initialIn⟩ := picker_reach_invariants reached
+  obtain ⟨contains, safeRegion, symmetric, initialIn⟩ := invariants
   have safeMax : ∀ m ∈ maxima, safe A K m = true := by
     intro m hm
     exact safeRegion m (List.any_eq_true.mpr ⟨m, hm, decide_eq_true (fun _ => Nat.le_refl _)⟩)
@@ -67,6 +69,20 @@ theorem picker_completed (closed : BooleanClosed A) (K : Nat) (positive : 1 ≤ 
   change final A K side (initial A K) = true
   rw [← he]
   exact initialIn
+
+/-- Fixed-K histories supply all completion invariants. The separate
+    invariant form also supports regions reused after a bound raise. -/
+theorem picker_completed (closed : BooleanClosed A) (K : Nat) (positive : 1 ≤ K)
+    (side : Bool) (P : SweepPlan A side) (maxima : List (State n K))
+    (reached : PickerReach A K side P.generators (downset maxima))
+    (rows : List ((Fin a → Bool) × List (Fin a → Bool)))
+    (retained : ∀ O ∈ P.orbits, ∃ row ∈ rows, row.1 = O.representative)
+    (compatible : ∀ row ∈ rows, ∀ v ∈ row.2, ∃ o, v = merge A side row.1 o)
+    (exhausted : (criticalCached (fun f v => storedSucc A K f v) maxima rows).1 = none) :
+    (∀ row ∈ rows, (fun f => downset maxima f && backwardT A K side maxima row.1 f) = downset maxima) ∧
+      downset maxima = final A K side ∧ winner A K side = true :=
+  picker_completed_of_invariants closed K positive side P maxima
+    (picker_reach_invariants reached) rows retained compatible exhausted
 
 /-- The default Boolean preprocessing port supplies the graph condition, so
     the completion theorem needs no separately assumed forward-storage bridge. -/

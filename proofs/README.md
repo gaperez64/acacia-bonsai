@@ -85,6 +85,64 @@ then to the final region and successful verdict. `PickerReach` retains arbitrary
 input selection and the initial-out test between picker calls; it does not
 replace the stopping test with complete rounds.
 
+`ActionTable.lean` ports the representative table construction. Input traversal
+produces partial cubes with output residual diagrams. Output traversal produces
+complete endpoint action lists. Filtering keeps a whole input cube whenever it
+intersects the representative set. The actioner's next step compares whole
+input rows by their action lists, ignores their BDD keys, and retains the first
+key in each equal class. Its set orders the retained classes by their action
+lists; `Refines.permuted` proves that this ordering preserves the relation.
+Discarded keys are not merged into that key. This is separate from
+deduplicating responses within one input row.
+
+Consequently, a physical row need not have a literal representative key, and a
+representative can disappear even from the union of surviving keys.
+`precomputer_refinement` proves that every representative still maps to a
+retained action class, and every retained class implements all responses of a
+legal input in its surviving cube. Its only interpretation premise says that
+the raw input/output diagram denotes the automaton's endpoint relation.
+`precomputer_denotes` derives that premise for the executable truth-table
+constructor. Actual BDD encoding and decoding remain at the BDD boundary.
+Traversal coverage, cube filtering and whole-row deduplication are proved,
+rather than assumed at the table interface.
+
+`class_predecessor_exact` and `class_backward_exact` give the full forward
+response predecessor and backward union for each class. `selected_refinement`
+therefore identifies a physical payload update with `representativeUpdate` at
+a legal input. `virtual_exhausted` transfers physical exhaustion to a virtual
+table containing every representative and its full responses. The virtual
+`retained` and `compatible` premises of `picker_completed` are derived.
+`precomputer_completed` and `physical_completed` instantiate completion;
+`physical_update_reach` instantiates update preservation. The relation survives
+response splices, priority sorting and reconstruction of the next priority
+queue. These are proof constructions, with no additional runtime work.
+
+`AdaptiveK.lean` adds the bound-raise case. Subtracting the increase from every
+shifted coordinate, flooring at absence, maps every new-bound winner into the
+old winning region. Thus raising each counting maximum by the actual increase
+and resetting each Boolean maximum to 0 preserves a safe overapproximation of
+all new-bound winners. The lift also preserves symmetry and restores initial
+membership before the next picker call. `AdaptiveReach` follows the source's
+update, closure, initial-out test and post-update lift. `adaptive_completed`,
+`adaptive_selected`, `shared_loop_raise` and `adaptive_stopped` connect both
+stopping branches and continued calls to the physical table relation.
+The same history also has individual sweep-orbit and post-orbit raise cases;
+`adaptive_sweep_completed` and `adaptive_orbit_out` cover the sweep's unchanged
+round and intervening initial-out tests, including the raise at lines 751–760.
+
+The shared and ordinary K schedules are not identical. Shared code uses
+`k += kinc`; ordinary code clamps the next K to `kmax` and lifts by that smaller
+actual delta. With positive K and increment, both supply the positive delta
+needed by the reuse proof. They coincide when the increment lands within
+`kmax`. Shared execution can otherwise overshoot: a success is proved at the
+returned actual K, and a refutation at or beyond `kmax` implies refutation at
+`kmax`. Success after overshooting need not imply success at `kmax`.
+`AdaptiveWitnesses.schedule_verdict_mutant` gives a three-state acyclic chain:
+starting at 1 with increment 2 and maximum 2, shared next uses 3 and can win,
+whereas ordinary next uses 2 and loses. Equality of the two configured-maximum
+verdicts is therefore not claimed for arbitrary schedules. This does not
+invalidate the returned larger-bound winning certificate.
+
 Forward Boolean storage needs a graph condition: a Boolean destination is
 nonrejecting and has no incoming counting-state edge. `BooleanBoundary.lean`
 ports rank saturation, acceptance clearing, and state reordering, and proves
@@ -132,12 +190,15 @@ they do not unfold the fixed-point solver.
 | Representative/closure solver has the plain final set | `representativeFinal_eq`, `verdicts_equal` | `plan`, `final_sets`, `verdicts`, `OrbitWitnesses.verdicts` |
 | Actual swapped engine frame | `swapped_engine_cpre`, `both_engine_frames` | `ioAccepted`, `engine_partition` |
 | Early initial-out exit preserves the verdict | `early_exit_exact`, `executed_verdicts_equal` | `executed`, `OrbitWitnesses.executed` |
-| Uniform bound widening preserves symmetry | `bump_commutes` | `bound_raise` |
+| Bound raises preserve new-bound soundness, safety, symmetry and init | `final_lower`, `bound_raise_invariant`, `raised_initial`, `adaptive_invariants` | `AdaptiveWitnesses.raised`, `restored`, `symmetric_raise`, `no_lift_mutant`, `nonuniform_mutant` |
+| Adaptive stopping branches and schedules | `adaptive_completed`, `adaptive_selected_raise`, `shared_loop_raise`, `ordinary_loop_delta`, `schedules_raise`, `schedules_agree`, `refuted_at_limit`, `adaptive_stopped`, `adaptive_sweep_completed`, `adaptive_orbit_out` | `AdaptiveWitnesses.completed`, `stopping_branches`, `sweep_branches`, `simulations`, `schedules`, `schedule_verdict_mutant` |
 | Engine-input coverage ignores protagonist bits, in either frame | `opponentProjection`, `computeT_projected`, `opponentProjection_commutes`, `SweepPlan.covers` | `OrbitWitnesses.plan`, `OrbitWitnesses.input_only` |
 | Successful raw builder supplies all plan premises | `buildFamilies`, `computeBlockLayout`, `alignGroup`, `buildReduction`, `reduction_final_eq`, `sharedBuilder_generators` | `BuilderWitnesses.builder_result`, `builder_accepts`, `original_generators`, `final_sets`; `RepresentativeWitness.builder_result` |
 | Block and AP inverse lookup construction | `layoutOfRows`, `recognizeBlocks_exact`, `reindexLayout_swap` | `BuilderWitnesses.recognized_eq`, `layout_mutants`; two-block `OrbitWitnesses.stateLayout` |
 | Count/shared-bit coverage and stable matching | `mem_typeCounts`, `counts_cover`, `letter_covers`, `matchEntries_complete`, `matchSlots_types`, `builtOrbits_cover` | `BuilderWitnesses.enumeration`, `BuilderWitnesses.enumeration_mutants`, both frames of `builder_accepts` |
 | Complete, nonduplicating next-permutation traversal | `nextPermutation_exact`, `traversal_complete`, `traversal_unique` | repeated types and six distinct permutations in `BuilderWitnesses.enumeration`; unsorted-start mutant |
+| Grouped input cubes, representative filtering and whole-input-row quotient | `diagram_rows`, `mem_diagramActions`, `precomputer_denotes`, `dedup_refines`, `precomputer_refinement`, `physical_refinement` | `TableWitnesses.grouped_partial_cube`, `input_row_dedup`, `precomputer_row_dedup`, `quotient_covers`, `wrong_class_mutant`, `mutant_not_refinement` |
+| Physical classes implement full response predecessors and legal updates | `class_predecessor_exact`, `class_backward_exact`, `selected_refinement`, `virtual_exhausted`, `precomputer_completed`, `physical_update_reach`, `Refines.scan`, `Refines.priority` | `TableWitnesses.selected`, `update_reachable`, `full_responses`, `output_paths`, `completed`, `precomputer_success`, `cache_refines`, `priority_completed`; `AdaptiveWitnesses.physical_updated` |
 | Complete deduplicated response actions | `responseActions_complete`, `responseAction_succ` | `BuilderWitnesses.responses`; `RepresentativeWitness.identical_responses` |
 | Cached and priority picker exhaustion | `criticalCached_none`, `criticalPQCached_none`, `criticalPQ_none` | `PickerWitnesses.cached_exhausted`, `pq_exhausted`, `caching`, `priority_hit`; `RepresentativeWitness.priority_completed` |
 | Forward Boolean storage agrees with scalar successor | `storedSucc_exact`, `stored_picker_none` | `PickerWitnesses.closed`, `preprocessing_excludes_mutant` |
@@ -181,6 +242,16 @@ increment and produces -1. In Lean these values are 2, 1, and 0 respectively.
 - `solver/equivariant_k_bounded_safety_aut.hh:936–942`: exhaustion returns success.
 - `actioners/standard.hh:175–181`: backward subtraction rejects the maximum.
 
+The production entry in `solver/solve_game_vector.cc:19` selects bare
+`simd_vector_backed`, which retains the scalar forward value. It does not select
+`x_and_boolvec`, whose Boolean suffix stores only presence. Thus this particular
+compression counterexample concerns `x_and_boolvec`, not the bare vector used by
+the production CLI. On safe preprocessed graphs, `storedSucc_exact` proves that
+Boolean scalar results already equal their stored presence values, so both
+representations obey the same picker bridge. The physical-table completion
+proof takes scalar payload application, matching bare SIMD storage, and uses
+that equality when passing to the existing stored-forward completion theorem.
+
 This is a mutant of the preprocessing contract, not a demonstrated wrong answer
 from the shipped solver. The Boolean preprocessing port excludes it:
 `preprocessBoolean_closed` proves the required graph condition, and
@@ -203,6 +274,8 @@ marked with `../subprojects/`.
 | PR #330 `solver/symmetry.hh:310–335` | `Candidate.families`, `familyGuard`, `Generated`, `partitionGuard` |
 | `solver/symmetry_certificate.hh:8–17` | Candidate provenance only; `Verified` is the Lean soundness certificate, not this C++ struct |
 | `solver/k_bounded_safety_aut.hh:101–110` | `initial`, `safe`, `State` |
+| `ios_precomputers/mona.hh:142–192`; `ios_precomputers/standard.hh:28–100,159` | `Diagram`, `tabulate`, `diagram_rows`, `diagramActions`, `precomputerRows`, `precomputer_denotes`; truth-table endpoint relations replace BDD residuals |
+| `solver/equivariant_k_bounded_safety_aut.hh:331–353`; `actioners/standard.hh:36–39,75–102,116–118` | `restrict`, `dedup`, `dedup_refines`, `precomputerTable`, `precomputer_refinement`; one original key per equal action list |
 | `actioners/standard.hh:149–195` | `contribution`, `succ`, `backwardConstraint`, `backward` |
 | `actioners/standard.hh:52–56,141–145` | `safeCap` |
 | `solver/k_bounded_safety_aut.hh:244–308` | `computeT`, `cpre`, `backwardT`, `backward_update_exact` |
@@ -216,13 +289,13 @@ marked with `../subprojects/`.
 | `solver/equivariant_k_bounded_safety_aut.hh:434–466` | `backwardT`, `computeT`, `backwardT_exact` |
 | `solver/equivariant_k_bounded_safety_aut.hh:558–581` | `closePass`, `close` on the original list; `generated_invariant` for its products |
 | `solver/equivariant_k_bounded_safety_aut.hh:636–643,851–853` | `Automaton.counting`, `capGuard` |
-| `solver/equivariant_k_bounded_safety_aut.hh:721–774` | `orbitUpdate`, `sweep`, `sweepFinal` |
-| `solver/equivariant_k_bounded_safety_aut.hh:923–955` | `representativeUpdate`, `PickerReach`, `picker_completed`, `picker_initial_out`; `representativeRound` remains the complete-round reference |
+| `solver/equivariant_k_bounded_safety_aut.hh:721–774` | `orbitUpdate`, `sweep`, `sweepFinal`, `AdaptiveReach.orbit`, `AdaptiveReach.orbit_raise`, `adaptive_sweep_completed`, `adaptive_orbit_out` |
+| `solver/equivariant_k_bounded_safety_aut.hh:923–955` | `class_backward_exact`, `selected_refinement`, `physical_update_reach`, `virtual_exhausted`, `precomputer_completed`, `PickerReach`, `AdaptiveReach`, `adaptive_completed`, `adaptive_stopped` |
 | `input_pickers/critical.hh:24–87`; `critical_pq.hh:19–87` | `takeResponse`, `scanCriticalRows`, `scanCriticalMaxima`, `criticalCached`, `criticalPQCached`, exhaustion equivalences |
-| `actioners/standard.hh:195`; `../subprojects/posets/include/posets/vectors/X_and_boolvec.hh:21–30,69–71` | `storedSucc`, `storedSucc_exact` |
+| `solver/solve_game_vector.cc:19`; `actioners/standard.hh:195`; `../subprojects/posets/include/posets/vectors/X_and_boolvec.hh:21–30,69–71` | `applyAction` is bare-vector scalar application; `storedSucc` models presence compression; `storedSucc_exact` identifies them on safe Boolean-closed graphs |
 | `boolean_states/forward_saturation.hh:29–87` | `saturation`, `saturateRanks`, `saturationPass`, `booleanized`, `renameStates`, `preprocessBoolean_closed` |
 | `solver/k_bounded_safety_aut.hh:157–162`; equivariant `:746–750,952–956` | `runUntilInitialOut`, `early_exit_exact` |
-| `solver/k_bounded_safety_aut.hh:220–238`; equivariant `:963–976` | `bump`, `bump_commutes` |
+| `solver/k_bounded_safety_aut.hh:190–238`; `solver/k_schedule.hh:8–14`; equivariant `:951–976` | `bump`, `lower_succ`, `final_lower`, `bound_raise_invariant`, `raised_initial`, `AdaptiveReach`, `shared_loop_raise`, `ordinary_loop_delta`, `winner_mono`, `refuted_at_limit` |
 | `solver/solver_invoker.cc:1159–1165` | `swapFrame`, `swapped_engine_cpre` |
 
 `Finite.lean` contains the finite-set converse argument. `FixedPoint.lean`
@@ -243,19 +316,23 @@ formal extraction/refinement of the C++ binary are outside this project.
   partition. `FamilyTable.unique` is the distinct-variable invariant of the AP
   dictionary's family/index entries; `buildFamilies` derives the inverse AP
   layout and checks family sides. Parsing names into those dictionary entries
-  is outside the port. Grouped precomputer cubes are interpreted extensionally
-  as their represented input valuations and compatible response actions.
-  In `picker_completed`, `retained` is the table interface's coverage contract
-  after restriction, and `compatible` is its input/action contract. These are
-  BDD/precomputer representation assumptions; exhaustion itself and its
-  implication for every representative backward constraint are proved.
-  `computeT_projected` removes unused input bits; `responseActions_complete`
-  and `responseAction_succ` justify response deduplication.
+  is outside the port. The BDD interpretation premise of
+  `precomputer_refinement` identifies the raw input/output diagram's endpoint
+  relation with `Automaton.enabled`. Concrete BDD construction, residual
+  identity, decoding and traversal representation must implement that
+  interpretation. The truth-table constructor proves it internally.
+  Complete traversal, grouped-cube intersection filtering, and whole-input-row
+  deduplication then derive the physical-to-virtual table relation. Literal
+  `retained` and `compatible` are derived for the virtual table; neither is
+  assumed of physical BDD keys. `computeT_projected` removes unused input bits;
+  `responseActions_complete` and `responseAction_succ` separately justify
+  response deduplication.
 - Containers. `downset` interprets a finite list of maxima. Antichain insertion,
-  meet/intersection, pruning, SIMD and Boolean storage implementation, BDD-table
-  restriction, and the unchecked bulk factory remain trusted at their data
-  structure interfaces. `image_downset`, `backward_update_exact`, and
-  `storedSucc_exact` prove the corresponding mathematical operations. The picker
+  meet/intersection, pruning, SIMD and Boolean storage implementation, and the
+  unchecked bulk factory remain trusted at their data structure interfaces.
+  C++ lists, sets and maps must implement the ported traversal, restriction,
+  key-retaining quotient and cache operations. `image_downset`,
+  `backward_update_exact` and `storedSucc_exact` prove the corresponding mathematical operations. The picker
   cache proof preserves row references and response multisets; queue tie order
   is immaterial to exhaustion.
 - Arithmetic and execution limits. Naturals/integers replace machine counters,
@@ -272,11 +349,16 @@ choice of root or path compression. Stable type matching and the full
 pivot/swap/reverse traversal are proved, including repeated types. AP/state slot
 alignment preserves the original generator list and its order.
 
-The result is for fixed K, with K >= 1 for the backward bridge and actual picker
-success branch. Arbitrary in-place picker schedules and both initial-out and
-no-input branches are covered. Adaptive-K warm-start correctness, formula/LTL
+The backward bridge and picker success branch require K >= 1. Fixed-K and
+adaptive-K in-place picker executions, including post-refutation warm starts,
+initial-out and no-input branches, are covered. Each raise requires a positive
+actual delta and the source's uniform counting lift with Boolean reset.
+The theorem certifies a successful region at its returned K; it does not equate
+shared overshooting success with ordinary success at a smaller configured
+maximum. BDD, container and machine-arithmetic correspondence are the remaining
+implementation trust for these two execution contracts. Formula/LTL
 translation, completeness of detector search or hint selection, and general
-correctness of the Boolean optimization as an LTL transformation are outside
+correctness of the Boolean optimization as an LTL transformation remain outside
 this symmetry proof. The needed Boolean graph/storage property of the ported
 preprocessing is proved here; it is no longer an assumed picker bridge.
 The preprocessor uses state-based acceptance, matching this solver configuration.
@@ -286,32 +368,35 @@ C++ is unchanged. No runtime monitor or additional solver validation was added.
 ## Memory-limited validation
 
 The library config uses one worker per compiler and synchronous elaboration.
-Lake can still launch independent modules together. This sequence builds targets
-in dependency order, with one compiler at a time, under the 2,800,000 KiB virtual
-memory limit. Run it from `proofs/`:
+Lake can still launch independent modules together. On the shared 7.6 GiB
+machine, check and build modules sequentially in dependency order, with exactly
+one Lean process at a time. Do not set a virtual-memory limit: it can prevent
+Lean from starting. Run from `proofs/`:
 
 ```sh
 export LEAN_NUM_THREADS=1 LEAN_STACK_SIZE_KB=2048 LEAN_MAIN_USE_THREAD=0
-(
-  ulimit -v 2800000
-  ulimit -c 0
-  for module in Automaton Finite Detector Game Equivariance FixedPoint \
-    Transports Reuse Backward Closure Frames Solver Reproducer331 Witnesses \
-    OrbitWitnesses Enumeration NextPermutation LayoutBuilder PlanBuilder \
-    Pickers CachedPickers BooleanBoundary PickerCompletion PickerWitnesses \
-    BuilderWitnesses RepresentativeWitness; do
-    timeout -k 5 300 lake build "SymmetryProofs.$module" || exit $?
-  done
-  timeout -k 5 1200 lake build
-)
+for module in Automaton Finite Detector Game Equivariance FixedPoint \
+  Transports Reuse Backward Closure Frames Solver Reproducer331 Witnesses \
+  OrbitWitnesses Enumeration NextPermutation LayoutBuilder PlanBuilder \
+  Pickers CachedPickers BooleanBoundary PickerCompletion PickerWitnesses \
+  BuilderWitnesses RepresentativeWitness ActionTable AdaptiveK TableWitnesses \
+  AdaptiveWitnesses; do
+  timeout 300 lake env lean "SymmetryProofs/$module.lean" || exit $?
+  timeout 300 lake build "SymmetryProofs.$module" || exit $?
+done
+timeout 1500 lake build
 ```
 
-The two builder fixtures use three and five clients, with two state blocks each.
+The builder fixtures use three and five clients, with two state blocks each.
 Their recognition and detector results are proved once and kept as explicit
 tables. This avoids repeated kernel evaluation of the whole builder when a
-later theorem reads a layout field. The compiler no longer imports all of
-`Std`; the core imports contain everything these proofs use.
+later theorem reads a layout field. The new table fixture has two states and
+two APs. The adaptive fixtures use two or three states; their final-set claims
+apply greatestness and local successor checks rather than evaluating the
+fixed-point solver. The compiler does not import all of `Std`.
 
-Validation on Lean 4.35.0: the default `lake build` passed warning-free (29 jobs)
-under that limit. An axiom audit of 69 main definitions, theorems, and witnesses
-found only Lean's standard `propext`, `Classical.choice`, and `Quot.sound`.
+Validation on Lean 4.35.0: `timeout 1500 lake build` passed warning-free
+(33 jobs), after sequential checks and builds of the affected modules. An axiom
+audit of all 402 public theorem declarations found only Lean's standard
+`propext`, `Classical.choice` and `Quot.sound`. C++ tests were not run; C++ is
+unchanged.
