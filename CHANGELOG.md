@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Shared equivariant solving falls back to the ordinary solver when a K raise
+  would exceed the rank type's range, avoiding overflow with large K schedules.
 - **Completeness fix: MONA precomputers keep empty responses.** Both `mona` and
   `semantic_mona` dropped legal output choices that enable no transitions, which
   could make backward and forward solving return UNKNOWN for realizable

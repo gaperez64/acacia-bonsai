@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <bddx.h>
 #include <cstddef>
+#include <limits>
 #include <map>
 #include <optional>
 #include <set>
@@ -48,6 +49,14 @@ namespace acacia::solver_detail::equivariant {
   };
 
   namespace detail {
+
+    // Preserve full shared steps; the ordinary fallback uses a clamped schedule.
+    inline std::optional<VECTOR_ELT_T> checked_next_k (VECTOR_ELT_T k, VECTOR_ELT_T kinc) {
+      const long long next = static_cast<long long> (k) + static_cast<long long> (kinc);
+      if (next > std::numeric_limits<VECTOR_ELT_T>::max ())
+        return std::nullopt;
+      return static_cast<VECTOR_ELT_T> (next);
+    }
 
     inline bool support_contains_var (bdd support, int var) {
       const bdd v = bdd_ithvar (var);
@@ -748,7 +757,13 @@ namespace acacia::solver_detail::equivariant {
             acacia::diagnostics::set_final_reason ("kmax-initial-out");
             return {status::completed, std::nullopt};
           }
-          k += kinc;
+          const auto next_k = detail::checked_next_k (k, kinc);
+          if (not next_k) {
+            acacia::diagnostics::set_equivariant_decline ("K raise exceeds rank range");
+            acacia::worker_decline ("K raise exceeds rank range");
+            return {status::declined, std::nullopt};
+          }
+          k = *next_k;
           actioner.setK (k);
           acacia::diagnostics::set_support_k (static_cast<int> (k));
           f = f.apply ([&] (const state& maximal) {
@@ -954,9 +969,12 @@ namespace acacia::solver_detail::equivariant {
           acacia::diagnostics::set_final_reason ("kmax-initial-out");
           return {status::completed, std::nullopt};
         }
+        const auto next_k = detail::checked_next_k (k, kinc);
+        if (not next_k)
+          return decline ("K raise exceeds rank range");
         verb_do (1, vout << "[equivariant] Incrementing k from " << (int) k << " to "
-                         << (int) (k + kinc) << "\n");
-        k += kinc;
+                         << (int) *next_k << "\n");
+        k = *next_k;
         actioner.setK (k);
         acacia::diagnostics::set_support_k (static_cast<int> (k));
         f = f.apply ([&] (const state& s) {
