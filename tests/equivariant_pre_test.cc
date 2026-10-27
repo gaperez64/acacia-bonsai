@@ -64,13 +64,22 @@ namespace {
   }
 
   bool check_k_raise () {
+    using T = VECTOR_ELT_T;
     using eq::detail::checked_next_k;
-    constexpr auto max = std::numeric_limits<VECTOR_ELT_T>::max ();
-    bool ok = expect ("in-range K raise unchanged", checked_next_k (2, 3) == 5);
-    ok &= expect ("representable overshoot unchanged", checked_next_k (98, 3) == 101);
-    ok &= expect ("K raise reaches rank maximum", checked_next_k (max - 3, 3) == max);
-    ok &= expect ("out-of-range K raise declines", not checked_next_k (max - 1, 3));
-    ok &= expect ("K raise beyond rank maximum declines", not checked_next_k (max, 1));
+    constexpr auto max = std::numeric_limits<T>::max ();
+    bool ok = expect ("in-range K raise unchanged", checked_next_k<T> (2, 3) == 5);
+    ok &= expect ("representable overshoot unchanged", checked_next_k<T> (98, 3) == 101);
+    ok &= expect ("K raise reaches rank maximum", checked_next_k<T> (max - 3, 3) == max);
+    ok &= expect ("out-of-range K raise declines", not checked_next_k<T> (max - 1, 3));
+    ok &= expect ("K raise beyond rank maximum declines", not checked_next_k<T> (max, 1));
+    // A build may override VECTOR_ELT_T; the check must not rely on a wider type.
+    constexpr auto llmax = std::numeric_limits<long long>::max ();
+    constexpr auto ullmax = std::numeric_limits<unsigned long long>::max ();
+    ok &= expect ("long long raise reaches maximum",
+                  checked_next_k<long long> (llmax - 3, 3) == llmax);
+    ok &= expect ("long long raise declines", not checked_next_k<long long> (llmax - 1, 3));
+    ok &= expect ("unsigned long long raise declines",
+                  not checked_next_k<unsigned long long> (ullmax - 1, 3));
     return ok;
   }
 

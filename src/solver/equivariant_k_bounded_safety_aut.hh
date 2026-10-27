@@ -51,11 +51,13 @@ namespace acacia::solver_detail::equivariant {
   namespace detail {
 
     // Preserve full shared steps; the ordinary fallback uses a clamped schedule.
-    inline std::optional<VECTOR_ELT_T> checked_next_k (VECTOR_ELT_T k, VECTOR_ELT_T kinc) {
-      const long long next = static_cast<long long> (k) + static_cast<long long> (kinc);
-      if (next > std::numeric_limits<VECTOR_ELT_T>::max ())
+    // Needs 0 <= k <= max and kinc > 0 (the parser enforces both); compares
+    // without widening, so it holds for any integer VECTOR_ELT_T.
+    template <typename T>
+    inline std::optional<T> checked_next_k (T k, T kinc) {
+      if (kinc > std::numeric_limits<T>::max () - k)
         return std::nullopt;
-      return static_cast<VECTOR_ELT_T> (next);
+      return static_cast<T> (k + kinc);
     }
 
     inline bool support_contains_var (bdd support, int var) {
