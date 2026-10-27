@@ -12,6 +12,7 @@
 #include <cassert>
 #include <chrono>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <random>
 #include <set>
@@ -60,6 +61,26 @@ namespace {
       return true;
     std::cerr << "FAIL: " << what << "\n";
     return false;
+  }
+
+  bool check_k_raise () {
+    using T = VECTOR_ELT_T;
+    using eq::detail::checked_next_k;
+    constexpr auto max = std::numeric_limits<T>::max ();
+    bool ok = expect ("in-range K raise unchanged", checked_next_k<T> (2, 3) == 5);
+    ok &= expect ("representable overshoot unchanged", checked_next_k<T> (98, 3) == 101);
+    ok &= expect ("K raise reaches rank maximum", checked_next_k<T> (max - 3, 3) == max);
+    ok &= expect ("out-of-range K raise declines", not checked_next_k<T> (max - 1, 3));
+    ok &= expect ("K raise beyond rank maximum declines", not checked_next_k<T> (max, 1));
+    // A build may override VECTOR_ELT_T; the check must not rely on a wider type.
+    constexpr auto llmax = std::numeric_limits<long long>::max ();
+    constexpr auto ullmax = std::numeric_limits<unsigned long long>::max ();
+    ok &= expect ("long long raise reaches maximum",
+                  checked_next_k<long long> (llmax - 3, 3) == llmax);
+    ok &= expect ("long long raise declines", not checked_next_k<long long> (llmax - 1, 3));
+    ok &= expect ("unsigned long long raise declines",
+                  not checked_next_k<unsigned long long> (ullmax - 1, 3));
+    return ok;
   }
 
   fixture make_aut (unsigned n, bool forced_unreal = false) {
@@ -926,6 +947,40 @@ namespace {
     return ok;
   }
 
+  bool run_k_overflow_case (unsigned n) {
+    posets::vectors::bool_threshold = 1 + 2 * n;
+    const fixture fx = make_aut (n, true);
+    constexpr auto kmax = std::numeric_limits<VECTOR_ELT_T>::max ();
+    constexpr VECTOR_ELT_T kmin = kmax - 1;
+    acacia::worker_record record {};
+    auto* prior_record = acacia::active_worker_record ();
+    acacia::active_worker_record () = &record;
+    auto result = eq::try_solve<SetOfStates> (
+        fx.aut, kmax, kmin, 3, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+        actioners::standard<state> (), input_pickers::critical ());
+    acacia::active_worker_record () = prior_record;
+    bool ok = expect ("overflow declines shared solving", result.outcome == eq::status::declined);
+    ok &= expect ("overflow decline has no verdict", not result.win);
+    ok &= expect (
+        "overflow records decline reason",
+        record.declines == 1 and std::string (record.reason) == "K raise exceeds rank range");
+
+    // Mirror the caller's fallback and compare with equivariance disabled.
+    auto ordinary = [&] {
+      return k_bounded_safety_aut_detail<SetOfStates, ios_precomputers::mona,
+                                         actioners::standard<state>, input_pickers::critical> (
+                 fx.aut, kmin, kmax, 3, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+                 actioners::standard<state> (), input_pickers::critical ())
+          .solve ();
+    };
+    auto fallback = result.outcome == eq::status::completed ? std::move (result.win) : ordinary ();
+    auto baseline = ordinary ();
+    ok &= expect ("overflow fallback matches equivariance off",
+                  fallback.has_value () == baseline.has_value ());
+    ok &= expect ("overflow fixture remains losing", not baseline);
+    return ok;
+  }
+
   bool run_unreal_case (unsigned n) {
     posets::vectors::bool_threshold = 1 + 2 * n;
     const fixture fx = make_aut (n, true);
@@ -967,7 +1022,7 @@ namespace {
 int main () {
   const size_t old_bool_threshold = posets::vectors::bool_threshold;
 
-  bool ok = true;
+  bool ok = check_k_raise ();
   for (unsigned n : {3U, 4U}) {
     ok &= run_case (n, 1 + 2 * n);
     ok &= run_case (n, 1 + n);
@@ -977,8 +1032,10 @@ int main () {
   ok &= run_partial_symmetry_case ();
   ok &= run_mixed_io_family_case ();
   ok &= run_syntax_hint_case ();
-  for (unsigned n : {3U, 5U})
+  for (unsigned n : {3U, 5U}) {
     ok &= run_unreal_case (n);
+    ok &= run_k_overflow_case (n);
+  }
   ok &= run_budget_cases ();
   ok &= check_equivariant_invariant_backends ();
 
