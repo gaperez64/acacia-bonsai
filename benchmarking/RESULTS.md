@@ -12,6 +12,22 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-27 — The parity worker loses inputs to its memory share; on-the-fly parity would first need a lazy automaton
+
+Archive `otfpar-20261027` (release `evidence-2026-10-27-otfpar`), branch `research/otf-parity` at d5cb75c5, not merged. Every call ran in its own 8 GiB scope, serially.
+
+Where the eager parity route stops. Alone at 120 s on the 69 inputs only SemML decides (c120-syntcomp26-20261024), `both:parity:spot` decides 9 with 0.8–3.6 GB; the other 60 never finish translating to a deterministic automaton. On 10 of those, `ltl2tgba` does not even build the nondeterministic automaton within 60 s on 7. On the 231 tier-4 wins of `tier4-spot282-20261018`, the part of the solved game reachable under the winner's strategy covers a median 36% of the automaton (20% on the 40 automata with at least 1000 states). An on-the-fly parity solver would therefore need a lazily built deterministic automaton first; the game is not the bottleneck.
+
+The memory share. In the default portfolio the parity worker is killed above 512 MiB (8 GiB over eight workers, halved), which it exceeds on 58 of the 69, so the portfolio decides none of the 9. A fixed 4 GiB share decides 5 but lets the scope run out of memory 26 times. The research option `--parity-memory-share pressure` keeps the equal share but enforces it only once the solver's own cgroup comes within an eighth of its `memory.max`; without a readable limit it is the equal share. Same binary, paired, order alternating:
+
+| | equal | pressure |
+|---|---:|---:|
+| 69 SemML-only inputs, 120 s | 0 | 5 |
+| SYNTCOMP26, 17 s | 1341 | 1342 |
+| SYNTCOMP26, 60 s on the 17 s undecided | 1359 | 1364 |
+
+At 60 s pressure alone decides chain-5-real, ltl2dba_R_pb_10, robot-to-target-charging-unreal0 and -unreal1, and simple_arbiter_enc_pb_11 and _12; equal alone decides Morning_9cac58d3 at 59.9 s, which both settle at 60.5–62.5 s in three reruns each. No verdict changes and no out-of-memory kill in either.
+
 ## 2026-10-26 — Backward reductions add little to the forward unreal engine, even computed from the whole automaton
 
 Archive `fwdp-20261026` (release `evidence-2026-10-26-fwdp`), branch `research/fwd-prune` at 510b1ed6, not merged. The guarded sparse forward game streams the automaton and so skips the reductions the backward engine applies first. It already has the surely-losing purge and Boolean states; cap census, direct simulation and symmetry were missing. Before writing on-the-fly versions, this measured a ceiling: the three computed from the whole frozen automaton and applied inside the sparse search (opt-in diagnostic build option, lifted winning certificates verified against the original automaton). An on-the-fly version knows at most as much.
