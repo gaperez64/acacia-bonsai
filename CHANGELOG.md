@@ -1,5 +1,12 @@
 # Acacia-Bonsai changelog
 
+## Unreleased
+
+- **Completeness fix: MONA precomputers keep empty responses.** Both `mona` and
+  `semantic_mona` dropped legal output choices that enable no transitions, which
+  could make backward and forward solving return UNKNOWN for realizable
+  specifications (#335).
+
 ## 2.7.1 (2026-10-26)
 
 - **Soundness fix: equivariance could answer REALIZABLE wrongly.** The symmetry

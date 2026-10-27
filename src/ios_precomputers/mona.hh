@@ -139,11 +139,10 @@ namespace ios_precomputers {
           // to count what a quotient would save.
           std::unordered_set<int> residual_roots;
 
-          auto recurse_outputs = [&] (this const auto& self, auto& tss, bdd bdd_opq) {
+          auto recurse_outputs = [&] (this const auto& self, auto& tss, bdd bdd_opq) -> void {
             acacia::equivariance_budget::checkpoint ();
-            if (bdd_opq == bddfalse)
-              return;
-            if (bdd_opq == bddtrue or bdd_var (bdd_opq) >= first_src_var) {
+            // A false residual is a legal response with no enabled transitions.
+            if (bdd_opq == bddfalse or bdd_opq == bddtrue or bdd_var (bdd_opq) >= first_src_var) {
               if constexpr (quotient) {
                 if (not residual_roots.emplace (bdd_opq.id ()).second)
                   return;
@@ -166,11 +165,10 @@ namespace ios_precomputers {
           };
 
           auto recurse_inputs = [&] (this const auto& self, auto& i_to_tss, bdd bdd_iopq,
-                                     bdd bdd_input) {
+                                     bdd bdd_input) -> void {
             acacia::equivariance_budget::checkpoint ();
-            if (bdd_iopq == bddfalse)
-              return;
-            if (bdd_iopq == bddtrue or bdd_var (bdd_iopq) >= first_output) {
+            if (bdd_iopq == bddfalse or bdd_iopq == bddtrue or
+                bdd_var (bdd_iopq) >= first_output) {
               using vt = typename std::remove_cvref_t<decltype (i_to_tss)>::value_type;
               i_to_tss.emplace_back (vt (bdd_input, {}));
               // Per input class: two inputs reaching the same residual root
@@ -387,8 +385,7 @@ namespace ios_precomputers {
             acacia::equivariance_budget::checkpoint ();
             const auto endpoints_for_letter =
                 row (endpoints).subspan (offsets[letter], cursor[letter]);
-            if (endpoints_for_letter.empty ())
-              continue;
+            // Empty endpoint rows need terminal IDs too: they are legal letters.
             auto [it, added] = ids_by_row.emplace (endpoints_for_letter, bddfalse);
             if (added) {
               it->second = bdd_ibuildcube (ids_by_row.size () - 1, width, id_vars.data ());

@@ -9,16 +9,24 @@
 // load-bearing because the input pickers scan actions in order and move a
 // successful action to the front.
 
+#include "ios_precomputers/semantic_mona.hh"
+
 #include "actioners/standard.hh"
+#include "aut_preprocessors/standard.hh"
+#include "boolean_states/forward_saturation.hh"
 #include "input_pickers/critical.hh"
 #include "ios_precomputers/mona.hh"
-#include "ios_precomputers/semantic_mona.hh"
+#include "ios_precomputers/standard.hh"
+#include "solver/create_automaton.hh"
+#include "solver/forward_k_bounded_safety_aut.hh"
 #include "solver/k_bounded_safety_aut.hh"
 #include "utils/verbose.hh"
 
 #include <iostream>
 #include <map>
 #include <ranges>
+#include <set>
+#include <spot/tl/parse.hh>
 #include <string>
 #include <vector>
 
@@ -140,8 +148,51 @@ namespace {
     fixture empty;
     empty.aut = spot::make_twa_graph (spot::make_bdd_dict ());
     empty.aut->new_state ();
+    // No enabled transitions still leaves a legal response reaching bottom (#335).
+    const auto full = precompute<ios_precomputers::mona> (empty);
+    const auto quot = precompute<ios_precomputers::semantic_mona> (empty);
     expect ("false endpoint relation",
-            precompute<ios_precomputers::semantic_mona> (empty).empty ());
+            full == quot and full.size () == 1 and full.front ().first == bddtrue and
+                full.front ().second == std::list<transset> {transset {}});
+  }
+
+  void check_empty_responses () {
+    for (unsigned shape = 0; shape < 3; ++shape) {
+      fixture fx;
+      fx.aut = spot::make_twa_graph (spot::make_bdd_dict ());
+      fx.aut->new_state ();
+      fx.all_inputs = bdd_ithvar (fx.aut->register_ap ("i"));
+      fx.all_outputs = bdd_ithvar (fx.aut->register_ap ("c"));
+      if (shape == 1)
+        fx.aut->new_edge (0, 0, fx.all_inputs & fx.all_outputs);
+      if (shape == 2)
+        fx.aut->new_edge (0, 0, fx.all_inputs ^ fx.all_outputs);
+      const auto responses = [] (const auto& table, bdd input) {
+        std::set<transset> result;
+        for (const auto& [cube, actions] : table)
+          if ((cube & input) != bddfalse)
+            for (const auto& action : actions)
+              result.insert (action);
+        return result;
+      };
+      const auto standard = precompute<ios_precomputers::standard> (fx);
+      const auto full = precompute<ios_precomputers::mona> (fx);
+      const auto computer = ios_precomputers::semantic_mona::make<spot::twa_graph_ptr, transset> (
+          fx.aut, fx.all_inputs, fx.all_outputs);
+      const auto symbolic = computer.symbolic ();
+      const auto explicit_table = computer.explicit_letters ();
+      expect ("empty responses: explicit admission", explicit_table.has_value ());
+      for (bdd input : {fx.all_inputs, !fx.all_inputs}) {
+        const auto expected = responses (standard, input);
+        expect ("empty responses: reference has an empty action", expected.contains (transset {}));
+        expect ("empty responses: MONA matches standard", responses (full, input) == expected);
+        expect ("empty responses: semantic symbolic matches standard",
+                responses (symbolic, input) == expected);
+        if (explicit_table)
+          expect ("empty responses: semantic explicit matches standard",
+                  responses (*explicit_table, input) == expected);
+      }
+    }
   }
 
   void check_explicit_letters () {
@@ -217,7 +268,7 @@ namespace {
         aut, x & y, bddtrue);
     expect ("large global pool: symbolic fallback", not computer.explicit_letters ());
     const auto baseline = computer.symbolic ();
-    expect ("large global pool: two ordered input classes", baseline.size () == 2);
+    expect ("large global pool: includes the empty input cofactor", baseline.size () == 3);
     expect ("large global pool: ordered identity", computer () == baseline);
   }
 
@@ -361,10 +412,59 @@ namespace {
       expect (what + ": same winning bound", *base == *quot);
   }
 
+  template <typename Precomputer>
+  void check_empty_response_verdicts (const fixture& fx, const std::string& what) {
+    for (VECTOR_ELT_T bound : {1, 2, 5}) {
+      const Precomputer precomputer;
+      const actioners::standard<state> actioner;
+      const input_pickers::critical picker;
+      k_bounded_safety_aut_detail<SetOfStates, Precomputer, actioners::standard<state>,
+                                  input_pickers::critical>
+          backward (fx.aut, bound, bound, 1, fx.all_inputs, fx.all_outputs, precomputer, actioner,
+                    picker);
+      expect (what + ": backward REALIZABLE at K=" + std::to_string (bound),
+              backward.solve ().has_value ());
+      acacia::solver_detail::forward_k_bounded_safety_aut_detail<
+          SetOfStates, Precomputer, actioners::standard<state>, input_pickers::critical>
+          forward (fx.aut, bound, bound, 1, fx.all_inputs, fx.all_outputs, precomputer, actioner,
+                   picker);
+      expect (what + ": forward REALIZABLE at K=" + std::to_string (bound),
+              forward.solve ().has_value () and not forward.should_fallback_to_backward ());
+    }
+  }
+
+  void check_ltl_empty_responses () {
+    for (const char* text : {"F (c <-> i) | G F c", "F (c <-> i)"}) {
+      auto parsed = spot::parse_infix_psl (text);
+      if (not expect ("parse empty-response regression", parsed.f and parsed.errors.empty ()))
+        continue;
+      const auto dict = spot::make_bdd_dict ();
+      fixture fx;
+      fx.aut = spot::make_twa_graph (dict);
+      fx.all_inputs = bdd_ithvar (fx.aut->register_ap ("i"));
+      fx.all_outputs = bdd_ithvar (fx.aut->register_ap ("c"));
+      auto options = acacia::translation::make_options ();
+      spot::translator translator (dict, &options);
+      acacia::translation::validate_options (options);
+      auto negated = spot::formula::Not (parsed.f);
+      fx.aut = create_automaton (negated, translator);
+      aut_preprocessors::standard::make (fx.aut, fx.all_inputs, fx.all_outputs, 5) ();
+      posets::vectors::bool_threshold = boolean_states::forward_saturation::make (fx.aut, 5) ();
+      // Call the games directly so deterministic CLI shortcuts cannot mask the missing action.
+      check_empty_response_verdicts<ios_precomputers::standard> (
+          fx, std::string (text) + ": standard");
+      check_empty_response_verdicts<ios_precomputers::mona> (fx, std::string (text) + ": mona");
+      check_empty_response_verdicts<ios_precomputers::semantic_mona> (
+          fx, std::string (text) + ": semantic_mona");
+    }
+  }
+
 }  // namespace
 
 int main () {
   check_endpoint_order ();
+  check_empty_responses ();
+  check_ltl_empty_responses ();
   check_explicit_letters ();
   // A disjunctive grant: three output branches reach one endpoint relation.
   const fixture duplicating = make_aut (3, true);
