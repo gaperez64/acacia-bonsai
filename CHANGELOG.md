@@ -1,13 +1,19 @@
 # Acacia-Bonsai changelog
 
-## Unreleased
+## 2.7.2 (2026-10-27)
 
-- Shared equivariant solving falls back to the ordinary solver when a K raise
-  would exceed the rank type's range, avoiding overflow with large K schedules.
 - **Completeness fix: MONA precomputers keep empty responses.** Both `mona` and
   `semantic_mona` dropped legal output choices that enable no transitions, which
   could make backward and forward solving return UNKNOWN for realizable
-  specifications (#335).
+  specifications such as `F (c <-> i) | G F c` (#335, #336). The shipped Docker
+  configurations use `semantic_mona` and were affected. The bug only removed
+  choices from the player whose win is checked, so it could not produce a wrong
+  REALIZABLE or UNREALIZABLE answer.
+- Shared equivariant solving falls back to the ordinary solver when a K raise
+  would exceed the rank type's range, avoiding overflow with large K schedules
+  (#337). The default schedule was not affected.
+- `proofs/` holds a Lean proof that the guarded symmetry reduction is sound
+  (#331, #334). Both fixes above were found while writing it.
 
 ## 2.7.1 (2026-10-26)
 
