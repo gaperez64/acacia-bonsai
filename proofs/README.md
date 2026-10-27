@@ -1,9 +1,9 @@
 # Symmetry reduction proofs
 
-Standalone Lean 4.35.0, using core only. The default target checks every module
-and both example files; warnings are errors. No admitted proofs, custom axioms,
-native decision procedures or partial functions are used. C++ references below
-are relative to `src/` at master `df5b2c28` (including PR #330, `35a8723a`).
+This standalone development uses Lean 4.35.0 and core only. The default target
+checks every module and both example files, treating warnings as errors. The
+proofs use no admitted steps, custom axioms, native decision procedures or partial
+functions. C++ references are relative to `src/` at master `bbf12523` (including PR #336).
 
 What is proved:
 
@@ -17,16 +17,18 @@ What is proved:
   and verdict, including early initial-out exits and reachable picker completion.
 - Physical input cubes and whole-row action deduplication refine full response
   classes; caching and priority changes preserve this relation.
+- MONA's low-first input and high-first output walks keep empty responses in
+  both symbolic modes and the explicit path; their tables satisfy `Refines`.
 - Boolean preprocessing supplies the stored-forward picker condition. Adaptive
-  bound raises preserve soundness; success is certified at the returned actual K.
+  bound raises preserve soundness, and a successful solve certifies its returned actual K.
 
 ## Issue #331 obligations
 
-Names are in `Symmetry`, with builder names in `Symmetry.Builders` and table names
-in `Symmetry.ActionTable`. `BuilderExamples.lean` checks one staged three-client,
-two-block builder in both frames. `Examples.lean` contains the #331 reproducer,
-small completion fixtures and hypothesis mutants. Large fixed points are never
-computed by brute-force `decide`.
+Definitions and theorems use `Symmetry`, with builders in `Symmetry.Builders` and
+tables in `Symmetry.ActionTable`. `BuilderExamples.lean` checks a staged builder
+with three clients and two blocks in both frames. `Examples.lean` checks the #331
+reproducer, small completion fixtures and hypothesis mutants, without evaluating
+large fixed points by brute-force `decide`.
 
 | Obligation | Definition or theorem |
 | --- | --- |
@@ -58,6 +60,8 @@ computed by brute-force `decide`.
 | Count/shared-bit coverage and stable matching | `mem_typeCounts`, `counts_cover`, `letter_covers`, `matchEntries_complete`, `matchSlots_types`, `builtOrbits_cover` |
 | Complete nonduplicating permutation traversal | `nextPermutation_exact`, `traversal_complete`, `traversal_unique` |
 | Input traversal, cube filtering, whole-row quotient | `diagram_rows`, `mem_diagramActions`, `precomputer_denotes`, `dedup_refines`, `precomputer_refinement`, `physical_refinement` |
+| Fixed MONA traversal and explicit terminal construction | `outputPaths`, `monaRows`, `monaTable`, `mona_refinement`, `tabulate_realizable`, `precomputer_realizable`, `explicitRows`, `explicit_rows`, `explicit_refinement`, `mona_completed`, `explicit_completed` |
+| Empty-response regression and pre-fix mutant | `MonaWitnesses.preFix_not_refines`, `MonaWitnesses.preFix_explicit_not_refines`, `MonaWitnesses.fixed_refines`, `MonaWitnesses.explicit_refines`, `MonaWitnesses.empty_terminals`, `MonaWitnesses.quotient_order`, `MonaWitnesses.completion`, `MonaWitnesses.explicit_completion`, `MonaWitnesses.lost_response` |
 | Full response classes and physical updates | `class_predecessor_exact`, `class_backward_exact`, `selected_refinement`, `virtual_exhausted`, `precomputer_completed`, `physical_completed`, `physical_update_reach`, `Refines.scan`, `Refines.priority`, `Refines.permuted` |
 | Deduplicated response actions | `responseActions_complete`, `responseAction_succ` |
 | Cached and priority exhaustion | `criticalCached_none`, `criticalPQCached_none`, `criticalPQ_none` |
@@ -81,7 +85,7 @@ computed by brute-force `decide`.
 | `actioners/standard.hh:149–195`; `solver/k_bounded_safety_aut.hh:101–110,244–308` | `succ`, `safe`, `initial`, `backward`, `computeT`, `cpre` |
 | `solver/k_bounded_safety_aut.hh:129–165` | `stage`, `final`, `winner`, fixed-point termination |
 | `solver/equivariant_k_bounded_safety_aut.hh:388–466,558–581,721–774,923–955` | Downset transport, snapshot sweep, closure, representative updates and completion |
-| `ios_precomputers/mona.hh:142–192`; `ios_precomputers/standard.hh:28–100,159` | `Diagram`, `tabulate`, input/output traversal and endpoint interpretation |
+| `ios_precomputers/mona.hh:142–190,384–437`; `ios_precomputers/standard.hh:28–100,159` | `Diagram`, `tabulate`, `monaRows`, `explicitTable`, input/output traversal and endpoint interpretation |
 | `solver/equivariant_k_bounded_safety_aut.hh:331–353`; `actioners/standard.hh:36–39,75–118` | Cube restriction, whole-row `dedup`, `precomputer_refinement` |
 | `input_pickers/critical.hh:24–89`; `critical_pq.hh:19–89` | Nested scans, response splices, signed priorities and exhaustion |
 | `boolean_states/forward_saturation.hh:29–87` | Rank saturation, acceptance clearing, state reordering, `preprocessBoolean_closed` |
@@ -91,38 +95,44 @@ computed by brute-force `decide`.
 
 ## Trusted gap
 
-These are kernel-checked mathematical ports, without extraction or refinement of
-the compiled C++ binary. BDD construction, canonical identity, support/dictionary
-interpretation and concrete traversal representation remain trusted; the table
-refinement assumes the BDD diagram denotes the endpoint relation. Its truth-table
-constructor proves that interpretation internally. MONA empty-response handling
-has not been ported. AP dictionary rows must have distinct identifiers.
+The Lean kernel checks these mathematical ports; they do not extract or verify
+the compiled C++ binary. The correspondence assumptions cover BDDs, containers
+and machine arithmetic. For BDDs, they cover construction, canonical identity,
+support/dictionary interpretation, ordered paths and endpoint decoding.
+`mona_refinement` assumes the diagram denotes the endpoint relation and its output
+paths satisfy `Diagram.Realizable`. The explicit truth-table constructor proves
+both properties internally. Its visitors skip unencoded false nodes, and every
+endpoint row, including the empty relation, receives an injective terminal ID.
+AP dictionary rows must have distinct identifiers.
 
 Antichain insertion, pruning, meet, bulk construction, SIMD/Boolean containers,
 C++ maps and caches must implement their mathematical interfaces. Machine counter,
-rank, shift and priority arithmetic, overflow handling, interruption, cancellation,
-and compiler correctness remain trusted. Formula/LTL translation, detector-search
-completeness and Boolean optimization as an LTL transformation are outside scope.
+rank, shift and priority arithmetic must agree with the mathematical operations.
+The shared loops still use unchecked `k += kinc` at
+`solver/equivariant_k_bounded_safety_aut.hh:751,959`; K and lifted ranks must stay
+in range. Compiled execution, interruption, cancellation, formula/LTL translation,
+detector-search completeness and Boolean optimization as an LTL transformation
+are outside scope.
 
 Backward/picker completion requires K ≥ 1 and safe maxima. Stored Boolean forward
-steps additionally require `BooleanClosed`, proved for the ported preprocessing.
-The rejecting Boolean self-loop mutant shows why this matters; production's bare
+steps also require `BooleanClosed`, which the ported preprocessing proves.
+The rejecting Boolean self-loop mutant violates this condition; production's bare
 SIMD vector stores scalar values. Adaptive raises require a positive actual delta,
-uniform counting lift and Boolean reset. Shared scheduling may overshoot kmax:
-refutation then implies refutation at kmax, while success only certifies actual K.
+a uniform counting lift and a Boolean reset. Shared scheduling can overshoot kmax.
+Refutation at an overshoot implies refutation at kmax; success certifies actual K.
 The schedule mutant wins at 3 and loses at the configured maximum 2.
 
 ## Build
 
-Run from `proofs/`. Keep exactly one Lean process running on the shared 7.6 GiB
-machine. Do not set `ulimit -v`. Check and cache modules sequentially before the
-final build; the library disables asynchronous elaboration and uses one worker.
+Run from `proofs/` with exactly one Lean process on the shared 7.6 GiB machine.
+Do not set `ulimit -v`. Check and cache the modules sequentially before the final
+build. The library disables asynchronous elaboration and uses one worker.
 
 ```sh
 export LEAN_NUM_THREADS=1 LEAN_STACK_SIZE_KB=2048 LEAN_MAIN_USE_THREAD=0
 for module in Automaton Detector Game Equivariance FixedPoint Transports Reuse \
   Backward Closure Enumeration NextPermutation LayoutBuilder PlanBuilder \
-  Pickers BooleanBoundary ActionTable AdaptiveK BuilderExamples Examples; do
+  Pickers BooleanBoundary ActionTable Mona AdaptiveK BuilderExamples Examples; do
   timeout 300 lake env lean "SymmetryProofs/$module.lean" || exit $?
   timeout 300 lake build "SymmetryProofs.$module" || exit $?
 done

@@ -23,7 +23,7 @@ theorem mem_responses (A : Automaton n a) (side : Bool) (i : Letter a) (t : Acti
     t ∈ responses A side i ↔ ∃ o, action A (merge A side i o) = t := by
   simp only [responses, mem_unique, List.mem_map]
   exact ⟨fun ⟨o, _, h⟩ => ⟨o, h⟩, fun ⟨o, h⟩ => ⟨o, mem_letters o, h⟩⟩
-inductive Diagram (a : Nat) (α : Type) where -- Input leaves carry residual output diagrams; mona.hh:142–192.
+inductive Diagram (a : Nat) (α : Type) where -- Input leaves carry residual output diagrams; mona.hh:142–190.
   | leaf (value : α)
   | branch (p : Fin a) (low high : Diagram a α)
   deriving DecidableEq
@@ -63,7 +63,7 @@ theorem tabulate_eval [DecidableEq α] (F : Letter a → α) (ps : List (Fin a))
       · exact ih _ (ha true hp.symm)
 theorem diagram_rows (D : Diagram a α) : (∀ i, ∃ row ∈ D.rows, row.1 i = true) ∧
     (∀ row ∈ D.rows, ∀ i, row.1 i = true → D.eval i = row.2) := by
-  induction D with -- Traversal covers all valuations and gives each cube its residual; mona.hh:142–192.
+  induction D with -- Traversal covers all valuations and gives each cube its residual; mona.hh:142–190.
   | leaf x => simp [Diagram.rows, Diagram.eval]
   | branch p l h il ih =>
     constructor
@@ -114,7 +114,7 @@ structure Refines (A : Automaton n a) (side : Bool) (reps : List (Letter a)) (ro
   legal : ∀ row ∈ rows, ∃ i ∈ reps, row.1 i = true ∧ Class A side row.2 i
 def diagramActions (D : Diagram a (Action n)) : List (Action n) :=
   (D.rows.filter (fun row => (letters a).any row.1)).map Prod.snd
--- Output traversal contains exactly the reachable endpoint actions; mona.hh:142–192.
+-- Output traversal contains exactly the reachable endpoint actions; mona.hh:142–165.
 theorem mem_diagramActions (D : Diagram a (Action n)) (t : Action n) :
     t ∈ diagramActions D ↔ ∃ o, D.eval o = t := by
   simp only [diagramActions, List.mem_map, List.mem_filter, List.any_eq_true]

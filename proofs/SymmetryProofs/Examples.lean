@@ -1,4 +1,5 @@
 import SymmetryProofs.BuilderExamples
+import SymmetryProofs.Mona
 
 namespace Symmetry
 private def finiteForall (U : List α) (full : ∀ x, x ∈ U) (P : α → Prop)
@@ -233,6 +234,85 @@ theorem mutant_not_refinement : ¬ Refines bad false [zero, mixed] (physical bad
   exact hn row hr ha
 
 end TableWitnesses
+
+namespace MonaWitnesses
+open ActionTable
+def empty : Action 1 := fun _ _ => false
+def live : Action 1 := fun _ _ => true
+def zero : Letter 2 := fun _ => false
+def one : Letter 2 := fun _ => true
+def aut : Automaton 1 2 where
+  init := 0
+  rejecting := fun _ => true
+  counting := fun _ => true
+  isInput := fun p => p = 0
+  edges := [⟨0, .conj (.atom 0) (.neg (.atom 1)), 0⟩]
+def diagram := precomputerDiagram aut false
+-- Pre-#336 skipped false residuals at both frontiers; mona.hh:142–190.
+def preFixTable (quotient : Bool) (reps : List (Letter 2)) : List (Row 1 2) :=
+  dedup (restrict reps ((diagram.rows.filter (fun row => match row.2 with
+    | .leaf t => t != empty | .branch _ _ _ => true)).map
+    fun row => (row.1, (monaOutputs quotient row.2).filter (· != empty))))
+theorem preFix_not_refines (quotient : Bool) :
+    (¬ Refines aut false [zero] (preFixTable quotient [zero])) ∧
+    (¬ Refines aut false [one] (preFixTable quotient [one])) := by
+  constructor
+  · intro h; obtain ⟨row, hr, _⟩ := h.covers zero (by simp)
+    have he : preFixTable quotient [zero] = [] := by cases quotient <;> decide
+    simp [he] at hr
+  · intro h; obtain ⟨row, hr, hc⟩ := h.covers one (by simp)
+    have ha := (hc empty).mpr ⟨one, by decide⟩
+    have hn : ∀ row ∈ preFixTable quotient [one], empty ∉ row.2 := by cases quotient <;> decide
+    exact hn row hr ha
+-- The old explicit path left empty rows unencoded; mona.hh:384–394.
+def preFixExplicit (reps : List (Letter 2)) : List (Row 1 2) :=
+  dedup (restrict reps (explicitRows (diagram.map (Diagram.map fun t => if t == empty then none else some t))))
+theorem preFix_explicit_not_refines :
+    (¬ Refines aut false [zero] (preFixExplicit [zero])) ∧
+    (¬ Refines aut false [one] (preFixExplicit [one])) := by
+  have hz : preFixExplicit [zero] = preFixTable true [zero] := by decide
+  have ho : preFixExplicit [one] = preFixTable true [one] := by decide
+  rw [hz, ho]; exact preFix_not_refines true
+theorem fixed_refines (quotient : Bool) :
+    Refines aut false [zero, one] (monaTable quotient diagram [zero, one]) :=
+  mona_refinement aut false quotient diagram (precomputer_realizable aut false) (precomputer_denotes aut false) _
+theorem explicit_refines : Refines aut false [zero, one] (explicitTable aut false [zero, one]) :=
+  explicit_refinement aut false _
+theorem empty_terminals :
+    (monaRows false diagram).map Prod.snd = [[empty], [empty, live]] ∧
+    (explicitTable aut false [zero, one]).map Prod.snd = [[empty], [empty, live]] := by decide
+-- High-first order, first occurrence and per-input reset; mona.hh:146–188,406–435.
+theorem quotient_order :
+    let outputs : Diagram 3 (Action 1) := .branch 1 (.leaf empty) (.branch 2 (.leaf live) (.leaf empty))
+    let D := Diagram.branch 0 (.leaf outputs) (.leaf (.leaf empty))
+    (monaRows false D).map Prod.snd = [[empty, live, empty], [empty]] ∧
+    (monaRows true D).map Prod.snd = [[empty, live], [empty]] := by decide
+def plan : SweepPlan aut false where
+  generators := []
+  orbits := (letters 2).map fun i => ⟨i, [Verified.identity aut]⟩
+  member_generated := by
+    intro O ho s hs; obtain ⟨i, _, rfl⟩ := List.mem_map.mp ho
+    simp only [List.mem_singleton] at hs; subst s; exact .identity
+  orbit_closed := by simp
+  covers := by
+    intro i; refine ⟨⟨i, [Verified.identity aut]⟩, List.mem_map.mpr ⟨i, mem_letters i, rfl⟩, ?_⟩
+    simp only [orbitLetters, List.map_cons, List.map_nil, List.mem_singleton]; rfl
+def maxima : List (State 1 1) := [fun _ => 1]
+theorem reached : PickerReach aut 1 false plan.generators (downset maxima) := by
+  have he : ∀ f, downset maxima f = safe aut 1 f := by decide
+  rw [funext he]; exact .start (by decide)
+theorem completion (quotient : Bool) : downset maxima = final aut 1 false ∧ winner aut 1 false = true := by
+  apply mona_completed aut (by intro q r v _ h; contradiction) 1 (by decide) false plan maxima reached
+    quotient diagram (precomputer_realizable aut false) (precomputer_denotes aut false)
+  cases quotient <;> decide
+theorem explicit_completion : downset maxima = final aut 1 false ∧ winner aut 1 false = true := by
+  apply explicit_completed aut (by intro q r v _ h; contradiction) 1 (by decide) false plan maxima reached
+  decide
+theorem lost_response (quotient : Bool) :
+    (criticalCached (applyAction aut 1) maxima (preFixTable quotient [one])).1 ≠ none ∧
+    cpre aut 1 false (downset maxima) (initial aut 1) = true := by cases quotient <;> decide
+
+end MonaWitnesses
 
 namespace AdaptiveWitnesses
 open ActionTable
