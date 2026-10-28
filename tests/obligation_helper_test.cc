@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <tuple>
 #include <spot/tl/parse.hh>
@@ -44,6 +46,59 @@ namespace {
     require (parsed.f && parsed.errors.empty (), "parse failed");
     return parsed.f;
   }
+
+  void check_memory_share () {
+    using namespace acacia::obligation;
+    namespace fs = std::filesystem;
+    char directory[] = "obligation-memory-XXXXXX";
+    require (mkdtemp (directory), "cannot create cgroup fixture");
+    const fs::path scope = directory;
+    const auto write = [&] (const char* file, const std::string& contents) {
+      std::ofstream output (scope / file);
+      require (bool (output << contents), "cannot write cgroup fixture");
+    };
+    constexpr uint64_t share = 100;
+    const auto exceeded = [&] (uint64_t resident) {
+      return rss_share_exceeded (resident, share,
+                                 scope_memory ("memory.max", directory).value_or (0), directory);
+    };
+    write ("memory.max", "800\n");
+    require (scope_memory ("memory.max", directory) == 800, "finite scope limit not read");
+    for (const auto& [used, enforce] : std::vector<std::pair<uint64_t, bool>> {
+             {0, false}, {699, false}, {700, true}, {701, true}, {800, true}, {UINT64_MAX, true}}) {
+      write ("memory.current", std::to_string (used) + "\n");
+      require (scope_memory ("memory.current", directory) == used, "scope usage not read");
+      require (exceeded (share + 1) == enforce, "headroom enforcement boundary changed");
+      require (!exceeded (share) && !exceeded (share - 1), "worker within its share killed");
+      require (rss_share_exceeded (share + 1, share, 0, directory), "equal share not enforced");
+    }
+    write ("memory.current", "0\n");
+    for (const char* limit : {"max\n", "", "invalid\n"}) {
+      write ("memory.max", limit);
+      require (!scope_memory ("memory.max", directory), "unbounded/invalid limit accepted");
+      require (exceeded (share + 1) && !exceeded (share), "unbounded limit differs from equal");
+    }
+    for (const char* file : {"memory.max", "memory.current"}) {
+      write ("memory.max", "800\n");
+      write ("memory.current", "0\n");
+      fs::remove (scope / file);
+      require (!scope_memory (file, directory), "missing scope file accepted");
+      require (exceeded (share + 1) && !exceeded (share), "missing scope file differs from equal");
+      // A directory gives a real read error even when tests run as root.
+      fs::create_directory (scope / file);
+      require (!scope_memory (file, directory), "unreadable scope file accepted");
+      require (exceeded (share + 1), "unreadable scope file differs from equal");
+      fs::remove (scope / file);
+      if (geteuid () != 0) {
+        write (file, "800\n");
+        fs::permissions (scope / file, fs::perms::none);
+        require (!scope_memory (file, directory), "scope file permissions ignored");
+        require (exceeded (share + 1), "inaccessible scope file differs from equal");
+        fs::permissions (scope / file, fs::perms::owner_all);
+      }
+    }
+    fs::remove_all (scope);
+  }
 }
 
 int main () {
@@ -67,7 +122,10 @@ int main () {
              "equal RSS computation changed");
     require (rss_share_for_limit (limit, workers, memory_share::alone) == alone,
              "alone RSS computation exceeded the finite limit");
+    require (rss_share_for_limit (limit, workers, memory_share::headroom) == equal,
+             "headroom RSS computation differs from equal");
   }
+  check_memory_share ();
   const auto absent = solve (spot::formula::tt (), {"fresh_input"}, {"fresh_output"});
   require (absent.value == outcome::real, "absent output AP broke decision");
   for (const char* text : {"1", "0", "G o", "F o", "i U o", "i W o", "i R o", "i M o",

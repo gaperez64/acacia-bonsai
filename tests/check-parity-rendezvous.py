@@ -142,22 +142,42 @@ def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
                     pass
 
 
-def memory_limit(binary, scratch):
+def memory_limit(binary, scratch, updated_limit=None):
     with tempfile.TemporaryDirectory(dir=scratch) as temporary:
         root = Path(temporary)
         gate_read, gate_write = os.pipe()
         env = dict(os.environ, ACACIA_PHASE_RECORDS=str(root),
                    ACACIA_TEST_SYNTHESIS_PARITY_VERDICT_FD=str(gate_read),
                    ACACIA_TEST_SYNTHESIS_PARITY_RSS_BYTES=str(144 * 1024 * 1024))
+        flags = []
+        if updated_limit is not None:
+            (root / "memory.max").write_text(str(800 * 1024 * 1024))
+            (root / "memory.current").write_text(str(350 * 1024 * 1024))
+            env["ACACIA_TEST_CGROUP_DIRECTORY"] = str(root)
+            flags = ["--parity-memory-share=headroom"]
 
         def limit():
             resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024))
 
         process = subprocess.Popen([binary, "-f", "G o", "-i", "", "-o", "o", "--arms", "both:parity:spot",
-                                    "-s", str(root / "controller.aag")], env=env, preexec_fn=limit,
+                                    "-s", str(root / "controller.aag"), *flags], env=env, preexec_fn=limit,
                                    pass_fds=(gate_read,), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         os.close(gate_read)
         try:
+            if updated_limit is not None:
+                Events(process).wait("synthesis_ready")
+                # The over-share worker must survive while the scope has headroom.
+                try:
+                    process.wait(timeout=0.1)
+                except subprocess.TimeoutExpired:
+                    pass
+                else:
+                    raise AssertionError(("worker killed before limit change", process.returncode))
+                if updated_limit:
+                    (root / "next.max").write_text(updated_limit)
+                    (root / "next.max").replace(root / "memory.max")
+                else:
+                    (root / "memory.max").unlink()
             stdout, stderr = process.communicate(timeout=20)
             assert process.returncode == 2 and not stdout, (stdout, stderr)
             rows = records(root)
@@ -189,6 +209,8 @@ def main():
         print("Skipping RLIMIT_AS case: incompatible with ASan shadow memory")
     else:
         memory_limit(binary, args.scratch)
+        for updated_limit in (str(400 * 1024 * 1024), "max", ""):
+            memory_limit(binary, args.scratch, updated_limit)
     print("Parity selection, fallback, cancellation, parent death and RSS supervision passed")
 
 

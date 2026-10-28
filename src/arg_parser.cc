@@ -119,6 +119,10 @@ void show_help (const char* program_name) {
       << "                    limit and 8 GiB (at most 4 GiB); equal divides it among\n"
       << "                    launched workers, alone gives all of it to the helper;\n"
       << "                    the separate 8 GiB address-space cap still applies\n"
+      << "  --parity-memory-share VAL [equal|headroom] (default equal)\n"
+      << "                    headroom enforces the equal share only when the solver's\n"
+      << "                    memory scope is nearly exhausted; without a readable limit,\n"
+      << "                    it behaves like equal\n"
       << "  --r-prepass VAL   [on|off] R discovery/candidates in combined native arms (default "
          "on)\n"
       << "  --equivariance VAL [on|off] exact pre-pass in backward decision workers (default "
@@ -437,6 +441,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   std::optional<int> sgn_kmin = std::nullopt;
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_OBLIGATION_MEMORY_SHARE = 1015;
+  static constexpr int OPT_PARITY_MEMORY_SHARE = 1016;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
   static constexpr int OPT_REAL_BACKEND = 1002;
@@ -464,6 +469,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"unreal-backend", required_argument, nullptr, OPT_UNREAL_BACKEND},
       {"arms", required_argument, nullptr, OPT_ARMS},
       {"obligation-memory-share", required_argument, nullptr, OPT_OBLIGATION_MEMORY_SHARE},
+      {"parity-memory-share", required_argument, nullptr, OPT_PARITY_MEMORY_SHARE},
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
@@ -640,6 +646,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
           retval.obligation_memory_share = acacia::obligation::memory_share::alone;
         else
           error (EXIT_CODE_ERROR, "Error: --obligation-memory-share expects equal or alone.\n");
+        break;
+      case OPT_PARITY_MEMORY_SHARE:
+        if (std::string_view {optarg} == "equal")
+          retval.parity_memory_share = acacia::obligation::memory_share::equal;
+        else if (std::string_view {optarg} == "headroom")
+          retval.parity_memory_share = acacia::obligation::memory_share::headroom;
+        else
+          error (EXIT_CODE_ERROR, "Error: --parity-memory-share expects equal or headroom.\n");
         break;
       case OPT_R_PREPASS:
       case OPT_EQUIVARIANCE: {

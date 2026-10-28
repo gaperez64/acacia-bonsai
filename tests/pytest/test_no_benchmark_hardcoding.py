@@ -219,6 +219,8 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'included solver header',
     ('src/solver/equivariant_k_bounded_safety_aut.hh', 'not a verified full symmetric group ('):
         'symmetry validation diagnostic',
+    ('src/solver/obligation_helper.cc', 'ACACIA_TEST_CGROUP_DIRECTORY'):
+        'test-only cgroup directory override',
     ('src/solver/solver_invoker.cc', ' full_symmetric='):
         'included header or symmetry diagnostic label',
     ('src/solver/solver_invoker.cc', 'solver/unreal_safety_core_witnesses.hh'):
