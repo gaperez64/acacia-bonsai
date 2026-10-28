@@ -1113,7 +1113,8 @@ int main (int argc, char** argv) {
   g_main_pid = getpid ();
 #ifdef __linux__
   // Own orphaned worker descendants even when accounting is disabled.
-  const bool subreaper = prctl (PR_SET_CHILD_SUBREAPER, 1) == 0;
+  if (prctl (PR_SET_CHILD_SUBREAPER, 1) != 0)
+    error (EXIT_CODE_ERROR, "Error: unable to become child subreaper: %s.\n", strerror (errno));
 #endif
   if (acacia::phase_records_enabled ()) {
     const size_t bytes = worker_slots * sizeof (acacia::worker_record);
@@ -1121,18 +1122,8 @@ int main (int argc, char** argv) {
         mmap (nullptr, bytes, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     if (shared == MAP_FAILED)
       acacia::phase_records_disable ();
-    else {
-#ifdef __linux__
-      if (!subreaper) {
-        munmap (shared, bytes);
-        acacia::phase_records_disable ();
-      }
-      else
-#endif
-      {
-        g_worker_records = static_cast<acacia::worker_record*> (shared);
-      }
-    }
+    else
+      g_worker_records = static_cast<acacia::worker_record*> (shared);
   }
 
   sigset_t block_set;

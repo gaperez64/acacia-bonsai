@@ -79,7 +79,8 @@ def test_timeout_row_retains_every_terminal_and_both_summaries(monkeypatch, tmp_
     assert (row["result"], row["timed_out"], row["exit_code"]) == ("TIMEOUT", "true", "124")
     assert float(row["seconds"]) >= 1
     assert row["cpu_seconds"] and row["scope_memory_peak_bytes"] == "4096"
-    events = [dict(json.loads(line), emitter_pid=int(path.stem))
+    events = [dict(json.loads(line), emitter_pid=int(path.stem.removesuffix("-final")),
+                   durable=path.stem.endswith("-final"))
               for path in records.rglob("*.jsonl") for line in path.read_text().splitlines()]
     specifications = [event for event in events if event.get("event") == "worker_spec"]
     spawned = [event for event in events if event.get("event") == "worker_spawn"]
@@ -96,6 +97,6 @@ def test_timeout_row_retains_every_terminal_and_both_summaries(monkeypatch, tmp_
                for event in events)
     writer, = [event for event in events if event.get("event") == "writer_summary"]
     assert writer["failed_records"] == 0 and not writer["incomplete_packet"]
-    assert writer["delivered_records"] == len(events) - 1
+    assert writer["delivered_records"] == sum(not event["durable"] for event in events) - 1
     assert all(event.get("dropped_records", 0) == 0 for event in events)
     assert not any(event.get("event") == "parent_winner" for event in events)

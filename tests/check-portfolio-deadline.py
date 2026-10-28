@@ -40,9 +40,11 @@ def check_lifecycle(binary: Path, args: list[str], directory: Path, *,
         if phase_records:
             env["ACACIA_PHASE_RECORDS"] = records
         process = subprocess.Popen([str(binary), *args], env=env,
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0,
+                                   start_new_session=True)
         workers = []
         descendants = []
+        writers = []
         try:
             deadline = time.monotonic() + 3
             while not workers:
@@ -54,6 +56,21 @@ def check_lifecycle(binary: Path, args: list[str], directory: Path, *,
                 if line.startswith(b'{"stage":"child_group",'):
                     workers.append(json.loads(line)["pid"])
             worker, = workers
+            if phase_records:
+                children = Path(f"/proc/{process.pid}/task/{process.pid}/children")
+                writers = [int(pid) for pid in children.read_text().split()
+                           if int(pid) != worker]
+                writer, = writers
+                if parent_death:
+                    # Delivery proves the writer has completed startup before we stop it.
+                    delivered = Path(records) / f"{process.pid}.jsonl"
+                    while not delivered.exists() or not delivered.stat().st_size:
+                        assert time.monotonic() < deadline, "writer readiness missing"
+                        time.sleep(.001)
+                    os.kill(writer, signal.SIGSTOP)
+                    while Path(f"/proc/{writer}/stat").read_text().split()[2] != "T":
+                        assert time.monotonic() < deadline, "writer did not stop"
+                        time.sleep(.001)
             if not parent_death:
                 children = Path(f"/proc/{worker}/task/{worker}/children")
                 while not descendants:
@@ -63,15 +80,17 @@ def check_lifecycle(binary: Path, args: list[str], directory: Path, *,
             os.kill(process.pid if parent_death else worker, signal.SIGKILL)
             assert process.wait(timeout=3) == (-signal.SIGKILL if parent_death else 2)
             if parent_death:
-                deadline = time.monotonic() + 3
-                while time.monotonic() < deadline:
-                    reaped, status = os.waitpid(worker, os.WNOHANG)
-                    if reaped:
-                        assert os.WIFSIGNALED(status) and os.WTERMSIG(status) == signal.SIGKILL
-                        break
-                    time.sleep(.001)
+                for pid in workers + writers:
+                    deadline = time.monotonic() + 3
+                    while time.monotonic() < deadline:
+                        reaped, status = os.waitpid(pid, os.WNOHANG)
+                        if reaped:
+                            assert os.WIFSIGNALED(status) and os.WTERMSIG(status) == signal.SIGKILL
+                            break
+                        time.sleep(.001)
             leftovers = [(pid, Path(f"/proc/{pid}/stat").read_text().split()[2:5])
-                         for pid in workers + descendants if Path(f"/proc/{pid}").exists()]
+                         for pid in workers + descendants + writers
+                         if Path(f"/proc/{pid}").exists()]
             assert not leftovers, ("surviving processes (pid, state/ppid/pgid)", leftovers)
             stdout, stderr = process.communicate(timeout=3)
             if not parent_death:
@@ -80,7 +99,7 @@ def check_lifecycle(binary: Path, args: list[str], directory: Path, *,
             if process.poll() is None:
                 process.kill()
                 process.wait(timeout=3)
-            for pid in workers + descendants:
+            for pid in workers + descendants + writers:
                 try:
                     os.kill(pid, signal.SIGKILL)
                 except ProcessLookupError:
