@@ -2,6 +2,7 @@
 """Check the production parity arm and exported timing against generated specifications."""
 
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -21,7 +22,7 @@ def execute(command, env=None):
     return result
 
 
-def check_records(directory, expected_calls=None, synthesis=False):
+def check_records(directory, expected_calls=None, synthesis=False, formula=False):
     rows = [json.loads(line) for path in directory.glob("*.jsonl")
             for line in path.read_text().splitlines()]
     assert_parse_calls(rows, expected_calls or {})
@@ -50,6 +51,11 @@ def check_records(directory, expected_calls=None, synthesis=False):
         assert row["worker_pid"] == solved["worker_pid"], row
     identity, = [row for row in rows if row.get("event") == "work_identity"
                  and row.get("provider") == "spot-parity"]
+    if formula:
+        digest = hashlib.sha256(identity["formula"].encode()).hexdigest()
+        assert digest == identity["formula_sha256"], identity
+    else:
+        assert "formula" not in identity, identity
     return tier["tier"], (identity["formula_sha256"], identity["alphabet_sha256"])
 
 
@@ -67,12 +73,25 @@ def main():
                 "FG !o | FG !p", "FG !i | FG !j"]
     with tempfile.TemporaryDirectory(dir=args.scratch) as temporary:
         root = Path(temporary)
+        # A quoted AP exercises JSON escaping and exceeds both record size limits.
+        output = "long-output-" + "o" * 20000
+        for capture in (False, True):
+            phases = root / f"formula-{capture}"
+            phases.mkdir()
+            env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases))
+            env.pop("ACACIA_PHASE_RECORDS_FORMULA", None)
+            if capture:
+                env["ACACIA_PHASE_RECORDS_FORMULA"] = "1"
+            execute([binary, "-f", f'G "{output}"', "-i", "i", "-o", output,
+                     "--arms", "both:parity:spot"], env)
+            check_records(phases, formula=capture)
         seen_tiers = set()
         for moore in ((False, True) if args.tlsf else (False,)):
             for formula in fixtures:
                 phases = root / "phases"
                 phases.mkdir(exist_ok=True)
                 env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases))
+                env.pop("ACACIA_PHASE_RECORDS_FORMULA", None)
                 effective = formula.replace("i", "X i").replace("j", "X j") if moore else formula
                 interface = ["-i", "i,j,unused_input", "-o", "o,p,unused_output"]
                 source = ["-f", formula, *interface]
@@ -144,6 +163,7 @@ GUARANTEES {{ {guarantee}; }} }}
                                     path.unlink()
                                 controller.unlink(missing_ok=True)
                                 env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases), **extra_env)
+                                env.pop("ACACIA_PHASE_RECORDS_FORMULA", None)
                                 command = [executable, "-T", str(source), "--arms", arms]
                                 if synthesis:
                                     command += ["-s", str(controller)]
