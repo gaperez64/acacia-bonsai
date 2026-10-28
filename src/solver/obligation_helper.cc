@@ -175,47 +175,41 @@ namespace acacia::obligation {
     rlimit address {};
     if (getrlimit (RLIMIT_AS, &address) == 0 && address.rlim_cur != RLIM_INFINITY)
       cap = std::min (cap, uint64_t (address.rlim_cur));
-    if (FILE* membership = std::fopen ("/proc/self/cgroup", "r")) {
-      char line[4096] {};
-      if (std::fgets (line, sizeof line, membership)) {
-        if (const char* group = std::strstr (line, "::/")) {
-          std::string path = "/sys/fs/cgroup";
-          path += group + 2;
-          if (!path.empty () && path.back () == '\n')
-            path.pop_back ();
-          path += "/memory.max";
-          if (FILE* file = std::fopen (path.c_str (), "r")) {
-            unsigned long long scoped = 0;
-            if (std::fscanf (file, "%llu", &scoped) == 1 && scoped)
-              cap = std::min (cap, uint64_t (scoped));
-            std::fclose (file);
-          }
-        }
-      }
-      std::fclose (membership);
-    }
+    if (const auto scoped = scope_memory ("memory.max"); scoped && *scoped)
+      cap = std::min (cap, *scoped);
     return rss_share_for_limit (cap, workers, policy);
   }
 
-  uint64_t scope_memory (const char* file) noexcept {
-    uint64_t value = 0;
-    if (FILE* membership = std::fopen ("/proc/self/cgroup", "r")) {
+  std::optional<uint64_t> scope_memory (const char* file, const char* directory) noexcept {
+    char path[4608] {};
+    if (directory)
+      snprintf (path, sizeof path, "%s/%s", directory, file);
+    else if (FILE* membership = std::fopen ("/proc/self/cgroup", "r")) {
       char line[4096] {};
       if (std::fgets (line, sizeof line, membership))
-        if (const char* group = std::strstr (line, "::/")) {
-          char path[4608];
-          snprintf (path, sizeof path, "/sys/fs/cgroup%.*s/%s", int (std::strcspn (group + 2, "\n")),
-                    group + 2, file);
-          if (FILE* f = std::fopen (path, "r")) {
-            unsigned long long v = 0;
-            if (std::fscanf (f, "%llu", &v) == 1)
-              value = v;
-            std::fclose (f);
-          }
-        }
+        if (const char* group = std::strstr (line, "::/"))
+          snprintf (path, sizeof path, "/sys/fs/cgroup%.*s/%s",
+                    int (std::strcspn (group + 2, "\n")), group + 2, file);
       std::fclose (membership);
     }
-    return value;
+    if (FILE* f = std::fopen (path, "r")) {
+      unsigned long long value = 0;
+      const bool read = std::fscanf (f, "%llu", &value) == 1;
+      std::fclose (f);
+      if (read)
+        return value;
+    }
+    return std::nullopt;
+  }
+
+  bool rss_share_exceeded (uint64_t resident, uint64_t share, uint64_t scope_limit,
+                           const char* directory) noexcept {
+    if (resident <= share)
+      return false;
+    if (!scope_limit)
+      return true;
+    const auto used = scope_memory ("memory.current", directory);
+    return !used || *used >= scope_limit - scope_limit / 8;
   }
 
   uint64_t resident_bytes (pid_t pid) noexcept {

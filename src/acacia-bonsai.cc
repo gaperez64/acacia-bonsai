@@ -713,11 +713,10 @@ namespace {
     if (std::ranges::any_of (*arg_values.arms, [] (const auto& arm) {
           return arm.kind == portfolio_arm_kind::parity;
         }))
-      g_parity_rss_share =
-          acacia::obligation::rss_share (child_count + size_t (g_obligation != nullptr),
-                                         arg_values.parity_memory_share);
-    if (arg_values.parity_memory_share == acacia::obligation::memory_share::pressure)
-      g_parity_scope_limit = acacia::obligation::scope_memory ("memory.max");
+      g_parity_rss_share = acacia::obligation::rss_share (
+          child_count + size_t (g_obligation != nullptr), arg_values.parity_memory_share);
+    if (arg_values.parity_memory_share == acacia::obligation::memory_share::headroom)
+      g_parity_scope_limit = acacia::obligation::scope_memory ("memory.max").value_or (0);
     for (const auto& arm : *arg_values.arms) {
       if (arm.kind == portfolio_arm_kind::legacy && !arg_values.legacy_available)
         continue;
@@ -818,10 +817,8 @@ namespace {
         const pid_t worker = g_child_pids[index];
         if (worker > 0 &&
             std::ranges::find (g_parity_exhausted, index) == g_parity_exhausted.end () &&
-            acacia::obligation::resident_bytes (worker) > g_parity_rss_share &&
-            (g_parity_scope_limit == 0 ||
-             acacia::obligation::scope_memory ("memory.current") + g_parity_scope_limit / 8 >
-                 g_parity_scope_limit)) {
+            acacia::obligation::rss_share_exceeded (acacia::obligation::resident_bytes (worker),
+                                                    g_parity_rss_share, g_parity_scope_limit)) {
           g_parity_exhausted.push_back (index);
           if (g_worker_records) {
             auto r = g_worker_records[index];
