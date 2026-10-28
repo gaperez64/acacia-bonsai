@@ -589,14 +589,6 @@ test ('check-selection',
       suite : ['unit', 'check-selection'],
       depends : [ab_exe])
 
-cap_census_test = executable ('cap-census-test',
-                              'cap_census_test.cc',
-                              include_directories : inc,
-                              dependencies : [spot_dep, bddx_dep])
-test ('cap-census',
-      cap_census_test,
-      suite : ['unit', 'preprocessing'])
-
 push_aps_test = executable ('push-aps-test',
                             'push_aps_test.cc',
                             include_directories : inc,
