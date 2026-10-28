@@ -1,6 +1,7 @@
 #pragma once
 
 #include "phase_records.hh"
+#include "solver/spot_worker_record.hh"
 #include <string_view>
 
 #include <spot/tl/print.hh>
@@ -31,7 +32,8 @@ namespace acacia {
       append (inputs);
       append (outputs);
       char formula_hash[65], alphabet_hash[65], translation_hash[65], preprocessing_hash[65];
-      hash (spot::str_psl (formula), formula_hash);
+      const auto formula_text = spot::str_psl (formula);
+      hash (formula_text, formula_hash);
       hash (alphabet, alphabet_hash);
       hash (translation, translation_hash);
       hash (preprocessing, preprocessing_hash);
@@ -46,10 +48,19 @@ namespace acacia {
           long (getpid ()), (unsigned long long) phase_clock (CLOCK_MONOTONIC), w ? w->subjob : 0,
           w ? w->run_id : 0, formula_hash, alphabet_hash, provider, translation_hash,
           preprocessing_hash);
-      if (n > 0 && size_t (n) < sizeof line)
-        phase_records_send (line, size_t (n));
-      else
+      if (n <= 0 || size_t (n) >= sizeof line) {
         phase_records_drop ();
+        return;
+      }
+      if (const char* capture = getenv ("ACACIA_PHASE_RECORDS_FORMULA");
+          capture && std::strcmp (capture, "1") == 0) {
+        const auto record = std::string (line, size_t (n) - 2) +
+                            ",\"formula\":" + spot_records::quote (formula_text) + "}\n";
+        // Full formulas can exceed both the fixed buffer and the pipe packet limit.
+        phase_records_final (record.data (), record.size ());
+      }
+      else
+        phase_records_send (line, size_t (n));
     } catch (...) {
       phase_records_drop ();
     }

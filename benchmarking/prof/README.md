@@ -41,6 +41,7 @@ Records added:
   reconciliation is needed. Frozen records retain conservative legacy accounting.
 - `work_identity`: SHA-256 of the actual translated formula, length-prefixed
   **ordered** I/O alphabet, provider, translation options and preprocessing options.
+  `ACACIA_PHASE_RECORDS_FORMULA=1` adds the exact `spot::str_psl` text as `formula`, writing the identity directly to `PID-final.jsonl` to avoid the pipe packet size limit.
   Native `native_work_identity` uses the stricter full TLSF source identity
   (including declarations/parameters), exact reduction/options and OxiDD provider;
   `accounting_artifact` binds solve/check phases to the exact AAG SHA-256. Similar
