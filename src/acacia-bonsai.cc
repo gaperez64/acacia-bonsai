@@ -173,34 +173,44 @@ namespace {
   }
 
   void reap_descendants () {
-    if (!g_worker_records)
-      return;
-    for (sig_atomic_t i = 0; i < g_child_count; ++i)
-      reap_worker_descendant (g_worker_records[i]);
+    if (g_worker_records)
+      for (sig_atomic_t i = 0; i < g_child_count; ++i)
+        reap_worker_descendant (g_worker_records[i]);
 #ifdef __linux__
     // Also cover death between fork() and publishing descendant_pid. An adopted
     // child's process group still identifies its arm even after its PPID changes.
     char path[96];
     snprintf (path, sizeof path, "/proc/self/task/%ld/children", long (getpid ()));
-    if (FILE* children = fopen (path, "r")) {
+    bool remaining = true;
+    while (remaining) {
+      remaining = false;
+      FILE* children = fopen (path, "r");
+      if (!children)
+        break;
       long pid;
       while (fscanf (children, "%ld", &pid) == 1) {
         if (pid == acacia::phase_records_writer_pid ())
           continue;
+        remaining = true;  // Killing an adoptee may expose more descendants.
         const pid_t group = getpgid (pid);
+        acacia::worker_record* record = nullptr;
         for (sig_atomic_t i = 0; i < g_child_count; ++i)
-          if (g_worker_records[i].pid == group) {
-            kill (pid, SIGKILL);
-            int status = 0;
-            rusage usage {};
-            pid_t got;
-            do {
-              got = wait4 (pid, &status, 0, &usage);
-            } while (got < 0 && errno == EINTR);
-            acacia::descendant_record (g_worker_records[i], pid, got == pid ? &usage : nullptr,
-                                       status, got != pid);
+          if ((g_worker_records ? g_worker_records[i].pid : g_child_pids[i]) == group) {
+            kill (-group, SIGKILL);
+            if (g_worker_records)
+              record = &g_worker_records[i];
             break;
           }
+        kill (pid, SIGKILL);
+        int status = 0;
+        rusage usage {};
+        pid_t got;
+        do {
+          got = wait4 (pid, &status, 0, &usage);
+        } while (got < 0 && errno == EINTR);
+        if (record)
+          acacia::descendant_record (*record, pid, got == pid ? &usage : nullptr, status,
+                                     got != pid);
       }
       fclose (children);
     }
@@ -595,13 +605,10 @@ namespace {
         acacia::synthesis::test_before_worker_protection ();
 #endif
 #ifdef __linux__
-      if (g_synthesis || arm.kind == portfolio_arm_kind::obligation ||
-          arm.kind == portfolio_arm_kind::parity) {
-        // SIGKILL also terminates suspended synthesis competitors. Recheck the
-        // parent to cover its death between fork and installing the signal.
-        if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != g_main_pid)
-          acacia::worker_exit (EXIT_CODE_UNKNOWN);
-      }
+      // SIGKILL also terminates suspended synthesis competitors. Recheck the
+      // parent to cover its death between fork and installing the signal.
+      if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != g_main_pid)
+        acacia::worker_exit (EXIT_CODE_UNKNOWN);
 #endif
       if (g_synthesis) {
         acacia::synthesis::current_slot = &g_synthesis[g_child_count];
@@ -923,6 +930,8 @@ namespace {
             break;
           }
       }
+      if (reaped > 0 && reaped_index < 0)
+        continue;  // Adopted descendants cannot supply a worker verdict.
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
       if (reaped > 0 && std::getenv ("ACACIA_TEST_DELAY_AFTER_REAP")) {
         char line[64];
@@ -1102,6 +1111,10 @@ int main (int argc, char** argv) {
       new (&g_synthesis[i]) acacia::synthesis::rendezvous_slot;
   }
   g_main_pid = getpid ();
+#ifdef __linux__
+  // Own orphaned worker descendants even when accounting is disabled.
+  const bool subreaper = prctl (PR_SET_CHILD_SUBREAPER, 1) == 0;
+#endif
   if (acacia::phase_records_enabled ()) {
     const size_t bytes = worker_slots * sizeof (acacia::worker_record);
     void* shared =
@@ -1110,8 +1123,7 @@ int main (int argc, char** argv) {
       acacia::phase_records_disable ();
     else {
 #ifdef __linux__
-      // Adopt the safety-core subprocess only after its accounting area exists.
-      if (prctl (PR_SET_CHILD_SUBREAPER, 1) != 0) {
+      if (!subreaper) {
         munmap (shared, bytes);
         acacia::phase_records_disable ();
       }

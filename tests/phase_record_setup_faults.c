@@ -15,8 +15,6 @@ static int failure (const char* name) {
 
 int prctl (int option, ...) {
   if (option == PR_SET_CHILD_SUBREAPER) {
-    if (failure ("mmap"))
-      (void) write (STDERR_FILENO, "unexpected_subreaper\n", 21);
     if (failure ("prctl")) {
       errno = EPERM;
       return -1;

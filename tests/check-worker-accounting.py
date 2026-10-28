@@ -41,7 +41,6 @@ with tempfile.TemporaryDirectory(dir=build) as location:
                 ACACIA_TEST_RECORD_SETUP_FAILURE=failure))
             assert (run.returncode, run.stdout) == (baseline.returncode, baseline.stdout), run
             assert run.stderr.count(b"acacia: phase recording failed") == 1, run.stderr
-            assert b"unexpected_subreaper" not in run.stderr, run.stderr
             assert not any(e.get("worker_pid") for e in records(directory)), failure
         reader, writer = os.pipe()
         os.close(reader)
