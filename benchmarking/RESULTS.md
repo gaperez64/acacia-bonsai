@@ -12,6 +12,20 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-28: Headroom becomes the default; translation sharing closes without a build
+
+Archive `sharegate-20261028` (release `evidence-2026-10-28-sharegate`), #341. The equal and headroom policies used the same release binary of `otf_sparse_formula_parity` on all 1524 SYNTCOMP26 inputs. Every call ran in its own 8 GiB scope, serially. At 17 s, equal decided 1342 inputs and headroom 1341, with no verdict change. The one difference, `amba_case_study_unreal_pb_2_pe_`, finished under equal at 16.36 s, near the cap; both policies decide it at 60 s.
+
+At 60 s, the 183 inputs either policy left undecided at 17 s ran with the order reversed. Equal reached 1357 decided in total and headroom 1364. Headroom alone decides `F-G-contradiction-114`, `chain-5-real`, `ltl2dba_R_pb_10`, `robot-to-target-charging-unreal0` and `robot-to-target-charging-unreal1`, and `simple_arbiter_enc_pb_11` and `simple_arbiter_enc_pb_12`. No input is decided only by equal. Headroom had no scope out-of-memory event; equal had one, on `round_robin_arbiter_unreal1_pb_3_13` at 59.6 s. Headroom became the default.
+
+Archive `sharecheck-20261028` (release `evidence-2026-10-28-sharecheck`), #342, closed without a build. Phase records with full formula capture on `robot-to-target-charging-unreal5` show that only `real:small:backward` and `real:small:forward` translate the same formula with the same options. Each used 1560 MB and was still translating at 60 s. The two unreal workers translate different formulas. Parity uses deterministic options and was killed by its memory share at 17.7 s.
+
+The upper bound for sharing used `robot-to-target-charging-unreal4` through `robot-to-target-charging-unreal7`. At a 120 s cap, parity alone decides all four in 46 to 64 s. Headroom with all arms decides none at 60 s or 120 s. Without `real:small:forward`, it decides none at 60 s and 1 of 4 at 120 s (`robot-to-target-charging-unreal4` at 86 s). A backward worker forking its forward sibling after translation was estimated at about 350 production lines and 405 test lines. It was not built. Scoping it found process lifecycle leaks fixed in #352.
+
+The cap census was removed as dead diagnostics (#343, PR #350).
+The soundness audit (#344) argued that 72 shipped reductions are sound and found one deadline bug (#347, PR #351).
+The nondeterministic GFG fast path was removed (#346, PR #353, archive `gfgcensus-20261028`).
+
 ## 2026-10-28 — The GFG Büchi fast path fires on one input, so it is removed rather than proved
 
 Archive `gfgcensus-20261028` (release `evidence-2026-10-28-gfgcensus`), master 1571a87b, a checked
