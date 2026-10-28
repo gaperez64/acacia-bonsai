@@ -1,6 +1,5 @@
 #include "solver/solver_invoker.hh"
 
-#include "aut_preprocessors/cap_census.hh"
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
 #include "solver/accounting_identity.hh"
@@ -693,17 +692,6 @@ namespace {
                 "preprocessing-census-skipped-transition-based-acceptance");
           }
           else {
-            {
-              acacia::diagnostics::scoped_timer timer (&diag->cap_census_ms);
-              const auto census = aut_preprocessors::future_visit_cap_census (aut, opt_k);
-              diag->cap_k = opt_k;
-              diag->cap_states_at_k = census.states_at_k;
-              diag->cap_states_finite = census.finite_states;
-              diag->cap_states_zero = census.zero_states;
-              diag->cap_counting_states = census.counting_states;
-              diag->cap_finite_counting_states = census.finite_counting_states;
-            }
-            acacia::diagnostics::snapshot ("after-cap-census");
             {
               acacia::diagnostics::scoped_timer timer (&diag->simulation_census_ms);
               const auto reduced = spot::reduce_direct_sim_sba (aut);

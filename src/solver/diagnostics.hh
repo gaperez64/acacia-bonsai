@@ -205,7 +205,6 @@ namespace acacia::diagnostics {
       long long fast_class_ms = 0;
       long long fast_solve_ms = 0;
       long long preproc_ms = 0;
-      long long cap_census_ms = 0;
       long long simulation_census_ms = 0;
       long long solve_ms = 0;
       double cpre_ms = 0.0;
@@ -228,12 +227,6 @@ namespace acacia::diagnostics {
       size_t preproc_states_after = 0;
       size_t preproc_edges_before = 0;
       size_t preproc_edges_after = 0;
-      size_t cap_k = 0;
-      size_t cap_states_at_k = 0;
-      size_t cap_states_finite = 0;
-      size_t cap_states_zero = 0;
-      size_t cap_counting_states = 0;
-      size_t cap_finite_counting_states = 0;
       size_t simulation_states_after = 0;
       size_t simulation_states_removed = 0;
       size_t bool_threshold = 0;
@@ -383,12 +376,6 @@ namespace acacia::diagnostics {
          << " preproc_states_after=" << m.preproc_states_after
          << " preproc_edges_before=" << m.preproc_edges_before
          << " preproc_edges_after=" << m.preproc_edges_after
-         << " cap_census_ms=" << m.cap_census_ms << " cap_k=" << m.cap_k
-         << " cap_states_at_k=" << m.cap_states_at_k
-         << " cap_states_finite=" << m.cap_states_finite
-         << " cap_states_zero=" << m.cap_states_zero
-         << " cap_counting_states=" << m.cap_counting_states
-         << " cap_finite_counting_states=" << m.cap_finite_counting_states
          << " simulation_census_ms=" << m.simulation_census_ms
          << " simulation_states_after=" << m.simulation_states_after
          << " simulation_states_removed=" << m.simulation_states_removed
