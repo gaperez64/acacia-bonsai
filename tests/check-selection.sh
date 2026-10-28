@@ -76,5 +76,7 @@ run_error trailing_comma_is_not_a_strategy 'empty strategy in -r list' -r small,
 run_error embedded_whitespace_is_not_ignored 'unexpected realizability strategy' -r 's mall'
 run_error legacy_bare_real_flag 'option requires an argument' -r
 run_error removed_unreal_only_flag 'invalid option' -U
+run_error removed_gfg_fast_path 'GFG Spot fast path was removed' --spot-fast det-and-gfg
+run_error removed_gfg_fast_path_alias 'GFG Spot fast path was removed' --spot-fast gfg
 
 exit "$failures"

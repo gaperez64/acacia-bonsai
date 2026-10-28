@@ -12,6 +12,34 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-10-28 — The GFG Büchi fast path fires on one input, so it is removed rather than proved
+
+Archive `gfgcensus-20261028` (release `evidence-2026-10-28-gfgcensus`), master 1571a87b, a checked
+build of the first `docker_default` member against Spot 2.16. The nondeterministic GFG decision
+branch (`--spot-fast det-and-gfg`, never shipped) had an open proof obligation (#346). Before
+proving it, this counted how often it would fire.
+
+The 17 s phase records of `spotfast-ablation-20261019` give, for each REAL-side antichain worker,
+the translated automaton's size and whether the deterministic shortcut solved it. On 245 inputs
+some REAL-side automaton is a nondeterministic single-set Büchi automaton within the two-token
+recognizer's 31-state budget; the default decides 240 of them at 17 s. Running the recognizer on
+each (`--arms real:small:backward --spot-fast det-and-gfg`, 20 s, 4 GiB scope, serially):
+
+| Classification per input | Inputs |
+|---|---:|
+| Not GFG | 228 |
+| Not GFG, or over the budget | 5 |
+| Not GFG, or deterministic | 1 |
+| Deterministic (translation differs from the archive) | 6 |
+| Not classified within 20 s | 4 |
+| GFG | 1 |
+
+The one GFG input, `ordered-visits-choice-real`, is REALIZABLE, which the GFG verdict matches and
+the default reaches in 0.11 s. None of the five inputs the default leaves undecided at 17 s
+(`generalized_buffer_pb_6`, `simple_arbiter_enc_pb_11`–`_14`) is GFG, and the four unclassified
+inputs are decided by the default in under 3 s. The branch is removed; `--spot-fast` keeps
+`off` and `det`.
+
 ## 2026-10-27 — The parity worker loses inputs to its memory share; on-the-fly parity would first need a lazy automaton
 
 Archive `otfpar-20261027` (release `evidence-2026-10-27-otfpar`), branch `research/otf-parity` at d5cb75c5, not merged. Every call ran in its own 8 GiB scope, serially.

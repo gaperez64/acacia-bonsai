@@ -39,7 +39,7 @@ namespace {
     return aut;
   }
 
-  spot::twa_graph_ptr make_nondet_gfg_buchi () {
+  spot::twa_graph_ptr make_nondet_choice_buchi () {
     auto dict = spot::make_bdd_dict ();
     auto aut = spot::make_twa_graph (dict);
     aut->set_acceptance (1, spot::acc_cond::acc_code::buchi ());
@@ -53,7 +53,7 @@ namespace {
     return aut;
   }
 
-  spot::twa_graph_ptr make_nondet_non_gfg_buchi () {
+  spot::twa_graph_ptr make_nondet_eventually_stable_buchi () {
     auto dict = spot::make_bdd_dict ();
     int owner;
     const unsigned a_var = dict->register_proposition (spot::formula::ap ("a"), &owner);
@@ -96,24 +96,36 @@ namespace {
     return true;
   }
 
-  bool spot_fast_modes_require_det_bit () {
+  bool spot_fast_modes_gate_the_deterministic_path () {
     auto aut = make_deterministic_buchi ();
 
-    auto gfg_only = acacia::spot_fastpath::try_spot_nba_fast_path (
-        aut, bddtrue, bddtrue, false, true, SPOT_FAST_GFG_DECISION);
-    if (gfg_only.conclusive) {
-      std::cerr << "mode-gate: GFG-only bit unexpectedly ran a fast path\n";
+    auto off = acacia::spot_fastpath::try_spot_nba_fast_path (aut, bddtrue, false, SPOT_FAST_OFF);
+    if (off.conclusive or off.classification_ran) {
+      std::cerr << "mode-gate: off unexpectedly ran a fast path\n";
       return false;
     }
 
-    auto det_and_gfg = acacia::spot_fastpath::try_spot_nba_fast_path (
-        aut, bddtrue, bddtrue, false, true, SPOT_FAST_DET_AND_GFG);
-    if (not det_and_gfg.conclusive) {
-      std::cerr << "mode-gate: DET+GFG did not run deterministic fast path\n";
+    auto det = acacia::spot_fastpath::try_spot_nba_fast_path (aut, bddtrue, false, SPOT_FAST_DET);
+    if (not det.conclusive) {
+      std::cerr << "mode-gate: det did not run the deterministic fast path\n";
       return false;
     }
 
     return true;
+  }
+
+  // Nondeterministic automata always fall through to the general solvers (#346).
+  bool nondeterministic_is_never_conclusive () {
+    bool ok = true;
+    for (auto aut : {make_nondet_choice_buchi (), make_nondet_eventually_stable_buchi ()}) {
+      auto res = acacia::spot_fastpath::try_spot_nba_fast_path (aut, bddtrue, false,
+                                                                SPOT_FAST_DET);
+      if (res.conclusive or res.classification != nba_fast_class::nondeterministic_buchi) {
+        std::cerr << "nondet: expected an inconclusive nondeterministic classification\n";
+        ok = false;
+      }
+    }
+    return ok;
   }
 
 }  // namespace
@@ -126,17 +138,18 @@ int main () {
                           make_deterministic_buchi ()),
                       nba_fast_class::deterministic_buchi);
 
-  ok &= expect_class ("nondet-gfg",
+  ok &= expect_class ("nondet-choice",
                       acacia::spot_fastpath::classify_nba_for_fast_path (
-                          make_nondet_gfg_buchi ()),
-                      nba_fast_class::gfg_buchi);
+                          make_nondet_choice_buchi ()),
+                      nba_fast_class::nondeterministic_buchi);
 
-  ok &= expect_class ("eventually-stable-non-gfg",
+  ok &= expect_class ("eventually-stable",
                       acacia::spot_fastpath::classify_nba_for_fast_path (
-                          make_nondet_non_gfg_buchi ()),
-                      nba_fast_class::non_gfg_buchi);
+                          make_nondet_eventually_stable_buchi ()),
+                      nba_fast_class::nondeterministic_buchi);
   ok &= deterministic_winning_region_covers_all_original_states ();
-  ok &= spot_fast_modes_require_det_bit ();
+  ok &= spot_fast_modes_gate_the_deterministic_path ();
+  ok &= nondeterministic_is_never_conclusive ();
 
   return ok ? 0 : 1;
 }

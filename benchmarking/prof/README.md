@@ -35,7 +35,7 @@ Records added:
   and cumulative process CPU stamps, phase/parent IDs, durations and loss counts.
   Native R discovery, candidate reduction/construction, seed solve/check, direct
   solve and target check are split. Equivariance recognition and solving are
-  separate. Spot classification and deterministic/GFG solving are split. Child
+  separate. Spot classification and deterministic solving are split. Child
   intervals are subtracted from parent intervals for exclusive totals. Legacy
   and native scopes use one durable stack and common parent IDs; no overlap
   reconciliation is needed. Frozen records retain conservative legacy accounting.
