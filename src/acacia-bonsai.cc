@@ -267,7 +267,7 @@ namespace {
     if (errno || end == value || *end || !std::isfinite (seconds) || seconds <= 0 ||
         seconds >= static_cast<long double> (UINT64_MAX) / 1000000000.0L)
       error (EXIT_CODE_ERROR, "Error: invalid ACACIA_OUTER_DEADLINE_MONOTONIC.\n");
-    return static_cast<uint64_t> (seconds * 1000000000.0L);
+    return std::max<uint64_t> (1, static_cast<uint64_t> (seconds * 1000000000.0L));
   }
 
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
