@@ -621,12 +621,8 @@ namespace {
         const bool want_controller_strategy =
             synth_fname.has_value () and
             (not check_unreal.has_value () or *check_unreal == UNREAL_X_FORMULA);
-        // The nondeterministic GFG path is decision-only and currently validated
-        // only in the REAL-child orientation. Keep unreal children on the
-        // deterministic fast path or the existing Acacia solver.
-        const bool allow_gfg_decision = not check_unreal.has_value ();
         auto fast = acacia::spot_fastpath::try_spot_nba_fast_path (
-            aut, all_inputs, all_outputs, want_controller_strategy, allow_gfg_decision,
+            aut, all_outputs, want_controller_strategy,
             acacia::unreal_witnesses::checking_candidate ? SPOT_FAST_OFF : spot_fast);
 #if ACACIA_ENABLE_DIAGNOSTICS
         if (auto* diag = acacia::diagnostics::current ()) {

@@ -132,7 +132,7 @@ void show_help (const char* program_name) {
       << "                    of remaining invocation budget, or a fixed 5 s reference without\n"
       << "                    a deadline; duration uses s or ms (e.g. 3s, 3000ms); cumulative\n"
       << "  --oracle-layout VAL  sparse guard storage from [scan|grouped] (default: grouped)\n"
-      << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
+      << "  --spot-fast VAL   use Spot NBA fast path from [off|det]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
       << "\t" << (int) EXIT_CODE_REAL << "   if the input problem is realizable\n"
@@ -242,7 +242,8 @@ void process_arg_spot_fast (const std::string& arg, arg_parse_result& result) {
   else if (case_insensitive_equals (arg, "det-and-gfg") or
            case_insensitive_equals (arg, "det_and_gfg") or
            case_insensitive_equals (arg, "gfg-decision") or case_insensitive_equals (arg, "gfg"))
-    result.spot_fast = SPOT_FAST_DET_AND_GFG;
+    error (EXIT_CODE_ERROR,
+           "Error: the GFG Spot fast path was removed (see issue #346); use off or det\n");
   else
     error (EXIT_CODE_ERROR, "Error: unexpected Spot fast-path option %s\n", arg.c_str ());
 }
