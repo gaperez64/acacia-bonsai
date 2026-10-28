@@ -1,5 +1,9 @@
 # Acacia-Bonsai changelog
 
+## Unreleased
+
+- The parity worker now runs past its equal memory share until the solver's memory scope is nearly full and decides more inputs (#341, evidence `sharegate-20261028`). Use `--parity-memory-share equal` for the old behaviour.
+
 ## 2.7.2 (2026-10-27)
 
 - **Completeness fix: MONA precomputers keep empty responses.** Both `mona` and

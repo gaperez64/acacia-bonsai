@@ -119,7 +119,7 @@ void show_help (const char* program_name) {
       << "                    limit and 8 GiB (at most 4 GiB); equal divides it among\n"
       << "                    launched workers, alone gives all of it to the helper;\n"
       << "                    the separate 8 GiB address-space cap still applies\n"
-      << "  --parity-memory-share VAL [equal|headroom] (default equal)\n"
+      << "  --parity-memory-share VAL [equal|headroom] (default headroom)\n"
       << "                    headroom enforces the equal share only when the solver's\n"
       << "                    memory scope is nearly exhausted; without a readable limit,\n"
       << "                    it behaves like equal\n"
