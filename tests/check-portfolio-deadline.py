@@ -131,6 +131,16 @@ def main() -> None:
     with tempfile.TemporaryDirectory(dir=build_dir) as location:
         source = Path(location) / "real.tlsf"
         source.write_text(REAL)
+        controller = Path(location) / "expired.aag"
+        for deadline in ("0.0000000001", "0.000000001"):
+            env = dict(os.environ, ACACIA_OUTER_DEADLINE_MONOTONIC=deadline)
+            result = subprocess.run(
+                [str(binary), "-f", "1", "-i", "", "-o", "", "-s", str(controller)],
+                env=env, text=True, capture_output=True, timeout=3,
+            )
+            assert result.returncode == 2 and "UNKNOWN" in (result.stdout + result.stderr).splitlines(), (
+                deadline, result.returncode, result.stdout, result.stderr)
+            assert not controller.exists(), (deadline, "expired deadline wrote a controller")
         for kind in ("legacy", "native") if native else ("legacy",):
             if kind == "native":
                 single = ["-T", str(source), "--arms", "real:gr1:oxidd"]
