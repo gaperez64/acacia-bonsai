@@ -75,8 +75,9 @@ def main():
         root = Path(temporary)
         # A quoted AP exercises JSON escaping and exceeds both record size limits.
         output = "long-output-" + "o" * 20000
-        for capture in (False, True):
-            phases = root / f"formula-{capture}"
+        for case, (output, capture) in enumerate(((output, False), (output, True),
+                                                ("line\u2028separator", True))):
+            phases = root / f"formula-{case}"
             phases.mkdir()
             env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases))
             env.pop("ACACIA_PHASE_RECORDS_FORMULA", None)

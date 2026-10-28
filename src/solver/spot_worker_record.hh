@@ -18,7 +18,8 @@ namespace acacia::spot_records {
   inline std::string quote (const std::string& s) {
     constexpr char hex[] = "0123456789abcdef";
     std::string out = "\"";
-    for (unsigned char c : s)
+    for (size_t i = 0; i < s.size (); ++i) {
+      const unsigned char c = s[i];
       if (c == '"' || c == '\\') {
         out += '\\';
         out += c;
@@ -28,8 +29,18 @@ namespace acacia::spot_records {
         out += hex[c >> 4];
         out += hex[c & 15];
       }
+      // Python's splitlines() also splits on these Unicode separators.
+      else if (s.compare (i, 2, "\xc2\x85") == 0) {
+        out += "\\u0085";
+        ++i;
+      }
+      else if (s.compare (i, 3, "\xe2\x80\xa8") == 0 || s.compare (i, 3, "\xe2\x80\xa9") == 0) {
+        out += s[i + 2] == '\xa8' ? "\\u2028" : "\\u2029";
+        i += 2;
+      }
       else
         out += c;
+    }
     return out + '"';
   }
   class Record;
