@@ -7,6 +7,7 @@
 #include <unordered_set>
 
 #include <algorithm>
+#include <cstdlib>
 #include <new>
 #include <stdexcept>
 
@@ -181,6 +182,10 @@ namespace acacia::obligation {
   }
 
   std::optional<uint64_t> scope_memory (const char* file, const char* directory) noexcept {
+#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
+    if (!directory)
+      directory = std::getenv ("ACACIA_TEST_CGROUP_DIRECTORY");
+#endif
     char path[4608] {};
     if (directory)
       snprintf (path, sizeof path, "%s/%s", directory, file);
