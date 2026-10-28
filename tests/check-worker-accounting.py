@@ -32,7 +32,18 @@ with tempfile.TemporaryDirectory(dir=build) as location:
         env.pop("ACACIA_PHASE_RECORDS", None)
         baseline = subprocess.run(command, env=env, capture_output=True, timeout=10)
         assert verdict in baseline.stdout, baseline
-        for failure in ("prctl", "mmap", "pipe", "fork", "directory"):
+        for phase_records in (False, True):
+            directory = root / (arm + "-subreaper")
+            fault_env = dict(env, LD_PRELOAD=str(faults.resolve()),
+                             ACACIA_TEST_RECORD_SETUP_FAILURE="subreaper")
+            if phase_records:
+                directory.mkdir()
+                fault_env["ACACIA_PHASE_RECORDS"] = str(directory)
+            run = subprocess.run(command, capture_output=True, timeout=10, env=fault_env)
+            assert run.returncode == 3 and not run.stdout, run
+            assert b"Error: unable to become child subreaper:" in run.stderr, run.stderr
+            assert not any(e.get("worker_pid") for e in records(directory)), run
+        for failure in ("mmap", "pipe", "fork", "directory"):
             directory = root / (arm + failure)
             if failure != "directory":
                 directory.mkdir()
@@ -41,7 +52,6 @@ with tempfile.TemporaryDirectory(dir=build) as location:
                 ACACIA_TEST_RECORD_SETUP_FAILURE=failure))
             assert (run.returncode, run.stdout) == (baseline.returncode, baseline.stdout), run
             assert run.stderr.count(b"acacia: phase recording failed") == 1, run.stderr
-            assert b"unexpected_subreaper" not in run.stderr, run.stderr
             assert not any(e.get("worker_pid") for e in records(directory)), failure
         reader, writer = os.pipe()
         os.close(reader)
@@ -52,6 +62,17 @@ with tempfile.TemporaryDirectory(dir=build) as location:
                 assert (run.returncode, run.stdout) == (baseline.returncode, baseline.stdout), run
         finally:
             os.close(writer)
+    # The records-off reproducer must fail before its descendant-stall worker starts.
+    env = dict(os.environ, LD_PRELOAD=str(faults.resolve()),
+               ACACIA_TEST_RECORD_SETUP_FAILURE="subreaper",
+               ACACIA_TEST_CHILD_MODES="descendant-stall")
+    env.pop("ACACIA_PHASE_RECORDS", None)
+    env.pop("ACACIA_OUTER_DEADLINE_MONOTONIC", None)
+    run = subprocess.run([str(binary), *base[:-1], "real:small:backward"],
+                         env=env, capture_output=True, timeout=3, start_new_session=True)
+    assert run.returncode == 3 and not run.stdout, run
+    assert b"Error: unable to become child subreaper:" in run.stderr, run.stderr
+    assert b'"stage":"child_group"' not in run.stderr, run.stderr
     for modes in [
         "decline,real-delayed",
         "stall,real-delayed",
@@ -127,4 +148,4 @@ with tempfile.TemporaryDirectory(dir=build) as location:
     reaps = [e for e in events if e.get("event") == "worker_reap"]
     assert len(reaps) == 2 and all(e["reason"] == "interrupted" for e in reaps), events
     assert sum(e.get("boundary") == "interrupted" for e in events) == 2, events
-print("recorder failure verdict parity and wait4 accounting passed")
+print("required supervision, recorder failure verdict parity and wait4 accounting passed")

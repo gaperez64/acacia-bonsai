@@ -14,13 +14,9 @@ static int failure (const char* name) {
 }
 
 int prctl (int option, ...) {
-  if (option == PR_SET_CHILD_SUBREAPER) {
-    if (failure ("mmap"))
-      (void) write (STDERR_FILENO, "unexpected_subreaper\n", 21);
-    if (failure ("prctl")) {
-      errno = EPERM;
-      return -1;
-    }
+  if (option == PR_SET_CHILD_SUBREAPER && failure ("subreaper")) {
+    errno = EPERM;
+    return -1;
   }
   va_list args;
   va_start (args, option);

@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 
+import ctypes
 import json
 import os
 from pathlib import Path
 import subprocess
 import resource
+import select
 import signal
 import sys
 import tempfile
@@ -25,6 +27,95 @@ def gone(pid: int) -> bool:
     except ProcessLookupError:
         return True
     return False
+
+
+def check_lifecycle(binary: Path, args: list[str], directory: Path, *,
+                    phase_records: bool, parent_death: bool) -> None:
+    """The test adopts parent-death orphans; ordinary cleanup must reap its own."""
+    env = os.environ.copy()
+    env.pop("ACACIA_PHASE_RECORDS", None)
+    env.pop("ACACIA_OUTER_DEADLINE_MONOTONIC", None)
+    env["ACACIA_TEST_CHILD_MODES"] = "stall" if parent_death else "descendant-stall"
+    with tempfile.TemporaryDirectory(dir=directory) as records:
+        if phase_records:
+            env["ACACIA_PHASE_RECORDS"] = records
+        process = subprocess.Popen([str(binary), *args], env=env,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0,
+                                   start_new_session=True)
+        workers = []
+        descendants = []
+        writers = []
+        try:
+            deadline = time.monotonic() + 3
+            while not workers:
+                remaining = deadline - time.monotonic()
+                assert remaining > 0 and select.select([process.stderr], [], [], remaining)[0], (
+                    "worker readiness missing", process.poll())
+                line = process.stderr.readline()
+                assert line, ("early exit", process.poll())
+                if line.startswith(b'{"stage":"child_group",'):
+                    workers.append(json.loads(line)["pid"])
+            worker, = workers
+            if phase_records:
+                children = Path(f"/proc/{process.pid}/task/{process.pid}/children")
+                writers = [int(pid) for pid in children.read_text().split()
+                           if int(pid) != worker]
+                writer, = writers
+                if parent_death:
+                    # Delivery proves the writer has completed startup before we stop it.
+                    delivered = Path(records) / f"{process.pid}.jsonl"
+                    while not delivered.exists() or not delivered.stat().st_size:
+                        assert time.monotonic() < deadline, "writer readiness missing"
+                        time.sleep(.001)
+                    os.kill(writer, signal.SIGSTOP)
+                    while Path(f"/proc/{writer}/stat").read_text().split()[2] != "T":
+                        assert time.monotonic() < deadline, "writer did not stop"
+                        time.sleep(.001)
+            if not parent_death:
+                children = Path(f"/proc/{worker}/task/{worker}/children")
+                while not descendants:
+                    descendants = [int(pid) for pid in children.read_text().split()]
+                    assert time.monotonic() < deadline, "descendant readiness missing"
+                    time.sleep(.001)
+            os.kill(process.pid if parent_death else worker, signal.SIGKILL)
+            assert process.wait(timeout=3) == (-signal.SIGKILL if parent_death else 2)
+            if parent_death:
+                for pid in workers + writers:
+                    deadline = time.monotonic() + 3
+                    while time.monotonic() < deadline:
+                        reaped, status = os.waitpid(pid, os.WNOHANG)
+                        if reaped:
+                            assert os.WIFSIGNALED(status) and os.WTERMSIG(status) == signal.SIGKILL
+                            break
+                        time.sleep(.001)
+            leftovers = [(pid, Path(f"/proc/{pid}/stat").read_text().split()[2:5])
+                         for pid in workers + descendants + writers
+                         if Path(f"/proc/{pid}").exists()]
+            assert not leftovers, ("surviving processes (pid, state/ppid/pgid)", leftovers)
+            stdout, stderr = process.communicate(timeout=3)
+            if not parent_death:
+                assert b"UNKNOWN\n" in stdout + stderr, (stdout, stderr)
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait(timeout=3)
+            for pid in workers + descendants + writers:
+                try:
+                    os.kill(pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            # Reap failures too, including the optional record writer.
+            deadline = time.monotonic() + 3
+            while True:
+                try:
+                    pid, _ = os.waitpid(-1, os.WNOHANG)
+                except ChildProcessError:
+                    break
+                assert time.monotonic() < deadline, "test children did not exit"
+                if not pid:
+                    time.sleep(.001)
+            process.stdout.close()
+            process.stderr.close()
 
 
 def check(binary: Path, args: list[str], modes: str, seconds: float,
@@ -128,6 +219,9 @@ def main() -> None:
     binary = Path(sys.argv[1]).resolve()
     build_dir = Path(sys.argv[2]).resolve()
     native = "--native" in sys.argv[3:]
+    if sys.platform == "linux":
+        libc = ctypes.CDLL(None, use_errno=True)
+        assert libc.prctl(36, 1, 0, 0, 0) == 0, ctypes.get_errno()  # PR_SET_CHILD_SUBREAPER
     with tempfile.TemporaryDirectory(dir=build_dir) as location:
         source = Path(location) / "real.tlsf"
         source.write_text(REAL)
@@ -151,6 +245,11 @@ def main() -> None:
                 single = [*source_args, "--arms", "real:small:backward"]
                 pair = [*source_args, "--arms",
                         "unreal:formula:backward,real:small:backward"]
+            if sys.platform == "linux":
+                for phase_records in (False, True):
+                    for parent_death in (False, True):
+                        check_lifecycle(binary, single, Path(location),
+                                        phase_records=phase_records, parent_death=parent_death)
             # Signal deaths have no exit verdict: WEXITSTATUS alone would
             # misread SIGKILL as REALIZABLE. Cover both native and legacy arms.
             check(binary, single, "signal", 2.0, 1, 2, "UNKNOWN", 1.2)

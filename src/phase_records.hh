@@ -19,6 +19,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef __linux__
+# include <sys/prctl.h>
+#endif
+
 // mallinfo2 is glibc 2.33 and later. Elsewhere (macOS, manylinux_2_28 wheels)
 // records write "mallinfo2":null instead of inventing heap figures.
 #if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 33))
@@ -848,10 +852,16 @@ namespace acacia {
       phase_records_disable ();
       return;
     }
-    // The writer inherits the prepared descriptors and signal dispositions;
-    // all fallible recorder setup runs here, before solving or enabling it.
+    // The writer inherits the prepared descriptors and signal dispositions.
     const pid_t writer = fork ();
     if (writer == 0) {
+#ifdef __linux__
+      // Cover parent death both before registration and while the writer is stopped.
+      if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != state.owner) {
+        phase_records_warn ();
+        _exit (EXIT_FAILURE);
+      }
+#endif
       close (fds[1]);
       if (writer_setup)
         writer_setup ();
