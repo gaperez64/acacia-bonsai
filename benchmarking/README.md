@@ -75,7 +75,7 @@ python3 -s benchmarking/run-syntcomp26-coverage.py subset \
   --bin "build_${preset}/src/acacia-bonsai" \
   --list tests/suites/benchmarks/syntcomp26/all.list \
   --tlsf-map tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv \
-  --tlsf-corpus tlsf-corpus --flags=--tlsf-only \
+  --tlsf-corpus tlsf-corpus \
   --timeout 17 --systemd-scope --memory-max 8G \
   --csv _bm-logs/baseline.csv
 python3 -s benchmarking/cactus-report.py \
