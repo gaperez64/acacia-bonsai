@@ -462,7 +462,7 @@ namespace {
                                                std::memory_order_release);
         }
       }
-      const int code = acacia::run_parity_arm (arg_values);
+      const int code = acacia::run_parity_arm (arg_values, arm.parity_oxidd, deadline_mono_ns);
       acacia::worker_terminal (code);
       acacia::worker_exit (code);
     }

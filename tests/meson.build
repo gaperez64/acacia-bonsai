@@ -442,13 +442,14 @@ game_backend_integration_sources += '../src/tlsf_frontend.cc'
 preparation_fault_link_args = []
 preparation_fault_cpp_args = []
 if host_machine.system () == 'linux' and (get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release'))
-  preparation_fault_link_args = ['-Wl,--wrap=tlsf_convert']
+  preparation_fault_link_args = ['-Wl,--wrap=tlsf_convert',
+                                 '-Wl,--wrap=tlsf_dpa_create', '-Wl,--wrap=bdd_ite']
   preparation_fault_cpp_args = ['-DACACIA_TLSF_PREPARATION_TEST_HOOKS=1']
 endif
 game_backend_integration = executable (
   'game-backend-integration', game_backend_integration_sources,
   'synthesis_rendezvous_hooks.cc', version_h,
-  link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib],
+  link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib, tlsf_dpa_lib],
   include_directories : inc,
   cpp_args : ['-DACACIA_PORTFOLIO_TEST_HOOKS=1',
               '-DACACIA_FORWARD_SAFETY_SOLVER=1',
@@ -1008,6 +1009,12 @@ parity_route_test = executable ('parity-route-test',
   link_with : [parity_route_lib, parity_lib], include_directories : inc,
   dependencies : [spot_dep, bddx_dep])
 test ('parity-route', parity_route_test, suite : ['unit', 'parity'], timeout : 120)
+
+tlsf_dpa_test = executable ('tlsf-dpa-test',
+  ['tlsf_dpa_test.cc', '../src/tlsf_frontend.cc', '../src/solver/mealy_to_moore.cc'],
+  link_with : [tlsf_dpa_lib, parity_route_lib, parity_lib], include_directories : inc,
+  dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
+test ('tlsf-dpa', tlsf_dpa_test, suite : ['unit', 'parity'], timeout : 120)
 
 parity_arm_test = executable ('parity-arm-test',
   ['parity_arm_test.cc', '../src/solver/mealy_to_moore.cc'],

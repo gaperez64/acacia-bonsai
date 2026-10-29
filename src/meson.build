@@ -1,5 +1,7 @@
 parity_lib = static_library ('parity', 'solver/parity/game.cc',
   include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
+tlsf_dpa_lib = static_library ('tlsf-dpa', 'solver/parity/tlsf_dpa.cc',
+  include_directories : inc, dependencies : [spot_dep, bddx_dep] + tlsf_deps, install : false)
 parity_route_lib = static_library ('parity-route', 'solver/parity/route.cc',
   include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
 
@@ -36,7 +38,7 @@ endif
 #subdir ('python_pybind')
 
 ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
-                     link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib],
+                     link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib, tlsf_dpa_lib],
                      include_directories : inc,
                      install: true,
                      install_tag: 'cli',
@@ -47,7 +49,7 @@ if native_test_hooks
     'native_test_hooks.cc', '../tests/native_attribution_hooks.cc', version_h,
     tlsf_native.get_variable ('gr1_reduction_source'),
     tlsf_native.get_variable ('reduction_contract_hooks'),
-    link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib],
+    link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib, tlsf_dpa_lib],
     include_directories : inc,
     cpp_args : ['-DACACIA_NATIVE_TEST_HOOKS=1', '-DTLSF_GR1_REDUCTION_TEST_FAULT'],
     install : false,

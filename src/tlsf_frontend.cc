@@ -61,6 +61,7 @@ namespace acacia::tlsf_frontend {
       }
     }
 
+    value.ast = std::move (result.ast);
     value.formula = std::move (result.preprocessed_ltl);
     value.metadata.tlsf_normalized_objective = value.formula;
     value.inputs = std::move (result.inputs);

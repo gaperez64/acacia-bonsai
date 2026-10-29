@@ -108,6 +108,10 @@ void show_help (const char* program_name) {
       << "                    both:parity:spot: deterministic translation, exact Buchi or parity "
          "games;\n"
       << "                    trusted decisions and controller synthesis; no provider\n"
+      << "                    both:parity:oxidd: bounded TLSF construction and exact parity "
+         "game;\n"
+      << "                    requires -T, supports -s; outside the supported fragment or over\n"
+      << "                    budget returns UNKNOWN; opt-in only, no provider\n"
       << "                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\n"
       << "                    both:gr1-real-lift:oxidd,\n"
       << "                    real:gr1:oxidd, unreal:gr1:oxidd, and\n"
@@ -369,7 +373,8 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       break;
     case portfolio_arm_parse_error::parity_spec:
       error (EXIT_CODE_ERROR,
-             "Error: parity arms require both:parity:spot without a provider.\n");
+             "Error: parity arms require both:parity:spot or both:parity:oxidd without a "
+             "provider.\n");
       break;
     case portfolio_arm_parse_error::obligation_spec:
       error (EXIT_CODE_ERROR,
