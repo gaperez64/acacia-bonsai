@@ -29,7 +29,7 @@ with tempfile.TemporaryDirectory(dir=Path.cwd(), prefix="check-help-") as direct
             assert "--spot-fast VAL   use Spot NBA fast path from [off|det]\n" in result.stdout
             assert "--obligation-helper" not in result.stdout
             assert "--obligation-memory-share VAL [equal|alone] (default equal)" in result.stdout
-            assert "--parity-memory-share VAL [equal|headroom] (default equal)" in result.stdout
+            assert "--parity-memory-share VAL [equal|headroom] (default headroom)" in result.stdout
             assert ("both:obligation:spot: syntactic obligations, trusted Spot synthesis"
                     in result.stdout)
             assert "membership follows the build default; starts only when eligible" in result.stdout

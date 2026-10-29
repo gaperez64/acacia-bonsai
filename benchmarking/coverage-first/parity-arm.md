@@ -41,7 +41,11 @@ UNREAL never opens the destination, and failed export resumes suspended competit
 The existing process-group supervisor handles cancellation and the outer invocation
 deadline. There is no local wall allowance or solver-visible deadline. The worker
 uses the obligation helper's address-space cap and cgroup-aware soft RSS share
-(half the available cap divided by scheduled workers). Resource stops and declines
+(half the available cap divided by scheduled workers). The default `headroom` mode
+(`sharegate-20261028`) enforces the share only when the solver's own memory scope is
+nearly full, within an eighth of `memory.max`. Without a readable limit, it behaves
+like `--parity-memory-share equal`, which enforces the share at all times.
+Resource stops and declines
 are never verdicts. Phase records identify tiers, game construction, solving
 and trust; missing records remain uncertain.
 

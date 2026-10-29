@@ -149,7 +149,7 @@ def memory_limit(binary, scratch, updated_limit=None):
         env = dict(os.environ, ACACIA_PHASE_RECORDS=str(root),
                    ACACIA_TEST_SYNTHESIS_PARITY_VERDICT_FD=str(gate_read),
                    ACACIA_TEST_SYNTHESIS_PARITY_RSS_BYTES=str(144 * 1024 * 1024))
-        flags = []
+        flags = ["--parity-memory-share=equal"]
         if updated_limit is not None:
             (root / "memory.max").write_text(str(800 * 1024 * 1024))
             (root / "memory.current").write_text(str(350 * 1024 * 1024))
