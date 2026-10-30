@@ -83,7 +83,7 @@ namespace acacia::parity_route {
     return {4, "genuine parity acceptance", nullptr};
   }
 
-  result run (request input, options config, observer observe) {
+  static result run_impl (request input, options config, observer observe, bool positive_dpa) {
     result output;
     if (config.verify and not config.synthesis)
       throw std::runtime_error ("controller verification requires synthesis");
@@ -91,8 +91,14 @@ namespace acacia::parity_route {
       throw std::runtime_error ("the original specification is required for verification");
     if (not input.automaton and not input.formula)
       throw std::runtime_error ("a formula or deterministic HOA is required");
-    if (input.source == source_language::original and input.frame != timing_frame::original)
+    if (!positive_dpa && input.source == source_language::original and
+        input.frame != timing_frame::original)
       throw std::runtime_error ("original specifications require the original timing frame");
+    if (positive_dpa) {
+      bool max = false, odd = false;
+      if (!input.automaton || !input.automaton->acc ().is_parity (max, odd) || !max || !odd)
+        throw std::runtime_error ("positive DPA must be complete with max-odd acceptance");
+    }
     std::set<std::string> names;
     for (const auto& partition : {input.inputs, input.outputs})
       for (const auto& name : partition)
@@ -136,6 +142,8 @@ namespace acacia::parity_route {
           throw std::runtime_error ("translation did not produce an automaton");
       });
     require_deterministic (aut);
+    if (positive_dpa && !spot::is_complete (aut))
+      throw std::runtime_error ("positive DPA must be complete");
     for (const auto& ap : aut->ap ())
       if (not names.contains (ap.ap_name ()))
         throw std::runtime_error ("HOA AP is missing from the declared partition");
@@ -146,13 +154,14 @@ namespace acacia::parity_route {
       aut->register_ap (spot::formula::ap (name));
     for (const auto& name : input.outputs)
       outputs &= bdd_ithvar (aut->register_ap (spot::formula::ap (name)));
-    spot::twa_graph_ptr worker;
-    stage ("orient", [&] {
-      worker = input.source == source_language::original ? spot::dualize (aut) : aut;
-    });
-    classification tier;
-    stage ("classify", [&] { tier = classify (worker); });
-    worker.reset ();
+    classification tier {4, "supplied positive parity", nullptr};
+    if (!positive_dpa) {
+      spot::twa_graph_ptr worker;
+      stage ("orient", [&] {
+        worker = input.source == source_language::original ? spot::dualize (aut) : aut;
+      });
+      stage ("classify", [&] { tier = classify (worker); });
+    }
     output.tier = tier.tier;
     output.tier_reason = tier.reason;
     if (config.on_classified)
@@ -196,18 +205,20 @@ namespace acacia::parity_route {
     }
     else {
       output.route = "spot";
-      stage ("parity", [&] {
-        // For captured REAL workers, complement exactly once after classification.
-        // Original-formula mode reuses its positive translation for the game.
-        auto objective = input.source == source_language::real_worker ? spot::dualize (aut) : aut;
-        if (config.use_lar) {
-          aut = spot::to_parity (objective);
-          spot::reduce_parity_here (aut);
-        }
-        else {
-          aut = spot::acd_transform (objective);
-        }
-      });
+      if (!positive_dpa)
+        stage ("parity", [&] {
+          // For captured REAL workers, complement exactly once after classification.
+          // Original-formula mode reuses its positive translation for the game.
+          auto objective =
+              input.source == source_language::real_worker ? spot::dualize (aut) : aut;
+          if (config.use_lar) {
+            aut = spot::to_parity (objective);
+            spot::reduce_parity_here (aut);
+          }
+          else {
+            aut = spot::acd_transform (objective);
+          }
+        });
       stage ("split", [&] {
         arena = spot::split_2step (aut, outputs, true, synthesis.sp, native_moore);
         spot::set_synthesis_outputs (arena, outputs);
@@ -286,5 +297,12 @@ namespace acacia::parity_route {
     }
     output.checked = config.verify;
     return output;
+  }
+  result run (request input, options config, observer observe) {
+    return run_impl (std::move (input), std::move (config), std::move (observe), false);
+  }
+
+  result run_positive_dpa (request input, options config, observer observe) {
+    return run_impl (std::move (input), std::move (config), std::move (observe), true);
   }
 }

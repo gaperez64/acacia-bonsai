@@ -49,4 +49,6 @@ namespace acacia::parity_route {
       spot::aig_ptr circuit;
   };
   result run (request input, options config = {}, observer observe = {});
+  // Complete max-odd DPA for the positive objective; bypass translation and classification.
+  result run_positive_dpa (request input, options config = {}, observer observe = {});
 }

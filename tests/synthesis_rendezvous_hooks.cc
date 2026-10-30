@@ -4,6 +4,7 @@
 #ifdef ACACIA_TLSF_PREPARATION_TEST_HOOKS
 # include <cstdlib>
 # include <tlsf/convert.h>
+# include <tlsf/dpa.h>
 # include <unistd.h>
 
 namespace {
@@ -15,6 +16,26 @@ extern "C" TlsfConversionResult* __wrap_tlsf_convert (const char* source,
   if (getpid () == preparation_parent && std::getenv ("ACACIA_TEST_TLSF_PARENT_FAILURE"))
     return nullptr;
   return __real_tlsf_convert (source, effective_target);
+}
+
+// Faults stay in the integration executable; production reads no test settings.
+extern "C" TlsfDpaStatus __real_tlsf_dpa_create (const TlsfAstNode*, const char* const*, uint32_t,
+                                                 const char* const*, uint32_t,
+                                                 const TlsfDpaBudget*, TlsfDpa**);
+extern "C" TlsfDpaStatus __wrap_tlsf_dpa_create (const TlsfAstNode* root,
+                                                 const char* const* inputs, uint32_t ni,
+                                                 const char* const* outputs, uint32_t no,
+                                                 const TlsfDpaBudget* budget, TlsfDpa** out) {
+  auto capped = *budget;
+  if (std::getenv ("ACACIA_TEST_DPA_STATE_LIMIT"))
+    capped.max_states = 2;
+  return __real_tlsf_dpa_create (root, inputs, ni, outputs, no, &capped, out);
+}
+extern "C" int __real_bdd_ite (int, int, int);
+extern "C" int __wrap_bdd_ite (int f, int g, int h) {
+  if (std::getenv ("ACACIA_TEST_DPA_IMPORT_ALLOCATION"))
+    throw std::bad_alloc ();
+  return __real_bdd_ite (f, g, h);
 }
 #endif
 

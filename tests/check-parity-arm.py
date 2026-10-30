@@ -59,6 +59,112 @@ def check_records(directory, expected_calls=None, synthesis=False, formula=False
     return tier["tier"], (identity["formula_sha256"], identity["alphabet_sha256"])
 
 
+
+def check_oxidd(binary, checker, root, integration):
+    arm = "both:parity:oxidd"
+    phases = root / "oxidd-phases"
+    phases.mkdir()
+    source = root / "oxidd.tlsf"
+    controller = root / "oxidd.aag"
+    env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases))
+
+    def rows():
+        return [json.loads(line) for path in phases.glob("*.jsonl")
+                for line in path.read_text().splitlines()]
+
+    def clear():
+        controller.unlink(missing_ok=True)
+        for path in phases.glob("*.jsonl"):
+            path.unlink()
+
+    def write(guarantee, semantics="Mealy", target="Mealy"):
+        source.write_text(f'''INFO {{ TITLE: "native parity" SEMANTICS: {semantics} TARGET: {target} }}
+MAIN {{ INPUTS {{ i; unused_input; }} OUTPUTS {{ o; unused_output; }}
+GUARANTEES {{ {guarantee}; }} }}''')
+
+    for formula, real in (("G(i -> X o)", True), ("F o", True), ("true", True),
+                          ("false", False), ("G F (i && X o)", False),
+                          ("F G (!i || X !o)", True)):
+        write(formula)
+        clear()
+        reference = execute([binary, "-T", str(source), "--arms", "both:parity:spot"])
+        for synthesis in (False, True):
+            clear()
+            command = [binary, "-T", str(source), "--arms", arm]
+            if synthesis:
+                command += ["-s", str(controller)]
+            answer = execute(command, env)
+            assert answer.returncode == reference.returncode == (0 if real else 1), answer
+            records = rows()
+            imported, = [row for row in records if row.get("event") == "dpa_import"]
+            assert imported["reason"] == "none" and imported["edges"] and imported["labels"], records
+            assert imported["states"] == imported["imported_states"], records
+            assert any(row.get("event") == "parity_solved" and row.get("arm") == arm
+                       for row in records), records
+            forbidden = {"translate", "orient", "classify", "parity"}
+            assert not any(row.get("stage", row.get("phase")) in forbidden
+                           for row in records), records
+            if synthesis and real:
+                subprocess.run([checker, "--check-controller", str(controller),
+                                formula.replace("true", "1").replace("false", "0"), "mealy"],
+                               check=True, capture_output=True, text=True, timeout=20)
+                circuit = Aiger.read(controller)
+                assert set(circuit.input_names) == {"i", "unused_input"}, circuit
+                assert set(circuit.output_names) == {"o", "unused_output"}, circuit
+            else:
+                assert not controller.exists(), answer
+    # Reuse the incumbent timing matrix, with the native arm's effective-Mealy objective.
+    for semantics in ("Mealy", "Moore", "Strict,Mealy", "Strict,Moore"):
+        for target in ("Mealy", "Moore"):
+            for guarantee in ("G (o <-> i)", "G (i -> X o)"):
+                write(guarantee, semantics, target)
+                clear()
+                reference = execute([binary, "-T", str(source), "--arms", "both:parity:spot"])
+                answer = execute([binary, "-T", str(source), "--arms", arm,
+                                  "-s", str(controller)])
+                assert reference.returncode == answer.returncode, (semantics, target, answer)
+                if answer.returncode == 0:
+                    original = guarantee
+                    if not semantics.endswith(target):
+                        original = original.replace("o", "X o") if target == "Moore" else original.replace("i", "X i")
+                    subprocess.run([checker, "--check-controller", str(controller),
+                                    original, target.lower()], check=True,
+                                   capture_output=True, text=True, timeout=20)
+    execute([binary, "-T", str(source), "--arms", "both:parity:spot,both:parity:oxidd"])
+    duplicate = subprocess.run([binary, "-T", str(source), "--arms", f"{arm},{arm}"],
+                               capture_output=True, text=True, timeout=20)
+    assert duplicate.returncode == 3 and "duplicate" in duplicate.stderr.lower(), duplicate
+    clear()
+    unknown = subprocess.run([binary, "-f", "1", "-i", "i", "-o", "o", "--arms", arm],
+                             capture_output=True, text=True, timeout=20)
+    assert unknown.returncode == 2 and "UNKNOWN" in unknown.stderr, unknown
+    write("F G F o")
+    unknown = subprocess.run([binary, "-T", str(source), "--arms", arm,
+                              "-s", str(controller)], env=env,
+                             capture_output=True, text=True, timeout=20)
+    assert unknown.returncode == 2 and "UNKNOWN" in unknown.stderr, unknown
+    assert not controller.exists(), unknown
+    assert any(row.get("reason") == "dpa_unsupported" for row in rows()), rows()
+    if integration:
+        write("X X X o")
+        for setting, reason, stage in (("ACACIA_TEST_DPA_STATE_LIMIT", "dpa_state_limit", "expand"),
+                                       ("ACACIA_TEST_DPA_IMPORT_ALLOCATION", "dpa_host_limit", "import")):
+            clear()
+            unknown = subprocess.run([str(integration.resolve()), "-T", str(source),
+                                      "--arms", arm, "-s", str(controller)],
+                                     env=dict(env, **{setting: "1"}),
+                                     capture_output=True, text=True, timeout=20)
+            assert unknown.returncode == 2 and "UNKNOWN" in unknown.stderr, unknown
+            records = rows()
+            imported, = [row for row in records if row.get("event") == "dpa_import"]
+            assert imported["edges"] and imported["labels"], imported
+            assert imported["reason"] == reason and imported["stage"] == stage, imported
+            assert not controller.exists(), unknown
+            assert not any(row.get("event") in {"parity_solved", "parity_verdict"}
+                           or row.get("stage", row.get("phase")) == "solve"
+                           for row in records), records
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
@@ -73,6 +179,8 @@ def main():
                 "FG !o | FG !p", "FG !i | FG !j"]
     with tempfile.TemporaryDirectory(dir=args.scratch) as temporary:
         root = Path(temporary)
+        if args.tlsf:
+            check_oxidd(binary, checker, root, args.integration_binary)
         # A quoted AP exercises JSON escaping and exceeds both record size limits.
         output = "long-output-" + "o" * 20000
         for case, (output, capture) in enumerate(((output, False), (output, True),
@@ -126,7 +234,8 @@ GUARANTEES {{ {guarantee}; }} }}
                 for path in phases.glob("*.jsonl"):
                     path.unlink()
         assert {1, 4} <= seen_tiers, seen_tiers
-        for wrong in ("real:parity:spot", "both:parity:backward", "both:parity:spot:frozen-graph"):
+        for wrong in ("real:parity:spot", "both:parity:backward", "both:parity:spot:frozen-graph",
+                      "real:parity:oxidd", "both:parity:oxidd:frozen-graph"):
             result = subprocess.run([binary, "-f", "1", "--arms", wrong],
                                     capture_output=True, text=True, timeout=20)
             assert result.returncode == 3 and "parity arms require" in result.stderr, result

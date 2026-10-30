@@ -3,12 +3,12 @@
 #include "configuration.hh"
 #include "solver/game_backend.hh"
 #include "solver/solver_invoker.hh"
+#include <string_view>
 
 #include <algorithm>
 #include <cctype>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <vector>
 
 enum class portfolio_arm_kind {
@@ -32,6 +32,7 @@ struct portfolio_arm {
     bool unreal;  // false selects a realizability arm
     bool both = false;  // exact arms may prove either side
     portfolio_arm_kind kind;
+    bool parity_oxidd = false;
     std::optional<legacy_arm_options> legacy;
 
     portfolio_arm (bool is_unreal, TRANSLATION_PREF_T translation_pref, UNREAL_X_T unreal_x,
@@ -49,7 +50,7 @@ struct portfolio_arm {
 
     const char* native_name () const {
       if (kind == portfolio_arm_kind::parity)
-        return "both:parity:spot";
+        return parity_oxidd ? "both:parity:oxidd" : "both:parity:spot";
       if (kind == portfolio_arm_kind::obligation)
         return "both:obligation:spot";
       if (kind == portfolio_arm_kind::gr1)
@@ -62,7 +63,8 @@ struct portfolio_arm {
     }
 
     bool operator== (const portfolio_arm& rhs) const {
-      return kind == rhs.kind && unreal == rhs.unreal && both == rhs.both && legacy == rhs.legacy;
+      return kind == rhs.kind && parity_oxidd == rhs.parity_oxidd && unreal == rhs.unreal &&
+             both == rhs.both && legacy == rhs.legacy;
     }
 
   private:
