@@ -104,16 +104,19 @@ namespace acacia {
       };
       if (oxidd) {
         tlsf_dpa::limits budget;
+        budget.construction.allow_unproved = args.dpa_allow_unproved;
         // Share one 120-second construction/import deadline with the worker.
         constexpr uint64_t construction_ns = 120ULL * 1000000000ULL;
         const auto deadline = phase_clock (CLOCK_MONOTONIC) + construction_ns;
         budget.construction.deadline_mono_ns =
             deadline_mono_ns ? std::min (deadline, deadline_mono_ns) : deadline;
         const auto share = obligation::rss_share (args.arms ? args.arms->size () : 1);
-        budget.construction.max_host_bytes = std::min<uint64_t> (
-            budget.construction.max_host_bytes, std::max<uint64_t> (1, share / 4));
-        budget.import_bytes =
-            std::min<uint64_t> (budget.import_bytes, std::max<uint64_t> (1, share / 4));
+        // Reserve 1/8 for solving; the worker RSS cap covers overlapping C/BDD/import storage.
+        budget.construction.max_host_bytes = budget.import_bytes =
+            std::max<uint64_t> (1, share - share / 8);
+        // Allow 128 bytes per node for nodes, unique tables and a 1:4 apply cache.
+        budget.construction.bdd_nodes = std::clamp<uint64_t> (share / 128, 256, 1u << 30);
+        budget.construction.bdd_cache = budget.construction.bdd_nodes / 4;
         TlsfDpaStatus status;
         auto context = tlsf_dpa::context (nullptr, tlsf_dpa_free);
         {

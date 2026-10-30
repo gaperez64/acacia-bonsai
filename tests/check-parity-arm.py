@@ -84,7 +84,7 @@ GUARANTEES {{ {guarantee}; }} }}''')
 
     for formula, real in (("G(i -> X o)", True), ("F o", True), ("true", True),
                           ("false", False), ("G F (i && X o)", False),
-                          ("F G (!i || X !o)", True)):
+                          ("F G (!i || X !o)", True), ("G(i -> F o)", True)):
         write(formula)
         clear()
         reference = execute([binary, "-T", str(source), "--arms", "both:parity:spot"])
@@ -145,6 +145,19 @@ GUARANTEES {{ {guarantee}; }} }}''')
     assert unknown.returncode == 2 and "UNKNOWN" in unknown.stderr, unknown
     assert not controller.exists(), unknown
     assert any(row.get("reason") == "dpa_unsupported" for row in rows()), rows()
+    write("G(o || (o && F G i))")
+    for flags in ([], ["--dpa-allow-unproved"]):
+        clear()
+        answer = execute([binary, "-T", str(source), "--arms", arm, *flags], env)
+        assert answer.stdout.strip() == "REALIZABLE", answer
+    write("G(i -> F (i U o))")
+    for flags in ([], ["--dpa-allow-unproved"]):
+        clear()
+        answer = subprocess.run([binary, "-T", str(source), "--arms", arm, *flags],
+                                env=env, capture_output=True, text=True, timeout=20)
+        imported, = [row for row in rows() if row.get("event") == "dpa_import"]
+        assert answer.returncode == (0 if flags else 2), answer
+        assert imported["reason"] == ("none" if flags else "dpa_unsupported"), imported
     if integration:
         write("X X X o")
         for setting, reason, stage in (("ACACIA_TEST_DPA_STATE_LIMIT", "dpa_state_limit", "expand"),

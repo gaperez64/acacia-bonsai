@@ -5,12 +5,10 @@
 #include "portfolio_arm.hh"
 #include "solver/equivariance_budget.hh"
 #include "solver/game_backend.hh"
-#include "solver/oracle_layout.hh"
 #include "solver/obligation_memory.hh"
+#include "solver/oracle_layout.hh"
 #include "solver/solver_invoker.hh"
-# include "tlsf_frontend.hh"
-
-# include <tlsf/pipeline.h>
+#include "tlsf_frontend.hh"
 #include "utils/verbose.hh"
 #include "version.hh"
 #include <string_view>
@@ -27,6 +25,7 @@
 #include <stdexcept>
 #include <stdio.h>
 #include <string>
+#include <tlsf/pipeline.h>
 #include <unistd.h>
 #include <vector>
 
@@ -61,7 +60,9 @@ struct arg_parse_result {
     bool obligation_explicit = false;
     acacia::obligation::memory_share obligation_memory_share =
         acacia::obligation::memory_share::equal;
-    acacia::obligation::memory_share parity_memory_share = acacia::obligation::memory_share::headroom;
+    acacia::obligation::memory_share parity_memory_share =
+        acacia::obligation::memory_share::headroom;
+    bool dpa_allow_unproved = false;
     bool r_prepass = true;
     bool equivariance = ACACIA_ENABLE_EQUIVARIANT_SOLVER;
     std::optional<double> equivariance_budget;
@@ -82,8 +83,8 @@ struct arg_parse_result {
     bool original_tlsf_prepared = false;
     bool legacy_available = true;
 
-    const acacia::tlsf_frontend::specification&
-    prepare_objective (acacia::tlsf_frontend::specification& child_local) const {
+    const acacia::tlsf_frontend::specification& prepare_objective (
+        acacia::tlsf_frontend::specification& child_local) const {
       if (tlsf_specified && !original_tlsf_prepared) {
         child_local = acacia::tlsf_frontend::parse (tlsf_source);
         return child_local;
