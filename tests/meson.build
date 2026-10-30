@@ -1012,6 +1012,7 @@ test ('parity-route', parity_route_test, suite : ['unit', 'parity'], timeout : 1
 
 tlsf_dpa_test = executable ('tlsf-dpa-test',
   ['tlsf_dpa_test.cc', '../src/tlsf_frontend.cc', '../src/solver/mealy_to_moore.cc'],
+  link_args : ['-Wl,--wrap=tlsf_dpa_max_priority'],
   link_with : [tlsf_dpa_lib, parity_route_lib, parity_lib], include_directories : inc,
   dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
 test ('tlsf-dpa', tlsf_dpa_test, suite : ['unit', 'parity'], timeout : 120)
