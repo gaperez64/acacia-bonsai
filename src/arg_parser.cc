@@ -127,6 +127,10 @@ void show_help (const char* program_name) {
       << "                    headroom enforces the equal share only when the solver's\n"
       << "                    memory scope is nearly exhausted; without a readable limit,\n"
       << "                    it behaves like equal\n"
+      << "  --dpa-allow-unproved  research option for both:parity:oxidd (default off)\n"
+      << "                    admits temporal logic components whose translation is not yet "
+         "proved\n"
+      << "                    correct; for measurements only\n"
       << "  --r-prepass VAL   [on|off] R discovery/candidates in combined native arms (default "
          "on)\n"
       << "  --equivariance VAL [on|off] exact pre-pass in backward decision workers (default "
@@ -448,6 +452,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_OBLIGATION_MEMORY_SHARE = 1015;
   static constexpr int OPT_PARITY_MEMORY_SHARE = 1016;
+  static constexpr int OPT_DPA_ALLOW_UNPROVED = 1017;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
   static constexpr int OPT_REAL_BACKEND = 1002;
@@ -476,6 +481,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"arms", required_argument, nullptr, OPT_ARMS},
       {"obligation-memory-share", required_argument, nullptr, OPT_OBLIGATION_MEMORY_SHARE},
       {"parity-memory-share", required_argument, nullptr, OPT_PARITY_MEMORY_SHARE},
+      {"dpa-allow-unproved", no_argument, nullptr, OPT_DPA_ALLOW_UNPROVED},
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
@@ -661,6 +667,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
         else
           error (EXIT_CODE_ERROR, "Error: --parity-memory-share expects equal or headroom.\n");
         break;
+      case OPT_DPA_ALLOW_UNPROVED: retval.dpa_allow_unproved = true; break;
       case OPT_R_PREPASS:
       case OPT_EQUIVARIANCE: {
         const bool enabled = case_insensitive_equals (optarg, "on");
@@ -762,8 +769,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
     const bool needed_unreal = std::ranges::any_of (
         *retval.arms, [] (const auto& arm) { return arm.unreal || arm.both; });
     std::erase_if (*retval.arms, [&] (const portfolio_arm& arm) {
-      if (arm.kind == portfolio_arm_kind::legacy ||
-          arm.kind == portfolio_arm_kind::obligation || arm.kind == portfolio_arm_kind::parity)
+      if (arm.kind == portfolio_arm_kind::legacy || arm.kind == portfolio_arm_kind::obligation ||
+          arm.kind == portfolio_arm_kind::parity)
         return false;
       if (retval.verbose_level)
         std::cerr << "Skipping default arm " << arm.native_name ()
@@ -784,8 +791,10 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   if (retval.synth_fname.has_value ()) {
-    const bool obligation_synthesis = retval.arms && std::ranges::any_of (
-        *retval.arms, [] (const auto& arm) { return arm.kind == portfolio_arm_kind::obligation; });
+    const bool obligation_synthesis =
+        retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+          return arm.kind == portfolio_arm_kind::obligation;
+        });
     if (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
           return arm.kind != portfolio_arm_kind::legacy &&
                  arm.kind != portfolio_arm_kind::obligation &&
@@ -793,9 +802,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
         }))
       error (EXIT_CODE_ERROR, "Error: native arms do not support -s controller synthesis.\n");
     if (obligation_synthesis) {
-      const bool ordinary = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-        return arm.kind == portfolio_arm_kind::legacy;
-      });
+      const bool ordinary = std::ranges::any_of (
+          *retval.arms, [] (const auto& arm) { return arm.kind == portfolio_arm_kind::legacy; });
       const bool real = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
         return arm.kind == portfolio_arm_kind::legacy && !arm.unreal;
       });
@@ -896,11 +904,10 @@ arg_parse_result arg_parser (int argc, char** argv) {
       retval.inputs_specified = true;
       retval.outputs_specified = true;
     } catch (const std::exception& exception) {
-      const bool has_native = std::ranges::any_of (
-          *retval.arms, [] (const auto& arm) {
-            return arm.kind != portfolio_arm_kind::legacy &&
-                   arm.kind != portfolio_arm_kind::obligation;
-          });
+      const bool has_native = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+        return arm.kind != portfolio_arm_kind::legacy &&
+               arm.kind != portfolio_arm_kind::obligation;
+      });
       if (not has_native)
         error (EXIT_CODE_ERROR, "Error: TLSF conversion failed: %s\n", exception.what ());
       retval.legacy_available = false;

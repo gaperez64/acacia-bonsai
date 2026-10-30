@@ -104,6 +104,7 @@ namespace acacia {
       };
       if (oxidd) {
         tlsf_dpa::limits budget;
+        budget.construction.allow_unproved = args.dpa_allow_unproved;
         // Share one 120-second construction/import deadline with the worker.
         constexpr uint64_t construction_ns = 120ULL * 1000000000ULL;
         const auto deadline = phase_clock (CLOCK_MONOTONIC) + construction_ns;
