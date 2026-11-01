@@ -11,8 +11,10 @@ shift precedes translation.
 
 The opt-in `both:parity:oxidd` arm builds the tlsf-tools DPA from native TLSF.
 It tries the proved grammar first. Only an unsupported creation retries with the
-general Boolean Π2/Σ2 construction, which tlsf-tools validates against a
-construction proved in Lean. Both attempts share one construction deadline;
+general Boolean Π2/Σ2 construction. tlsf-tools validates that construction
+offline, on a recorded sample of formulas, against a construction proved in
+Lean; formulas outside the sample rely on that evidence and on testing. Both
+attempts share one construction deadline;
 resource declines do not retry. The completed DPA feeds the exact parity game
 and supports controller synthesis.
 
