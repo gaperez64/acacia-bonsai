@@ -49,7 +49,9 @@ Decision-only calls do not build controllers. Synthesis uses the existing parent
 rendezvous: only a selected REAL worker constructs and writes the controller;
 UNREAL never opens the destination, and failed export resumes suspended competitors.
 The existing process-group supervisor handles cancellation and the outer invocation
-deadline. There is no local wall allowance or solver-visible deadline. The worker
+deadline. `both:parity:spot` has no local wall allowance or solver-visible deadline;
+`both:parity:oxidd` bounds DPA construction and import together by one 120-second
+deadline (or the outer deadline, if earlier) and reports UNKNOWN when it expires. The worker
 uses the obligation helper's address-space cap and cgroup-aware soft RSS share
 (half the available cap divided by scheduled workers). The default `headroom` mode
 (`sharegate-20261028`) enforces the share only when the solver's own memory scope is

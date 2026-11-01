@@ -3,9 +3,9 @@
 ## Unreleased
 
 - The default portfolio adds `both:parity:oxidd` alongside `both:parity:spot`,
-  bringing it to eight arms. At 17 s on all 1,524 SYNTCOMP26 inputs, the explicit
-  eight-arm list decides 1,352 against 1,341 for master's seven arms, with no
-  verdict disagreement. Arm reduction is tracked in #359.
+  bringing it to eight arms. On all 1,524 SYNTCOMP26 inputs it decides 1,351 at
+  17 s and 1,379 at 60 s, against 1,341 and 1,364 for archived master's seven
+  arms, with no verdict disagreement. Arm reduction is tracked in #359.
 - The parity worker now runs past its equal memory share until the solver's memory scope is nearly full and decides more inputs (#341, evidence `sharegate-20261028`). Use `--parity-memory-share equal` for the old behaviour.
 
 ## 2.7.2 (2026-10-27)
