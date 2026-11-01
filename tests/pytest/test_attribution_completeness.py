@@ -423,6 +423,57 @@ def test_default_portfolio_specs_and_context_are_checked(tmp_path, lifecycle, mo
         assert "worker_spec_mismatch" in reasons(result, "delivery")
 
 
+# worker_spec fields observed with -T tiny.tlsf --arms ARM and phase records enabled.
+EXACT_WORKER_SPECS = [
+    dict(kind="both:obligation:spot", requested_backend="obligation", requested_polarity="both",
+         translation="native", transform="exact", provider="native",
+         r_prepass=True, equivariance=True),
+    dict(kind="both:parity:spot", requested_backend="parity", requested_polarity="both",
+         translation="native", transform="exact", provider="native",
+         r_prepass=True, equivariance=True),
+    dict(kind="both:parity:oxidd", requested_backend="parity", requested_polarity="both",
+         translation="native", transform="exact", provider="native",
+         r_prepass=True, equivariance=True),
+]
+
+
+@pytest.mark.parametrize("specification", EXACT_WORKER_SPECS, ids=lambda spec: spec["kind"])
+def test_exact_arm_inventory_matches_worker_spec(specification):
+    inventory, context = reader.expected_configuration(row(
+        flags=f"--arms {specification['kind']} --equivariance on"))
+    assert inventory == [specification]
+    assert context == dict(r_prepass=True, equivariance=True)
+
+
+def test_shipped_eight_arm_default_inventory():
+    inventory, context = reader.expected_configuration(row(
+        flags="", preset="otf_sparse_formula_parity"))
+    expected = [
+        dict(kind="legacy", requested_polarity=polarity, translation="small",
+             transform=transform, provider="frozen-graph", requested_backend=backend,
+             r_prepass=True, equivariance=True)
+        for polarity, transform, backend in [
+            ("REAL", "real", "backward"), ("REAL", "real", "forward"),
+            ("UNREAL", "formula", "spot-guarded-sparse"), ("UNREAL", "automaton", "forward"),
+        ]
+    ]
+    expected += [dict(kind="both:gr1-real-lift:oxidd", requested_backend="oxidd",
+                      requested_polarity="both", translation="native", transform="exact",
+                      provider="native", r_prepass=True, equivariance=True), *EXACT_WORKER_SPECS]
+    assert inventory == expected
+    assert len(inventory) == 8
+    assert context == dict(r_prepass=True, equivariance=True)
+
+
+@pytest.mark.parametrize("arm", [
+    "real:obligation:spot", "both:obligation:oxidd", "both:obligation:spot:native",
+    "unreal:parity:spot", "both:parity:forward", "both:parity:oxidd:native",
+])
+def test_invalid_obligation_and_parity_arms_are_rejected(arm):
+    with pytest.raises(ValueError, match="invalid legacy arm"):
+        reader.expected_configuration(row(flags=f"--arms {arm}"))
+
+
 def test_worker_specs_are_matched_by_launch_index(tmp_path, lifecycle):
     sibling = [{**record, "worker": 1, "worker_pid": 21}
                if "worker" in record else copy.deepcopy(record)

@@ -782,6 +782,11 @@ def completeness_expected_configuration(row):
                 raise ValueError(f"invalid native arm {arm!r}")
             specification = dict(kind=arm.strip(), translation="native", transform="exact",
                                  provider="native")
+        elif arm.strip() in ("both:obligation:spot", "both:parity:spot", "both:parity:oxidd"):
+            specification = dict(kind=arm.strip(), translation="native", transform="exact",
+                                 provider="native")
+            # These workers report their solver family as the requested backend.
+            backend = transform
         else:
             transforms = {"real": ("small", "any"), "unreal": ("formula", "automaton")}
             if transform not in transforms.get(polarity, ()) or backend not in (
