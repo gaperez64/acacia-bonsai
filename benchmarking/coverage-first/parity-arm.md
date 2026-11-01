@@ -1,6 +1,7 @@
 # Deterministic automaton and parity arm
 
-`both:parity:spot` is part of the first `docker_default` portfolio. It translates the
+The first `docker_default` portfolio has eight arms, including `both:parity:spot`
+and `both:parity:oxidd`. The Spot arm translates the
 original positive specification with Spot's deterministic, generic-acceptance,
 high-level translation through `src/solver/parity/route.{hh,cc}`.
 The declared input/output partition, including unused signals,
@@ -9,7 +10,7 @@ lowering once and the ordinary controller conversion for a Moore target. No
 realizability simplification, decomposition, input/output swap or extra timing
 shift precedes translation.
 
-The opt-in `both:parity:oxidd` arm builds the tlsf-tools DPA from native TLSF.
+The `both:parity:oxidd` arm builds the tlsf-tools DPA from native TLSF.
 It tries the proved grammar first. Only an unsupported creation retries with the
 general Boolean Π2/Σ2 construction. tlsf-tools validates that construction
 offline, on a recorded sample of formulas, against a construction proved in
@@ -65,4 +66,4 @@ Developer measurements and admission history live in the evidence archives and
 `otd-parity-engines20261015` (engine comparisons), `otd-gates-OTF20261016` (gates),
 and `otd-OTF-owner20261016` (default admission). Resolve the shipped preset through
 `python3 scripts/acacia-config.py list-group docker_default`; the parity portfolio
-adds this arm to the previous shipped portfolio, retained second in the group.
+adds both parity arms to the previous shipped portfolio, retained second in the group.

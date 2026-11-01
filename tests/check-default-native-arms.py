@@ -15,11 +15,7 @@ arms = sys.argv[3].split(",")
 expected_ltl_children = int(sys.argv[4])
 verbose_enabled = sys.argv[5] == "true"
 ordinary = [a for a in arms if a != "both:obligation:spot"]
-legacy = [a for a in ordinary if a != "both:parity:spot" and ":gr1:oxidd" not in a and
-          ":gr1-lift:oxidd" not in a and
-          ":gr1-real-lift:oxidd" not in a and
-          ":param-lift:oxidd" not in a]
-native = [a for a in ordinary if a not in legacy and a != "both:parity:spot"]
+native = [a for a in ordinary if a.endswith(":oxidd") and a != "both:parity:oxidd"]
 assert native
 
 
@@ -86,7 +82,7 @@ finally:
 
 # Run the checked binary through the real wrapper in an isolated layout. Its
 # configuration list normally points at shipped builds, while this test uses
-# the six-arm test build passed by Meson.
+# the test build passed by Meson.
 with tempfile.TemporaryDirectory(prefix="default-native-wrapper-", dir=build) as tmp:
     root = Path(tmp)
     (root / "scripts").mkdir()
