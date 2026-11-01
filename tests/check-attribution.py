@@ -279,7 +279,7 @@ def main() -> None:
                 "REAL" if code == 0 else "UNREAL"), winner
         native_exception_stops(hook, sources["direct"], root)
         source = root / "prepare-budget.tlsf"
-        source.write_text(fixtures.REAL.replace("extent = 5", "extent = 2050"))
+        source.write_text(fixtures.REAL.replace("G F response[i]", "X " * 17 + "response[i]"))
         for arm in ("both:gr1-lift:oxidd", "both:gr1-real-lift:oxidd", "both:gr1:oxidd",
                     "real:param-lift:oxidd"):
             directory = root / f"prepare-budget-{arm}"

@@ -2,7 +2,9 @@
 #include "solver/synthesis_rendezvous.hh"
 
 #ifdef ACACIA_TLSF_PREPARATION_TEST_HOOKS
+# include <cstdio>
 # include <cstdlib>
+# include <cstring>
 # include <tlsf/convert.h>
 # include <tlsf/dpa.h>
 # include <unistd.h>
@@ -26,6 +28,19 @@ extern "C" TlsfDpaStatus __wrap_tlsf_dpa_create (const TlsfAstNode* root,
                                                  const char* const* inputs, uint32_t ni,
                                                  const char* const* outputs, uint32_t no,
                                                  const TlsfDpaBudget* budget, TlsfDpa** out) {
+  if (std::getenv ("ACACIA_TEST_DPA_CREATE_TRACE"))
+    std::fprintf (stderr, "test_dpa_create %u %llu\n", unsigned (budget->allow_unproved),
+                  (unsigned long long) budget->deadline_mono_ns);
+  if (const char* decline = std::getenv ("ACACIA_TEST_DPA_CREATE_DECLINE")) {
+    const char* names[] = {"state", "host", "bdd", "deadline"};
+    const TlsfDpaReason reasons[] = {TLSF_DPA_STATE_LIMIT, TLSF_DPA_HOST_LIMIT, TLSF_DPA_BDD_LIMIT,
+                                     TLSF_DPA_DEADLINE};
+    for (unsigned i = 0; i < 4; ++i)
+      if (std::strcmp (decline, names[i]) == 0) {
+        *out = nullptr;
+        return {TLSF_DPA_DECLINED, reasons[i]};
+      }
+  }
   auto capped = *budget;
   if (std::getenv ("ACACIA_TEST_DPA_STATE_LIMIT"))
     capped.max_states = 2;

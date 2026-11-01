@@ -108,10 +108,13 @@ void show_help (const char* program_name) {
       << "                    both:parity:spot: deterministic translation, exact Buchi or parity "
          "games;\n"
       << "                    trusted decisions and controller synthesis; no provider\n"
-      << "                    both:parity:oxidd: bounded TLSF construction and exact parity "
+      << "                    both:parity:oxidd: builds the tlsf-tools DPA and solves its parity "
          "game;\n"
+      << "                    outside the proved grammar, uses the general construction,\n"
+      << "                    validated offline on a recorded sample against a construction\n"
+      << "                    proved in Lean;\n"
       << "                    requires -T, supports -s; outside the supported fragment or over\n"
-      << "                    budget returns UNKNOWN; opt-in only, no provider\n"
+      << "                    budget returns UNKNOWN; no provider\n"
       << "                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\n"
       << "                    both:gr1-real-lift:oxidd,\n"
       << "                    real:gr1:oxidd, unreal:gr1:oxidd, and\n"
@@ -762,8 +765,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
     const bool needed_unreal = std::ranges::any_of (
         *retval.arms, [] (const auto& arm) { return arm.unreal || arm.both; });
     std::erase_if (*retval.arms, [&] (const portfolio_arm& arm) {
-      if (arm.kind == portfolio_arm_kind::legacy ||
-          arm.kind == portfolio_arm_kind::obligation || arm.kind == portfolio_arm_kind::parity)
+      if (arm.kind == portfolio_arm_kind::legacy || arm.kind == portfolio_arm_kind::obligation ||
+          arm.kind == portfolio_arm_kind::parity)
         return false;
       if (retval.verbose_level)
         std::cerr << "Skipping default arm " << arm.native_name ()
@@ -784,8 +787,10 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   if (retval.synth_fname.has_value ()) {
-    const bool obligation_synthesis = retval.arms && std::ranges::any_of (
-        *retval.arms, [] (const auto& arm) { return arm.kind == portfolio_arm_kind::obligation; });
+    const bool obligation_synthesis =
+        retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+          return arm.kind == portfolio_arm_kind::obligation;
+        });
     if (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
           return arm.kind != portfolio_arm_kind::legacy &&
                  arm.kind != portfolio_arm_kind::obligation &&
@@ -793,9 +798,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
         }))
       error (EXIT_CODE_ERROR, "Error: native arms do not support -s controller synthesis.\n");
     if (obligation_synthesis) {
-      const bool ordinary = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-        return arm.kind == portfolio_arm_kind::legacy;
-      });
+      const bool ordinary = std::ranges::any_of (
+          *retval.arms, [] (const auto& arm) { return arm.kind == portfolio_arm_kind::legacy; });
       const bool real = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
         return arm.kind == portfolio_arm_kind::legacy && !arm.unreal;
       });
@@ -896,11 +900,10 @@ arg_parse_result arg_parser (int argc, char** argv) {
       retval.inputs_specified = true;
       retval.outputs_specified = true;
     } catch (const std::exception& exception) {
-      const bool has_native = std::ranges::any_of (
-          *retval.arms, [] (const auto& arm) {
-            return arm.kind != portfolio_arm_kind::legacy &&
-                   arm.kind != portfolio_arm_kind::obligation;
-          });
+      const bool has_native = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+        return arm.kind != portfolio_arm_kind::legacy &&
+               arm.kind != portfolio_arm_kind::obligation;
+      });
       if (not has_native)
         error (EXIT_CODE_ERROR, "Error: TLSF conversion failed: %s\n", exception.what ());
       retval.legacy_available = false;

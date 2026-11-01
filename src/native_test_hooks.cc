@@ -1,13 +1,16 @@
-#include "configuration.hh"
 #include "native_test_hooks.hh"
+
+#include "configuration.hh"
 #include "native_proof_binding.hh"
 
 #if defined(ACACIA_NATIVE_TEST_HOOKS)
-#include <cstring>
-#include <cstdlib>
-#include <memory>
-#include <utility>
-#include <tlsf/pipeline.h>
+# include <cstdio>
+# include <cstdlib>
+# include <cstring>
+# include <memory>
+# include <tlsf/pipeline.h>
+# include <unistd.h>
+# include <utility>
 
 namespace acacia {
   void native_lift_test_fault (TlsfGr1LiftResult& result) {
@@ -81,13 +84,21 @@ namespace acacia {
       artifact[0] = 'X';
   }
   void native_lift_test_options (TlsfGr1LiftOptions& options) {
+    if (const char* value = std::getenv ("ACACIA_NATIVE_TEST_LIFT_PAUSE_FD")) {
+      char pid[32];
+      const int size = std::snprintf (pid, sizeof pid, "%ld\n", long (getpid ()));
+      if (size <= 0 || ::write (std::atoi (value), pid, size) != size)
+        _exit (92);
+      for (;;)
+        pause ();
+    }
     if (const char* fault = std::getenv ("ACACIA_NATIVE_TEST_LIFT_FAULT")) {
       if (std::strcmp (fault, "r-decline") == 0) {
         options.schema_nodes = 1;
         options.proof_order = TLSF_GR1_LIFT_POLICY_FIRST;
       }
       else if (std::strcmp (fault, "region-method") == 0 ||
-          std::strcmp (fault, "unexpected-region-policy-hash") == 0)
+               std::strcmp (fault, "unexpected-region-policy-hash") == 0)
         options.phase_budget.policy_proof_ns = 1;
       else if (std::strcmp (fault, "missing-policy-hash") == 0 ||
                std::strcmp (fault, "swap-certificate") == 0)

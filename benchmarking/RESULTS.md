@@ -12,6 +12,29 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-01: The oxidd parity arm joins the default portfolio; the swap for the Spot arm loses
+
+Archive `otfdpa-20261101` (release `evidence-2026-11-01-otfdpa`), PR #358. The shipping eight-arm default is e8df0bbc (frozen binary SHA-256 `127eb09d72135a9fa58cd5a9817e02def8d3c44dbe8739d2edabac128dc09730`). Full-corpus runs cover all 1524 SYNTCOMP26 inputs. Every call ran in its own 8 GiB scope, serially. At 60 s and 120 s, each series reran only the inputs undecided at the previous cap and recycled earlier verdicts.
+
+References are archived from earlier sessions, so the comparison is indicative: master headroom from `sharegate-20261028`, ltlsynt 2.16 and Acacia 1.x from `threeway-syntcomp26-20261019`, SemML from `semml-syntcomp26-20261024`, and v2.7.0 and SemML at 120 s from `c120-syntcomp26-20261024`.
+
+| | 17 s decided | 17 s PAR-2 (s) | 60 s decided | 60 s PAR-2 (s) | 120 s decided | 120 s PAR-2 (s) |
+|---|---:|---:|---:|---:|---:|---:|
+| Eight-arm default | 1351 | 6489.2 | 1379 | 18979.5 | 1388 | 34986.4 |
+| Master headroom | 1341 | 6799.8 | 1364 | 20533.7 | | |
+| SemML | 1271 | 11690.0 | 1334 | 27788.0 | 1355 | 47408.9 |
+| ltlsynt 2.16 | 1264 | 9420.7 | 1290 | 29523.6 | | |
+| Acacia 1.x | 812 | 24778.5 | 854 | 82407.0 | | |
+| v2.7.0 | | | | | 1366 | 39637.7 |
+
+The default hit the scope memory limit on three calls at 120 s. No verdict disagrees with any reference.
+
+Replacing `both:parity:spot` with `both:parity:oxidd` leaves seven arms (same build as b889e84c, frozen binary SHA-256 `3fed2ca91a49b4d0a028b51409f0d58fe6c17394d642123f03bd694ce73d2617`): 1317 decided at 17 s, PAR-2 8036.2 s. It loses 37 inputs master decides, most in under 3 s, and gains 13 hard ones, including `SPIPureNext`, `chain-5-real`, AMBA arbiters/encoders, `reversible-lane-r-real` and `robot-to-target-charging-unreal0`/`robot-to-target-charging-unreal3`. With the same binary, an explicit eight-arm list decides 1352 at 17 s, PAR-2 6465.9 s, +12/-1 against master; master alone decides `chomp_pb_4_4_pe_` at 10.4 s. Reducing the arm count is #359.
+
+On the 37 losses, master's portfolio and the Spot parity arm alone decide all 37 in 0 to 8 s: 7 through the Büchi fast path and 30 as full parity games. The oxidd arm alone decides none: 12 unsupported outside Boolean Π2/Σ2, 22 still constructing at 17 s, 2 at the BDD limit and 1 slow solve. The swap is rejected. Moving Spot's Büchi fast path into the oxidd arm is also rejected: its DPA does not arrive in time on those inputs.
+
+Earlier in the sprint, on the 69 inputs only SemML decides at 120 s, Owl's eager DPA fully expands on 43 (median 1883 states) and SemML's non-learned Strix heuristic decides 57/69. The lazy DPA arm alone at 120 s initially decided 0/69 (2 with the research flag), stopped by the BDD limit at the first state, the priority limit at import, host share or construction. Priority compression, memory-sized budgets and factoring (grouping, G/F distribution, decided-product sinks and AP-constrained unfolding) bring it to 12/69 by default and 18/69 with the general construction; the Spot parity arm decides 10. No verdict mismatches SemML anywhere in the sprint.
+
 ## 2026-10-28: Headroom becomes the default; translation sharing closes without a build
 
 Archive `sharegate-20261028` (release `evidence-2026-10-28-sharegate`), #341. The equal and headroom policies used the same release binary of `otf_sparse_formula_parity` on all 1524 SYNTCOMP26 inputs. Every call ran in its own 8 GiB scope, serially. At 17 s, equal decided 1342 inputs and headroom 1341, with no verdict change. The one difference, `amba_case_study_unreal_pb_2_pe_`, finished under equal at 16.36 s, near the cap; both policies decide it at 60 s.

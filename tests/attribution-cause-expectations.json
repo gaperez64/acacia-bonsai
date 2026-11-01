@@ -931,62 +931,6 @@
     "cause": "TLSF_GR1_REDUCE_LIMIT",
     "telemetry": "STOPPED/resource"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"lower\" | \"classification failed\" | 0": {
-    "cause": "TLSF_GR1_REDUCE_LIMIT",
-    "telemetry": "STOPPED/resource"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"lower\" | \"formula build failed\" | 0": {
-    "cause": "TLSF_GR1_REDUCE_LIMIT",
-    "telemetry": "STOPPED/resource"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"lower\" | \"out of memory\" | 0": {
-    "cause": "TLSF_GR1_REDUCE_LIMIT",
-    "telemetry": "STOPPED/resource"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"lower\" | \"formula output failed\" | 0": {
-    "cause": "TLSF_GR1_REDUCE_LIMIT",
-    "telemetry": "STOPPED/resource"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"mp-class\" | \"not DBA reducible: \" + spot::str_psl(formula) | 0": {
-    "cause": "TLSF_GR1_REDUCE_UNSUPPORTED",
-    "telemetry": "DECLINE/applicability"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"translate\" | \"Spot translation reached its state limit\" | 0": {
-    "cause": "TLSF_GR1_REDUCE_LIMIT",
-    "telemetry": "STOPPED/resource"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"budget-translate\" | \"Spot translation exceeded state or edge limit\" | 0": {
-    "cause": "TLSF_GR1_REDUCE_LIMIT",
-    "telemetry": "STOPPED/resource"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | state_limit ? \"budget-monitor-states\" : \"budget-monitor-edges\" | \"Spot determinization exceeded construction budget; \" + reason.str() | 0": {
-    "cause": "TLSF_GR1_REDUCE_LIMIT",
-    "telemetry": "STOPPED/resource"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"determinize\" | \"Spot determinization failed; \" + reason.str() | 0": {
-    "cause": "TLSF_GR1_REDUCE_LIMIT",
-    "telemetry": "STOPPED/resource"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"determinize\" | \"Spot could not construct recurrence DBA monitor\" | 0": {
-    "cause": "TLSF_GR1_REDUCE_UNSUPPORTED",
-    "telemetry": "DECLINE/applicability"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"budget-monitor\" | \"completed monitor exceeded state or edge limit\" | 0": {
-    "cause": "TLSF_GR1_REDUCE_LIMIT",
-    "telemetry": "STOPPED/resource"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"monitor\" | \"Spot produced nondeterministic or incomplete monitor\" | 0": {
-    "cause": "TLSF_GR1_REDUCE_ERROR",
-    "telemetry": "STOPPED/error"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"monitor\" | \"monitor state cap exceeded\" | 0": {
-    "cause": "TLSF_GR1_REDUCE_LIMIT",
-    "telemetry": "STOPPED/resource"
-  },
-  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"monitor\" | \"Spot did not produce state-based acceptance\" | 0": {
-    "cause": "TLSF_GR1_REDUCE_ERROR",
-    "telemetry": "STOPPED/error"
-  },
   "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"monitor\" | \"empty state\" | 0": {
     "cause": "TLSF_GR1_REDUCE_ERROR",
     "telemetry": "STOPPED/error"
@@ -2986,5 +2930,53 @@
   "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | tlsf_dpa::reason (imported.status) | 0": {
     "cause": "worker_stopped",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline.c | pipeline_status | TLSF_PIPELINE_DECLINED | \"adapt\" | \"finite semantics/target adaptation is unsupported; \" \"SEMANTICS and TARGET must agree\" | 0": {
+    "cause": "TLSF_PIPELINE_DECLINED",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | code | stage | code == TLSF_GR1_REDUCE_UNSUPPORTED ? \"outside proved DPA Buchi fragment\" : \"DPA construction declined (reason \" + std::to_string(status.reason) + \")\" | 0": {
+    "cause": "code",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"budget-monitor-states\" | \"monitor state budget exhausted\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"mp-class\" | \"outside proved DPA Buchi fragment\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_UNSUPPORTED",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"budget-monitor-states\" | \"DPA expansion exceeded live state budget\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_LIMIT | \"budget-monitor-edges\" | \"DPA expansion exceeded edge budget\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_LIMIT",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"monitor\" | \"nondeterministic or incomplete monitor\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"monitor\" | \"non-state-based acceptance\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_UNSUPPORTED | \"mp-class\" | \"safety tag disagrees with monitor language\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | Failure | TLSF_GR1_REDUCE_ERROR | \"formula\" | \"lowered formula has undeclared APs\" | 0": {
+    "cause": "TLSF_GR1_REDUCE_ERROR",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | throw std::runtime_error | UNKNOWN | provider | \"invalid DPA label\" | 0": {
+    "cause": "std::runtime_error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | throw std::bad_alloc | UNKNOWN | provider |  | 1": {
+    "cause": "std::bad_alloc",
+    "telemetry": "STOPPED/resource"
   }
 }

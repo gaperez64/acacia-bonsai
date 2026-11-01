@@ -1,6 +1,7 @@
 # Deterministic automaton and parity arm
 
-`both:parity:spot` is part of the first `docker_default` portfolio. It translates the
+The first `docker_default` portfolio has eight arms, including `both:parity:spot`
+and `both:parity:oxidd`. The Spot arm translates the
 original positive specification with Spot's deterministic, generic-acceptance,
 high-level translation through `src/solver/parity/route.{hh,cc}`.
 The declared input/output partition, including unused signals,
@@ -8,6 +9,15 @@ is preserved. Raw LTL is Mealy; native TLSF uses the frontend's effective-Mealy
 lowering once and the ordinary controller conversion for a Moore target. No
 realizability simplification, decomposition, input/output swap or extra timing
 shift precedes translation.
+
+The `both:parity:oxidd` arm builds the tlsf-tools DPA from native TLSF.
+It tries the proved grammar first. Only an unsupported creation retries with the
+general Boolean Π2/Σ2 construction. tlsf-tools validates that construction
+offline, on a recorded sample of formulas, against a construction proved in
+Lean; formulas outside the sample rely on that evidence and on testing. Both
+attempts share one construction deadline;
+resource declines do not retry. The completed DPA feeds the exact parity game
+and supports controller synthesis.
 
 ## Structural tiers and engines
 
@@ -39,7 +49,9 @@ Decision-only calls do not build controllers. Synthesis uses the existing parent
 rendezvous: only a selected REAL worker constructs and writes the controller;
 UNREAL never opens the destination, and failed export resumes suspended competitors.
 The existing process-group supervisor handles cancellation and the outer invocation
-deadline. There is no local wall allowance or solver-visible deadline. The worker
+deadline. `both:parity:spot` has no local wall allowance or solver-visible deadline;
+`both:parity:oxidd` bounds DPA construction and import together by one 120-second
+deadline (or the outer deadline, if earlier) and reports UNKNOWN when it expires. The worker
 uses the obligation helper's address-space cap and cgroup-aware soft RSS share
 (half the available cap divided by scheduled workers). The default `headroom` mode
 (`sharegate-20261028`) enforces the share only when the solver's own memory scope is
@@ -56,4 +68,4 @@ Developer measurements and admission history live in the evidence archives and
 `otd-parity-engines20261015` (engine comparisons), `otd-gates-OTF20261016` (gates),
 and `otd-OTF-owner20261016` (default admission). Resolve the shipped preset through
 `python3 scripts/acacia-config.py list-group docker_default`; the parity portfolio
-adds this arm to the previous shipped portfolio, retained second in the group.
+adds both parity arms to the previous shipped portfolio, retained second in the group.

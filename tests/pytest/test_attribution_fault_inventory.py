@@ -98,6 +98,7 @@ def telemetry_class(row: dict) -> str:
     if c in (
         "worker_stopped",
         "category",
+        "code",
         "cause",
         "kind",
         "reason",
@@ -109,7 +110,7 @@ def telemetry_class(row: dict) -> str:
             return "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
         if c.startswith("native_failure ("):
             return "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
-        if c == "category":
+        if c in ("category", "code"):
             return "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
         return "STOPPED/error/resource/deadline/cancelled"
     if c.startswith("solver_failure_cause("):
@@ -184,8 +185,10 @@ def test_all_acacia_proof_corruptions_have_runtime_telemetry_assertions() -> Non
 
 def test_all_reduction_contract_corruptions_have_runtime_telemetry_assertions() -> None:
     panel = runpy.run_path(str(ROOT / "tests/check-attribution-contracts.py"))
-    source = (ROOT / "subprojects/tlsf-tools/test/unit/reduction_contract_hooks.cc").read_text()
-    modes = set(re.findall(r'\bmode\("([^"]+)"\)', source))
+    source = "\n".join((ROOT / path).read_text() for path in (
+        "subprojects/tlsf-tools/test/unit/reduction_contract_hooks.cc",
+        "subprojects/tlsf-tools/src/lib/gr1_reduction_test_hooks.hh"))
+    modes = set(re.findall(r'\b(?:reduction_test_)?mode\("([^"]+)"\)', source))
     assert modes == {
         row.fault for row in (*panel["REDUCTION_CASES"], *panel["PREPARATION_CASES"])
     } | {"seed-null", "provenance-recover"}

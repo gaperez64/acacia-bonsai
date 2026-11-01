@@ -117,13 +117,9 @@ native_lift_cli_args = [files ('check-native-param-lift-cli.py'), ab_exe,
                         meson.project_build_root ()]
 native_cli_depends = [ab_exe]
 if native_test_hooks
-  spot_pause_hook = shared_library ('spot-translation-pause',
-                                   'spot_translation_pause.cc',
-                                   dependencies : [spot_dep], install : false)
   native_gr1_cli_args += ['--hook-binary', native_test_exe.full_path ()]
-  native_lift_cli_args += ['--hook-binary', native_test_exe.full_path (),
-                           '--spot-hook', spot_pause_hook.full_path ()]
-  native_cli_depends += [native_test_exe, spot_pause_hook]
+  native_lift_cli_args += ['--hook-binary', native_test_exe.full_path ()]
+  native_cli_depends += [native_test_exe]
 endif
 test ('native-gr1-cli', py,
       args : native_gr1_cli_args,
@@ -1012,6 +1008,7 @@ test ('parity-route', parity_route_test, suite : ['unit', 'parity'], timeout : 1
 
 tlsf_dpa_test = executable ('tlsf-dpa-test',
   ['tlsf_dpa_test.cc', '../src/tlsf_frontend.cc', '../src/solver/mealy_to_moore.cc'],
+  link_args : ['-Wl,--wrap=tlsf_dpa_max_priority'],
   link_with : [tlsf_dpa_lib, parity_route_lib, parity_lib], include_directories : inc,
   dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
 test ('tlsf-dpa', tlsf_dpa_test, suite : ['unit', 'parity'], timeout : 120)

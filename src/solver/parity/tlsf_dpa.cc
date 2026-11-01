@@ -162,14 +162,12 @@ namespace acacia::tlsf_dpa {
       if (auto status = tlsf_dpa_status (&source); status.code != TLSF_DPA_OK)
         throw stopped {status};
       const auto priority = tlsf_dpa_max_priority (&source);
-      if (priority >= spot::acc_cond::mark_t::max_accsets ())
-        throw stopped {{TLSF_DPA_DECLINED, TLSF_DPA_PRIORITY_LIMIT}};
-      space.charge (sizeof (spot::twa_graph) + (priority + 1) * sizeof (spot::acc_cond::acc_code));
+      space.charge (sizeof (spot::twa_graph));
       if constexpr (ACACIA_BDD_MAX_INCREASE > 0)
         configure_bdd ();
       auto graph = spot::make_twa_graph (dictionary);
-      graph->set_acceptance (priority + 1,
-                             spot::acc_cond::acc_code::parity (true, true, priority + 1));
+      std::vector<uint32_t> edge_priorities;
+      std::map<uint32_t, unsigned> priorities;
       labels bridge (source, graph, space, answer.labels);
       std::vector<TlsfDpaState> queue;
       const auto intern = [&] (TlsfDpaState id) {
@@ -211,7 +209,12 @@ namespace acacia::tlsf_dpa {
           covered |= guard;
           const auto dst = intern (edges[e].successor);
           space.charge (4 * sizeof (graph->edge_storage (0u)));
-          graph->new_edge (src, dst, guard, {edges[e].priority});
+          graph->new_edge (src, dst, guard);
+          space.push (edge_priorities, edges[e].priority);
+          if (!priorities.contains (edges[e].priority)) {
+            space.entry<decltype (priorities)> ();
+            priorities.emplace (edges[e].priority, 0);
+          }
           ++answer.edges;
           space.poll ();
         }
@@ -219,6 +222,26 @@ namespace acacia::tlsf_dpa {
           throw stopped {{TLSF_DPA_INVALID, TLSF_DPA_NONE}};
       }
       space.poll ();
+      // The API bound is component count + padding, even before the first row.
+      // Collapse adjacent used priorities of equal parity. This monotone map
+      // preserves parity, so max(map(Inf(run))) = map(max(Inf(run))) is odd
+      // exactly when the original maximum is odd.
+      unsigned compressed = priorities.begin ()->first & 1u;
+      for (auto& [raw, mapped] : priorities) {
+        space.poll ();
+        compressed += (raw & 1u) != (compressed & 1u);
+        mapped = compressed;
+      }
+      if (compressed >= spot::acc_cond::mark_t::max_accsets ())
+        throw stopped {{TLSF_DPA_DECLINED, TLSF_DPA_PRIORITY_LIMIT}};
+      space.charge ((compressed + 1) * sizeof (spot::acc_cond::acc_code));
+      graph->set_acceptance (compressed + 1,
+                             spot::acc_cond::acc_code::parity (true, true, compressed + 1));
+      size_t edge = 0;
+      for (auto& transition : graph->edges ()) {
+        space.poll ();
+        transition.acc = {priorities.at (edge_priorities[edge++])};
+      }
       graph->prop_universal (true);
       graph->prop_complete (true);
       answer.automaton = std::move (graph);

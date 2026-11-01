@@ -176,7 +176,8 @@ def main() -> None:
     default_arms = options.default_arms.split(",") if options.default_arms else []
     default_has_helper = arm in default_arms
     ordinary_defaults = [value for value in default_arms
-                         if value != arm and ":oxidd" not in value]
+                         if value != arm and
+                         (":oxidd" not in value or value == "both:parity:oxidd")]
     previous = ["--arms", ",".join(ordinary_defaults)] if ordinary_defaults else []
     for value in ("", "unknown", "Equal", "alone,equal", "4GiB"):
         invalid = subprocess.run([str(binary), *source, "--obligation-memory-share=" + value],

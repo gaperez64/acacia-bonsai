@@ -92,7 +92,7 @@ def test_obligation_membership_is_explicit_in_shipping_portfolios():
     assert options["options"]["default_arms"]["default"] == ""
 
 
-def test_first_shipping_preset_adds_only_parity_to_the_previous_default():
+def test_first_shipping_preset_adds_both_parity_arms_to_the_previous_default():
     module = load_module()
     options, presets = module.load_registry()
     shipping = presets["groups"]["docker_default"]
@@ -100,7 +100,9 @@ def test_first_shipping_preset_adds_only_parity_to_the_previous_default():
     assert presets["presets"][name]["role"] == "shipping"
     baseline = module.normalize_preset(options, presets, previous)
     candidate = module.normalize_preset(options, presets, name)
-    assert candidate["default_arms"] == baseline["default_arms"] + ",both:parity:spot"
+    assert candidate["default_arms"] == (
+        baseline["default_arms"] + ",both:parity:spot,both:parity:oxidd")
+    assert len(candidate["default_arms"].split(",")) == 8
     for key in baseline:
         if key not in {"_preset", "preset", "default_arms"}:
             assert candidate[key] == baseline[key], key

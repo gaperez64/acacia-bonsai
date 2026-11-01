@@ -66,12 +66,11 @@ def expect(binary: Path, args: list[str], code: int, marker: str,
     return result
 
 
-def check_deadline_reap(binary: Path, source_path: Path, spot_hook: Path) -> None:
+def check_deadline_reap(binary: Path, source_path: Path) -> None:
     env = os.environ.copy()
     env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(time.monotonic() + 4)
-    env["LD_PRELOAD"] = str(spot_hook)
     read_fd, write_fd = os.pipe()
-    env["ACACIA_NATIVE_TEST_SPOT_FD"] = str(write_fd)
+    env["ACACIA_NATIVE_TEST_LIFT_PAUSE_FD"] = str(write_fd)
     try:
         process = subprocess.Popen([str(binary),
                                     "-T", str(source_path), "--arms", ARM],
@@ -81,7 +80,7 @@ def check_deadline_reap(binary: Path, source_path: Path, spot_hook: Path) -> Non
         os.close(write_fd)
         write_fd = -1
         ready, _, _ = select.select([read_fd], [], [], 3)
-        assert ready, "lifting child never entered Spot translation"
+        assert ready, "lifting child never reached the pause hook"
         child_pid = int(os.read(read_fd, 32).strip())
         assert child_pid != process.pid and Path(f"/proc/{child_pid}").exists()
         stdout, stderr = process.communicate(timeout=6)
@@ -150,10 +149,6 @@ def main() -> None:
                                    "uncontrollable_output", enum=True))
         expect(binary, ["-T", str(enum_bus), "--arms", ARM], 0, "REALIZABLE")
 
-        if "--spot-hook" in sys.argv[3:]:
-            spot_hook = Path(sys.argv[sys.argv.index("--spot-hook") + 1])
-            check_deadline_reap(binary, paths[0], spot_hook)
-
         for arms, marker in (("unreal:param-lift:oxidd", "realizability only"),
                              (f"{ARM},{ARM}", "duplicate arm"),
                              (f"{ARM}:frozen-graph", "does not accept a provider"),
@@ -166,6 +161,7 @@ def main() -> None:
         expect(binary, ["-h"], 0, ARM)
         if "--hook-binary" in sys.argv[3:]:
             hook_binary = Path(sys.argv[sys.argv.index("--hook-binary") + 1])
+            check_deadline_reap(hook_binary, paths[0])
             expect(hook_binary, ["-T", str(paths[0]), "--arms", ARM],
                    0, "REALIZABLE", fault="region-method")
             for fault, marker in (("source-hash", '"stage":"source"'),

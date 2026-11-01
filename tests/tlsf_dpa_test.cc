@@ -23,6 +23,13 @@ utils::voutstream utils::vout;
 namespace dpa = acacia::tlsf_dpa;
 namespace route = acacia::parity_route;
 
+// An upper bound may greatly exceed the emitted priorities. Exercise that
+// case on every small language/label fixture without building a large product.
+extern "C" uint32_t __real_tlsf_dpa_max_priority (const TlsfDpa* source);
+extern "C" uint32_t __wrap_tlsf_dpa_max_priority (const TlsfDpa* source) {
+  return __real_tlsf_dpa_max_priority (source) + spot::acc_cond::mark_t::max_accsets ();
+}
+
 void require (bool condition, const char* message) {
   if (!condition)
     throw std::runtime_error (message);
@@ -104,6 +111,20 @@ bool evaluate (TlsfDpa& source, TlsfDpaLabel id, unsigned valuation) {
 
 void exact_relation (TlsfDpa& source, const dpa::result& imported) {
   auto graph = imported.automaton;
+  std::map<uint32_t, unsigned> priorities;
+  for (const auto& [id, mapped] : imported.states) {
+    const TlsfDpaEdge* edges;
+    size_t count;
+    require (tlsf_dpa_successors (&source, id, &edges, &count).code == TLSF_DPA_OK,
+             "completed row unavailable");
+    for (size_t e = 0; e < count; ++e)
+      priorities.emplace (edges[e].priority, 0);
+  }
+  unsigned compressed = priorities.begin ()->first & 1u;
+  for (auto& [raw, mapped] : priorities) {
+    compressed += (raw & 1u) != (compressed & 1u);
+    mapped = compressed;
+  }
   require (imported.states.at (tlsf_dpa_initial (&source)) == graph->get_init_state_number (),
            "wrong initial state map");
   require (graph->num_states () == tlsf_dpa_state_count (&source), "BFS lost reachable states");
@@ -125,10 +146,10 @@ void exact_relation (TlsfDpa& source, const dpa::result& imported) {
       }
       // Every triple, including absent edges; OR repeated guards per (target, priority).
       for (const auto& [target, destination] : imported.states)
-        for (unsigned priority = 0; priority <= tlsf_dpa_max_priority (&source); ++priority) {
+        for (unsigned priority = 0; priority <= compressed; ++priority) {
           bool expected = false;
           for (size_t e = 0; e < count; ++e)
-            if (edges[e].successor == target && edges[e].priority == priority)
+            if (edges[e].successor == target && priorities.at (edges[e].priority) == priority)
               expected |= evaluate (source, edges[e].label, valuation);
           bdd actual = bddfalse;
           for (const auto& edge : graph->out (mapped))
