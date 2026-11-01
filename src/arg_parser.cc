@@ -108,8 +108,10 @@ void show_help (const char* program_name) {
       << "                    both:parity:spot: deterministic translation, exact Buchi or parity "
          "games;\n"
       << "                    trusted decisions and controller synthesis; no provider\n"
-      << "                    both:parity:oxidd: bounded TLSF construction and exact parity "
+      << "                    both:parity:oxidd: builds the tlsf-tools DPA and solves its parity "
          "game;\n"
+      << "                    outside the proved grammar, uses the general construction,\n"
+      << "                    which tlsf-tools validates against a construction proved in Lean;\n"
       << "                    requires -T, supports -s; outside the supported fragment or over\n"
       << "                    budget returns UNKNOWN; opt-in only, no provider\n"
       << "                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\n"
@@ -127,10 +129,6 @@ void show_help (const char* program_name) {
       << "                    headroom enforces the equal share only when the solver's\n"
       << "                    memory scope is nearly exhausted; without a readable limit,\n"
       << "                    it behaves like equal\n"
-      << "  --dpa-allow-unproved  research option for both:parity:oxidd (default off)\n"
-      << "                    admits temporal logic components whose translation is not yet "
-         "proved\n"
-      << "                    correct; for measurements only\n"
       << "  --r-prepass VAL   [on|off] R discovery/candidates in combined native arms (default "
          "on)\n"
       << "  --equivariance VAL [on|off] exact pre-pass in backward decision workers (default "
@@ -452,7 +450,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_OBLIGATION_MEMORY_SHARE = 1015;
   static constexpr int OPT_PARITY_MEMORY_SHARE = 1016;
-  static constexpr int OPT_DPA_ALLOW_UNPROVED = 1017;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
   static constexpr int OPT_REAL_BACKEND = 1002;
@@ -481,7 +478,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"arms", required_argument, nullptr, OPT_ARMS},
       {"obligation-memory-share", required_argument, nullptr, OPT_OBLIGATION_MEMORY_SHARE},
       {"parity-memory-share", required_argument, nullptr, OPT_PARITY_MEMORY_SHARE},
-      {"dpa-allow-unproved", no_argument, nullptr, OPT_DPA_ALLOW_UNPROVED},
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
@@ -667,7 +663,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
         else
           error (EXIT_CODE_ERROR, "Error: --parity-memory-share expects equal or headroom.\n");
         break;
-      case OPT_DPA_ALLOW_UNPROVED: retval.dpa_allow_unproved = true; break;
       case OPT_R_PREPASS:
       case OPT_EQUIVARIANCE: {
         const bool enabled = case_insensitive_equals (optarg, "on");

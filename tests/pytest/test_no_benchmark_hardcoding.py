@@ -113,6 +113,10 @@ GENERIC_DECLARED_NAMES = frozenset({
 })
 # Exact (path, literal) exceptions for audited non-identity uses.
 SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
+    ('subprojects/tlsf-tools/src/lib/gr1_reduction.cc', 'gr1_reduction_test_hooks.hh'):
+        'test-only monitor hooks, included under TLSF_GR1_REDUCTION_TEST_FAULT',
+    ('subprojects/tlsf-tools/src/lib/gr1_reduction_test_hooks.hh', 'ACACIA_NATIVE_TEST_CONTRACT'):
+        'test-only fault selection, included under TLSF_GR1_REDUCTION_TEST_FAULT',
     ('src/acacia-bonsai.cc', 'ACACIA_TEST_CHILD_MODES'):
         'included header, test control, or diagnostic record',
     ('src/acacia-bonsai.cc', 'ACACIA_TEST_DELAY_AFTER_REAP'):

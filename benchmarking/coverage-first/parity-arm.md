@@ -9,6 +9,13 @@ lowering once and the ordinary controller conversion for a Moore target. No
 realizability simplification, decomposition, input/output swap or extra timing
 shift precedes translation.
 
+The opt-in `both:parity:oxidd` arm builds the tlsf-tools DPA from native TLSF.
+It tries the proved grammar first. Only an unsupported creation retries with the
+general Boolean Π2/Σ2 construction, which tlsf-tools validates against a
+construction proved in Lean. Both attempts share one construction deadline;
+resource declines do not retry. The completed DPA feeds the exact parity game
+and supports controller synthesis.
+
 ## Structural tiers and engines
 
 Classify the worker's negated-specification language using acceptance structure alone:

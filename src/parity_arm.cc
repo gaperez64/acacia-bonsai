@@ -104,7 +104,6 @@ namespace acacia {
       };
       if (oxidd) {
         tlsf_dpa::limits budget;
-        budget.construction.allow_unproved = args.dpa_allow_unproved;
         // Share one 120-second construction/import deadline with the worker.
         constexpr uint64_t construction_ns = 120ULL * 1000000000ULL;
         const auto deadline = phase_clock (CLOCK_MONOTONIC) + construction_ns;
@@ -124,6 +123,11 @@ namespace acacia {
           legacy_phase construction (stage);
           context = tlsf_dpa::create (tlsf_ast_root (objective.ast.get ()), input.inputs,
                                       input.outputs, budget, status);
+          if (status.code == TLSF_DPA_DECLINED && status.reason == TLSF_DPA_UNSUPPORTED) {
+            budget.construction.allow_unproved = true;
+            context = tlsf_dpa::create (tlsf_ast_root (objective.ast.get ()), input.inputs,
+                                        input.outputs, budget, status);
+          }
         }
         tlsf_dpa::result imported;
         imported.status = status;

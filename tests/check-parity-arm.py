@@ -84,7 +84,8 @@ GUARANTEES {{ {guarantee}; }} }}''')
 
     for formula, real in (("G(i -> X o)", True), ("F o", True), ("true", True),
                           ("false", False), ("G F (i && X o)", False),
-                          ("F G (!i || X !o)", True), ("G(i -> F o)", True)):
+                          ("F G (!i || X !o)", True), ("G(i -> F o)", True),
+                          ("G(i -> F(i U o))", True), ("G(o || (o && F G i))", True)):
         write(formula)
         clear()
         reference = execute([binary, "-T", str(source), "--arms", "both:parity:spot"])
@@ -138,36 +139,51 @@ GUARANTEES {{ {guarantee}; }} }}''')
     unknown = subprocess.run([binary, "-f", "1", "-i", "i", "-o", "o", "--arms", arm],
                              capture_output=True, text=True, timeout=20)
     assert unknown.returncode == 2 and "UNKNOWN" in unknown.stderr, unknown
-    write("F G F o")
+    write("G F G F o")
     unknown = subprocess.run([binary, "-T", str(source), "--arms", arm,
                               "-s", str(controller)], env=env,
                              capture_output=True, text=True, timeout=20)
     assert unknown.returncode == 2 and "UNKNOWN" in unknown.stderr, unknown
     assert not controller.exists(), unknown
     assert any(row.get("reason") == "dpa_unsupported" for row in rows()), rows()
-    write("G(o || (o && F G i))")
-    for flags in ([], ["--dpa-allow-unproved"]):
-        clear()
-        answer = execute([binary, "-T", str(source), "--arms", arm, *flags], env)
-        assert answer.stdout.strip() == "REALIZABLE", answer
-    write("G(i -> F (i U o))")
-    for flags in ([], ["--dpa-allow-unproved"]):
-        clear()
-        answer = subprocess.run([binary, "-T", str(source), "--arms", arm, *flags],
-                                env=env, capture_output=True, text=True, timeout=20)
-        imported, = [row for row in rows() if row.get("event") == "dpa_import"]
-        assert answer.returncode == (0 if flags else 2), answer
-        assert imported["reason"] == ("none" if flags else "dpa_unsupported"), imported
     if integration:
+        traced = dict(env, ACACIA_TEST_DPA_CREATE_TRACE="1")
+
+        def attempts(answer):
+            return [tuple(map(int, line.split()[1:])) for line in answer.stderr.splitlines()
+                    if line.startswith("test_dpa_create ")]
+
+        for formula, admissions in (("G(i -> F o)", [0]),
+                                    ("G(i -> F(i U o))", [0, 1])):
+            write(formula)
+            clear()
+            answer = execute([str(integration.resolve()), "-T", str(source), "--arms", arm],
+                             traced)
+            calls = attempts(answer)
+            assert [general for general, _ in calls] == admissions, answer
+            assert len({deadline for _, deadline in calls}) == 1 and calls[0][1] > 0, calls
+            for limit in ("state", "host", "bdd", "deadline"):
+                clear()
+                unknown = subprocess.run([str(integration.resolve()), "-T", str(source),
+                                          "--arms", arm, "-s", str(controller)],
+                                         env=dict(traced, ACACIA_TEST_DPA_CREATE_DECLINE=limit),
+                                         capture_output=True, text=True, timeout=20)
+                assert unknown.returncode == 2 and "UNKNOWN" in unknown.stderr, unknown
+                assert [general for general, _ in attempts(unknown)] == [0], unknown
+                imported, = [row for row in rows() if row.get("event") == "dpa_import"]
+                reason = "dpa_deadline" if limit == "deadline" else f"dpa_{limit}_limit"
+                assert imported["reason"] == reason and imported["stage"] == "create", imported
+                assert not controller.exists(), unknown
         write("X X X o")
         for setting, reason, stage in (("ACACIA_TEST_DPA_STATE_LIMIT", "dpa_state_limit", "expand"),
                                        ("ACACIA_TEST_DPA_IMPORT_ALLOCATION", "dpa_host_limit", "import")):
             clear()
             unknown = subprocess.run([str(integration.resolve()), "-T", str(source),
                                       "--arms", arm, "-s", str(controller)],
-                                     env=dict(env, **{setting: "1"}),
+                                     env=dict(traced, **{setting: "1"}),
                                      capture_output=True, text=True, timeout=20)
             assert unknown.returncode == 2 and "UNKNOWN" in unknown.stderr, unknown
+            assert [general for general, _ in attempts(unknown)] == [0], unknown
             records = rows()
             imported, = [row for row in records if row.get("event") == "dpa_import"]
             assert imported["edges"] and imported["labels"], imported

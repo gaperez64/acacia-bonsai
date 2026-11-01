@@ -30,6 +30,8 @@ with tempfile.TemporaryDirectory(dir=Path.cwd(), prefix="check-help-") as direct
             assert "--obligation-helper" not in result.stdout
             assert "--obligation-memory-share VAL [equal|alone] (default equal)" in result.stdout
             assert "--parity-memory-share VAL [equal|headroom] (default headroom)" in result.stdout
+            assert "builds the tlsf-tools DPA" in result.stdout
+            assert "tlsf-tools validates against a construction proved in Lean" in result.stdout
             assert ("both:obligation:spot: syntactic obligations, trusted Spot synthesis"
                     in result.stdout)
             assert "membership follows the build default; starts only when eligible" in result.stdout

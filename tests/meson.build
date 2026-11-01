@@ -117,13 +117,9 @@ native_lift_cli_args = [files ('check-native-param-lift-cli.py'), ab_exe,
                         meson.project_build_root ()]
 native_cli_depends = [ab_exe]
 if native_test_hooks
-  spot_pause_hook = shared_library ('spot-translation-pause',
-                                   'spot_translation_pause.cc',
-                                   dependencies : [spot_dep], install : false)
   native_gr1_cli_args += ['--hook-binary', native_test_exe.full_path ()]
-  native_lift_cli_args += ['--hook-binary', native_test_exe.full_path (),
-                           '--spot-hook', spot_pause_hook.full_path ()]
-  native_cli_depends += [native_test_exe, spot_pause_hook]
+  native_lift_cli_args += ['--hook-binary', native_test_exe.full_path ()]
+  native_cli_depends += [native_test_exe]
 endif
 test ('native-gr1-cli', py,
       args : native_gr1_cli_args,

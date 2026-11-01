@@ -179,11 +179,10 @@ namespace {
   }
   unsigned focused () {
     unsigned failures = 0;
-    // The legacy AP table also exposes undeclared occurrences. After
-    // lowercasing, an occurrence can alias a bus member; ordering removes it.
+    // Lowercasing must reject an undeclared occurrence that aliases a bus member.
     failures += !compare (R"(INFO { TITLE: "AP aliases" SEMANTICS: Mealy TARGET: Mealy }
 MAIN { INPUTS { req[2]; } OUTPUTS { grant; } GUARANTEE { G (REQ_0 -> grant); } })",
-                          "undeclared bus alias", 1);
+                          "undeclared bus alias", 0);
     failures += !compare (R"(INFO { TITLE: "enums" SEMANTICS: Mealy TARGET: Moore }
 GLOBAL { DEFINITIONS { enum mode = A: 01 B: 10 C: 11; } }
 MAIN { INPUTS { go; unused_i; } OUTPUTS { mode st; unused_o; }
