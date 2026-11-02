@@ -778,3 +778,41 @@ def test_parent_parse_has_no_synthetic_worker_identity(tmp_path, lifecycle):
     write_records(tmp_path, lifecycle)
     result = reader.audit_row(row(), tmp_path)
     assert result["complete"], result["issues"]
+
+
+@pytest.mark.parametrize("polarity", ["real", "unreal"])
+@pytest.mark.parametrize("fault", [None, "emitter", "states", "expanded_states", "solves", "stage"])
+def test_lazy_dpa_snapshot_diagnostics(tmp_path, lifecycle, polarity, fault):
+    files, campaign, diagnostics = diagnostic_records(lifecycle, "parity:oxidd")
+    arm = polarity + ":parity:oxidd-otf"
+    files[10][1]["kind"] = arm
+    # No requested inventory is needed to check the independent emitter/schema
+    # contract; the lazy arm's CLI inventory is checked by its own arm tests.
+    campaign["flags"] = "--equivariance off"
+    for record in diagnostics:
+        if "arm" in record:
+            record["arm"] = arm
+    imported = diagnostics[-1]
+    imported.update(event="dpa_snapshot", states=3, imported_states=2, expanded_states=1, solves=0,
+                    stage="expand", reason="dpa_state_limit")
+    if fault == "emitter":
+        files[20].remove(imported)
+        files[10].append(imported)
+    elif fault:
+        imported[fault] = {"states": 1, "expanded_states": 3, "solves": True,
+                           "stage": "unrecognized"}[fault]
+    write_records(tmp_path, files)
+    result = reader.audit_row(campaign, tmp_path)
+    assert result["complete"] == (fault is None), result["issues"]
+
+
+@pytest.mark.parametrize("polarity", ["real", "unreal"])
+def test_directional_lazy_parity_worker_spec(polarity):
+    arm = polarity + ":parity:oxidd-otf"
+    inventory, context = reader.expected_configuration(row(
+        flags=f"--arms {arm} --equivariance on"))
+    assert inventory == [dict(kind=arm, requested_backend="parity",
+                              requested_polarity=polarity.upper(), translation="native",
+                              transform="exact", provider="native", r_prepass=True,
+                              equivariance=True)]
+    assert context == dict(r_prepass=True, equivariance=True)
