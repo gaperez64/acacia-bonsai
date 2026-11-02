@@ -259,8 +259,7 @@ namespace acacia::tlsf_dpa {
 
   lazy_result solve_lazy (TlsfDpa& source, const limits& budget,
                           const std::vector<std::string>& outputs, bool target_real,
-                          std::function<void (const lazy_result&)> on_snapshot,
-                          bool strategy_guided) {
+                          std::function<void (const lazy_result&)> on_snapshot) {
     lazy_result answer;
     allowance space (budget, answer.import_bytes);
     try {
@@ -283,22 +282,19 @@ namespace acacia::tlsf_dpa {
       const auto bound = tlsf_dpa_max_priority (&source);
       std::map<TlsfDpaState, unsigned> states;
       std::vector<TlsfDpaState> queue;
-      std::vector<uint8_t> expanded;
-      std::vector<unsigned> preferred;
-      size_t fallback = 0;
       // Raw priorities never change. Every snapshot is rebuilt and compressed
       // independently, including all old edges and the fixed frontier priority.
       std::vector<uint32_t> raw_priorities;
       const auto intern = [&] (TlsfDpaState id) {
         if (auto found = states.find (id); found != states.end ())
           return found->second;
-        if ((budget.construction.max_states && states.size () >= budget.construction.max_states) ||
+        if ((budget.construction.max_states &&
+             states.size () >= budget.construction.max_states) ||
             states.size () >= std::numeric_limits<unsigned>::max ())
           throw stopped {{TLSF_DPA_DECLINED, TLSF_DPA_STATE_LIMIT}};
         space.entry<decltype (states)> ();
         space.charge (4 * sizeof (spot::twa_graph::graph_t::state_storage_t));
         space.push (queue, id);
-        space.push (expanded, uint8_t (0));
         const auto state = graph->new_state ();
         states.emplace (id, state);
         answer.states = states.size ();
@@ -309,22 +305,17 @@ namespace acacia::tlsf_dpa {
       for (;;) {
         while (answer.expanded < queue.size () && answer.expanded < next_solve) {
           check ();
-          while (!preferred.empty () && expanded[preferred.back ()])
-            preferred.pop_back ();
-          while (fallback < expanded.size () && expanded[fallback])
-            ++fallback;
-          const auto src = preferred.empty () ? unsigned (fallback) : preferred.back ();
-          if (!preferred.empty ())
-            preferred.pop_back ();
           answer.stage = "expand";
           const TlsfDpaEdge* edges = nullptr;
           size_t count = 0;
-          const auto status = tlsf_dpa_successors (&source, queue[src], &edges, &count);
+          const auto status =
+              tlsf_dpa_successors (&source, queue[answer.expanded], &edges, &count);
           if (status.code != TLSF_DPA_OK)
             throw stopped {status};
           if (!edges || !count)
             throw stopped {{TLSF_DPA_INVALID, TLSF_DPA_NONE}};
           answer.stage = "import";
+          const auto src = unsigned (answer.expanded);
           bdd covered = bddfalse;
           for (size_t e = 0; e < count; ++e) {
             space.poll ();
@@ -345,7 +336,6 @@ namespace acacia::tlsf_dpa {
           check ();
           // Publication boundary: all outgoing labels, targets and priorities
           // exist and the complete row has passed validation.
-          expanded[src] = 1;
           ++answer.expanded;
         }
         check ();
@@ -380,18 +370,17 @@ namespace acacia::tlsf_dpa {
         snapshot->new_states (graph->num_states ());
         snapshot->set_init_state (graph->get_init_state_number ());
         space.charge ((compressed + 1) * sizeof (spot::acc_cond::acc_code));
-        snapshot->set_acceptance (compressed + 1,
-                                  spot::acc_cond::acc_code::parity (true, true, compressed + 1));
+        snapshot->set_acceptance (
+            compressed + 1, spot::acc_cond::acc_code::parity (true, true, compressed + 1));
         size_t edge = 0;
         for (const auto& e : graph->edges ()) {
           space.charge (4 * sizeof (graph->edge_storage (0u)));
           snapshot->new_edge (e.src, e.dst, e.cond, {priorities.at (raw_priorities[edge++])});
         }
-        for (unsigned state = 0; state < queue.size (); ++state)
-          if (!expanded[state]) {
-            space.charge (4 * sizeof (graph->edge_storage (0u)));
-            snapshot->new_edge (state, state, bddtrue, {priorities.at (frontier)});
-          }
+        for (unsigned state = answer.expanded; state < queue.size (); ++state) {
+          space.charge (4 * sizeof (graph->edge_storage (0u)));
+          snapshot->new_edge (state, state, bddtrue, {priorities.at (frontier)});
+        }
         snapshot->prop_universal (true);
         snapshot->prop_complete (true);
         check ();
@@ -419,60 +408,6 @@ namespace acacia::tlsf_dpa {
         }
         if (answer.expanded == queue.size ())
           return answer;
-        if (strategy_guided) {
-          answer.stage = "snapshot";
-          preferred.clear ();
-          const auto& owners = spot::get_state_players (arena);
-          const auto& winners = spot::get_state_winners (arena);
-          const auto& strategy = spot::get_strategy (arena);
-          const auto count = arena->num_states ();
-          if (owners.size () == count && winners.size () == count && strategy.size () == count &&
-              arena->get_init_state_number () < count) {
-            space.charge (count);
-            std::vector<uint8_t> seen (count, 0);
-            std::vector<unsigned> todo;
-            space.push (todo, arena->get_init_state_number ());
-            seen[todo.front ()] = 1;
-            bool valid = true;
-            for (size_t next = 0; next < todo.size () && valid; ++next) {
-              check ();
-              const auto v = todo[next];
-              if (winners[v] != real) {
-                valid = false;
-                break;
-              }
-              if (v < expanded.size () && !expanded[v])
-                continue;
-              bool selected = owners[v] != real;
-              for (const auto& edge : arena->out (v)) {
-                check ();
-                // Only the current initial WINNER has a usable strategy.
-                // Opponent-owned choices remain universal; never read their slot.
-                if (owners[v] == real && arena->edge_number (edge) != strategy[v])
-                  continue;
-                selected = true;
-                if (edge.dst >= count || winners[edge.dst] != real) {
-                  valid = false;
-                  break;
-                }
-                if (!seen[edge.dst]) {
-                  seen[edge.dst] = 1;
-                  space.push (todo, edge.dst);
-                }
-              }
-              valid &= selected;
-            }
-            // Split preserves original state IDs. Use newest reachable frontier
-            // first, retaining only graph IDs and no snapshot/strategy state.
-            if (valid)
-              for (unsigned v = 0; v < expanded.size (); ++v) {
-                check ();
-                if (!expanded[v] && v < seen.size () && seen[v])
-                  space.push (preferred, v);
-              }
-          }
-          check ();
-        }
         if (next_solve > std::numeric_limits<size_t>::max () / 2)
           throw stopped {{TLSF_DPA_DECLINED, TLSF_DPA_HOST_LIMIT}};
         next_solve *= 2;

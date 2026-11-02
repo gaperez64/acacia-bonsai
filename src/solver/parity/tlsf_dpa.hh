@@ -40,7 +40,6 @@ namespace acacia::tlsf_dpa {
   // flag is always inconclusive, including a complete game won by the other side.
   lazy_result solve_lazy (TlsfDpa& source, const limits& budget,
                           const std::vector<std::string>& outputs, bool target_real,
-                          std::function<void (const lazy_result&)> on_snapshot = {},
-                          bool strategy_guided = false);
+                          std::function<void (const lazy_result&)> on_snapshot = {});
   const char* reason (TlsfDpaStatus status);
 }

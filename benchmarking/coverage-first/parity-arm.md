@@ -31,13 +31,6 @@ measurements. The pre-code reviewed soundness argument is
 records expose discovered/expanded states and solve counts. No extra helper
 worker is created.
 
-`--parity-exploration bfs|strategy` selects discovery order (the default) or
-an opt-in order guided by the current optimistic winner's strategy. Both use
-the same one-sided completion and exact solver. The reviewed ordering
-invariant and diagnostic stopping rule are in
-[on-the-fly-parity-guidance.md](on-the-fly-parity-guidance.md). Neither order
-can avoid constructing the first complete DPA row.
-
 ## Structural tiers and engines
 
 Classify the worker's negated-specification language using acceptance structure alone:

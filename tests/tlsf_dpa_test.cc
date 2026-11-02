@@ -229,27 +229,24 @@ void check (const std::string& text, bool real) {
     input.frame = route::timing_frame::original;
     const auto reference = route::run (input, config);
     require (answer.verdict == reference.verdict, "native verdict differs from Spot arm");
-    for (bool guided : {false, true})
-      for (bool target_real : {false, true}) {
-        auto lazy_source = create (spec, limits);
-        size_t previous = 0, snapshots = 0;
-        const auto lazy = dpa::solve_lazy (
-            *lazy_source, limits, spec.outputs, target_real,
-            [&] (const auto& progress) {
-              require (progress.expanded > previous && progress.expanded <= progress.states,
-                       "lazy publication did not advance by complete rows");
-              require (progress.solves == ++snapshots, "lazy snapshot counter changed");
-              require (progress.expanded == progress.states ||
-                           progress.expanded == (size_t (1) << (snapshots - 1)),
-                       "lazy exploration budget did not double");
-              previous = progress.expanded;
-            },
-            guided);
-        require (lazy.status.code == TLSF_DPA_OK && lazy.decided == (target_real == real),
-                 "one-sided lazy result disagrees with exact oracle");
-        require (lazy.solves && (!lazy.decided ? lazy.expanded == lazy.states : true),
-                 "lazy opposite result escaped before completion");
-      }
+    for (bool target_real : {false, true}) {
+      auto lazy_source = create (spec, limits);
+      size_t previous = 0, snapshots = 0;
+      const auto lazy = dpa::solve_lazy (
+          *lazy_source, limits, spec.outputs, target_real, [&] (const auto& progress) {
+            require (progress.expanded > previous && progress.expanded <= progress.states,
+                     "lazy publication did not advance by complete rows");
+            require (progress.solves == ++snapshots, "lazy snapshot counter changed");
+            require (progress.expanded == progress.states ||
+                         progress.expanded == (size_t (1) << (snapshots - 1)),
+                     "lazy exploration budget did not double");
+            previous = progress.expanded;
+          });
+      require (lazy.status.code == TLSF_DPA_OK && lazy.decided == (target_real == real),
+               "one-sided lazy result disagrees with exact oracle");
+      require (lazy.solves && (!lazy.decided ? lazy.expanded == lazy.states : true),
+               "lazy opposite result escaped before completion");
+    }
   }
 }
 

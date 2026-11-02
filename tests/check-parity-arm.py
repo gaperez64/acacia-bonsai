@@ -90,24 +90,18 @@ GUARANTEES {{ {guarantee}; }} }}''')
         clear()
         reference = execute([binary, "-T", str(source), "--arms", "both:parity:spot"])
         for target_real in (False, True):
+            clear()
             lazy_arm = f"{'real' if target_real else 'unreal'}:parity:oxidd-otf"
-            identities = []
-            for order in ("bfs", "strategy"):
-                clear()
-                lazy = subprocess.run([binary, "-T", str(source), "--arms", lazy_arm,
-                                       "--parity-exploration", order],
-                                      env=env, capture_output=True, text=True, timeout=20)
-                expected = reference.returncode if target_real == real else 2
-                assert lazy.returncode == expected, (formula, lazy_arm, order, lazy)
-                snapshots = [row for row in rows() if row.get("event") == "dpa_snapshot"]
-                assert snapshots and snapshots[-1]["reason"] == "none", rows()
-                assert all(row["expanded_states"] <= row["imported_states"] <= row["states"]
-                           for row in snapshots), snapshots
-                assert any(row.get("event") == "parity_verdict" for row in rows()) == (
-                    target_real == real), rows()
-                identity, = [row for row in rows() if row.get("event") == "work_identity"]
-                identities.append(identity["translation_options_sha256"])
-            assert len(set(identities)) == 2, identities
+            lazy = subprocess.run([binary, "-T", str(source), "--arms", lazy_arm],
+                                  env=env, capture_output=True, text=True, timeout=20)
+            expected = reference.returncode if target_real == real else 2
+            assert lazy.returncode == expected, (formula, lazy_arm, lazy)
+            snapshots = [row for row in rows() if row.get("event") == "dpa_snapshot"]
+            assert snapshots and snapshots[-1]["reason"] == "none", rows()
+            assert all(row["expanded_states"] <= row["imported_states"] <= row["states"]
+                       for row in snapshots), snapshots
+            assert any(row.get("event") == "parity_verdict" for row in rows()) == (
+                target_real == real), rows()
         for synthesis in (False, True):
             clear()
             command = [binary, "-T", str(source), "--arms", arm]
@@ -142,10 +136,8 @@ GUARANTEES {{ {guarantee}; }} }}''')
                 reference = execute([binary, "-T", str(source), "--arms", "both:parity:spot"])
                 target_real = reference.returncode == 0
                 lazy_arm = f"{'real' if target_real else 'unreal'}:parity:oxidd-otf"
-                for order in ("bfs", "strategy"):
-                    lazy = execute([binary, "-T", str(source), "--arms", lazy_arm,
-                                    "--parity-exploration", order])
-                    assert lazy.returncode == reference.returncode, (semantics, target, lazy)
+                lazy = execute([binary, "-T", str(source), "--arms", lazy_arm])
+                assert lazy.returncode == reference.returncode, (semantics, target, lazy)
                 answer = execute([binary, "-T", str(source), "--arms", arm,
                                   "-s", str(controller)])
                 assert reference.returncode == answer.returncode, (semantics, target, answer)
@@ -157,10 +149,6 @@ GUARANTEES {{ {guarantee}; }} }}''')
                                     original, target.lower()], check=True,
                                    capture_output=True, text=True, timeout=20)
     execute([binary, "-T", str(source), "--arms", "both:parity:spot,both:parity:oxidd"])
-    invalid = subprocess.run([binary, "-T", str(source), "--arms", arm,
-                              "--parity-exploration", "invalid"],
-                             capture_output=True, text=True, timeout=20)
-    assert invalid.returncode == 3 and "expects bfs or strategy" in invalid.stderr, invalid
     duplicate = subprocess.run([binary, "-T", str(source), "--arms", f"{arm},{arm}"],
                                capture_output=True, text=True, timeout=20)
     assert duplicate.returncode == 3 and "duplicate" in duplicate.stderr.lower(), duplicate
