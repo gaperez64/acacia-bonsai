@@ -75,6 +75,11 @@ int main () {
                                          : std::vector<std::string> {});
       require (early.decided && early.expanded == 2 && early.states == 3,
                "closed strategy cone failed to decide with frontier remaining");
+      reset ({{{2, 1, 2}, {3, 2, 2}}, {{0, 1, terminal}}, {{0, 2, terminal ^ 1u}}});
+      const auto escape = solve (real, real ? std::vector<std::string> {}
+                                          : std::vector<std::string> {"x"});
+      require (!escape.decided && escape.expanded == escape.states,
+               "opponent-controlled frontier escape violated strategy closure");
     }
     // Both previously observed 3 and 9 are odd. Inserting even 6 later
     // requires remapping the older 9 as well. All three edges recur: retaining
