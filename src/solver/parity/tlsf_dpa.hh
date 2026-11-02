@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <functional>
 #include <memory>
 #include <spot/twa/twagraph.hh>
 #include <string>
@@ -29,5 +30,16 @@ namespace acacia::tlsf_dpa {
   // No graph escapes unless every reachable row and label was imported.
   result import (TlsfDpa& source, const limits& budget,
                  spot::bdd_dict_ptr dictionary = spot::make_bdd_dict ());
+  struct lazy_result {
+      bool decided = false;
+      size_t states = 0, expanded = 0, edges = 0, labels = 0, import_bytes = 0, solves = 0;
+      TlsfDpaStatus status {TLSF_DPA_OK, TLSF_DPA_NONE};
+      const char* stage = "import";
+  };
+  // Decision only: true targets REAL, false targets UNREAL. A false decided
+  // flag is always inconclusive, including a complete game won by the other side.
+  lazy_result solve_lazy (TlsfDpa& source, const limits& budget,
+                          const std::vector<std::string>& outputs, bool target_real,
+                          std::function<void (const lazy_result&)> on_snapshot = {});
   const char* reason (TlsfDpaStatus status);
 }

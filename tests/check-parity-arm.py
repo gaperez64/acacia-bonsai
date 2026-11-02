@@ -89,6 +89,19 @@ GUARANTEES {{ {guarantee}; }} }}''')
         write(formula)
         clear()
         reference = execute([binary, "-T", str(source), "--arms", "both:parity:spot"])
+        for target_real in (False, True):
+            clear()
+            lazy_arm = f"{'real' if target_real else 'unreal'}:parity:oxidd-otf"
+            lazy = subprocess.run([binary, "-T", str(source), "--arms", lazy_arm],
+                                  env=env, capture_output=True, text=True, timeout=20)
+            expected = reference.returncode if target_real == real else 2
+            assert lazy.returncode == expected, (formula, lazy_arm, lazy)
+            snapshots = [row for row in rows() if row.get("event") == "dpa_snapshot"]
+            assert snapshots and snapshots[-1]["reason"] == "none", rows()
+            assert all(row["expanded_states"] <= row["imported_states"] <= row["states"]
+                       for row in snapshots), snapshots
+            assert any(row.get("event") == "parity_verdict" for row in rows()) == (
+                target_real == real), rows()
         for synthesis in (False, True):
             clear()
             command = [binary, "-T", str(source), "--arms", arm]
@@ -121,6 +134,10 @@ GUARANTEES {{ {guarantee}; }} }}''')
                 write(guarantee, semantics, target)
                 clear()
                 reference = execute([binary, "-T", str(source), "--arms", "both:parity:spot"])
+                target_real = reference.returncode == 0
+                lazy_arm = f"{'real' if target_real else 'unreal'}:parity:oxidd-otf"
+                lazy = execute([binary, "-T", str(source), "--arms", lazy_arm])
+                assert lazy.returncode == reference.returncode, (semantics, target, lazy)
                 answer = execute([binary, "-T", str(source), "--arms", arm,
                                   "-s", str(controller)])
                 assert reference.returncode == answer.returncode, (semantics, target, answer)
@@ -139,6 +156,20 @@ GUARANTEES {{ {guarantee}; }} }}''')
     unknown = subprocess.run([binary, "-f", "1", "-i", "i", "-o", "o", "--arms", arm],
                              capture_output=True, text=True, timeout=20)
     assert unknown.returncode == 2 and "UNKNOWN" in unknown.stderr, unknown
+    for polarity in ("real", "unreal"):
+        clear()
+        lazy_arm = f"{polarity}:parity:oxidd-otf"
+        declined = subprocess.run([binary, "-T", str(source), "--arms", lazy_arm,
+                                   "-s", str(controller)], env=env,
+                                  capture_output=True, text=True, timeout=20)
+        assert declined.returncode == 2 and not controller.exists(), declined
+        assert any(row.get("reason") == "dpa_lazy_decision_only" for row in rows()), rows()
+        assert not any(row.get("event") in {"dpa_snapshot", "parity_verdict"}
+                       for row in rows()), rows()
+        duplicate = subprocess.run([binary, "-T", str(source), "--arms",
+                                    f"{lazy_arm},{lazy_arm}"],
+                                   capture_output=True, text=True, timeout=20)
+        assert duplicate.returncode == 3 and "duplicate" in duplicate.stderr.lower(), duplicate
     write("G F G F o")
     unknown = subprocess.run([binary, "-T", str(source), "--arms", arm,
                               "-s", str(controller)], env=env,
@@ -264,7 +295,8 @@ GUARANTEES {{ {guarantee}; }} }}
                     path.unlink()
         assert {1, 4} <= seen_tiers, seen_tiers
         for wrong in ("real:parity:spot", "both:parity:backward", "both:parity:spot:frozen-graph",
-                      "real:parity:oxidd", "both:parity:oxidd:frozen-graph"):
+                      "real:parity:oxidd", "both:parity:oxidd:frozen-graph",
+                      "both:parity:oxidd-otf", "real:parity:oxidd-otf:frozen-graph"):
             result = subprocess.run([binary, "-f", "1", "--arms", wrong],
                                     capture_output=True, text=True, timeout=20)
             assert result.returncode == 3 and "parity arms require" in result.stderr, result

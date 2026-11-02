@@ -61,9 +61,16 @@ portfolio_arm_parse_result parse_portfolio_arms (std::string_view arg) {
         : portfolio_arm {false, ACACIA_TRANSLATION_PREF, UNREAL_X_FORMULA,
                          acacia::game_backend::backward};
 
-    arm.parity_oxidd = parity_transform && backend_name == "oxidd";
+    arm.parity_lazy = parity_transform && backend_name == "oxidd-otf";
+    arm.parity_oxidd = parity_transform && (backend_name == "oxidd" || arm.parity_lazy);
+    if (arm.parity_lazy) {
+      arm.unreal = polarity == "unreal";
+      arm.both = false;
+    }
     if (obligation_transform || parity_transform) {
-      if (polarity != "both" || (backend_name != "spot" && !arm.parity_oxidd) ||
+      const bool valid_polarity = arm.parity_lazy ? polarity == "real" || polarity == "unreal"
+                                                 : polarity == "both";
+      if (!valid_polarity || (backend_name != "spot" && !arm.parity_oxidd) ||
           third_colon != std::string::npos) {
         result.error = parity_transform ? portfolio_arm_parse_error::parity_spec
                                        : portfolio_arm_parse_error::obligation_spec;

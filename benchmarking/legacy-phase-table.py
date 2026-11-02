@@ -782,7 +782,8 @@ def completeness_expected_configuration(row):
                 raise ValueError(f"invalid native arm {arm!r}")
             specification = dict(kind=arm.strip(), translation="native", transform="exact",
                                  provider="native")
-        elif arm.strip() in ("both:obligation:spot", "both:parity:spot", "both:parity:oxidd"):
+        elif arm.strip() in ("both:obligation:spot", "both:parity:spot", "both:parity:oxidd",
+                             "real:parity:oxidd-otf", "unreal:parity:oxidd-otf"):
             specification = dict(kind=arm.strip(), translation="native", transform="exact",
                                  provider="native")
             # These workers report their solver family as the requested backend.

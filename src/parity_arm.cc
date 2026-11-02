@@ -44,14 +44,20 @@ namespace acacia {
     active_worker_record () = previous;
   }
 
-  int run_parity_arm (const arg_parse_result& args, bool oxidd, uint64_t deadline_mono_ns) {
-    const char* arm = oxidd ? "both:parity:oxidd" : "both:parity:spot";
+  int run_parity_arm (const arg_parse_result& args, const portfolio_arm& selection,
+                      uint64_t deadline_mono_ns) {
+    const bool oxidd = selection.parity_oxidd;
+    const char* arm = selection.native_name ();
     worker_route ("original_game", "parity", "unknown");
     worker_stage ("parity_preprocessing");
     const char* stage = "preprocessing";
     try {
       if (!obligation::limit_address_space ()) {
         worker_stopped ("address_space_limit");
+        return EXIT_CODE_UNKNOWN;
+      }
+      if (selection.parity_lazy && args.synth_fname) {
+        worker_decline ("dpa_lazy_decision_only");
         return EXIT_CODE_UNKNOWN;
       }
       tlsf_frontend::specification child_local;
@@ -76,7 +82,8 @@ namespace acacia {
       if (phase_records_enabled ())
         accounting_identity (input.formula, input.inputs, input.outputs,
                              oxidd ? "oxidd-parity" : "spot-parity",
-                             oxidd ? "tlsf-dpa-stage1:max-odd:bounded-bfs"
+                             oxidd ? (selection.parity_lazy ? "tlsf-dpa:max-odd:lazy-doubling"
+                                                          : "tlsf-dpa-stage1:max-odd:bounded-bfs")
                                    : "Generic:Deterministic:High:simul=0:ba-simul=0:det-simul=0:"
                                      "tls-impl=1:wdba-minimize=2",
                              "parity-route");
@@ -128,6 +135,52 @@ namespace acacia {
             context = tlsf_dpa::create (tlsf_ast_root (objective.ast.get ()), input.inputs,
                                         input.outputs, budget, status);
           }
+        }
+        if (selection.parity_lazy) {
+          const auto report = [&] (const char* event, const tlsf_dpa::lazy_result& result) {
+            if (!phase_records_enabled ())
+              return;
+            char line[1024];
+            const int length = snprintf (
+                line, sizeof line,
+                "{\"arm\":\"%s\",\"event\":\"%s\",\"stage\":\"%s\","
+                "\"states\":%zu,\"imported_states\":%zu,\"expanded_states\":%zu,"
+                "\"edges\":%zu,\"labels\":%zu,\"import_bytes\":%zu,\"solves\":%zu,"
+                "\"reason\":\"%s\"}\n",
+                arm, event, result.stage, context ? tlsf_dpa_state_count (context.get ()) : 0,
+                result.states, result.expanded, result.edges, result.labels, result.import_bytes,
+                result.solves, tlsf_dpa::reason (result.status));
+            if (length > 0 && size_t (length) < sizeof line)
+              phase_records_send (line, size_t (length));
+            else
+              phase_records_drop ();
+          };
+          tlsf_dpa::lazy_result answer;
+          answer.status = status;
+          answer.stage = "create";
+          if (context && status.code == TLSF_DPA_OK) {
+            config.on_classified (4, "lazy positive parity");
+            stage = "dpa_lazy";
+            legacy_phase exploration (stage);
+            answer = tlsf_dpa::solve_lazy (*context, budget, input.outputs, !selection.unreal,
+                                          [&] (const auto& progress) {
+                                            report ("dpa_snapshot", progress);
+                                          });
+          }
+          if (answer.status.code != TLSF_DPA_OK || !answer.solves)
+            report ("dpa_snapshot", answer);
+          if (!answer.decided) {
+            if (answer.status.code == TLSF_DPA_OK)
+              worker_decline ("dpa_opposite_polarity");
+            else if (answer.status.reason == TLSF_DPA_UNSUPPORTED)
+              worker_decline (tlsf_dpa::reason (answer.status));
+            else
+              worker_stopped (tlsf_dpa::reason (answer.status));
+            return EXIT_CODE_UNKNOWN;
+          }
+          config.on_solved ();
+          config.on_verdict (!selection.unreal);
+          return selection.unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL;
         }
         tlsf_dpa::result imported;
         imported.status = status;
