@@ -1013,12 +1013,16 @@ tlsf_dpa_test = executable ('tlsf-dpa-test',
   dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
 test ('tlsf-dpa', tlsf_dpa_test, suite : ['unit', 'parity'], timeout : 120)
 
-tlsf_dpa_lazy_test = executable ('tlsf-dpa-lazy-test', 'tlsf_dpa_lazy_test.cc',
+tlsf_dpa_lazy_test = executable ('tlsf-dpa-lazy-test',
+  ['tlsf_dpa_lazy_test.cc', '../src/solver/parity/tlsf_dpa.cc'],
+  # LTO can bind API calls before --wrap sees them. Compile the importer into
+  # this fixture without LTO so its synthetic source is always used.
+  override_options : ['b_lto=false'],
   link_args : ['-Wl,--wrap=tlsf_dpa_status', '-Wl,--wrap=tlsf_dpa_initial',
                '-Wl,--wrap=tlsf_dpa_ap_count', '-Wl,--wrap=tlsf_dpa_ap_name',
                '-Wl,--wrap=tlsf_dpa_max_priority', '-Wl,--wrap=tlsf_dpa_label_node',
                '-Wl,--wrap=tlsf_dpa_successors'],
-  link_with : [tlsf_dpa_lib], include_directories : inc,
+  include_directories : inc,
   dependencies : [spot_dep, bddx_dep] + tlsf_deps)
 test ('tlsf-dpa-lazy', tlsf_dpa_lazy_test, suite : ['unit', 'parity'], timeout : 120)
 
