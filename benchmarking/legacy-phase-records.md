@@ -385,6 +385,21 @@ parent deadline/interruption acceptance. Exit codes are 0 REAL, 1 UNREAL, 2 UNKN
 have no winner. Combined native routes are seed discovery, R, U and direct; entry,
 checking and source-binding completion remain distinct from acceptance.
 
+Exact-arm diagnostics have separate schemas. `obligation_start` is a parent
+observation of the assigned child; `obligation_eligibility` is parent-wide with
+worker/index -1. `obligation_completion` comes from the child on normal completion
+or the parent on forced cancellation/resource/error exits (unassigned `fork_failed`
+is also a parent error). These diagnostics are unsequenced and retain their
+Spot trust flags, outcome, reason and wall/monotonic times. `tlsf_parse` identifies
+the emitting process, parent/backend role and per-process call count, without a
+synthetic worker. `dpa_import` belongs to the emitting OxiDD parity worker and
+carries stage, counts and reason. `parity_tier`, `parity_solved` and `parity_verdict`
+carry worker identity, tier, exact-game trust flags and monotonic time; they consume
+the same child sequence as lifecycle events without repeating lifecycle context.
+The completeness auditor validates these schemas and emitter identities while
+retaining writer totals, drops and sequence checks. Unrecognized events still
+undergo lifecycle validation.
+
 DECLINE means genuine inapplicability/unsupported input or a completed logical
 certificate rejection. Resource, deadline, cancellation, invalid input, integrity,
 internal and operational failures are STOPPED with their typed cause. Finite K
