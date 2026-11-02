@@ -62,6 +62,7 @@ struct arg_parse_result {
         acacia::obligation::memory_share::equal;
     acacia::obligation::memory_share parity_memory_share =
         acacia::obligation::memory_share::headroom;
+    bool parity_strategy = false;
     bool r_prepass = true;
     bool equivariance = ACACIA_ENABLE_EQUIVARIANT_SOLVER;
     std::optional<double> equivariance_budget;

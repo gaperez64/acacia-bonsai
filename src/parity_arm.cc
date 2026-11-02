@@ -79,11 +79,13 @@ namespace acacia {
       input.formula = parsed.f;
       input.inputs = objective.inputs;
       input.outputs = objective.outputs;
+      const char* dpa_options = !selection.parity_lazy ? "tlsf-dpa-stage1:max-odd:bounded-bfs"
+                                : args.parity_strategy ? "tlsf-dpa:max-odd:lazy-strategy-doubling"
+                                                       : "tlsf-dpa:max-odd:lazy-doubling";
       if (phase_records_enabled ())
         accounting_identity (input.formula, input.inputs, input.outputs,
                              oxidd ? "oxidd-parity" : "spot-parity",
-                             oxidd ? (selection.parity_lazy ? "tlsf-dpa:max-odd:lazy-doubling"
-                                                          : "tlsf-dpa-stage1:max-odd:bounded-bfs")
+                             oxidd ? dpa_options
                                    : "Generic:Deterministic:High:simul=0:ba-simul=0:det-simul=0:"
                                      "tls-impl=1:wdba-minimize=2",
                              "parity-route");
@@ -162,10 +164,10 @@ namespace acacia {
             config.on_classified (4, "lazy positive parity");
             stage = "dpa_lazy";
             legacy_phase exploration (stage);
-            answer = tlsf_dpa::solve_lazy (*context, budget, input.outputs, !selection.unreal,
-                                          [&] (const auto& progress) {
-                                            report ("dpa_snapshot", progress);
-                                          });
+            answer = tlsf_dpa::solve_lazy (
+                *context, budget, input.outputs, !selection.unreal,
+                [&] (const auto& progress) { report ("dpa_snapshot", progress); },
+                args.parity_strategy);
           }
           if (answer.status.code != TLSF_DPA_OK || !answer.solves)
             report ("dpa_snapshot", answer);

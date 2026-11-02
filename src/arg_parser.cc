@@ -123,6 +123,7 @@ void show_help (const char* program_name) {
       << "                    real:param-lift:oxidd (realizability only);\n"
       << "                    require -T FILE;\n"
       << "                    native arms have no provider and do not support -s\n"
+      << "  --parity-exploration VAL [bfs|strategy] lazy DPA order (default bfs)\n"
       << "  --obligation-memory-share VAL [equal|alone] (default equal)\n"
       << "                    the helper allowance is half the smaller of the memory\n"
       << "                    limit and 8 GiB (at most 4 GiB); equal divides it among\n"
@@ -454,6 +455,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_OBLIGATION_MEMORY_SHARE = 1015;
   static constexpr int OPT_PARITY_MEMORY_SHARE = 1016;
+  static constexpr int OPT_PARITY_EXPLORATION = 1017;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
   static constexpr int OPT_REAL_BACKEND = 1002;
@@ -482,6 +484,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"arms", required_argument, nullptr, OPT_ARMS},
       {"obligation-memory-share", required_argument, nullptr, OPT_OBLIGATION_MEMORY_SHARE},
       {"parity-memory-share", required_argument, nullptr, OPT_PARITY_MEMORY_SHARE},
+      {"parity-exploration", required_argument, nullptr, OPT_PARITY_EXPLORATION},
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
@@ -658,6 +661,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
           retval.obligation_memory_share = acacia::obligation::memory_share::alone;
         else
           error (EXIT_CODE_ERROR, "Error: --obligation-memory-share expects equal or alone.\n");
+        break;
+      case OPT_PARITY_EXPLORATION:
+        if (std::string_view {optarg} == "bfs")
+          retval.parity_strategy = false;
+        else if (std::string_view {optarg} == "strategy")
+          retval.parity_strategy = true;
+        else
+          error (EXIT_CODE_ERROR, "Error: --parity-exploration expects bfs or strategy.\n");
         break;
       case OPT_PARITY_MEMORY_SHARE:
         if (std::string_view {optarg} == "equal")
