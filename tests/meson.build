@@ -1060,6 +1060,11 @@ endif
 test ('accounting-analyzers', py, args : [files ('test_accounting_analyzers.py')],
       suite : ['unit', 'attribution'])
 if host_machine.system () == 'linux'
+  test ('exact-arm-records', py,
+        args : [files ('check-exact-arm-records.py'), ab_exe,
+                meson.project_build_root (), record_transport_ack],
+        suite : ['unit', 'attribution', 'obligation', 'parity'],
+        depends : [ab_exe, record_transport_ack], timeout : 90)
   test ('obligation-recorded', py,
         args : [files ('check-obligation-recorded.py'), obligation_helper_test,
                 meson.project_build_root (), record_transport_ack],

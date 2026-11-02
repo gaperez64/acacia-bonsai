@@ -443,6 +443,7 @@ namespace {
                           : result.value == outcome::unreal ? "UNREAL"
                                                             : "unknown");
     acacia::worker_terminal (code, result.reason);
+    acacia::phase_records_summary ("both:obligation:spot");
     g_obligation->result.store (result.value, std::memory_order_release);
     acacia::worker_exit (code);
   }
@@ -464,6 +465,7 @@ namespace {
       }
       const int code = acacia::run_parity_arm (arg_values, arm.parity_oxidd, deadline_mono_ns);
       acacia::worker_terminal (code);
+      acacia::phase_records_summary (arm.native_name ());
       acacia::worker_exit (code);
     }
     if (arm.kind != portfolio_arm_kind::legacy) {
