@@ -363,7 +363,8 @@ namespace acacia::tlsf_dpa {
         if (compressed >= spot::acc_cond::mark_t::max_accsets ())
           throw stopped {{TLSF_DPA_DECLINED, TLSF_DPA_PRIORITY_LIMIT}};
         space.charge (sizeof (spot::twa_graph) +
-                      4 * graph->num_states () * sizeof (spot::twa_graph::graph_t::state_storage_t));
+                      4 * size_t (graph->num_states ()) *
+                          sizeof (spot::twa_graph::graph_t::state_storage_t));
         auto snapshot = spot::make_twa_graph (graph->get_dict ());
         snapshot->copy_ap_of (graph);
         snapshot->new_states (graph->num_states ());
@@ -387,7 +388,7 @@ namespace acacia::tlsf_dpa {
         auto arena = spot::split_2step (snapshot, output_cube, true);
         // Splitter/solver and BDD internals are opaque; worker AS/RSS limits
         // cover their allocations. Charge the resulting arena and solver
-        // storage to the same cumulative import allowance before solving.
+        // storage estimates to the cumulative import allowance before solving.
         space.charge (sizeof (spot::twa_graph) +
                       4 * size_t (arena->num_states ()) *
                           sizeof (spot::twa_graph::graph_t::state_storage_t) +

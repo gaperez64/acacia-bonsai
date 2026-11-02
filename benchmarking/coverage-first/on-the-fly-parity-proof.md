@@ -84,8 +84,8 @@ breadth-first discovery. Strategy-directed frontier selection is optional
 later and cannot affect soundness, provided every published row remains whole.
 Use the existing exact Spot solver each time; do not implement incremental
 Zielonka or add hidden workers. Check the shared budget before and after each
-non-cooperatively cancellable Spot solve. A deadline/cancellation during that
-solve suppresses its result. Parent process-group supervision remains the
+non-cooperatively cancellable Spot split and solve. A deadline/cancellation
+during either operation suppresses its result. Parent process-group supervision remains the
 hard cancellation boundary.
 
 ## Synthesis and resource outcomes
@@ -100,6 +100,10 @@ Creation/expansion/import failures, unsupported syntax, capacity/priority
 limits, allocation failures, deadline and cancellation are UNKNOWN, never
 opposite verdicts or evidence that a row was fully explored. Retain the
 existing worker AS/RSS limits and one shared construction/exploration deadline.
+Snapshot storage and completed split arenas share the cumulative import
+allowance. Splitter/solver storage charges are estimates, not proven bounds on
+their opaque temporary allocations; worker AS/RSS supervision is the hard
+memory boundary, including the temporary peak before the post-split charge.
 The exploration budget controls when to solve; it is not a reason to publish
 a result. A source failure after earlier snapshots does not revive a cached
 answer. All conclusive results must pass a final budget/status check.
