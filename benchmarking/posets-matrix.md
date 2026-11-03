@@ -142,9 +142,15 @@ python3 benchmarking/posets-matrix.py --build-dir build-posets-release \
   --output _bm-logs.posets/replay-check
 python3 benchmarking/posets-matrix.py --build-dir build-posets-release \
   --trace-plan _bm-logs.posets/traces/plan.json --measure \
-  --rounds 1 --repetitions 3 --case-timeout 15 \
+  --rounds 1 --repetitions 3 --source-timeout 30 --check-timeout 2 --case-timeout 2 \
   --output _bm-logs.posets/replay-measured
 ```
+
+Source-oracle, backend-correctness and clean-timing caps are separate. Without
+explicit overrides, checks inherit `--case-timeout`; source checks inherit the
+backend cap. A higher-cap semantic confirmation belongs in its own report and
+does not rewrite earlier timeouts or invent missing timing observations. Core
+dumps are disabled in the driver before launching any harness process.
 
 The driver reuses `benchlib.run_systemd_scope`: serial, 8GiB, zero swap. It
 records each rejection/timeout/resource limit, fixed-seed shuffled order, compiler
@@ -173,6 +179,11 @@ actual-query timer starts after query materialization. Keep the two trace kinds
 separate in comparisons. Detail components need not sum to inclusive CPre time.
 Rounds greater than one can reuse allocator/interner/cache state; they remain
 repeated point replays, not independent cold solver searches.
+Both end timestamps precede result-map bookkeeping. The original bounded pilot
+predated that CPU fix: preserve its raw CPU values with the bookkeeping caveat,
+and use a new build directory/binary identity for corrected observations. Do not
+rank tiny queries near timer resolution, or mix their CPU values with the
+corrected experiment.
 
 Zero numeric prefix with a nonempty Boolean suffix has positive logical
 dimension and is replayed directly. The dynamic scalar/SIMD matrix does not

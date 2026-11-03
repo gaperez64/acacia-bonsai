@@ -310,7 +310,7 @@ def replay(args, metadata, traces, output):
     with campaign_scope_guard("posets-matrix"):
         for trace in traces:
             source_command = [cells[0][3]["binary"], "--trace", trace["path"], "--check=trace-source"]
-            source_result = run_systemd_scope(source_command, args.case_timeout, args.memory_max, "0",
+            source_result = run_systemd_scope(source_command, args.source_timeout, args.memory_max, "0",
                                               unit_prefix="acacia-posets", scratch_root=output / "scopes")
             source_prefix = f"source-{trace['id']}"
             source_logs = save_logs(output, source_prefix, source_result.stdout, source_result.stderr)
@@ -329,7 +329,7 @@ def replay(args, metadata, traces, output):
                 command = [entry["binary"], "--trace", trace["path"], "--check=replay",
                            "--params=rounds=1", backend, vector + "<test_value_type>"]
                 prefix = f"check-{trace['id']}-{mode}-{backend}-{vector}"
-                result = run_systemd_scope(command, args.case_timeout, args.memory_max, "0",
+                result = run_systemd_scope(command, args.check_timeout, args.memory_max, "0",
                                            unit_prefix="acacia-posets", scratch_root=output / "scopes")
                 logs = save_logs(output, prefix, result.stdout, result.stderr)
                 outcome = status(result)
@@ -421,6 +421,8 @@ def main():
     parser.add_argument("--build-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--case-timeout", type=float, default=15)
+    parser.add_argument("--check-timeout", type=float, help="Separate backend correctness cap; defaults to --case-timeout")
+    parser.add_argument("--source-timeout", type=float, help="Separate scalar source-oracle cap; defaults to --check-timeout")
     parser.add_argument("--trace-plan", type=Path, help="Fixed JSON capture/split plan; otherwise run synthetic semantic cases")
     parser.add_argument("--measure", action="store_true", help="Explicitly enable serial actual-trace timing after correctness checks")
     parser.add_argument("--rounds", type=int, default=1)
@@ -431,7 +433,10 @@ def main():
     parser.add_argument("--backends", nargs="+", choices=sorted(BACKENDS), default=sorted(BACKENDS),
                         help="Explicit subset for later hybrid/profile follow-ups; default retains all14")
     args = parser.parse_args()
-    require(math.isfinite(args.case_timeout) and args.case_timeout > 0 and
+    no_core()
+    args.check_timeout = args.case_timeout if args.check_timeout is None else args.check_timeout
+    args.source_timeout = args.check_timeout if args.source_timeout is None else args.source_timeout
+    require(all(math.isfinite(cap) and cap > 0 for cap in (args.case_timeout, args.check_timeout, args.source_timeout)) and
             args.rounds > 0 and args.repetitions > 0, "Positive finite timeout/rounds/repetitions required")
     require(not args.measure or args.trace_plan, "Timing requires a fixed actual-trace plan")
     require(not args.detail or args.measure, "Detailed instrumentation requires --measure")
@@ -456,10 +461,12 @@ def main():
                   "provenance": metadata, "inputs_sha256": sha(output / "inputs.json"),
                   "measurement_order_sha256": sha(output / "measurement-order.json") if args.measure else None,
                   "treatment": {"memory_max": args.memory_max, "memory_swap_max": "0", "serial": True,
+                                "core_limit_bytes": 0,
                                 "rounds": args.rounds, "repetitions": args.repetitions,
                                 "backends": args.backends,
                                 "seed": args.seed,
                                 "detail": args.detail, "case_timeout": args.case_timeout},
+                  "semantic_caps": {"source_timeout": args.source_timeout, "check_timeout": args.check_timeout},
                   "limits": ["Point samples are unweighted; full search/portfolio frequencies are not reconstructed.",
                              "Scalar vectors run as correctness controls once per backend/trace; timed cells cover unique SIMD treatments.",
                              "Each replay round reconstructs the source frontier; sharing history outside the sampled operation is unknown.",
@@ -488,7 +495,7 @@ def main():
                     prefix = f"{mode}-{backend}-{vector}-{case}"
                     try:
                         result = subprocess.run(command, capture_output=True, text=True,
-                                                timeout=args.case_timeout, preexec_fn=no_core)
+                                                timeout=args.check_timeout, preexec_fn=no_core)
                         status, code = ("pass" if result.returncode == 0 else "rejected"), result.returncode
                         stdout, stderr = result.stdout, result.stderr
                     except subprocess.TimeoutExpired as error:

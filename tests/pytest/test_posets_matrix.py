@@ -196,20 +196,24 @@ def test_planned_order_is_saved_and_source_timeout_never_qualifies(tmp_path, mon
     mode = {"binary": "/trusted/fixture", "backends": ["vector_backed", "vector_backed_bin"]}
     metadata = {"modes": {"compatible": mode, "native": mode},
                 "aliases": {"compatible": "compatible", "native": "native"}}
-    args = Namespace(case_timeout=1, memory_max="8G", backends=mode["backends"], measure=True,
+    args = Namespace(case_timeout=1, check_timeout=4, source_timeout=7, memory_max="8G", backends=mode["backends"], measure=True,
                      repetitions=3, rounds=1, detail=False, seed=0)
     trace = {"id": 0, "path": "/trace", "features": {"dimension": 2, "maxima": 1, "boolean_tail": 2}}
     measured = []
 
-    def fake_run(command, *_args, **_kwargs):
+    def fake_run(command, cap, *_args, **_kwargs):
         if "--check=trace-source" in command:
+            assert cap == 7
             return RunResult("[TRACE SOURCE OK]\n", "", 0, 0, False)
         backend, vector = command[-2:]
         output = f"[--] running tests for posets::downsets::{backend}<posets::vectors::{vector}>\n"
         if "--check=replay" not in command:
+            assert cap == 1
             assert (tmp_path / "measurement-order.json").is_file()
             measured.append(command)
             output += "  - rounds: 1\n  - dimension: 2\n  - boolean_tail: 2\n  - before_maxima: 1\n  - cpre: 0.001\n"
+        else:
+            assert cap == 4
         return RunResult(output, "", 0, 0, False)
 
     monkeypatch.setattr(M, "run_systemd_scope", fake_run)
