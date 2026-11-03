@@ -25,6 +25,7 @@ int main (int argc, char** argv) {
   setenv ("ACACIA_DIAG", "1", 1);
   setenv ("ACACIA_ANTICHAIN_SNAPSHOT_DIR", argv[1], 1);
   setenv ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE", "1", 1);
+  setenv ("ACACIA_ANTICHAIN_SNAPSHOT_CONTAINS", "1", 1);
   setenv ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE_MAX", "4", 1);
   setenv ("ACACIA_DIAG_PROGRESS_EVERY", "0", 1);
 
@@ -48,6 +49,7 @@ int main (int argc, char** argv) {
   // Both an all-counting layout and a nonaccepting Boolean tail must survive
   // serialization; a reset to K-1 for the Boolean tail would be incorrect.
   for (const size_t threshold : {3u, 2u}) {
+    setenv ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE_FRONTIERS", threshold == 2 ? "1" : "0", 1);
     posets::vectors::bool_threshold = threshold;
     solver game (aut, 2, 2, 1, request, grant, ios_precomputers::mona (),
                  actioners::standard<state> (), input_pickers::critical ());
