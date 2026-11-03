@@ -129,6 +129,7 @@ namespace {
         });
         route::options options;
         options.synthesis = options.verify = verify;
+        options.fastpath_phases = true;
         std::map<std::string, stamp> starts;
         auto observe = [&] (const char* name, const auto&, double elapsed) {
           const auto stage = mode + ":" + name;
