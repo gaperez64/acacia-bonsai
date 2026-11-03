@@ -171,7 +171,7 @@ namespace acacia::tlsf_dpa {
     size_t bytes = 0;
     allowance space (budget, bytes);
     try {
-      if (!root || !root.is_ltl_formula ())
+      if (!root || !root.is_ltl_formula () || root.is_quantified ())
         return {TLSF_DPA_DECLINED, TLSF_DPA_UNSUPPORTED};
       std::vector<spot::formula> pending;
       std::unordered_map<spot::formula, bool> seen;
@@ -182,8 +182,16 @@ namespace acacia::tlsf_dpa {
         pending.pop_back ();
         if (seen.contains (f))
           continue;
-        if (f.kind () == spot::op::strong_X)
+        switch (f.kind ()) {
+        case spot::op::tt: case spot::op::ff: case spot::op::ap:
+        case spot::op::Not: case spot::op::X: case spot::op::F: case spot::op::G:
+        case spot::op::And: case spot::op::Or: case spot::op::Implies:
+        case spot::op::Equiv: case spot::op::Xor:
+        case spot::op::U: case spot::op::R: case spot::op::W: case spot::op::M:
+          break;
+        default:
           return {TLSF_DPA_DECLINED, TLSF_DPA_UNSUPPORTED};
+        }
         space.entry<decltype (seen)> ();
         seen.emplace (f, true);
         for (const auto& child : f)
@@ -204,7 +212,7 @@ namespace acacia::tlsf_dpa {
     size_t bytes = 0;
     allowance space (budget, bytes);
     try {
-      if (!root || !root.is_ltl_formula ())
+      if (!root || !root.is_ltl_formula () || root.is_quantified ())
         throw stopped {{TLSF_DPA_DECLINED, TLSF_DPA_UNSUPPORTED}};
       std::vector<const char*> in, out;
       std::map<std::string, uint32_t> aps;
@@ -444,6 +452,15 @@ namespace acacia::tlsf_dpa {
           metrics->setup_seconds - metrics->first_successor_seconds -
           metrics->remaining_successor_seconds);
     next_phase (nullptr);
+    if (answer.status.code == TLSF_DPA_OK) {
+      // An observer may consume the deadline or request cancellation even on
+      // final exit. A source decline also invalidates the entire imported graph.
+      answer.status = check_budget (budget);
+      if (answer.status.code == TLSF_DPA_OK)
+        answer.status = tlsf_dpa_status (&source);
+      if (answer.status.code != TLSF_DPA_OK)
+        answer.automaton.reset ();
+    }
     return answer;
   }
 

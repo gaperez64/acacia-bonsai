@@ -340,11 +340,51 @@ void delta2 () {
   require (dpa::check_infinite_ltl (spot::formula::strong_X (spot::formula::ap ("a")), limits).reason ==
                TLSF_DPA_UNSUPPORTED,
            "finite strong-next entered infinite-LTL normalization");
+  const auto atom = spot::formula::ap ("a");
+  const auto quantified = spot::formula::quantify (spot::op::exists, atom,
+      spot::formula::G (spot::formula::U (atom, spot::formula::ap ("b"))));
+  require (quantified.is_quantified () && quantified.is_ltl_formula (),
+           "quantified guard fixture lost the LTL-property trap");
+  for (const auto& f : {quantified, spot::formula::F (quantified),
+                        spot::formula::Or ({quantified, spot::formula::ap ("b")})}) {
+    require (dpa::check_infinite_ltl (f, limits).reason == TLSF_DPA_UNSUPPORTED,
+             "quantified formula entered infinite-LTL normalization");
+    TlsfDpaStatus status;
+    auto declined = dpa::create (f, {"a"}, {"b"}, TLSF_DPA_PARITY, limits, status);
+    require (!declined && status.reason == TLSF_DPA_UNSUPPORTED,
+             "quantified DAG adapter did not decline honestly");
+  }
   const auto xor_formula = spot::formula::Xor (spot::formula::ap ("a"), spot::formula::ap ("b"));
   TlsfDpaStatus status;
   auto xor_context = dpa::create (xor_formula, {"a"}, {"b"}, TLSF_DPA_PARITY, limits, status);
   require (bool (xor_context), "Xor DAG adapter declined");
   equivalent (dpa::import (*xor_context, limits).automaton, xor_formula);
+}
+
+void import_final_callback () {
+  const auto spec = specification ("F grant");
+  for (bool decline_source : {false, true}) {
+    dpa::limits limits;
+    volatile bool cancelled = false;
+    limits.construction.cancel = &cancelled;
+    auto source = create (spec, limits);
+    const auto result = dpa::import (*source, limits, spot::make_bdd_dict (),
+        [&] (const char* phase, double seconds) {
+          if (std::string (phase) != "dpa_rest_import" || seconds < 0)
+            return;
+          cancelled = true;
+          if (decline_source) {
+            const TlsfDpaEdge* edges;
+            size_t count;
+            require (tlsf_dpa_successors (source.get (), tlsf_dpa_initial (source.get ()),
+                       &edges, &count).reason == TLSF_DPA_CANCELLED,
+                     "callback failed to decline source");
+            cancelled = false; // Only the source's permanent decline remains.
+          }
+        });
+    require (!result.automaton && result.status.reason == TLSF_DPA_CANCELLED,
+             "final importer callback exposed a graph after cancellation");
+  }
 }
 
 void declines () {
@@ -503,6 +543,7 @@ int main () {
       check (text, real);
     declines ();
     delta2 ();
+    import_final_callback ();
     symbolic ();
     lazy_frontier ();
     std::cout << "Exact label relation, language, checked synthesis and declines passed\n";

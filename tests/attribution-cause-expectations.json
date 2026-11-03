@@ -3000,19 +3000,19 @@
     "telemetry": "STOPPED/resource"
   },
   "src/parity_arm.cc | throw std::invalid_argument | UNKNOWN | provider | \"experimental DPA route\" | 0": {
-    "cause": "invalid_query",
-    "telemetry": "STOPPED/error via dpa_experimental_config"
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
   },
   "src/parity_arm.cc | throw std::invalid_argument | UNKNOWN | provider | \"experimental Delta2 toggle\" | 0": {
-    "cause": "invalid_query",
-    "telemetry": "STOPPED/error via dpa_experimental_config"
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
   },
   "src/parity_arm.cc | throw std::invalid_argument | UNKNOWN | provider | \"experimental DPA constructor share\" | 0": {
-    "cause": "invalid_query",
-    "telemetry": "STOPPED/error via dpa_experimental_config"
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
   },
   "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"dpa_experimental_config\" | 0": {
     "cause": "worker_stopped",
-    "telemetry": "STOPPED/error"
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
   }
 }
