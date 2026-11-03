@@ -45,6 +45,8 @@ def check_records(directory, expected_calls=None, synthesis=False, formula=False
                        for row in rows), rows
     assert not any(row.get("event") == "verification_complete"
                    or row.get("stage", "").startswith("verify-") for row in rows), rows
+    assert not any(row.get("stage", row.get("phase", "")).startswith("fastpath_")
+                   for row in rows), rows
     for row in [tier, solved, verdict]:
         assert row["trust"] == "exact_game", row
         assert not row["same_library_checked"] and not row["independent_checked"], row
@@ -157,6 +159,9 @@ GUARANTEES {{ {guarantee}; }} }}''')
                     answer = execute([binary, "-T", str(source), "--arms", arm,
                                       "-s", str(controller)], experimental)
                     assert answer.returncode == reference.returncode, (route, semantics, target, answer)
+                    if route == "buchi":
+                        assert {row.get("phase") for row in rows()} >= {
+                            "acacia", "fastpath_complete", "fastpath_split", "fastpath_solve"}, rows()
                     if answer.returncode == 0:
                         subprocess.run([checker, "--check-controller", str(controller),
                                         original, target.lower()], check=True,

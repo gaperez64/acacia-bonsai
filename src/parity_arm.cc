@@ -142,6 +142,7 @@ namespace acacia {
                              preprocessing);
       parity_route::options config;
       config.synthesis = args.synth_fname.has_value ();
+      config.fastpath_phases = pipeline.active && phase_records_enabled ();
       unsigned tier = 0;
       config.on_classified = [&] (unsigned value, const std::string&) {
         tier = value;
@@ -316,16 +317,17 @@ namespace acacia {
           input.source = parity_route::source_language::real_worker;
         }
       }
-      std::optional<legacy_phase> phase;
+      std::optional<legacy_phase> phase, fastpath_phase;
       const auto solve = !oxidd || pipeline.route == "buchi" ? parity_route::run
                          : pipeline.route == "classify" ? parity_route::run_classified_positive_dpa
                                                          : parity_route::run_positive_dpa;
       auto answer = solve (input, config, [&] (const char* name, const auto&, double s) {
         stage = name;
+        auto& current = std::strncmp (name, "fastpath_", 9) == 0 ? fastpath_phase : phase;
         if (s < 0)
-          phase.emplace (name);
+          current.emplace (name);
         else
-          phase.reset ();
+          current.reset ();
       });
       if (answer.verdict != "REALIZABLE" && answer.verdict != "UNREALIZABLE") {
         worker_stopped ("inconclusive");

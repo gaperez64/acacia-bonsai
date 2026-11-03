@@ -24,6 +24,7 @@ namespace acacia::parity_route {
       bool synthesis = true;
       bool use_lar = false;
       bool verify = false;
+      bool fastpath_phases = false; // opt-in completion/split/solve timings
       // Cooperative checks around opaque Spot calls and before publishing a verdict.
       std::function<void ()> check;
       std::function<void (bool)> on_verdict;

@@ -202,8 +202,25 @@ namespace acacia::parity_route {
           tier.buchi->register_ap (spot::formula::ap (name));
         // Production needs only the verdict and, after selection, the controller.
         acacia::synthesis::controller_capture capture (&buchi_controller);
+        acacia::spot_fastpath::fastpath_observer fast_observe;
+        std::chrono::steady_clock::time_point fast_start;
+        if (config.fastpath_phases)
+          fast_observe = [&] (const char* name, const auto& graph, bool entering) {
+            if (config.check)
+              config.check ();
+            if (!observe)
+              return;
+            if (entering) {
+              fast_start = std::chrono::steady_clock::now ();
+              observe (name, graph, -1);
+            }
+            else
+              observe (name, graph, std::chrono::duration<double> (
+                  std::chrono::steady_clock::now () - fast_start).count ());
+          };
         auto fast = acacia::spot_fastpath::deterministic_negated_spec_fast_path (
-            tier.buchi, outputs, config.synthesis and not keep_arena, keep_arena, native_moore);
+            tier.buchi, outputs, config.synthesis and not keep_arena, keep_arena, native_moore,
+            fast_observe);
         winning = fast.current_output_player_wins;
         if (keep_arena)
           arena = *fast.solved_arena;

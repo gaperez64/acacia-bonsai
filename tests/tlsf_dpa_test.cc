@@ -229,7 +229,20 @@ void check (const std::string& text, bool real) {
     const auto states = input.automaton->num_states ();
     const auto edges = input.automaton->num_edges ();
     const auto acceptance = input.automaton->acc ().get_acceptance ();
-    const auto classified = route::run_classified_positive_dpa (input, config);
+    config.fastpath_phases = true;
+    std::vector<std::string> fast_stages;
+    const auto classified = route::run_classified_positive_dpa (
+        input, config, [&] (const char* name, const auto& graph, double seconds) {
+          if (std::string (name).starts_with ("fastpath_")) {
+            require (bool (graph), "missing fast-path phase graph");
+            fast_stages.push_back (std::string (name) + (seconds < 0 ? ":enter" : ":exit"));
+          }
+        });
+    config.fastpath_phases = false;
+    require (fast_stages == (classified.tier == 4 ? std::vector<std::string> {} :
+          std::vector<std::string> {"fastpath_complete:enter", "fastpath_complete:exit",
+            "fastpath_split:enter", "fastpath_split:exit", "fastpath_solve:enter",
+            "fastpath_solve:exit"}), "incorrect opt-in fast-path phase boundaries");
     require (classified.checked && classified.verdict == answer.verdict,
              "same-DPA classification changed verdict or synthesis");
     if (text == "G F (a && X b)")
