@@ -782,7 +782,8 @@ def completeness_expected_configuration(row):
                 raise ValueError(f"invalid native arm {arm!r}")
             specification = dict(kind=arm.strip(), translation="native", transform="exact",
                                  provider="native")
-        elif arm.strip() in ("both:obligation:spot", "both:parity:spot", "both:parity:oxidd"):
+        elif arm.strip() in ("both:obligation:spot", "both:parity:spot", "both:parity:oxidd",
+                             "real:parity:oxidd-otf", "unreal:parity:oxidd-otf"):
             specification = dict(kind=arm.strip(), translation="native", transform="exact",
                                  provider="native")
             # These workers report their solver family as the requested backend.
@@ -907,6 +908,8 @@ def completeness_audit_row(row, directory, expected_workers=None):
                       if completeness_nonnegative_int(r.get('worker_pid')) and completeness_nonnegative_int(r.get('worker'))}
     parents = set()
     lifecycle = []
+    diagnostics = []
+    parity_events = {"parity_tier", "parity_solved", "parity_verdict"}
     for record in records:
         event = record.get("event")
         if event is None or event == "writer_summary":
@@ -919,6 +922,10 @@ def completeness_audit_row(row, directory, expected_workers=None):
         if event in {"worker_reap", "worker_resource", "parent_record_summary",
                      "work_identity", "native_work_identity"} or event.startswith(
                          ("accounting_", "descendant_")):
+            continue
+        if event in {"obligation_start", "obligation_eligibility", "obligation_completion",
+                     "tlsf_parse", "dpa_import", "dpa_snapshot"}:
+            diagnostics.append(record)
             continue
         stage_record = event in {'stage_entry', 'stage_completion', 'stage_stopped',
                                  'stage_metric', 'stage_censored'}
@@ -939,6 +946,11 @@ def completeness_audit_row(row, directory, expected_workers=None):
                 issue("delivery", "wrong_parent_emitter", completeness_location(record))
         elif record["_emitter_pid"] != pid:
             issue("delivery", "wrong_child_emitter", completeness_location(record))
+        if event in parity_events:
+            diagnostics.append(record)
+            if not completeness_nonnegative_int(record.get("seq")) or record["seq"] == 0:
+                issue("delivery", "invalid_sequence", completeness_location(record))
+            continue
         if supplemental:
             if not completeness_nonnegative_int(record.get("seq")) or record["seq"] == 0:
                 issue("delivery", "invalid_sequence", completeness_location(record))
@@ -999,6 +1011,90 @@ def completeness_audit_row(row, directory, expected_workers=None):
         elif not completeness_nonnegative_int(summaries[0].get("dropped_records")):
             issue("delivery", "invalid_drop_count", completeness_location(summaries[0]))
             issue("producer", "invalid_drop_count", completeness_location(summaries[0]))
+
+    # Diagnostics have independent schemas. Only parity diagnostics consume the
+    # worker lifecycle sequence; parent-wide diagnostics need no worker identity.
+    parse_calls = defaultdict(list)
+    for record in diagnostics:
+        event, emitter = record["event"], record["_emitter_pid"]
+        pid, index = record.get("worker_pid"), record.get("worker")
+        group = workers.get(pid, []) if type(pid) is int else []
+        emitter_group = workers.get(emitter, [])
+        specs = [r for r in (emitter_group if event in ("dpa_import", "dpa_snapshot") else group)
+                 if r["event"] == "worker_spec"]
+        arm = specs[0].get("kind") if len(specs) == 1 else None
+        identified = (type(pid) is int and pid > 0 and completeness_nonnegative_int(index)
+                      and bool(group) and all(r["worker"] == index for r in group))
+        valid = True
+        if event == "tlsf_parse":
+            role = record.get("role")
+            valid = (type(record.get("pid")) is int and record["pid"] == emitter
+                     and isinstance(role, str) and bool(role)
+                     and completeness_nonnegative_int(record.get("call")) and record["call"] > 0
+                     and completeness_nonnegative_int(record.get("mono_ns")))
+            if role == "parent":
+                valid &= emitter in parents
+            else:
+                valid &= any(r.get("requested_backend") == role for r in emitter_group)
+            parse_calls[emitter].append(record.get("call"))
+        elif event == "dpa_snapshot":
+            valid = (arm == record.get("arm")
+                     and arm in ("real:parity:oxidd-otf", "unreal:parity:oxidd-otf")
+                     and record.get("stage") in ("create", "import", "expand", "snapshot", "split", "solve")
+                     and isinstance(record.get("reason"), str) and bool(record["reason"])
+                     and all(completeness_nonnegative_int(record.get(field)) for field in
+                             ("states", "imported_states", "expanded_states", "edges", "labels",
+                              "import_bytes", "solves")))
+            if valid:
+                valid = record["expanded_states"] <= record["imported_states"] <= record["states"]
+        elif event == "dpa_import":
+            valid = (arm == record.get("arm") == "both:parity:oxidd"
+                     and record.get("stage") in ("create", "expand", "import")
+                     and isinstance(record.get("reason"), str) and bool(record["reason"])
+                     and all(completeness_nonnegative_int(record.get(field)) for field in
+                             ("states", "imported_states", "edges", "labels", "import_bytes")))
+            if valid:
+                valid = record["imported_states"] <= record["states"]
+                if record["reason"] == "none":
+                    valid &= record["imported_states"] == record["states"]
+        else:
+            parity = event in parity_events
+            valid = (record.get("trust") == ("exact_game" if parity else "spot_exact")
+                     and record.get("same_library_checked") is False
+                     and record.get("independent_checked") is False
+                     and completeness_nonnegative_int(record.get("mono_ns")))
+            if parity:
+                valid &= (identified and arm == record.get("arm")
+                          and arm in ("both:parity:spot", "both:parity:oxidd",
+                                      "real:parity:oxidd-otf", "unreal:parity:oxidd-otf")
+                          and type(record.get("tier")) is int and 1 <= record["tier"] <= 4)
+            else:
+                outcome = record.get("outcome")
+                unassigned = type(pid) is int and type(index) is int and pid == index == -1
+                valid &= (record.get("arm") == "both:obligation:spot"
+                          and outcome in ("pending", "completed_REAL", "completed_UNREAL",
+                                          "inapplicable", "exhausted", "cancelled", "error")
+                          and isinstance(record.get("reason"), str) and bool(record["reason"])
+                          and completeness_nonnegative_int(record.get("wall_ns")))
+                if event == "obligation_eligibility":
+                    valid &= (unassigned and emitter in parents
+                              and outcome in ("pending", "inapplicable", "error"))
+                elif unassigned:
+                    valid &= (event == "obligation_completion" and emitter in parents
+                              and outcome == "error" and record.get("reason") == "fork_failed")
+                else:
+                    valid &= identified and arm == "both:obligation:spot"
+                    if event == "obligation_completion":
+                        valid &= outcome != "pending"
+                    if event == "obligation_start":
+                        valid &= emitter in parents and outcome == "pending"
+                    elif emitter != pid:
+                        valid &= emitter in parents and outcome in ("exhausted", "cancelled", "error")
+        if not valid:
+            issue("delivery", "invalid_diagnostic", completeness_location(record))
+    for emitter, calls in parse_calls.items():
+        if calls != list(range(1, len(calls) + 1)):
+            issue("delivery", "parse_call_gap", f"{directory}/{emitter}.jsonl: call={calls}")
 
     indices = [group[0]["worker"] for group in workers.values()]
     count = expected_workers if expected_workers is not None else (

@@ -229,6 +229,24 @@ void check (const std::string& text, bool real) {
     input.frame = route::timing_frame::original;
     const auto reference = route::run (input, config);
     require (answer.verdict == reference.verdict, "native verdict differs from Spot arm");
+    for (bool target_real : {false, true}) {
+      auto lazy_source = create (spec, limits);
+      size_t previous = 0, snapshots = 0;
+      const auto lazy = dpa::solve_lazy (
+          *lazy_source, limits, spec.outputs, target_real, [&] (const auto& progress) {
+            require (progress.expanded > previous && progress.expanded <= progress.states,
+                     "lazy publication did not advance by complete rows");
+            require (progress.solves == ++snapshots, "lazy snapshot counter changed");
+            require (progress.expanded == progress.states ||
+                         progress.expanded == (size_t (1) << (snapshots - 1)),
+                     "lazy exploration budget did not double");
+            previous = progress.expanded;
+          });
+      require (lazy.status.code == TLSF_DPA_OK && lazy.decided == (target_real == real),
+               "one-sided lazy result disagrees with exact oracle");
+      require (lazy.solves && (!lazy.decided ? lazy.expanded == lazy.states : true),
+               "lazy opposite result escaped before completion");
+    }
   }
 }
 
@@ -322,6 +340,56 @@ void symbolic () {
            "shared DAG or large unused partition expanded");
 }
 
+void lazy_frontier () {
+  std::cout << "checking lazy frontier and stops" << std::endl;
+  for (bool real : {false, true}) {
+    const auto spec = specification (real ? "F grant || X X X X X X a"
+                                         : "G req && X X X X X X grant");
+    dpa::limits limits;
+    auto source = create (spec, limits);
+    const auto lazy = dpa::solve_lazy (*source, limits, spec.outputs, real);
+    require (lazy.decided && lazy.expanded < lazy.states,
+             "lazy solver did not decide before full expansion");
+    // An opposite-polarity answer must never be inferred from the optimistic
+    // frontier. This remains true for a long, as-yet unseen eventual verdict.
+    const auto delayed = specification (real ? "X X X X X X grant" : "X X X X X X req");
+    source = create (delayed, limits);
+    const auto opposite = dpa::solve_lazy (*source, limits, delayed.outputs, !real);
+    require (!opposite.decided && opposite.expanded == opposite.states &&
+                 opposite.status.code == TLSF_DPA_OK,
+             "frontier produced an unsound opposite-polarity answer");
+  }
+  const auto spec = specification ("X X X grant");
+  dpa::limits limits;
+  limits.construction.max_states = 2;
+  auto source = create (spec, limits);
+  const auto failed = dpa::solve_lazy (*source, limits, spec.outputs, true);
+  require (!failed.decided && failed.solves == 1 && failed.expanded == 1 &&
+               failed.status.reason == TLSF_DPA_STATE_LIMIT,
+           "failed complete-row expansion published a result");
+  require (!dpa::solve_lazy (*source, limits, spec.outputs, true).decided,
+           "declined lazy context revived");
+  limits = {};
+  source = create (spec, limits);
+  limits.import_bytes = 1;
+  const auto capped = dpa::solve_lazy (*source, limits, spec.outputs, true);
+  require (!capped.decided && !capped.solves && capped.status.reason == TLSF_DPA_HOST_LIMIT,
+           "lazy import ignored host limit");
+  limits = {};
+  limits.construction.deadline_mono_ns = 1;
+  const auto expired = dpa::solve_lazy (*source, limits, spec.outputs, true);
+  require (!expired.decided && expired.status.reason == TLSF_DPA_DEADLINE,
+           "lazy deadline produced a result");
+  limits = {};
+  volatile bool cancel = false;
+  limits.construction.cancel = &cancel;
+  const auto cancelled = dpa::solve_lazy (*source, limits, spec.outputs, true,
+                                        [&] (const auto&) { cancel = true; });
+  require (!cancelled.decided && cancelled.solves == 1 &&
+               cancelled.status.reason == TLSF_DPA_CANCELLED,
+           "cancellation after exact solving published a lazy result");
+}
+
 int main () {
   try {
     for (const auto& [text, real] :
@@ -338,6 +406,7 @@ int main () {
       check (text, real);
     declines ();
     symbolic ();
+    lazy_frontier ();
     std::cout << "Exact label relation, language, checked synthesis and declines passed\n";
   } catch (const std::exception& error) {
     std::cerr << error.what () << '\n';

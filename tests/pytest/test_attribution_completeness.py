@@ -599,3 +599,220 @@ def test_durable_parent_records_and_accounting_share_delivery_audit(tmp_path, li
     result = reader.audit_row(row(), tmp_path)
     assert result["complete"], result["issues"]
     assert result["accepted_winners"][0]["route"] == "R"
+
+
+def diagnostic_records(lifecycle, family):
+    arm = "both:" + (family + ":spot" if family == "obligation" else family)
+    backend = family.split(":")[0]
+    for records in lifecycle.values():
+        for record in records:
+            if "requested_backend" in record:
+                record["requested_backend"] = backend
+    lifecycle[10][1]["kind"] = arm
+    lifecycle[20][-1]["arm"] = arm
+    parse = dict(event="tlsf_parse", pid=20, role=backend, call=1, mono_ns=100)
+    lifecycle[20].insert(0, parse)
+    diagnostics = []
+    if family == "obligation":
+        common = dict(arm=arm, worker=0, worker_pid=20, mono_ns=100, wall_ns=0,
+                      trust="spot_exact", same_library_checked=False, independent_checked=False)
+        diagnostics = [dict(common, event="obligation_start", outcome="pending", reason="preparation"),
+                       dict(common, event="obligation_eligibility", worker=-1, worker_pid=-1,
+                            outcome="pending", reason="eligible"),
+                       dict(common, event="obligation_completion", outcome="completed_REAL",
+                            reason="completed")]
+        lifecycle[10][0:0] = diagnostics[:2]
+        lifecycle[20].insert(-2, diagnostics[2])
+    else:
+        common = dict(arm=arm, worker=0, worker_pid=20, mono_ns=100, tier=4,
+                      trust="exact_game", same_library_checked=False, independent_checked=False)
+        diagnostics = [dict(common, event=event, seq=seq) for event, seq in
+                       zip(("parity_tier", "parity_solved", "parity_verdict"), (4, 5, 6))]
+        lifecycle[20][-2]["seq"] = 7
+        lifecycle[20][-2:-2] = diagnostics
+        lifecycle[10][2]["seq"] = 8
+        lifecycle[10][3]["seq"] = 9
+        if family == "parity:oxidd":
+            imported = dict(arm=arm, event="dpa_import", stage="import", states=1,
+                            imported_states=1, edges=1, labels=1, import_bytes=128, reason="none")
+            lifecycle[20].insert(1, imported)
+            diagnostics.append(imported)
+    return lifecycle, row(flags=f"--arms {arm} --equivariance off"), [parse, *diagnostics]
+
+
+@pytest.fixture(params=["obligation", "parity:spot", "parity:oxidd"])
+def diagnostic_lifecycle(lifecycle, request):
+    return diagnostic_records(lifecycle, request.param)
+
+
+def test_supported_diagnostic_schemas(tmp_path, diagnostic_lifecycle):
+    files, campaign, _ = diagnostic_lifecycle
+    write_records(tmp_path, files)
+    result = reader.audit_row(campaign, tmp_path)
+    assert result["complete"], result["issues"]
+
+
+@pytest.mark.parametrize("field", ["mono_ns", "trust", "same_library_checked", "independent_checked"])
+def test_malformed_diagnostics_fail_delivery(tmp_path, diagnostic_lifecycle, field):
+    files, campaign, diagnostics = diagnostic_lifecycle
+    diagnostic = next(record for record in diagnostics if "trust" in record)
+    diagnostic.pop(field)
+    write_records(tmp_path, files)
+    result = reader.audit_row(campaign, tmp_path)
+    assert "invalid_diagnostic" in reasons(result, "delivery"), result["issues"]
+
+
+@pytest.mark.parametrize("fault", ["emitter", "identity", "arm", "sequence"])
+def test_diagnostic_identity_and_sequence_contracts(tmp_path, diagnostic_lifecycle, fault):
+    files, campaign, diagnostics = diagnostic_lifecycle
+    diagnostic = next(record for record in diagnostics if record["event"] in
+                      ("obligation_start", "parity_tier"))
+    if fault == "emitter":
+        source, destination = (10, 20) if diagnostic["event"] == "obligation_start" else (20, 10)
+        files[source].remove(diagnostic)
+        files[destination].insert(0, diagnostic)
+    elif fault == "identity":
+        diagnostic["worker"] = 1
+    elif fault == "arm":
+        diagnostic["arm"] = "both:parity:spot" if "obligation" in campaign["flags"] else "both:obligation:spot"
+    elif "seq" in diagnostic:
+        files[20].remove(diagnostic)
+    else:
+        diagnostic["event"] = "obligation_unrecognized"
+    write_records(tmp_path, files)
+    result = reader.audit_row(campaign, tmp_path)
+    assert result["delivery"] == "incomplete", result
+    if fault == "sequence" and "seq" in diagnostic:
+        assert "sequence_gap" in reasons(result, "delivery")
+
+
+@pytest.mark.parametrize("fault", ["pid", "role", "call", "mono_ns"])
+def test_parse_diagnostic_contract(tmp_path, diagnostic_lifecycle, fault):
+    files, campaign, diagnostics = diagnostic_lifecycle
+    diagnostics[0][fault] = {"pid": 10, "role": "parent", "call": True, "mono_ns": -1}[fault]
+    write_records(tmp_path, files)
+    result = reader.audit_row(campaign, tmp_path)
+    assert result["delivery"] == "incomplete", result
+
+
+def test_diagnostics_do_not_relax_lifecycle_or_transport(tmp_path, diagnostic_lifecycle):
+    files, campaign, _ = diagnostic_lifecycle
+    next(r for r in files[20] if r.get("event") == "route_start").pop("route")
+    write_records(tmp_path, files, failed_records=1)
+    result = reader.audit_row(campaign, tmp_path)
+    assert {"missing_event_context", "writer_failed_records"} <= reasons(result, "delivery")
+
+
+def test_parent_obligation_cancellation_diagnostic(tmp_path, lifecycle):
+    common = dict(arm="both:obligation:spot", event="obligation_completion", worker=0,
+                  worker_pid=20, mono_ns=120, wall_ns=20, trust="spot_exact",
+                  same_library_checked=False, independent_checked=False,
+                  outcome="cancelled", reason="deadline")
+    lifecycle[20] = lifecycle[20][:3]
+    lifecycle[10][1]["kind"] = "both:obligation:spot"
+    for records in lifecycle.values():
+        for record in records:
+            if "requested_backend" in record:
+                record["requested_backend"] = "obligation"
+    lifecycle[10][2].update(seq=4, telemetry="incomplete", signal=9, exit_code=-1, reason="deadline")
+    lifecycle[10] = [r for r in lifecycle[10] if r.get("event") != "parent_winner"]
+    lifecycle[10].insert(0, common)
+    write_records(tmp_path, lifecycle)
+    result = reader.audit_row({**row(flags="--arms both:obligation:spot --equivariance off"),
+                               "result": "UNKNOWN"}, tmp_path)
+    assert result["delivery"] == "complete", result["issues"]
+    assert reasons(result, "producer") == {"worker_final_event_not_emitted"}
+
+
+@pytest.mark.parametrize("event,field,value", [
+    ("tlsf_parse", "call", 2),
+    ("obligation_start", "worker", False),
+    ("obligation_start", "worker_pid", -1),
+    ("obligation_eligibility", "worker", 0),
+    ("obligation_completion", "wall_ns", -1),
+    ("obligation_completion", "outcome", "unrecognized"),
+    ("obligation_completion", "outcome", "pending"),
+    ("obligation_eligibility", "outcome", "completed_REAL"),
+    ("parity_tier", "tier", True),
+    ("parity_solved", "tier", 5),
+    ("dpa_import", "edges", -1),
+    ("dpa_import", "imported_states", "1"),
+    ("dpa_import", "imported_states", 2),
+    ("dpa_import", "imported_states", 0),
+    ("dpa_import", "stage", "unrecognized"),
+    ("dpa_import", "reason", None),
+])
+def test_malformed_diagnostic_fields(tmp_path, lifecycle, event, field, value):
+    family = "obligation" if event.startswith("obligation_") else "parity:oxidd"
+    # Use the same emitted schemas as the positive fixture without adding a
+    # cross product of irrelevant diagnostic/fault combinations.
+    files, campaign, diagnostics = diagnostic_records(lifecycle, family)
+    next(record for record in diagnostics if record["event"] == event)[field] = value
+    write_records(tmp_path, files)
+    result = reader.audit_row(campaign, tmp_path)
+    assert result["delivery"] == "incomplete", result
+
+
+def test_diagnostic_only_record_cannot_invent_worker(tmp_path, lifecycle):
+    lifecycle[10].insert(0, dict(event="tlsf_parse", pid=30, role="parity", call=1, mono_ns=100))
+    write_records(tmp_path, lifecycle)
+    result = reader.audit_row(row(), tmp_path)
+    assert "invalid_diagnostic" in reasons(result, "delivery")
+    assert len(result["workers"]) == 1
+
+
+@pytest.mark.parametrize("pid", [10, 20])
+def test_unsequenced_diagnostics_require_actual_emitter(tmp_path, lifecycle, pid):
+    files, campaign, diagnostics = diagnostic_records(lifecycle, "obligation")
+    completion = diagnostics[-1]
+    files[20].remove(completion)
+    files[pid].insert(0, completion)
+    # A parent cannot report a child's completed proof as its own diagnostic.
+    write_records(tmp_path, files)
+    result = reader.audit_row(campaign, tmp_path)
+    assert result["complete"] == (pid == 20), result["issues"]
+
+
+def test_parent_parse_has_no_synthetic_worker_identity(tmp_path, lifecycle):
+    lifecycle[10].insert(0, dict(event="tlsf_parse", pid=10, role="parent", call=1, mono_ns=50))
+    write_records(tmp_path, lifecycle)
+    result = reader.audit_row(row(), tmp_path)
+    assert result["complete"], result["issues"]
+
+
+@pytest.mark.parametrize("polarity", ["real", "unreal"])
+@pytest.mark.parametrize("fault", [None, "emitter", "states", "expanded_states", "solves", "stage"])
+def test_lazy_dpa_snapshot_diagnostics(tmp_path, lifecycle, polarity, fault):
+    files, campaign, diagnostics = diagnostic_records(lifecycle, "parity:oxidd")
+    arm = polarity + ":parity:oxidd-otf"
+    files[10][1]["kind"] = arm
+    # No requested inventory is needed to check the independent emitter/schema
+    # contract; the lazy arm's CLI inventory is checked by its own arm tests.
+    campaign["flags"] = "--equivariance off"
+    for record in diagnostics:
+        if "arm" in record:
+            record["arm"] = arm
+    imported = diagnostics[-1]
+    imported.update(event="dpa_snapshot", states=3, imported_states=2, expanded_states=1, solves=0,
+                    stage="expand", reason="dpa_state_limit")
+    if fault == "emitter":
+        files[20].remove(imported)
+        files[10].append(imported)
+    elif fault:
+        imported[fault] = {"states": 1, "expanded_states": 3, "solves": True,
+                           "stage": "unrecognized"}[fault]
+    write_records(tmp_path, files)
+    result = reader.audit_row(campaign, tmp_path)
+    assert result["complete"] == (fault is None), result["issues"]
+
+
+@pytest.mark.parametrize("polarity", ["real", "unreal"])
+def test_directional_lazy_parity_worker_spec(polarity):
+    arm = polarity + ":parity:oxidd-otf"
+    inventory, context = reader.expected_configuration(row(
+        flags=f"--arms {arm} --equivariance on"))
+    assert inventory == [dict(kind=arm, requested_backend="parity",
+                              requested_polarity=polarity.upper(), translation="native",
+                              transform="exact", provider="native", r_prepass=True,
+                              equivariance=True)]
+    assert context == dict(r_prepass=True, equivariance=True)

@@ -12,6 +12,94 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-03: Lazy parity stays opt-in; accounting fixes retain the eight-arm default
+
+The completed SYNTCOMP26 campaign decides 1351/1379/1387 of 1524 inputs at
+17/60/120 s. The archived eight-arm default decides 1351/1379/1388: no gains,
+and the only lost solve is `finding_nemo_pb_6_pe_`, previously REAL at 119.243 s
+and now TIMEOUT at 120 s. No verdict disagrees with the normalized/adjudicated
+reference series. The [plots and aggregate tables](https://github.com/gaperez64/acacia-bonsai/releases/tag/evidence-2026-11-03-sprint-performance)
+are published separately, including the [per-arm solve-count table](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-03-sprint-performance/per-arm-solve-counts.md)
+and [CSV](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-03-sprint-performance/per-arm-solve-counts.csv).
+The complete [verified evidence archive](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-03-sprint-performance/sprint-performance-20261102.tar.gz)
+is `sprint-performance-20261102`, registered in [the evidence index](evidence-index.tsv).
+It includes the raw observations, frozen binaries, input corpus and reviewed provenance.
+
+Source `5b7b6fcb` has the same tracked tree as the reviewed/tested `c53f06df`.
+The final frozen `otf_sparse_formula_parity` executable is SHA-256
+`9d42189b7931fd3dc300987a82ff7e42c9ee82a068f927ec46baa6ba0179f3c0`,
+built with release `-Ofast -march=native` and LTO, using the explicit compatible
+128-bit Posets SIMD ABI, not the widest-vector build. The eight default arms
+are unchanged. Every primary timing call used native TLSF in its own 8 GiB/no-swap scope,
+serially, with phase/worker records and formula capture disabled.
+
+Only this new binary was measured freshly: all 1524 inputs at 17 s, only its
+173 TIMEOUTs at 60 s, then only those 145 TIMEOUTs at 120 s. Earlier source
+observations are retained in the derived 60/120 s series. The interrupted
+60 s stage preserved seven completed rows and resumed with the same pinned
+identity. REAL/UNREAL counts are 622/729, 637/742 and 642/745. The remaining
+outcomes are 173/145/136 TIMEOUTs and one resource limit at 120 s; no UNKNOWN,
+ERROR or conversion failure occurred in the primary campaign.
+
+| Series | 17 s solved | 17 s PAR-2 (s) | 60 s solved | 60 s PAR-2 (s) | 120 s solved | 120 s PAR-2 (s) |
+|---|---:|---:|---:|---:|---:|---:|
+| New final, eight arms | 1351 | 6492.2 | 1379 | 18983.5 | 1387 | 35106.5 |
+| Prior default, eight arms | 1351 | 6489.2 | 1379 | 18979.5 | 1388 | 34986.4 |
+| Prior master headroom | 1341 | 6799.8 | 1364 | 20533.7 | — | — |
+| Acacia 2.7 lineage | 1342 | 6792.7 | 1358 | 21057.3 | 1366 | 39637.7 |
+| SemML | 1271 | 11690.0 | 1334 | 27788.0 | 1355 | 47408.9 |
+| ltlsynt 2.16 | 1264 | 9420.7 | 1290 | 29523.6 | — | — |
+| Acacia 1.x | 812 | 24778.5 | 854 | 82407.0 | — | — |
+
+Comparators are recycled historical observations, not fresh matched runs.
+Acacia 2.7's 17 s rows are its prerelease lineage; 60/120 s retries use its
+release, while earlier prerelease solves are reused.
+SemML includes Java startup; ltlsynt and Acacia 1.x exclude SyFCo conversion.
+Acacia 1.x retains archived resource-limit adjudications of false REAL reports.
+The prior-default archive's contents are verified, but its archive/index
+provenance lists differ; the relevant binary is declared by both and the
+discrepancy is retained. Missing 120 s series are omitted. The 17 s PAR-2
+difference from the prior default is 3.024 s, inside the recorded 12.074 s
+noise floor, with identical coverage; this is no speedup claim. Standalone
+figures, score tables, plot-data hashes and full clock/provenance notes are
+retained in the archive's `closeout/` directory.
+
+#361 retains opt-in `real:parity:oxidd-otf` and `unreal:parity:oxidd-otf`.
+They expand complete lazy DPA rows and use the existing exact solver with
+doubling exploration budgets. A [pre-code reviewed proof](coverage-first/on-the-fly-parity-proof.md)
+covers the positive effective-Mealy objective, fixed frontier losses, stable
+priorities and closed winning strategies. Each arm emits only its named
+verdict, declines synthesis and reports resource/cancellation stops as UNKNOWN;
+the existing DPA/Spot trust assumptions remain. BFS solves none of the required
+nine load_balancer inputs at 17 s: seven TIMEOUTs and two initial-row BDD limits.
+An opt-in strategy-order experiment observes three UNREAL solves at
+7.108/2.718/12.152 s, but needs 2048/1024/2048 expanded rows. It fails the
+predeclared requirement for a solve within 128 rows and is reverted; its patch,
+proof, executable and all observations are preserved. No heuristic or new worker
+is added to the default.
+
+Two seven-arm candidates also fail their veto screens. Removing
+`unreal:automaton:forward` loses `lift_wrong_physics_unreal_pb_10_pe_`
+(incumbent UNREAL in 0.946 s, candidate TIMEOUT17). Removing
+`real:small:forward` loses `generalized_buffer_pb_5_pe_` (incumbent REAL in
+1.276 s, candidate TIMEOUT17). Both are rejected; #359 remains unresolved.
+
+#362 makes completeness auditing validate the actual obligation/parity diagnostic
+schemas while retaining identity, sequence, writer-total and drop checks.
+#363 emits missing child record summaries on completed obligation/parity exits,
+including UNKNOWN. The separate instrumented attribution pass has the same
+solved totals as the primary campaign; its strict, parent-confirmed and UNKNOWN
+winner evidence stays distinct and cannot identify the unrecorded primary race's
+winner. It does not supply the primary timing curves.
+
+G0 passes 82 unit and 19 Posets tests; G1 passes all 40 frozen rows. G2s passes
+the preselected `membership-default` rule (baseline/candidate cycle ratio
+1.00298; worst reported improvement -1.26%). Both G3 panels pass with no loss
+or verdict change. G4 reports 595 OK, 30 permitted timeouts and no failures.
+G5 passes over all 1524 inputs with no frontend error or opposite verdict:
+10 spot checks pass, 28 answers are native-only and one converted-only. Its
+seven tlsf-tools fallback pairs are explicitly not independently cross-checked.
+
 ## 2026-11-01: The oxidd parity arm joins the default portfolio; the swap for the Spot arm loses
 
 Archive `otfdpa-20261101` (release `evidence-2026-11-01-otfdpa`), PR #358. The shipping eight-arm default is e8df0bbc (frozen binary SHA-256 `127eb09d72135a9fa58cd5a9817e02def8d3c44dbe8739d2edabac128dc09730`). Full-corpus runs cover all 1524 SYNTCOMP26 inputs. Every call ran in its own 8 GiB scope, serially. At 60 s and 120 s, each series reran only the inputs undecided at the previous cap and recycled earlier verdicts.
