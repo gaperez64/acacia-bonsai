@@ -37,6 +37,13 @@ must be initialized consistently or masked, with element-aligned loads unless
 both the base and stride satisfy the required alignment. Byte comparisons must
 preserve signed order.
 
+`acacia_simd_is_max=false` retains the compatible ABI (128-bit on x86-64);
+`true` retains the maximum fixed size supported by the library. The additive
+`acacia_simd_native=true` option takes precedence and explicitly selects the
+build target's native SIMD width. Shipping presets do not enable it. None of
+these options dispatches instruction sets at runtime; record actual lane counts
+and compiler target flags for comparisons.
+
 A sparse rank stores sorted `(state, value)` pairs, omits bottom and merges
 repeated states by maximum. `x <= y` requires a matching state with at least the
 value of every stored pair in x; other states in y are unconstrained. A losing

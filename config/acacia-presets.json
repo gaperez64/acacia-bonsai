@@ -22,8 +22,17 @@
       "role": "reference"
     },
     "best_decomp_mona": {
-      "description": "Use plain vector-backed downsets with decomposition, MONA precomputation, standard automaton preprocessing, critical input selection and the native SIMD register width as the downset comparison reference.",
+      "description": "Use plain vector-backed downsets with decomposition, MONA precomputation, standard automaton preprocessing, critical input selection and the compatible SIMD ABI (128-bit on x86-64) as the downset comparison reference.",
       "role": "reference",
+      "simd_is_max": false,
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "mona",
+      "input_picker": "critical"
+    },
+    "posets_native_width": {
+      "description": "Compare hardware-native SIMD width with the compatible-ABI plain-vector downset reference; no default selection changes.",
+      "role": "sweep",
+      "simd_native": true,
       "simd_is_max": false,
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
@@ -191,6 +200,10 @@
       "best_decomp_mona",
       "best_decomp_mona_any",
       "best_decomp_rank_bucketed_mona"
+    ],
+    "posets_simd_sweep": [
+      "best_decomp_mona",
+      "posets_native_width"
     ],
     "posets_downset_sweep": [
       "best_decomp_mona",
