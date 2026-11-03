@@ -1013,6 +1013,16 @@ tlsf_dpa_test = executable ('tlsf-dpa-test',
   dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
 test ('tlsf-dpa', tlsf_dpa_test, suite : ['unit', 'parity'], timeout : 120)
 
+if host_machine.system () == 'linux'
+  parity_pipeline_bench = executable ('parity-pipeline-bench',
+    ['parity_pipeline_bench.cc', '../src/tlsf_frontend.cc', '../src/solver/mealy_to_moore.cc'],
+    link_with : [tlsf_dpa_lib, parity_route_lib, parity_lib], include_directories : inc,
+    dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
+  test ('parity-pipeline-bench', py,
+    args : [files ('check-parity-pipeline-bench.py'), parity_pipeline_bench],
+    suite : ['unit', 'parity'], timeout : 120)
+endif
+
 tlsf_dpa_lazy_test = executable ('tlsf-dpa-lazy-test',
   ['tlsf_dpa_lazy_test.cc', '../src/solver/parity/tlsf_dpa.cc'],
   # LTO can bind API calls before --wrap sees them. Compile the importer into
