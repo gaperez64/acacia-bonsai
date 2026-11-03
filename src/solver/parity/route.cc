@@ -83,8 +83,11 @@ namespace acacia::parity_route {
     return {4, "genuine parity acceptance", nullptr};
   }
 
-  static result run_impl (request input, options config, observer observe, bool positive_dpa) {
+  static result run_impl (request input, options config, observer observe, bool positive_dpa,
+                          bool classify_positive = false) {
     result output;
+    if (config.check)
+      config.check ();
     if (config.verify and not config.synthesis)
       throw std::runtime_error ("controller verification requires synthesis");
     if (config.verify and not input.specification)
@@ -96,7 +99,8 @@ namespace acacia::parity_route {
       throw std::runtime_error ("original specifications require the original timing frame");
     if (positive_dpa) {
       bool max = false, odd = false;
-      if (!input.automaton || !input.automaton->acc ().is_parity (max, odd) || !max || !odd)
+      if (input.source != source_language::original || !input.automaton ||
+          !input.automaton->acc ().is_parity (max, odd) || !max || !odd)
         throw std::runtime_error ("positive DPA must be complete with max-odd acceptance");
     }
     std::set<std::string> names;
@@ -120,10 +124,14 @@ namespace acacia::parity_route {
       configure_bdd ();
     input.automaton.reset ();
     auto stage = [&] (const char* name, auto action) {
+      if (config.check)
+        config.check ();
       if (observe)
         observe (name, aut, -1);
       const auto start = std::chrono::steady_clock::now ();
       action ();
+      if (config.check)
+        config.check ();
       if (observe)
         observe (
             name, aut,
@@ -144,6 +152,8 @@ namespace acacia::parity_route {
     require_deterministic (aut);
     if (positive_dpa && !spot::is_complete (aut))
       throw std::runtime_error ("positive DPA must be complete");
+    if (config.check)
+      config.check ();
     for (const auto& ap : aut->ap ())
       if (not names.contains (ap.ap_name ()))
         throw std::runtime_error ("HOA AP is missing from the declared partition");
@@ -155,10 +165,14 @@ namespace acacia::parity_route {
     for (const auto& name : input.outputs)
       outputs &= bdd_ithvar (aut->register_ap (spot::formula::ap (name)));
     classification tier {4, "supplied positive parity", nullptr};
-    if (!positive_dpa) {
+    if (!positive_dpa || classify_positive) {
       spot::twa_graph_ptr worker;
       stage ("orient", [&] {
-        worker = input.source == source_language::original ? spot::dualize (aut) : aut;
+        // Classification may mutate its argument. A complete negative copy
+        // keeps the supplied positive graph intact for parity fallback.
+        auto source = classify_positive
+                          ? spot::make_twa_graph (aut, spot::twa::prop_set::all ()) : aut;
+        worker = input.source == source_language::original ? spot::dualize (source) : source;
       });
       stage ("classify", [&] { tier = classify (worker); });
     }
@@ -233,6 +247,8 @@ namespace acacia::parity_route {
             config.on_game (*output.game);
         });
     }
+    if (config.check)
+      config.check ();
     if (config.on_solved)
       config.on_solved ();
     if (config.on_solution)
@@ -243,8 +259,12 @@ namespace acacia::parity_route {
         if (not parity::check_strategy (output.game->explicit_game, output.solution, &reason))
           throw std::runtime_error ("game strategy check failed: " + reason);
       });
+    if (config.check)
+      config.check ();
     if (config.on_verdict)
       config.on_verdict (winning);
+    if (config.check)
+      config.check ();
     if (winning and config.synthesis) {
       stage ("strategy", [&] {
         if (buchi_controller)
@@ -296,6 +316,8 @@ namespace acacia::parity_route {
       output.verdict = "UNREALIZABLE";
     }
     output.checked = config.verify;
+    if (config.check)
+      config.check ();
     return output;
   }
   result run (request input, options config, observer observe) {
@@ -304,5 +326,9 @@ namespace acacia::parity_route {
 
   result run_positive_dpa (request input, options config, observer observe) {
     return run_impl (std::move (input), std::move (config), std::move (observe), true);
+  }
+
+  result run_classified_positive_dpa (request input, options config, observer observe) {
+    return run_impl (std::move (input), std::move (config), std::move (observe), true, true);
   }
 }

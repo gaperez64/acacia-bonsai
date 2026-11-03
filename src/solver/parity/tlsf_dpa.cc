@@ -4,11 +4,13 @@
 
 #include <algorithm>
 #include <cstring>
+#include <chrono>
 #include <ctime>
 #include <limits>
 #include <spot/twaalgos/game.hh>
 #include <spot/twaalgos/synthesis.hh>
 #include <stdexcept>
+#include <unordered_map>
 
 namespace acacia::tlsf_dpa {
   namespace {
@@ -155,9 +157,179 @@ namespace acacia::tlsf_dpa {
     return {raw, tlsf_dpa_free};
   }
 
-  result import (TlsfDpa& source, const limits& budget, spot::bdd_dict_ptr dictionary) {
+  TlsfDpaStatus check_budget (const limits& budget) {
+    size_t bytes = 0;
+    try {
+      allowance (budget, bytes).poll ();
+      return {TLSF_DPA_OK, TLSF_DPA_NONE};
+    } catch (const stopped& failure) {
+      return failure.status;
+    }
+  }
+
+  TlsfDpaStatus check_infinite_ltl (spot::formula root, const limits& budget) {
+    size_t bytes = 0;
+    allowance space (budget, bytes);
+    try {
+      if (!root || !root.is_ltl_formula ())
+        return {TLSF_DPA_DECLINED, TLSF_DPA_UNSUPPORTED};
+      std::vector<spot::formula> pending;
+      std::unordered_map<spot::formula, bool> seen;
+      space.push (pending, root);
+      while (!pending.empty ()) {
+        space.poll ();
+        auto f = pending.back ();
+        pending.pop_back ();
+        if (seen.contains (f))
+          continue;
+        if (f.kind () == spot::op::strong_X)
+          return {TLSF_DPA_DECLINED, TLSF_DPA_UNSUPPORTED};
+        space.entry<decltype (seen)> ();
+        seen.emplace (f, true);
+        for (const auto& child : f)
+          space.push (pending, child);
+      }
+      return {TLSF_DPA_OK, TLSF_DPA_NONE};
+    } catch (const stopped& failure) {
+      return failure.status;
+    } catch (const std::bad_alloc&) {
+      return {TLSF_DPA_DECLINED, TLSF_DPA_HOST_LIMIT};
+    }
+  }
+
+  context create (spot::formula root, const std::vector<std::string>& inputs,
+                  const std::vector<std::string>& outputs, TlsfDpaKind kind,
+                  const limits& budget, TlsfDpaStatus& status) {
+    TlsfDpa* raw = nullptr;
+    size_t bytes = 0;
+    allowance space (budget, bytes);
+    try {
+      if (!root || !root.is_ltl_formula ())
+        throw stopped {{TLSF_DPA_DECLINED, TLSF_DPA_UNSUPPORTED}};
+      std::vector<const char*> in, out;
+      std::map<std::string, uint32_t> aps;
+      const auto partition = [&] (const auto& names, auto& pointers) {
+        for (const auto& name : names) {
+          space.entry<decltype (aps)> ();
+          space.charge (name.size () + 1);
+          if (aps.size () >= UINT32_MAX || name.empty () ||
+              !aps.emplace (name, uint32_t (aps.size ())).second)
+            throw stopped {{TLSF_DPA_INVALID, TLSF_DPA_NONE}};
+          space.push (pointers, name.c_str ());
+        }
+      };
+      partition (inputs, in);
+      partition (outputs, out);
+      std::vector<TlsfDpaFormulaNode> nodes;
+      std::unordered_map<spot::formula, uint32_t> memo;
+      std::vector<std::pair<spot::formula, unsigned>> pending;
+      space.push (pending, std::pair {root, 0u});
+      const auto append = [&] (TlsfAstKind op, uint32_t lhs = UINT32_MAX,
+                               uint32_t rhs = UINT32_MAX, uint32_t ap = UINT32_MAX) {
+        if (nodes.size () >= UINT32_MAX)
+          throw stopped {{TLSF_DPA_DECLINED, TLSF_DPA_HOST_LIMIT}};
+        const auto id = uint32_t (nodes.size ());
+        space.push (nodes, TlsfDpaFormulaNode {op, lhs, rhs, ap});
+        return id;
+      };
+      while (!pending.empty ()) {
+        space.poll ();
+        auto& [formula, child] = pending.back ();
+        if (child < formula.size ()) {
+          const auto next = formula[child++];
+          if (!memo.contains (next))
+            space.push (pending, std::pair {next, 0u});
+          continue;
+        }
+        const auto f = formula;
+        TlsfAstKind op;
+        using O = spot::op;
+        switch (f.kind ()) {
+        case O::tt: op = TLSF_AST_TRUE; break;
+        case O::ff: op = TLSF_AST_FALSE; break;
+        case O::ap: op = TLSF_AST_AP; break;
+        case O::Not: op = TLSF_AST_NOT; break;
+        case O::X: op = TLSF_AST_X; break;
+        case O::F: op = TLSF_AST_F; break;
+        case O::G: op = TLSF_AST_G; break;
+        case O::And: op = TLSF_AST_AND; break;
+        case O::Or: op = TLSF_AST_OR; break;
+        case O::Implies: op = TLSF_AST_IMPL; break;
+        case O::Equiv: case O::Xor: op = TLSF_AST_EQUIV; break;
+        case O::U: op = TLSF_AST_U; break;
+        case O::R: op = TLSF_AST_R; break;
+        case O::W: op = TLSF_AST_W; break;
+        case O::M: op = TLSF_AST_M; break;
+        default: throw stopped {{TLSF_DPA_DECLINED, TLSF_DPA_UNSUPPORTED}};
+        }
+        uint32_t id;
+        if (op == TLSF_AST_AP) {
+          const auto found = aps.find (f.ap_name ());
+          if (found == aps.end ())
+            throw stopped {{TLSF_DPA_INVALID, TLSF_DPA_NONE}};
+          id = append (op, UINT32_MAX, UINT32_MAX, found->second);
+        }
+        else if (f.kind () == O::And || f.kind () == O::Or) {
+          // A balanced fold preserves n-ary sharing without manufacturing a
+          // linear syntax depth that the C constructor would rightly reject.
+          std::vector<uint32_t> children;
+          for (const auto& c : f)
+            space.push (children, memo.at (c));
+          while (children.size () > 1) {
+            size_t kept = 0;
+            for (size_t i = 0; i < children.size (); i += 2)
+              children[kept++] = i + 1 < children.size ()
+                  ? append (op, children[i], children[i + 1]) : children[i];
+            children.resize (kept);
+          }
+          id = children.at (0);
+        }
+        else {
+          id = append (op, f.size () ? memo.at (f[0]) : UINT32_MAX,
+                       f.size () > 1 ? memo.at (f[1]) : UINT32_MAX);
+          if (f.kind () == O::Xor)
+            id = append (TLSF_AST_NOT, id);
+        }
+        space.entry<decltype (memo)> ();
+        memo.emplace (f, id);
+        pending.pop_back ();
+      }
+      space.poll ();
+      status = tlsf_dpa_create_from_dag (
+          nodes.data (), uint32_t (nodes.size ()), memo.at (root), in.data (),
+          uint32_t (in.size ()), out.data (), uint32_t (out.size ()), kind,
+          &budget.construction, &raw);
+    } catch (const stopped& failure) {
+      status = failure.status;
+    } catch (const std::bad_alloc&) {
+      status = {TLSF_DPA_DECLINED, TLSF_DPA_HOST_LIMIT};
+    } catch (const std::length_error&) {
+      status = {TLSF_DPA_DECLINED, TLSF_DPA_HOST_LIMIT};
+    }
+    return {raw, tlsf_dpa_free};
+  }
+
+  result import (TlsfDpa& source, const limits& budget, spot::bdd_dict_ptr dictionary,
+                 std::function<void (const char*, double)> observe, import_metrics* metrics) {
     result answer;
     allowance space (budget, answer.import_bytes);
+    using clock = std::chrono::steady_clock;
+    const char* phase = "dpa_import_setup";
+    const auto start = observe || metrics ? clock::now () : clock::time_point {};
+    auto started = start;
+    if (metrics)
+      *metrics = {};
+    const auto next_phase = [&] (const char* name) {
+      if (!observe)
+        return;
+      observe (phase, std::chrono::duration<double> (clock::now () - started).count ());
+      phase = name;
+      started = clock::now ();
+      if (observe && phase)
+        observe (phase, -1);
+    };
+    if (observe)
+      observe (phase, -1);
     try {
       answer.stage = "import";
       space.poll ();
@@ -193,7 +365,19 @@ namespace acacia::tlsf_dpa {
         answer.stage = "expand";
         const TlsfDpaEdge* edges = nullptr;
         size_t count = 0;
+        if (!next) {
+          if (metrics)
+            metrics->setup_seconds = std::chrono::duration<double> (clock::now () - start).count ();
+          next_phase ("dpa_first_successor");
+        }
+        const auto successor_start = metrics ? clock::now () : clock::time_point {};
         const auto status = tlsf_dpa_successors (&source, queue[next], &edges, &count);
+        if (metrics) {
+          const double seconds = std::chrono::duration<double> (clock::now () - successor_start).count ();
+          (next ? metrics->remaining_successor_seconds : metrics->first_successor_seconds) += seconds;
+        }
+        if (!next)
+          next_phase ("dpa_rest_import");
         if (status.code != TLSF_DPA_OK)
           throw stopped {status};
         if (!edges || !count)
@@ -254,6 +438,12 @@ namespace acacia::tlsf_dpa {
     } catch (const std::length_error&) {
       answer.status = {TLSF_DPA_DECLINED, TLSF_DPA_HOST_LIMIT};
     }
+    if (metrics)
+      metrics->bridge_seconds = std::max (0.0,
+          std::chrono::duration<double> (clock::now () - start).count () -
+          metrics->setup_seconds - metrics->first_successor_seconds -
+          metrics->remaining_successor_seconds);
+    next_phase (nullptr);
     return answer;
   }
 

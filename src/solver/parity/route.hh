@@ -24,6 +24,8 @@ namespace acacia::parity_route {
       bool synthesis = true;
       bool use_lar = false;
       bool verify = false;
+      // Cooperative checks around opaque Spot calls and before publishing a verdict.
+      std::function<void ()> check;
       std::function<void (bool)> on_verdict;
       std::function<void ()> on_solved;
       std::function<void (unsigned, const std::string&)> on_classified;
@@ -51,4 +53,7 @@ namespace acacia::parity_route {
   result run (request input, options config = {}, observer observe = {});
   // Complete max-odd DPA for the positive objective; bypass translation and classification.
   result run_positive_dpa (request input, options config = {}, observer observe = {});
+  // Classify a negative copy of the same positive DPA; retain the original
+  // positive graph for genuine parity fallback. No reconstruction on tier4.
+  result run_classified_positive_dpa (request input, options config = {}, observer observe = {});
 }
