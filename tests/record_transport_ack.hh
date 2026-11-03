@@ -36,6 +36,10 @@ extern "C" ssize_t write (int fd, const void* data, size_t size) {
   }
   if (written == ssize_t (size)) {
     const int saved_errno = errno;
+    if (const char* notify = std::getenv ("ACACIA_TEST_RECORD_ACK_NOTIFY_FD")) {
+      constexpr char queued = 'q';
+      (void) original (std::atoi (notify), &queued, 1);
+    }
     struct stat after {};
     while (stat (path, &after) != 0 || after.st_size < end)
       poll (nullptr, 0, 1);

@@ -2,10 +2,13 @@
 """Reach the original reduction/preparation/seed contracts and assert wire telemetry."""
 from __future__ import annotations
 
+import argparse
 import importlib.util
+import os
 from pathlib import Path
+import select
+import signal
 import subprocess
-import sys
 import tempfile
 
 from typing import NamedTuple
@@ -66,10 +69,97 @@ def stopped(result, records: list[dict], cause: Contract, *, decline: bool = Fal
     attribution.complete_records(records, expected_winners=0)
 
 
+def recorded_env(acknowledgement: Path | None, extra: dict | None = None) -> dict:
+    env = dict(extra or {})
+    if acknowledgement is not None:
+        preload = env.get("LD_PRELOAD", os.environ.get("LD_PRELOAD", ""))
+        env["LD_PRELOAD"] = " ".join(filter(None, (preload, str(acknowledgement))))
+        env["ACACIA_TEST_RECORD_ACK"] = "1"
+    return env
+
+
+def gated_delivery(worker: Path, acknowledgement: Path, root: Path) -> None:
+    # Hold the reader before its first append. The ordinary bounded close can
+    # then lose every pipe row without reporting any producer-side drops.
+    for reliable in (False, True):
+        directory = root / ("acked-writer" if reliable else "unacked-writer")
+        directory.mkdir()
+        gate_read, gate_write = os.pipe()
+        notify_read, notify_write = os.pipe()
+        owned = {gate_read, gate_write, notify_read, notify_write}
+
+        def close(fd):
+            os.close(fd)
+            owned.remove(fd)
+
+        env = os.environ.copy()
+        env.pop("ACACIA_TEST_RECORD_ACK", None)
+        env.pop("ACACIA_TEST_OBLIGATION_RECORD_ACK", None)
+        env.update(ACACIA_PHASE_RECORDS=str(directory),
+                   ACACIA_TEST_RECORD_WRITER_GATE_FD=str(gate_read))
+        if reliable:
+            env.update(recorded_env(acknowledgement, {
+                "ACACIA_TEST_RECORD_ACK_NOTIFY_FD": str(notify_write)}))
+        process = subprocess.Popen([str(worker)], env=env, text=True, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   pass_fds=(gate_read, notify_write), start_new_session=True)
+        finished = False
+        try:
+            close(gate_read)
+            close(notify_write)
+            if reliable:
+                process.stdin.write("x")
+                process.stdin.flush()
+                ready, _, _ = select.select([notify_read], [], [], 3)
+                assert ready and os.read(notify_read, 1) == b"q", "producer did not queue a packet"
+                assert process.poll() is None, "producer did not wait for append"
+                assert not (directory / f"{process.pid}.jsonl").exists(), "writer bypassed its gate"
+                close(gate_write)
+                stdout, stderr = process.communicate(timeout=3)
+            else:
+                stdout, stderr = process.communicate("x", timeout=3)
+            assert process.returncode == 0 and not stderr and "REALIZABLE" in stdout, (stdout, stderr)
+            records = attribution.rows(directory)
+            if reliable:
+                assert all(row.get("dropped_records", 0) == 0 for row in records), records
+                assert len([row for row in records if row.get("phase") == "record_failure_test"]) == 1, records
+                assert len([row for row in records if row.get("phase") == "record_summary"]) == 2, records
+                writer, = [row for row in records if row.get("event") == "writer_summary"]
+                assert writer["failed_records"] == 0 and not writer["incomplete_packet"], writer
+                assert writer["delivered_records"] == sum(not row.get("durable", False) for row in records) - 1
+            else:
+                assert len(records) == 1 and records[0]["event"] == "parent_record_summary", records
+                assert records[0]["dropped_records"] == 0, records
+            finished = True
+        finally:
+            if not finished:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                process.communicate(timeout=3)
+            for fd in list(owned):
+                close(fd)
+
+
 def main() -> None:
-    hook, api, build = (Path(value).resolve() for value in sys.argv[1:4])
+    parser = argparse.ArgumentParser(description=__doc__)
+    for name in ("hook", "api", "build"):
+        parser.add_argument(name, type=Path)
+    parser.add_argument("--record-ack-library", type=Path)
+    parser.add_argument("--record-failure-worker", type=Path)
+    options = parser.parse_args()
+    hook, api, build = (getattr(options, name).resolve() for name in ("hook", "api", "build"))
+    acknowledgement = options.record_ack_library.resolve() if options.record_ack_library else None
+    assert bool(acknowledgement) == bool(options.record_failure_worker)
+
+    def recorded(args, directory, extra=None):
+        return attribution.execute(hook, args, directory, recorded_env(acknowledgement, extra))
+
     with tempfile.TemporaryDirectory(dir=build) as temporary:
         root = Path(temporary)
+        if acknowledgement is not None:
+            gated_delivery(options.record_failure_worker.resolve(), acknowledgement, root)
         source = root / "contract.tlsf"
         source.write_text(SOURCE)
         # Every added contract mutation reaches the actual validator/check.
@@ -84,7 +174,7 @@ def main() -> None:
                 env = {"ACACIA_NATIVE_TEST_CONTRACT": cause.fault}
                 args = ["-T", str(source), "--arms", arm]
                 baseline = attribution.execute(hook, args, None, env)
-                result = attribution.execute(hook, args, directory, env)
+                result = recorded(args, directory, env)
                 assert (result.returncode, result.stdout) == (baseline.returncode, baseline.stdout)
                 stage = "provenance" if cause.fault == "provenance-retry" and arm != ARMS[2] else cause.stage
                 stopped(result, attribution.rows(directory), cause._replace(stage=stage),
@@ -96,8 +186,8 @@ def main() -> None:
         for arm in ARMS[:2]:
             directory = root / f"seed-null-{arm}"
             directory.mkdir()
-            result = attribution.execute(hook, ["-T", str(source), "--arms", arm], directory,
-                                         {"ACACIA_NATIVE_TEST_CONTRACT": "seed-null"})
+            result = recorded(["-T", str(source), "--arms", arm], directory,
+                              {"ACACIA_NATIVE_TEST_CONTRACT": "seed-null"})
             assert result.returncode == 0, result
             records = attribution.rows(directory)
             stops = [row for row in records if row.get("event") == "route_stopped"]
@@ -120,8 +210,8 @@ def main() -> None:
                     proof_source = root / "direct-proof.tlsf"
                     proof_source.write_text(SOURCE.replace(
                         "GLOBAL { PARAMETERS { extent = 5; } }", "").replace("extent", "5"))
-                result = attribution.execute(hook, ["-T", str(proof_source), "--arms", arm],
-                                             directory, {"ACACIA_NATIVE_TEST_LIFT_FAULT": fault})
+                result = recorded(["-T", str(proof_source), "--arms", arm], directory,
+                                  {"ACACIA_NATIVE_TEST_LIFT_FAULT": fault})
                 records = attribution.rows(directory)
                 assert result.returncode == 2, (fault, arm, result)
                 stops = [row for row in records if row.get("event") == "route_stopped"]
@@ -131,8 +221,8 @@ def main() -> None:
                 attribution.complete_records(records, expected_winners=0)
         directory = root / "direct-proof"
         directory.mkdir()
-        result = attribution.execute(hook, ["-T", str(source), "--arms", "both:gr1:oxidd"],
-                                     directory, {"ACACIA_NATIVE_TEST_CORRUPT_PROOF": "1"})
+        result = recorded(["-T", str(source), "--arms", "both:gr1:oxidd"], directory,
+                          {"ACACIA_NATIVE_TEST_CORRUPT_PROOF": "1"})
         records = attribution.rows(directory)
         assert result.returncode == 2, result
         stops = [row for row in records if row.get("event") == "route_stopped"]

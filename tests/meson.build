@@ -475,10 +475,15 @@ if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release
         suite : ['unit', 'portfolio'], depends : [game_backend_integration])
 endif
 if native_test_hooks
+  contract_record_args = [files ('check-attribution-contracts.py'), native_test_exe,
+                          tlsf_native.get_variable ('native_contract_api_exe'),
+                          meson.current_build_dir ()]
+  if host_machine.system () == 'linux'
+    contract_record_args += ['--record-ack-library', record_transport_ack,
+                            '--record-failure-worker', phase_record_failure_worker]
+  endif
   test ('attribution-contracts', py,
-        args : [files ('check-attribution-contracts.py'), native_test_exe,
-                tlsf_native.get_variable ('native_contract_api_exe'),
-                meson.current_build_dir ()],
+        args : contract_record_args,
         suite : ['unit', 'attribution'], timeout : 180)
   test ('attribution', py,
         args : [files ('check-attribution.py'), ab_exe, native_test_exe,
