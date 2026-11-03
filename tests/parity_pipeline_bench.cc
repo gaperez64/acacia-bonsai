@@ -11,6 +11,7 @@
 #include <iostream>
 #include <map>
 #include <signal.h>
+#include <spot/tl/delta2.hh>
 #include <spot/tl/parse.hh>
 #include <stdexcept>
 #include <sys/wait.h>
@@ -111,6 +112,120 @@ namespace {
     completed ("structural_features", structural_start, structural_end);
   }
 
+  int construct_only (const acacia::tlsf_frontend::specification& spec, spot::formula original,
+                      const std::string& mode, unsigned seconds) {
+    // Separate C/bridge allowances, not a combined live-memory bound. No
+    // successor/import/dispatcher calls occur in this mode.
+    constexpr uint64_t share = 512ULL << 20;
+    dpa::limits budget;
+    budget.construction.max_host_bytes = budget.import_bytes = share - share / 8;
+    budget.construction.bdd_nodes = share / 128;
+    budget.construction.bdd_cache = budget.construction.bdd_nodes / 4;
+    budget.construction.deadline_mono_ns =
+        acacia::phase_clock (CLOCK_MONOTONIC) + uint64_t (seconds) * 1000000000ULL;
+    const bool buchi = mode == "buchi";
+    const auto requested = buchi ? spot::formula::Not (original) : original;
+    const auto kind = buchi ? TLSF_DPA_BUCHI : TLSF_DPA_PARITY;
+    TlsfDpaStatus status {TLSF_DPA_OK, TLSF_DPA_NONE};
+    dpa::context context (nullptr, tlsf_dpa_free);
+    unsigned attempts = 0;
+    bool normalized = false;
+    size_t states = 0;
+    const auto unsupported = [&] {
+      return status.code == TLSF_DPA_DECLINED && status.reason == TLSF_DPA_UNSUPPORTED;
+    };
+    const auto poll = [&] {
+      const auto boundary = dpa::check_budget (budget);
+      if (boundary.code != TLSF_DPA_OK && (status.code == TLSF_DPA_OK || unsupported ()))
+        status = boundary;
+    };
+    const auto attempt = [&] (spot::formula formula, bool dag, bool general) {
+      budget.construction.allow_unproved = general;
+      const auto stage = std::string (normalized ? "normalized_" : "") +
+                         (general ? "general_create" : "strict_create");
+      try {
+        context = phase (stage, [&] {
+          return dag ? dpa::create (formula, spec.inputs, spec.outputs, kind, budget, status)
+                     : dpa::create (tlsf_ast_root (spec.ast.get ()), spec.inputs, spec.outputs,
+                                     budget, status);
+        });
+      } catch (const std::bad_alloc&) {
+        context.reset ();
+        status = {TLSF_DPA_DECLINED, TLSF_DPA_HOST_LIMIT};
+      }
+      ++attempts;
+      if ((status.code == TLSF_DPA_OK) != bool (context))
+        throw std::runtime_error ("inconsistent constructor status/context");
+      states = context ? tlsf_dpa_state_count (context.get ()) : 0;
+      std::cout << "{\"event\":\"constructor_attempt\",\"mode\":" << quote (mode)
+                << ",\"attempt\":" << attempts << ",\"stage\":" << quote (stage)
+                << ",\"code\":" << int (status.code)
+                << ",\"reason\":" << quote (dpa::reason (status))
+                << ",\"allow_unproved\":" << general << ",\"normalized\":" << normalized
+                << ",\"source_states\":" << states
+                << ",\"harness_successor_requests\":0}\n" << std::flush;
+      // Includes adapter destruction/observer output after the C factory.
+      poll ();
+    };
+    const auto construct = [&] (spot::formula formula, bool dag) {
+      attempt (formula, dag, false);
+      if (unsupported ())
+        attempt (formula, dag, true);
+    };
+    std::cout << "{\"event\":\"constructor_regime\",\"mode\":" << quote (mode)
+              << ",\"polarity\":" << quote (buchi ? "negative" : "positive")
+              << ",\"kind\":" << quote (buchi ? "buchi" : "parity")
+              << ",\"deadline_mono_ns\":" << budget.construction.deadline_mono_ns
+              << ",\"constructor_share_bytes\":536870912,\"c_host_ceiling_bytes\":469762048,"
+                 "\"bridge_ceiling_bytes\":469762048,\"bdd_nodes\":4194304,\"bdd_cache\":1048576,"
+                 "\"harness_successor_requests\":0}\n" << std::flush;
+    poll ();
+    if (status.code == TLSF_DPA_OK)
+      construct (requested, buchi);
+    if (mode == "delta2" && unsupported () && !requested.is_delta2 ()) {
+      status = dpa::check_infinite_ltl (requested, budget);
+      poll ();
+      if (status.code == TLSF_DPA_OK) {
+        spot::formula formula;
+        try {
+          formula = phase ("normalize", [&] {
+            poll ();
+            return status.code == TLSF_DPA_OK ? spot::to_delta2 (requested) : spot::formula {};
+          });
+        } catch (const std::bad_alloc&) {
+          status = {TLSF_DPA_DECLINED, TLSF_DPA_HOST_LIMIT};
+        }
+        poll ();
+        if (status.code == TLSF_DPA_OK) {
+          normalized = true;
+          construct (formula, true);
+        }
+      }
+    }
+    context.reset ();
+    poll (); // Cleanup must not allow a late successful result to escape.
+    const auto finished = acacia::phase_clock (CLOCK_MONOTONIC);
+    if ((status.code == TLSF_DPA_OK || unsupported ()) &&
+        finished >= budget.construction.deadline_mono_ns)
+      status = {TLSF_DPA_DECLINED, TLSF_DPA_DEADLINE};
+    const char* admission = status.code == TLSF_DPA_OK ? "ADMITTED"
+                            : unsupported () ? "REJECTED"
+                            : status.code == TLSF_DPA_DECLINED ? "UNKNOWN" : "ERROR";
+    std::cout << "{\"event\":\"constructor_result\",\"mode\":" << quote (mode)
+              << ",\"admission\":" << quote (admission)
+              << ",\"code\":" << int (status.code)
+              << ",\"reason\":" << quote (dpa::reason (status))
+              << ",\"attempts\":" << attempts << ",\"normalized\":" << normalized
+              << ",\"allow_unproved\":" << budget.construction.allow_unproved
+              << ",\"source_states\":" << states << ",\"harness_successor_requests\":0"
+              << ",\"provisional_until_exit\":1"
+              << ",\"finished_mono_ns\":" << finished
+              << "}\n" << std::flush;
+    poll (); // A slow output observer must not commit a late admission/rejection.
+    return status.code == TLSF_DPA_OK ? 0 : unsupported () ? 2
+             : status.code == TLSF_DPA_DECLINED ? 4 : 3;
+  }
+
   int solve_copy (const route::request& original, bool classify, bool verify, unsigned seconds) {
     std::cout.flush ();
     const stamp start;
@@ -183,8 +298,10 @@ int main (int argc, char** argv) {
   try {
     if (argc < 2)
       throw std::runtime_error (
-          "usage: parity-pipeline-bench FILE.tlsf [--features] [--reverse] [--verify] [--seconds N]");
+          "usage: parity-pipeline-bench FILE.tlsf [--features] [--reverse] [--verify] "
+          "[--construct positive|buchi|delta2] [--seconds N]");
     bool features_only = false, reverse = false, verify = false;
+    std::string construct;
     unsigned seconds = 17;
     for (int i = 2; i < argc; ++i) {
       const std::string flag = argv[i];
@@ -194,6 +311,11 @@ int main (int argc, char** argv) {
         reverse = true;
       else if (flag == "--verify")
         verify = true;
+      else if (flag == "--construct" && i + 1 < argc) {
+        construct = argv[++i];
+        if (construct != "positive" && construct != "buchi" && construct != "delta2")
+          throw std::runtime_error ("construct must be positive, buchi, or delta2");
+      }
       else if (flag == "--seconds" && i + 1 < argc) {
         size_t end;
         const std::string value = argv[++i];
@@ -205,6 +327,8 @@ int main (int argc, char** argv) {
       else
         throw std::runtime_error ("unrecognized argument: " + flag);
     }
+    if (!construct.empty () && (features_only || reverse || verify))
+      throw std::runtime_error ("construct is exclusive with features/reverse/verify");
     const auto spec = phase ("frontend", [&] { return acacia::tlsf_frontend::load (argv[1]); });
     const auto parsed = phase ("spot_parse", [&] { return spot::parse_infix_psl (spec.formula); });
     if (!parsed.f || !parsed.errors.empty ())
@@ -212,6 +336,8 @@ int main (int argc, char** argv) {
     features (parsed.f, spec.inputs.size (), spec.outputs.size ());
     if (features_only)
       return 0;
+    if (!construct.empty ())
+      return construct_only (spec, parsed.f, construct, seconds);
 
     std::cout << "{\"event\":\"regime\",\"construction_allowance_s\":" << seconds
               << ",\"each_dispatcher_allowance_s\":" << seconds

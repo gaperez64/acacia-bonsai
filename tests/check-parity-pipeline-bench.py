@@ -42,6 +42,47 @@ def main():
         invalid = subprocess.run([str(binary), str(source), "--seconds", "0"],
                                  capture_output=True, text=True, timeout=10)
         assert invalid.returncode == 3 and json.loads(invalid.stdout)["event"] == "error"
+        for formula, expected in (
+            ("G F i", {"positive": "ADMITTED", "buchi": "REJECTED", "delta2": "ADMITTED"}),
+            ("F G i", {"positive": "ADMITTED", "buchi": "ADMITTED"}),
+            ("G(i U (o R i))", {"positive": "REJECTED", "delta2": "ADMITTED"}),
+        ):
+            source.write_text('INFO { TITLE: "admission" SEMANTICS: Mealy TARGET: Mealy } '
+                              'MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { '
+                              + formula + '; } }')
+            for mode, admission in expected.items():
+                run = subprocess.run([str(binary), str(source), "--construct", mode],
+                                     capture_output=True, text=True, timeout=20)
+                assert run.returncode == (0 if admission == "ADMITTED" else 2), run.stdout
+                rows = [json.loads(line) for line in run.stdout.splitlines()]
+                regime, = [r for r in rows if r["event"] == "constructor_regime"]
+                result, = [r for r in rows if r["event"] == "constructor_result"]
+                attempts = [r for r in rows if r["event"] == "constructor_attempt"]
+                assert regime["polarity"] == ("negative" if mode == "buchi" else "positive")
+                assert result["admission"] == admission and result["mode"] == mode
+                assert result["provisional_until_exit"] == 1
+                assert result["attempts"] == len(attempts) > 0
+                assert [r["attempt"] for r in attempts] == list(range(1, len(attempts) + 1))
+                assert all(r["harness_successor_requests"] == 0 for r in attempts + [result])
+                assert not any(r["event"] in {"shared_graph", "route_begin", "route_result",
+                                               "import_components"} for r in rows)
+                normalized = formula.startswith("G(i U") and mode == "delta2"
+                assert bool(result["normalized"]) == normalized
+                if normalized:
+                    assert [r["stage"] for r in attempts[:2]] == ["strict_create", "general_create"]
+                    assert all(r["code"] == 1 and r["reason"] == "dpa_unsupported"
+                               for r in attempts[:2])
+                    assert any(r["event"] == "phase_end" and r["stage"] == "normalize" for r in rows)
+                if admission == "ADMITTED":
+                    assert result["code"] == 0 and result["source_states"] > 0
+                    assert result["finished_mono_ns"] < regime["deadline_mono_ns"]
+        for flags in (["--construct", "unknown"], ["--construct"],
+                      ["--construct", "positive", "--features"],
+                      ["--construct", "positive", "--reverse"],
+                      ["--construct", "positive", "--verify"]):
+            run = subprocess.run([str(binary), str(source), *flags],
+                                 capture_output=True, text=True, timeout=10)
+            assert run.returncode == 3 and json.loads(run.stdout)["event"] == "error"
     print("Both dispatcher orders preserve known verdicts and checked strategies")
 
 
