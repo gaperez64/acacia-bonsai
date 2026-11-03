@@ -21,9 +21,9 @@ and now TIMEOUT at 120 s. No verdict disagrees with the normalized/adjudicated
 reference series. The [plots and aggregate tables](https://github.com/gaperez64/acacia-bonsai/releases/tag/evidence-2026-11-03-sprint-performance)
 are published separately, including the [per-arm solve-count table](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-03-sprint-performance/per-arm-solve-counts.md)
 and [CSV](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-03-sprint-performance/per-arm-solve-counts.csv).
-The complete verified local archive is `sprint-performance-20261102`;
-**raw-evidence publication and index registration remain pending authorization**.
-New raw observations and frozen binaries remain local.
+The complete [verified evidence archive](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-03-sprint-performance/sprint-performance-20261102.tar.gz)
+is `sprint-performance-20261102`, registered in [the evidence index](evidence-index.tsv).
+It includes the raw observations, frozen binaries, input corpus and reviewed provenance.
 
 Source `5b7b6fcb` has the same tracked tree as the reviewed/tested `c53f06df`.
 The final frozen `otf_sparse_formula_parity` executable is SHA-256
@@ -62,7 +62,7 @@ discrepancy is retained. Missing 120 s series are omitted. The 17 s PAR-2
 difference from the prior default is 3.024 s, inside the recorded 12.074 s
 noise floor, with identical coverage; this is no speedup claim. Standalone
 figures, score tables, plot-data hashes and full clock/provenance notes are
-retained in the planned archive's `closeout/` directory.
+retained in the archive's `closeout/` directory.
 
 #361 retains opt-in `real:parity:oxidd-otf` and `unreal:parity:oxidd-otf`.
 They expand complete lazy DPA rows and use the existing exact solver with
