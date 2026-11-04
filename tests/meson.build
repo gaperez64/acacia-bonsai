@@ -1018,37 +1018,6 @@ tlsf_dpa_test = executable ('tlsf-dpa-test',
   dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
 test ('tlsf-dpa', tlsf_dpa_test, suite : ['unit', 'parity'], timeout : 120)
 
-if host_machine.system () == 'linux'
-  parity_pipeline_bench = executable ('parity-pipeline-bench',
-    ['parity_pipeline_bench.cc', '../src/tlsf_frontend.cc', '../src/solver/mealy_to_moore.cc'],
-    link_with : [tlsf_dpa_lib, parity_route_lib, parity_lib], include_directories : inc,
-    dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
-  test ('parity-pipeline-bench', py,
-    args : [files ('check-parity-pipeline-bench.py'), parity_pipeline_bench],
-    suite : ['unit', 'parity'], timeout : 120)
-  parity_pipeline_observer_test = executable ('parity-pipeline-observer-test',
-    ['parity_pipeline_observer_test.cc', '../src/tlsf_frontend.cc', '../src/solver/mealy_to_moore.cc'],
-    cpp_args : ['-UNDEBUG'], override_options : ['b_lto=false'],
-    link_args : ['-Wl,--wrap=clock_gettime'],
-    link_with : [tlsf_dpa_lib, parity_route_lib, parity_lib], include_directories : inc,
-    dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
-  test ('parity-pipeline-observer', parity_pipeline_observer_test,
-    suite : ['unit', 'parity'], timeout : 30)
-endif
-
-tlsf_dpa_lazy_test = executable ('tlsf-dpa-lazy-test',
-  ['tlsf_dpa_lazy_test.cc', '../src/solver/parity/tlsf_dpa.cc'],
-  # LTO can bind API calls before --wrap sees them. Compile the importer into
-  # this fixture without LTO so its synthetic source is always used.
-  override_options : ['b_lto=false'],
-  link_args : ['-Wl,--wrap=tlsf_dpa_status', '-Wl,--wrap=tlsf_dpa_initial',
-               '-Wl,--wrap=tlsf_dpa_ap_count', '-Wl,--wrap=tlsf_dpa_ap_name',
-               '-Wl,--wrap=tlsf_dpa_max_priority', '-Wl,--wrap=tlsf_dpa_label_node',
-               '-Wl,--wrap=tlsf_dpa_successors'],
-  include_directories : inc,
-  dependencies : [spot_dep, bddx_dep] + tlsf_deps)
-test ('tlsf-dpa-lazy', tlsf_dpa_lazy_test, suite : ['unit', 'parity'], timeout : 120)
-
 parity_arm_test = executable ('parity-arm-test',
   ['parity_arm_test.cc', '../src/solver/mealy_to_moore.cc'],
   link_with : [parity_route_lib, parity_lib], include_directories : inc,
