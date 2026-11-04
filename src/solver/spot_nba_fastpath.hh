@@ -7,7 +7,6 @@
 
 #include <cassert>
 #include <chrono>
-#include <functional>
 #include <optional>
 #include <string_view>
 #include <utility>
@@ -157,37 +156,22 @@ namespace acacia::spot_fastpath {
                                                 : nba_fast_class::nondeterministic_buchi;
   }
 
-  using fastpath_observer =
-      std::function<void (const char*, const spot::twa_graph_ptr&, bool entering)>;
   inline fast_path_result deterministic_negated_spec_fast_path (
       const spot::twa_graph_ptr& negated_spec_aut, const bdd& all_outputs,
-      bool want_strategy, bool want_winning_region = false, bool moore = false,
-      const fastpath_observer& observe = {}) {
+      bool want_strategy, bool want_winning_region = false, bool moore = false) {
     fast_path_result res;
 
-    if (observe)
-      observe ("fastpath_complete", negated_spec_aut, true);
     auto good = complete_copy_with_rejecting_sink (negated_spec_aut);
     good->set_acceptance (1, spot::acc_cond::acc_code::cobuchi ());
     spot::set_synthesis_outputs (good, all_outputs);
-    if (observe)
-      observe ("fastpath_complete", good, false);
 
     spot::synthesis_info gi;
     gi.sp = spot::synthesis_info::splittype::AUTO;
     gi.moore = moore;
-    if (observe)
-      observe ("fastpath_split", good, true);
     auto arena = spot::split_2step (good, gi);
-    if (observe) {
-      observe ("fastpath_split", arena, false);
-      observe ("fastpath_solve", arena, true);
-    }
     const bool p_out_wins = want_winning_region
         ? spot::solve_parity_game (arena, true)
         : spot::solve_game (arena, gi);
-    if (observe)
-      observe ("fastpath_solve", arena, false);
 
     res.conclusive = true;
     res.current_output_player_wins = p_out_wins;

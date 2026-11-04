@@ -83,8 +83,7 @@ namespace acacia::parity_route {
     return {4, "genuine parity acceptance", nullptr};
   }
 
-  static result run_impl (request input, options config, observer observe, bool positive_dpa,
-                          bool classify_positive = false) {
+  static result run_impl (request input, options config, observer observe, bool positive_dpa) {
     result output;
     if (config.check)
       config.check ();
@@ -165,14 +164,10 @@ namespace acacia::parity_route {
     for (const auto& name : input.outputs)
       outputs &= bdd_ithvar (aut->register_ap (spot::formula::ap (name)));
     classification tier {4, "supplied positive parity", nullptr};
-    if (!positive_dpa || classify_positive) {
+    if (!positive_dpa) {
       spot::twa_graph_ptr worker;
       stage ("orient", [&] {
-        // Classification may mutate its argument. A complete negative copy
-        // keeps the supplied positive graph intact for parity fallback.
-        auto source = classify_positive
-                          ? spot::make_twa_graph (aut, spot::twa::prop_set::all ()) : aut;
-        worker = input.source == source_language::original ? spot::dualize (source) : source;
+        worker = input.source == source_language::original ? spot::dualize (aut) : aut;
       });
       stage ("classify", [&] { tier = classify (worker); });
     }
@@ -202,25 +197,8 @@ namespace acacia::parity_route {
           tier.buchi->register_ap (spot::formula::ap (name));
         // Production needs only the verdict and, after selection, the controller.
         acacia::synthesis::controller_capture capture (&buchi_controller);
-        acacia::spot_fastpath::fastpath_observer fast_observe;
-        std::chrono::steady_clock::time_point fast_start;
-        if (config.fastpath_phases)
-          fast_observe = [&] (const char* name, const auto& graph, bool entering) {
-            if (config.check)
-              config.check ();
-            if (!observe)
-              return;
-            if (entering) {
-              fast_start = std::chrono::steady_clock::now ();
-              observe (name, graph, -1);
-            }
-            else
-              observe (name, graph, std::chrono::duration<double> (
-                  std::chrono::steady_clock::now () - fast_start).count ());
-          };
         auto fast = acacia::spot_fastpath::deterministic_negated_spec_fast_path (
-            tier.buchi, outputs, config.synthesis and not keep_arena, keep_arena, native_moore,
-            fast_observe);
+            tier.buchi, outputs, config.synthesis and not keep_arena, keep_arena, native_moore);
         winning = fast.current_output_player_wins;
         if (keep_arena)
           arena = *fast.solved_arena;
@@ -343,9 +321,5 @@ namespace acacia::parity_route {
 
   result run_positive_dpa (request input, options config, observer observe) {
     return run_impl (std::move (input), std::move (config), std::move (observe), true);
-  }
-
-  result run_classified_positive_dpa (request input, options config, observer observe) {
-    return run_impl (std::move (input), std::move (config), std::move (observe), true, true);
   }
 }

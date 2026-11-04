@@ -1025,6 +1025,7 @@ This selected screen is not a full-corpus gain.
 
 ## Rejected or deferred ideas
 
+- Removed experimental DPA route/share controls, classify-copy, negative-objective Büchi, Delta2 fallback and lazy parity arms (#365): no useful coverage gain. `pipeline-posets-20261103`: classify tier 4 on all 5 completed graphs; negative DBA constructor admitted 1/16 (timed out), solved 0/16, 15 syntax rejects; Delta2 added 2 constructor admissions, 1 extra solve (already solved by Spot: 0.23 s vs 9.8 s). `sprint-performance-20261102`: lazy BFS solved 0/9 load_balancer at 17 s. Default eager positive DPA and #365 telemetry fixes remain.
 - Sparse forward move compaction: a confirmed near-cap regression defeated the
   five-pair gate. Archive `demand-sparse-20260916`.
 - Scheduling hints in sparse unreal search: no confirmed deployed gain and a

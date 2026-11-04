@@ -396,9 +396,6 @@ synthetic worker. `dpa_import` belongs to the emitting OxiDD parity worker and
 carries stage, counts and reason. `parity_tier`, `parity_solved` and `parity_verdict`
 carry worker identity, tier, exact-game trust flags and monotonic time; they consume
 the same child sequence as lifecycle events without repeating lifecycle context.
-Directional OxiDD lazy arms emit unsequenced `dpa_snapshot` diagnostics from their
-worker, including source/imported/expanded counts, solve count, stage and reason;
-partial snapshots need not import every source state.
 The completeness auditor validates these schemas and emitter identities while
 retaining writer totals, drops and sequence checks. Unrecognized events still
 undergo lifecycle validation.

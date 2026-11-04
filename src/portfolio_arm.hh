@@ -33,7 +33,6 @@ struct portfolio_arm {
     bool both = false;  // exact arms may prove either side
     portfolio_arm_kind kind;
     bool parity_oxidd = false;
-    bool parity_lazy = false;
     std::optional<legacy_arm_options> legacy;
 
     portfolio_arm (bool is_unreal, TRANSLATION_PREF_T translation_pref, UNREAL_X_T unreal_x,
@@ -51,8 +50,6 @@ struct portfolio_arm {
 
     const char* native_name () const {
       if (kind == portfolio_arm_kind::parity) {
-        if (parity_lazy)
-          return unreal ? "unreal:parity:oxidd-otf" : "real:parity:oxidd-otf";
         return parity_oxidd ? "both:parity:oxidd" : "both:parity:spot";
       }
       if (kind == portfolio_arm_kind::obligation)
@@ -68,8 +65,7 @@ struct portfolio_arm {
 
     bool operator== (const portfolio_arm& rhs) const {
       return kind == rhs.kind && parity_oxidd == rhs.parity_oxidd &&
-             parity_lazy == rhs.parity_lazy && unreal == rhs.unreal &&
-             both == rhs.both && legacy == rhs.legacy;
+             unreal == rhs.unreal && both == rhs.both && legacy == rhs.legacy;
     }
 
   private:
