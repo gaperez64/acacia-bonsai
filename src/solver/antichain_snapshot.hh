@@ -8,6 +8,7 @@
 
 #if ACACIA_ENABLE_DIAGNOSTICS
 
+# include <array>
 # include <cstdlib>
 # include <filesystem>
 # include <fstream>
@@ -64,11 +65,17 @@ namespace acacia::antichain_snapshot {
         size_t max_inputs = 4096;
         size_t max_actions = 65536;
         size_t max_transitions = 4000000;
-        bool cpre = false;
+        bool cpre = false, cpre_frontiers = false;
+        size_t cpre_calls = 0;
+        std::vector<bool> cpre_taken;
         size_t cpre_max_actions = 4096;
         size_t cpre_dumps = 0;
         size_t cpre_maximum = 8;
         std::ofstream cpre_out;
+        bool contains_enabled = false;
+        size_t contains_maximum = 16, contains_dumps = 0, contains_queries = 0, contains_hits = 0;
+        std::vector<std::array<bool, 2>> contains_taken;
+        int current_k = 0, current_loop = 0;
     };
 
     inline snapshot_state& state () {
@@ -110,6 +117,15 @@ namespace acacia::antichain_snapshot {
     snapshot.cpre_maximum =
         detail::env_size ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE_MAX", 8, true);
     snapshot.cpre_dumps = 0;
+    snapshot.cpre_calls = 0;
+    const char* frontiers = std::getenv ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE_FRONTIERS");
+    snapshot.cpre_frontiers = frontiers && *frontiers && std::string_view {frontiers} != "0";
+    snapshot.cpre_taken.assign (snapshot.size_marks.size () + 1, false);
+    const char* contains = std::getenv ("ACACIA_ANTICHAIN_SNAPSHOT_CONTAINS");
+    snapshot.contains_enabled = contains != nullptr && *contains != '\0' && std::string_view {contains} != "0";
+    snapshot.contains_maximum = detail::env_size ("ACACIA_ANTICHAIN_SNAPSHOT_CONTAINS_MAX", 16, true);
+    snapshot.contains_dumps = snapshot.contains_queries = snapshot.contains_hits = 0;
+    snapshot.contains_taken.assign (snapshot.size_marks.size () + 1, {false, false});
     snapshot.cpre_out.close ();
     snapshot.cpre_out.clear ();
     snapshot.mark_taken.assign (snapshot.size_marks.size (), false);
@@ -163,6 +179,8 @@ namespace acacia::antichain_snapshot {
   template <typename SetOfStates>
   inline void observe (const SetOfStates& f, int k, int loop) {
     detail::snapshot_state& snapshot = detail::state ();
+    snapshot.current_k = k;
+    snapshot.current_loop = loop;
     if (snapshot.directory.empty () or snapshot.dumps >= snapshot.maximum or loop < 0)
       return;
 
@@ -210,6 +228,12 @@ namespace acacia::antichain_snapshot {
     detail::snapshot_state& snapshot = detail::state ();
     if (snapshot.directory.empty ())
       return;
+    if (snapshot.contains_enabled) {
+      std::ofstream counts (snapshot.directory + "/operation-counts.tsv");
+      counts << "complete\tcontains\thits\tmisses\tcpre_calls\n1\t"
+             << snapshot.contains_queries << '\t' << snapshot.contains_hits << '\t'
+             << snapshot.contains_queries - snapshot.contains_hits << '\t' << snapshot.cpre_calls << '\n';
+    }
     std::ofstream output {snapshot.directory + "/antichain-final.tsv"};
     output << "# k=" << k << " loop=" << loop << " maxima=" << f.size ()
            << " after_bound_raise=0 final=1\n";
@@ -291,9 +315,21 @@ namespace acacia::antichain_snapshot {
   inline bool record_cpre_before (const SetOfStates& f, int k, int loop,
                                   const std::string& input, const Actions& actions) {
     detail::snapshot_state& snapshot = detail::state ();
-    if (snapshot.directory.empty () or not snapshot.cpre or
-        snapshot.cpre_dumps >= snapshot.cpre_maximum)
+    if (snapshot.directory.empty ())
       return false;
+    ++snapshot.cpre_calls;
+    if (!snapshot.cpre)
+      return false;
+    if (snapshot.cpre_dumps >= snapshot.cpre_maximum)
+      return false;
+    if (snapshot.cpre_frontiers) {
+      size_t bin = 0;
+      for (const auto mark : snapshot.size_marks)
+        bin += f.size () >= mark;
+      if (snapshot.cpre_taken[bin])
+        return false;
+      snapshot.cpre_taken[bin] = true;
+    }
     // An input class with a very large action list would dominate the dump; the
     // cap is recorded rather than silently applied.
     const size_t action_count = std::distance (actions.begin (), actions.end ());
@@ -332,6 +368,51 @@ namespace acacia::antichain_snapshot {
           out << q << '\t' << p << '\t' << (increment ? 1 : 0) << '\n';
     }
     return true;
+  }
+
+  /// First observed hit/miss per frontier-size bin. These are actual source
+  /// queries, not random membership probes. Collection changes diagnostic costs
+  /// only; callers and this writer are absent from diagnostics-off builds.
+  template <typename SetOfStates, typename State>
+  inline void record_contains (const SetOfStates& f, const State& query, bool answer,
+                                const char* origin) noexcept {
+    try {
+      auto& snapshot = detail::state ();
+      if (snapshot.directory.empty () || !snapshot.contains_enabled)
+        return;
+      ++snapshot.contains_queries;
+      snapshot.contains_hits += answer;
+      if (snapshot.contains_dumps >= snapshot.contains_maximum)
+        return;
+      size_t bin = 0;
+      for (const auto mark : snapshot.size_marks)
+        bin += f.size () >= mark;
+      if (snapshot.contains_taken[bin][answer])
+        return;
+      snapshot.contains_taken[bin][answer] = true;
+      const auto path = snapshot.directory + "/contains-" + std::to_string (snapshot.contains_dumps++) + ".tsv";
+      std::ofstream out (path + ".partial");
+      out << "# schema_version=1 k=" << snapshot.current_k << " loop=" << snapshot.current_loop
+          << " maxima=" << f.size () << " expected=" << int (answer) << " bin=" << bin
+          << " ordinal=" << snapshot.contains_queries << " hits=" << snapshot.contains_hits
+          << " origin=" << origin << '\n' << "[query]\n";
+      const auto write = [&] (const auto& value) {
+        for (size_t i = 0; i < value.size (); ++i)
+          out << (i ? "\t" : "") << int (value[i]);
+        out << '\n';
+      };
+      write (query);
+      out << "[generators]\n";
+      for (const auto& maximum : f)
+        write (maximum);
+      out << "[end]\n";
+      out.close ();
+      if (out)
+        std::filesystem::rename (path + ".partial", path);
+    } catch (...) {
+      // Capture failures cannot change the answer or the picker decision.
+      // Incomplete .partial files remain explicit evidence, never replay inputs.
+    }
   }
 
   /// Close the event opened by `record_cpre_before` with the region the solver

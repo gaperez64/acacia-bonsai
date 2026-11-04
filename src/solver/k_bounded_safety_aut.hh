@@ -155,7 +155,14 @@ class k_bounded_safety_aut_detail {
         cpre_inplace (f, *input, actioner, k, loopcount);
         acacia::diagnostics::snapshot_loop_progress ("classic-after-cpre");
 
+#if ACACIA_ENABLE_DIAGNOSTICS
+        const state initial_query (init);
+        const bool initial_contained = f.contains (initial_query);
+        acacia::antichain_snapshot::record_contains (f, initial_query, initial_contained, "initial");
+        if (not initial_contained) {
+#else
         if (not f.contains (state (init))) {
+#endif
           if (not raise_bound_or_give_up (f, k, actioner))
             return std::nullopt;
           continue;

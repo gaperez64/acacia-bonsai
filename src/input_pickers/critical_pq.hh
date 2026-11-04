@@ -2,6 +2,9 @@
 
 #include "actioners/direction.hh"
 #include "solver/diagnostics.hh"
+#if ACACIA_ENABLE_DIAGNOSTICS
+# include "solver/antichain_snapshot.hh"
+#endif
 
 #include <optional>
 #include <random>
@@ -40,7 +43,13 @@ namespace input_pickers {
                 acacia::diagnostics::observe_support_demand (f, *it_act);
                 auto fwdf = actioner.apply (f, *it_act, actioners::direction::forward);
                 verb_do (3, vout << "apply(" << f << ", <" << input << ", ?>) = " << fwdf << ": ");
+#if ACACIA_ENABLE_DIAGNOSTICS
+                const bool contained = F.contains (fwdf);
+                acacia::antichain_snapshot::record_contains (F, fwdf, contained, "picker-pq");
+                if (contained) {
+#else
                 if (F.contains (fwdf)) {
+#endif
                   verb_do (3, vout << " is in F." << std::endl);
                   is_witness = false;
                   break;

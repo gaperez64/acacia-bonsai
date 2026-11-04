@@ -475,10 +475,15 @@ if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release
         suite : ['unit', 'portfolio'], depends : [game_backend_integration])
 endif
 if native_test_hooks
+  contract_record_args = [files ('check-attribution-contracts.py'), native_test_exe,
+                          tlsf_native.get_variable ('native_contract_api_exe'),
+                          meson.current_build_dir ()]
+  if host_machine.system () == 'linux'
+    contract_record_args += ['--record-ack-library', record_transport_ack,
+                            '--record-failure-worker', phase_record_failure_worker]
+  endif
   test ('attribution-contracts', py,
-        args : [files ('check-attribution-contracts.py'), native_test_exe,
-                tlsf_native.get_variable ('native_contract_api_exe'),
-                meson.current_build_dir ()],
+        args : contract_record_args,
         suite : ['unit', 'attribution'], timeout : 180)
   test ('attribution', py,
         args : [files ('check-attribution.py'), ab_exe, native_test_exe,
@@ -1012,6 +1017,24 @@ tlsf_dpa_test = executable ('tlsf-dpa-test',
   link_with : [tlsf_dpa_lib, parity_route_lib, parity_lib], include_directories : inc,
   dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
 test ('tlsf-dpa', tlsf_dpa_test, suite : ['unit', 'parity'], timeout : 120)
+
+if host_machine.system () == 'linux'
+  parity_pipeline_bench = executable ('parity-pipeline-bench',
+    ['parity_pipeline_bench.cc', '../src/tlsf_frontend.cc', '../src/solver/mealy_to_moore.cc'],
+    link_with : [tlsf_dpa_lib, parity_route_lib, parity_lib], include_directories : inc,
+    dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
+  test ('parity-pipeline-bench', py,
+    args : [files ('check-parity-pipeline-bench.py'), parity_pipeline_bench],
+    suite : ['unit', 'parity'], timeout : 120)
+  parity_pipeline_observer_test = executable ('parity-pipeline-observer-test',
+    ['parity_pipeline_observer_test.cc', '../src/tlsf_frontend.cc', '../src/solver/mealy_to_moore.cc'],
+    cpp_args : ['-UNDEBUG'], override_options : ['b_lto=false'],
+    link_args : ['-Wl,--wrap=clock_gettime'],
+    link_with : [tlsf_dpa_lib, parity_route_lib, parity_lib], include_directories : inc,
+    dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
+  test ('parity-pipeline-observer', parity_pipeline_observer_test,
+    suite : ['unit', 'parity'], timeout : 30)
+endif
 
 tlsf_dpa_lazy_test = executable ('tlsf-dpa-lazy-test',
   ['tlsf_dpa_lazy_test.cc', '../src/solver/parity/tlsf_dpa.cc'],

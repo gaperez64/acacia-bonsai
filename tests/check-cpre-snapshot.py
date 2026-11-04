@@ -61,10 +61,25 @@ def check_event(path, states, threshold):
     return before != after, len(actions) > 1
 
 
+def check_contains(path, states):
+    lines = path.read_text().splitlines()
+    header = dict(word.split("=", 1) for word in lines[0].removeprefix("# ").split())
+    assert header["schema_version"] == "1" and header["origin"] in {"picker", "picker-pq", "initial"}
+    assert lines[1] == "[query]" and lines[3] == "[generators]" and lines[-1] == "[end]"
+    query = tuple(map(int, lines[2].split("\t")))
+    generators = [tuple(map(int, line.split("\t"))) for line in lines[4:-1]]
+    assert len(query) == states and all(len(v) == states for v in generators)
+    assert len(generators) == int(header["maxima"]) and header["expected"] in {"0", "1"}
+    answer = any(all(a <= b for a, b in zip(query, value)) for value in generators)
+    assert answer == (header["expected"] == "1")
+    return answer
+
+
 def main():
     with tempfile.TemporaryDirectory(prefix="cpre-snapshot-") as temporary:
         subprocess.run([sys.argv[1], temporary], check=True, timeout=30)
         checked = changed = multiple = 0
+        contains_answers = set()
         thresholds = set()
         for directory in sorted(Path(temporary).glob("aut-*")):
             with (directory / "meta.tsv").open() as stream:
@@ -78,6 +93,16 @@ def main():
                 checked += 1
                 changed += different
                 multiple += many
+            for event in sorted(directory.glob("contains-*.tsv")):
+                contains_answers.add(check_contains(event, states))
+            assert not list(directory.glob("*.partial"))
+            with (directory / "operation-counts.tsv").open() as stream:
+                counts, = csv.DictReader(stream, delimiter="\t")
+            assert counts["complete"] == "1"
+            assert int(counts["contains"]) == int(counts["hits"]) + int(counts["misses"])
+            assert int(counts["contains"]) >= len(list(directory.glob("contains-*.tsv")))
+            assert int(counts["cpre_calls"]) >= len(list(directory.glob("cpre-*.tsv")))
+        assert contains_answers == {False, True}
         assert thresholds == {2, 3} and checked and changed and multiple, (
             thresholds, checked, changed, multiple)
         print(f"checked {checked} production CPre snapshots ({changed} changed regions)")

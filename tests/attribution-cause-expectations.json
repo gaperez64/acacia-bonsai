@@ -2923,6 +2923,10 @@
     "cause": "worker_decline",
     "telemetry": "DECLINE/applicability"
   },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | tlsf_dpa::reason (failure.status) | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
   "src/parity_arm.cc | worker_decline | UNKNOWN | worker | \"dpa_missing_ast\" | 0": {
     "cause": "worker_decline",
     "telemetry": "DECLINE/applicability"
@@ -2994,5 +2998,21 @@
   "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | throw std::bad_alloc | UNKNOWN | provider |  | 1": {
     "cause": "std::bad_alloc",
     "telemetry": "STOPPED/resource"
+  },
+  "src/parity_arm.cc | throw std::invalid_argument | UNKNOWN | provider | \"experimental DPA route\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/parity_arm.cc | throw std::invalid_argument | UNKNOWN | provider | \"experimental Delta2 toggle\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/parity_arm.cc | throw std::invalid_argument | UNKNOWN | provider | \"experimental DPA constructor share\" | 0": {
+    "cause": "std::invalid_argument",
+    "telemetry": "STOPPED/error"
+  },
+  "src/parity_arm.cc | worker_stopped | UNKNOWN | worker | \"dpa_experimental_config\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
   }
 }

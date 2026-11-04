@@ -45,6 +45,8 @@ def check_records(directory, expected_calls=None, synthesis=False, formula=False
                        for row in rows), rows
     assert not any(row.get("event") == "verification_complete"
                    or row.get("stage", "").startswith("verify-") for row in rows), rows
+    assert not any(row.get("stage", row.get("phase", "")).startswith("fastpath_")
+                   for row in rows), rows
     for row in [tier, solved, verdict]:
         assert row["trust"] == "exact_game", row
         assert not row["same_library_checked"] and not row["independent_checked"], row
@@ -148,6 +150,43 @@ GUARANTEES {{ {guarantee}; }} }}''')
                     subprocess.run([checker, "--check-controller", str(controller),
                                     original, target.lower()], check=True,
                                    capture_output=True, text=True, timeout=20)
+                # Both experimental orientations retain frontend timing and
+                # the production arm's sole Moore reconstruction owner.
+                for route in ("classify", "buchi"):
+                    clear()
+                    experimental = dict(env, ACACIA_EXPERIMENTAL_DPA_ROUTE=route,
+                                        ACACIA_EXPERIMENTAL_DPA_SHARE_BYTES="536870912")
+                    answer = execute([binary, "-T", str(source), "--arms", arm,
+                                      "-s", str(controller)], experimental)
+                    assert answer.returncode == reference.returncode, (route, semantics, target, answer)
+                    if route == "buchi":
+                        assert {row.get("phase") for row in rows()} >= {
+                            "acacia", "fastpath_complete", "fastpath_split", "fastpath_solve"}, rows()
+                    if answer.returncode == 0:
+                        subprocess.run([checker, "--check-controller", str(controller),
+                                        original, target.lower()], check=True,
+                                       capture_output=True, text=True, timeout=20)
+    for key, value in (("ROUTE", "bad"), ("DELTA2", "yes"), ("SHARE_BYTES", "-1"),
+                       ("SHARE_BYTES", "536870912x"), ("SHARE_BYTES", "0"),
+                       ("SHARE_BYTES", "4294967297")):
+        clear()
+        invalid = subprocess.run([binary, "-T", str(source), "--arms", arm],
+                                 env=dict(env, **{f"ACACIA_EXPERIMENTAL_DPA_{key}": value}),
+                                 capture_output=True, text=True, timeout=20)
+        assert invalid.returncode == 2, invalid
+        assert any(row.get("reason") == "dpa_experimental_config" for row in rows()), rows()
+        assert not any(row.get("event") in {"parity_verdict", "dpa_import"} for row in rows()), rows()
+    for route in ("positive", "classify"):
+        write("G F G F o")
+        clear()
+        answer = execute([binary, "-T", str(source), "--arms", arm,
+                          "-s", str(controller)],
+                         dict(env, ACACIA_EXPERIMENTAL_DPA_ROUTE=route,
+                              ACACIA_EXPERIMENTAL_DPA_DELTA2="1"))
+        assert answer.returncode == 0, answer
+        assert any(row.get("phase") == "dpa_normalize" for row in rows()), rows()
+        subprocess.run([checker, "--check-controller", str(controller), "G F G F o", "mealy"],
+                       check=True, capture_output=True, text=True, timeout=20)
     execute([binary, "-T", str(source), "--arms", "both:parity:spot,both:parity:oxidd"])
     duplicate = subprocess.run([binary, "-T", str(source), "--arms", f"{arm},{arm}"],
                                capture_output=True, text=True, timeout=20)

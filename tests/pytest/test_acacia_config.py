@@ -605,6 +605,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         "-DACACIA_BDD_MAX_INCREASE=4194304",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",
         "-DSIMD_IS_MAX=false",
+        "-DSIMD_IS_NATIVE=false",
         "-DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed",
         "-DACACIA_ENABLE_DIAGNOSTICS=1",
         r'-DACACIA_DEFAULT_ARMS=\"real:identity:backward,unreal:identity:forward\"',
@@ -734,3 +735,18 @@ def test_kept_presets_are_flat_and_each_selector_varies():
             if name in {"preset", "bdd_max_increase"}:
                 continue
             assert any(values[name] != option["default"] for values in resolved), name
+
+
+def test_native_simd_is_additive_and_old_presets_keep_their_abi():
+    module = load_module()
+    options, presets = module.load_registry()
+    for name in presets["presets"]:
+        values = module.normalize_preset(options, presets, name)
+        assert values["simd_native"] is (name == "posets_native_width")
+    assert "posets_native_width" not in presets["groups"]["docker_default"]
+    values = module.defaults(options)
+    values["simd_native"] = True
+    assert "-Dacacia_simd_native=true" in module.meson_args(options, values)
+    flags = module.preprocessor_flags(options, values)
+    assert "-DSIMD_IS_NATIVE=true" in flags
+    assert "-DSIMD_IS_MAX=true" in flags  # Explicit native selection takes precedence.

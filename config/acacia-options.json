@@ -113,10 +113,23 @@
       "meson": "acacia_simd_is_max",
       "type": "boolean",
       "default": true,
-      "description": "Vector width for SIMD comparisons: the widest fixed size the library allows if true, the native register width if false",
+      "description": "Legacy SIMD width: max fixed size if true, compatible ABI (128-bit on x86-64) if false",
       "macros": [
         {
           "name": "SIMD_IS_MAX",
+          "emit": "always",
+          "encoding": "bool_literal"
+        }
+      ]
+    },
+    "simd_native": {
+      "meson": "acacia_simd_native",
+      "type": "boolean",
+      "default": false,
+      "description": "Select hardware-native SIMD width; otherwise retain simd_is_max selection",
+      "macros": [
+        {
+          "name": "SIMD_IS_NATIVE",
           "emit": "always",
           "encoding": "bool_literal"
         }

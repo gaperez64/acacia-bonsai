@@ -10,11 +10,48 @@
 #include "solver/synthesis_rendezvous.hh"
 
 #include <optional>
+#include <charconv>
+#include <spot/tl/delta2.hh>
 #include <spot/tl/parse.hh>
 #include <stdexcept>
 
 namespace acacia {
   namespace {
+    struct dpa_stopped {
+        TlsfDpaStatus status;
+    };
+    struct experiment {
+        std::string route = "positive";
+        bool delta2 = false, active = false;
+        std::optional<uint64_t> share;
+    };
+    experiment experimental_dpa () {
+      experiment value;
+      if (const char* route = getenv ("ACACIA_EXPERIMENTAL_DPA_ROUTE")) {
+        value.active = true;
+        value.route = route;
+        if (value.route != "positive" && value.route != "classify" && value.route != "buchi")
+          throw std::invalid_argument ("experimental DPA route");
+      }
+      if (const char* delta2 = getenv ("ACACIA_EXPERIMENTAL_DPA_DELTA2")) {
+        value.active = true;
+        if (std::strcmp (delta2, "0") && std::strcmp (delta2, "1"))
+          throw std::invalid_argument ("experimental Delta2 toggle");
+        value.delta2 = !std::strcmp (delta2, "1");
+      }
+      if (const char* share = getenv ("ACACIA_EXPERIMENTAL_DPA_SHARE_BYTES")) {
+        value.active = true;
+        uint64_t bytes = 0;
+        const char* end = share + std::strlen (share);
+        const auto result = std::from_chars (share, end, bytes);
+        if (result.ec != std::errc {} || result.ptr != end || bytes < (1u << 20) ||
+            bytes > (uint64_t {4} << 30))
+          throw std::invalid_argument ("experimental DPA constructor share");
+        value.share = bytes;
+      }
+      return value;
+    }
+
     void record (const char* arm, const char* event, unsigned tier) {
       if (!phase_records_enabled ())
         return;
@@ -60,6 +97,15 @@ namespace acacia {
         worker_decline ("dpa_lazy_decision_only");
         return EXIT_CODE_UNKNOWN;
       }
+      experiment pipeline;
+      if (oxidd && !selection.parity_lazy) {
+        try {
+          pipeline = experimental_dpa ();
+        } catch (const std::invalid_argument&) {
+          worker_stopped ("dpa_experimental_config");
+          return EXIT_CODE_UNKNOWN;
+        }
+      }
       tlsf_frontend::specification child_local;
       const auto& objective = args.prepare_objective (child_local);
       const auto& metadata = objective.metadata;
@@ -77,8 +123,15 @@ namespace acacia {
       // original positive objective, without simplification, swapping or another X.
       parity_route::request input;
       input.formula = parsed.f;
+      if (pipeline.active)
+        input.specification = parsed.f;
       input.inputs = objective.inputs;
       input.outputs = objective.outputs;
+      std::string preprocessing = "parity-route";
+      if (pipeline.active)
+        preprocessing += ":experimental-route=" + pipeline.route +
+                         ":delta2=" + (pipeline.delta2 ? "1" : "0") + ":constructor-share=" +
+                         (pipeline.share ? std::to_string (*pipeline.share) : "worker");
       if (phase_records_enabled ())
         accounting_identity (input.formula, input.inputs, input.outputs,
                              oxidd ? "oxidd-parity" : "spot-parity",
@@ -86,9 +139,10 @@ namespace acacia {
                                                           : "tlsf-dpa-stage1:max-odd:bounded-bfs")
                                    : "Generic:Deterministic:High:simul=0:ba-simul=0:det-simul=0:"
                                      "tls-impl=1:wdba-minimize=2",
-                             "parity-route");
+                             preprocessing);
       parity_route::options config;
       config.synthesis = args.synth_fname.has_value ();
+      config.fastpath_phases = pipeline.active && phase_records_enabled ();
       unsigned tier = 0;
       config.on_classified = [&] (unsigned value, const std::string&) {
         tier = value;
@@ -116,24 +170,62 @@ namespace acacia {
         const auto deadline = phase_clock (CLOCK_MONOTONIC) + construction_ns;
         budget.construction.deadline_mono_ns =
             deadline_mono_ns ? std::min (deadline, deadline_mono_ns) : deadline;
-        const auto share = obligation::rss_share (args.arms ? args.arms->size () : 1);
+        const auto share = pipeline.share.value_or (
+            obligation::rss_share (args.arms ? args.arms->size () : 1));
         // Reserve 1/8 for solving; the worker RSS cap covers overlapping C/BDD/import storage.
         budget.construction.max_host_bytes = budget.import_bytes =
             std::max<uint64_t> (1, share - share / 8);
         // Allow 128 bytes per node for nodes, unique tables and a 1:4 apply cache.
         budget.construction.bdd_nodes = std::clamp<uint64_t> (share / 128, 256, 1u << 30);
         budget.construction.bdd_cache = budget.construction.bdd_nodes / 4;
+        // These calls are cooperatively bounded only between opaque Spot stages.
+        // Parent deadline and process AS/RSS remain the hard boundary inside them.
+        if (!selection.parity_lazy)
+          config.check = [budget] {
+            const auto status = tlsf_dpa::check_budget (budget);
+            if (status.code != TLSF_DPA_OK)
+              throw dpa_stopped {status};
+          };
         TlsfDpaStatus status;
         auto context = tlsf_dpa::context (nullptr, tlsf_dpa_free);
+        const bool buchi = pipeline.route == "buchi";
+        const auto requested = buchi ? spot::formula::Not (parsed.f) : parsed.f;
+        const auto attempt = [&] (spot::formula formula, bool dag) {
+          budget.construction.allow_unproved = false;
+          const auto construct = [&] {
+            return dag
+                       ? tlsf_dpa::create (formula, input.inputs, input.outputs,
+                                           buchi ? TLSF_DPA_BUCHI : TLSF_DPA_PARITY, budget, status)
+                       : tlsf_dpa::create (tlsf_ast_root (objective.ast.get ()), input.inputs,
+                                           input.outputs, budget, status);
+          };
+          context = construct ();
+          if (status.code == TLSF_DPA_DECLINED && status.reason == TLSF_DPA_UNSUPPORTED) {
+            // Preserve the explicit existing general-admission trust assumption.
+            budget.construction.allow_unproved = true;
+            context = construct ();
+          }
+        };
         {
           stage = "dpa_create";
           legacy_phase construction (stage);
-          context = tlsf_dpa::create (tlsf_ast_root (objective.ast.get ()), input.inputs,
-                                      input.outputs, budget, status);
-          if (status.code == TLSF_DPA_DECLINED && status.reason == TLSF_DPA_UNSUPPORTED) {
-            budget.construction.allow_unproved = true;
-            context = tlsf_dpa::create (tlsf_ast_root (objective.ast.get ()), input.inputs,
-                                        input.outputs, budget, status);
+          attempt (requested, buchi);
+        }
+        if (pipeline.delta2 && status.code == TLSF_DPA_DECLINED &&
+            status.reason == TLSF_DPA_UNSUPPORTED && !requested.is_delta2 ()) {
+          status = tlsf_dpa::check_infinite_ltl (requested, budget);
+          if (status.code == TLSF_DPA_OK) {
+            spot::formula normalized;
+            {
+              stage = "dpa_normalize";
+              legacy_phase normalization (stage);
+              config.check ();
+              normalized = spot::to_delta2 (requested);
+              config.check ();
+            }
+            stage = "dpa_normalized_create";
+            legacy_phase construction (stage);
+            attempt (normalized, true);
           }
         }
         if (selection.parity_lazy) {
@@ -187,7 +279,16 @@ namespace acacia {
         if (context && status.code == TLSF_DPA_OK) {
           stage = "dpa_expand_import";
           legacy_phase expansion (stage);
-          imported = tlsf_dpa::import (*context, budget);
+          std::optional<legacy_phase> import_phase;
+          std::function<void (const char*, double)> observe;
+          if (phase_records_enabled ())
+            observe = [&] (const char* name, double seconds) {
+                if (seconds < 0)
+                  import_phase.emplace (name);
+                else
+                  import_phase.reset ();
+              };
+          imported = tlsf_dpa::import (*context, budget, spot::make_bdd_dict (), observe);
         }
         if (phase_records_enabled ()) {
           char line[768];
@@ -211,15 +312,22 @@ namespace acacia {
         }
         input.automaton = std::move (imported.automaton);
         input.frame = parity_route::timing_frame::effective_mealy;
+        if (buchi) {
+          input.formula = requested;
+          input.source = parity_route::source_language::real_worker;
+        }
       }
-      std::optional<legacy_phase> phase;
-      const auto solve = oxidd ? parity_route::run_positive_dpa : parity_route::run;
+      std::optional<legacy_phase> phase, fastpath_phase;
+      const auto solve = !oxidd || pipeline.route == "buchi" ? parity_route::run
+                         : pipeline.route == "classify" ? parity_route::run_classified_positive_dpa
+                                                         : parity_route::run_positive_dpa;
       auto answer = solve (input, config, [&] (const char* name, const auto&, double s) {
         stage = name;
+        auto& current = std::strncmp (name, "fastpath_", 9) == 0 ? fastpath_phase : phase;
         if (s < 0)
-          phase.emplace (name);
+          current.emplace (name);
         else
-          phase.reset ();
+          current.reset ();
       });
       if (answer.verdict != "REALIZABLE" && answer.verdict != "UNREALIZABLE") {
         worker_stopped ("inconclusive");
@@ -237,6 +345,8 @@ namespace acacia {
         }
       }
       return real ? EXIT_CODE_REAL : EXIT_CODE_UNREAL;
+    } catch (const dpa_stopped& failure) {
+      worker_stopped (tlsf_dpa::reason (failure.status));
     } catch (const std::bad_alloc&) {
       if (std::strcmp (stage, "translate") == 0)
         worker_stopped ("translation_allocation");

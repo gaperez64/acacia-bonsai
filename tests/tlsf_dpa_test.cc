@@ -12,6 +12,7 @@ extern "C" {
 #include <iostream>
 #include <set>
 #include <spot/tl/parse.hh>
+#include <spot/tl/delta2.hh>
 #include <spot/twaalgos/contains.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/translate.hh>
@@ -225,10 +226,75 @@ void check (const std::string& text, bool real) {
         });
     require (solved && answer.checked && answer.verdict == (real ? "REALIZABLE" : "UNREALIZABLE"),
              "wrong native verdict or unchecked controller");
+    const auto states = input.automaton->num_states ();
+    const auto edges = input.automaton->num_edges ();
+    const auto acceptance = input.automaton->acc ().get_acceptance ();
+    config.fastpath_phases = true;
+    std::vector<std::string> fast_stages;
+    const auto classified = route::run_classified_positive_dpa (
+        input, config, [&] (const char* name, const auto& graph, double seconds) {
+          if (std::string (name).starts_with ("fastpath_")) {
+            require (bool (graph), "missing fast-path phase graph");
+            fast_stages.push_back (std::string (name) + (seconds < 0 ? ":enter" : ":exit"));
+          }
+        });
+    config.fastpath_phases = false;
+    require (fast_stages == (classified.tier == 4 ? std::vector<std::string> {} :
+          std::vector<std::string> {"fastpath_complete:enter", "fastpath_complete:exit",
+            "fastpath_split:enter", "fastpath_split:exit", "fastpath_solve:enter",
+            "fastpath_solve:exit"}), "incorrect opt-in fast-path phase boundaries");
+    require (classified.checked && classified.verdict == answer.verdict,
+             "same-DPA classification changed verdict or synthesis");
+    if (text == "G F (a && X b)")
+      require (classified.tier == 4, "genuine parity fallback was not exercised");
+    require (input.automaton->num_states () == states && input.automaton->num_edges () == edges &&
+                 input.automaton->acc ().get_acceptance () == acceptance,
+             "classification changed positive fallback");
+    equivalent (input.automaton, formula);
+    TlsfDpaStatus status;
+    auto dag = dpa::create (formula, spec.inputs, spec.outputs, TLSF_DPA_PARITY, limits, status);
+    require (dag && status.code == TLSF_DPA_OK, "Spot DAG creation declined");
+    dpa::import_metrics metrics;
+    const auto dag_import = dpa::import (*dag, limits, spot::make_bdd_dict (), {}, &metrics);
+    require (bool (dag_import.automaton), "Spot DAG import declined");
+    require (metrics.setup_seconds >= 0 && metrics.first_successor_seconds >= 0 &&
+                 metrics.remaining_successor_seconds >= 0 && metrics.bridge_seconds >= 0,
+             "negative import metric duration");
+    equivalent (dag_import.automaton, formula);
+    const auto negative = spot::formula::Not (formula);
+    auto buchi = dpa::create (negative, spec.inputs, spec.outputs, TLSF_DPA_BUCHI, limits, status);
+    if (buchi) {
+      auto negative_import = dpa::import (*buchi, limits);
+      require (bool (negative_import.automaton), "negative DBA import declined");
+      equivalent (negative_import.automaton, negative);
+      auto negative_input = input;
+      negative_input.automaton = negative_import.automaton;
+      negative_input.formula = negative;
+      negative_input.source = route::source_language::real_worker;
+      const auto direct = route::run (negative_input, config);
+      require (direct.checked && direct.tier < 4 && direct.verdict == answer.verdict,
+               "negative DBA fast path changed original verdict or synthesis");
+    }
+    else
+      require (status.reason == TLSF_DPA_UNSUPPORTED, "negative DBA failed for unexpected reason");
     input.automaton.reset ();
     input.frame = route::timing_frame::original;
     const auto reference = route::run (input, config);
     require (answer.verdict == reference.verdict, "native verdict differs from Spot arm");
+    bool published = false, stopped = false;
+    config.check = [&] {
+      if (published)
+        throw std::runtime_error ("post-callback cancellation");
+    };
+    config.on_verdict = [&] (bool) { published = true; };
+    input.automaton = imported.automaton;
+    input.frame = route::timing_frame::effective_mealy;
+    try {
+      route::run_classified_positive_dpa (input, config);
+    } catch (const std::runtime_error& error) {
+      stopped = std::string (error.what ()) == "post-callback cancellation";
+    }
+    require (stopped, "deadline consumed by verdict callback was not checked");
     for (bool target_real : {false, true}) {
       auto lazy_source = create (spec, limits);
       size_t previous = 0, snapshots = 0;
@@ -247,6 +313,77 @@ void check (const std::string& text, bool real) {
       require (lazy.solves && (!lazy.decided ? lazy.expanded == lazy.states : true),
                "lazy opposite result escaped before completion");
     }
+  }
+}
+
+void delta2 () {
+  dpa::limits limits;
+  limits.construction.allow_unproved = true;
+  for (const char* text : {"G(a U (b R a))", "F(a R (b U a))"}) {
+    const auto parsed = spot::parse_infix_psl (text);
+    require (parsed.f && parsed.errors.empty () && !parsed.f.is_delta2 (),
+             "normalization fixture already Delta2");
+    TlsfDpaStatus status;
+    const auto rejected = dpa::create (parsed.f, {"a"}, {"b"}, TLSF_DPA_PARITY, limits, status);
+    require (!rejected && status.reason == TLSF_DPA_UNSUPPORTED,
+             "normalization fixture did not require extended construction");
+    require (dpa::check_infinite_ltl (parsed.f, limits).code == TLSF_DPA_OK,
+             "infinite-LTL guard rejected a supported formula");
+    const auto normalized = spot::to_delta2 (parsed.f);
+    require (normalized.is_delta2 (), "Spot normalization failed");
+    auto context = dpa::create (normalized, {"a"}, {"b"}, TLSF_DPA_PARITY, limits, status);
+    require (context && status.code == TLSF_DPA_OK, "normalized DAG construction declined");
+    const auto graph = dpa::import (*context, limits);
+    require (bool (graph.automaton), "normalized import declined");
+    equivalent (graph.automaton, parsed.f);
+  }
+  require (dpa::check_infinite_ltl (spot::formula::strong_X (spot::formula::ap ("a")), limits).reason ==
+               TLSF_DPA_UNSUPPORTED,
+           "finite strong-next entered infinite-LTL normalization");
+  const auto atom = spot::formula::ap ("a");
+  const auto quantified = spot::formula::quantify (spot::op::exists, atom,
+      spot::formula::G (spot::formula::U (atom, spot::formula::ap ("b"))));
+  require (quantified.is_quantified () && quantified.is_ltl_formula (),
+           "quantified guard fixture lost the LTL-property trap");
+  for (const auto& f : {quantified, spot::formula::F (quantified),
+                        spot::formula::Or ({quantified, spot::formula::ap ("b")})}) {
+    require (dpa::check_infinite_ltl (f, limits).reason == TLSF_DPA_UNSUPPORTED,
+             "quantified formula entered infinite-LTL normalization");
+    TlsfDpaStatus status;
+    auto declined = dpa::create (f, {"a"}, {"b"}, TLSF_DPA_PARITY, limits, status);
+    require (!declined && status.reason == TLSF_DPA_UNSUPPORTED,
+             "quantified DAG adapter did not decline honestly");
+  }
+  const auto xor_formula = spot::formula::Xor (spot::formula::ap ("a"), spot::formula::ap ("b"));
+  TlsfDpaStatus status;
+  auto xor_context = dpa::create (xor_formula, {"a"}, {"b"}, TLSF_DPA_PARITY, limits, status);
+  require (bool (xor_context), "Xor DAG adapter declined");
+  equivalent (dpa::import (*xor_context, limits).automaton, xor_formula);
+}
+
+void import_final_callback () {
+  const auto spec = specification ("F grant");
+  for (bool decline_source : {false, true}) {
+    dpa::limits limits;
+    volatile bool cancelled = false;
+    limits.construction.cancel = &cancelled;
+    auto source = create (spec, limits);
+    const auto result = dpa::import (*source, limits, spot::make_bdd_dict (),
+        [&] (const char* phase, double seconds) {
+          if (std::string (phase) != "dpa_rest_import" || seconds < 0)
+            return;
+          cancelled = true;
+          if (decline_source) {
+            const TlsfDpaEdge* edges;
+            size_t count;
+            require (tlsf_dpa_successors (source.get (), tlsf_dpa_initial (source.get ()),
+                       &edges, &count).reason == TLSF_DPA_CANCELLED,
+                     "callback failed to decline source");
+            cancelled = false; // Only the source's permanent decline remains.
+          }
+        });
+    require (!result.automaton && result.status.reason == TLSF_DPA_CANCELLED,
+             "final importer callback exposed a graph after cancellation");
   }
 }
 
@@ -405,6 +542,8 @@ int main () {
                                                     {"!(G F (a && X X b))", true}})
       check (text, real);
     declines ();
+    delta2 ();
+    import_final_callback ();
     symbolic ();
     lazy_frontier ();
     std::cout << "Exact label relation, language, checked synthesis and declines passed\n";

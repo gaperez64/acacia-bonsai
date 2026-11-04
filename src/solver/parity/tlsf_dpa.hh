@@ -27,9 +27,24 @@ namespace acacia::tlsf_dpa {
   context create (const TlsfAstNode* root, const std::vector<std::string>& inputs,
                   const std::vector<std::string>& outputs, const limits& budget,
                   TlsfDpaStatus& status);
+  // Shared Spot DAG, with explicit language polarity supplied by the caller.
+  // Adapter storage is conservatively charged to the separate import_bytes
+  // ceiling; it overlaps C construction.max_host_bytes until construction
+  // returns. Process AS/RSS, not either ceiling alone, bounds the combined peak.
+  context create (spot::formula root, const std::vector<std::string>& inputs,
+                  const std::vector<std::string>& outputs, TlsfDpaKind kind,
+                  const limits& budget, TlsfDpaStatus& status);
+  TlsfDpaStatus check_budget (const limits& budget);
+  TlsfDpaStatus check_infinite_ltl (spot::formula root, const limits& budget);
   // No graph escapes unless every reachable row and label was imported.
+  struct import_metrics {
+      double setup_seconds = 0, first_successor_seconds = 0,
+             remaining_successor_seconds = 0, bridge_seconds = 0;
+  };
   result import (TlsfDpa& source, const limits& budget,
-                 spot::bdd_dict_ptr dictionary = spot::make_bdd_dict ());
+                 spot::bdd_dict_ptr dictionary = spot::make_bdd_dict (),
+                 std::function<void (const char*, double)> observe = {},
+                 import_metrics* metrics = nullptr);
   struct lazy_result {
       bool decided = false;
       size_t states = 0, expanded = 0, edges = 0, labels = 0, import_bytes = 0, solves = 0;

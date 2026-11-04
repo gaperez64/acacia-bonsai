@@ -12,6 +12,97 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-04: Shared deterministic routes; rank/128 retained
+
+The final eight-arm release binary decides **1362/1385/1390 of 1524 SYNTCOMP26
+inputs at 17/60/120 s**. Against the previous sprint it gains **11/6/3** solved
+inputs and loses none at each cap. It also loses no solves against the archived
+November 1 eight-arm default. No conclusive verdict conflicts with a normalized/adjudicated recycled
+reference or the separate diagnostic pass. Archive `pipeline-posets-20261103`
+contains the [verified campaign evidence](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-04-pipeline-posets/pipeline-posets-20261103.tar.gz);
+its [guide](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-04-pipeline-posets/README.md),
+[plots and tables](https://github.com/gaperez64/acacia-bonsai/releases/tag/evidence-2026-11-04-pipeline-posets)
+and [per-arm counts and percentages](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-04-pipeline-posets/per-arm-counts-percentages.md)
+are also published separately.
+
+| Series | 17 s solved | 17 s PAR-2 (s) | 60 s solved | 60 s PAR-2 (s) | 120 s solved | 120 s PAR-2 (s) |
+|---|---:|---:|---:|---:|---:|---:|
+| New final | 1362 | 6199.319 | 1385 | 18148.228 | 1390 | 34068.512 |
+| Acacia 2026-11-02 | 1351 | 6492.201 | 1379 | 18983.506 | 1387 | 35106.502 |
+| Acacia 2026-11-01 | 1351 | 6489.177 | 1379 | 18979.462 | 1388 | 34986.434 |
+| Prior master headroom | 1341 | 6799.767 | 1364 | 20533.729 | — | — |
+| Acacia 2.7 lineage | 1342 | 6792.732 | 1358 | 21057.255 | 1366 | 39637.722 |
+| SemML | 1271 | 11689.974 | 1334 | 27788.038 | 1355 | 47408.945 |
+| ltlsynt 2.16 | 1264 | 9420.729 | 1290 | 29523.584 | — | — |
+| Acacia 1.x | 812 | 24778.516 | 854 | 82407.024 | — | — |
+
+Only the new binary was run freshly. Each pass starts with all 1524 inputs at
+17 s and advances only its own preceding TIMEOUTs. The clean pass retried
+162 inputs at 60 s and 139 at 120 s. REAL/UNREAL counts are 626/736, 641/744 and
+645/745; remaining outcomes are 162/139/132 TIMEOUTs and two memory-limit results
+at 120 s. There were no primary ERROR, UNKNOWN or conversion-failure results.
+All calls were serial, each in its own 8 GiB scope with swap disabled. Both
+120 s passes recorded five scopes with OOM kills; outcomes that also reach the
+wall cap remain TIMEOUT under the recorded classifier. Resource sidecars retain
+those events rather than treating them as absent.
+
+The frozen executable is source `110b77994f247502b6b57a61fc68cf0dc6f46833`, SHA-256
+`fb4928a5f8993765cf5ccc8cccff811ca015a1528db049336276834265be1242`, built with
+release `-Ofast -march=native`, LTO and explicit compatible 128-bit Posets SIMD.
+The clean pass supplies the timing curves. Archived comparators come from
+different sessions; their clock conventions and the Acacia 2.7 prerelease/release
+lineage remain explicit in the guide. Missing historical 120 s series are
+omitted. These observations do not establish a matched full-corpus speedup.
+
+The separate recording pass decides 1360/1384/1390 inputs. Parent-confirmed
+winner counts cover 1307/1331/1337, with 53 unknown identities at each cap.
+The unchanged strict auditor attributes 1088/1112/1118, with 272 unknowns.
+These are alternative metrics over the same diagnostic solves; percentages
+include unknowns in the solved denominator. They measure portfolio race wins,
+not solo-arm coverage or winners in the clean pass. The
+[instance ledger](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-04-pipeline-posets/per-instance-winner-ledger.csv)
+retains each reused observation's source and identity evidence.
+
+#366 adds opt-in OxiDD-to-Spot classification/fast paths, direct negative-objective
+Büchi construction and guarded Δ₂ normalization, using a copied formula-DAG API.
+The original positive graph and objective remain available for fallback and
+controller checks. Profiling led to batching internal deadline reads while
+retaining cancellation callbacks and exact public/publication checks. The bound
+is 255 skipped poll sites, not elapsed cancellation latency. Cheap syntax
+admission features have not established a runtime winner predictor, so both
+translators and the eight-arm default remain.
+
+The Posets study covers fourteen backends, scalar controls and actual 128/512-bit
+representations. No 256-bit performance mode was measured. BBox/128 alone reached
+the frozen shortlist but failed held-out qualification and regression criteria;
+rank/128 stays selected. Strict checks exposed noncanonical sharingtree storage,
+now fixed together with shared-forest allocation recovery and BBox empty-set
+algebra. All six strict sharingtree/sharingtrie replays across scalar/128/512
+produce exactly 326 maxima. Correctness reruns are separate from the preserved
+original performance observations.
+
+Independent source and evidence reviews applying the `legendary-nbjorner` skill pass. G0 passes 84 Acacia and
+42 assertion-enabled Posets tests; G1 passes 40 sentinels. The targeted ten-case
+cycle gate has a 1.098 baseline/candidate geometric ratio (8.9% fewer cycles),
+mainly from AMBA, with a worst regression of 1.3%. Both 180-input coverage panels
+retain their solved sets and verdicts. G4 has 595 OK and 30 permitted TIMEOUTs
+among all 625 registered occurrences. G5 checks all 1524 inputs without opposite
+verdicts or frontend errors; seven native-TLSF fallback pairs are explicitly
+not independent cross-checks.
+
+[tlsf-tools #102](https://github.com/gaperez64/tlsf-tools/pull/102) and
+[Posets #35](https://github.com/michaelcadilhac/posets/pull/35) are merged with
+post-merge CI passing. Posets #36/#37 are closed.
+[tlsf-tools #103](https://github.com/gaperez64/tlsf-tools/issues/103) remains open
+for DAG/normalization/import proof obligations, and
+[Posets #38](https://github.com/michaelcadilhac/posets/issues/38) for sharingtrie
+allocation propagation and rebuild ownership. The current rank default is
+unchanged; the sprint does not resolve those broader obligations.
+
+An [archive retention table](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-04-pipeline-posets/archive-retention-limits.md) records eleven unrecovered intermediate hashes: six early Posets executables, one superseded metadata receipt and four pre-build source drafts. Two executables supported an early untimed semantic screen, a third supported its alias/width checks, and the other three supported early unit and release checks. Their original hashes and surviving receipts remain; the final campaign, gates and frozen pilot/training/held-out measurements retain their verified artifacts.
+
+The [archive metadata qualification](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-04-pipeline-posets/archive-metadata-qualification.md) identifies three JSON metadata digests included in the declared binary-hash list. The archive and index retain the same declaration for verification; the qualification lists the 20 executable hashes separately. The measured binary and all result rows are unchanged.
+
 ## 2026-11-03: Lazy parity stays opt-in; accounting fixes retain the eight-arm default
 
 The completed SYNTCOMP26 campaign decides 1351/1379/1387 of 1524 inputs at

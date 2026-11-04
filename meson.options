@@ -37,7 +37,10 @@ option('acacia_forced_output_contradiction', type: 'boolean', value: false,
        description: 'Enable the forced-output contradiction checker in the decision-only syntactic bypass')
 
 option('acacia_simd_is_max', type: 'boolean', value: true,
-       description: 'Vector width for SIMD comparisons: the widest fixed size the library allows if true, the native register width if false')
+       description: 'Legacy SIMD width: max fixed size if true, compatible ABI (128-bit on x86-64) if false')
+
+option('acacia_simd_native', type: 'boolean', value: false,
+       description: 'Select hardware-native SIMD width; otherwise retain acacia_simd_is_max selection')
 
 option('acacia_enable_diagnostics', type: 'boolean', value: false,
        description: 'Compile compact Acacia phase diagnostics, gated at runtime by ACACIA_DIAG')
