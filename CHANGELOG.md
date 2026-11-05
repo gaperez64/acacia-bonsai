@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Linux phase recording requests a 1 MiB pipe to reduce startup drops, silently keeping the default capacity if refused.
 - Remove unsuccessful DPA route experiments and lazy parity arms; keep eager parity and telemetry fixes.
 - The default portfolio adds `both:parity:oxidd` alongside `both:parity:spot`,
   bringing it to eight arms. On all 1,524 SYNTCOMP26 inputs it decides 1,351 at

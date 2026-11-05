@@ -327,7 +327,7 @@ namespace {
     }
     if (mode == "flood-stall") {
       constexpr char flood[] = "{\"event\":\"flood\"}\n";
-      for (unsigned i = 0; i < 20000; ++i)
+      for (unsigned i = 0; i < 100000; ++i)
         acacia::phase_records_send (flood, sizeof flood - 1);
       mode = "stall";
     }
