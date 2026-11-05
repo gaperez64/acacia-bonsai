@@ -803,6 +803,8 @@ namespace acacia {
       phase_records_warn ();
       return;
     }
+    // Absorb startup bursts; keep the default capacity if the kernel refuses.
+    (void) fcntl (fds[1], F_SETPIPE_SZ, 1024 * 1024);
 #else
     if (pipe (fds) != 0) {
       phase_records_warn ();

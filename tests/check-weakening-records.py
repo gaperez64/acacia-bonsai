@@ -126,7 +126,7 @@ def main():
         process = subprocess.Popen([binary, "flood"], env=env, stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         marker, delivered = process.stdout.readline().split()
-        assert marker == "flooded" and 0 < int(delivered) < 20000
+        assert marker == "flooded" and 0 < int(delivered) < 100000
         # A created file can still have a full pipe behind it. Drain every
         # accepted flood packet before releasing the real pre-pass.
         end = time.monotonic() + 2
