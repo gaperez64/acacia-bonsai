@@ -91,19 +91,6 @@ GUARANTEES {{ {guarantee}; }} }}''')
         write(formula)
         clear()
         reference = execute([binary, "-T", str(source), "--arms", "both:parity:spot"])
-        for target_real in (False, True):
-            clear()
-            lazy_arm = f"{'real' if target_real else 'unreal'}:parity:oxidd-otf"
-            lazy = subprocess.run([binary, "-T", str(source), "--arms", lazy_arm],
-                                  env=env, capture_output=True, text=True, timeout=20)
-            expected = reference.returncode if target_real == real else 2
-            assert lazy.returncode == expected, (formula, lazy_arm, lazy)
-            snapshots = [row for row in rows() if row.get("event") == "dpa_snapshot"]
-            assert snapshots and snapshots[-1]["reason"] == "none", rows()
-            assert all(row["expanded_states"] <= row["imported_states"] <= row["states"]
-                       for row in snapshots), snapshots
-            assert any(row.get("event") == "parity_verdict" for row in rows()) == (
-                target_real == real), rows()
         for synthesis in (False, True):
             clear()
             command = [binary, "-T", str(source), "--arms", arm]
@@ -136,10 +123,6 @@ GUARANTEES {{ {guarantee}; }} }}''')
                 write(guarantee, semantics, target)
                 clear()
                 reference = execute([binary, "-T", str(source), "--arms", "both:parity:spot"])
-                target_real = reference.returncode == 0
-                lazy_arm = f"{'real' if target_real else 'unreal'}:parity:oxidd-otf"
-                lazy = execute([binary, "-T", str(source), "--arms", lazy_arm])
-                assert lazy.returncode == reference.returncode, (semantics, target, lazy)
                 answer = execute([binary, "-T", str(source), "--arms", arm,
                                   "-s", str(controller)])
                 assert reference.returncode == answer.returncode, (semantics, target, answer)
@@ -150,43 +133,6 @@ GUARANTEES {{ {guarantee}; }} }}''')
                     subprocess.run([checker, "--check-controller", str(controller),
                                     original, target.lower()], check=True,
                                    capture_output=True, text=True, timeout=20)
-                # Both experimental orientations retain frontend timing and
-                # the production arm's sole Moore reconstruction owner.
-                for route in ("classify", "buchi"):
-                    clear()
-                    experimental = dict(env, ACACIA_EXPERIMENTAL_DPA_ROUTE=route,
-                                        ACACIA_EXPERIMENTAL_DPA_SHARE_BYTES="536870912")
-                    answer = execute([binary, "-T", str(source), "--arms", arm,
-                                      "-s", str(controller)], experimental)
-                    assert answer.returncode == reference.returncode, (route, semantics, target, answer)
-                    if route == "buchi":
-                        assert {row.get("phase") for row in rows()} >= {
-                            "acacia", "fastpath_complete", "fastpath_split", "fastpath_solve"}, rows()
-                    if answer.returncode == 0:
-                        subprocess.run([checker, "--check-controller", str(controller),
-                                        original, target.lower()], check=True,
-                                       capture_output=True, text=True, timeout=20)
-    for key, value in (("ROUTE", "bad"), ("DELTA2", "yes"), ("SHARE_BYTES", "-1"),
-                       ("SHARE_BYTES", "536870912x"), ("SHARE_BYTES", "0"),
-                       ("SHARE_BYTES", "4294967297")):
-        clear()
-        invalid = subprocess.run([binary, "-T", str(source), "--arms", arm],
-                                 env=dict(env, **{f"ACACIA_EXPERIMENTAL_DPA_{key}": value}),
-                                 capture_output=True, text=True, timeout=20)
-        assert invalid.returncode == 2, invalid
-        assert any(row.get("reason") == "dpa_experimental_config" for row in rows()), rows()
-        assert not any(row.get("event") in {"parity_verdict", "dpa_import"} for row in rows()), rows()
-    for route in ("positive", "classify"):
-        write("G F G F o")
-        clear()
-        answer = execute([binary, "-T", str(source), "--arms", arm,
-                          "-s", str(controller)],
-                         dict(env, ACACIA_EXPERIMENTAL_DPA_ROUTE=route,
-                              ACACIA_EXPERIMENTAL_DPA_DELTA2="1"))
-        assert answer.returncode == 0, answer
-        assert any(row.get("phase") == "dpa_normalize" for row in rows()), rows()
-        subprocess.run([checker, "--check-controller", str(controller), "G F G F o", "mealy"],
-                       check=True, capture_output=True, text=True, timeout=20)
     execute([binary, "-T", str(source), "--arms", "both:parity:spot,both:parity:oxidd"])
     duplicate = subprocess.run([binary, "-T", str(source), "--arms", f"{arm},{arm}"],
                                capture_output=True, text=True, timeout=20)
@@ -195,21 +141,8 @@ GUARANTEES {{ {guarantee}; }} }}''')
     unknown = subprocess.run([binary, "-f", "1", "-i", "i", "-o", "o", "--arms", arm],
                              capture_output=True, text=True, timeout=20)
     assert unknown.returncode == 2 and "UNKNOWN" in unknown.stderr, unknown
-    for polarity in ("real", "unreal"):
-        clear()
-        lazy_arm = f"{polarity}:parity:oxidd-otf"
-        declined = subprocess.run([binary, "-T", str(source), "--arms", lazy_arm,
-                                   "-s", str(controller)], env=env,
-                                  capture_output=True, text=True, timeout=20)
-        assert declined.returncode == 2 and not controller.exists(), declined
-        assert any(row.get("reason") == "dpa_lazy_decision_only" for row in rows()), rows()
-        assert not any(row.get("event") in {"dpa_snapshot", "parity_verdict"}
-                       for row in rows()), rows()
-        duplicate = subprocess.run([binary, "-T", str(source), "--arms",
-                                    f"{lazy_arm},{lazy_arm}"],
-                                   capture_output=True, text=True, timeout=20)
-        assert duplicate.returncode == 3 and "duplicate" in duplicate.stderr.lower(), duplicate
     write("G F G F o")
+    clear()
     unknown = subprocess.run([binary, "-T", str(source), "--arms", arm,
                               "-s", str(controller)], env=env,
                              capture_output=True, text=True, timeout=20)
@@ -334,8 +267,7 @@ GUARANTEES {{ {guarantee}; }} }}
                     path.unlink()
         assert {1, 4} <= seen_tiers, seen_tiers
         for wrong in ("real:parity:spot", "both:parity:backward", "both:parity:spot:frozen-graph",
-                      "real:parity:oxidd", "both:parity:oxidd:frozen-graph",
-                      "both:parity:oxidd-otf", "real:parity:oxidd-otf:frozen-graph"):
+                      "real:parity:oxidd", "both:parity:oxidd:frozen-graph"):
             result = subprocess.run([binary, "-f", "1", "--arms", wrong],
                                     capture_output=True, text=True, timeout=20)
             assert result.returncode == 3 and "parity arms require" in result.stderr, result

@@ -782,8 +782,7 @@ def completeness_expected_configuration(row):
                 raise ValueError(f"invalid native arm {arm!r}")
             specification = dict(kind=arm.strip(), translation="native", transform="exact",
                                  provider="native")
-        elif arm.strip() in ("both:obligation:spot", "both:parity:spot", "both:parity:oxidd",
-                             "real:parity:oxidd-otf", "unreal:parity:oxidd-otf"):
+        elif arm.strip() in ("both:obligation:spot", "both:parity:spot", "both:parity:oxidd"):
             specification = dict(kind=arm.strip(), translation="native", transform="exact",
                                  provider="native")
             # These workers report their solver family as the requested backend.
@@ -924,7 +923,7 @@ def completeness_audit_row(row, directory, expected_workers=None):
                          ("accounting_", "descendant_")):
             continue
         if event in {"obligation_start", "obligation_eligibility", "obligation_completion",
-                     "tlsf_parse", "dpa_import", "dpa_snapshot"}:
+                     "tlsf_parse", "dpa_import"}:
             diagnostics.append(record)
             continue
         stage_record = event in {'stage_entry', 'stage_completion', 'stage_stopped',
@@ -1020,7 +1019,7 @@ def completeness_audit_row(row, directory, expected_workers=None):
         pid, index = record.get("worker_pid"), record.get("worker")
         group = workers.get(pid, []) if type(pid) is int else []
         emitter_group = workers.get(emitter, [])
-        specs = [r for r in (emitter_group if event in ("dpa_import", "dpa_snapshot") else group)
+        specs = [r for r in (emitter_group if event == "dpa_import" else group)
                  if r["event"] == "worker_spec"]
         arm = specs[0].get("kind") if len(specs) == 1 else None
         identified = (type(pid) is int and pid > 0 and completeness_nonnegative_int(index)
@@ -1037,16 +1036,6 @@ def completeness_audit_row(row, directory, expected_workers=None):
             else:
                 valid &= any(r.get("requested_backend") == role for r in emitter_group)
             parse_calls[emitter].append(record.get("call"))
-        elif event == "dpa_snapshot":
-            valid = (arm == record.get("arm")
-                     and arm in ("real:parity:oxidd-otf", "unreal:parity:oxidd-otf")
-                     and record.get("stage") in ("create", "import", "expand", "snapshot", "split", "solve")
-                     and isinstance(record.get("reason"), str) and bool(record["reason"])
-                     and all(completeness_nonnegative_int(record.get(field)) for field in
-                             ("states", "imported_states", "expanded_states", "edges", "labels",
-                              "import_bytes", "solves")))
-            if valid:
-                valid = record["expanded_states"] <= record["imported_states"] <= record["states"]
         elif event == "dpa_import":
             valid = (arm == record.get("arm") == "both:parity:oxidd"
                      and record.get("stage") in ("create", "expand", "import")
@@ -1065,8 +1054,7 @@ def completeness_audit_row(row, directory, expected_workers=None):
                      and completeness_nonnegative_int(record.get("mono_ns")))
             if parity:
                 valid &= (identified and arm == record.get("arm")
-                          and arm in ("both:parity:spot", "both:parity:oxidd",
-                                      "real:parity:oxidd-otf", "unreal:parity:oxidd-otf")
+                          and arm in ("both:parity:spot", "both:parity:oxidd")
                           and type(record.get("tier")) is int and 1 <= record["tier"] <= 4)
             else:
                 outcome = record.get("outcome")

@@ -19,22 +19,6 @@ attempts share one construction deadline;
 resource declines do not retry. The completed DPA feeds the exact parity game
 and supports controller synthesis.
 
-Issue #361 additionally exposes opt-in `unreal:parity:oxidd-otf` and
-`real:parity:oxidd-otf`. These decision-only arms expand complete successor
-rows lazily and use Spot's existing exact solver after 1, 2, 4, ... expanded
-rows. Frontier self-loops lose for the environment in UNREAL-only mode and
-for the system in REAL-only mode. Each arm publishes only its named verdict;
-the opposite full-game answer declines as UNKNOWN. Both explicitly decline
-`-s` and require native TLSF. The default portfolio remains unchanged. The
-2026-11-02 first-nine screen decides none with BFS (seven timeouts and two
-initial-row BDD limits). A reviewed strategy-order experiment decides three,
-but none within the predeclared 128-row retention bound; that heuristic and its
-option were reverted. Both arms remain opt-in; measurements and retained
-limitations are in [RESULTS.md](../RESULTS.md). The pre-code reviewed soundness argument is
-[on-the-fly-parity-proof.md](on-the-fly-parity-proof.md). `dpa_snapshot` phase
-records expose discovered/expanded states and solve counts. No extra helper
-worker is created.
-
 ## Structural tiers and engines
 
 Classify the worker's negated-specification language using acceptance structure alone:
