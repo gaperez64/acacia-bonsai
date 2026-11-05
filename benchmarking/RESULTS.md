@@ -1169,3 +1169,23 @@ one of nine workers; 20 s REAL confirmations added no alternate-only win.
 This rejected normalization as a coverage mechanism. Original study text and
 exact rows are in `refactor-closeout20261017`; earlier root reports are in
 `benchmarking-root-legacy`. These are selected historical studies, not new runs.
+
+## 2026-11-05: Lean DPA closeout; tlsf-tools #105 retained
+
+Archive [`lean-20261104`](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-05-lean/lean-20261104.tar.gz).
+P0 profile: `dpa_poll` 52–58% / `successors` 26–28% self time;
+the cause was a quadratic guard scan per row.
+
+Kept tlsf-tools #105: OxiDD arm alone, 106 inputs, 17 s, **24 → 37 → 38 solved**, zero losses;
+geomean time **0.41× then 0.90×**, peak memory **1.00× then 0.87×**.
+
+SYNTCOMP26 portfolio: **1365/1385/1390** solved at **17/60/120 s**, PAR-2 **6025.2/17975.6/33891.3 s**;
+master `fb4928a5`: **1362/1385/1390**, PAR-2 **6199.3/18148.2/34068.5 s**.
+At 17 s: +3 solves, no loss; at 120 s: one swap (`finding_nemo_pb_6` was 119.2 s against the cap).
+
+Rejected: removing the 100k state cap (+1/69; 24 quick declines became 17 s runs at 3–4 GiB);
+vectorizable tuple hash + DAG SoA (0.974×, below the 5% bar);
+sharingtrie #367 (equal coverage, PAR-2 within noise; peak memory +1–3%, +9% on >500 MB SYNTCOMP25 cases).
+
+Strict-auditor unknowns: 268, traced to recording-pipe overflow on sub-second inputs; parent-confirmed unknowns: 44.
+G3/G4/G5 pass.
