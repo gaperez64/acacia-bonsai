@@ -58,6 +58,12 @@ namespace {
 int main () {
   acacia::record_transport_test_start ();
   acacia::phase_records_init ();
+#ifdef __linux__
+  const int fd = acacia::phase_record_process_state ().write_fd;
+  const int capacity = fcntl (fd, F_GETPIPE_SZ);
+  if (fcntl (fd, F_SETPIPE_SZ, 1024 * 1024) >= 0)
+    assert (capacity >= 1024 * 1024);
+#endif
   const int command = std::getchar ();
   if (command == EOF)
     return 3;
@@ -86,7 +92,7 @@ int main () {
     drain ();
   if (command == 'f') {
     constexpr char flood[] = "{\"phase\":\"flood\"}\n";
-    for (int i = 0; i < 20000; ++i)
+    for (int i = 0; i < 100000; ++i)
       acacia::phase_records_send (flood, sizeof flood - 1);
     assert (record.dropped > 0);
     std::puts ("flooded");

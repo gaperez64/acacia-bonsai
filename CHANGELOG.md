@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Linux phase recording requests a 1 MiB pipe to reduce startup drops, silently keeping the default capacity if refused.
 - The default portfolio adds `both:parity:oxidd` alongside `both:parity:spot`,
   bringing it to eight arms. On all 1,524 SYNTCOMP26 inputs it decides 1,351 at
   17 s and 1,379 at 60 s, against 1,341 and 1,364 for archived master's seven
