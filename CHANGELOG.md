@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.8.0 (2026-11-06)
+
+- The TLSF → Acacia pipeline is now fuzzed (#369). tlsf-tools v1.9 generates small TLSF specifications from arbitrary bytes and checks its parser, printer, allocation-failure handling and DPA builder on them; Acacia replays the generated inputs and checks that its native conversion agrees with SyFCo, that the tlsf-tools DPA agrees with Spot's automaton, and that no two default arms give opposite verdicts. Seeds run in the unit suite and a weekly CI job grows and replays the corpora.
+- tlsf-tools v1.9 fixes what the fuzzer found: printed big operators that lost required parentheses, set deduplication that dropped a strong next under finite semantics, and crashes or partial rewrites when memory runs out. Acacia's verdicts on infinite-word specifications were not affected.
+- Faster DPA construction in tlsf-tools: rows visit only reachable formula nodes and the intern tables use tagged probing. On all 1,524 SYNTCOMP26 inputs the default portfolio decides 1,365/1,385/1,390 at 17/60/120 s, three more than before at 17 s with none lost.
+- **Known issue (#375).** Spot's obligation synthesis answers REALIZABLE for some unrealizable obligation specifications, such as `G i -> G(i <-> X X X false)`. The `both:obligation:spot` arm uses it, so Acacia can print a wrong REALIZABLE when that arm finishes first. Reported upstream as spot#666; the arm stays in the default portfolio until Spot ships a fix.
 - Linux phase recording requests a 1 MiB pipe to reduce startup drops, silently keeping the default capacity if refused.
 - Remove unsuccessful DPA route experiments and lazy parity arms; keep eager parity and telemetry fixes.
 - The default portfolio adds `both:parity:oxidd` alongside `both:parity:spot`,
