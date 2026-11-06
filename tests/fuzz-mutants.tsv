@@ -1,0 +1,4 @@
+property	corpus_kind	seed	one_line_mutant
+P2	roundtrip	da39a3ee5e6b4b0d3255bfef95601890afd80709	auto formula = spot::formula::Not (reference.f);
+P3	roundtrip	da39a3ee5e6b4b0d3255bfef95601890afd80709	const auto reference = translate.run (spot::formula::Not (parsed.f));
+P4	roundtrip	da39a3ee5e6b4b0d3255bfef95601890afd80709	answers[arm] = "UNREALIZABLE" if arm == arms[-1] else outcome

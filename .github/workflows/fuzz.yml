@@ -1,0 +1,80 @@
+name: Generated TLSF properties
+
+on:
+  schedule:
+    - cron: '0 3 * * 3'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CXX: g++-14
+  CARGO_BUILD_JOBS: '1'
+
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0, submodules: recursive}
+      - uses: ./.github/actions/setup-packages
+        with: {extra: clang}
+      - uses: ./.github/actions/setup-spot
+      - uses: hendrikmuhs/ccache-action@v1
+        with: {key: ci-fuzz, max-size: 500M}
+      - name: Build tlsf-tools fuzzers with clang
+        run: |
+          CC=clang CXX=clang++ meson setup build-fz-tlsf subprojects/tlsf-tools \
+            --buildtype=debugoptimized -Dfuzz=true
+          meson compile -C build-fz-tlsf -j 1 fuzz-dpa fuzz-roundtrip
+      - name: Grow both corpora for ten minutes each
+        run: |
+          mkdir -p build-fz-corpora/roundtrip build-fz-corpora/dpa build-fz-corpora/findings
+          failed=0
+          for kind in roundtrip dpa; do
+            cp subprojects/tlsf-tools/test/fuzz/corpus/"$kind"/* build-fz-corpora/"$kind"/
+            build-fz-tlsf/test/fuzz/fuzz-"$kind" build-fz-corpora/"$kind" \
+              -max_total_time=600 -timeout=5 -rss_limit_mb=2048 -max_len=4096 \
+              -artifact_prefix="build-fz-corpora/findings/$kind-" || failed=1
+          done
+          exit "$failed"
+      - name: Build the first shipped configuration with GCC
+        id: gcc
+        if: '!cancelled()'
+        run: |
+          first=$(python3 scripts/acacia-config.py list-group docker_default | head -n1)
+          read -r -a preset_args <<< "$(python3 scripts/acacia-config.py meson-args "$first")"
+          CC=gcc-14 CXX=g++-14 meson setup build-fz-acacia --buildtype=debugoptimized \
+            -Db_lto=false "${preset_args[@]}"
+          meson compile -C build-fz-acacia -j 1 acacia-bonsai tlsf-fuzz-replay
+      - name: Replay the grown corpora with GCC
+        if: ${{ !cancelled() && steps.gcc.outcome == 'success' }}
+        timeout-minutes: 60
+        run: |
+          failed=0
+          cd build-fz-acacia
+          for kind in roundtrip dpa; do
+            # SyFCo is deliberately absent in CI: P2 must report the Meson skip code.
+            tests/tlsf-fuzz-replay 2 "$kind" "../build-fz-corpora/$kind" || test "$?" = 77 || failed=1
+            tests/tlsf-fuzz-replay 3 "$kind" "../build-fz-corpora/$kind" || test "$?" = 77 || failed=1
+            python3 ../tests/check-fuzz-portfolio.py --binary src/acacia-bonsai \
+              --replayer tests/tlsf-fuzz-replay --kind "$kind" --work-dir . \
+              --timeout 0.25 \
+              "../build-fz-corpora/$kind" || test "$?" = 77 || failed=1
+          done
+          exit "$failed"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: fuzz-corpora-and-findings
+          path: |
+            build-fz-corpora/
+            build-fz-acacia/findings/
+            build-fz-acacia/findings-p2.txt
+            build-fz-acacia/meson-logs/
