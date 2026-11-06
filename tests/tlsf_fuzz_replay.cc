@@ -33,6 +33,7 @@ namespace dpa = acacia::tlsf_dpa;
 
 namespace {
   constexpr unsigned max_aps = 8, max_nodes = 64, max_states = 64;
+  constexpr int strong_next_skip = 78;
 
   std::string read (const fs::path& path) {
     std::ifstream stream (path, std::ios::binary);
@@ -102,11 +103,12 @@ namespace {
 
   // The worker's alarm also bounds SyFCo; its process group is reaped by the parent.
   bool syfco (const std::vector<std::string>& arguments, const fs::path& output) {
+    const auto error = output.string () + ".err";
     const pid_t pid = fork ();
     if (pid < 0)
       throw std::runtime_error ("fork failed");
     if (!pid) {
-      if (!freopen (output.c_str (), "w", stdout) || !freopen ("/dev/null", "w", stderr))
+      if (!freopen (output.c_str (), "w", stdout) || !freopen (error.c_str (), "w", stderr))
         _exit (1);
       std::vector<char*> argv {const_cast<char*> ("syfco")};
       for (const auto& argument : arguments)
@@ -189,17 +191,28 @@ namespace {
       const auto input = work / "spec.tlsf", output = work / "syfco.ltl",
                  part = work / "spec.part";
       std::ofstream (input) << syfco_syntax (text);
-      if (!syfco ({"-f", "ltl", "-m", "fully", "--part-file", part.string (), input.string ()},
-                  output))
-        return 77;
-      const auto reference = spot::parse_infix_psl (read (output));
+      const bool moore = spec.metadata.tlsf_semantics.find ("Moore") != std::string::npos;
+      std::vector<std::string> arguments {"-f", "ltl", "-m", "fully", "--part-file", part.string ()};
+      // SyFCo rewrites strict semantics only when explicitly dropping strictness.
+      // Keep the source timing model: changing it can introduce strong next.
+      if (spec.metadata.tlsf_semantics.find ("Strict") != std::string::npos)
+        arguments.insert (arguments.end (), {"-os", moore ? "Moore" : "Mealy"});
+      arguments.push_back (input.string ());
+      if (!syfco (arguments, output))
+        return read (output.string () + ".err").find ("strong next") != std::string::npos
+                   ? strong_next_skip
+                   : 77;
+      const auto reference_text = read (output);
+      if (reference_text.find ("X[!]") != std::string::npos)
+        return strong_next_skip;
+      const auto reference = spot::parse_infix_psl (reference_text);
       if (!reference.f || !reference.errors.empty () ||
           spot::length (reference.f) > int (max_nodes))
         return 77;
       auto formula = reference.f;
       // G5: SyFCo prints in the source semantics frame. Native conversion
       // already targets Mealy; Moore -> Mealy delays inputs exactly once.
-      if (spec.metadata.tlsf_semantics.find ("Moore") != std::string::npos) {
+      if (moore) {
         const auto delay = [&] (auto&& self, spot::formula f) -> spot::formula {
           if (f.is (spot::op::ap))
             return std::ranges::find (spec.inputs, f.ap_name ()) != spec.inputs.end ()
@@ -328,7 +341,7 @@ int main (int argc, char** argv) {
     unsigned failures = 0, total_checked = 0;
     for (const auto& kind : property == "2" ? std::vector<std::string> {"2"}
                                             : std::vector<std::string> {"3-parity", "3-buchi"}) {
-      unsigned checked = 0, skipped = 0, cases = 0;
+      unsigned checked = 0, skipped = 0, strong_next = 0, cases = 0;
       const auto previous_failures = failures;
       for (const auto& file : files) {
         const auto texts = replay_texts (decode (file, dpa_input));
@@ -366,7 +379,10 @@ int main (int argc, char** argv) {
           kill (-pid, SIGKILL);  // Also remove a SyFCo child left by an expired alarm.
           if (WIFEXITED (status) && WEXITSTATUS (status) == 0)
             ++checked;
-          else if ((WIFEXITED (status) && WEXITSTATUS (status) == 77) ||
+          else if (WIFEXITED (status) && WEXITSTATUS (status) == strong_next_skip) {
+            ++skipped;
+            ++strong_next;
+          } else if ((WIFEXITED (status) && WEXITSTATUS (status) == 77) ||
                    (WIFSIGNALED (status) && WTERMSIG (status) == SIGALRM))
             ++skipped;
           else {
@@ -386,7 +402,10 @@ int main (int argc, char** argv) {
       total_checked += checked;
       std::cout << "P" << kind << ": checked=" << checked << " skipped=" << skipped
                 << " failed=" << failures - previous_failures << " seeds=" << files.size ()
-                << " finite-variants=" << cases - files.size () << '\n';
+                << " finite-variants=" << cases - files.size ();
+      if (kind == "2")
+        std::cout << " syfco-strong-next=" << strong_next;
+      std::cout << '\n';
     }
     return failures ? 1 : total_checked ? 0 : 77;
   } catch (const std::exception& error) {

@@ -1032,6 +1032,9 @@ foreach kind : ['roundtrip', 'dpa']
           args : [property, kind, corpus], suite : ['unit', 'fuzz'],
           workdir : meson.project_build_root (), timeout : 600)
   endforeach
+  test ('fuzz-p2-strict-' + kind, tlsf_fuzz_replay,
+        args : ['2', kind, meson.current_source_dir () / 'fuzz-seeds' / kind],
+        suite : ['unit', 'fuzz'], workdir : meson.project_build_root (), timeout : 30)
   # Eight default arms at 5s each exceed a fast unit allowance on larger corpora.
   test ('fuzz-p4-' + kind, py,
         args : [files ('check-fuzz-portfolio.py'), '--binary', ab_exe,
