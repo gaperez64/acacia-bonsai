@@ -1189,3 +1189,14 @@ sharingtrie #367 (equal coverage, PAR-2 within noise; peak memory +1–3%, +9% o
 
 Strict-auditor unknowns: 268, traced to recording-pipe overflow on sub-second inputs; parent-confirmed unknowns: 44.
 G3/G4/G5 pass.
+
+## 2026-11-06: Generated-input property tests (#369); one wrong verdict traced to Spot
+
+Archive [`fuzz-20261105`](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-06-fuzz/fuzz-20261105.tar.gz).
+tlsf-tools gaperez64/tlsf-tools#109 adds a total bytes→TLSF generator and three libFuzzer targets (round trip, refused allocations, DPA contract), a coverage witness and 30 recorded library mutants (all caught); this repository adds a GCC replayer for SyFCo agreement, DPA≡Spot and portfolio agreement.
+
+Found and fixed in tlsf-tools: big operators printed without required parentheses (meaning-changing `tlsf2tlsf`/`tlsfnorm` output); parser, expansion and target-adaptation crashes or partial state on refused allocations; set deduplication dropping strong next under finite semantics (#108 tracks the proof). Successful conversions unchanged: 1,826 frozen records, 4,202 translation receipts, 67,971 old/new comparisons.
+
+Local campaigns on the final code: round trip 264k runs, allocation 272k, DPA 64k, no findings. Replayer over the grown corpora (947 round-trip and 2,443 DPA inputs with finite companions): SyFCo agreement 1,884 checked, 0 failed after passing `-os` for Strict sources (all 16 first-run failures were Strict); DPA≡Spot 2,138 Büchi checks plus parity, 0 failed; portfolio agreement 3,390 inputs × 8 arms, **1 conflict**.
+
+The conflict is a Spot bug, open in #375 (upstream [spot#666](https://gitlab.lre.epita.fr/spot/spot/-/issues/666)): `spot::obligation_synthesis()` answers REALIZABLE for `G i -> G(i <-> XXX false)` (equivalent to `F !i`) in Spot 2.16.0 and 2.16.2, so `both:obligation:spot` can win the race with a wrong REALIZABLE. Owner decision: keep the arm until Spot fixes it. The ltlsynt and G5 SyFCo references read Strict specs non-strictly (#373).
