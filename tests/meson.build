@@ -1018,6 +1018,32 @@ tlsf_dpa_test = executable ('tlsf-dpa-test',
   dependencies : [spot_dep, bddx_dep, tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
 test ('tlsf-dpa', tlsf_dpa_test, suite : ['unit', 'parity'], timeout : 120)
 
+# Ordinary GCC replay of the byte grammar shared with tlsf-tools' clang fuzzers.
+# Link the CLI parser only to query its default arms, and reuse the DPA importer.
+tlsf_fuzz_replay = executable ('tlsf-fuzz-replay',
+  ['tlsf_fuzz_replay.cc', '../src/tlsf_frontend.cc', '../src/arg_parser.cc', '../src/portfolio_arm.cc',
+   '../src/version.cc', version_h],
+  link_with : [tlsf_dpa_lib, tlsf_native.get_variable ('decoder')], include_directories : inc,
+  dependencies : [posets_dep, stdsimd_dep, spot_dep, bddx_dep] + tlsf_deps)
+foreach kind : ['roundtrip', 'dpa']
+  corpus = meson.project_source_root () / 'subprojects/tlsf-tools/test/fuzz/corpus' / kind
+  foreach property : ['2', '3']
+    test ('fuzz-p' + property + '-' + kind, tlsf_fuzz_replay,
+          args : [property, kind, corpus], suite : ['unit', 'fuzz'],
+          workdir : meson.project_build_root (), timeout : 600)
+  endforeach
+  test ('fuzz-p2-strict-' + kind, tlsf_fuzz_replay,
+        args : ['2', kind, meson.current_source_dir () / 'fuzz-seeds' / kind],
+        suite : ['unit', 'fuzz'], workdir : meson.project_build_root (), timeout : 30)
+  # Eight default arms at 5s each exceed a fast unit allowance on larger corpora.
+  test ('fuzz-p4-' + kind, py,
+        args : [files ('check-fuzz-portfolio.py'), '--binary', ab_exe,
+                '--replayer', tlsf_fuzz_replay, '--kind', kind,
+                '--work-dir', meson.project_build_root (), corpus],
+        suite : ['fuzz-portfolio'], depends : [ab_exe, tlsf_fuzz_replay],
+        workdir : meson.project_build_root (), timeout : 3600, is_parallel : false)
+endforeach
+
 parity_arm_test = executable ('parity-arm-test',
   ['parity_arm_test.cc', '../src/solver/mealy_to_moore.cc'],
   link_with : [parity_route_lib, parity_lib], include_directories : inc,
