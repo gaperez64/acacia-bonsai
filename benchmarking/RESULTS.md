@@ -1200,3 +1200,19 @@ Found and fixed in tlsf-tools: big operators printed without required parenthese
 Local campaigns on the final code: round trip 264k runs, allocation 272k, DPA 64k, no findings. Replayer over the grown corpora (947 round-trip and 2,443 DPA inputs with finite companions): SyFCo agreement 1,884 checked, 0 failed after passing `-os` for Strict sources (all 16 first-run failures were Strict); DPA≡Spot 2,138 Büchi checks plus parity, 0 failed; portfolio agreement 3,390 inputs × 8 arms, **1 conflict**.
 
 The conflict is a Spot bug, open in #375 (upstream [spot#666](https://gitlab.lre.epita.fr/spot/spot/-/issues/666)): `spot::obligation_synthesis()` answers REALIZABLE for `G i -> G(i <-> XXX false)` (equivalent to `F !i`) in Spot 2.16.0 and 2.16.2, so `both:obligation:spot` can win the race with a wrong REALIZABLE. Owner decision: keep the arm until Spot fixes it. The ltlsynt and G5 SyFCo references read Strict specs non-strictly (#373).
+
+## 2026-11-07: Seven default arms; real:small:forward leaves the shipped portfolio (#359)
+
+Archive [`arms-20261107`](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-07-arms/arms-20261107.tar.gz). Same frozen v2.8.0 binary (`4b4c9da8`) throughout, arms chosen with `--arms`, each call in its own 8 GiB scope.
+
+Screen at 17 s, each seven-arm candidate on the inputs its dropped arm won in `lean-20261104` (eight arms on the 520-input union): dropping `both:gr1-real-lift:oxidd` loses 16/35, `both:parity:oxidd` 23/55, `both:parity:spot` 27/378, `both:obligation:spot` 4/24 (three `chomp` inputs still unsolved at 60 s), `real:small:forward` 1/28.
+
+SYNTCOMP26, all 1,524 inputs, paired; 60 s reruns each portfolio's own 17 s timeouts:
+
+| Portfolio | 17 s solved | 17 s PAR-2 (s) | 60 s solved | 60 s PAR-2 (s) |
+|---|---:|---:|---:|---:|
+| Seven arms, without `real:small:forward` | **1367** | **5978.5** | **1386** | **17841.7** |
+| Eight arms (v2.8.0) | 1365 | 6023.9 | 1384 | 18055.2 |
+| Seven arms, without `both:obligation:spot` | 1360 | 6177.7 | — | — |
+
+No verdict conflicts. Without `real:small:forward` the only loss is `generalized_buffer_pb_5` (1.3 s with eight arms, unsolved at 60 s); the freed worker gains `chomp_pb_4_4` and two round-robin arbiters at 17 s, and `load_balancer_unreal1_pb_4_8` and `sort53` at 60 s. Dropping `both:obligation:spot` (which would remove the #375 exposure) loses `08` and four `chomp` inputs with no gain, so it stays. The seven-arm default build (`a16046d7`) passes G3 (SYNTCOMP25 165/180 and SYNTCOMP26 168/180 on both binaries, no verdict change or coverage loss), G4 and G5.
