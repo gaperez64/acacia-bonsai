@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The default portfolio drops `real:small:forward`, going from eight arms to seven. On all 1,524 SYNTCOMP26 inputs it decides 1,367 at 17 s and 1,386 at 60 s, against 1,365 and 1,384 for eight arms, with PAR-2 45 s and 214 s lower and no verdict disagreement (#359). The freed worker gains more inputs than the arm alone decided.
+
 ## 2.8.0 (2026-11-06)
 
 - The TLSF → Acacia pipeline is now fuzzed (#369). tlsf-tools v1.9 generates small TLSF specifications from arbitrary bytes and checks its parser, printer, allocation-failure handling and DPA builder on them; Acacia replays the generated inputs and checks that its native conversion agrees with SyFCo, that the tlsf-tools DPA agrees with Spot's automaton, and that no two default arms give opposite verdicts. Seeds run in the unit suite and a weekly CI job grows and replays the corpora.

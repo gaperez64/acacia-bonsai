@@ -445,7 +445,7 @@ def test_exact_arm_inventory_matches_worker_spec(specification):
     assert context == dict(r_prepass=True, equivariance=True)
 
 
-def test_shipped_eight_arm_default_inventory():
+def test_shipped_seven_arm_default_inventory():
     inventory, context = reader.expected_configuration(row(
         flags="", preset="otf_sparse_formula_parity"))
     expected = [
@@ -453,7 +453,7 @@ def test_shipped_eight_arm_default_inventory():
              transform=transform, provider="frozen-graph", requested_backend=backend,
              r_prepass=True, equivariance=True)
         for polarity, transform, backend in [
-            ("REAL", "real", "backward"), ("REAL", "real", "forward"),
+            ("REAL", "real", "backward"),
             ("UNREAL", "formula", "spot-guarded-sparse"), ("UNREAL", "automaton", "forward"),
         ]
     ]
@@ -461,7 +461,7 @@ def test_shipped_eight_arm_default_inventory():
                       requested_polarity="both", translation="native", transform="exact",
                       provider="native", r_prepass=True, equivariance=True), *EXACT_WORKER_SPECS]
     assert inventory == expected
-    assert len(inventory) == 8
+    assert len(inventory) == 7
     assert context == dict(r_prepass=True, equivariance=True)
 
 

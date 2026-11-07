@@ -1,6 +1,6 @@
 # Deterministic automaton and parity arm
 
-The first `docker_default` portfolio has eight arms, including `both:parity:spot`
+The first `docker_default` portfolio has seven arms, including `both:parity:spot`
 and `both:parity:oxidd`. The Spot arm translates the
 original positive specification with Spot's deterministic, generic-acceptance,
 high-level translation through `src/solver/parity/route.{hh,cc}`.
@@ -68,4 +68,5 @@ Developer measurements and admission history live in the evidence archives and
 `otd-parity-engines20261015` (engine comparisons), `otd-gates-OTF20261016` (gates),
 and `otd-OTF-owner20261016` (default admission). Resolve the shipped preset through
 `python3 scripts/acacia-config.py list-group docker_default`; the parity portfolio
-adds both parity arms to the previous shipped portfolio, retained second in the group.
+drops `real:small:forward` and adds both parity arms to the previous shipped
+portfolio, retained second in the group.
