@@ -218,10 +218,11 @@ def main() -> None:
         result, rows = run(binary, [*source, *selection], root, library)
         assert result.returncode == 0 and "REALIZABLE" in result.stdout, result
         assert not any(row.get("event", "").startswith("obligation_") for row in rows), rows
-        expected_workers = 2 if selection == pair else len(ordinary_defaults)
-        if expected_workers:
-            assert len([row for row in rows if row.get("event") == "worker_spawn"]) == (
-                expected_workers), rows
+        if selection:
+            expected = ["legacy" if value.startswith(("real:", "unreal:")) else value
+                        for value in selection[1].split(",")]
+            assert sorted(row["kind"] for row in rows if row.get("event") == "worker_spec") == (
+                sorted(expected)), rows
 
     if not default_has_helper:
         result, rows = run(binary, source, root, library)

@@ -41,8 +41,10 @@ def check_children(result: subprocess.CompletedProcess[str], records: list[dict]
     assert startups.count("both:obligation:spot") <= 1, (result, startups)
     ordinary = [arm for arm in startups if arm != "both:obligation:spot"]
     assert len(ordinary) == expected, (result, startups)
-    for arm in native:
-        assert (arm in startups) == expected_native, (result, arm, startups)
+    assert sorted(ordinary) == sorted(
+        "legacy" if a.startswith(("real:", "unreal:")) and a not in native else a
+        for a in arms if a != "both:obligation:spot" and (expected_native or a not in native)
+    ), (result, startups)
     if verbose_enabled:
         assert f"Starting {expected} solver children" in result.stdout, result
 
