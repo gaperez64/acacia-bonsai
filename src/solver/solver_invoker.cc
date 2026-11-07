@@ -208,6 +208,7 @@ namespace {
   bool run_no_input_ltl (const std::vector<std::string>& output_aps, spot::formula spot_formula,
                          std::optional<UNREAL_X_T> check_unreal,
                          TRANSLATION_PREF_T translation_pref,
+                         spot::postprocessor::optimization_level translation_effort,
                          const std::optional<std::string>& synth_fname,
                          controller_conversion conversion) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
@@ -232,6 +233,8 @@ namespace {
     spot::option_map extra_options = acacia::translation::make_options ();
 
     spot::translator trans (dict, &extra_options);
+    if (translation_effort != spot::postprocessor::High)
+      trans.set_level (translation_effort);
     acacia::translation::validate_options (extra_options);
     if (acacia::diagnostics::support_demand_enabled ()) {
       std::ostringstream formula_text;
@@ -305,6 +308,7 @@ namespace {
       const VECTOR_ELT_T opt_kinc;
       const std::optional<UNREAL_X_T> check_unreal;
       const TRANSLATION_PREF_T translation_pref;
+      const spot::postprocessor::optimization_level translation_effort;
       const SPOT_FAST_T spot_fast;
       const acacia::game_backend backend;
       const acacia::automaton_provider provider;
@@ -329,6 +333,7 @@ namespace {
                    const std::vector<std::string>& output_aps, VECTOR_ELT_T opt_k,
                    VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
                    std::optional<UNREAL_X_T> check_unreal, TRANSLATION_PREF_T translation_pref,
+                   spot::postprocessor::optimization_level translation_effort,
                    SPOT_FAST_T spot_fast, acacia::game_backend backend,
                    acacia::automaton_provider provider, acacia::candidate_mode candidate,
                    bool equivariance, const std::optional<std::string>& synth_fname,
@@ -344,6 +349,7 @@ namespace {
           opt_kinc {opt_kinc},
           check_unreal {check_unreal},
           translation_pref {translation_pref},
+          translation_effort {translation_effort},
           spot_fast {spot_fast},
           backend {backend},
           provider {provider},
@@ -419,12 +425,15 @@ namespace {
         verb_do (2, vout << "Model checking result by checking intersection with " << spot_formula
                          << std::endl);
         spot::translator trans (dict, &extra_options);
+        if (translation_effort != spot::postprocessor::High)
+          trans.set_level (translation_effort);
         acacia::translation::validate_options (extra_options);
         spot::twa_graph_ptr aut;
         {
           ACACIA_DIAG_SCOPED_TIMER (translation_ms);
           const acacia::translation_identity identity {
               input_aps, output_aps, translation_pref_name (translation_pref),
+              translation_effort_name (translation_effort),
               ACACIA_DIAG_STRINGIFY (AUT_PREPROCESSOR),
               check_unreal && *check_unreal == UNREAL_X_AUTOMATON};
           aut = translate_with_diagnostics (spot_formula, trans, translation_pref, &identity);
@@ -479,6 +488,7 @@ namespace {
                        check_unreal ? (*check_unreal == UNREAL_X_FORMULA ? "formula" : "automaton")
                                     : "real");
           capture.put ("translation_pref", translation_pref_name (translation_pref));
+          capture.put ("translation_effort", translation_effort_name (translation_effort));
           capture.put ("requested_provider", acacia::automaton_provider_name (provider));
           capture.put ("requested_backend",
                        acacia::active_worker_record ()
@@ -542,12 +552,15 @@ namespace {
                                           ? std::chrono::steady_clock::now ()
                                           : std::chrono::steady_clock::time_point {};
         spot::translator trans (dict, &extra_options);
+        if (translation_effort != spot::postprocessor::High)
+          trans.set_level (translation_effort);
         acacia::translation::validate_options (extra_options);
         spot::twa_graph_ptr aut;
         {
           ACACIA_DIAG_SCOPED_TIMER (translation_ms);
           const acacia::translation_identity identity {
               input_aps, output_aps, translation_pref_name (translation_pref),
+              translation_effort_name (translation_effort),
               ACACIA_DIAG_STRINGIFY (AUT_PREPROCESSOR),
               check_unreal && *check_unreal == UNREAL_X_AUTOMATON};
           aut = translate_with_diagnostics (spot_formula, trans, translation_pref, &identity);
@@ -795,6 +808,7 @@ namespace {
                                          const spot::formula& spot_formula,
                                          std::optional<UNREAL_X_T> check_unreal,
                                          TRANSLATION_PREF_T translation_pref,
+                                         spot::postprocessor::optimization_level translation_effort,
                                          const std::optional<std::string>& synth_fname,
                                          controller_conversion conversion) {
     // Degenerate alphabets are language questions, not games.  Keep this in the
@@ -804,8 +818,8 @@ namespace {
     if (input_aps.empty () and synth_fname.has_value () and
         not(check_unreal.has_value () and *check_unreal == UNREAL_X_FORMULA))
       return std::optional<bool> {acacia::diagnostics::finish (
-          run_no_input_ltl (output_aps, spot_formula, check_unreal, translation_pref, synth_fname,
-                            conversion),
+          run_no_input_ltl (output_aps, spot_formula, check_unreal, translation_pref,
+                            translation_effort, synth_fname, conversion),
           "no-input-ltl-synthesis")};
 
     if (not synth_fname.has_value () and (input_aps.empty () or output_aps.empty ())) {
@@ -813,7 +827,7 @@ namespace {
       {
         ACACIA_DIAG_SCOPED_TIMER (translation_ms);
         direct = acacia::degenerate_io::try_direct (spot_formula, input_aps, output_aps,
-                                                    translation_pref);
+                                                    translation_pref, translation_effort);
       }
       assert (direct != acacia::degenerate_io::verdict::unknown);
       const bool child_matches =
@@ -1024,7 +1038,8 @@ void validate_ltl_partition (const std::vector<std::string>& input_aps,
 bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> output_aps,
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
-              TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
+              TRANSLATION_PREF_T translation_pref,
+              spot::postprocessor::optimization_level translation_effort, SPOT_FAST_T spot_fast,
               acacia::game_backend backend, const std::optional<std::string>& synth_fname,
               const specification_metadata& metadata, acacia::automaton_provider provider,
               acacia::candidate_mode candidate, bool equivariance, uint64_t diagnostic_deadline_ns,
@@ -1068,6 +1083,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     diag->game_backend = acacia::game_backend_name (backend);
     diag->candidate_mode = acacia::candidate_mode_name (candidate);
     diag->translation_pref = translation_pref_name (translation_pref);
+    diag->translation_effort = translation_effort_name (translation_effort);
     diag->source_format = metadata.source_format;
     diag->tlsf_semantics = metadata.tlsf_semantics;
     diag->tlsf_target = metadata.tlsf_target;
@@ -1130,7 +1146,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   if (!acacia::is_closure_provider (provider)) {
     acacia::legacy_phase bypass ("direct-checks");
     if (auto answer = try_degenerate_io (input_aps, output_aps, spot_formula, check_unreal,
-                                         translation_pref, synth_fname, conversion);
+                                         translation_pref, translation_effort, synth_fname,
+                                         conversion);
         answer.has_value ())
       return *answer;
 
@@ -1177,8 +1194,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (
       dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal, translation_pref,
-      spot_fast, backend, provider, candidate, equivariance, synth_fname, conversion,
-      indexed_family_hints,
+      translation_effort, spot_fast, backend, provider, candidate, equivariance, synth_fname,
+      conversion, indexed_family_hints,
       metadata.source_format + ";semantics=" + metadata.tlsf_semantics +
           ";target=" + metadata.tlsf_target + ";effective=" +
           ((metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-")

@@ -140,6 +140,7 @@ void show_help (const char* program_name) {
       << "                    a deadline; duration uses s or ms (e.g. 3s, 3000ms); cumulative\n"
       << "  --oracle-layout VAL  sparse guard storage from [scan|grouped] (default: grouped)\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det]\n"
+      << "  --translation-effort VAL  native translation effort [high|medium|low] (default high)\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
       << "\t" << (int) EXIT_CODE_REAL << "   if the input problem is realizable\n"
@@ -450,6 +451,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_OBLIGATION_MEMORY_SHARE = 1015;
   static constexpr int OPT_PARITY_MEMORY_SHARE = 1016;
+  static constexpr int OPT_TRANSLATION_EFFORT = 1017;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
   static constexpr int OPT_REAL_BACKEND = 1002;
@@ -472,6 +474,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"help", no_argument, nullptr, 'h'},
       {"oracle-layout", required_argument, nullptr, OPT_ORACLE_LAYOUT},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
+      {"translation-effort", required_argument, nullptr, OPT_TRANSLATION_EFFORT},
       {"unreal-translation-pref", required_argument, nullptr, OPT_UNREAL_TRANSLATION_PREF},
       {"real-backend", required_argument, nullptr, OPT_REAL_BACKEND},
       {"unreal-backend", required_argument, nullptr, OPT_UNREAL_BACKEND},
@@ -686,6 +689,16 @@ arg_parse_result arg_parser (int argc, char** argv) {
         break;
       }
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
+      case OPT_TRANSLATION_EFFORT:
+        if (std::string_view (optarg) == "high")
+          retval.translation_effort = spot::postprocessor::High;
+        else if (std::string_view (optarg) == "medium")
+          retval.translation_effort = spot::postprocessor::Medium;
+        else if (std::string_view (optarg) == "low")
+          retval.translation_effort = spot::postprocessor::Low;
+        else
+          error (EXIT_CODE_ERROR, "Error: --translation-effort expects high, medium or low.\n");
+        break;
       case OPT_REAL_BACKEND:
         if (retval.arms.has_value ())
           error (EXIT_CODE_ERROR, "Error: --real-backend and --arms are mutually exclusive.\n");

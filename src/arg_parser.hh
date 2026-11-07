@@ -43,6 +43,7 @@ struct arg_parse_result {
     std::optional<std::vector<UNREAL_X_T>> unreal_strategies = std::nullopt;
     std::optional<std::vector<portfolio_arm>> arms = std::nullopt;
     TRANSLATION_PREF_T primary_translation_pref = ACACIA_TRANSLATION_PREF;
+    spot::postprocessor::optimization_level translation_effort = spot::postprocessor::High;
     // Compiling spot-guarded never changes the default; select it explicitly.
 #if ACACIA_FORWARD_SAFETY_SOLVER
     acacia::game_backend real_backend = acacia::game_backend::forward;

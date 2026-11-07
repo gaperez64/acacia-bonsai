@@ -541,12 +541,14 @@ namespace {
                             ",backend=" + acacia::game_backend_name (backend) + "] ");
     verb_do (
         1, vout << "Starting solver child provider=" << acacia::automaton_provider_name (provider)
+                << " translation_effort=" << translation_effort_name (arg_values.translation_effort)
                 << " candidate_mode=" << acacia::candidate_mode_name (arg_values.candidate) << "\n"
                 << std::flush);
     const bool res = run_ltl (arg_values.objective.inputs, arg_values.objective.outputs,
                               arg_values.opt_k, arg_values.opt_kmin, arg_values.opt_kinc,
                               arg_values.objective.formula,
-                              unreal_x, translation_pref, arg_values.spot_fast, backend,
+                              unreal_x, translation_pref, arg_values.translation_effort,
+                              arg_values.spot_fast, backend,
                               (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA)
                                   ? std::nullopt
                                   : arg_values.synth_fname,
@@ -663,12 +665,14 @@ namespace {
               "{\"event\":\"worker_spec\",\"worker\":%u,\"worker_pid\":%ld,"
               "\"mono_ns\":%llu,\"start_mono_ns\":%llu,\"requested_backend\":\"%s\",\"kind\":\"%"
               "s\",\"requested_polarity\":\"%s\","
-              "\"translation\":\"%s\",\"transform\":\"%s\",\"provider\":\"%s\","
+              "\"translation\":\"%s\",\"translation_effort\":\"%s\","
+              "\"transform\":\"%s\",\"provider\":\"%s\","
               "\"r_prepass\":%s,\"equivariance\":%s}\n",
               spawned.index, long (pid), (unsigned long long) fork_start.wall,
               (unsigned long long) fork_start.wall, spawned.requested_backend,
               arm.legacy ? "legacy" : arm.native_name (), spawned.original_polarity,
               arm.legacy ? translation_pref_name (arm.legacy->translation_pref) : "native",
+              arm.legacy ? translation_effort_name (arg_values.translation_effort) : "unused",
               arm.legacy ? (arm.unreal ? unreal_strategy_name (arm.legacy->unreal_x) : "real")
                          : "exact",
               arm.legacy ? acacia::automaton_provider_name (arm.legacy->provider) : "native",
