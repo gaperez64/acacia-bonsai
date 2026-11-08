@@ -4,6 +4,7 @@
 
 #include <charconv>
 #include <cmath>
+#include <utility>
 
 /**
  * Process the specified input (-i) argument. This is a comma-separated list uncontrollable
@@ -141,6 +142,11 @@ void show_help (const char* program_name) {
       << "  --oracle-layout VAL  sparse guard storage from [scan|grouped] (default: grouped)\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det]\n"
       << "  --translation-effort VAL  native translation effort [high|medium|low] (default high)\n"
+      << "                    comma-separated LEVEL and ARM=LEVEL entries; one bare level sets\n"
+      << "                    the default; arm overrides win, with the last override used\n"
+      << "                    overrides apply only to translation-based providers (frozen-graph)\n"
+      << "                    ARM must match a selected translation arm exactly; :provider may\n"
+      << "                    be omitted only if unique; if given, it matches the effective provider\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
       << "\t" << (int) EXIT_CODE_REAL << "   if the input problem is realizable\n"
@@ -445,6 +451,7 @@ void process_tlsf_file (const std::string& arg, arg_parse_result& result) {
  */
 arg_parse_result arg_parser (int argc, char** argv) {
   arg_parse_result retval;
+  std::vector<std::pair<std::string, spot::postprocessor::optimization_level>> effort_overrides;
   int opt;
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
@@ -689,16 +696,39 @@ arg_parse_result arg_parser (int argc, char** argv) {
         break;
       }
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
-      case OPT_TRANSLATION_EFFORT:
-        if (std::string_view (optarg) == "high")
-          retval.translation_effort = spot::postprocessor::High;
-        else if (std::string_view (optarg) == "medium")
-          retval.translation_effort = spot::postprocessor::Medium;
-        else if (std::string_view (optarg) == "low")
-          retval.translation_effort = spot::postprocessor::Low;
-        else
-          error (EXIT_CODE_ERROR, "Error: --translation-effort expects high, medium or low.\n");
+      case OPT_TRANSLATION_EFFORT: {
+        std::istringstream entries (optarg);
+        std::string entry;
+        bool default_seen = false;
+        if (std::string_view (optarg).empty () || std::string_view (optarg).back () == ',')
+          error (EXIT_CODE_ERROR, "Error: --translation-effort expects high, medium or low, "
+                                 "or ARM=LEVEL entries.\n");
+        while (std::getline (entries, entry, ',')) {
+          const auto equal = entry.find ('=');
+          const auto value = entry.substr (equal == std::string::npos ? 0 : equal + 1);
+          spot::postprocessor::optimization_level effort;
+          if (value == "high")
+            effort = spot::postprocessor::High;
+          else if (value == "medium")
+            effort = spot::postprocessor::Medium;
+          else if (value == "low")
+            effort = spot::postprocessor::Low;
+          else
+            error (EXIT_CODE_ERROR,
+                   "Error: --translation-effort expects high, medium or low; got '%s'.\n",
+                   value.c_str ());
+          if (equal == std::string::npos) {
+            if (default_seen)
+              error (EXIT_CODE_ERROR, "Error: --translation-effort expects high, medium or low "
+                                     "as one default, plus ARM=LEVEL overrides.\n");
+            default_seen = true;
+            retval.translation_effort = effort;
+          }
+          else
+            effort_overrides.emplace_back (entry.substr (0, equal), effort);
+        }
         break;
+      }
       case OPT_REAL_BACKEND:
         if (retval.arms.has_value ())
           error (EXIT_CODE_ERROR, "Error: --real-backend and --arms are mutually exclusive.\n");
@@ -901,6 +931,43 @@ arg_parse_result arg_parser (int argc, char** argv) {
     }
   }
 
+  for (size_t i = 0; i < retval.arms->size (); ++i)
+    for (size_t j = 0; j < i; ++j)
+      if ((*retval.arms)[i] == (*retval.arms)[j])
+        error (EXIT_CODE_ERROR, "Error: duplicate arm after provider selection.\n");
+
+  for (auto& arm : *retval.arms)
+    if (arm.legacy)
+      arm.legacy->translation_effort = retval.translation_effort;
+  for (const auto& [name, effort] : effort_overrides) {
+    portfolio_arm* match = nullptr;
+    for (auto& arm : *retval.arms) {
+      if (!arm.legacy)
+        continue;
+      const auto& legacy = *arm.legacy;
+      const std::string base = std::string (arm.unreal ? "unreal:" : "real:") +
+          (arm.unreal ? (legacy.unreal_x == UNREAL_X_FORMULA ? "formula" : "automaton")
+                      : translation_pref_name (legacy.translation_pref)) +
+          ":" + acacia::game_backend_name (legacy.backend);
+      if (name != base && name != base + ":" + acacia::automaton_provider_name (legacy.provider))
+        continue;
+      if (match)
+        error (EXIT_CODE_ERROR,
+               "Error: ambiguous arm '%s' in --translation-effort; add :provider.\n",
+               name.c_str ());
+      match = &arm;
+    }
+    if (!match)
+      error (EXIT_CODE_ERROR, "Error: unknown translation arm '%s' in --translation-effort.\n",
+             name.c_str ());
+    if (match->legacy->provider != acacia::automaton_provider::frozen_graph)
+      error (EXIT_CODE_ERROR,
+             "Error: arm '%s' in --translation-effort uses provider '%s', which does not use "
+             "effort-aware translation.\n",
+             name.c_str (), acacia::automaton_provider_name (match->legacy->provider));
+    match->legacy->translation_effort = effort;
+  }
+
   if (retval.tlsf_specified && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
         return arm.kind == portfolio_arm_kind::legacy;
       })) {
@@ -930,11 +997,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
     error (EXIT_CODE_ERROR, "Error: inputs must be specified (-i).\n");
   if (not retval.tlsf_specified && not retval.outputs_specified)
     error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).\n");
-
-  for (size_t i = 0; i < retval.arms->size (); ++i)
-    for (size_t j = 0; j < i; ++j)
-      if ((*retval.arms)[i] == (*retval.arms)[j])
-        error (EXIT_CODE_ERROR, "Error: duplicate arm after provider selection.\n");
 
   if (sgn_kmin.has_value ()) {
     if (*sgn_kmin > 0) {

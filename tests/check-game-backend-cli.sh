@@ -119,6 +119,36 @@ else
     [[ $output == *'acacia_forward_safety_solver=true'* ]]
 fi
 
+if [[ $guarded_enabled == true && $lazy_enabled == true ]]; then
+    effort_formula=(-f 'G(i <-> X(o))' -i i -o o --spot-fast off)
+    provider_arms='real:small:spot-guarded:frozen-graph,real:small:spot-guarded:spot-eager'
+    output=$(run 3 "${effort_formula[@]}" --arms "$provider_arms" \
+        --translation-effort real:small:spot-guarded=low)
+    [[ $output == *"ambiguous arm 'real:small:spot-guarded'"* && $output == *'add :provider'* ]]
+    output=$(run 0 "${effort_formula[@]}" --arms "$provider_arms" \
+        --translation-effort real:small:spot-guarded:frozen-graph=low)
+    grep -qx REALIZABLE <<<"$output"
+    for provider in spot-eager spot-lazy; do
+        for arm in real:small unreal:formula; do
+            for selector in "$arm:spot-guarded" "$arm:spot-guarded:$provider"; do
+                output=$(run 3 "${effort_formula[@]}" --arms "$arm:spot-guarded" \
+                    "--${arm%%:*}-provider" "$provider" --translation-effort "$selector=low")
+                [[ $output == *"arm '$selector'"* && $output == *"provider '$provider'"* ]]
+                [[ $output == *'does not use effort-aware translation'* ]]
+            done
+        done
+    done
+    # Provider inheritance makes these two spellings select the same arm.
+    for selector in '' real:small:spot-guarded real:small:spot-guarded:spot-eager; do
+        effort_args=()
+        [[ -z $selector ]] || effort_args=(--translation-effort "$selector=low")
+        output=$(run 3 "${effort_formula[@]}" \
+            --arms real:small:spot-guarded,real:small:spot-guarded:spot-eager \
+            --real-provider spot-eager "${effort_args[@]}")
+        [[ $output == *'duplicate arm after provider selection'* && $output != *'add :provider'* ]]
+    done
+fi
+
 if [[ $guarded_enabled == true ]]; then
     output=$(run 0 -f 'G(i <-> X(o))' -i i -o o --spot-fast off -v \
         --arms real:small:spot-guarded)
@@ -297,6 +327,15 @@ fi
 # legacy fallback policy requested. Validate before workers or synthesis start.
 for provider in closure-buchi closure-buchi-eager; do
     if [[ $guarded_enabled == true ]]; then
+        for arm in real:small unreal:formula; do
+            for selector in "$arm:spot-guarded-sparse" "$arm:spot-guarded-sparse:$provider"; do
+                output=$(run 3 -f 'G(i <-> X(o))' -i i -o o --spot-fast off \
+                    --arms "$arm:spot-guarded-sparse:$provider" \
+                    --translation-effort "$selector=low")
+                [[ $output == *"arm '$selector'"* && $output == *"provider '$provider'"* ]]
+                [[ $output == *'does not use effort-aware translation'* ]]
+            done
+        done
         for transform in small any; do
             output=$(run 0 -f 'G(i <-> X(o))' -i i -o o -K 5 \
                 --arms "real:$transform:spot-guarded-sparse:$provider")

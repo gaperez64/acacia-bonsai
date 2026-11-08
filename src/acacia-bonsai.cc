@@ -541,13 +541,13 @@ namespace {
                             ",backend=" + acacia::game_backend_name (backend) + "] ");
     verb_do (
         1, vout << "Starting solver child provider=" << acacia::automaton_provider_name (provider)
-                << " translation_effort=" << translation_effort_name (arg_values.translation_effort)
+                << " translation_effort=" << translation_effort_name (arm.legacy->translation_effort)
                 << " candidate_mode=" << acacia::candidate_mode_name (arg_values.candidate) << "\n"
                 << std::flush);
     const bool res = run_ltl (arg_values.objective.inputs, arg_values.objective.outputs,
                               arg_values.opt_k, arg_values.opt_kmin, arg_values.opt_kinc,
                               arg_values.objective.formula,
-                              unreal_x, translation_pref, arg_values.translation_effort,
+                              unreal_x, translation_pref, arm.legacy->translation_effort,
                               arg_values.spot_fast, backend,
                               (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA)
                                   ? std::nullopt
@@ -672,7 +672,7 @@ namespace {
               (unsigned long long) fork_start.wall, spawned.requested_backend,
               arm.legacy ? "legacy" : arm.native_name (), spawned.original_polarity,
               arm.legacy ? translation_pref_name (arm.legacy->translation_pref) : "native",
-              arm.legacy ? translation_effort_name (arg_values.translation_effort) : "unused",
+              arm.legacy ? translation_effort_name (arm.legacy->translation_effort) : "unused",
               arm.legacy ? (arm.unreal ? unreal_strategy_name (arm.legacy->unreal_x) : "real")
                          : "exact",
               arm.legacy ? acacia::automaton_provider_name (arm.legacy->provider) : "native",
