@@ -56,6 +56,14 @@ Release builds target the local CPU. Native TLSF parsing needs no external
 converter at runtime. `-s` writes a controller for a REALIZABLE answer, including
 conversion for Moore targets. Use `-h` for CLI options.
 
+`-Dacacia_default_translation_effort=high` sets the build's native translation
+effort, using the same comma-separated levels and `ARM=LEVEL` overrides as
+`--translation-effort`. Both values are validated after selecting the active
+portfolio. Build-default overrides without an active `frozen-graph` arm are
+ignored; runtime overrides for inactive or unsupported arms are errors.
+Giving `--translation-effort` replaces the build default entirely, with implicit
+`high` for arms without an override.
+
 ## Reference and results
 
 - [Build and development conventions](CLAUDE.md)

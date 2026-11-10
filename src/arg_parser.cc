@@ -141,12 +141,16 @@ void show_help (const char* program_name) {
       << "                    a deadline; duration uses s or ms (e.g. 3s, 3000ms); cumulative\n"
       << "  --oracle-layout VAL  sparse guard storage from [scan|grouped] (default: grouped)\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det]\n"
-      << "  --translation-effort VAL  native translation effort [high|medium|low] (default high)\n"
+      << "  --translation-effort VAL  native translation effort [high|medium|low]\n"
+      << "                    build default: " << ACACIA_DEFAULT_TRANSLATION_EFFORT << '\n'
+      << "                    when given, replaces the build default entirely (implicit level high)\n"
       << "                    comma-separated LEVEL and ARM=LEVEL entries; one bare level sets\n"
       << "                    the default; arm overrides win, with the last override used\n"
       << "                    overrides apply only to translation-based providers (frozen-graph)\n"
       << "                    ARM must match a selected translation arm exactly; :provider may\n"
       << "                    be omitted only if unique; if given, it matches the effective provider\n"
+      << "                    build overrides without an active frozen-graph arm are ignored;\n"
+      << "                    runtime overrides for inactive or unsupported arms are errors\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
       << "\t" << (int) EXIT_CODE_REAL << "   if the input problem is realizable\n"
@@ -451,7 +455,7 @@ void process_tlsf_file (const std::string& arg, arg_parse_result& result) {
  */
 arg_parse_result arg_parser (int argc, char** argv) {
   arg_parse_result retval;
-  std::vector<std::pair<std::string, spot::postprocessor::optimization_level>> effort_overrides;
+  std::vector<std::string> effort_values;
   int opt;
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
@@ -696,39 +700,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
         break;
       }
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
-      case OPT_TRANSLATION_EFFORT: {
-        std::istringstream entries (optarg);
-        std::string entry;
-        bool default_seen = false;
-        if (std::string_view (optarg).empty () || std::string_view (optarg).back () == ',')
-          error (EXIT_CODE_ERROR, "Error: --translation-effort expects high, medium or low, "
-                                 "or ARM=LEVEL entries.\n");
-        while (std::getline (entries, entry, ',')) {
-          const auto equal = entry.find ('=');
-          const auto value = entry.substr (equal == std::string::npos ? 0 : equal + 1);
-          spot::postprocessor::optimization_level effort;
-          if (value == "high")
-            effort = spot::postprocessor::High;
-          else if (value == "medium")
-            effort = spot::postprocessor::Medium;
-          else if (value == "low")
-            effort = spot::postprocessor::Low;
-          else
-            error (EXIT_CODE_ERROR,
-                   "Error: --translation-effort expects high, medium or low; got '%s'.\n",
-                   value.c_str ());
-          if (equal == std::string::npos) {
-            if (default_seen)
-              error (EXIT_CODE_ERROR, "Error: --translation-effort expects high, medium or low "
-                                     "as one default, plus ARM=LEVEL overrides.\n");
-            default_seen = true;
-            retval.translation_effort = effort;
-          }
-          else
-            effort_overrides.emplace_back (entry.substr (0, equal), effort);
-        }
-        break;
-      }
+      case OPT_TRANSLATION_EFFORT: effort_values.emplace_back (optarg); break;
       case OPT_REAL_BACKEND:
         if (retval.arms.has_value ())
           error (EXIT_CODE_ERROR, "Error: --real-backend and --arms are mutually exclusive.\n");
@@ -936,13 +908,54 @@ arg_parse_result arg_parser (int argc, char** argv) {
       if ((*retval.arms)[i] == (*retval.arms)[j])
         error (EXIT_CODE_ERROR, "Error: duplicate arm after provider selection.\n");
 
+  // Select the entire source before parsing so runtime values never inherit build overrides.
+  // Both sources are validated here, once the effective portfolio/providers are known.
+  const bool build_default_effort = effort_values.empty ();
+  const char* effort_option = build_default_effort ? "acacia_default_translation_effort"
+                                                  : "--translation-effort";
+  if (build_default_effort)
+    effort_values.emplace_back (ACACIA_DEFAULT_TRANSLATION_EFFORT);
+  std::vector<std::pair<std::string, spot::postprocessor::optimization_level>> effort_overrides;
+  for (const auto& effort_value : effort_values) {
+    std::istringstream entries (effort_value);
+    std::string entry;
+    bool default_seen = false;
+    if (effort_value.empty () || effort_value.back () == ',')
+      error (EXIT_CODE_ERROR, "Error: %s expects high, medium or low, or ARM=LEVEL entries.\n",
+             effort_option);
+    while (std::getline (entries, entry, ',')) {
+      const auto equal = entry.find ('=');
+      const auto value = entry.substr (equal == std::string::npos ? 0 : equal + 1);
+      spot::postprocessor::optimization_level effort;
+      if (value == "high")
+        effort = spot::postprocessor::High;
+      else if (value == "medium")
+        effort = spot::postprocessor::Medium;
+      else if (value == "low")
+        effort = spot::postprocessor::Low;
+      else
+        error (EXIT_CODE_ERROR, "Error: %s expects high, medium or low; got '%s'.\n",
+               effort_option, value.c_str ());
+      if (equal == std::string::npos) {
+        if (default_seen)
+          error (EXIT_CODE_ERROR, "Error: %s expects high, medium or low "
+                                 "as one default, plus ARM=LEVEL overrides.\n",
+                 effort_option);
+        default_seen = true;
+        retval.translation_effort = effort;
+      }
+      else
+        effort_overrides.emplace_back (entry.substr (0, equal), effort);
+    }
+  }
   for (auto& arm : *retval.arms)
     if (arm.legacy)
       arm.legacy->translation_effort = retval.translation_effort;
   for (const auto& [name, effort] : effort_overrides) {
     portfolio_arm* match = nullptr;
     for (auto& arm : *retval.arms) {
-      if (!arm.legacy)
+      if (!arm.legacy || (build_default_effort &&
+                          arm.legacy->provider != acacia::automaton_provider::frozen_graph))
         continue;
       const auto& legacy = *arm.legacy;
       const std::string base = std::string (arm.unreal ? "unreal:" : "real:") +
@@ -953,18 +966,21 @@ arg_parse_result arg_parser (int argc, char** argv) {
         continue;
       if (match)
         error (EXIT_CODE_ERROR,
-               "Error: ambiguous arm '%s' in --translation-effort; add :provider.\n",
-               name.c_str ());
+               "Error: ambiguous arm '%s' in %s; add :provider.\n", name.c_str (), effort_option);
       match = &arm;
     }
-    if (!match)
-      error (EXIT_CODE_ERROR, "Error: unknown translation arm '%s' in --translation-effort.\n",
-             name.c_str ());
+    if (!match) {
+      if (build_default_effort)
+        continue;
+      error (EXIT_CODE_ERROR, "Error: unknown translation arm '%s' in %s.\n", name.c_str (),
+             effort_option);
+    }
     if (match->legacy->provider != acacia::automaton_provider::frozen_graph)
       error (EXIT_CODE_ERROR,
-             "Error: arm '%s' in --translation-effort uses provider '%s', which does not use "
+             "Error: arm '%s' in %s uses provider '%s', which does not use "
              "effort-aware translation.\n",
-             name.c_str (), acacia::automaton_provider_name (match->legacy->provider));
+             name.c_str (), effort_option,
+             acacia::automaton_provider_name (match->legacy->provider));
     match->legacy->translation_effort = effort;
   }
 

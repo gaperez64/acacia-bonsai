@@ -10,6 +10,27 @@ import tempfile
 
 
 binary = Path(sys.argv[1]).resolve()
+build_options = {option["name"]: option["value"] for option in json.loads(
+    (binary.parent.parent / "meson-info/intro-buildoptions.json").read_text())}
+build_effort = build_options["acacia_default_translation_effort"]
+
+
+def worker_arm(row):
+    polarity = row["requested_polarity"].lower()
+    transform = row["translation"] if polarity == "real" else row["transform"]
+    return f"{polarity}:{transform}:{row['requested_backend']}"
+
+
+def expected_effort(value, arm, provider="frozen-graph"):
+    entries = value.split(",")
+    level = next((entry for entry in entries if "=" not in entry), "high")
+    for entry in entries:
+        name, equal, override = entry.partition("=")
+        if equal and provider == "frozen-graph" and name in (arm, arm + ":" + provider):
+            level = override
+    return level
+
+
 with tempfile.TemporaryDirectory(dir=Path.cwd(), prefix="check-help-") as directory:
     cwd = Path(directory)
     for option in ("-h", "--help"):
@@ -29,7 +50,11 @@ with tempfile.TemporaryDirectory(dir=Path.cwd(), prefix="check-help-") as direct
             assert "[scan|grouped] (default: grouped)" in result.stdout
             assert "--spot-fast VAL   use Spot NBA fast path from [off|det]\n" in result.stdout
             assert ("--translation-effort VAL  native translation effort "
-                    "[high|medium|low] (default high)\n" in result.stdout)
+                    "[high|medium|low]\n" in result.stdout)
+            assert f"build default: {build_effort}\n" in result.stdout
+            assert "when given, replaces the build default entirely (implicit level high)" in result.stdout
+            assert "build overrides without an active frozen-graph arm are ignored" in result.stdout
+            assert "runtime overrides for inactive or unsupported arms are errors" in result.stdout
             assert "comma-separated LEVEL and ARM=LEVEL entries" in result.stdout
             assert "overrides apply only to translation-based providers (frozen-graph)" in result.stdout
             assert "ARM must match a selected translation arm exactly" in result.stdout
@@ -92,23 +117,41 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G(i <-> X o); } }
             assert result.returncode == 3, result
             assert f"unknown translation arm '{arm}' in --translation-effort" in result.stderr, result
 
-    # With no selection or effort options, every native translation worker in
-    # the build's default portfolio must retain high effort. Parent-side specs
-    # include every launched worker even when a winner stops its competitors.
-    with tempfile.TemporaryDirectory(dir=cwd) as capture_directory:
-        env = dict(os.environ, ACACIA_PHASE_RECORDS=capture_directory)
-        result = subprocess.run([str(binary), "-f", "G(i <-> X o)", "-i", "i", "-o", "o",
-                                 "--spot-fast", "off", "-K", "4"], cwd=cwd, env=env,
-                                capture_output=True, text=True, check=False, timeout=10)
-        assert result.returncode == 0, result
-        specs = [row for p in Path(capture_directory).glob("*.jsonl")
-                 for line in p.read_text().splitlines()
-                 if (row := json.loads(line)).get("event") == "worker_spec"]
-        native_translations = [r for r in specs if r["kind"] == "legacy"]
-        assert native_translations, specs
-        assert all(r["translation_effort"] == "high" for r in native_translations), specs
-        assert all(r["translation_effort"] == "unused" for r in specs
-                   if r["kind"] != "legacy"), specs
+    # Keep the full default portfolio with -T. Parent specs cover losing workers
+    # too. A runtime level or override must replace every build-default setting.
+    tlsf = cwd / "effort.tlsf"
+    tlsf.write_text('INFO { TITLE: "effort" DESCRIPTION: "test" '
+                    'SEMANTICS: Mealy TARGET: Mealy }\n'
+                    'MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G(i <-> X o); } }\n')
+    runtime_values = [None, "high", "medium"]
+    for effort in runtime_values:
+        with tempfile.TemporaryDirectory(dir=cwd) as capture_directory:
+            env = dict(os.environ, ACACIA_PHASE_RECORDS=capture_directory)
+            command = [str(binary), "-T", str(tlsf), "--spot-fast", "off", "-K", "4"]
+            if effort is not None:
+                command += ["--translation-effort", effort]
+            result = subprocess.run(command, cwd=cwd, env=env, capture_output=True,
+                                    text=True, check=False, timeout=10)
+            assert result.returncode == 0, result
+            specs = [row for p in Path(capture_directory).glob("*.jsonl")
+                     for line in p.read_text().splitlines()
+                     if (row := json.loads(line)).get("event") == "worker_spec"]
+            native_translations = [r for r in specs if r["kind"] == "legacy"]
+            assert native_translations, specs
+            for row in specs:
+                expected = "unused"
+                if row["kind"] == "legacy":
+                    expected = expected_effort(
+                        build_effort if effort is None else effort, worker_arm(row), row["provider"])
+                assert row["translation_effort"] == expected, specs
+            if effort is None:
+                selected = build_options["acacia_default_arms"].split(",")
+                if selected != [""]:
+                    assert {worker_arm(r) for r in native_translations} == {
+                        arm for arm in selected if not arm.startswith("both:")}, specs
+                # An override alone starts from high and discards build defaults.
+                runtime_values.append(worker_arm(native_translations[0]) + "=medium")
+    tlsf.unlink()
 
     # Each arm runs in a forked worker. Check its captured effective option and
     # the same tiny verdict with the default and each explicit effort level.
@@ -127,7 +170,8 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G(i <-> X o); } }
                     command += ["--translation-effort", name + "=low"]
                 elif effort is not None:
                     command += ["--translation-effort", effort]
-                level = "low" if effort in ("override", "provider") else effort or "high"
+                level = ("low" if effort in ("override", "provider") else
+                         expected_effort(build_effort if effort is None else effort, arm))
                 result = subprocess.run(command, cwd=cwd, env=env, capture_output=True,
                                         text=True, check=False, timeout=10)
                 expected = 0 if arm.startswith("real:") else 1
@@ -140,7 +184,7 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G(i <-> X o); } }
                 if effort is None:
                     defaults[arm] = {k: v for k, v in records[0].items()
                                      if k not in ("worker_pid", "run_id")}
-                elif effort == "high":
+                elif effort == expected_effort(build_effort, arm):
                     assert {k: v for k, v in records[0].items()
                             if k not in ("worker_pid", "run_id")} == defaults[arm], records
                 specs = [row for p in Path(capture_directory).glob("*.jsonl")
