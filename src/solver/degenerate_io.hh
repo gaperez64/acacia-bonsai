@@ -18,7 +18,9 @@ namespace acacia::degenerate_io {
   inline verdict try_direct (spot::formula formula,
                              const std::vector<std::string>& input_aps,
                              const std::vector<std::string>& output_aps,
-                             spot::postprocessor::output_pref translation_pref) {
+                             spot::postprocessor::output_pref translation_pref,
+                             spot::postprocessor::optimization_level translation_effort =
+                                 spot::postprocessor::High) {
     if (not input_aps.empty () and not output_aps.empty ())
       return verdict::unknown;
 
@@ -36,6 +38,8 @@ namespace acacia::degenerate_io {
       configure_bdd ();
     auto options = translation::make_options ();
     spot::translator trans (dict, &options);
+    if (translation_effort != spot::postprocessor::High)
+      trans.set_level (translation_effort);
     translation::validate_options (options);
     auto aut = create_automaton (formula, trans, translation_pref);
     const bool language_nonempty = aut->num_states () != 0 and not aut->is_empty ();

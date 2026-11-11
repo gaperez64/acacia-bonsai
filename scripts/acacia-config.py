@@ -86,6 +86,36 @@ def normalize_preset(options: dict[str, Any], presets: dict[str, Any], name: str
     return values
 
 
+def validate_translation_effort(value: Any) -> None:
+    """Check syntax only; active arms and provider support are runtime concerns."""
+    error = ("acacia_default_translation_effort: expected at most one high, medium or low "
+             "level, plus ARM=LEVEL entries with valid arm syntax and no empty entries; "
+             f"got {value!r}")
+    if not isinstance(value, str):
+        raise SystemExit(error)
+    # Match parse_portfolio_arms syntax, including valid inactive/native arms.
+    arm_pattern = (
+        r"(?:(?:real:(?:small|any)|unreal:(?:formula|automaton)):"
+        r"(?:backward|forward|spot-guarded(?:-sparse)?)"
+        r"(?::(?:frozen-graph|spot-lazy|spot-eager|closure-buchi(?:-eager)?))?"
+        r"|(?:real|unreal|both):gr1:oxidd"
+        r"|both:(?:gr1-lift|gr1-real-lift):oxidd|real:param-lift:oxidd"
+        r"|both:parity:(?:spot|oxidd)|both:obligation:spot)"
+    )
+    default_seen = False
+    for entry in value.split(","):
+        arm, equal, level = entry.rpartition("=")
+        if level not in {"high", "medium", "low"}:
+            raise SystemExit(error)
+        if equal:
+            if not re.fullmatch(arm_pattern, arm):
+                raise SystemExit(error)
+        elif default_seen:
+            raise SystemExit(error)
+        else:
+            default_seen = True
+
+
 def validate_preset(options: dict[str, Any], presets: dict[str, Any], name: str) -> None:
     values = normalize_preset(options, presets, name)
     valid_keys = set(options["options"]) | set(options["families"]) | {"_preset"}
@@ -107,6 +137,8 @@ def validate_preset(options: dict[str, Any], presets: dict[str, Any], name: str)
                     or ("min" in option and value < option["min"])
                     or ("max" in option and value > option["max"])):
                 raise SystemExit(f"{name}: invalid {option_name}={value}")
+
+    validate_translation_effort(values["default_translation_effort"])
 
 
 
@@ -331,6 +363,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("validate")
+    effort_p = sub.add_parser("validate-translation-effort")
+    effort_p.add_argument("value")
     list_p = sub.add_parser("list-presets")
     list_p.add_argument("--long", action="store_true", help="include role and description")
     sub.add_parser("list-tools")
@@ -353,6 +387,10 @@ def main() -> int:
     meson_p = sub.add_parser("meson-args")
     meson_p.add_argument("preset")
     args = parser.parse_args()
+
+    if args.cmd == "validate-translation-effort":
+        validate_translation_effort(args.value)
+        return 0
 
     options, presets = load_registry()
 

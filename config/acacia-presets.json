@@ -146,6 +146,7 @@
       "simd_is_max": false,
       "vector_downset": "rank_bucketed_vector_backed",
       "default_arms": "real:small:backward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-real-lift:oxidd,both:obligation:spot,both:parity:spot,both:parity:oxidd",
+      "default_translation_effort": "high,unreal:formula:spot-guarded-sparse=low",
       "spot_lazy_provider": true,
       "spot_guarded_backend": true,
       "forward_safety_solver": true,

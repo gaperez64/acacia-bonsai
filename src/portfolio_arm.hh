@@ -21,6 +21,7 @@ struct legacy_arm_options {
     acacia::game_backend backend;
     acacia::automaton_provider provider = acacia::automaton_provider::frozen_graph;
     bool provider_explicit = false;
+    spot::postprocessor::optimization_level translation_effort = spot::postprocessor::High;
 
     bool operator== (const legacy_arm_options& rhs) const {
       return translation_pref == rhs.translation_pref && unreal_x == rhs.unreal_x &&

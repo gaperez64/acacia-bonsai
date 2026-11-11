@@ -33,6 +33,42 @@ def test_committed_registry_is_valid():
     module.command_validate(options, presets)
 
 
+@pytest.mark.parametrize("value", [
+    "", "fast", "High", "high,low", "high,", ",low", "low,,high",
+    "real:small:backward=", "real:small:backward=fast", "=low", "missing=low",
+    "real:formula:backward=low", "unreal:any:forward=low", "both:small:backward=low",
+    "real:small:missing=low", "real:small:backward:missing=low",
+    "real:small:backward:frozen-graph:extra=low", "real:small:backward==low",
+    "real:small:backward=low,", "high, low", "high\n", None, 1,
+])
+def test_translation_effort_validation_rejects_malformed_values(value):
+    module = load_module()
+    options, presets = module.load_registry()
+    name = presets["groups"]["docker_default"][0]
+    presets["presets"][name]["default_translation_effort"] = value
+    with pytest.raises(SystemExit, match="acacia_default_translation_effort: expected"):
+        module.command_validate(options, presets)
+
+
+@pytest.mark.parametrize("value", [
+    "high", "medium", "low", "real:small:backward=low",
+    "medium,real:any:forward:frozen-graph=low,unreal:automaton:backward=high",
+    "unreal:formula:spot-guarded-sparse=low,medium",
+    "real:small:backward=low,real:small:backward=medium",
+    "real:small:spot-guarded:spot-lazy=low",
+    "unreal:formula:spot-guarded-sparse:closure-buchi-eager=low",
+    "both:parity:spot=low,both:obligation:spot=medium,real:param-lift:oxidd=high",
+    "both:gr1-real-lift:oxidd=low,unreal:gr1:oxidd=medium",
+])
+def test_translation_effort_validation_allows_inactive_arms(value):
+    module = load_module()
+    options, presets = module.load_registry()
+    name = presets["groups"]["docker_default"][0]
+    presets["presets"][name]["default_arms"] = "real:small:backward"
+    presets["presets"][name]["default_translation_effort"] = value
+    module.command_validate(options, presets)
+
+
 
 
 def test_gr1_prepass_preset_is_five_arms():
@@ -105,8 +141,25 @@ def test_first_shipping_preset_replaces_real_forward_with_both_parity_arms():
     ] + ["both:parity:spot", "both:parity:oxidd"]
     assert len(candidate["default_arms"].split(",")) == 7
     for key in baseline:
-        if key not in {"_preset", "preset", "default_arms"}:
+        if key not in {"_preset", "preset", "default_arms", "default_translation_effort"}:
             assert candidate[key] == baseline[key], key
+
+
+def test_only_first_shipping_preset_changes_default_translation_effort():
+    module = load_module()
+    options, presets = module.load_registry()
+    default = options["options"]["default_translation_effort"]["default"]
+    first = presets["groups"]["docker_default"][0]
+    for name in presets["presets"]:
+        values = module.normalize_preset(options, presets, name)
+        expected = default + ",unreal:formula:spot-guarded-sparse=low" if name == first else default
+        assert values["default_translation_effort"] == expected, name
+        assert f"-Dacacia_default_translation_effort={expected}" in module.meson_args(
+            options, values)
+    template = (ROOT / "src/config/acacia_build_config.hh.in").read_text()
+    assert ("#ifndef ACACIA_DEFAULT_TRANSLATION_EFFORT\n"
+            "# define ACACIA_DEFAULT_TRANSLATION_EFFORT @ACACIA_DEFAULT_TRANSLATION_EFFORT@\n"
+            "#endif" in template)
 
 
 def test_docker_launcher_uses_registry_group_without_python():
@@ -595,6 +648,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     values = module.defaults(options)
     values.update({
         "translation_pref": "any",
+        "default_translation_effort": "medium,unreal:formula:backward=low",
         "simd_is_max": False,
         "enable_diagnostics": True,
         "default_arms": "real:identity:backward,unreal:identity:forward",
@@ -603,6 +657,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     expected = [
         "-DACACIA_TRANSLATION_PREF=spot::postprocessor::Any",
         "-DACACIA_TRANSLATION_PREFS=spot::postprocessor::Any",
+        r'-DACACIA_DEFAULT_TRANSLATION_EFFORT=\"medium,unreal:formula:backward=low\"',
         "-DACACIA_BDD_MAX_INCREASE=4194304",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",
         "-DSIMD_IS_MAX=false",

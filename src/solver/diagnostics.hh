@@ -171,6 +171,7 @@ namespace acacia::diagnostics {
       std::string result = "unknown";
       std::string final_reason = "unknown";
       std::string translation_pref = "unknown";
+      std::string translation_effort = "unknown";
       std::string k_schedule = "linear";
       std::string source_format = "ltl";
       std::string tlsf_semantics = "-";
@@ -353,7 +354,8 @@ namespace acacia::diagnostics {
          << " preset=" << (*acacia_preset () ? acacia_preset () : "-")
          << " pid=" << getpid () << " diag_kind=" << kind << " checkpoint=" << checkpoint
          << " instance=" << m.instance << " path=" << m.path
-         << " translation_pref=" << m.translation_pref << " source_format=" << m.source_format
+         << " translation_pref=" << m.translation_pref
+         << " translation_effort=" << m.translation_effort << " source_format=" << m.source_format
          << " tlsf_semantics=" << m.tlsf_semantics << " tlsf_target=" << m.tlsf_target
          << " tlsf_effective_target=" << m.tlsf_effective_target
          << " tlsf_gr_level=" << m.tlsf_gr_level << " rsimp_ms=" << m.rsimp_ms

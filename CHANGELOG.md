@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The shipped portfolio translates the formula-based unrealizability arm with Spot's low effort level; on all 1,524 SYNTCOMP26 inputs it decides 1,368 at 17 s and 1,387 at 60 s, against 1,367 and 1,385, with PAR-2 33 s and 159 s lower and no input lost (#378). A `--translation-effort` option sets the level per arm.
 - The default portfolio drops `real:small:forward`, going from eight arms to seven. On all 1,524 SYNTCOMP26 inputs it decides 1,367 at 17 s and 1,386 at 60 s, against 1,365 and 1,384 for eight arms, with PAR-2 45 s and 214 s lower and no verdict disagreement (#359). The freed worker gains more inputs than the arm alone decided.
 
 ## 2.8.0 (2026-11-06)

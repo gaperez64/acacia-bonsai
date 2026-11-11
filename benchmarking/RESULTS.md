@@ -1216,3 +1216,27 @@ SYNTCOMP26, all 1,524 inputs, paired; 60 s reruns each portfolio's own 17 s time
 | Seven arms, without `both:obligation:spot` | 1360 | 6177.7 | — | — |
 
 No verdict conflicts. Without `real:small:forward` the only loss is `generalized_buffer_pb_5` (1.3 s with eight arms, unsolved at 60 s); the freed worker gains `chomp_pb_4_4` and two round-robin arbiters at 17 s, and `load_balancer_unreal1_pb_4_8` and `sort53` at 60 s. Dropping `both:obligation:spot` (which would remove the #375 exposure) loses `08` and four `chomp` inputs with no gain, so it stays. The seven-arm default build (`a16046d7`) passes G3 (SYNTCOMP25 165/180 and SYNTCOMP26 168/180 on both binaries, no verdict change or coverage loss), G4 and G5.
+
+## 2026-11-10: Native-arm census; the formula unrealizability arm translates at low effort (#378, #370)
+
+Archive [`native-20261107`](https://github.com/gaperez64/acacia-bonsai/releases/download/evidence-2026-11-10-native/native-20261107.tar.gz).
+
+Census: the four native arms alone (17 s, phase records) on the 677 inputs won by non-native arms in `lean-20261104` or undecided decide 346, including 258 of the 366 `both:parity:spot` wins. Of 194 inputs the portfolio decides and they miss, the right-polarity arms are still translating at the cap on 112, searching on 66, in I/O preparation on 11.
+
+Symmetry census (tlsf-tools `tlsfsym`, exact check on the canonicalized objective, a lower bound): 154 of 1,524 inputs have a verified group (143 symmetric ranges, 11 cyclic), against 45 for the automaton detector (#205); 3 of the 194 native misses and 23 of the 138 inputs undecided by every portfolio are symmetric.
+
+Spot translation effort (new `--translation-effort`, same frozen binary, all 1,524 TLSF inputs, 17 s):
+
+| Run | Decided | PAR-2 (s) |
+|---|---:|---:|
+| Native arms, all high | 1190 | 12182.2 |
+| Native arms, all low | 1190 (+21/−21) | 12067.1 |
+| Native arms, all medium | 1190 (+22/−22) | 12064.8 |
+| Native arms, forward and formula arms low | **1206** (+23/−7) | **11541.0** |
+| Native arms, forward and automaton arms low | 1188 (+10/−12) | 12235.4 |
+| Shipped portfolio, all high | 1367 | 5981.2 |
+| Shipped portfolio, all low | 1363 (+3/−7) | 6090.1 |
+| Shipped portfolio, automaton arm low | 1367 | 5991.1 |
+| **Shipped portfolio, formula arm low** | **1368** (+1/−0) | **5948.4** |
+
+At 60 s (each configuration rerunning its own 17 s timeouts) the shipped portfolio with the formula arm at low decides 1387 against 1385, PAR-2 17776.7 against 17935.6 s, no loss. No run had a verdict conflict. No level dominates per input: phase records on the 42 inputs where high and low disagree show each level stalling where the other finishes, so no translation time budget can choose. The shipped preset now sets `unreal:formula:spot-guarded-sparse` to low; the build passes G3 (SYNTCOMP25 165/180, SYNTCOMP26 169/180 against 168, no verdict change or coverage loss) , G4 and G5 (0 opposite verdicts, 0 frontend errors). Two thirds of the translation-stuck inputs still stall at low. The first translation probe (`c2-translation`) used SyFCo formulas, not the native frontend's, and is kept only as disclosed; `c3-native-formula` repeats it on the formulas Acacia translates.

@@ -72,6 +72,7 @@ namespace acacia {
       const std::vector<std::string>& inputs;
       const std::vector<std::string>& outputs;
       const char* preference;
+      const char* effort;
       const char* preprocessing;
       bool push_inputs;
       void operator() (spot::formula actual) const noexcept {
@@ -80,7 +81,7 @@ namespace acacia {
         try {
           accounting_identity (
               actual, inputs, outputs, "frozen-graph",
-              std::string (preference) +
+              std::string (preference) + ":effort=" + effort +
                   ":BA:SBAcc:simul=0:ba-simul=0:det-simul=0:tls-impl=1:wdba-minimize=2",
               std::string (preprocessing) + (push_inputs ? ":push-inputs" : ":no-input-push"));
         } catch (...) {

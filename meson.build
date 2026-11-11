@@ -14,6 +14,16 @@ extra_args = ['-ftrack-macro-expansion=0',
 cpp = meson.get_compiler ('cpp')
 add_global_arguments (cpp.get_supported_arguments (extra_args), language: 'cpp')
 
+config_python = import ('python').find_installation ('python3')
+effort_check = run_command (
+  config_python, files ('scripts/acacia-config.py'),
+  'validate-translation-effort', '--', get_option ('acacia_default_translation_effort'),
+  check : false,
+)
+if effort_check.returncode () != 0
+  error (effort_check.stderr ().strip ())
+endif
+
 spot_dep = dependency ('libspot')
 bddx_dep = dependency ('libbddx')  # Spot's copy of BuDDy
 posets_dep = dependency ('posets')
@@ -73,6 +83,8 @@ translation_preferences = {
 translation_preference = translation_preferences[get_option ('acacia_translation_pref')]
 build_conf.set ('ACACIA_TRANSLATION_PREF', translation_preference)
 build_conf.set ('ACACIA_TRANSLATION_PREFS', translation_preference)
+build_conf.set_quoted ('ACACIA_DEFAULT_TRANSLATION_EFFORT',
+                       get_option ('acacia_default_translation_effort'))
 build_conf.set ('ACACIA_BDD_MAX_INCREASE', get_option ('acacia_bdd_max_increase'))
 build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION',
                 get_option ('acacia_forced_output_contradiction') ? 1 : 0)
