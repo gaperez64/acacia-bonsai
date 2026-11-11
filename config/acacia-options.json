@@ -122,29 +122,26 @@
         }
       ]
     },
-    "simd_is_max": {
-      "meson": "acacia_simd_is_max",
-      "type": "boolean",
-      "default": true,
-      "description": "Legacy SIMD width: max fixed size if true, compatible ABI (128-bit on x86-64) if false",
+    "simd_width": {
+      "meson": "acacia_simd_width",
+      "type": "combo",
+      "default": "native",
+      "choices": [
+        "native",
+        "compatible",
+        "max"
+      ],
+      "description": "SIMD width: native to the build target, compatible (128 bits), or largest fixed size",
       "macros": [
         {
-          "name": "SIMD_IS_MAX",
+          "name": "POSETS_SIMD_WIDTH",
           "emit": "always",
-          "encoding": "bool_literal"
-        }
-      ]
-    },
-    "simd_native": {
-      "meson": "acacia_simd_native",
-      "type": "boolean",
-      "default": true,
-      "description": "Select the build target's native SIMD width; if false, simd_is_max selects it",
-      "macros": [
-        {
-          "name": "SIMD_IS_NATIVE",
-          "emit": "always",
-          "encoding": "bool_literal"
+          "encoding": "map",
+          "map": {
+            "native": 1,
+            "compatible": 0,
+            "max": 2
+          }
         }
       ]
     },

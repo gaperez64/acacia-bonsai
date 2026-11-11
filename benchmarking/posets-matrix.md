@@ -7,8 +7,8 @@ zero-dimensional singleton and an all-minus-one bottom vector are distinct.
 Actual solver integration must satisfy the call path's contract; a passing
 nonempty trace does not establish unrestricted empty/zero support.
 
-`acacia_simd_native=true` opts into hardware-native lane count. Otherwise the
-legacy `acacia_simd_is_max` chooses max-fixed or compatible width. The benchmark
+`acacia_simd_width` selects `native` (default), `compatible` (128 bits), or `max`
+(the largest fixed size supported by the library). The benchmark
 reports actual widths and emitted comparison instructions and deduplicates only
 identical types/alignment/instructions. Scalar vectors are correctness controls;
 no claim is made about compiler auto-vectorization of their ordinary loops.
