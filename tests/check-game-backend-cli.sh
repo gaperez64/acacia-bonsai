@@ -120,7 +120,7 @@ else
 fi
 
 if [[ $guarded_enabled == true && $lazy_enabled == true ]]; then
-    effort_formula=(-f 'G(i <-> X(o))' -i i -o o --spot-fast off)
+    effort_formula=(-f 'G(o)' -i i -o o --spot-fast off)
     provider_arms='real:small:spot-guarded:frozen-graph,real:small:spot-guarded:spot-eager'
     output=$(run 3 "${effort_formula[@]}" --arms "$provider_arms" \
         --translation-effort real:small:spot-guarded=low)

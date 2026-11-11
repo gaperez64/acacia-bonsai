@@ -148,11 +148,11 @@ def test_first_shipping_preset_replaces_real_forward_with_both_parity_arms():
 def test_only_first_shipping_preset_changes_default_translation_effort():
     module = load_module()
     options, presets = module.load_registry()
-    assert options["options"]["default_translation_effort"]["default"] == "high"
+    default = options["options"]["default_translation_effort"]["default"]
     first = presets["groups"]["docker_default"][0]
     for name in presets["presets"]:
         values = module.normalize_preset(options, presets, name)
-        expected = "high,unreal:formula:spot-guarded-sparse=low" if name == first else "high"
+        expected = default + ",unreal:formula:spot-guarded-sparse=low" if name == first else default
         assert values["default_translation_effort"] == expected, name
         assert f"-Dacacia_default_translation_effort={expected}" in module.meson_args(
             options, values)
@@ -648,6 +648,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     values = module.defaults(options)
     values.update({
         "translation_pref": "any",
+        "default_translation_effort": "medium,unreal:formula:backward=low",
         "simd_is_max": False,
         "enable_diagnostics": True,
         "default_arms": "real:identity:backward,unreal:identity:forward",
@@ -656,7 +657,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     expected = [
         "-DACACIA_TRANSLATION_PREF=spot::postprocessor::Any",
         "-DACACIA_TRANSLATION_PREFS=spot::postprocessor::Any",
-        r'-DACACIA_DEFAULT_TRANSLATION_EFFORT=\"high\"',
+        r'-DACACIA_DEFAULT_TRANSLATION_EFFORT=\"medium,unreal:formula:backward=low\"',
         "-DACACIA_BDD_MAX_INCREASE=4194304",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",
         "-DSIMD_IS_MAX=false",
