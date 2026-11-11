@@ -154,9 +154,9 @@ namespace acacia::solver_detail {
 
           if (winning_region.contains (*fwd.begin ())) {
             strat = avec.output ();
-            verb_do (2, vout << "dominated with IO = "
+            verb_do (2, print_downset (vout << "dominated with IO = "
                              << spot::bdd_to_formula (input_letter & strat, aut->get_dict ())
-                             << ": " << fwd);
+                             << ": ", fwd));
             tgt = 0;
             for (const auto& elem_in_antichain : winning_region) {
               if (elem_in_antichain.partial_order (*fwd.begin ()).geq ())

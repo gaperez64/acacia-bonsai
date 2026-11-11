@@ -14,6 +14,7 @@
 
 #include <posets/downsets.hh>
 #include <posets/downsets/bboxtree_backed.hh>
+#include <posets/downsets/lazy_kdtree_backed.hh>
 #include <posets/downsets/rank_bucketed_vector_backed.hh>
 
 using state = posets::vectors::simd_vector_backed<VECTOR_ELT_T>;
@@ -102,6 +103,7 @@ bool check_equivariant_invariant_backends () {
   G.gens.push_back ({1, 0});
   bool ok = check_backend_cases<posets::downsets::bboxtree_backed<state>> ("bbox", G);
   ok &= check_backend_cases<posets::downsets::rank_bucketed_vector_backed<state>> ("rank", G);
+  ok &= check_backend_cases<posets::downsets::lazy_kdtree_backed<state>> ("lazy KD", G);
   posets::downsets::rank_bucketed_vector_backed<state> empty {std::vector<state> {}};
   ok &= check_backend ("rank empty", empty, G, true);
   posets::vectors::bool_threshold = old_bool_threshold;

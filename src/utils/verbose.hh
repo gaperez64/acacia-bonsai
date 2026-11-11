@@ -3,6 +3,13 @@
 #include <sstream>
 
 namespace utils {
+  template <typename Downset>
+  std::ostream& print_downset (std::ostream& os, const Downset& downset) {
+    for (const auto& maximal : downset)
+      os << maximal << std::endl;
+    return os;
+  }
+
   // https://stackoverflow.com/questions/37490881/overloading-operator-in-c-with-a-prefix
   class prefixstringbuf : public std::stringbuf {
     private:

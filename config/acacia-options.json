@@ -154,14 +154,20 @@
       "default": "vector_backed",
       "choices": [
         "vector_backed",
-        "rank_bucketed_vector_backed"
+        "rank_bucketed_vector_backed",
+        "lazy_kd"
       ],
-      "description": "Downset implementation for vectors and bitsets",
+      "description": "Downset storage: plain vectors, rank buckets, or a lazy KD tree",
       "macros": [
         {
           "name": "VECTOR_AND_BITSET_DOWNSET_IMPL",
           "emit": "always",
-          "encoding": "value"
+          "encoding": "map",
+          "map": {
+            "vector_backed": "vector_backed",
+            "rank_bucketed_vector_backed": "rank_bucketed_vector_backed",
+            "lazy_kd": "lazy_kdtree_backed"
+          }
         }
       ]
     },

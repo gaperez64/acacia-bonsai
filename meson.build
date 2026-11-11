@@ -126,7 +126,14 @@ input_picker_types = {
 build_conf.set ('INPUT_PICKER', input_picker_types[input_picker])
 build_conf.set ('ACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ', input_picker == 'critical_pq' ? 1 : 0)
 build_conf.set ('ACACIA_ENABLE_INPUT_PICKER_CRITICAL', input_picker == 'critical' ? 1 : 0)
-build_conf.set ('VECTOR_AND_BITSET_DOWNSET_IMPL', get_option ('acacia_vector_downset'))
+posets_downset_types = {
+  'vector_backed' : 'vector_backed',
+  'rank_bucketed_vector_backed' : 'rank_bucketed_vector_backed',
+  # Posets defaults to fractional cascading and its standard lazy KD policy.
+  'lazy_kd' : 'lazy_kdtree_backed',
+}
+build_conf.set ('VECTOR_AND_BITSET_DOWNSET_IMPL',
+                posets_downset_types[get_option ('acacia_vector_downset')])
 
 posets_gates = [
   'POSETS_ENABLE_VECTOR_SIMD_ARRAY_BACKED',
@@ -144,6 +151,7 @@ posets_gates = [
   'POSETS_ENABLE_VECTOR_X_AND_BITSET',
   'POSETS_ENABLE_DOWNSET_FULL_SET',
   'POSETS_ENABLE_DOWNSET_KDTREE_BACKED',
+  'POSETS_ENABLE_DOWNSET_LAZY_KDTREE_BACKED',
   'POSETS_ENABLE_DOWNSET_BBOXTREE_BACKED',
   'POSETS_ENABLE_DOWNSET_COMPTRIE_BACKED',
   'POSETS_ENABLE_DOWNSET_SET_BACKED',
@@ -171,6 +179,7 @@ build_conf.set ('POSETS_ENABLE_VECTOR_SIMD_VECTOR_BACKED', 1)
 posets_downset_gates = {
   'vector_backed' : 'POSETS_ENABLE_DOWNSET_VECTOR_BACKED',
   'rank_bucketed_vector_backed' : 'POSETS_ENABLE_DOWNSET_RANK_BUCKETED_VECTOR_BACKED',
+  'lazy_kd' : 'POSETS_ENABLE_DOWNSET_LAZY_KDTREE_BACKED',
 }
 foreach choice, gate : posets_downset_gates
   build_conf.set (gate, 0)

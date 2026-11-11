@@ -259,7 +259,7 @@ class k_bounded_safety_aut_detail {
     void cpre_inplace (SetOfStates& f, const Action& io_action, Actioner& actioner,
                        [[maybe_unused]] int k = -1, [[maybe_unused]] int loop = -1) {
       acacia::diagnostics::scoped_fine_timer cpre_timer {acacia::diagnostics::fine_metric::cpre};
-      verb_do (2, vout << "Computing cpre(f) with f = " << std::endl << f);
+      verb_do (2, print_downset (vout << "Computing cpre(f) with f = " << std::endl, f));
 
       const auto& [input, actions] = io_action.get ();
 #if ACACIA_ENABLE_DIAGNOSTICS
@@ -321,7 +321,7 @@ class k_bounded_safety_aut_detail {
       // Experimentally, this is not faster:
       //   f1i.intersect_with (std::move (f));
       //   f = std::move (f1i);
-      verb_do (2, vout << "f = " << std::endl << f);
+      verb_do (2, print_downset (vout << "f = " << std::endl, f));
     }
 
     ////////////////////////////////////////////////

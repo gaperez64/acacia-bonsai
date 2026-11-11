@@ -66,5 +66,6 @@ option('acacia_enable_equivariant_solver', type: 'boolean', value: true,
        description: 'Compile and enable the exact equivariant solver path')
 
 option('acacia_vector_downset', type: 'combo',
-       choices: ['vector_backed', 'rank_bucketed_vector_backed'],
-       value: 'vector_backed')
+       choices: ['vector_backed', 'rank_bucketed_vector_backed', 'lazy_kd'],
+       value: 'vector_backed',
+       description: 'Downset storage: plain vectors, rank buckets, or a lazy KD tree')
