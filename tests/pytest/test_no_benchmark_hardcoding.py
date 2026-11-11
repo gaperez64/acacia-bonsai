@@ -113,6 +113,15 @@ GENERIC_DECLARED_NAMES = frozenset({
 })
 # Exact (path, literal) exceptions for audited non-identity uses.
 SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
+    **{('subprojects/tlsf-tools/src/lib/expand_check.c', message):
+       'generic TLSF expression type diagnostic' for message in (
+           'logical operator requires boolean/LTL expressions',
+           'temporal operator requires an LTL expression',
+           'next body must be an LTL expression',
+           'temporal body must be an LTL expression',
+           'pattern subject must be LTL',
+           'guard must be boolean (signals are LTL)',
+           'specification requires an LTL expression')},
     ('subprojects/tlsf-tools/src/lib/gr1_reduction.cc', 'gr1_reduction_test_hooks.hh'):
         'test-only monitor hooks, included under TLSF_GR1_REDUCTION_TEST_FAULT',
     ('subprojects/tlsf-tools/src/lib/gr1_reduction_test_hooks.hh', 'ACACIA_NATIVE_TEST_CONTRACT'):
