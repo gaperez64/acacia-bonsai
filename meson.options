@@ -42,8 +42,8 @@ option('acacia_forced_output_contradiction', type: 'boolean', value: false,
 option('acacia_simd_is_max', type: 'boolean', value: true,
        description: 'Legacy SIMD width: max fixed size if true, compatible ABI (128-bit on x86-64) if false')
 
-option('acacia_simd_native', type: 'boolean', value: false,
-       description: 'Select hardware-native SIMD width; otherwise retain acacia_simd_is_max selection')
+option('acacia_simd_native', type: 'boolean', value: true,
+       description: 'Select the build target\'s native SIMD width; if false, acacia_simd_is_max selects it')
 
 option('acacia_enable_diagnostics', type: 'boolean', value: false,
        description: 'Compile compact Acacia phase diagnostics, gated at runtime by ACACIA_DIAG')

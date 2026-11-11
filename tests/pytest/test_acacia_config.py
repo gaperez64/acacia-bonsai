@@ -650,6 +650,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         "translation_pref": "any",
         "default_translation_effort": "medium,unreal:formula:backward=low",
         "simd_is_max": False,
+        "simd_native": False,
         "enable_diagnostics": True,
         "default_arms": "real:identity:backward,unreal:identity:forward",
         "forward_safety_solver": True,
@@ -787,22 +788,25 @@ def test_kept_presets_are_flat_and_each_selector_varies():
     resolved = [module.normalize_preset(options, presets, name) for name in presets["presets"]]
     for section in ("options", "families"):
         for name, option in options[section].items():
-            # BDD growth remains an opt-in experiment pending memory/coverage gates.
-            if name in {"preset", "bdd_max_increase"}:
+            # BDD growth remains an opt-in experiment pending memory/coverage gates; native SIMD
+            # width is the default and the legacy width stays a build option, not a preset.
+            if name in {"preset", "bdd_max_increase", "simd_native"}:
                 continue
             assert any(values[name] != option["default"] for values in resolved), name
 
 
-def test_native_simd_is_additive_and_old_presets_keep_their_abi():
+def test_native_simd_is_the_default_and_legacy_width_stays_selectable():
     module = load_module()
     options, presets = module.load_registry()
     for name in presets["presets"]:
         values = module.normalize_preset(options, presets, name)
-        assert values["simd_native"] is (name == "posets_native_width")
-    assert "posets_native_width" not in presets["groups"]["docker_default"]
+        assert values["simd_native"] is True, name
     values = module.defaults(options)
-    values["simd_native"] = True
     assert "-Dacacia_simd_native=true" in module.meson_args(options, values)
+    values["simd_native"] = False
+    assert "-Dacacia_simd_native=false" in module.meson_args(options, values)
+    assert "-DSIMD_IS_NATIVE=false" in module.preprocessor_flags(options, values)
+    values["simd_native"] = True
     flags = module.preprocessor_flags(options, values)
     assert "-DSIMD_IS_NATIVE=true" in flags
     assert "-DSIMD_IS_MAX=true" in flags  # Explicit native selection takes precedence.

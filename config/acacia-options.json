@@ -138,8 +138,8 @@
     "simd_native": {
       "meson": "acacia_simd_native",
       "type": "boolean",
-      "default": false,
-      "description": "Select hardware-native SIMD width; otherwise retain simd_is_max selection",
+      "default": true,
+      "description": "Select the build target's native SIMD width; if false, simd_is_max selects it",
       "macros": [
         {
           "name": "SIMD_IS_NATIVE",
