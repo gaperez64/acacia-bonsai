@@ -12,7 +12,8 @@ std::optional<spot::twa_graph_ptr> solve_game (
     spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
     const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
     const std::vector<symmetry::indexed_family_hint>& hints, acacia::game_backend backend,
-    acacia::candidate_mode candidate, bool equivariance) {
+    acacia::candidate_mode candidate, bool equivariance,
+    const std::vector<symmetry::objective_symmetry_hint>& objective_hints) {
   if (all_outputs == bddtrue)
     verb_do (2, vout << "Warning: synthesis without output APs\n");
 
@@ -21,5 +22,5 @@ std::optional<spot::twa_graph_ptr> solve_game (
 
   return acacia::solver_detail::solve_with_downset<Downset> (
       aut, kmax, kmin, kinc, all_inputs, all_outputs, do_synthesis, hints, backend, candidate,
-      equivariance);
+      equivariance, objective_hints);
 }

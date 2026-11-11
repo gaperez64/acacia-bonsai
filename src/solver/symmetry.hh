@@ -249,18 +249,12 @@ namespace symmetry {
         }
     };
 
-    inline std::optional<std::vector<unsigned>> verify_transposition (
-        const spot::twa_graph_ptr& aut, const family_map& families,
-        long a, long b, const std::vector<std::vector<out_edge>>& oeA,
-        const std::vector<std::string>& sigA) {
+    inline std::optional<std::vector<unsigned>> verify_relabeling (
+        const spot::twa_graph_ptr& aut, spot::relabeling_map& rm,
+        const std::vector<std::vector<out_edge>>& oeA, const std::vector<std::string>& sigA) {
       const unsigned n = aut->num_states ();
       const unsigned init = aut->get_init_state_number ();
 
-      spot::relabeling_map rm;
-      for (auto& [pfx, f] : families) {
-        rm[f.idx2ap.at (a)] = f.idx2ap.at (b);
-        rm[f.idx2ap.at (b)] = f.idx2ap.at (a);
-      }
       auto B = spot::make_twa_graph (aut, spot::twa::prop_set::all ());
       spot::relabel_here (B, &rm);
       if (B->get_init_state_number () != init)
@@ -276,6 +270,17 @@ namespace symmetry {
       if (not f.search ())
         return std::nullopt;
       return f.phi;
+    }
+
+    inline std::optional<std::vector<unsigned>> verify_transposition (
+        const spot::twa_graph_ptr& aut, const family_map& families, long a, long b,
+        const std::vector<std::vector<out_edge>>& oeA, const std::vector<std::string>& sigA) {
+      spot::relabeling_map rm;
+      for (auto& [pfx, f] : families) {
+        rm[f.idx2ap.at (a)] = f.idx2ap.at (b);
+        rm[f.idx2ap.at (b)] = f.idx2ap.at (a);
+      }
+      return verify_relabeling (aut, rm, oeA, sigA);
     }
 
     // Structural automorphisms are closed under conjugation, so verified
@@ -587,6 +592,99 @@ namespace symmetry {
                      << " clients (full_symmetric=" << G.full_symmetric
                      << "), aut has " << aut->num_states () << " states\n");
     return G;
+  }
+
+  // Verify the supplied AP maps directly. Each declared range acts separately;
+  // unrelated indexed families remain shared. No objective-level certificate
+  // can bypass the final automaton isomorphism check.
+  inline group detect_objective_generators (const spot::twa_graph_ptr& aut, bdd all_inputs,
+                                            bdd all_outputs,
+                                            const std::vector<objective_symmetry_hint>& hints) {
+    const auto oe = detail::out_edges (aut);
+    const auto sig = detail::signatures (aut, oe);
+    std::map<std::string, spot::formula> aps;
+    for (const auto& ap : aut->ap ())
+      aps.emplace (ap.ap_name (), ap);
+    const auto side = [&] (spot::formula ap) {
+      const auto v = bdd_ithvar (aut->get_dict ()->varnum (ap));
+      const bool input = bdd_exist (all_inputs, v) != all_inputs;
+      const bool output = bdd_exist (all_outputs, v) != all_outputs;
+      return input != output ? (input ? 1 : 2) : 0;
+    };
+
+    group best;
+    for (const auto& hint : hints) {
+      acacia::equivariance_budget::checkpoint ();
+      group G;
+      std::map<long, size_t> counts;
+      bool valid = true, has_input = false;
+      for (const auto& declared : hint.families) {
+        family f {};
+        int family_side = 0;
+        for (size_t i = 0; i < declared.members.size (); ++i) {
+          const auto ap = aps.find (declared.members[i]);
+          if (ap == aps.end ())
+            continue;
+          const auto s = side (ap->second);
+          if (not s or (family_side and family_side != s))
+            valid = false;
+          family_side = s;
+          f.idx2ap.emplace (declared.lo + i, ap->second);
+        }
+        if (f.idx2ap.empty ())
+          continue;
+        f.is_input = family_side == 1;
+        has_input |= f.is_input;
+        for (const auto& [index, ap] : f.idx2ap)
+          ++counts[index];
+        G.families.emplace (declared.members.front (), std::move (f));
+      }
+      for (const auto& [index, count] : counts)
+        if (count == G.families.size ())
+          G.indices.push_back (index);
+      if (not valid or not has_input or G.indices.size () < 3)
+        continue;
+
+      size_t attempted = 0;
+      for (const auto& candidate : hint.generators) {
+        acacia::equivariance_budget::checkpoint ();
+        const auto [a, b] = candidate.indices;
+        if (not std::binary_search (G.indices.begin (), G.indices.end (), a) or
+            not std::binary_search (G.indices.begin (), G.indices.end (), b))
+          continue;
+        ++attempted;
+        spot::relabeling_map rm, expected;
+        bool closed = true;
+        for (const auto& [from, to] : candidate.image) {
+          auto src = aps.find (from), dst = aps.find (to);
+          if (src == aps.end () and dst == aps.end ())
+            continue;
+          if (src == aps.end () or dst == aps.end () or not side (src->second) or
+              side (src->second) != side (dst->second)) {
+            closed = false;
+            break;
+          }
+          rm.emplace (src->second, dst->second);
+        }
+        for (const auto& [name, f] : G.families) {
+          expected[f.idx2ap.at (a)] = f.idx2ap.at (b);
+          expected[f.idx2ap.at (b)] = f.idx2ap.at (a);
+        }
+        if (not closed or rm != expected)
+          continue;
+        if (auto phi = detail::verify_relabeling (aut, rm, oe, sig)) {
+          G.gens.push_back (std::move (*phi));
+          G.gen_pairs.push_back ({a, b});
+        }
+      }
+      verb_do (1, vout << "[symmetry] objective candidates verified " << G.gens.size () << "/"
+                       << attempted << " automaton transpositions over " << G.indices.size ()
+                       << " clients\n");
+      G = largest_full_symmetric_subgroup (G);
+      if (G.full_symmetric and G.indices.size () >= 3 and G.indices.size () > best.indices.size ())
+        best = std::move (G);
+    }
+    return best;
   }
 
   inline group detect_full_symmetric_generators (const spot::twa_graph_ptr& aut,

@@ -189,7 +189,9 @@ namespace acacia::solver_detail {
       const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
       [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints,
       acacia::game_backend backend, [[maybe_unused]] acacia::candidate_mode candidate,
-      [[maybe_unused]] bool equivariance) {
+      [[maybe_unused]] bool equivariance,
+      [[maybe_unused]] const std::vector<symmetry::objective_symmetry_hint>& objective_hints =
+          {}) {
     backend = acacia::synthesis_backend (backend, do_synthesis);
     acacia::config::checks::check_solver_components<SpecializedDownset> ();
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
@@ -212,7 +214,8 @@ namespace acacia::solver_detail {
       acacia::worker_route ("equivariance", "backward");
       auto eq = acacia::solver_detail::equivariant::try_solve<SpecializedDownset> (
           aut, kmax, kmin, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
-          actioners::standard<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints, budget);
+          actioners::standard<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints,
+          budget, objective_hints);
       if (eq.outcome == acacia::solver_detail::equivariant::status::completed)
         return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut, all_inputs,
                                               all_outputs);

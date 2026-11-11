@@ -629,6 +629,11 @@ tlsf_frontend_test = executable (
 )
 test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
 
+tlsf_symmetry_test = executable (
+  'tlsf-symmetry-test', ['tlsf_symmetry_test.cc', '../src/tlsf_frontend.cc'],
+  include_directories : inc, dependencies : tlsf_deps + [spot_dep, bddx_dep])
+test ('tlsf-symmetry', tlsf_symmetry_test, suite : ['unit', 'tlsf', 'symmetry'])
+
 test ('moore-synthesis-semantics',
       py,
       args : [files ('check-moore-synthesis.py'), ab_exe],

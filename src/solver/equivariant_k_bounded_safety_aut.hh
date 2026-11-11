@@ -798,7 +798,8 @@ namespace acacia::solver_detail::equivariant {
       const bdd& all_inputs, const bdd& all_outputs,
       const IOsPrecomputerMaker& ios_precomputer_maker, const ActionerMaker& actioner_maker,
       const InputPickerMaker& input_picker_maker,
-      const std::vector<symmetry::indexed_family_hint>& hints = {}) {
+      const std::vector<symmetry::indexed_family_hint>& hints = {},
+      const std::vector<symmetry::objective_symmetry_hint>& objective_hints = {}) {
     acacia::accounting_phase recognition ("equivariance_recognition");
     using state = typename SetOfStates::value_type;
     const unsigned num_states = aut->num_states ();
@@ -810,26 +811,25 @@ namespace acacia::solver_detail::equivariant {
       return result<SetOfStates> {status::declined, std::nullopt};
     };
 
-    if (num_states > 512 and hints.empty ())
-      return decline ("too many automaton states");
-
-    acacia::equivariance_budget::checkpoint ();
-    symmetry::indexed_ap_analysis indexed;
-    {
-      indexed = symmetry::analyze_indexed_aps (aut, all_inputs, all_outputs, hints);
-    }
-    acacia::equivariance_budget::checkpoint ();
-    if (num_states > 512 and not indexed.syntax_hinted)
-      return decline ("too many automaton states without a matching TLSF indexed-family hint");
-    if (indexed.empty ())
-      return decline ("no indexed AP families");
-    if (indexed.input_families == 0)
-      return decline ("no indexed input AP families");
-    if (indexed.indices.size () < 3)
-      return decline ("too few indexed clients");
-
     symmetry::group G;
-    {
+    if (not objective_hints.empty ())
+      G = symmetry::detect_objective_generators (aut, all_inputs, all_outputs, objective_hints);
+
+    if (not G.full_symmetric) {
+      if (num_states > 512 and hints.empty ())
+        return decline ("too many automaton states");
+      acacia::equivariance_budget::checkpoint ();
+      const auto indexed = symmetry::analyze_indexed_aps (aut, all_inputs, all_outputs, hints);
+      acacia::equivariance_budget::checkpoint ();
+      if (num_states > 512 and not indexed.syntax_hinted)
+        return decline ("too many automaton states without a matching TLSF indexed-family hint");
+      if (indexed.empty ())
+        return decline ("no indexed AP families");
+      if (indexed.input_families == 0)
+        return decline ("no indexed input AP families");
+      if (indexed.indices.size () < 3)
+        return decline ("too few indexed clients");
+
       G = symmetry::detect_full_symmetric_generators (aut, indexed);
     }
     acacia::equivariance_budget::checkpoint ();
@@ -999,13 +999,14 @@ namespace acacia::solver_detail::equivariant {
 
   template <typename SetOfStates, typename IOsPrecomputerMaker, typename ActionerMaker,
             typename InputPickerMaker>
-  result<SetOfStates> try_solve (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin,
-                                 VECTOR_ELT_T kinc, const bdd& all_inputs, const bdd& all_outputs,
-                                 const IOsPrecomputerMaker& ios_precomputer_maker,
-                                 const ActionerMaker& actioner_maker,
-                                 const InputPickerMaker& input_picker_maker,
-                                 const std::vector<symmetry::indexed_family_hint>& hints = {},
-                                 const acacia::equivariance_budget::allowance& budget = {}) {
+  result<SetOfStates> try_solve (
+      spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
+      const bdd& all_inputs, const bdd& all_outputs,
+      const IOsPrecomputerMaker& ios_precomputer_maker, const ActionerMaker& actioner_maker,
+      const InputPickerMaker& input_picker_maker,
+      const std::vector<symmetry::indexed_family_hint>& hints = {},
+      const acacia::equivariance_budget::allowance& budget = {},
+      const std::vector<symmetry::objective_symmetry_hint>& objective_hints = {}) {
     acacia::equivariance_budget::scope scope {budget};
     acacia::equivariance_budget::record (acacia::equivariance_budget::invocation,
                                          scope.entered_ns (), budget);
@@ -1014,7 +1015,7 @@ namespace acacia::solver_detail::equivariant {
       acacia::equivariance_budget::checkpoint ();
       auto answer = try_solve_impl<SetOfStates> (aut, kmax, kmin, kinc, all_inputs, all_outputs,
                                                  ios_precomputer_maker, actioner_maker,
-                                                 input_picker_maker, hints);
+                                                 input_picker_maker, hints, objective_hints);
       if (answer.outcome == status::completed) {
         if (auto* worker = acacia::active_worker_record ())
           acacia::worker_event (*worker, "equivariance_complete",

@@ -12,6 +12,73 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-11: Objective symmetry candidates (S2 diagnostic sample)
+
+The 154-input tlsf-tools objective census and Acacia's 45-input equivariance
+coverage count different things. In 17 sampled misses, singleton identities,
+syntactic bypasses, decomposition and final automaton structure account for the
+gap. These are diagnostic probes, not a performance or coverage campaign.
+Each solver probe used `timeout 60` in a user scope with `MemoryMax=8G`, selecting
+`real:small:backward`, with Spot fast solving and weakening disabled. The baseline
+was the GCC debug first `docker_default` build at parent revision `1309a32a`.
+The objective census used tlsf-tools `0acb6c0`. Raw local outputs and the compact
+index are ignored under `_bm-logs.s2/`; they are not published campaign evidence.
+
+| Input | First blocking gate |
+|---|---|
+| abcg_arbiter_pb_1_pe_.ltl | Too few clients; singleton identity |
+| amba_case_study_unreal_pb_2_pe_.ltl | Too few clients; only singleton range verifies |
+| arbiter_on_inpchange_pb_1_pe_.ltl | Too few clients; singleton identity |
+| arbiter_with_buffer_pb_1_pe_.ltl | Syntactic bypass |
+| collector_v2_pb_3_pe_.ltl | All structural transposition checks fail (17 states) |
+| example7_pb_1_pe_.ltl | Syntactic bypass |
+| lift_gr1+_pb_2_pe_.ltl | Too few clients; only singleton range verifies |
+| lift_pb_2_pe_.ltl | Too few clients; only singleton range verifies |
+| ltl2dba_C2_pb_3_pe_.ltl | Syntactic bypass |
+| ltl2dba_Q_pb_1_pe_.ltl | Syntactic bypass |
+| ltl2dba_U1_pb_1_pe_.ltl | Syntactic bypass; no conjunction hint either |
+| narylatch_pb_8_pe_.ltl | Decomposition leaves one client in each subgame |
+| prioritized_arbiter_pb_1_pe_.ltl | No indexed input family remains |
+| rw_arbiter_pb_1_pe_.ltl | Too few clients; singleton identity |
+| simple_arbiter_enc_pb_15_pe_.ltl | Three generators verify; no usable block layout |
+| ltl2dba_theta_pb_3_pe_.ltl | All structural transposition checks fail (20 states) |
+| shift_pb_8_pe_.ltl | Syntactic bypass; objective group is cyclic-only |
+
+No sampled miss exhausted the detection budget. Multiple families, including
+input and output families on the same range, are already supported. The positive
+control `collector_v1_pb_3_pe_.ltl` verifies both generators and uses equivariance.
+The 60-second ordinary-backend timeouts on two samples occur after recognition.
+
+The native frontend now copies verified AP transpositions from `tlsf_symmetry_detect`
+before releasing its conversion. Each range is checked separately against the
+current automaton AP names and I/O partition, including reversed worker roles.
+The existing structural isomorphism check remains mandatory. A usable candidate
+group skips the name-derived pair search; otherwise the existing detector remains
+the fallback. Inputs without usable objective generators keep the old path.
+
+This removes reliance on conjunction hints for candidate selection and avoids
+coupling unrelated ranges. The unit test demonstrates three symmetric clients
+beside an unrelated singleton, checks worker I/O reversal, and rejects valid
+objective candidates against an asymmetric automaton. It also checks an
+asymmetric objective and cyclic-only exclusion. The sampled structural failures,
+small groups, decomposition, bypasses and block-layout limits remain. Cyclic-only
+groups are not integrated: block recovery and count-vector canonicalization require
+full symmetric transpositions. No new corpus-coverage claim is made.
+
+Verification: GCC 16.2.1 debug builds of the first registry-selected
+`docker_default` preset and plain default options both pass, using `-j 2`,
+`CARGO_BUILD_JOBS=2` and `PKG_CONFIG_PATH=/usr/local/lib/pkgconfig`. Meson also
+used the existing local yyjson pkg-config installation; no subproject sources
+were edited. `meson test --suite unit --num-processes 2` passes 101/101 tests for
+the shipped preset and 95/95 for defaults. With freshly built local Python
+bindings and the installed Spot bindings on `PYTHONPATH`, the requested venv's
+`python -m pytest tests/pytest -q` reports 2053 passed, 15 skipped and 58 subtests
+passed. Ruff, config-frontends agreement (14 shared options), registry validation
+and `git diff --check` pass. Bounded CLI follow-ups (`-K 2`) verify 2/2 supplied
+candidates on the positive control, and verify 0/2 on both structural-failure
+samples before falling back to the existing detector. Tests ran in 8 GiB user
+scopes; standalone probes used `timeout 60`. No benchmark campaign was run.
+
 ## 2026-11-04: Shared deterministic routes; rank/128 retained
 
 The final eight-arm release binary decides **1362/1385/1390 of 1524 SYNTCOMP26

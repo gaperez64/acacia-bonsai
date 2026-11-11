@@ -319,6 +319,7 @@ namespace {
       const controller_conversion conversion;
       const std::string target_semantics;
       const std::vector<symmetry::indexed_family_hint>& indexed_family_hints;
+      const std::vector<symmetry::objective_symmetry_hint>& objective_symmetry_hints;
       std::vector<acacia::synthesis::controller_builder> strats;
       const acacia::unreal_witnesses::records& weakening_records;
 
@@ -339,6 +340,7 @@ namespace {
                    bool equivariance, const std::optional<std::string>& synth_fname,
                    controller_conversion conversion,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints,
+                   const std::vector<symmetry::objective_symmetry_hint>& objective_symmetry_hints,
                    std::string target_semantics,
                    const acacia::unreal_witnesses::records& weakening_records)
         : dict {dict},
@@ -359,6 +361,7 @@ namespace {
           conversion {conversion},
           target_semantics {std::move (target_semantics)},
           indexed_family_hints {indexed_family_hints},
+          objective_symmetry_hints {objective_symmetry_hints},
           weakening_records {weakening_records} {
         // Create BDD "cubes" that represent the sets of inputs and outputs,
         // respectively. We associate them with this object when registering
@@ -788,7 +791,7 @@ namespace {
           maybe_strat =
               solve_game (aut, opt_k, opt_kmin, opt_kinc, partition.inputs, partition.outputs,
                           synth_fname.has_value (), indexed_family_hints, effective_backend,
-                          candidate, equivariance);
+                          candidate, equivariance, objective_symmetry_hints);
         }
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())
@@ -1195,7 +1198,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   run_one_ltl runner (
       dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal, translation_pref,
       translation_effort, spot_fast, backend, provider, candidate, equivariance, synth_fname,
-      conversion, indexed_family_hints,
+      conversion, indexed_family_hints, metadata.tlsf_symmetries,
       metadata.source_format + ";semantics=" + metadata.tlsf_semantics +
           ";target=" + metadata.tlsf_target + ";effective=" +
           ((metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-")

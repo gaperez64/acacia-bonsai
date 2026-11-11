@@ -29,6 +29,7 @@ struct specification_metadata {
     // Exact linked-frontend normalization, before any realizability simplification.
     std::string tlsf_normalized_objective;
     std::vector<symmetry::indexed_family_hint> tlsf_indexed_families;
+    std::vector<symmetry::objective_symmetry_hint> tlsf_symmetries;
 };
 
 inline const char* translation_pref_name (TRANSLATION_PREF_T preference) {
