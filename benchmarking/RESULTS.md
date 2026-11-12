@@ -12,6 +12,35 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-12: Lazy KD performance pilot
+
+Local campaign `lemire-20261112-pilot` is unpublished and awaits owner publication and
+indexing. This is a subset measurement, not a full-corpus admission gate. Both release
+builds use the first `docker_default` preset, with only the downset choice differing.
+
+| Final backend | Fixed cases solved | Instructions (billion) | Cycles (billion) | Wall (s) |
+|---|---:|---:|---:|---:|
+| Lazy KD | 11/11 | 479.689 | 238.908 | 61.844 |
+| Rank buckets | 11/11 | 520.809 | 250.360 | 64.582 |
+
+Both share lazy directional vector comparisons and portable SIMD tail loading. KD also
+replaces a repeated private ID bounds check with a debug assertion; pending and frozen
+IDs must belong to the current append-only epoch. Nodes remain 32 bytes and the original
+policy defaults remain. Intersection short-circuiting, 64-entry leaves, a smaller pending
+buffer, and the rank-only block sum were rejected. All conclusive verdicts agree.
+
+On the original 20 search-bound inputs, both solve 0/20 at 17 s. At 30 s KD solves 2/20
+and rank buckets 1/20, with no losses: KD alone solves `abcg_arbiter_pb_3_pe_`. Full raw
+instructions, cycles, timings, rejected trials, source snapshots, and validation logs are
+retained in the local campaign. Both debug unit suites pass 100/100; the selected posets
+tests pass 14/14; pytest reports 2056 passed, 15 skipped and 58 passed subtests; ruff passes.
+Wall and cycle timings are noisy on the shared host. The owner's full-corpus run remains
+the shipping gate.
+
+The exclusive solve repeats with backend order reversed: KD finishes in 20.09 s while
+rank buckets time out at 30 s again. Two exploratory scaling cases, AMBA 7 and 8, time out
+for both backends at both limits and are recorded separately from the original panel.
+
 ## 2026-11-04: Shared deterministic routes; rank/128 retained
 
 The final eight-arm release binary decides **1362/1385/1390 of 1524 SYNTCOMP26
