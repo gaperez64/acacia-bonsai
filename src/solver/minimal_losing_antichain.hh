@@ -44,8 +44,13 @@ namespace acacia::solver_detail {
 
       /// Whether some stored generator `l` satisfies `l <= r`.
       [[nodiscard]] bool subsumes (const State& r) const {
+        return subsumes (r, rank_of (r));
+      }
+
+      /// Same query with the coordinate sum of `r` supplied by the caller,
+      /// which may have it from a contiguous copy already at hand.
+      [[nodiscard]] bool subsumes (const State& r, rank_type r_rank) const {
         ++queries;
-        const rank_type r_rank = rank_of (r);
         for (const auto& generator : generators) {
           if (generator.rank > r_rank) {
             ++prefilter_skips;
@@ -61,10 +66,13 @@ namespace acacia::solver_detail {
 
       /// Insert `r` if it is not already in the generated upward closure.
       bool insert (const State& r) {
-        if (subsumes (r))
+        return insert (r, rank_of (r));
+      }
+
+      bool insert (const State& r, rank_type r_rank) {
+        if (subsumes (r, r_rank))
           return false;
 
-        const rank_type r_rank = rank_of (r);
         std::size_t write = 0;
         for (std::size_t read = 0; read < generators.size (); ++read) {
           bool remove = false;

@@ -41,6 +41,94 @@ The exclusive solve repeats with backend order reversed: KD finishes in 20.09 s 
 rank buckets time out at 30 s again. Two exploratory scaling cases, AMBA 7 and 8, time out
 for both backends at both limits and are recorded separately from the original panel.
 
+## 2026-11-12: Local solver pilot (unarchived)
+
+This is a local pilot on `d7873d6`, not a full-corpus admission result. The first
+`docker_default` preset was resolved through the registry. Release measurements
+use optimization 3, LTO, assertions disabled and the release compiler profile.
+All solver calls are serial in 8 GiB systemd scopes with swap disabled; builds
+use at most four jobs. Raw rows, stdout/stderr, counters, manifests, frozen
+executables and build options are in `/tmp/biere-20261112`; no published archive
+or evidence-index row exists yet.
+
+The inherited forward change was completed and checked. It hashes a reusable
+contiguous copy, caches exact 64-bit coordinate sums, and uses the sums only as
+necessary conditions before the unchanged coordinate order. Hash lookup still
+checks full state equality. An injected constant hash tests every collision;
+additional tests cover coordinate lengths around 8/32-byte and SIMD boundaries.
+The cached sums and scratch payload are included in logical byte accounting.
+The generator consistency scan now lives inside `assert`, so release builds
+cannot perform that second antichain traversal.
+
+Two formula changes remove BDD work: helper operands borrow references for the
+duration of each call, and the lazy Oracle counts result nodes only when a
+reporter consumes the metric. The latter retains both step-budget checkpoints
+and the independent manager live-node limit; reporting keeps its node counts.
+
+Initial ten-input fixed-work screens, with identical conclusive verdicts:
+
+| Change | Instructions (G), before -> after | Cycles (G), before -> after | Wall (s) |
+|---|---:|---:|---:|
+| Forward hash and cached sums | 947.53 -> 686.04 | 315.42 -> 220.57 | 72.22 -> 51.81 |
+| Formula borrowed BDD operands | 484.84 -> 455.45 | 258.91 -> 225.02 | 62.24 -> 51.51 |
+| Formula node counts, after borrowing | 455.45 -> 434.24 | 225.02 -> 207.30 | 51.51 -> 50.50 |
+
+A separate paired repeat alternates baseline/candidate order per input. Forward
+instructions fall 27.55% and cycles 22.25% (74.33 -> 60.42 s); formula instructions
+fall 10.44% and cycles 14.35% (59.21 -> 51.15 s). Every verdict agrees.
+`GF-G-contradiction4` crosses 17 s in both passes: 18.82 -> 11.25 s and
+19.65 -> 11.34 s. Shared-host timing outliers remain in the raw rows. Forward L1
+misses fall 9.76% in the repeat; last-level cache misses change direction between passes, so no
+last-level cache improvement is established.
+A short matched formula profile reduces markcount/unmark from 6.10% of samples
+to below the 0.3% display threshold each; addref/delref fall from 10.55% to 6.52%.
+
+Rejected: direct iteration in the critical picker removes temporary containers
+but saves only 0.14% aggregate instructions (520.10 -> 519.35 G; cycles
+212.24 -> 208.30 G). A reusable contiguous actioner input copy increases forward
+instructions 12.35% (686.04 -> 770.77 G; cycles 220.57 -> 272.98 G), with only
+0.02% fewer backward instructions and 8.33% more cycles. Both changes were
+restored. The unchanged backward baseline itself varies on `load_balancer`
+(171.00 versus 143.75 G instructions); its repeated panel is not evidence of a
+fixed amount of work or a backward speedup.
+
+On a separately selected 20-input search near-miss panel (7 backward, 6 forward,
+7 formula), 17 s coverage is 1 -> 4 and staged 30 s coverage is 4 -> 4. There are
+no lost solves or conflicting verdicts. Only 17 s timeouts advance to 30 s.
+The three apparent new 17 s solves all time out in the first baseline pass:
+
+| Instance | Baseline at 30 s | Candidate at 17 s |
+|---|---:|---:|
+| g-unreal-116 | 24.87 s | 15.26 s |
+| infinite-race-unequal-26 | 18.22 s | 15.33 s |
+| robot-to-target-charging12 | 16.68 s | 14.60 s |
+
+The last baseline's sub-17 s result at the longer cap shows timing noise; the
+initial coverage difference alone does not establish three stable crossings.
+Two additional ordered 17 s repeats, combined with the original pass, give:
+
+| Instance | Baseline solves / 3 | Candidate solves / 3 |
+|---|---:|---:|
+| g-unreal-116 | 0 | 3 |
+| infinite-race-unequal-26 | 0 | 2 |
+| robot-to-target-charging12 | 1 | 3 |
+
+Thus the first crossing repeats consistently here; the two formula crossings
+remain sensitive to timing. The candidate's successful repeat times are
+14.62/14.76 s, 14.82 s, and 14.93/14.78 s respectively. These repeated rows are
+separate observations, not corrections to the initial coverage counts.
+A 14-input full-portfolio check solves every case in both binaries, with
+identical verdicts (33.23 -> 32.13 s total, not an established speedup).
+Full-corpus portfolio admission remains unmeasured in this pilot.
+
+Correctness gates: the first registry preset in a debug build, with assertions
+and fresh Python bindings, passes all 100 serial unit tests; pytest reports
+2056 passed, 15 skipped and 58 subtests passed; Ruff 0.16.9 passes. Forward tests
+compare 5012 independent explicit games and replay 7170 losing proofs and 5685
+winning certificates. Lazy Oracle tests include 184647 predicate comparisons,
+1122 fixed-K matches, cache eviction, corrupt certificates and exact step-limit
+boundaries with telemetry enabled and disabled.
+
 ## 2026-11-04: Shared deterministic routes; rank/128 retained
 
 The final eight-arm release binary decides **1362/1385/1390 of 1524 SYNTCOMP26
