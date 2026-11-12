@@ -12,6 +12,34 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-12: Lazy KD with subtree and pending-block bounds becomes the shipped downset
+
+Local campaigns `kd-bounds-20261112` (component replay and panels) and `kdb20261112`
+(full corpus), unpublished. Posets 016826e adds coordinatewise lower/upper bounds to
+lazy KD frozen nodes and to sealed 16-entry pending blocks; a failing one-direction
+bound comparison skips the subtree or block, and live points are always checked exactly.
+Both backends below are release builds of the same tree with identical options except the
+downset.
+
+| Measurement | Lazy KD | Rank buckets |
+|---|---:|---:|
+| Captured CPre updates, 8 inputs: cycles / instructions | 21.9B / 71.0B | 30.5B / 101.2B |
+| Same, lazy KD before bounds | 34.1B / 93.9B | |
+| 20-input search-bound panel, solved at 17 s / 30 s | 11 / 11 | 9 / 9 |
+| 10 held-out inputs, solved at 17 s / 30 s | 4 / 5 | 4 / 4 |
+| Shipped portfolio, all 1,524 SYNTCOMP26 inputs at 17 s | 1,368 | 1,368 |
+| Shipped portfolio PAR-2 | 5,943 s | 5,947 s |
+
+Every replayed update produced the same maximal antichain. The portfolio runs disagree on
+no input and record no memory failure. The three panel gains (two arbiter inputs and AMBA 7,
+all realizable) repeated with backend order reversed; in the portfolio another arm already
+decides them. Peak RSS on replayed updates is 4.6% higher (881 against 842 MiB); robot-grid
+6x6 reaches 4.5 GiB against 0.7 GiB at a 30 s timeout, which the review attributes to deeper
+search but did not prove. Block sizes 8, 16, 32 and 64 were within 2%. Review found that
+bound comparisons through the cached-sum shortcut could overflow for wide coordinate types;
+bounds now compare coordinates only (posets regression tests with 64-bit coordinates). The
+measurements above predate that fix, which only drops the sum shortcut from bound checks.
+
 ## 2026-11-12: Lazy KD performance pilot
 
 Local campaign `lemire-20261112-pilot` is unpublished and awaits owner publication and

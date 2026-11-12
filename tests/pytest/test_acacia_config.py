@@ -141,8 +141,13 @@ def test_first_shipping_preset_replaces_real_forward_with_both_parity_arms():
     ] + ["both:parity:spot", "both:parity:oxidd"]
     assert len(candidate["default_arms"].split(",")) == 7
     for key in baseline:
-        if key not in {"_preset", "preset", "default_arms", "default_translation_effort"}:
+        if key not in {
+            "_preset", "preset", "default_arms", "default_translation_effort", "vector_downset"
+        }:
             assert candidate[key] == baseline[key], key
+    # Only the shipped preset moved to lazy KD; the fallback presets keep rank buckets.
+    assert candidate["vector_downset"] == "lazy_kd"
+    assert baseline["vector_downset"] == "rank_bucketed_vector_backed"
 
 
 def test_only_first_shipping_preset_changes_default_translation_effort():

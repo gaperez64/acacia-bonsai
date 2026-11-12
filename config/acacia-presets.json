@@ -131,7 +131,7 @@
       "description": "Seven-worker portfolio combining antichain search, sparse formula solving, a GR(1) realizability pre-pass, exact Spot obligation solving, and Spot and tlsf-tools parity game solving.",
       "role": "shipping",
       "forced_output_contradiction": true,
-      "vector_downset": "rank_bucketed_vector_backed",
+      "vector_downset": "lazy_kd",
       "default_arms": "real:small:backward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-real-lift:oxidd,both:obligation:spot,both:parity:spot,both:parity:oxidd",
       "default_translation_effort": "high,unreal:formula:spot-guarded-sparse=low",
       "spot_lazy_provider": true,
