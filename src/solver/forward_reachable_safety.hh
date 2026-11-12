@@ -18,12 +18,14 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <deque>
 #include <functional>
 #include <initializer_list>
 #include <limits>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -94,13 +96,14 @@ namespace acacia::solver_detail {
       /// Logical retained bytes.  The categories count objects and payload
       /// elements, rather than allocator capacity and implementation overhead.
       std::size_t rank_bytes = 0;
+      /// Environment records, cached sums, and the coordinate-copy workspace.
       std::size_t environment_node_bytes = 0;
       std::size_t controller_node_bytes = 0;
       std::size_t reverse_dependency_bytes = 0;
       std::size_t proof_bytes = 0;
       std::size_t hash_index_bytes = 0;
       std::size_t losing_antichain_bytes = 0;
-      /// Aggregates used by diagnostics: node bytes are the two node records;
+      /// Aggregates used by diagnostics: node bytes cover environment/controller storage;
       /// index bytes are node links, proofs, the hash index, and antichain.
       std::size_t node_bytes = 0;
       std::size_t index_bytes = 0;
@@ -121,20 +124,44 @@ namespace acacia::solver_detail {
     template <typename State>
     using coordinate_type = typename State::value_type;
 
-    template <typename State>
-    [[nodiscard]] std::uint64_t coordinate_hash (const State& rank) noexcept {
-      std::uint64_t result = static_cast<std::uint64_t> (rank.size ());
-      for (std::size_t i = 0; i < rank.size (); ++i) {
-        const auto value = static_cast<std::uint64_t> (
-            std::hash<coordinate_type<State>> {} (rank[i]));
-        result ^= value + UINT64_C (0x9e3779b97f4a7c15)
-                  + (result << 6U) + (result >> 2U);
+    /// Hash of a contiguous coordinate copy, eight bytes per step on four
+    /// independent lanes so the loop is not one long dependency chain.  The
+    /// buffer is zero padded to a multiple of eight bytes. All ranks in one
+    /// search have the same dimension; full equality resolves hash collisions.
+    struct coordinate_hash {
+      [[nodiscard]] std::uint64_t operator() (const unsigned char* bytes,
+                                              std::size_t padded) const noexcept {
+        constexpr std::uint64_t mul = UINT64_C (0x9e3779b97f4a7c15);
+        const auto mix = [] (std::uint64_t lane, std::uint64_t word) {
+          lane = (lane ^ word) * mul;
+          return lane ^ (lane >> 29U);
+        };
+        const auto word_at = [bytes] (std::size_t offset) {
+          std::uint64_t word;
+          std::memcpy (&word, bytes + offset, sizeof word);
+          return word;
+        };
+        std::uint64_t lane0 = padded, lane1 = padded ^ mul, lane2 = padded + mul,
+                      lane3 = padded * 3;
+        std::size_t offset = 0;
+        for (; offset + 32 <= padded; offset += 32) {
+          lane0 = mix (lane0, word_at (offset));
+          lane1 = mix (lane1, word_at (offset + 8));
+          lane2 = mix (lane2, word_at (offset + 16));
+          lane3 = mix (lane3, word_at (offset + 24));
+        }
+        for (; offset < padded; offset += 8)
+          lane0 = mix (lane0, word_at (offset));
+        return mix (mix (mix (lane0, lane1), lane2), lane3);
       }
-      return result;
-    }
+    };
 
+    using coordinate_sum = std::int64_t;
+
+    /// `Hash` maps the padded scratch copy of a rank to its intern hash; the
+    /// unit tests substitute one that collides on purpose.
     template <typename SetOfStates, typename InputOutputFwdActions,
-              typename Actioner>
+              typename Actioner, typename Hash = coordinate_hash>
     class forward_search {
         using state = typename SetOfStates::value_type;
         using env_hash_index =
@@ -156,9 +183,12 @@ namespace acacia::solver_detail {
             actioner {actioner},
             limits {limits},
             use_losing_antichain {use_losing_antichain},
-            snapshot {snapshot} {}
+            snapshot {snapshot},
+            scratch ((initial.size () + 7) / 8 * 8, 0) {}
 
         forward_solve_result<state> solve () {
+          account_items (environment_node_bytes, scratch.size (),
+                         sizeof (coordinate_type<state>));
           const std::size_t initial_id = intern_env (initial.copy ());
           if (limit_exceeded)
             return make_result (forward_result_status::resource_limit);
@@ -195,7 +225,14 @@ namespace acacia::solver_detail {
         const forward_snapshot snapshot;
 
         std::vector<forward_env_node<state>> env_nodes;
+        /// Coordinate sum of each environment rank, kept apart from the node
+        /// records so the invalidation scan reads a dense array.  A sum is a
+        /// necessary condition for dominance: `a <= b` implies `sum a <= sum b`.
+        std::vector<coordinate_sum> env_sums;
         std::vector<forward_ctrl_node<state>> ctrl_nodes;
+        /// Contiguous zero-padded copy of the rank being hashed and summed;
+        /// the posets vector only exposes block-wise access.
+        std::vector<coordinate_type<state>> scratch;
         env_hash_index interned_envs;
         forward_work_queue<queued_node> open_queue;
         forward_work_queue<queued_node> losing_queue;
@@ -365,10 +402,28 @@ namespace acacia::solver_detail {
           return id;
         }
 
+        /// Copy `rank` into the padded scratch buffer and return its
+        /// coordinate sum; `scratch_hash` reads the same copy.
+        coordinate_sum load_scratch (const state& rank) {
+          assert (rank.size () == initial.size ());
+          rank.to_vector (std::span<coordinate_type<state>> (scratch.data (), rank.size ()));
+          coordinate_sum sum = 0;
+          for (std::size_t i = 0; i < rank.size (); ++i)
+            sum += scratch[i];
+          return sum;
+        }
+
+        [[nodiscard]] std::uint64_t scratch_hash () const noexcept {
+          return Hash {} (
+              reinterpret_cast<const unsigned char*> (scratch.data ()),
+              scratch.size () * sizeof (coordinate_type<state>));
+        }
+
         [[nodiscard]] std::optional<std::size_t> subsuming_generator (
-            const state& rank) const {
+            const state& rank, coordinate_sum sum) const {
           for (const std::size_t generator : losing_antichain_generators)
-            if (env_nodes[generator].rank.partial_order (rank).leq ())
+            if (env_sums[generator] <= sum
+                and env_nodes[generator].rank.partial_order (rank).leq ())
               return generator;
           return std::nullopt;
         }
@@ -388,16 +443,18 @@ namespace acacia::solver_detail {
             return;
 
           const std::size_t old_antichain_size = losing_antichain.size ();
-          if (not losing_antichain.insert (env.rank))
+          const coordinate_sum env_sum = env_sums[env_id];
+          if (not losing_antichain.insert (env.rank, env_sum))
             return;
 
           losing_antichain_peak =
               std::max (losing_antichain_peak, losing_antichain.size ());
           std::erase_if (
-              losing_antichain_generators, [this, env_id] (std::size_t generator) {
-                return env_nodes[env_id].rank
-                    .partial_order (env_nodes[generator].rank)
-                    .leq ();
+              losing_antichain_generators, [this, env_id, env_sum] (std::size_t generator) {
+                return env_sum <= env_sums[generator]
+                       and env_nodes[env_id].rank
+                           .partial_order (env_nodes[generator].rank)
+                           .leq ();
               });
           losing_antichain_generators.push_back (env_id);
           assert (losing_antichain_generators.size ()
@@ -409,9 +466,11 @@ namespace acacia::solver_detail {
           // Marking a match queues the ordinary selected-controller
           // propagation; a recursively attempted insertion is already
           // subsumed by `env.rank` and therefore cannot start another scan.
+          // The sum test only skips ranks the order test would reject.
           for (std::size_t id = 0; id < env_nodes.size (); ++id) {
             ++nodes_checked;
-            if (env_nodes[id].status == node_status::losing)
+            if (env_sum > env_sums[id]
+                or env_nodes[id].status == node_status::losing)
               continue;
             if (env.rank.partial_order (env_nodes[id].rank).leq ()) {
               ++nodes_invalidated;
@@ -437,12 +496,13 @@ namespace acacia::solver_detail {
         }
 
         std::size_t intern_env (state rank) {
-          const std::uint64_t hash = coordinate_hash (rank);
+          const coordinate_sum sum = load_scratch (rank);
+          const std::uint64_t hash = scratch_hash ();
           const auto found = find_env (rank, hash);
-          return intern_env (std::move (rank), hash, found);
+          return intern_env (std::move (rank), hash, sum, found);
         }
 
-        std::size_t intern_env (state rank, std::uint64_t hash,
+        std::size_t intern_env (state rank, std::uint64_t hash, coordinate_sum sum,
                                 std::optional<std::size_t> found) {
           if (found.has_value ()) {
             ++intern_hits;
@@ -452,8 +512,9 @@ namespace acacia::solver_detail {
           const std::size_t env_id = env_nodes.size ();
           env_nodes.push_back (
               {std::move (rank), node_status::open, {}, {}, 0});
+          env_sums.push_back (sum);
           account_bytes (
-              environment_node_bytes, sizeof (forward_env_node<state>));
+              environment_node_bytes, sizeof (forward_env_node<state>) + sizeof (coordinate_sum));
           account_rank (env_nodes[env_id].rank);
           interned_envs.emplace (hash, env_id);
           account_bytes (hash_index_bytes, sizeof (typename env_hash_index::value_type));
@@ -481,11 +542,11 @@ namespace acacia::solver_detail {
           if (env_nodes[env_id].status != node_status::open)
             return;
           if (use_losing_antichain
-              and losing_antichain.subsumes (env_nodes[env_id].rank)) {
+              and losing_antichain.subsumes (env_nodes[env_id].rank, env_sums[env_id])) {
             // The stored generator is a complete losing proof for this rank:
             // this is the "subsumed" environment-loss reason.
             const auto generator =
-                subsuming_generator (env_nodes[env_id].rank);
+                subsuming_generator (env_nodes[env_id].rank, env_sums[env_id]);
             assert (generator.has_value ());
             mark_environment_losing (
                 env_id, losing_reason::env_subsumed, *generator,
@@ -586,7 +647,8 @@ namespace acacia::solver_detail {
               continue;
             }
 
-            const std::uint64_t hash = coordinate_hash (successor);
+            const coordinate_sum sum = load_scratch (successor);
+            const std::uint64_t hash = scratch_hash ();
             const auto known_env = find_env (successor, hash);
             if (known_env.has_value ()
                 and std::ranges::contains (ctrl.tried_env_ids, *known_env)) {
@@ -595,10 +657,10 @@ namespace acacia::solver_detail {
             }
 
             if (use_losing_antichain
-                and losing_antichain.subsumes (successor)) {
-              [[maybe_unused]] const auto generator =
-                  subsuming_generator (successor);
-              assert (generator.has_value ());
+                and losing_antichain.subsumes (successor, sum)) {
+              // The generator scan is a consistency check only; it must not
+              // cost a second pass over the antichain in release builds.
+              assert (subsuming_generator (successor, sum).has_value ());
               ++choice_switches;
               continue;
             }
@@ -609,7 +671,8 @@ namespace acacia::solver_detail {
               return false;
 
 
-            const std::size_t env_id = intern_env (std::move (successor), hash, known_env);
+            const std::size_t env_id =
+                intern_env (std::move (successor), hash, sum, known_env);
             ctrl.tried_env_ids.push_back (env_id);
             account_bytes (
                 reverse_dependency_bytes, sizeof (std::size_t));
@@ -797,6 +860,7 @@ namespace acacia::solver_detail {
   /// A resource limit only interrupts that proof process.  It is deliberately
   /// returned as `resource_limit`, never converted into either game verdict.
   template <typename SetOfStates,
+            typename Hash = forward_reachable_detail::coordinate_hash,
             typename InputOutputFwdActions, typename Actioner>
   forward_solve_result<typename SetOfStates::value_type>
   solve_forward_reachable_safety (
@@ -806,7 +870,7 @@ namespace acacia::solver_detail {
       const forward_limits& limits = {}, bool use_losing_antichain = false,
       forward_snapshot snapshot = forward_snapshot::omit) {
     forward_reachable_detail::forward_search<
-        SetOfStates, InputOutputFwdActions, Actioner>
+        SetOfStates, InputOutputFwdActions, Actioner, Hash>
         search {initial, safe, input_output_fwd_actions, actioner, limits,
                 use_losing_antichain, snapshot};
     return search.solve ();

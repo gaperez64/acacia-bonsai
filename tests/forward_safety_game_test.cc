@@ -111,6 +111,13 @@ namespace {
     return std::forward<Check> (check) (actioner);
   }
 
+  // Every rank hashes alike, so the intern index can only tell ranks apart
+  // by the exact coordinate comparison that follows the hash lookup.
+  struct colliding_hash {
+      std::uint64_t operator() (const unsigned char*, std::size_t) const noexcept { return 0; }
+  };
+
+  template <typename Hash = acacia::solver_detail::forward_reachable_detail::coordinate_hash>
   f1_result solve_f1 (
       const tiny_game& game, size_t bool_threshold,
       const rank_vector& initial,
@@ -120,7 +127,7 @@ namespace {
     return with_actioner (game, bool_threshold, [&] (auto& actioner) {
       const state initial_state = as_solver_state (initial);
       const state safe_state = as_solver_state (safe_vector (game.states, game.K, bool_threshold));
-      return acacia::solver_detail::solve_forward_reachable_safety<SetOfStates> (
+      return acacia::solver_detail::solve_forward_reachable_safety<SetOfStates, Hash> (
           initial_state, safe_state, game.inputs, actioner, limits, use_losing_antichain,
           snapshot);
     });
@@ -597,17 +604,11 @@ namespace {
   }
 
   void check_hash_collisions () {
-    using acacia::solver_detail::forward_reachable_detail::coordinate_hash;
-    const state first = as_solver_state (vec ({0, -1}));
-    const state collision = as_solver_state (vec ({-1, 62}));
-    expect ("hash collision: unequal ranks have the same coordinate hash",
-            first != collision and coordinate_hash (first) == coordinate_hash (collision));
-
     const action_vec step = make_action (2, {{0, 1, false}, {1, 0, true}});
     const action_vec self = make_action (2, {{0, 0, false}, {1, 1, false}});
     const tiny_game game = make_game (2, static_cast<VECTOR_ELT_T> (64), {{step, step}, {self}});
     for (const bool antichain : {false, true}) {
-      const auto result = solve_f1 (
+      const auto result = solve_f1<colliding_hash> (
           game, 2, vec ({0, -1}), {}, antichain, forward_snapshot::capture);
       expect ("hash collision: distinct ranks still reach the losing boundary",
               result.status == acacia::solver_detail::forward_result_status::lose_k
@@ -629,6 +630,33 @@ namespace {
           }
       }
       expect ("hash collision: losing proof replays", replay_losing_proof (game, 2, result));
+    }
+  }
+
+  void check_hash_block_boundaries () {
+    for (const unsigned n : {7, 8, 9, 31, 32, 33, 63, 64, 65, 129}) {
+      const auto step = make_action (n, {{0, n - 1, false}, {n - 1, 0, true}});
+      const auto self = make_action (n, {{0, 0, false}, {n - 1, n - 1, false}});
+      const auto game = make_game (n, 3, {{step, step}, {self}});
+      rank_vector initial (n, -1);
+      initial[0] = 0;
+      for (const bool antichain : {false, true}) {
+        const auto result = solve_f1 (game, n, initial, {}, antichain,
+                                     forward_snapshot::capture);
+        expect ("hash blocks: distinct tail coordinates reach the losing boundary",
+                result.status == acacia::solver_detail::forward_result_status::lose_k
+                    and result.env_nodes == 5 and result.intern_hits == 4);
+        if (expect ("hash blocks: snapshot retains ranks", result.snapshot.has_value ())) {
+          const auto& ranks = result.snapshot->env_ranks;
+          for (std::size_t id = 0; id < ranks.size (); ++id) {
+            rank_vector expected (n, -1);
+            expected[id % 2 == 0 ? 0 : n - 1] = static_cast<VECTOR_ELT_T> ((id + 1) / 2);
+            expect ("hash blocks: copied ranks and padding preserve identity",
+                    ranks[id] == as_solver_state (expected));
+          }
+        }
+        expect ("hash blocks: losing proof replays", replay_losing_proof (game, n, result));
+      }
     }
   }
 
@@ -789,6 +817,7 @@ int main () {
   check_hand_written_games ();
   check_random_agreement ();
   check_hash_collisions ();
+  check_hash_block_boundaries ();
   check_resource_limit_is_inconclusive ();
 
   if (failures != 0) {

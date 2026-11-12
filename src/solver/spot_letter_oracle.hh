@@ -117,16 +117,22 @@ namespace acacia::spot_letters {
           step ();  // never publish an over-budget result
           return result;
         }
-        bdd land (bdd a, bdd b) { return call ([&] { return a & b; }); }
-        bdd lor (bdd a, bdd b) { return call ([&] { return a | b; }); }
-        bdd negate (bdd a) { return call ([&] { return !a; }); }
-        bdd restrict (bdd a, bdd cube) { return call ([&] { return bdd_restrict (a, cube); }); }
-        bdd exists (bdd a, bdd vars) { return call ([&] { return bdd_exist (a, vars); }); }
-        bdd forall (bdd a, bdd vars) { return call ([&] { return bdd_forall (a, vars); }); }
-        bdd support (bdd a) { return call ([&] { return bdd_support (a); }); }
-        bool satisfiable (bdd a) { step (); return a != bddfalse; }
-        bool tautology (bdd a) { step (); return a == bddtrue; }
-        int nodes (bdd a) {
+        bdd land (const bdd& a, const bdd& b) { return call ([&] { return a & b; }); }
+        bdd lor (const bdd& a, const bdd& b) { return call ([&] { return a | b; }); }
+        bdd negate (const bdd& a) { return call ([&] { return !a; }); }
+        bdd restrict (const bdd& a, const bdd& cube) {
+          return call ([&] { return bdd_restrict (a, cube); });
+        }
+        bdd exists (const bdd& a, const bdd& vars) {
+          return call ([&] { return bdd_exist (a, vars); });
+        }
+        bdd forall (const bdd& a, const bdd& vars) {
+          return call ([&] { return bdd_forall (a, vars); });
+        }
+        bdd support (const bdd& a) { return call ([&] { return bdd_support (a); }); }
+        bool satisfiable (const bdd& a) { step (); return a != bddfalse; }
+        bool tautology (const bdd& a) { step (); return a == bddtrue; }
+        int nodes (const bdd& a) {
           const int count = call ([&] { return bdd_nodecount (a); });
           metrics_.peak_result_nodes = std::max (metrics_.peak_result_nodes,
                                                 static_cast<std::size_t> (count));
@@ -136,10 +142,10 @@ namespace acacia::spot_letters {
           return which == Variables::all ? alphabet_.ap_vars
                  : which == Variables::inputs ? alphabet_.inputs : alphabet_.outputs;
         }
-        bool supported (bdd a, bdd allowed) {
+        bool supported (const bdd& a, const bdd& allowed) {
           return exists (support (a), allowed) == bddtrue;
         }
-        void require_support (bdd a, bdd allowed) {
+        void require_support (const bdd& a, const bdd& allowed) {
           if (not supported (a, allowed))
             throw Failure {Unknown::invalid_query};
         }
@@ -160,7 +166,7 @@ namespace acacia::spot_letters {
               || exists (alphabet_.inputs, alphabet_.outputs) != alphabet_.inputs)
             throw Failure {Unknown::invalid_query};
         }
-        bdd restrict_total (bdd a, bdd valuation, Variables which) {
+        bdd restrict_total (const bdd& a, const bdd& valuation, Variables which) {
           require_support (a, alphabet_.ap_vars);
           const bdd domain = vars (which);
           if (valuation == bddfalse || support (valuation) != domain
