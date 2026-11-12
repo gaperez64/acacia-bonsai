@@ -490,7 +490,24 @@ namespace {
       RowStore store {FixedBuchi {{g}, {}, {}}, {}, reporter};
       Reader reader {store, false, {}};
       Oracle oracle {reader, store, a, 3, layout};
-      expect (take (oracle.eq (source, target)) == take (oracle.eq (source, target)),
+      const auto predicate = take (oracle.eq (source, target));
+      const auto query_steps = oracle.work_metrics ().steps;
+      for (const bool observed : {false, true}) {
+        store.report = observed ? reporter : Reporter {};
+        for (const auto budget : {query_steps - 1, query_steps}) {
+          Oracle limited {reader, store, a, 3, layout};
+          letters::QueryLimits limits;
+          limits.max_steps = budget;
+          limited.set_limits (limits);
+          const auto result = limited.eq (source, target);
+          expect (budget == query_steps ? result.value == predicate
+                                        : !result.value &&
+                                              result.unknown == Unknown::resource_limit,
+                  "node telemetry preserves predicates and exact step-budget boundaries");
+        }
+      }
+      store.report = reporter;
+      expect (take (oracle.eq (source, target)) == predicate,
               "cached equality is exact");
       for (int h = -1; h <= 4; ++h)
         for (unsigned q = 0; q <= 3; ++q)

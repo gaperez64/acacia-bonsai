@@ -39,11 +39,9 @@ option('acacia_bdd_max_increase', type: 'integer', value: 4194304, min: 0, max: 
 option('acacia_forced_output_contradiction', type: 'boolean', value: false,
        description: 'Enable the forced-output contradiction checker in the decision-only syntactic bypass')
 
-option('acacia_simd_is_max', type: 'boolean', value: true,
-       description: 'Legacy SIMD width: max fixed size if true, compatible ABI (128-bit on x86-64) if false')
-
-option('acacia_simd_native', type: 'boolean', value: false,
-       description: 'Select hardware-native SIMD width; otherwise retain acacia_simd_is_max selection')
+option('acacia_simd_width', type: 'combo',
+       choices: ['native', 'compatible', 'max'], value: 'native',
+       description: 'SIMD width: native to the build target, compatible (128 bits), or largest fixed size')
 
 option('acacia_enable_diagnostics', type: 'boolean', value: false,
        description: 'Compile compact Acacia phase diagnostics, gated at runtime by ACACIA_DIAG')
@@ -66,5 +64,6 @@ option('acacia_enable_equivariant_solver', type: 'boolean', value: true,
        description: 'Compile and enable the exact equivariant solver path')
 
 option('acacia_vector_downset', type: 'combo',
-       choices: ['vector_backed', 'rank_bucketed_vector_backed'],
-       value: 'vector_backed')
+       choices: ['vector_backed', 'rank_bucketed_vector_backed', 'lazy_kd'],
+       value: 'vector_backed',
+       description: 'Downset storage: plain vectors, rank buckets, or a lazy KD tree')

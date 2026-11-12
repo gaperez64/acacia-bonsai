@@ -507,6 +507,16 @@ namespace acacia::spot_lazy_game {
       static size_t identity_bytes (const Rank& rank) {
         return rank_bytes (rank) + sizeof (size_t) + hash_links;
       }
+      void observe_nodes (const bdd& result, letters::detail::Letters& b) {
+        if (store_.report.sink)
+          (void) b.nodes (result);
+        else {
+          // Traversing the result only supplies telemetry. Keep both budget
+          // checkpoints: step() checks the manager's live nodes independently.
+          b.step ();
+          b.step ();
+        }
+      }
       void enforce_memo_budget () {
         peak_memo_bytes_ = std::max (peak_memo_bytes_, memo_bytes_);
         if (memo_bytes_ <= memo_budget_)
@@ -614,7 +624,7 @@ namespace acacia::spot_lazy_game {
             }
             if (store_.report.sink)
               ++threshold_misses_;
-            b.nodes (bddfalse);
+            observe_nodes (bddfalse, b);
             p.thresholds.emplace (std::make_pair (q, h), bddfalse);
             memo_bytes_ += sizeof (decltype (p.thresholds)::value_type) + tree_links;
             enforce_memo_budget ();
@@ -640,7 +650,7 @@ namespace acacia::spot_lazy_game {
               ++threshold_levels_scanned_;
             result = b.lor (result, it->second);
           }
-          b.nodes (result);
+          observe_nodes (result, b);
           // Publish only this requested suffix, after every checked OR finishes.
           const auto capacity = memo.capacity ();
           memo.insert (cached, {h, result});
@@ -663,7 +673,7 @@ namespace acacia::spot_lazy_game {
             if (level >= h)
               result = b.lor (result, guard);
           }
-        b.nodes (result);
+        observe_nodes (result, b);
         p.thresholds.emplace (std::make_pair (q, h), result);
         memo_bytes_ += sizeof (decltype (p.thresholds)::value_type) + tree_links;
         enforce_memo_budget ();
@@ -714,7 +724,7 @@ namespace acacia::spot_lazy_game {
               term = b.land (threshold (p, q, v, b), b.negate (threshold (p, q, v + 1, b)));
             result = b.land (result, term);
           }
-          b.nodes (result);
+          observe_nodes (result, b);
           // Threshold publication can evict all identities. Intern only after
           // computation, and never keep an iterator across a budget checkpoint.
           auto identity = target_ranks_.find (target);
@@ -769,7 +779,7 @@ namespace acacia::spot_lazy_game {
             term = b.land (threshold (p, q, v, b), b.negate (threshold (p, q, v + 1, b)));
           result = b.land (result, term);
         }
-        b.nodes (result);
+        observe_nodes (result, b);
         const auto entry = p.preimages.emplace (key, result).first;
         memo_bytes_ += sizeof (decltype (p.preimages)::value_type) + tree_links +
                        entry->first.second.capacity () * sizeof (Rank::Entry);
@@ -793,7 +803,7 @@ namespace acacia::spot_lazy_game {
           b.step ();
           result = b.lor (result, preimage (p, target, bad ? 0 : 1, b));
         }
-        b.nodes (result);
+        observe_nodes (result, b);
         return result;
       }
 

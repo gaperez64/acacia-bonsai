@@ -22,18 +22,15 @@
       "role": "reference"
     },
     "best_decomp_mona": {
-      "description": "Use plain vector-backed downsets with decomposition, MONA precomputation, standard automaton preprocessing, critical input selection and the compatible SIMD ABI (128-bit on x86-64) as the downset comparison reference.",
+      "description": "Use plain vector-backed downsets with decomposition, MONA precomputation, standard automaton preprocessing, critical input selection and the default SIMD width as the downset comparison reference.",
       "role": "reference",
-      "simd_is_max": false,
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
       "input_picker": "critical"
     },
     "posets_native_width": {
-      "description": "Compare hardware-native SIMD width with the compatible-ABI plain-vector downset reference; no default selection changes.",
+      "description": "Use the plain-vector downset reference with the default SIMD width; the name records its earlier native-width comparison.",
       "role": "sweep",
-      "simd_native": true,
-      "simd_is_max": false,
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
       "input_picker": "critical"
@@ -42,7 +39,6 @@
       "description": "Use Spot translation preference any instead of small to provide a shipped alternative translation with plain vector-backed downsets.",
       "role": "reference",
       "translation_pref": "any",
-      "simd_is_max": false,
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
       "input_picker": "critical"
@@ -50,7 +46,6 @@
     "best_decomp_mona_diag": {
       "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile the plain-vector downset reference.",
       "role": "diagnostic",
-      "simd_is_max": false,
       "enable_diagnostics": true,
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
@@ -59,7 +54,6 @@
     "best_decomp_rank_bucketed_mona": {
       "description": "Replace plain vector-backed downsets with rank-bucketed vectors to compare rank-based dominance filtering in the downset sweep.",
       "role": "sweep",
-      "simd_is_max": false,
       "vector_downset": "rank_bucketed_vector_backed",
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
@@ -68,7 +62,6 @@
     "best_decomp_rank_bucketed_semantic_mona": {
       "description": "Deduplicate equivalent MONA output actions before decoding to reduce action construction in the shipped backward solver with rank-bucketed downsets (B reference).",
       "role": "shipping",
-      "simd_is_max": false,
       "vector_downset": "rank_bucketed_vector_backed",
       "aut_preprocessor": "standard",
       "ios_precomputer": "semantic_mona",
@@ -77,7 +70,6 @@
     "best_decomp_rank_bucketed_mona_eq_min_blocks_2": {
       "description": "Use the parent's unchanged two-block gate, three clients and 512-state cap as the lower-block arm against the four-block equivariant sweep control.",
       "role": "sweep",
-      "simd_is_max": false,
       "vector_downset": "rank_bucketed_vector_backed",
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
@@ -87,7 +79,6 @@
       "description": "Retain backward and forward realizability and forward automaton-unreal solving, adding a sparse guarded formula-unreal worker. Include one bounded Spot obligation decision arm for eligible objectives.",
       "role": "shipping",
       "forced_output_contradiction": true,
-      "simd_is_max": false,
       "vector_downset": "rank_bucketed_vector_backed",
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:obligation:spot",
       "spot_lazy_provider": true,
@@ -101,7 +92,6 @@
       "description": "Five-worker sparse guarded formula portfolio with one exact GR(1) worker using checked parameter pre-passes.",
       "role": "sweep",
       "forced_output_contradiction": true,
-      "simd_is_max": false,
       "vector_downset": "rank_bucketed_vector_backed",
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-lift:oxidd",
       "spot_lazy_provider": true,
@@ -115,7 +105,6 @@
       "description": "Six-arm sparse guarded formula portfolio with a checked realizability-only GR(1) pre-pass. Include one bounded Spot obligation decision arm for eligible objectives.",
       "role": "shipping",
       "forced_output_contradiction": true,
-      "simd_is_max": false,
       "vector_downset": "rank_bucketed_vector_backed",
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-real-lift:oxidd,both:obligation:spot",
       "spot_lazy_provider": true,
@@ -128,7 +117,6 @@
     "otf_forward": {
       "description": "Compare Spot guarded and TAA arms using the best_decomp_rank_bucketed_semantic_mona_forward components and unchanged default arm selection.",
       "role": "sweep",
-      "simd_is_max": false,
       "vector_downset": "rank_bucketed_vector_backed",
       "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward",
       "spot_lazy_provider": true,
@@ -143,8 +131,7 @@
       "description": "Seven-worker portfolio combining antichain search, sparse formula solving, a GR(1) realizability pre-pass, exact Spot obligation solving, and Spot and tlsf-tools parity game solving.",
       "role": "shipping",
       "forced_output_contradiction": true,
-      "simd_is_max": false,
-      "vector_downset": "rank_bucketed_vector_backed",
+      "vector_downset": "lazy_kd",
       "default_arms": "real:small:backward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:gr1-real-lift:oxidd,both:obligation:spot,both:parity:spot,both:parity:oxidd",
       "default_translation_effort": "high,unreal:formula:spot-guarded-sparse=low",
       "spot_lazy_provider": true,

@@ -122,29 +122,26 @@
         }
       ]
     },
-    "simd_is_max": {
-      "meson": "acacia_simd_is_max",
-      "type": "boolean",
-      "default": true,
-      "description": "Legacy SIMD width: max fixed size if true, compatible ABI (128-bit on x86-64) if false",
+    "simd_width": {
+      "meson": "acacia_simd_width",
+      "type": "combo",
+      "default": "native",
+      "choices": [
+        "native",
+        "compatible",
+        "max"
+      ],
+      "description": "SIMD width: native to the build target, compatible (128 bits), or largest fixed size",
       "macros": [
         {
-          "name": "SIMD_IS_MAX",
+          "name": "POSETS_SIMD_WIDTH",
           "emit": "always",
-          "encoding": "bool_literal"
-        }
-      ]
-    },
-    "simd_native": {
-      "meson": "acacia_simd_native",
-      "type": "boolean",
-      "default": false,
-      "description": "Select hardware-native SIMD width; otherwise retain simd_is_max selection",
-      "macros": [
-        {
-          "name": "SIMD_IS_NATIVE",
-          "emit": "always",
-          "encoding": "bool_literal"
+          "encoding": "map",
+          "map": {
+            "native": 1,
+            "compatible": 0,
+            "max": 2
+          }
         }
       ]
     },
@@ -154,14 +151,20 @@
       "default": "vector_backed",
       "choices": [
         "vector_backed",
-        "rank_bucketed_vector_backed"
+        "rank_bucketed_vector_backed",
+        "lazy_kd"
       ],
-      "description": "Downset implementation for vectors and bitsets",
+      "description": "Downset storage: plain vectors, rank buckets, or a lazy KD tree",
       "macros": [
         {
           "name": "VECTOR_AND_BITSET_DOWNSET_IMPL",
           "emit": "always",
-          "encoding": "value"
+          "encoding": "map",
+          "map": {
+            "vector_backed": "vector_backed",
+            "rank_bucketed_vector_backed": "rank_bucketed_vector_backed",
+            "lazy_kd": "lazy_kdtree_backed"
+          }
         }
       ]
     },

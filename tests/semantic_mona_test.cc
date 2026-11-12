@@ -31,6 +31,8 @@
 #include <vector>
 
 #include <posets/downsets.hh>
+#include <posets/downsets/lazy_kdtree_backed.hh>
+#include <posets/downsets/rank_bucketed_vector_backed.hh>
 #include <posets/vectors.hh>
 #include <posets/vectors/traits.hh>
 
@@ -391,10 +393,10 @@ namespace {
     expect (what + ": union over outputs is unchanged on every rank vector", agreed);
   }
 
-  template <typename Precomputer>
+  template <typename Precomputer, typename Downset = SetOfStates>
   std::optional<VECTOR_ELT_T> solve (const fixture& fx) {
     posets::vectors::bool_threshold = fx.aut->num_states ();
-    k_bounded_safety_aut_detail<SetOfStates, Precomputer, actioners::standard<state>,
+    k_bounded_safety_aut_detail<Downset, Precomputer, actioners::standard<state>,
                                 input_pickers::critical>
         solver (fx.aut, 1, K, 1, fx.all_inputs, fx.all_outputs, Precomputer (),
                 actioners::standard<state> (), input_pickers::critical ());
@@ -410,6 +412,11 @@ namespace {
     expect (what + ": same realizability verdict", base.has_value () == quot.has_value ());
     if (base.has_value () and quot.has_value ())
       expect (what + ": same winning bound", *base == *quot);
+    const auto rank = solve<ios_precomputers::semantic_mona,
+                            posets::downsets::rank_bucketed_vector_backed<state>> (fx);
+    const auto lazy = solve<ios_precomputers::semantic_mona,
+                            posets::downsets::lazy_kdtree_backed<state>> (fx);
+    expect (what + ": lazy KD matches rank buckets on verdict and winning bound", lazy == rank);
   }
 
   template <typename Precomputer>
@@ -501,6 +508,10 @@ int main () {
   check_verdicts_agree ("duplicating", duplicating);
   check_verdicts_agree ("distinct", distinct);
   check_verdicts_agree ("with-tail", with_tail);
+  auto losing = make_aut (3, true);
+  losing.aut->new_acc_edge (0, 2, bddtrue);
+  check_verdicts_agree ("losing", losing);
+  expect ("losing fixture is unrealizable", not solve<ios_precomputers::semantic_mona> (losing));
 
   check_large_global_pool ();
 

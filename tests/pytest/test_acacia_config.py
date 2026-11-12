@@ -141,8 +141,13 @@ def test_first_shipping_preset_replaces_real_forward_with_both_parity_arms():
     ] + ["both:parity:spot", "both:parity:oxidd"]
     assert len(candidate["default_arms"].split(",")) == 7
     for key in baseline:
-        if key not in {"_preset", "preset", "default_arms", "default_translation_effort"}:
+        if key not in {
+            "_preset", "preset", "default_arms", "default_translation_effort", "vector_downset"
+        }:
             assert candidate[key] == baseline[key], key
+    # Only the shipped preset moved to lazy KD; the fallback presets keep rank buckets.
+    assert candidate["vector_downset"] == "lazy_kd"
+    assert baseline["vector_downset"] == "rank_bucketed_vector_backed"
 
 
 def test_only_first_shipping_preset_changes_default_translation_effort():
@@ -649,7 +654,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     values.update({
         "translation_pref": "any",
         "default_translation_effort": "medium,unreal:formula:backward=low",
-        "simd_is_max": False,
+        "simd_width": "compatible",
         "enable_diagnostics": True,
         "default_arms": "real:identity:backward,unreal:identity:forward",
         "forward_safety_solver": True,
@@ -660,8 +665,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         r'-DACACIA_DEFAULT_TRANSLATION_EFFORT=\"medium,unreal:formula:backward=low\"',
         "-DACACIA_BDD_MAX_INCREASE=4194304",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",
-        "-DSIMD_IS_MAX=false",
-        "-DSIMD_IS_NATIVE=false",
+        "-DPOSETS_SIMD_WIDTH=0",
         "-DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed",
         "-DACACIA_ENABLE_DIAGNOSTICS=1",
         r'-DACACIA_DEFAULT_ARMS=\"real:identity:backward,unreal:identity:forward\"',
@@ -787,22 +791,30 @@ def test_kept_presets_are_flat_and_each_selector_varies():
     resolved = [module.normalize_preset(options, presets, name) for name in presets["presets"]]
     for section in ("options", "families"):
         for name, option in options[section].items():
-            # BDD growth remains an opt-in experiment pending memory/coverage gates.
-            if name in {"preset", "bdd_max_increase"}:
+            # BDD growth and SIMD width stay build options, not preset variations.
+            if name in {"preset", "bdd_max_increase", "simd_width"}:
                 continue
             assert any(values[name] != option["default"] for values in resolved), name
 
 
-def test_native_simd_is_additive_and_old_presets_keep_their_abi():
+def test_native_simd_is_the_default_for_all_presets():
     module = load_module()
     options, presets = module.load_registry()
     for name in presets["presets"]:
         values = module.normalize_preset(options, presets, name)
-        assert values["simd_native"] is (name == "posets_native_width")
-    assert "posets_native_width" not in presets["groups"]["docker_default"]
+        assert "simd_width" not in presets["presets"][name], name
+        assert values["simd_width"] == "native", name
     values = module.defaults(options)
-    values["simd_native"] = True
-    assert "-Dacacia_simd_native=true" in module.meson_args(options, values)
-    flags = module.preprocessor_flags(options, values)
-    assert "-DSIMD_IS_NATIVE=true" in flags
-    assert "-DSIMD_IS_MAX=true" in flags  # Explicit native selection takes precedence.
+    assert "-Dacacia_simd_width=native" in module.meson_args(options, values)
+    assert "-DPOSETS_SIMD_WIDTH=1" in module.preprocessor_flags(options, values)
+
+
+@pytest.mark.parametrize("width,selector", [("native", 1), ("compatible", 0), ("max", 2)])
+def test_simd_width_maps_directly_to_posets(width, selector):
+    module = load_module()
+    options, _ = module.load_registry()
+    presets = {"presets": {"width": {"simd_width": width}}}
+    module.validate_preset(options, presets, "width")
+    values = module.normalize_preset(options, presets, "width")
+    assert f"-Dacacia_simd_width={width}" in module.meson_args(options, values)
+    assert f"-DPOSETS_SIMD_WIDTH={selector}" in module.preprocessor_flags(options, values)
