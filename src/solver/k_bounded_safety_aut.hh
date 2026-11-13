@@ -139,8 +139,18 @@ class k_bounded_safety_aut_detail {
           return input_picker (f);
         }();
         acacia::diagnostics::snapshot_loop_progress ("classic-after-picker");
-        if (not input.has_value ())  // No more inputs, and we just tested that init was present
+        if (not input.has_value ())
         {
+          // Picker exhaustion establishes a fixed point, not initial membership.
+          // A successful region must also contain init, including on the first
+          // iteration and immediately after a bound raise. With valid positive
+          // bounds initialization contains init; subsequent CPre steps check it
+          // below, and bound raises use the checked, representable K schedule.
+          if (not f.contains (state (init))) {
+            if (not raise_bound_or_give_up (f, k, actioner))
+              return std::nullopt;
+            continue;
+          }
           verb_do (3, vout << "Exit because of no more inputs being picked\n");
           acacia::diagnostics::set_final_reason ("fixedpoint");
 #if ACACIA_ENABLE_DIAGNOSTICS

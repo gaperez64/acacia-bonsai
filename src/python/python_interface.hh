@@ -280,7 +280,9 @@ bool state_is_accepting (const Game& game, unsigned s);
  * test is approximate (a partial cube is allowed — any edge whose condition
  * is satisfied by the cube restriction is considered active).
  *
- * Returns a newly owned vector_wrapper.
+ * k_cap must be in [0, max(VECTOR_ELT_T)] and entries must be in
+ * [-1, max(VECTOR_ELT_T)]. Entries above k_cap are allowed and saturate.
+ * Invalid ranges raise an argument exception. Returns a newly owned vector_wrapper.
  */
 vector_wrapper* successor (Game& game, const vector_wrapper& v,
                            const std::vector<std::string>& true_aps,
@@ -288,12 +290,15 @@ vector_wrapper* successor (Game& game, const vector_wrapper& v,
 
 /**
  * Builds a state vector from a Python-side list of ints. Size must match the
- * number of states of game.twa. Caller takes ownership.
+ * number of states of game.twa; entries must be in [-1, max(VECTOR_ELT_T)].
+ * Invalid ranges raise an argument exception. Caller takes ownership.
  */
 vector_wrapper* make_vector (const Game& game, const std::vector<int>& entries);
 
 /**
- * Solves the safety game wrapped in game. Returns an owned GameResult.
+ * Solves the safety game wrapped in game. Requires
+ * 1 <= k_min <= k_max <= max(VECTOR_ELT_T) and 1 <= k_inc <= max(VECTOR_ELT_T).
+ * Invalid bounds raise an argument exception. Returns an owned GameResult.
  */
 GameResult* solve_acacia_safety_game (Game& game, int k_max, int k_min, int k_inc);
 
