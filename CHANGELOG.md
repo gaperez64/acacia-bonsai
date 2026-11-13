@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Bump tlsf-tools to 9a2f748 (exact symmetry census `tlsfsym`, integer-overflow rejection in ranges and literals, and Lean proofs for literal decoding, checked arithmetic and indexed next strength) and posets to 81b0e5b (LLVM 22 lint). The shipped portfolio decides the same 1,368 of 1,524 SYNTCOMP26 inputs at 17 s with no verdict change.
 - The shipped preset stores downsets in lazy KD trees instead of rank buckets. Posets now prunes lazy KD searches with per-subtree and per-block coordinate bounds, which takes 28% fewer cycles than rank buckets on captured antichain updates. The shipped portfolio decides the same 1,368 of 1,524 SYNTCOMP26 inputs at 17 s, PAR-2 5,943 s against 5,947 s, with no verdict change and no memory failure. On a 30-input panel of search-bound inputs it decides three more. The other presets keep rank buckets (#384).
 - The native arms' search does less memory traffic: forward search hashes contiguous states and caches coordinate sums, and the formula arm's BDD helpers stop copying references (27.6% and 10.4% fewer instructions on fixed work). Vector comparisons evaluate only the direction a query needs.
 - Builds use the target's native SIMD width by default instead of a fixed 128 bits (#380); `acacia_simd_width` replaces the two SIMD booleans with `native` (default), `compatible` (128 bits), or `max` (largest fixed size). Release builds on AVX-512 hosts now use 64 lanes.
