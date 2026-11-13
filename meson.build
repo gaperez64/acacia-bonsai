@@ -73,6 +73,7 @@ else
 endif
 
 build_conf = configuration_data ()
+build_conf.set ('VECTOR_IMPL_AUTO', 'simd_vector_backed')
 if get_option ('acacia_preset') != ''
   build_conf.set_quoted ('ACACIA_PRESET', get_option ('acacia_preset'))
 endif

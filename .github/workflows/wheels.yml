@@ -15,6 +15,7 @@ permissions:
 
 env:
   SPOT_VERSION: 2.16
+  CARGO_BUILD_JOBS: 2
 
 jobs:
   # Evidence archives are data-only releases, so skip package builds and publishing.
@@ -48,6 +49,9 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v4.3
         env:
+          # pyproject.toml's backend passes the first docker_default preset as
+          # meson-python setup-args, keeping the compiler profile portable.
+          CIBW_CONFIG_SETTINGS: 'compile-args=-j2'
           CIBW_BUILD: ${{ matrix.cibw_build }}
           CIBW_ARCHS_LINUX: ${{ matrix.cibw_arch }}
           CIBW_ARCHS_MACOS: ${{ matrix.cibw_arch }}
@@ -59,6 +63,7 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: bash {project}/.github/workflows/wheels-before-all.sh
           CIBW_ENVIRONMENT_LINUX: >-
             PKG_CONFIG_PATH=/opt/spot_install/lib/pkgconfig
+            CARGO_BUILD_JOBS=2
             LD_LIBRARY_PATH=/opt/spot_install/lib
             CC=/opt/rh/gcc-toolset-14/root/usr/bin/gcc
             CXX=/opt/rh/gcc-toolset-14/root/usr/bin/g++
@@ -76,6 +81,7 @@ jobs:
           # refuse to bundle it.
           CIBW_ENVIRONMENT_MACOS: >-
             PKG_CONFIG_PATH=/opt/spot_install/lib/pkgconfig
+            CARGO_BUILD_JOBS=2
             DYLD_LIBRARY_PATH=/opt/spot_install/lib
             CC=/opt/homebrew/bin/gcc-14
             CXX=/opt/homebrew/bin/g++-14
@@ -160,7 +166,8 @@ jobs:
           mkdir sdist-smoke
           tar -xf dist/*.tar.gz -C sdist-smoke --strip-components=1
           test -z "$(find sdist-smoke -name .git -print -quit)"
-          python -m build --wheel sdist-smoke
+          python -m build --wheel sdist-smoke -Cbuild-dir=build_wheel -Ccompile-args=-j2
+          python tests/check-python-preset.py sdist-smoke/build_wheel --portable
 
       - name: Upload sdist
         uses: actions/upload-artifact@v7

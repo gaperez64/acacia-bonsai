@@ -9,6 +9,11 @@
 # define VECTOR_ELT_T signed char
 #endif
 
+// Fixed representation documented in config/acacia-options.json.
+#ifndef VECTOR_IMPL_AUTO
+# define VECTOR_IMPL_AUTO @VECTOR_IMPL_AUTO@
+#endif
+
 #ifndef ACACIA_TRANSLATION_PREF
 # define ACACIA_TRANSLATION_PREF @ACACIA_TRANSLATION_PREF@
 #endif

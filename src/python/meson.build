@@ -12,7 +12,7 @@ swig_gen = custom_target(
   input: 'acacia_boomslang.i',
   output: ['acacia_boomslang_wrap.cxx', 'acacia_boomslang.py'],
   command: [swig_cmd, '-c++', '-python', '-I' + spot_includedir, '-o', '@OUTPUT0@', '@INPUT@'],
-  depend_files: files('python_interface.cc'),
+  depend_files: files('python_interface.cc', 'python_interface.hh'),
 
   # Only the .py wrapper goes to site-packages; the .cxx feeds into the
   # extension_module build below and would just bloat the wheel otherwise.
@@ -30,7 +30,7 @@ project_headers = include_directories('..', '../..')
 # Build the extension module
 module = py.extension_module('_acacia_boomslang',
   sources: [swig_gen, 'python_interface.cc'],
-  dependencies: [spot_dep, posets_dep] + tlsf_deps,
+  dependencies: [spot_dep, posets_dep, stdsimd_dep] + tlsf_deps,
   include_directories: project_headers,
   install: true,
   install_tag: 'python-runtime',
