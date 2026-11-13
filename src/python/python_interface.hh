@@ -205,15 +205,15 @@ class WinningRegion {
 };
 
 /**
- * Result of solving the safety game. Either realizable (with a winning
- * region) or unrealizable.
+ * Result of the bounded safety search. A winning region certifies realizability;
+ * absence of a region through k_max does not prove LTL unrealizability.
  */
 class GameResult {
   private:
     std::optional<WinningRegion> region;
 
   public:
-    // Unrealizable result.
+    // No winning region found within the bound.
     GameResult () = default;
     // Realizable result with a winning region.
     GameResult (VECTOR_ELT_T k, winreg_type&& r) : region {std::in_place, k, std::move (r)} {}
@@ -272,8 +272,8 @@ bool state_is_accepting (const Game& game, unsigned s);
 /**
  * Computes the forward successor of a state vector under a full IO
  * assignment, using the same update rule as the solver's standard actioner:
- *   new[p] = max over edges p -> q compatible with the assignment of
- *     min(k_cap, v[q] + (1 if q accepting else 0))
+ *   new[dst] = max over edges src -> dst compatible with the assignment of
+ *     min(k_cap, v[src] + (1 if dst accepting else 0))
  * (with -1 propagated as "absent"). The assignment is given as disjoint
  * lists of true and false AP names; every AP appearing on an edge condition
  * should be decided by (true_aps ∪ false_aps), otherwise the compatibility

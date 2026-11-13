@@ -23,15 +23,3 @@ inline void error (int status, const char* format, ...) {
   if (status != 0)
     exit (status);
 }
-
-inline void error_at_line (int status, const char* filename, unsigned int linenum,
-                           const char* format, ...) {
-  va_list args;
-  fprintf (stderr, "%s:%u: ", filename, linenum);
-  va_start (args, format);
-  vfprintf (stderr, format, args);
-  va_end (args);
-  fputc ('\n', stderr);
-  if (status != 0)
-    exit (status);
-}

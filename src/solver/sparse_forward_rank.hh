@@ -7,11 +7,11 @@
 #include <limits>
 
 namespace acacia::spot_rows {
-  // This is an Acacia value type, not a Posets container. In C4/C5 every
+  // This is an Acacia value type, not a Posets container. In the lazy guarded game every
   // coordinate is numeric. boolean_states::forward_saturation materializes
   // states, mutates the automaton in place AND sets the global
   // posets::vectors::bool_threshold defining the safe envelope. It cannot run
-  // here: the lazy path is structurally Boolean-state-free, unlike C0/C3.
+  // here: the lazy path is structurally Boolean-state-free, unlike the frozen graph.
   template <std::signed_integral Value = std::int32_t>
     requires (sizeof (Value) <= sizeof (std::int32_t))
   class SparseForwardRank {

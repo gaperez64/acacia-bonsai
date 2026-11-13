@@ -67,36 +67,20 @@ def _check_real_(test_case: SynthesisProblem):
     # ab.create_twa builds the UCB automaton for whatever formula
     # is passed in and the safety algorithm then asks "can the controller
     # keep this formula falsified?". The C++ CLI negates the spec before
-    # translation when checking realizability (see solver_invoker.hh's
-    # run_one_ltl::operator() — "all that is needed for real is to negate
-    # the formula"). To get a realizability check from this API we have to
-    # do the same negation here.
+    # translation when checking realizability (see solver_invoker.cc).
+    # This API needs the same negation here.
     negated = "!(" + test_case.formula + ")"
     twa = ab.create_twa(negated, test_case.inputs, test_case.outputs)
 
-    # print("Automaton (HOA):")
     aut = spot.automaton(ab.get_aut_hoa(twa))
     print(aut.to_str('hoa'))
 
     ab.preprocess_aut_standard(twa, k_max=99)
-    # ab.preprocess_aut_surely_losing(twa, k_max=99)
     ab.set_bool_thresh_no_bool_states(twa, k_max=99)
-    # ab.set_bool_thresh_forward_saturation(twa, k_max=99)
 
-    # print("Solving safety game...")
-    # type(game_result) = GameResult
     game_result = ab.solve_acacia_safety_game(twa, k_max=99, k_min=2, k_inc=3)
 
     return game_result.is_real()
-    # print("Done.")
-    # print("Solve result:", game_result.is_real())
-
-    # type(winning_region) = Optional[WinningRegion]
-    winning_region = game_result.get_winning_region()
-
-    # print("Does the game result contain the initial state?")
-    contains = winning_region.contains(ab.get_initial_state(twa))
-    return contains
 
 
 

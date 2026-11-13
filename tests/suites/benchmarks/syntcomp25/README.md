@@ -30,7 +30,7 @@ run from repository commit
 `5c589692a84480f7267b0efcabde66afc21d5f8e`. It compared the
 `best_decomp_mona` Acacia configuration with the default `ltlsynt` from Spot
 2.15.1.dev at a 17-second cap, one test job at a time, with an 8 GiB memory
-limit and no swap. The four slices cover all 1,579 converted instances.
+limit and no swap.
 
 The shared `benchmarking/make-panel.py` algorithm classified an instance as:
 
@@ -84,6 +84,9 @@ now retains only the 1,171 instances whose pooled files survive because
 `syntcomp21` and `syntcomp24` also reference them. Those suites have no TLSF
 provenance and remain on the vendored `.ltl` basis. The 2026 `sources.tsv` was
 deleted entirely.
+
+The retained shared pool contains 1,234 pairs (2,468 payload files,
+5,690,457 bytes, about 5.43 MiB); its index covers only those surviving pairs.
 
 The old 2025 pairs were SyFCo conversions, whereas the old 2026 pairs used
 Acacia's native frontend, so moving this suite to `-T` is a real basis change.

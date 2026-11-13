@@ -44,7 +44,6 @@ spot::twa_graph_ptr create_automaton (
   // configurable size/determinism preference above.
   trans.set_pref (
       preference |
-      // spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
       spot::postprocessor::SBAcc);  // state-based acceptacen
   if constexpr (!std::is_same_v<Identity, std::nullptr_t>) {
     if (identity)

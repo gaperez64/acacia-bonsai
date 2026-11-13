@@ -217,7 +217,7 @@ run_acacia_bonsai () {
 PROG=$0
 usage () {
     cat <<EOF
-Usage: $PROG [-p] -[la+] [-e PROG_PATH] (-F LTL_FILE [-P PART_FILE] | -T TLSF_FILE) [-- OPTS...]
+Usage: $PROG [-p] -[la] (-F LTL_FILE [-P PART_FILE] | -T TLSF_FILE) [-- OPTS...]
 Runs ltlsynt or acacia-bonsai on an LTL or TLSF file:
   -p: prefix every line with the name of the test (useful for meson logging)
   -l: run ltlsynt ($LTLSYNT); with -T, convert the TLSF using syfco first
@@ -225,34 +225,28 @@ Runs ltlsynt or acacia-bonsai on an LTL or TLSF file:
   -V: run using Valgrind
   -v: verbose
   -c: prefix the executable with valgrind --tool=callgrind
-  -e EXE_PATH: overwrite the path for the executable
-  -o EXTRA_OPTS: extra options to the executable
   -F LTL_FILE: file to test
   -P PART_FILE: part file for LTL_FILE; if not provided, infered from LTL_FILE.
   -T TLSF_FILE: TLSF file to pass natively to Acacia or convert for ltlsynt.
 
 The leftover OPTS... are passed as options to the executable.
 
-If LTL_FILE contains "realizable" or "unrealizable", then this is assumed to be
-the correct answer.  Otherwise, ltlsynt is ran on it to have a reference point.
-
-The time printed is retrieved using time(1) (or the ZSH builtin).
+An input under a "realizable" or "unrealizable" directory must match that
+verdict. Otherwise, either decisive verdict is accepted; UNKNOWN fails.
 
 Additionally, extra options are passed to the tools using environment variables:
-LTLSYNT_OPTS, STRIX_OPTS, AB_OPTS, AP_OPTS.
+LTLSYNT_OPTS, AB_OPTS.
 EOF
     exit 1
 }
 
-PYTHON=${PYTHON:-$(whence python3)}
 progs=()
-while getopts "vcplsa+Ve:o:F:P:T:hx" opt; do
+while getopts "vcplaVF:P:T:hx" opt; do
     case $opt; in
         p) prefix=t;;
-        [lsa+]) progs+=$opt;;
+        [la]) progs+=$opt;;
         V) prog_prefix=(valgrind --error-exitcode=18 --exit-on-first-error=yes);;
         c) prog_prefix=(valgrind --tool=callgrind);;
-        e) forced_path=$OPTARG;;
         F) ltl=$OPTARG;;
         P) part=$OPTARG;;
         T) tlsf=$OPTARG;;

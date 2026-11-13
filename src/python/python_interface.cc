@@ -57,8 +57,6 @@ Game* create_twa (const std::string& formula_str, const std::vector<std::string>
   // Register input/output APs owned by the Game* we're about to create.
   // The Game destructor calls dict->unregister_all_my_variables(this) to
   // undo these registrations, keeping assert_emptiness() happy.
-  // We use a temporary owner key (unique_ptr) during construction and then
-  // transfer ownership once the Game pointer is stable.
   auto game = new Game {.dict = dict, .twa = twa};
   bdd all_inputs = bddtrue;
   bdd all_outputs = bddtrue;
@@ -166,8 +164,8 @@ vector_wrapper* make_vector (const Game& game, const std::vector<int>& entries) 
 }
 
 // Build a cube (BDD conjunction of literals) for the given assignment. APs
-// not registered in the dictionary are silently ignored, letting callers
-// pass either "input-only", "output-only" or full IO assignments.
+// not registered in the dictionary are rejected. Partial assignments may
+// mention only registered input or output APs, or both.
 static bdd cube_from_assignment (const Game& game, const std::vector<std::string>& true_aps,
                                  const std::vector<std::string>& false_aps) {
   bdd cube = bddtrue;

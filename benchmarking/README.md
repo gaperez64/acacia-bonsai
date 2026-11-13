@@ -67,17 +67,27 @@ Build the compile-time presets with `./self-benchmark.sh -R -c PRESET` and use
 the registry in `config/acacia-presets.json` to identify options. Run both
 binaries on exactly the same instance list, one solver at a time, recording
 verdict, wall time, exit code, cap, binary SHA-256 and resource regime. For
-example:
+example, after building both the registry-selected baseline and a candidate at
+`CANDIDATE_BUILD`, materialize the TLSF corpus and run:
 
 ```sh
 preset=$(python3 scripts/acacia-config.py list-group docker_default | head -n1)
+python3 benchmarking/syntcomp-corpus.py init
+python3 benchmarking/syntcomp-corpus.py materialize --out _bm-logs/tlsf-corpus
 python3 -s benchmarking/run-syntcomp26-coverage.py subset \
   --bin "build_${preset}/src/acacia-bonsai" \
   --list tests/suites/benchmarks/syntcomp26/all.list \
   --tlsf-map tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv \
-  --tlsf-corpus tlsf-corpus \
+  --tlsf-corpus _bm-logs/tlsf-corpus \
   --timeout 17 --systemd-scope --memory-max 8G \
   --csv _bm-logs/baseline.csv
+python3 -s benchmarking/run-syntcomp26-coverage.py subset \
+  --bin CANDIDATE_BUILD/src/acacia-bonsai \
+  --list tests/suites/benchmarks/syntcomp26/all.list \
+  --tlsf-map tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv \
+  --tlsf-corpus _bm-logs/tlsf-corpus \
+  --timeout 17 --systemd-scope --memory-max 8G \
+  --csv _bm-logs/candidate.csv
 python3 -s benchmarking/cactus-report.py \
   --csv baseline=_bm-logs/baseline.csv \
   --csv candidate=_bm-logs/candidate.csv \
@@ -218,7 +228,7 @@ Run the real Linux lifecycle panel **outside the sandbox**, from this worktree:
 ```sh
 set -o pipefail
 mkdir -p _bm-logs.p0-memory-validation
-/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python3 -u tests/check-scope-memory.py \
+python3 -u tests/check-scope-memory.py \
   | tee _bm-logs.p0-memory-validation/lifecycle.jsonl
 ```
 
@@ -245,6 +255,9 @@ both candidates. A stratified panel is a screen, not a full-corpus result.
 
 - **G0, correctness:** `meson test -C build --suite=unit` and
   `meson test -C subprojects/posets/build`; both must report `Fail: 0`.
+  First configure and compile the standalone Posets test build:
+  `meson setup subprojects/posets/build subprojects/posets`, then
+  `CARGO_BUILD_JOBS=2 meson compile -C subprojects/posets/build -j 2`.
 - **G1, frozen verdicts and coverage:**
   `benchmarking/regression-gate.sh --baseline-bin PREVIOUS-BIN build`.
   `--baseline-bin` or `REGRESSION_BASELINE_BIN` is required, with no default.
@@ -272,10 +285,8 @@ both candidates. A stratified panel is a screen, not a full-corpus result.
   realizable/unrealizable suites and reads their JSON records. Timeouts are allowed;
   failed tests, false-verdict markers (including in timed-out tests), missing records
   and unexplained launcher exits fail. Meson's exit status alone is insufficient.
-- **G5, native TLSF parity:** use
-  `tlsf-verdict-parity.py --prepare --native-inspect build/tests/tlsf-frontend-inspect
-  --canonicalizer build/tests/ltl-formula-canonicalize` with its usual required
-  arguments; SyFCo remains the independent converter wherever it succeeds, and only
+- **G5, native TLSF parity:** use the complete command below with a materialized
+  TLSF corpus. SyFCo remains the independent converter wherever it succeeds, and only
   its rejections use the existing tlsf-tools inspector's already-Mealy pair without
   further adaptation. `conversion.tsv` and parity rows record each converter and
   SyFCo error, and the summary names every fallback with its reason as **not
@@ -283,6 +294,21 @@ both candidates. A stratified panel is a screen, not a full-corpus result.
   no manual waiver. Preparation or spot-check failures, missing conversions,
   frontend errors and opposite verdicts still fail the gate; normalization timeouts
   remain UNKNOWN, and available pairs still run after preparation failures.
+
+For the 2025 selection (`build` must include the test helpers):
+
+```sh
+python3 benchmarking/tlsf-verdict-parity.py --prepare \
+  --bin build/src/acacia-bonsai \
+  --source _bm-logs/tlsf-corpus --converted _bm-logs/g5-pairs \
+  --list tests/suites/benchmarks/syntcomp25/all.list --expect-count 1579 \
+  --native-inspect build/tests/tlsf-frontend-inspect \
+  --canonicalizer build/tests/ltl-formula-canonicalize \
+  --csv _bm-logs/g5.csv --summary _bm-logs/g5-summary.txt \
+  --status _bm-logs/g5-status.txt
+```
+
+For the 2026 selection, use its `all.list` and `--expect-count 1524`.
 
 The historical frozen G1 shipping-preset twin is
 `best_decomp_rank_bucketed_mona_eq_min_blocks_2`, whose binary SHA-256 is
@@ -321,12 +347,16 @@ losses remain gate evidence.
 
 `refactor-closeout20261017` preserves exact parent Markdown at `93e4b19e` and all
 173 PR 3 deletions from `62afb5e7`, including executable modes and PR 3's deletion
-inventory. Its verified local archive is at
-`/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.next/closeout/`.
-Publication and index registration are pending with the driver; until then use
-`verify` with the digest in that directory's `DRIVER.md`, and retain the local copy.
-After publication/index registration, `fetch --campaign refactor-closeout20261017`
-restores originals under `build_scratch/pr4-docs/snapshot/markdown/` and
+inventory. The archive is published and registered in [evidence-index.tsv](evidence-index.tsv).
+Fetch and verify it with:
+
+```sh
+python3 -s scripts/acacia-evidence.py fetch \
+  --campaign refactor-closeout20261017 --dest _bm-logs/refactor-closeout
+```
+
+Under that destination, originals are restored in
+`build_scratch/pr4-docs/snapshot/markdown/` and
 `build_scratch/pr4-docs/snapshot/pr3-deleted/`, preserving repository-relative paths.
 The snapshot's `sources.tsv` binds every captured source to its commit and digest.
 Original `gr1-par2-20260923` remains partial. This snapshot adds no measurements.

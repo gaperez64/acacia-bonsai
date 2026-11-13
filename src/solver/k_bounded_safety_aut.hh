@@ -16,7 +16,6 @@
 #include <limits>
 #include <list>
 #include <map>
-#include <random>
 #include <spot/twa/formula2bdd.hh>
 #include <spot/twa/twagraph.hh>
 #include <sstream>
@@ -45,7 +44,6 @@ class k_bounded_safety_aut_detail {
         kinc {kinc},
         input_support {input_support},
         output_support {output_support},
-        gen {0},
         ios_precomputer_maker {ios_precomputer_maker},
         actioner_maker {actioner_maker},
         input_picker_maker {input_picker_maker} {}
@@ -184,7 +182,6 @@ class k_bounded_safety_aut_detail {
     spot::twa_graph_ptr aut;
     const VECTOR_ELT_T kfrom, kto, kinc;
     bdd input_support, output_support;
-    std::mt19937 gen {};
     const IOsPrecomputationMaker& ios_precomputer_maker;
     const ActionerMaker& actioner_maker;
     const InputPickerMaker& input_picker_maker;
