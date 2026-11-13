@@ -3,7 +3,7 @@ py = import('python').find_installation()
 
 swig_cmd = find_program('swig')
 
-# needed since we now include the Spot .i file.
+# Spot's headers are included through python_interface.hh.
 spot_includedir = spot_dep.get_variable('includedir')
 message(spot_includedir)
 

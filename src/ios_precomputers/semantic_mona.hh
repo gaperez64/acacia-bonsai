@@ -1,7 +1,6 @@
 #pragma once
 
-// Sprint A stage A1: the MONA precomputer with a pre-decoding semantic action
-// quotient.
+// MONA precomputation with a pre-decoding semantic action quotient.
 //
 // `ios_precomputers::mona` decodes a transition set for every output path that
 // reaches the state-variable frontier of R(i,o,p,q).  Many paths reach the same

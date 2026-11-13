@@ -28,7 +28,6 @@ from pathlib import Path
 import re
 from dataclasses import dataclass
 from itertools import zip_longest
-import importlib.util
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -549,15 +548,6 @@ def main():
     print(section(adjudicated))
     if failures:
         raise SystemExit(1)
-
-
-def load_as_module(path=Path(__file__)):
-    """Import this hyphenated script from another tool."""
-    spec = importlib.util.spec_from_file_location("check_cap_independence", path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
 
 
 if __name__ == "__main__":

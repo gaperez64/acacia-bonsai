@@ -125,25 +125,6 @@ namespace {
       }
   };
 
-  // Access the test instantiations' private engines without a release mutation hook.
-  template <typename Picker>
-  struct rng_tag {
-      using member = std::mt19937 Picker::*;
-      friend member rng_member (rng_tag);
-  };
-  template <typename Tag, typename Tag::member Member>
-  struct rng_access {
-      friend typename Tag::member rng_member (Tag) { return Member; }
-  };
-  using old_table = old_actioner::input_and_actions_set;
-  using new_table = new_actioner::input_and_actions_set;
-  using old_priority =
-      input_pickers::detail::critical_pq<old_table, recording_actioner<old_actioner>>;
-  using new_priority =
-      input_pickers::detail::critical_pq<new_table, recording_actioner<new_actioner>>;
-  template struct rng_access<rng_tag<old_priority>, &old_priority::gen>;
-  template struct rng_access<rng_tag<new_priority>, &new_priority::gen>;
-
   template <typename Maker, typename Actual>
   auto trace (const game& g, Actual actual) {
     std::string bytes;
@@ -165,11 +146,6 @@ namespace {
           recorder.apply (state (v), action, actioners::direction::backward);
       }
       serialize (bytes, recorder.actions ());
-      if constexpr (not std::is_same_v<Maker, input_pickers::critical>) {
-        std::ostringstream engine;
-        engine << (picker.*rng_member (rng_tag<decltype (picker)> {}));
-        bytes += engine.str ();
-      }
     }
     return bytes;
   }

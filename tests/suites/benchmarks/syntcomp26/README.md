@@ -55,6 +55,9 @@ retains only the 1,171 pooled instances also referenced by `syntcomp21` and
 `syntcomp24`; those two suites have no TLSF provenance and remain on vendored
 `.ltl` files.
 
+The retained shared pool contains 1,234 pairs (2,468 payload files,
+5,690,457 bytes, about 5.43 MiB); its index covers only those surviving pairs.
+
 `panel.list` applies the same 180-instance construction as the 2025 panel: 40
 easy, 65 border, 60 gap, and 15 open; verdict-proportional allocation within
 each stratum; family-round-robin sampling; and seed `20260804`. The answer and

@@ -52,3 +52,12 @@ def test_pair_digest_includes_partition(tmp_path):
     assert module.pair_digest(formula, b".inputs\n.outputs a\n") != module.pair_digest(
         formula, b".inputs a\n.outputs\n"
     )
+
+
+def test_committed_pool_index_and_source_maps_are_consistent():
+    module = load_module()
+    pairs, logical = module.validate(
+        ROOT / "tests/ltl/syntcomp", ROOT / "tests/suites/benchmarks"
+    )
+    assert pairs > 0
+    assert logical >= pairs

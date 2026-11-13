@@ -1,6 +1,6 @@
 {
   "naming": {
-    "_comment": "40 characters accommodates 25 of the 43 existing labels while staying well below the 61-character maximum; new labels can be shorter because mechanisms and purpose belong in metadata. Grandfathered names preserve existing build directories and historical logs; do not add new names to this list.",
+    "_comment": "New labels are limited to 40 characters; mechanisms and purpose belong in metadata. Grandfathered names preserve existing build directories and historical logs; do not add new names to this list.",
     "max_length": 40,
     "forbidden_tokens": [
       "best"
@@ -60,7 +60,7 @@
       "input_picker": "critical"
     },
     "best_decomp_rank_bucketed_semantic_mona": {
-      "description": "Deduplicate equivalent MONA output actions before decoding to reduce action construction in the shipped backward solver with rank-bucketed downsets (B reference).",
+      "description": "Deduplicate equivalent MONA output actions before decoding to reduce action construction in the shipped backward solver with rank-bucketed downsets.",
       "role": "shipping",
       "vector_downset": "rank_bucketed_vector_backed",
       "aut_preprocessor": "standard",
@@ -68,7 +68,7 @@
       "input_picker": "critical"
     },
     "best_decomp_rank_bucketed_mona_eq_min_blocks_2": {
-      "description": "Use the parent's unchanged two-block gate, three clients and 512-state cap as the lower-block arm against the four-block equivariant sweep control.",
+      "description": "Retain the historical two-block equivariant comparison label with the rank-bucketed MONA reference components and registry-default equivariant limits.",
       "role": "sweep",
       "vector_downset": "rank_bucketed_vector_backed",
       "aut_preprocessor": "standard",
@@ -115,7 +115,7 @@
       "input_picker": "critical"
     },
     "otf_forward": {
-      "description": "Compare Spot guarded and TAA arms using the best_decomp_rank_bucketed_semantic_mona_forward components and unchanged default arm selection.",
+      "description": "Compare forward Spot guarded and TAA arms with rank-bucketed downsets, semantic MONA precomputation, standard automaton preprocessing and critical input selection.",
       "role": "sweep",
       "vector_downset": "rank_bucketed_vector_backed",
       "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward",

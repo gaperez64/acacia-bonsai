@@ -7,14 +7,13 @@
 #endif
 
 #include <optional>
-#include <random>
 
 namespace input_pickers {
   namespace detail {
     template <typename FwdActions, typename Actioner>
     struct critical_pq {
       public:
-        critical_pq (FwdActions& fwd_actions, Actioner& actioner) : actioner {actioner}, gen {0} {
+        critical_pq (FwdActions& fwd_actions, Actioner& actioner) : actioner {actioner} {
           int priority = 0;
           for (auto& el : fwd_actions)
             fwd_actions_pq.emplace (priority++, std::ref (el));
@@ -101,7 +100,6 @@ namespace input_pickers {
         using fwd_actions_pq_t = std::multimap<int, input_and_actions_ref>;  // needs to be signed
         fwd_actions_pq_t fwd_actions_pq;
         Actioner& actioner;
-        std::mt19937 gen;
     };
   }
 

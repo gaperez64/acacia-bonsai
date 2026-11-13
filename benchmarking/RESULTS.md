@@ -32,7 +32,8 @@ G5 PASS (0 opposite verdicts, 0 resource limits).
 ## 2026-11-12: Lazy KD with subtree and pending-block bounds becomes the shipped downset
 
 Local campaigns `kd-bounds-20261112` (component replay and panels) and `kdb20261112`
-(full corpus), unpublished. Posets 016826e adds coordinatewise lower/upper bounds to
+(full corpus) are now included in the indexed `sprint-20261111` archive.
+Posets 016826e adds coordinatewise lower/upper bounds to
 lazy KD frozen nodes and to sealed 16-entry pending blocks; a failing one-direction
 bound comparison skips the subtree or block, and live points are always checked exactly.
 Both backends below are release builds of the same tree with identical options except the
@@ -59,8 +60,8 @@ measurements above predate that fix, which only drops the sum shortcut from boun
 
 ## 2026-11-12: Lazy KD performance pilot
 
-Local campaign `lemire-20261112-pilot` is unpublished and awaits owner publication and
-indexing. This is a subset measurement, not a full-corpus admission gate. Both release
+Local subcampaign `lemire-20261112-pilot` is now included in the indexed
+`sprint-20261111` archive. This is a subset measurement, not a full-corpus admission gate. Both release
 builds use the first `docker_default` preset, with only the downset choice differing.
 
 | Final backend | Fixed cases solved | Instructions (billion) | Cycles (billion) | Wall (s) |
@@ -86,15 +87,15 @@ The exclusive solve repeats with backend order reversed: KD finishes in 20.09 s 
 rank buckets time out at 30 s again. Two exploratory scaling cases, AMBA 7 and 8, time out
 for both backends at both limits and are recorded separately from the original panel.
 
-## 2026-11-12: Local solver pilot (unarchived)
+## 2026-11-12: Local solver pilot
 
 This is a local pilot on `d7873d6`, not a full-corpus admission result. The first
 `docker_default` preset was resolved through the registry. Release measurements
 use optimization 3, LTO, assertions disabled and the release compiler profile.
 All solver calls are serial in 8 GiB systemd scopes with swap disabled; builds
 use at most four jobs. Raw rows, stdout/stderr, counters, manifests, frozen
-executables and build options are in `/tmp/biere-20261112`; no published archive
-or evidence-index row exists yet.
+executables and build options from `/tmp/biere-20261112` are now included in
+the indexed `sprint-20261111` archive.
 
 The inherited forward change was completed and checked. It hashes a reusable
 contiguous copy, caches exact 64-bit coordinate sums, and uses the sums only as

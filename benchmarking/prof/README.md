@@ -97,9 +97,12 @@ recording overhead. Calibration belongs in a later measurement campaign.
 Validation covers real solver verdicts under injected setup failures, fake worker
 lifecycles (exit, decline, signals, cancellation, loss and subprocess adoption),
 synthetic analyzer records, paired obligation semantic/controller checks and
-native observer nesting. The full debug unit suite can be run serially with:
+native observer nesting. Configure a fresh debug build directory, then run
+the full unit suite serially:
 
 ```sh
-CARGO_BUILD_JOBS=1 meson compile -C build_scratch/accounting-fix -j 2
-meson test -C build_scratch/accounting-fix --suite unit --num-processes 1 --no-rebuild
+BUILD=build_debug
+meson setup "$BUILD" --buildtype=debug
+CARGO_BUILD_JOBS=2 meson compile -C "$BUILD" -j 2
+meson test -C "$BUILD" --suite unit --num-processes 1 --no-rebuild
 ```

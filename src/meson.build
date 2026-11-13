@@ -35,7 +35,6 @@ ab_sources += 'tlsf_frontend.cc'
 if get_option('build_python')
   subdir ('python')
 endif
-#subdir ('python_pybind')
 
 ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
                      link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib, tlsf_dpa_lib],

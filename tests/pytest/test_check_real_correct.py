@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import os
 import pathlib
+import shlex
 import subprocess
 import sys
+
+import pytest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -19,6 +22,8 @@ def run_fake(
     suite="syntcomp24",
     resource_unknown=False,
     cgroup_unavailable=False,
+    selectors=("-a",),
+    extra_opts=(),
 ):
     fake_acacia = tmp_path / "fake-acacia"
     fake_acacia.write_text(f"#!/bin/sh\n{script}\n")
@@ -28,7 +33,7 @@ def run_fake(
     wrapper = tmp_path / "check-real-correct.sh"
     wrapper.write_text(
         template.replace("@ACABONSAI@", str(fake_acacia)).replace(
-            "@LTLSYNT@", "/does/not/exist/ltlsynt"
+            "@LTLSYNT@", str(fake_acacia) if "-l" in selectors else "/does/not/exist/ltlsynt"
         )
     )
     wrapper.chmod(0o755)
@@ -50,7 +55,7 @@ def run_fake(
             "/bin/zsh",
             "-f",
             str(wrapper),
-            "-a",
+            *selectors,
             "-F",
             str(
                 resolve_instance(
@@ -58,12 +63,55 @@ def run_fake(
                     instance,
                 )
             ),
+            *extra_opts,
         ],
         capture_output=True,
         text=True,
         check=False,
         env=env,
     )
+
+
+@pytest.mark.parametrize("selector", ["-s", "-+", "-o", "-e"])
+def test_obsolete_options_are_rejected_before_launch(tmp_path, selector):
+    launched = tmp_path / "launched"
+    result = run_fake(
+        tmp_path,
+        f"touch {shlex.quote(str(launched))}\nexit 0",
+        selectors=("-a", selector),
+    )
+
+    assert result.returncode != 0
+    assert "Usage:" in result.stdout
+    assert "PASS." not in result.stdout
+    assert not launched.exists()
+
+
+@pytest.mark.parametrize("selector", ["-a", "-l"])
+def test_supported_backend_launches_once_and_preserves_extra_argv(tmp_path, selector):
+    argv = tmp_path / "argv"
+    result = run_fake(
+        tmp_path,
+        f"printf '%s\\0' \"$@\" >> {shlex.quote(str(argv))}\nexit 1",
+        selectors=(selector,),
+        extra_opts=("--", "--example", "one argument"),
+    )
+
+    source = resolve_instance(
+        ROOT / "tests/suites/benchmarks/syntcomp24/sources.tsv", "lift4.ltl"
+    )
+    part = source.with_suffix(".part").read_text().splitlines()
+    inputs = ",".join(next(line for line in part if line.startswith(".inputs")).split()[1:])
+    outputs = ",".join(next(line for line in part if line.startswith(".outputs")).split()[1:])
+    expected = (
+        ["-F", str(source), "-i", inputs, "-o", outputs]
+        if selector == "-a"
+        else ["--realizability", "-F", str(source), f"--ins={inputs}", f"--outs={outputs}"]
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert argv.read_bytes().split(b"\0") == [
+        item.encode() for item in [*expected, "--example", "one argument", ""]
+    ]
 
 
 def test_unlabelled_unknown_is_rejected(tmp_path):

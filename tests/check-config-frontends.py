@@ -5,21 +5,13 @@ Acacia has three places that state what an option defaults to:
 
   meson.options                 read by `meson setup`
   config/acacia-options.json    read by scripts/acacia-config.py
-  src/configuration.hh          the #ifndef fallbacks
+  src/config/acacia_build_config.hh.in   generated macro definitions
 
-meson.build always generates acacia_build_config.hh (meson.build:408), so the
-configuration.hh fallbacks never fire for a configured build; the two that can
-actually disagree in a shipped binary are the first two.  They diverged once
-already: meson.options defaulted acacia_local_certificate to true while the JSON
-and configuration.hh said false, so a plain `meson setup build` silently produced
-the S reference configuration while claiming to be B.  Nothing caught it because
-scripts/acacia-config.py passes every option explicitly, which hides the
-divergence from exactly the path that is used for measurement.
-
-This test makes that class of drift fail loudly.  A divergence is allowed only if
-it is listed in INTENTIONAL_DIVERGENCE with a reason, which forces the question
-"is this a capability difference or a behaviour difference?" to be answered in
-writing rather than discovered in a benchmark.
+meson.build generates acacia_build_config.hh from the template. This checker
+compares shared scalar defaults and documented constants; pytest also checks
+component families, option types, choices, bounds and generated macros.
+Explicit preset arguments can hide drift from a plain `meson setup` build.
+Any deliberate scalar divergence needs a reason in INTENTIONAL_DIVERGENCE.
 """
 
 from __future__ import annotations
@@ -35,7 +27,7 @@ import sys
 # The bar for an entry here: the divergence must change what the binary CAN DO,
 # not how it SOLVES, and it must fail loudly when it matters.  A solver-behaviour
 # option must never appear in this list -- that divergence is silent by nature,
-# which is what made the local_certificate one survive as long as it did.
+# as a past local_certificate default mismatch demonstrated.
 INTENTIONAL_DIVERGENCE = {}
 
 # Build products, benchmark inputs and compiler flags are outside the solver

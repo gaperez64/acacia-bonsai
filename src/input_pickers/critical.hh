@@ -11,7 +11,6 @@
 #include <functional>
 #include <list>
 #include <optional>
-#include <random>
 #include <vector>
 
 namespace input_pickers {
@@ -32,7 +31,6 @@ namespace input_pickers {
           //        \exists f \in F, i \in C, i witnesses one-step-loss of F.
           // Algo: We go through all f in F, find an input i witnessing one-step-loss, add it to C.
 
-          // Sort/randomize input_output_fwd_actions
           std::vector<input_and_actions_ref> V (fwd_actions.begin (), fwd_actions.end ());
 
           std::list<input_and_actions_ref> Cbar (V.begin (), V.end ());

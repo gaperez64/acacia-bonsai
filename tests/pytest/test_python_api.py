@@ -15,7 +15,6 @@ import acacia_boomslang as ab
 
 
 SPEC_REAL   = "!((G (F (req))) -> (G (F (grant))))"      # negated GR(1): real
-SPEC_UNREAL = "!((G (F (req))) <-> (G(!grant)))"         # negated: unreal
 
 INPUTS  = ["req"]
 OUTPUTS = ["grant"]
@@ -59,7 +58,7 @@ def test_make_vector_roundtrip():
 
 def test_make_vector_rejects_wrong_size():
     g = ab.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError, match="vector size does not match number of states"):
         ab.make_vector(g, ab.IntVector([0]))
 
 

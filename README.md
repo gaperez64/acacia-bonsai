@@ -27,7 +27,7 @@ docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
 
 ## Build and run
 
-Install GCC with C++23 support, Spot, Meson, Ninja, Zsh, Flex, Bison,
+Install GCC with C++23 and C23 support, Spot, Meson, Ninja, Zsh, Flex, Bison,
 Cargo (Rust 1.91+) and cbindgen 0.29.4. Every build includes OxiDD and native
 GR(1); Meson builds the native library from the nested sources. Initialize them:
 
@@ -48,7 +48,7 @@ For an optimized build, read a shipping configuration from the registry:
 ```sh
 preset=$(python3 scripts/acacia-config.py list-group docker_default | head -n1)
 ./self-benchmark.sh -R -c "$preset"
-"build_${preset}/src/acacia-bonsai" -T spec.tlsf -s controller.aag
+"build_${preset}/src/acacia-bonsai" -T examples/realizable.tlsf -s controller.aag
 ```
 
 `-R` builds without benchmarking; add `-L` for the low-memory compile profile.

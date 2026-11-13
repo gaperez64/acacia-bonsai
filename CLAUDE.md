@@ -14,10 +14,11 @@ and translates a preset into Meson arguments; `meson.build` writes the result
 into a generated `acacia_build_config.hh`.
 
 Three frontends have to agree — `meson.options`, the JSON registry, and the
-`#ifndef` fallbacks in `src/config/acacia_build_config.hh.in`. CI checks this
-before anything builds (`acacia-config.py validate`), and
-`tests/check-config-frontends.py` checks it without needing a build. Adding an
-option means adding it in all three.
+generated macro template `src/config/acacia_build_config.hh.in`. Registry
+validation runs before CI builds. `tests/check-config-frontends.py` compares
+scalar defaults and documented constants without a build; pytest also checks
+component families, types, choices, bounds and macros. Adding an option means
+updating all three.
 
 **A group is a pointer; a preset name is a historical label.** The shipped
 configurations are whatever `docker_default` currently names:

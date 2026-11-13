@@ -739,14 +739,6 @@ def classify_acacia_run(run: RunResult) -> str:
     return classify_run(run, "acacia")
 
 
-def classify_acacia1x_run(run: RunResult) -> str:
-    return classify_run(run, "acacia1x")
-
-
-def classify_ltlsynt_run(run: RunResult) -> str:
-    return classify_run(run, "ltlsynt")
-
-
 def read_part(path: str | pathlib.Path) -> tuple[str, str]:
     """Read a TLSF-style .part file as input/output proposition lists."""
     inputs: list[str] = []
@@ -777,11 +769,6 @@ def load_meson_jsonl(path: str | pathlib.Path) -> list[dict]:
             if line:
                 rows.append(json.loads(line))
     return rows
-
-
-def instance_from_meson_name(name: str) -> str:
-    """Return the concrete instance part of a Meson benchmark/test name."""
-    return name.rsplit(":", 1)[-1]
 
 
 def realizability_from_output(text: str | None) -> str | None:

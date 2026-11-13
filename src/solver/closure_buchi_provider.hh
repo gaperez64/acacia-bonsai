@@ -4,10 +4,8 @@
 
 #include <exception>
 #include <functional>
-#include <optional>
 #include <span>
 #include <spot/twa/twagraph.hh>
-#include <string_view>
 #include <variant>
 
 namespace acacia::closure_buchi {
@@ -41,19 +39,14 @@ namespace acacia::closure_buchi {
       std::function<bool ()> cancelled;
       std::function<bool (FaultPoint)> fail;
   };
-  // enumerative is the pre-A1 control: a pure Boolean Or still forks one
+  // enumerative is the reference expansion: a pure Boolean Or still forks one
   // branch per disjunct, recursively. symbolic_boolean folds a whole Boolean
-  // subformula into one memoized BDD before continuing (see closure_buchi.cc,
+  // subformula into one memoized BDD before continuing (see closure_buchi_provider.cc,
   // Impl::boolean_guard). Both must agree on every raw_row (T,P)->guard
   // extensionally; only branch count, order and transient BDDs may differ.
   enum class RowExpansion { enumerative, symbolic_boolean };
   inline const char* row_expansion_name (RowExpansion e) {
     return e == RowExpansion::enumerative ? "enumerative" : "symbolic-boolean";
-  }
-  inline std::optional<RowExpansion> parse_row_expansion (std::string_view name) {
-    if (name == "enumerative") return RowExpansion::enumerative;
-    if (name == "symbolic-boolean") return RowExpansion::symbolic_boolean;
-    return std::nullopt;
   }
   struct Options {
       std::size_t max_normalization_nodes = 100000;

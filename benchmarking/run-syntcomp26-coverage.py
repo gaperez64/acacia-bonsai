@@ -648,10 +648,6 @@ def quarantine_interrupted_records(directory: pathlib.Path) -> pathlib.Path | No
     return target
 
 
-def unique_in_order(instances: list[str]) -> list[str]:
-    return list(dict.fromkeys(instances))
-
-
 def summary_rows(
     solver_label: str,
     rows: list[dict[str, str]],

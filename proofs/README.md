@@ -108,9 +108,11 @@ AP dictionary rows must have distinct identifiers.
 Antichain insertion, pruning, meet, bulk construction, SIMD/Boolean containers,
 C++ maps and caches must implement their mathematical interfaces. Machine counter,
 rank, shift and priority arithmetic must agree with the mathematical operations.
-The shared loops still use unchecked `k += kinc` at
-`solver/equivariant_k_bounded_safety_aut.hh:751,959`; K and lifted ranks must stay
-in range. Compiled execution, interruption, cancellation, formula/LTL translation,
+The proof's pinned revision used unchecked `k += kinc` in the shared loops.
+Current C++ calls `checked_next_k` at both equivariant shared-loop increments;
+this checks representability while retaining the full-step schedule, distinct
+from the ordinary clamped schedule. K and lifted ranks must still stay in range.
+Compiled execution, interruption, cancellation, formula/LTL translation,
 detector-search completeness and Boolean optimization as an LTL transformation
 are outside scope.
 
