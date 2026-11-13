@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assert the build's configuration frontends agree on every default.
+"""Assert the build's configuration frontends agree on defaults and constants.
 
 Acacia has three places that state what an option defaults to:
 
@@ -96,16 +96,73 @@ def json_key_to_meson_name(registry: pathlib.Path) -> dict[str, str]:
     return mapping
 
 
+def constant_disagreements(root: pathlib.Path, constants: dict) -> list[str]:
+    """Compare literal definitions and resolve Meson header substitutions.
+
+    Listed C++ consumers such as arg_parser.cc derive the value through the
+    macro, so require a reference there. Templates and Meson must define it;
+    merely mentioning its name cannot satisfy the check.
+    """
+    meson = (root / "meson.build").read_text()
+
+    def meson_values(text, name):
+        return [str(ast.literal_eval(value)) for value in re.findall(
+            rf"^\s*build_conf\.set\s*\(\s*['\"]{re.escape(name)}['\"]\s*,\s*"
+            r"('[^']*'|\"[^\"]*\"|-?\d+)\s*\)", text, re.M,
+        )]
+
+    failures = []
+    for name, constant in constants.items():
+        expected = " ".join(str(constant["value"]).split())
+        definitions = 0
+        for source in constant["sources"]:
+            path = root / source
+            try:
+                text = path.read_text()
+            except OSError as error:
+                failures.append(f"{name}: cannot read {source}: {error}")
+                continue
+            if path.name == "meson.build":
+                values = meson_values(text, name)
+            else:
+                values = re.findall(
+                    rf"^[ \t]*#[ \t]*define[ \t]+{re.escape(name)}[ \t]+([^\n]+)",
+                    text, re.M,
+                )
+                if not values and not source.endswith(".in"):
+                    if not re.search(rf"\b{re.escape(name)}\b", text):
+                        failures.append(f"{name}: {source} neither defines nor uses the constant")
+                    continue
+            if not values:
+                failures.append(f"{name}: {source} has no constant definition")
+            for value in values:
+                definitions += 1
+                value = value.split("//", 1)[0].strip()
+                substitution = re.fullmatch(r"@(\w+)@", value)
+                resolved = meson_values(meson, substitution[1]) if substitution else [value]
+                if not resolved:
+                    failures.append(f"{name}: {source} has unresolved substitution {value}")
+                for actual in resolved:
+                    if " ".join(actual.split()) != expected:
+                        failures.append(
+                            f"{name}: {source}={actual!r} but "
+                            f"acacia-options.json={constant['value']!r}")
+        if not definitions:
+            failures.append(f"{name}: listed sources contain no constant definition")
+    return failures
+
+
 def main() -> int:
     root = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ".")
     meson = meson_defaults(root / "meson.options")
     registry = root / "config" / "acacia-options.json"
-    options = json.loads(registry.read_text())["options"]
+    data = json.loads(registry.read_text())
+    options = data["options"]
     scalars = {name: option["default"] for name, option in options.items()}
     mapping = json_key_to_meson_name(registry)
 
     checked = 0
-    failures: list[str] = []
+    failures = constant_disagreements(root, data["constants"])
     for name in sorted(set(meson) - set(mapping.values()) - NON_SOLVER_OPTIONS):
         failures.append(f"{name}: solver option has no registry entry")
     for name in sorted(set(mapping.values()) - set(meson)):
@@ -143,6 +200,7 @@ def main() -> int:
         return 1
 
     print(f"config frontends agree on all {checked} shared scalar options "
+          f"and {len(data['constants'])} constants "
           f"({len(INTENTIONAL_DIVERGENCE)} documented divergence(s))")
     return 0
 

@@ -16,7 +16,7 @@ std::optional<spot::twa_graph_ptr> solve_game (
   if (all_outputs == bddtrue)
     verb_do (2, vout << "Warning: synthesis without output APs\n");
 
-  using Vector = posets::vectors::simd_vector_backed<VECTOR_ELT_T>;
+  using Vector = posets::vectors::VECTOR_IMPL_AUTO<VECTOR_ELT_T>;
   using Downset = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<Vector>;
 
   return acacia::solver_detail::solve_with_downset<Downset> (

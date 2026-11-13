@@ -46,10 +46,17 @@ jobs:
           max-size: 500M
 
       - name: Compile acacia-bonsai with Python bindings
+        env:
+          CARGO_BUILD_JOBS: 2
         run: |
           export CXX=g++-14
-          meson setup build_python --buildtype=release -Dbuild_python=true
-          meson compile -C build_python -j "$(nproc)"
+          first=$(python3 scripts/acacia-config.py list-group docker_default | head -1)
+          read -r -a preset_args <<< "$(python3 scripts/acacia-config.py meson-args "$first")"
+          meson setup build_python --buildtype=release -Dbuild_python=true "${preset_args[@]}" -Dtlsf-tools:cpu=baseline
+          meson compile -C build_python -j 2
+
+      - name: Check Python build uses the shipped preset
+        run: python3 tests/check-python-preset.py build_python
 
       - name: Run pytest
         run: |

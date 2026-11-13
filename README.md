@@ -64,6 +64,36 @@ ignored; runtime overrides for inactive or unsupported arms are errors.
 Giving `--translation-effort` replaces the build default entirely, with implicit
 `high` for arms without an override.
 
+## Python module
+
+Install SWIG and Python development headers in addition to the build dependencies
+above. Python CI, Boomslang Docker and source/wheel builds use the first
+`docker_default` preset, resolved through `scripts/acacia-config.py meson-args`:
+
+```bash
+preset=$(python3 scripts/acacia-config.py list-group docker_default | head -1)
+read -r -a preset_args <<< "$(python3 scripts/acacia-config.py meson-args "$preset")"
+meson setup build_python -Dbuild_python=true "${preset_args[@]}" -Dtlsf-tools:cpu=baseline
+meson compile -C build_python -j 2
+python3 tests/check-python-preset.py build_python
+PYTHONPATH="$PWD/build_python/src/python${PYTHONPATH:+:$PYTHONPATH}" \
+  python3 -c 'import acacia_boomslang'
+```
+
+Set `LD_LIBRARY_PATH` to Spot's library directory if it is outside the loader's
+search path. The full pytest suite and notebooks also need Spot's Python bindings
+for the same interpreter; add their site-packages directory to `PYTHONPATH`.
+
+`python -m pip wheel . -Ccompile-args=-j2` uses meson-python with the same preset
+setup arguments, including when building from an sdist without Git metadata.
+Wheels keep `acacia_compiler_profile=debug` (Meson's wheel buildtype remains
+`release` with `-O3`) and `tlsf-tools:cpu=baseline` to use the compiler's default
+target ISA. `tests/check-python-preset.py --portable` rejects target ISA flags
+in the compile commands and checks that the tlsf-tools CPU option is baseline.
+The preset's `native` SIMD width then means the compiler's baseline target ABI,
+normally 128 bits on the supported wheel targets. These compile-time choices,
+including the downset, cannot be changed after installing a wheel.
+
 ## Reference and results
 
 - [Build and development conventions](CLAUDE.md)

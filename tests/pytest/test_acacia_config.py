@@ -4,6 +4,8 @@ import importlib.util
 import json
 import pathlib
 import re
+import shutil
+import subprocess
 import sys
 
 import pytest
@@ -528,6 +530,69 @@ def test_validate_checks_constant_documentation(constants, reason):
     options["constants"] = constants
     with pytest.raises(SystemExit, match=reason):
         module.command_validate(options, presets)
+
+
+@pytest.fixture
+def constant_source_tree(tmp_path):
+    registry = ROOT / "config/acacia-options.json"
+    constants = json.loads(registry.read_text())["constants"]
+    sources = {"meson.build", "meson.options", "config/acacia-options.json"}
+    sources.update(source for constant in constants.values() for source in constant["sources"])
+    for source in sources:
+        destination = tmp_path / source
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / source, destination)
+    return tmp_path
+
+
+def run_constant_frontend_check(root):
+    return subprocess.run(
+        [sys.executable, str(ROOT / "tests/check-config-frontends.py"), str(root)],
+        text=True, capture_output=True,
+    )
+
+
+def test_constant_sources_agree(constant_source_tree):
+    result = run_constant_frontend_check(constant_source_tree)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("name,value", [
+    ("VECTOR_IMPL_AUTO", "vector_backed"), ("VECTOR_ELT_T", "short"),
+])
+def test_frontend_check_rejects_conflicting_registry_constant(constant_source_tree, name, value):
+    registry = constant_source_tree / "config/acacia-options.json"
+    data = json.loads(registry.read_text())
+    data["constants"][name]["value"] = value
+    registry.write_text(json.dumps(data))
+    result = run_constant_frontend_check(constant_source_tree)
+    assert result.returncode == 1
+    assert name in result.stderr
+    assert f"acacia-options.json={value!r}" in result.stderr
+    assert "src/config/acacia_build_config.hh.in=" in result.stderr
+    if name == "VECTOR_IMPL_AUTO":
+        assert "meson.build=" in result.stderr
+
+
+@pytest.mark.parametrize("source,before,after", [
+    ("meson.build", "'VECTOR_IMPL_AUTO', 'simd_vector_backed'",
+     "'VECTOR_IMPL_AUTO', 'vector_backed'"),
+    ("src/config/acacia_build_config.hh.in", "@VECTOR_IMPL_AUTO@", "vector_backed"),
+    ("src/config/acacia_build_config.hh.in", "signed char", "short"),
+    ("src/config/acacia_build_config.hh.in", "# define VECTOR_IMPL_AUTO @VECTOR_IMPL_AUTO@", ""),
+    ("meson.build", "build_conf.set ('VECTOR_IMPL_AUTO', 'simd_vector_backed')", ""),
+    ("meson.build", "build_conf.set ('VECTOR_IMPL_AUTO', 'simd_vector_backed')",
+     "# build_conf.set ('VECTOR_IMPL_AUTO', 'simd_vector_backed')"),
+    ("src/arg_parser.hh", "VECTOR_ELT_T", "short"),
+])
+def test_frontend_check_rejects_constant_source_drift(constant_source_tree, source, before, after):
+    path = constant_source_tree / source
+    contents = path.read_text()
+    assert before in contents
+    path.write_text(contents.replace(before, after))
+    result = run_constant_frontend_check(constant_source_tree)
+    assert result.returncode == 1
+    assert source in result.stderr
 
 
 def test_registry_options_are_self_describing():

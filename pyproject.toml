@@ -1,6 +1,8 @@
 [build-system]
 requires = ["meson-python>=0.16.0", "meson>=1.7.0", "ninja"]
-build-backend = "mesonpy"
+# Resolve docker_default[0] into meson-python setup-args at build time.
+build-backend = "acacia_mesonpy"
+backend-path = ["scripts"]
 
 [project]
 name = "acacia-boomslang"

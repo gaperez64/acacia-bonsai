@@ -41,7 +41,7 @@ RUN ./configure --enable-max-accsets=64 --prefix=/opt/spot_install \
 WORKDIR /opt/acacia-bonsai
 COPY . .
 RUN cargo fetch --locked --manifest-path subprojects/tlsf-tools/external/oxidd/crates/oxidd-ffi-c/Cargo.toml
-ENV CARGO_NET_OFFLINE=true
+ENV CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=2
 
 # Pre-fetch the std-simd meson wrap so the meson build works offline.
 RUN meson subprojects download std-simd || true
@@ -49,8 +49,11 @@ RUN meson subprojects download std-simd || true
 # Build a single release configuration so src/python/_acacia_boomslang.so exists.
 # PKG_CONFIG_PATH lets meson find Spot in the custom /opt/spot_install prefix.
 ENV PKG_CONFIG_PATH=/opt/spot_install/lib/pkgconfig
-RUN meson setup builddir --buildtype=release -Dbuild_python=true \
-    && meson compile -C builddir
+RUN first=$(python3 scripts/acacia-config.py list-group docker_default | head -1) \
+    && preset_args=$(python3 scripts/acacia-config.py meson-args "$first") \
+    && meson setup builddir --buildtype=release -Dbuild_python=true $preset_args \
+    && meson compile -C builddir -j 2 \
+    && python3 tests/check-python-preset.py builddir
 
 RUN chmod +x scripts/launch-jupyter.sh
 
