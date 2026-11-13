@@ -12,6 +12,23 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-12: Shipped lazy KD build, native arms and gates
+
+Archive `sprint-20261111` (release `evidence-2026-11-12-sprint`) holds this sprint's
+campaigns, including the local IDs cited in the sections below. Final release build of
+500a86e9, 1,524 SYNTCOMP26 inputs, 17 s, 8 GiB per call:
+
+| Native arms only | Solved | PAR-2 (s) |
+|---|---:|---:|
+| Rank buckets, before the sprint's search work | 1,207 | 11,560 |
+| Rank buckets, same final tree | 1,212 | 11,384 |
+| **Lazy KD with bounds, same final tree** | **1,214** | **11,348** |
+
+Lazy KD adds `abcg_arbiter_pb_3_pe_` and `arbiter_with_cancel_pb_6_pe_` and loses nothing;
+no verdicts conflict. Gates on the shipped binary: G3 PASS (SYNTCOMP25 165/180 and
+SYNTCOMP26 169/180, equal to master, PAR-2 650.8 vs 651.3 s and 455.2 vs 455.9 s), G4 PASS,
+G5 PASS (0 opposite verdicts, 0 resource limits).
+
 ## 2026-11-12: Lazy KD with subtree and pending-block bounds becomes the shipped downset
 
 Local campaigns `kd-bounds-20261112` (component replay and panels) and `kdb20261112`
