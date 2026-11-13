@@ -389,6 +389,11 @@ test ('k-schedule',
       k_schedule_test,
       suite : ['unit', 'k-schedule'])
 
+k_bound_initial_test = executable ('k-bound-initial-test', 'k_bound_initial_test.cc',
+                                  include_directories : inc,
+                                  dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('k-bound-initial', k_bound_initial_test, suite : ['unit', 'k-schedule'])
+
 forced_output_contradiction_test = executable ('forced-output-contradiction-test',
                                                'forced_output_contradiction_test.cc',
                                                include_directories : inc,

@@ -14,6 +14,8 @@
 #include "utils/push_aps.hh"
 #include "utils/verbose.hh"
 
+#include <algorithm>
+#include <limits>
 #include <ranges>
 #include <spot/misc/optionmap.hh>
 #include <spot/tl/formula.hh>
@@ -123,6 +125,14 @@ static std::optional<std::pair<VECTOR_ELT_T, winreg_type>> solve_game_python (
 }
 
 GameResult* solve_acacia_safety_game (Game& game, int k_max, int k_min, int k_inc) {
+  constexpr int max_rank = std::numeric_limits<VECTOR_ELT_T>::max ();
+  if (k_min < 1 || k_min > k_max || k_max > max_rank)
+    throw std::invalid_argument ("bounds must satisfy 1 <= k_min <= k_max <= "
+                                 + std::to_string (max_rank));
+  if (k_inc < 1 || k_inc > max_rank)
+    throw std::invalid_argument ("k_inc must be positive and at most "
+                                 + std::to_string (max_rank));
+
   auto res = solve_game_python (game.twa, (VECTOR_ELT_T) k_max, (VECTOR_ELT_T) k_min,
                                 (VECTOR_ELT_T) k_inc, game.inputs, game.outputs);
   if (res.has_value ()) {
@@ -160,8 +170,12 @@ vector_wrapper* make_vector (const Game& game, const std::vector<int>& entries) 
   if (entries.size () != n)
     throw std::invalid_argument ("vector size does not match number of states");
   posets::utils::vector_mm<VECTOR_ELT_T> v (n, -1);
-  for (size_t i = 0; i < n; ++i)
+  for (size_t i = 0; i < n; ++i) {
+    if (entries[i] < -1 || entries[i] > std::numeric_limits<VECTOR_ELT_T>::max ())
+      throw std::invalid_argument ("vector entries must be between -1 and "
+                                   + std::to_string (std::numeric_limits<VECTOR_ELT_T>::max ()));
     v[i] = (VECTOR_ELT_T) entries[i];
+  }
   return new vector_wrapper (vector_type (v));
 }
 
@@ -194,12 +208,17 @@ vector_wrapper* successor (Game& game, const vector_wrapper& vw,
   const auto& v = vw.get_vec ();
   if ((size_t) (v.end () - v.begin ()) != n)
     throw std::invalid_argument ("vector size does not match number of states");
+  if (k_cap < 0 || k_cap > std::numeric_limits<VECTOR_ELT_T>::max ())
+    throw std::invalid_argument ("k_cap must be between 0 and "
+                                 + std::to_string (std::numeric_limits<VECTOR_ELT_T>::max ()));
+  for (const auto rank : v)
+    if (rank < -1)
+      throw std::invalid_argument ("vector entries must be at least -1");
 
   bdd cube = cube_from_assignment (game, true_aps, false_aps);
   if (cube == bddfalse)
     throw std::invalid_argument ("inconsistent IO assignment");
 
-  const VECTOR_ELT_T K = (VECTOR_ELT_T) k_cap;
   posets::utils::vector_mm<VECTOR_ELT_T> out (n, -1);
 
   // Forward simulation: for every compatible edge src -> dst with v[src] != -1,
@@ -213,8 +232,13 @@ vector_wrapper* successor (Game& game, const vector_wrapper& vw,
       if ((e.cond & cube) == bddfalse)
         continue;
       unsigned dst = e.dst;
-      VECTOR_ELT_T candidate = std::min (
-          K, (VECTOR_ELT_T) (v[src] + (VECTOR_ELT_T) (aut->state_is_accepting (dst) ? 1 : 0)));
+      // A live rank plus acceptance is nonnegative and fits in int. Saturating
+      // at the checked cap before narrowing keeps it representable, including
+      // max_rank + 1 on an accepting edge. Each live compatible predecessor
+      // contributes a rank in [0, k_cap], so out[dst] stays -1 exactly when
+      // there is no such predecessor.
+      const int incremented = static_cast<int> (v[src]) + (aut->state_is_accepting (dst) ? 1 : 0);
+      const auto candidate = static_cast<VECTOR_ELT_T> (std::min (k_cap, incremented));
       out[dst] = std::max (out[dst], candidate);
     }
   }
