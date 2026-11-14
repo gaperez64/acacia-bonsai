@@ -69,15 +69,6 @@
             "small": "spot::postprocessor::Small",
             "any": "spot::postprocessor::Any"
           }
-        },
-        {
-          "name": "ACACIA_TRANSLATION_PREFS",
-          "emit": "always",
-          "encoding": "map",
-          "map": {
-            "small": "spot::postprocessor::Small",
-            "any": "spot::postprocessor::Any"
-          }
         }
       ]
     },

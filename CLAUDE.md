@@ -32,6 +32,10 @@ the group. The `best` in existing names was accurate when those presets were
 chosen and silently stopped being so, which is exactly how the README's Docker
 examples came to name a preset the wrapper rejected.
 
+`list-presets --unique` lists one label per distinct option vector, ignoring
+preset provenance; the default sweep uses it to avoid equivalent cells.
+`list-presets` still lists every historical label for explicit selection.
+
 ## Building
 
 ```
@@ -55,9 +59,16 @@ than rebuilt (see below).
 `BENCHMARK_COMPILE_JOBS` and `BENCHMARK_TEST_JOBS` both default to **1**, because
 the default caller is measuring. Set them when you are not.
 
-Known wart: `.acacia-config.json` in a build directory records only the *acacia*
-options, so switching compile profile on an existing build directory silently
-reuses the old objects. Use a fresh directory when changing profile.
+`scripts/acacia-build.py` defines the shared compile profiles. Build wrappers
+record `.acacia-config.json` with the preset, profile, effective Meson options,
+compiler/linker identities, build environment and native-file contents. They
+refuse reuse when that identity changes or is missing (including old metadata).
+The environment includes GCC/Clang header, library and tool search variables
+(including `CPATH`, `CPLUS_INCLUDE_PATH`, `LIBRARY_PATH`, `COMPILER_PATH` and
+`GCC_EXEC_PREFIX`). For GCC/Clang, the driver-selected `ld` path and bytes are
+fingerprinted as well as the driver itself, including linkers selected by `-B`,
+`-fuse-ld` and native-file linker overrides.
+Use a fresh directory when changing profile or native file.
 
 ## Testing and gates
 

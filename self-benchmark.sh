@@ -2,7 +2,7 @@
 
 benchmark_source_root=$PWD
 benchmark_build_root=${BENCHMARK_BUILD_ROOT:-.}
-benchmark_log_root=$PWD/_bm-logs
+benchmark_log_root=${BENCHMARK_LOG_ROOT:-$PWD/_bm-logs}
 mkdir -p "$benchmark_build_root" "$benchmark_log_root"
 
 BENCHMARK_SUITE=ab/syntcomp21/crit
@@ -24,6 +24,7 @@ declare -A tool_descriptions
 declare -A tool_envs
 declare -A tool_suite_prefixes
 config_helper=${ACACIA_CONFIG_HELPER:-./scripts/acacia-config.py}
+build_helper=$benchmark_source_root/scripts/acacia-build.py
 for name in ${(f)"$(python3 "$config_helper" list-presets)"}; do
     config_kinds[$name]="acacia"
     meson_confs[$name]="$(python3 "$config_helper" meson-args "$name")"
@@ -40,7 +41,8 @@ force=false
 justtest=false
 native_file=
 donot=()
-conflist=(${(k)config_kinds})
+conflist=(${(f)"$(python3 "$config_helper" list-presets --unique)"}
+          ${(f)"$(python3 "$config_helper" list-tools)"})
 benchsuites=(--suite=$BENCHMARK_SUITE)
 meson_slice=()
 
@@ -48,7 +50,7 @@ if (( $# == 0 )); then
   secs=10
 
   cat <<EOF
-No option given; this will build, compile, and benchmark ${#config_kinds} different configurations.
+No option given; this will build, compile, and benchmark ${#conflist} different configurations.
 To build/compile/benchmark with default (debug) options, run:
 
   $ meson setup build
@@ -91,6 +93,7 @@ Environment:
   BENCHMARK_CGROUP_SWAP_MAX=MEMORY       systemd MemorySwapMax value (default: 0).
   BENCHMARK_COMPILE_PROFILE=normal|lowmem|checked
   BENCHMARK_BUILD_ROOT=DIR              Build directory parent (default: .).
+  BENCHMARK_LOG_ROOT=DIR                Log directory (default: ./_bm-logs).
   BENCHMARK_COMPILE_JOBS=N               Meson compile parallelism (default: 1).
   BENCHMARK_TEST_JOBS=N                  Meson benchmark/test parallelism (default: 1).
 EOF
@@ -116,15 +119,14 @@ EOF
 done
 
 ## If we're just testing, go for a fast compilation.
-setup_args=(--buildtype=release -Doptimization=3 -Db_lto=true -Ddebug=false -Db_ndebug=true -Dacacia_compiler_profile=release)
+build_profile=$BENCHMARK_COMPILE_PROFILE
 if $justtest; then
-    setup_args=()
+    [[ $build_profile == normal ]] && build_profile=debug
     echo "Using Meson default debug profile for faster compile-to-test times"
 fi
 case $BENCHMARK_COMPILE_PROFILE in
     normal) ;;
     lowmem)
-        setup_args=(--buildtype=plain -Doptimization=0 -Ddebug=false -Db_lto=false -Db_ndebug=true -Dacacia_compiler_profile=lowmem)
         compile_args=(-j "$BENCHMARK_COMPILE_JOBS")
         echo "Using low-memory Meson compile profile, compile jobs $BENCHMARK_COMPILE_JOBS"
         ;;
@@ -135,7 +137,6 @@ case $BENCHMARK_COMPILE_PROFILE in
         ## so none of -Ofast/-march=native/-DNDEBUG/-DNO_VERBOSE is added: the
         ## binary is portable and still verbose. For correctness suites that are
         ## too slow to run at -O0 but must keep their assertions.
-        setup_args=(--buildtype=debugoptimized -Ddebug=false -Db_lto=false -Dacacia_compiler_profile=debug)
         echo "Using checked Meson compile profile (optimized, assertions kept)"
         ;;
     *)
@@ -143,6 +144,10 @@ case $BENCHMARK_COMPILE_PROFILE in
         exit 2
         ;;
 esac
+profile_args=$(python3 "$build_helper" profile-args "$build_profile") || exit 2
+setup_args=(${(z)profile_args})
+native_flag=()
+[[ -n $native_file ]] && native_flag=(--native-file "$native_file")
 if (( ${#compile_args} == 0 )); then
     compile_args=(-j "$BENCHMARK_COMPILE_JOBS")
 fi
@@ -274,8 +279,13 @@ build_config_matches() {
     local current_config
 
     [[ -e $build/.acacia-config.json ]] || return 1
-    current_config="$(python3 "$config_helper" show "$name")"
+    current_config="$(build_identity_for "$name" "$build")" || return 1
     cmp -s <(print -r -- "$current_config") $build/.acacia-config.json
+}
+
+build_identity_for() {
+    python3 "$build_helper" identity "$1" --profile "$build_profile" \
+        --build-dir "$2" $native_flag
 }
 
 benchmark_build_for() {
@@ -297,13 +307,14 @@ benchmark_build_for() {
     # Prefer the shipping build: it is the tree the current campaign has
     # reconfigured, so its generated Meson metadata includes newly added
     # suites and panels.  Older generic trees may be compiled but stale.
-    for candidate in build_best_decomp_mona build_ltlsynt build_base build_best; do
+    for name in ${(f)"$(python3 "$config_helper" list-group docker_default)"}; do
+        candidate=$benchmark_build_root/build_$name
         if is_compiled_acacia_build $candidate; then
             echo "$candidate"
             return
         fi
     done
-    for candidate in build_*(N); do
+    for candidate in $benchmark_build_root/build_*(N); do
         if is_compiled_acacia_build $candidate; then
             echo "$candidate"
             return
@@ -351,13 +362,12 @@ if ! (( $donot[(Ie)build] )); then
         build=$benchmark_build_root/build_$name
         log=$benchmark_log_root/$name.log
         rm -f $log
-        current_config="$(python3 "$config_helper" show "$name")"
         if [[ -e $build ]]; then
             if [[ ! -e $build/.acacia-config.json ]]; then
                 echo "$build exists without Acacia config metadata; remove folder to rebuild."
                 $force || exit 2
                 continue
-            elif ! cmp -s <(print -r -- "$current_config") $build/.acacia-config.json; then
+            elif ! build_config_matches "$name" "$build"; then
                 echo "$build exists with stale Acacia config metadata; remove folder to rebuild."
                 $force || exit 2
                 continue
@@ -366,9 +376,8 @@ if ! (( $donot[(Ie)build] )); then
             fi
         else
             echo -n "building $build (logfile: $log)... "
-            native_flag=()
-            [[ -n $native_file ]] && native_flag=(--native-file "$native_file")
             if meson setup $build "$benchmark_source_root" $setup_args $native_flag $meson_param &>> $log; then
+                current_config="$(build_identity_for "$name" "$build")" || exit 2
                 print -r -- "$current_config" > $build/.acacia-config.json
                 echo "done."
             else
@@ -394,6 +403,11 @@ if ! (( $donot[(Ie)compile] )); then
         fi
         build=$benchmark_build_root/build_$name
         log=$benchmark_log_root/$name.log
+        if [[ -e $build ]] && ! build_config_matches $name $build; then
+            echo "$name build config metadata is missing or stale; remove $build to rebuild"
+            $force || exit 3
+            continue
+        fi
         if [[ -e $build/compiled ]]; then
             if [[ ! -x $build/src/acacia-bonsai ]]; then
                 echo "$name has a stale compiled marker, but $build/src/acacia-bonsai is missing or not executable"
@@ -406,11 +420,6 @@ if ! (( $donot[(Ie)compile] )); then
         if ! [[ -e $build ]]; then
 	    echo "$name isn't built, skipping."
 	    continue
-        fi
-        if ! build_config_matches $name $build; then
-            echo "$name build config metadata is missing or stale; remove $build to rebuild"
-            $force || exit 3
-            continue
         fi
         cd $build
         echo -n "compiling $name (logfile: $log)... "

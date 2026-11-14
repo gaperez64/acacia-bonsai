@@ -1,6 +1,7 @@
 #include "portfolio_arm.hh"
 #include "solver/game_backend.hh"
 #include "solver/spot_lazy_worker.hh"
+#include "utils/parse_text.hh"
 #include <spot/tl/parse.hh>
 
 #include <string_view>
@@ -21,6 +22,28 @@ int main () {
   using acacia::game_backend;
   using acacia::automaton_provider;
   using acacia::candidate_mode;
+
+  std::vector<std::string> aps {"existing"};
+  acacia::append_ap_list (" \tOne, ,,O u t,\r\n,", aps);
+  acacia::append_ap_list ("", aps);
+  if (aps != std::vector<std::string> {"existing", "One", "Out"} ||
+      acacia::trim_text ("\t \r\n").size () != 0 ||
+      acacia::trim_text (" \tMi xEd\n") != "Mi xEd")
+    return 1;
+  // Bytes outside ASCII must never be passed to ctype as negative chars.
+  const std::string high_byte (1, static_cast<char> (0xff));
+  if (acacia::trim_text (" " + high_byte + " ") != high_byte)
+    return 1;
+  if (parse_portfolio_arms (" \t ").error != portfolio_arm_parse_error::empty_list ||
+      parse_portfolio_arms ("real:small:backward, \n").error !=
+          portfolio_arm_parse_error::empty_spec ||
+      parse_portfolio_arms ("Real:small:backward").error !=
+          portfolio_arm_parse_error::polarity ||
+      parse_portfolio_arms ("real:s mall:backward").error !=
+          portfolio_arm_parse_error::real_transform ||
+      parse_portfolio_arms (" \treal:small:backward \n").error !=
+          portfolio_arm_parse_error::none)
+    return 1;
 
   for (auto provider : {automaton_provider::frozen_graph, automaton_provider::spot_lazy, automaton_provider::spot_eager,
                         automaton_provider::closure_buchi, automaton_provider::closure_buchi_eager}) {

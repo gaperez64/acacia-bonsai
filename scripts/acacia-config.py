@@ -221,12 +221,27 @@ def validate_tool(presets: dict[str, Any], name: str) -> None:
 
 def fingerprint_values(values: dict[str, Any]) -> dict[str, Any]:
     # acacia_preset records build provenance. Preserve historical hash and show
-    # output (including _preset): self-benchmark.sh uses show for staleness.
+    # output (including _preset): build identities include this provenance.
     return {key: value for key, value in values.items() if key != "preset"}
 
 
 def normalized_json(values: dict[str, Any]) -> str:
     return json.dumps(fingerprint_values(values), sort_keys=True, separators=(",", ":"))
+
+
+def unique_presets(options: dict[str, Any], presets: dict[str, Any],
+                   names: list[str]) -> list[str]:
+    """Keep the first label for each compile configuration, ignoring provenance."""
+    seen = set()
+    result = []
+    for name in names:
+        values = normalize_preset(options, presets, name)
+        key = json.dumps({k: v for k, v in values.items() if k not in {"_preset", "preset"}},
+                         sort_keys=True)
+        if key not in seen:
+            seen.add(key)
+            result.append(name)
+    return result
 
 
 def stable_hash(values: dict[str, Any]) -> str:
@@ -367,6 +382,8 @@ def main() -> int:
     effort_p.add_argument("value")
     list_p = sub.add_parser("list-presets")
     list_p.add_argument("--long", action="store_true", help="include role and description")
+    list_p.add_argument("--unique", action="store_true",
+                        help="list one label per compile configuration, excluding provenance")
     sub.add_parser("list-tools")
     group_p = sub.add_parser("list-group")
     group_p.add_argument("group")
@@ -399,6 +416,8 @@ def main() -> int:
         return 0
     if args.cmd == "list-presets":
         names = sorted(presets["presets"])
+        if args.unique:
+            names = unique_presets(options, presets, names)
         if args.long:
             for name in names:
                 validate_preset_metadata(presets, name)

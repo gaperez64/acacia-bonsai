@@ -5,12 +5,18 @@ tlsf_dpa_lib = static_library ('tlsf-dpa', 'solver/parity/tlsf_dpa.cc',
 parity_route_lib = static_library ('parity-route', 'solver/parity/route.cc',
   include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
 
-closure_buchi_provider_lib = static_library (
-  'closure-buchi-provider',
-  'solver/closure_buchi_provider.cc',
-  include_directories : inc,
-  dependencies : [spot_dep, bddx_dep],
-)
+# The worker can instantiate closure rows under either demand-provider gate;
+# reference unit tests also use the provider when production gates are off.
+closure_buchi_provider_lib = []
+if get_option ('build_tests') or get_option ('acacia_spot_lazy_provider') or \
+   get_option ('acacia_spot_guarded_backend')
+  closure_buchi_provider_lib = static_library (
+    'closure-buchi-provider',
+    'solver/closure_buchi_provider.cc',
+    include_directories : inc,
+    dependencies : [spot_dep, bddx_dep],
+  )
+endif
 
 ab_sources = [
   'acacia-bonsai.cc',
