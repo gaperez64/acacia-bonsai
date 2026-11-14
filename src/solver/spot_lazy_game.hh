@@ -15,6 +15,7 @@
 #include <iomanip>
 #include <sstream>
 #include <tuple>
+#include <variant>
 
 namespace acacia::spot_lazy_game {
   namespace rows = acacia::spot_rows;
@@ -470,12 +471,28 @@ namespace acacia::spot_lazy_game {
       struct Grouped {
           std::vector<Destination> destinations;
           std::array<std::unordered_map<const Rank*, bdd>, 3> preimages;
+          // Missing destinations still memoize false thresholds, with the same
+          // tree-node charge and budget checkpoints as the scan layout.
+          std::map<std::pair<StateId, int64_t>, bdd> thresholds;
       };
-      struct Prepared {
-          std::unique_ptr<Grouped> compact;
+      struct Scan {
           std::map<StateId, std::vector<std::pair<int64_t, bdd>>> destinations;
           std::map<std::pair<StateId, int64_t>, bdd> thresholds;
           std::map<std::pair<int, std::vector<Rank::Entry>>, bdd> preimages;
+      };
+      template <typename T>
+      using PreparedTable = std::unordered_map<Rank, T>;
+      struct GroupedCache {
+          // Identities point to owned immutable ranks, never caller addresses.
+          // Rehash preserves pointers; full equality resolves collisions.
+          // All pointer-keyed memos are destroyed before these identities.
+          std::unordered_map<Rank, size_t> targets;
+          PreparedTable<std::unique_ptr<Grouped>> prepared;
+      };
+      // Borrowed for one query; neither pointer is stored in a table node.
+      struct Prepared {
+          Scan* scan = nullptr;
+          Grouped* compact = nullptr;
       };
       Reader& rows_;
       RowStore& store_;
@@ -483,12 +500,10 @@ namespace acacia::spot_lazy_game {
       letters::Oracle boundary_;
       int K_;
       const OracleLayout layout_;
-      std::unordered_map<Rank, Prepared> prepared_;
-      // Identities point to owned immutable ranks, never caller addresses.
-      // Rehash preserves these pointers; full equality resolves collisions.
-      // Counts cover all source/kind memos, so an identity can be reclaimed
-      // only after its last memo entry is erased. Thresholds name no targets.
-      std::unordered_map<Rank, size_t> target_ranks_;
+      // Select once per Oracle, so each table node stores only its layout.
+      // Retain inline scan records and one allocation per grouped record.
+      // Cached guards are destroyed before the boundary's provider/AP data.
+      std::variant<PreparedTable<Scan>, GroupedCache> cache_;
       size_t queries_ = 0, threshold_hits_ = 0, preimage_hits_ = 0;
       size_t threshold_calls_ = 0, threshold_misses_ = 0, threshold_shortcuts_ = 0;
       size_t preimage_calls_ = 0, preimage_misses_ = 0;
@@ -523,33 +538,48 @@ namespace acacia::spot_lazy_game {
           return;
         // Prepared groups stay valid, including the current query's references.
         // No memo iterator or target identity is used after this checkpoint.
-        for (auto& [rank, p] : prepared_) {
-          (void) rank;
-          p.thresholds.clear ();
-          p.preimages.clear ();
-          if (p.compact) {
-            for (auto& dest : p.compact->destinations)
-              decltype (dest.thresholds) {}.swap (dest.thresholds);
-            for (auto& memo : p.compact->preimages)
-              decltype (p.compact->preimages)::value_type {}.swap (memo);
+        if (auto* scan = std::get_if<PreparedTable<Scan>> (&cache_)) {
+          for (auto& [rank, p] : *scan) {
+            (void) rank;
+            p.thresholds.clear ();
+            p.preimages.clear ();
           }
         }
-        decltype (target_ranks_) {}.swap (target_ranks_);
+        else {
+          auto& grouped = std::get<GroupedCache> (cache_);
+          for (auto& [rank, p] : grouped.prepared) {
+            (void) rank;
+            p->thresholds.clear ();
+            for (auto& dest : p->destinations)
+              decltype (dest.thresholds) {}.swap (dest.thresholds);
+            for (auto& memo : p->preimages)
+              decltype (p->preimages)::value_type {}.swap (memo);
+          }
+          decltype (grouped.targets) {}.swap (grouped.targets);
+        }
         memo_bytes_ = 0;
         ++cache_evictions_;
       }
-      Prepared& prepare (const Rank& r, letters::detail::Letters& b) {
+      Prepared prepare (const Rank& r, letters::detail::Letters& b) {
         used_rank_ = true;
         (void) r.is_safe (K_);
-        if (auto it = prepared_.find (r); it != prepared_.end ())
-          return it->second;
+        if (layout_ == OracleLayout::scan) {
+          auto& table = std::get<PreparedTable<Scan>> (cache_);
+          if (auto it = table.find (r); it != table.end ())
+            return {&it->second, nullptr};
+        }
+        else {
+          auto& table = std::get<GroupedCache> (cache_).prepared;
+          if (auto it = table.find (r); it != table.end ())
+            return {nullptr, it->second.get ()};
+        }
         std::vector<std::pair<int, const rows::CompleteRankRow*>> active;
         for (auto [q, value] : r.entries ()) {
           b.step ();
           active.emplace_back (value, &rows_.row (q));
         }
-        Prepared p;
         if (layout_ == OracleLayout::scan) {
+          Scan p;
           for (auto [value, row] : active)
             for (const auto& e : row->edges) {
               b.step ();
@@ -561,9 +591,11 @@ namespace acacia::spot_lazy_game {
                 ++prepared_levels_;
               }
             }
+          auto& table = std::get<PreparedTable<Scan>> (cache_);
+          return {&table.emplace (r, std::move (p)).first->second, nullptr};
         }
         else {
-          p.compact = std::make_unique<Grouped> ();
+          auto p = std::make_unique<Grouped> ();
           struct Contribution {
               StateId coordinate;
               int64_t level;
@@ -583,10 +615,10 @@ namespace acacia::spot_lazy_game {
           });
           for (const auto& e : edges) {
             b.step ();
-            if (p.compact->destinations.empty () ||
-                p.compact->destinations.back ().coordinate != e.coordinate)
-              p.compact->destinations.push_back ({e.coordinate, {}, {}});
-            auto& levels = p.compact->destinations.back ().levels;
+            if (p->destinations.empty () ||
+                p->destinations.back ().coordinate != e.coordinate)
+              p->destinations.push_back ({e.coordinate, {}, {}});
+            auto& levels = p->destinations.back ().levels;
             if (!levels.empty () && levels.back ().first == e.level)
               levels.back ().second = b.lor (levels.back ().second, e.guard);
             else {
@@ -596,10 +628,11 @@ namespace acacia::spot_lazy_game {
             }
           }
           b.step ();
+          auto& table = std::get<GroupedCache> (cache_).prepared;
+          return {nullptr, table.emplace (r, std::move (p)).first->second.get ()};
         }
-        return prepared_.emplace (r, std::move (p)).first->second;
       }
-      bdd threshold (Prepared& p, StateId q, int64_t h, letters::detail::Letters& b) {
+      bdd threshold (Prepared p, StateId q, int64_t h, letters::detail::Letters& b) {
         if (store_.report.sink)
           ++threshold_calls_;
         b.step ();
@@ -618,15 +651,16 @@ namespace acacia::spot_lazy_game {
               p.compact->destinations.begin (), p.compact->destinations.end (), q,
               [] (const Destination& d, StateId id) { return d.coordinate < id; });
           if (dest == p.compact->destinations.end () || dest->coordinate != q) {
-            if (const auto cached = p.thresholds.find ({q, h}); cached != p.thresholds.end ()) {
+            auto& thresholds = p.compact->thresholds;
+            if (const auto cached = thresholds.find ({q, h}); cached != thresholds.end ()) {
               ++threshold_hits_;
               return cached->second;
             }
             if (store_.report.sink)
               ++threshold_misses_;
             observe_nodes (bddfalse, b);
-            p.thresholds.emplace (std::make_pair (q, h), bddfalse);
-            memo_bytes_ += sizeof (decltype (p.thresholds)::value_type) + tree_links;
+            thresholds.emplace (std::make_pair (q, h), bddfalse);
+            memo_bytes_ += sizeof (std::decay_t<decltype (thresholds)>::value_type) + tree_links;
             enforce_memo_budget ();
             return bddfalse;
           }
@@ -658,14 +692,14 @@ namespace acacia::spot_lazy_game {
           enforce_memo_budget ();
           return result;
         }
-        if (auto it = p.thresholds.find ({q, h}); it != p.thresholds.end ()) {
+        if (auto it = p.scan->thresholds.find ({q, h}); it != p.scan->thresholds.end ()) {
           ++threshold_hits_;
           return it->second;
         }
         if (store_.report.sink)
           ++threshold_misses_;
         bdd result = bddfalse;
-        if (auto it = p.destinations.find (q); it != p.destinations.end ())
+        if (auto it = p.scan->destinations.find (q); it != p.scan->destinations.end ())
           for (const auto& [level, guard] : it->second) {
             b.step ();
             if (store_.report.sink)
@@ -674,19 +708,20 @@ namespace acacia::spot_lazy_game {
               result = b.lor (result, guard);
           }
         observe_nodes (result, b);
-        p.thresholds.emplace (std::make_pair (q, h), result);
-        memo_bytes_ += sizeof (decltype (p.thresholds)::value_type) + tree_links;
+        p.scan->thresholds.emplace (std::make_pair (q, h), result);
+        memo_bytes_ += sizeof (decltype (p.scan->thresholds)::value_type) + tree_links;
         enforce_memo_budget ();
         return result;
       }
       // kind: 0 upward, 1 downward, 2 equality (P3's exact same boundaries).
-      bdd preimage (Prepared& p, const Rank& target, int kind, letters::detail::Letters& b) {
+      bdd preimage (Prepared p, const Rank& target, int kind, letters::detail::Letters& b) {
         if (store_.report.sink)
           ++preimage_calls_;
         (void) target.is_safe (K_);
         if (layout_ == OracleLayout::grouped) {
+          auto& target_ranks = std::get<GroupedCache> (cache_).targets;
           auto& memo = p.compact->preimages.at (kind);
-          if (const auto identity = target_ranks_.find (target); identity != target_ranks_.end ())
+          if (const auto identity = target_ranks.find (target); identity != target_ranks.end ())
             if (const auto found = memo.find (&identity->first); found != memo.end ()) {
               ++preimage_hits_;
               return found->second;
@@ -727,12 +762,12 @@ namespace acacia::spot_lazy_game {
           observe_nodes (result, b);
           // Threshold publication can evict all identities. Intern only after
           // computation, and never keep an iterator across a budget checkpoint.
-          auto identity = target_ranks_.find (target);
-          if (identity == target_ranks_.end ()) {
-            const auto old_buckets = buckets (target_ranks_);
-            identity = target_ranks_.emplace (target, 0).first;
+          auto identity = target_ranks.find (target);
+          if (identity == target_ranks.end ()) {
+            const auto old_buckets = buckets (target_ranks);
+            identity = target_ranks.emplace (target, 0).first;
             memo_bytes_ +=
-                identity_bytes (identity->first) + buckets (target_ranks_) - old_buckets;
+                identity_bytes (identity->first) + buckets (target_ranks) - old_buckets;
             if (store_.report.sink)
               ++target_intern_misses_;
           }
@@ -747,7 +782,7 @@ namespace acacia::spot_lazy_game {
         if (store_.report.sink)
           preimage_key_entries_copied_ += target.entries ().size ();
         const auto key = std::make_pair (kind, target.entries ());
-        if (auto it = p.preimages.find (key); it != p.preimages.end ()) {
+        if (auto it = p.scan->preimages.find (key); it != p.scan->preimages.end ()) {
           ++preimage_hits_;
           return it->second;
         }
@@ -760,7 +795,7 @@ namespace acacia::spot_lazy_game {
           coordinates.insert (q);
         }
         if (kind != 0)
-          for (const auto& [q, edges] : p.destinations) {
+          for (const auto& [q, edges] : p.scan->destinations) {
             (void) edges;
             b.step ();
             coordinates.insert (q);
@@ -780,22 +815,22 @@ namespace acacia::spot_lazy_game {
           result = b.land (result, term);
         }
         observe_nodes (result, b);
-        const auto entry = p.preimages.emplace (key, result).first;
-        memo_bytes_ += sizeof (decltype (p.preimages)::value_type) + tree_links +
+        const auto entry = p.scan->preimages.emplace (key, result).first;
+        memo_bytes_ += sizeof (decltype (p.scan->preimages)::value_type) + tree_links +
                        entry->first.second.capacity () * sizeof (Rank::Entry);
         enforce_memo_budget ();
         return result;
       }
       bdd aggregate (const Rank& r, const std::vector<Rank>& targets, bool bad,
                      letters::detail::Letters& b) {
-        auto& p = prepare (r, b);
+        auto p = prepare (r, b);
         bdd result = bddfalse;
         if (bad && layout_ == OracleLayout::grouped)
           for (const auto& dest : p.compact->destinations)
             result = b.lor (result, threshold (p, dest.coordinate,
                                                rows_.safe_cap (dest.coordinate, K_) + 1, b));
         if (bad && layout_ == OracleLayout::scan)
-          for (const auto& [q, edges] : p.destinations) {
+          for (const auto& [q, edges] : p.scan->destinations) {
             (void) edges;
             result = b.lor (result, threshold (p, q, rows_.safe_cap (q, K_) + 1, b));
           }
@@ -816,11 +851,19 @@ namespace acacia::spot_lazy_game {
           boundary_ (store.cache, std::move (a), K),
           K_ (K),
           layout_ (layout),
-          memo_budget_ (memo_budget) {}
+          memo_budget_ (memo_budget) {
+        if (layout_ == OracleLayout::grouped)
+          cache_.emplace<GroupedCache> ();
+      }
       void release_caches () {
         // Destroy pointer-keyed preimages before their owned target ranks.
-        decltype (prepared_) {}.swap (prepared_);
-        decltype (target_ranks_) {}.swap (target_ranks_);
+        if (auto* scan = std::get_if<PreparedTable<Scan>> (&cache_))
+          PreparedTable<Scan> {}.swap (*scan);
+        else {
+          auto& grouped = std::get<GroupedCache> (cache_);
+          decltype (grouped.prepared) {}.swap (grouped.prepared);
+          decltype (grouped.targets) {}.swap (grouped.targets);
+        }
         memo_bytes_ = 0;
       }
       void set_limits (letters::QueryLimits l) { boundary_.set_limits (l); }
@@ -880,17 +923,20 @@ namespace acacia::spot_lazy_game {
       letters::Result<Rank> evaluate (const Rank& r, bdd valuation) {
         return query<Rank> ([&] (auto& b) {
           (void) b.restrict_total (bddtrue, valuation, Variables::all);
-          auto& p = prepare (r, b);
+          auto p = prepare (r, b);
           std::vector<Rank::Entry> result;
-          if (layout_ == OracleLayout::grouped)
+          if (layout_ == OracleLayout::grouped) {
             for (const auto& dest : p.compact->destinations)
               for (const auto& [level, guard] : dest.levels)
                 if (b.land (valuation, guard) != bddfalse)
                   result.emplace_back (dest.coordinate, int32_t (std::min (int64_t (K_), level)));
-          for (const auto& [q, edges] : p.destinations)
-            for (const auto& [level, guard] : edges)
-              if (b.land (valuation, guard) != bddfalse)
-                result.emplace_back (q, int32_t (std::min (int64_t (K_), level)));
+          }
+          else {
+            for (const auto& [q, edges] : p.scan->destinations)
+              for (const auto& [level, guard] : edges)
+                if (b.land (valuation, guard) != bddfalse)
+                  result.emplace_back (q, int32_t (std::min (int64_t (K_), level)));
+          }
           return Rank {std::move (result), K_};
         });
       }
@@ -910,33 +956,40 @@ namespace acacia::spot_lazy_game {
       }
       size_t storage_bytes_estimate () const {
         size_t bytes = sizeof (*this);
-        for (const auto& [rank, p] : prepared_) {
-          bytes += rank_bytes (rank) + sizeof (Prepared);
-          for (const auto& [q, entries] : p.destinations) {
-            (void) q;
-            bytes += sizeof (entries) +
-                     entries.capacity () * sizeof (std::decay_t<decltype (entries)>::value_type);
+        if (const auto* scan = std::get_if<PreparedTable<Scan>> (&cache_)) {
+          for (const auto& [rank, p] : *scan) {
+            bytes += rank_bytes (rank) + sizeof (Scan);
+            for (const auto& [q, entries] : p.destinations) {
+              (void) q;
+              bytes += sizeof (entries) +
+                       entries.capacity () * sizeof (std::decay_t<decltype (entries)>::value_type);
+            }
+            bytes += p.thresholds.size () * sizeof (decltype (p.thresholds)::value_type);
+            for (const auto& [key, predicate] : p.preimages) {
+              (void) predicate;
+              bytes += sizeof (key) + sizeof (bdd) + key.second.capacity () * sizeof (Rank::Entry);
+            }
           }
-          if (p.compact) {
-            bytes += sizeof (Grouped) + p.compact->destinations.capacity () * sizeof (Destination);
-            for (const auto& dest : p.compact->destinations)
+        }
+        else {
+          const auto& grouped = std::get<GroupedCache> (cache_);
+          for (const auto& [rank, p] : grouped.prepared) {
+            bytes += rank_bytes (rank) + sizeof (p) + sizeof (Grouped) +
+                     p->destinations.capacity () * sizeof (Destination);
+            for (const auto& dest : p->destinations)
               bytes +=
                   (dest.levels.capacity () + dest.thresholds.capacity ()) * sizeof (LevelGuard);
-            for (const auto& memo : p.compact->preimages)
+            for (const auto& memo : p->preimages)
               bytes += memo.size () * sizeof (std::decay_t<decltype (memo)>::value_type) +
                        memo.bucket_count () * sizeof (void*);
+            bytes += p->thresholds.size () * sizeof (decltype (p->thresholds)::value_type);
           }
-          bytes += p.thresholds.size () * sizeof (decltype (p.thresholds)::value_type);
-          for (const auto& [key, predicate] : p.preimages) {
-            (void) predicate;
-            bytes += sizeof (key) + sizeof (bdd) + key.second.capacity () * sizeof (Rank::Entry);
+          for (const auto& [rank, id] : grouped.targets) {
+            (void) id;
+            bytes += rank_bytes (rank) + sizeof (size_t);
           }
+          bytes += grouped.targets.bucket_count () * sizeof (void*);
         }
-        for (const auto& [rank, id] : target_ranks_) {
-          (void) id;
-          bytes += rank_bytes (rank) + sizeof (size_t);
-        }
-        bytes += target_ranks_.bucket_count () * sizeof (void*);
         return bytes;
       }
       void report (Reporter out, const std::string& prefix) const {
@@ -961,29 +1014,37 @@ namespace acacia::spot_lazy_game {
         out.count (prefix + "preimage_misses", preimage_misses_);
         out.count (prefix + "threshold_hits", threshold_hits_);
         out.count (prefix + "preimage_hits", preimage_hits_);
-        size_t bytes = 0, thresholds = 0, preimages = 0;
-        for (const auto& [rank, p] : prepared_) {
-          bytes += rank_bytes (rank);
-          thresholds += p.thresholds.size ();
-          preimages += p.preimages.size ();
-          if (p.compact) {
-            for (const auto& dest : p.compact->destinations)
-              thresholds += dest.thresholds.size ();
-            for (const auto& memo : p.compact->preimages)
-              preimages += memo.size ();
-          }
-          for (const auto& [key, predicate] : p.preimages) {
-            (void) predicate;
-            bytes += sizeof (key.second) + key.second.capacity () * sizeof (Rank::Entry);
+        size_t bytes = 0, thresholds = 0, preimages = 0, targets = 0;
+        if (const auto* scan = std::get_if<PreparedTable<Scan>> (&cache_)) {
+          for (const auto& [rank, p] : *scan) {
+            bytes += rank_bytes (rank);
+            thresholds += p.thresholds.size ();
+            preimages += p.preimages.size ();
+            for (const auto& [key, predicate] : p.preimages) {
+              (void) predicate;
+              bytes += sizeof (key.second) + key.second.capacity () * sizeof (Rank::Entry);
+            }
           }
         }
-        for (const auto& [rank, id] : target_ranks_) {
-          (void) id;
-          bytes += rank_bytes (rank);
+        else {
+          const auto& grouped = std::get<GroupedCache> (cache_);
+          for (const auto& [rank, p] : grouped.prepared) {
+            bytes += rank_bytes (rank);
+            thresholds += p->thresholds.size ();
+            for (const auto& dest : p->destinations)
+              thresholds += dest.thresholds.size ();
+            for (const auto& memo : p->preimages)
+              preimages += memo.size ();
+          }
+          for (const auto& [rank, id] : grouped.targets) {
+            (void) id;
+            bytes += rank_bytes (rank);
+          }
+          targets = grouped.targets.size ();
         }
         out.count (prefix + "cached_thresholds", thresholds);
         out.count (prefix + "cached_preimages", preimages);
-        out.count (prefix + "interned_targets", target_ranks_.size ());
+        out.count (prefix + "interned_targets", targets);
         out.count (prefix + "cache_rank_bytes", bytes);
         out.count (prefix + "cache_evictions", cache_evictions_);
         out.count (prefix + "oracle_memo_bytes_estimate", memo_bytes_);
