@@ -101,5 +101,4 @@ struct portfolio_arm_parse_result {
     std::string value;
 };
 
-std::string trim_portfolio_arm_value (std::string_view value);
 portfolio_arm_parse_result parse_portfolio_arms (std::string_view arg);

@@ -1,6 +1,7 @@
 #include "arg_parser.hh"
 
 #include "phase_records.hh"
+#include "utils/parse_text.hh"
 
 #include <charconv>
 #include <cmath>
@@ -14,14 +15,7 @@
  */
 void process_arg_input (const std::string& arg, arg_parse_result& result) {
   result.inputs_specified = true;
-  // very simple, we just split on comma "," and add every thing to the vector of inputs
-  std::istringstream props (arg);
-  std::string prop;
-  while (std::getline (props, prop, ',')) {
-    prop.erase (std::remove_if (prop.begin (), prop.end (), isspace), prop.end ());
-    if (not prop.empty ())
-      result.objective.inputs.push_back (prop);
-  }
+  acacia::append_ap_list (arg, result.objective.inputs);
 }
 
 /**
@@ -32,14 +26,7 @@ void process_arg_input (const std::string& arg, arg_parse_result& result) {
  */
 void process_arg_output (const std::string& arg, arg_parse_result& result) {
   result.outputs_specified = true;
-  // very simple, we just split on comma "," and add every thing to the vector of outputs
-  std::istringstream props (arg);
-  std::string prop;
-  while (std::getline (props, prop, ',')) {
-    prop.erase (std::remove_if (prop.begin (), prop.end (), isspace), prop.end ());
-    if (not prop.empty ())
-      result.objective.outputs.push_back (prop);
-  }
+  acacia::append_ap_list (arg, result.objective.outputs);
 }
 
 /**
@@ -176,14 +163,9 @@ std::vector<Strategy> process_strategy_list (const std::string& arg, const char*
   std::istringstream values (arg);
   std::string value;
   while (std::getline (values, value, ',')) {
-    const auto first = std::find_if_not (value.begin (), value.end (),
-                                         [] (unsigned char c) { return std::isspace (c); });
-    const auto last = std::find_if_not (value.rbegin (), value.rend (), [] (unsigned char c) {
-                        return std::isspace (c);
-                      }).base ();
-    if (first >= last)
+    value = acacia::trim_text (value);
+    if (value.empty ())
       error (EXIT_CODE_ERROR, "Error: empty strategy in -%s list.\n", option);
-    value = std::string (first, last);
     add_value (value, strategies);
   }
   if (strategies.empty () or arg.back () == ',')
@@ -214,12 +196,7 @@ void process_arg_real (const std::string& arg, arg_parse_result& result) {
 }
 
 void process_arg_unreal_translation_pref (const std::string& arg, arg_parse_result& result) {
-  const auto first = std::find_if_not (arg.begin (), arg.end (),
-                                       [] (unsigned char c) { return std::isspace (c); });
-  const auto last = std::find_if_not (arg.rbegin (), arg.rend (), [] (unsigned char c) {
-                      return std::isspace (c);
-                    }).base ();
-  const std::string value = first < last ? std::string (first, last) : std::string {};
+  const std::string value = acacia::trim_text (arg);
   if (case_insensitive_equals (value, "small"))
     result.primary_translation_pref = spot::postprocessor::Small;
   else if (case_insensitive_equals (value, "any"))
@@ -246,7 +223,7 @@ void process_arg_unreal (const std::string& arg, arg_parse_result& result) {
       });
 }
 
-std::vector<TRANSLATION_PREF_T> default_real_strategies () { return {ACACIA_TRANSLATION_PREFS}; }
+std::vector<TRANSLATION_PREF_T> default_real_strategies () { return {ACACIA_TRANSLATION_PREF}; }
 
 std::vector<UNREAL_X_T> default_unreal_strategies () {
   return {UNREAL_X_FORMULA, UNREAL_X_AUTOMATON};

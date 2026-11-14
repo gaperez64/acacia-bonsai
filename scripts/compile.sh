@@ -28,21 +28,40 @@ meson_args_for_config() {
     python3 scripts/acacia-config.py meson-args "$name"
 }
 
+profile_args=$(python3 scripts/acacia-build.py profile-args normal)
+read -r -a setup_args <<< "$profile_args"
+
+build_identity_for() {
+    python3 scripts/acacia-build.py identity "$1" --profile normal --build-dir "$2"
+}
+
 for name in "${CONFIG_NAMES[@]}"; do
     build="build_$name"
     if [ -d "$build" ]; then
-        echo "$build already exists, skipping (remove to rebuild)."
-        continue
-    fi
-    if ! meson_args=$(meson_args_for_config "$name"); then
-        failures+=("$name (configuration arguments)")
-        continue
-    fi
-    echo "Building $name..."
-    if ! meson setup "$build" --buildtype=release -Doptimization=3 -Db_lto=true -Ddebug=false -Db_ndebug=true -Dacacia_compiler_profile=release $meson_args; then
-        failures+=("$name (Meson setup)")
-        rm -rf "$build"  # so a rerun retries instead of skipping it
-        continue
+        if ! identity=$(build_identity_for "$name" "$build") || \
+           ! cmp -s <(printf '%s\n' "$identity") "$build/.acacia-config.json"; then
+            echo "$build has missing or stale build identity; remove to rebuild." >&2
+            failures+=("$name (build identity)")
+            continue
+        fi
+        echo "$build has matching build identity."
+    else
+        if ! meson_args=$(meson_args_for_config "$name"); then
+            failures+=("$name (configuration arguments)")
+            continue
+        fi
+        read -r -a preset_args <<< "$meson_args"
+        echo "Building $name..."
+        if ! meson setup "$build" "${setup_args[@]}" "${preset_args[@]}"; then
+            failures+=("$name (Meson setup)")
+            rm -rf "$build"  # so a rerun retries instead of skipping it
+            continue
+        fi
+        if ! identity=$(build_identity_for "$name" "$build"); then
+            failures+=("$name (build identity)")
+            continue
+        fi
+        printf '%s\n' "$identity" > "$build/.acacia-config.json"
     fi
     if ! meson compile -C "$build"; then
         failures+=("$name (Meson compile)")

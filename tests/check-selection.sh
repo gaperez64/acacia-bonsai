@@ -57,10 +57,14 @@ run_case default 0 "$default_children" ''
 run_case race_both 0 4 '' -r small,any -u both
 run_case race_real_only 0 2 '' -r small,any
 run_case any_real_only 0 1 "[real=any,backend=$default_backend]" -r any
+run_case trimmed_mixed_case_real 0 2 '' -r $' \tSmAlL , ANY\n'
 run_case automaton_unreal_only 2 1 \
   "[unreal=automaton,pref=small,backend=$default_backend]" -u automaton
 run_case formula_unreal_only 2 1 \
   "[unreal=formula,pref=small,backend=$default_backend]" -u formula
+run_case trimmed_mixed_case_unreal 2 1 \
+  "[unreal=formula,pref=any,backend=$default_backend]" \
+  -u $' \tFoRmUlA\n' --unreal-translation-pref $' \tAnY\n'
 
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
@@ -73,6 +77,12 @@ fi
 
 run_error deterministic_is_not_runtime_strategy 'unexpected realizability strategy' -r deterministic
 run_error trailing_comma_is_not_a_strategy 'empty strategy in -r list' -r small,
+run_error empty_real_list 'empty strategy in -r list' -r ''
+run_error whitespace_real_list 'empty strategy in -r list' -r $' \t\n'
+run_error empty_middle_strategy 'empty strategy in -r list' -r 'small, ,any'
+run_error empty_unreal_list 'empty strategy in -u list' -u ''
+run_error empty_unreal_preference 'unexpected unreal translation preference' \
+  --unreal-translation-pref $' \t\n'
 run_error embedded_whitespace_is_not_ignored 'unexpected realizability strategy' -r 's mall'
 run_error legacy_bare_real_flag 'option requires an argument' -r
 run_error removed_unreal_only_flag 'invalid option' -U

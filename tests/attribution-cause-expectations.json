@@ -7,10 +7,6 @@
     "cause": "worker_stopped",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
   },
-  "src/native_support.cc | native_arm_diagnostic | status | stage | message | 0": {
-    "cause": "category",
-    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
-  },
   "src/native_support.cc | native_arm_diagnostic | errno | \"memory\" | \"could not read address-space cap\" | 0": {
     "cause": "error",
     "telemetry": "STOPPED/error"
@@ -27,43 +23,43 @@
     "cause": "native_proof_sidecars",
     "telemetry": "STOPPED/error"
   },
-  "src/native_gr1_arm.cc | native_diagnostic | pipeline_error.status | pipeline_error.stage | pipeline_error.message | 0": {
+  "src/native_gr1_arm.cc | native_arm_diagnostic | pipeline_error.status | pipeline_error.stage | pipeline_error.message | 0": {
     "cause": "native_failure (pipeline_error.status)",
     "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
   },
-  "src/native_gr1_arm.cc | native_diagnostic | -1 | \"source\" | \"snapshot hash mismatch\" | 0": {
+  "src/native_gr1_arm.cc | native_arm_diagnostic | -1 | \"source\" | \"snapshot hash mismatch\" | 0": {
     "cause": "error",
     "telemetry": "STOPPED/error"
   },
-  "src/native_gr1_arm.cc | native_diagnostic | reduced | reduction_error.stage | native_budget_message (reduction_error.stage, reduction_error.message, work) | 0": {
+  "src/native_gr1_arm.cc | native_arm_diagnostic | reduced | reduction_error.stage | native_budget_message (reduction_error.stage, reduction_error.message, work) | 0": {
     "cause": "native_failure (reduction_cause)",
     "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
   },
-  "src/native_gr1_arm.cc | native_diagnostic | -1 | \"reduction\" | \"missing exact game\" | 0": {
+  "src/native_gr1_arm.cc | native_arm_diagnostic | -1 | \"reduction\" | \"missing exact game\" | 0": {
     "cause": "error",
     "telemetry": "STOPPED/error"
   },
-  "src/native_gr1_arm.cc | native_diagnostic | -1 | \"reduction\" | \"source or game hash mismatch\" | 0": {
+  "src/native_gr1_arm.cc | native_arm_diagnostic | -1 | \"reduction\" | \"source or game hash mismatch\" | 0": {
     "cause": "error",
     "telemetry": "STOPPED/error"
   },
-  "src/native_gr1_arm.cc | native_diagnostic | int (failure.kind) | \"solve\" | certificate.failed ? certificate.error : \"solver gave no decision\" | 0": {
+  "src/native_gr1_arm.cc | native_arm_diagnostic | int (failure.kind) | \"solve\" | certificate.failed ? certificate.error : \"solver gave no decision\" | 0": {
     "cause": "native_failure (failure.kind)",
     "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
   },
-  "src/native_gr1_arm.cc | native_diagnostic | 0 | \"polarity\" | \"opposite side solved\" | 0": {
+  "src/native_gr1_arm.cc | native_arm_diagnostic | 0 | \"polarity\" | \"opposite side solved\" | 0": {
     "cause": "native_failure_category::decline",
     "telemetry": "DECLINE/applicability"
   },
-  "src/native_gr1_arm.cc | native_diagnostic | -1 | \"certificate\" | \"certificate or policy missing\" | 0": {
+  "src/native_gr1_arm.cc | native_arm_diagnostic | -1 | \"certificate\" | \"certificate or policy missing\" | 0": {
     "cause": "error",
     "telemetry": "STOPPED/error"
   },
-  "src/native_gr1_arm.cc | native_diagnostic | -1 | \"metadata\" | \"proof side or semantics mismatch\" | 0": {
+  "src/native_gr1_arm.cc | native_arm_diagnostic | -1 | \"metadata\" | \"proof side or semantics mismatch\" | 0": {
     "cause": "error",
     "telemetry": "STOPPED/error"
   },
-  "src/native_gr1_arm.cc | native_diagnostic | status == TLSF_GR1_CHECK_OK ? int (checked.value.verdict) : int (status) | checked.value.stage[0] ? checked.value.stage : \"check\" | checked.value.message[0] ? checked.value.message : \"proof not verified\" | 0": {
+  "src/native_gr1_arm.cc | native_arm_diagnostic | status == TLSF_GR1_CHECK_OK ? int (checked.value.verdict) : int (status) | checked.value.stage[0] ? checked.value.stage : \"check\" | checked.value.message[0] ? checked.value.message : \"proof not verified\" | 0": {
     "cause": "native_failure (status, checked.value.verdict)",
     "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
   },

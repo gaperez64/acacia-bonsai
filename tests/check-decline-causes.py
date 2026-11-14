@@ -71,7 +71,7 @@ def origins() -> list[dict[str, str | int]]:
     """Enumerate origins as well as boolean validator checks below status adapters."""
     rows = []
     calls = (r"\b(decline|Declined|Failure|ResourceLimit|fail|pipeline_status|pipeline_error|"
-             r"oxidd_record_failure|check_failure|native_diagnostic|native_arm_diagnostic|"
+             r"oxidd_record_failure|check_failure|native_arm_diagnostic|"
              r"worker_decline|worker_stopped|require)\s*\(")
     for name in SOURCES:
         source = (ROOT / name).read_text()
@@ -98,7 +98,7 @@ def origins() -> list[dict[str, str | int]]:
                 legacy, stage = "DECLINED", "provider"
             elif call == "ResourceLimit":
                 cause, message, legacy, stage = "resource", args[-1], "UNKNOWN", "provider"
-            elif call in {"native_diagnostic", "native_arm_diagnostic"}:
+            elif call == "native_arm_diagnostic":
                 if len(args) < 4:
                     continue
                 stage, legacy, message = args[1:4]

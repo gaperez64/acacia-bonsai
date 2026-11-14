@@ -1,19 +1,10 @@
 #include "portfolio_arm.hh"
+#include "utils/parse_text.hh"
 #include <ranges>
-
-std::string trim_portfolio_arm_value (std::string_view value) {
-  const auto first = std::find_if_not (
-      value.begin (), value.end (), [] (unsigned char c) { return std::isspace (c); });
-  const auto last = std::find_if_not (
-                        value.rbegin (), value.rend (),
-                        [] (unsigned char c) { return std::isspace (c); })
-                        .base ();
-  return first < last ? std::string (first, last) : std::string {};
-}
 
 portfolio_arm_parse_result parse_portfolio_arms (std::string_view arg) {
   portfolio_arm_parse_result result;
-  if (trim_portfolio_arm_value (arg).empty ()) {
+  if (acacia::trim_text (arg).empty ()) {
     result.error = portfolio_arm_parse_error::empty_list;
     return result;
   }
@@ -21,7 +12,7 @@ portfolio_arm_parse_result parse_portfolio_arms (std::string_view arg) {
   size_t start = 0;
   while (start <= arg.size ()) {
     const size_t comma = arg.find (',', start);
-    const std::string spec = trim_portfolio_arm_value (
+    const std::string spec = acacia::trim_text (
         arg.substr (start, comma == std::string_view::npos ? comma : comma - start));
     if (spec.empty ()) {
       result.error = portfolio_arm_parse_error::empty_spec;

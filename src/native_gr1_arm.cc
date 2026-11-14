@@ -64,14 +64,14 @@ namespace acacia {
                                   args.tlsf_source.size (), &pipeline_options),
         tlsf_pipeline_free);
     if (!pipeline) {
-      native_diagnostic (arm, pipeline_error.stage, pipeline_error.status, pipeline_error.message,
+      native_arm_diagnostic (arm, pipeline_error.stage, pipeline_error.status, pipeline_error.message,
                          native_failure (pipeline_error.status));
       return EXIT_CODE_UNKNOWN;
     }
     pipeline_phase.finish ();
     phase_scope source_phase (arm, "source_provenance");
     if (args.tlsf_sha256 != pipeline->source_sha256) {
-      native_diagnostic (arm, "source", -1, "snapshot hash mismatch");
+      native_arm_diagnostic (arm, "source", -1, "snapshot hash mismatch");
       return EXIT_CODE_UNKNOWN;
     }
     source_phase.finish ();
@@ -102,14 +102,14 @@ namespace acacia {
         phase_finish (arm, stage.c_str (), phase_start (), -1, -1, work.formula_nodes, 0, nullptr,
                       work.monitors_completed, work.states);
       }
-      native_diagnostic (
+      native_arm_diagnostic (
           arm, reduction_error.stage, reduced,
           native_budget_message (reduction_error.stage, reduction_error.message, work),
           native_failure (reduction_cause));
       return EXIT_CODE_UNKNOWN;
     }
     if (!reduction.value.game || !reduction.value.aag || !reduction.value.aag_size) {
-      native_diagnostic (arm, "reduction", -1, "missing exact game");
+      native_arm_diagnostic (arm, "reduction", -1, "missing exact game");
       return EXIT_CODE_UNKNOWN;
     }
     native_json_doc parsed_reduction (nullptr, yyjson_doc_free);
@@ -119,7 +119,7 @@ namespace acacia {
         !native_json_field (metadata, "source_sha256", args.tlsf_sha256) ||
         !native_sha256_matches (metadata, "game_sha256", reduction.value.aag,
                                 reduction.value.aag_size)) {
-      native_diagnostic (arm, "reduction", -1, "source or game hash mismatch");
+      native_arm_diagnostic (arm, "reduction", -1, "source or game hash mismatch");
       return EXIT_CODE_UNKNOWN;
     }
     reduction_phase.finish ();
@@ -182,21 +182,21 @@ namespace acacia {
     }
     if (failure.kind != OXIDD_FAILURE_NONE || certificate.failed ||
         (!strategy && !solved_unreal)) {
-      native_diagnostic (arm, "solve", int (failure.kind),
+      native_arm_diagnostic (arm, "solve", int (failure.kind),
                          certificate.failed ? certificate.error : "solver gave no decision",
                          native_failure (failure.kind));
       return EXIT_CODE_UNKNOWN;
     }
     const bool proof_unreal = bool (solved_unreal);
     if (!both && proof_unreal != unreal) {
-      native_diagnostic (arm, "polarity", 0, "opposite side solved",
+      native_arm_diagnostic (arm, "polarity", 0, "opposite side solved",
                          native_failure_category::decline);
       return EXIT_CODE_UNKNOWN;
     }
     phase_scope proof_phase (arm, "proof_binding");
     for (size_t i = 0; i < bytes.size (); ++i) {
       if (!bytes[i] || !sizes[i]) {
-        native_diagnostic (arm, "certificate", -1, "certificate or policy missing");
+        native_arm_diagnostic (arm, "certificate", -1, "certificate or policy missing");
         return EXIT_CODE_UNKNOWN;
       }
     }
@@ -209,7 +209,7 @@ namespace acacia {
     if (!native_proof_sidecars (stable_artifacts[1].data (), stable_artifacts[1].size (),
                                 stable_artifacts[3].data (), stable_artifacts[3].size (), "exact",
                                 true, proof_unreal)) {
-      native_diagnostic (arm, "metadata", -1, "proof side or semantics mismatch");
+      native_arm_diagnostic (arm, "metadata", -1, "proof side or semantics mismatch");
       return EXIT_CODE_UNKNOWN;
     }
     const std::string stable_game (reduction.value.aag, reduction.value.aag_size);
@@ -249,7 +249,7 @@ namespace acacia {
     const TlsfGr1CheckStatus status = tlsf_gr1_check (&input, &check_options, &checked.value);
     check_phase.finish (static_cast<long long> (checked.value.peak_nodes));
     if (status != TLSF_GR1_CHECK_OK || checked.value.verdict != TLSF_GR1_CHECK_VERIFIED) {
-      native_diagnostic (arm, checked.value.stage[0] ? checked.value.stage : "check",
+      native_arm_diagnostic (arm, checked.value.stage[0] ? checked.value.stage : "check",
                          status == TLSF_GR1_CHECK_OK ? int (checked.value.verdict) : int (status),
                          checked.value.message[0] ? checked.value.message : "proof not verified",
                          native_failure (status, checked.value.verdict));

@@ -31,7 +31,8 @@ tlsf_native = subproject ('tlsf-tools', default_options : [
   'cpp_std=c++23', 'research_tools=false',
 ])
 tlsf_deps = [tlsf_native.get_variable ('tlsf_dep')]
-native_test_hooks = get_option ('buildtype') in ['debug', 'debugoptimized'] and \
+native_test_hooks = get_option ('build_tests') and \
+  get_option ('buildtype') in ['debug', 'debugoptimized'] and \
   get_option ('acacia_compiler_profile') == 'debug'
 
 compiler_profile = get_option ('acacia_compiler_profile')
@@ -83,7 +84,6 @@ translation_preferences = {
 }
 translation_preference = translation_preferences[get_option ('acacia_translation_pref')]
 build_conf.set ('ACACIA_TRANSLATION_PREF', translation_preference)
-build_conf.set ('ACACIA_TRANSLATION_PREFS', translation_preference)
 build_conf.set_quoted ('ACACIA_DEFAULT_TRANSLATION_EFFORT',
                        get_option ('acacia_default_translation_effort'))
 build_conf.set ('ACACIA_BDD_MAX_INCREASE', get_option ('acacia_bdd_max_increase'))

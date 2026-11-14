@@ -116,11 +116,6 @@ namespace acacia {
     (void) ::write (STDERR_FILENO, line.data (), line.size ());
   }
 
-  void native_diagnostic (std::string_view arm, std::string_view stage, int status,
-                          std::string_view message, native_failure_category category) {
-    native_arm_diagnostic (arm, stage, status, message, category);
-  }
-
   bool native_limit_address_space (std::string_view arm) {
 #ifdef __SANITIZE_ADDRESS__
     // ASan's shadow mapping exceeds RLIMIT_AS; cgroups still bound resident memory.

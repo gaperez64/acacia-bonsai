@@ -35,6 +35,31 @@ def test_committed_registry_is_valid():
     module.command_validate(options, presets)
 
 
+def test_unique_sweep_keeps_historical_labels_and_identities():
+    module = load_module()
+    options, presets = module.load_registry()
+    names = sorted(presets["presets"])
+    unique = module.unique_presets(options, presets, names)
+    assert len(unique) == len(names) - 2
+    vectors = set()
+    for name in unique:
+        values = module.normalize_preset(options, presets, name)
+        vector = json.dumps({k: v for k, v in values.items()
+                             if k not in {"_preset", "preset"}}, sort_keys=True)
+        assert vector not in vectors
+        vectors.add(vector)
+    for label in set(names) - set(unique):
+        values = module.normalize_preset(options, presets, label)
+        assert values["_preset"] == values["preset"] == label
+        assert f"-Dacacia_preset={label}" in module.meson_args(options, values)
+        assert json.dumps({k: v for k, v in values.items()
+                           if k not in {"_preset", "preset"}}, sort_keys=True) in vectors
+    for name in presets["groups"]["docker_default"]:
+        assert name in unique
+    for group in presets["groups"].values():
+        assert module.unique_presets(options, presets, group) == group
+
+
 @pytest.mark.parametrize("value", [
     "", "fast", "High", "high,low", "high,", ",low", "low,,high",
     "real:small:backward=", "real:small:backward=fast", "=low", "missing=low",
@@ -726,7 +751,6 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     })
     expected = [
         "-DACACIA_TRANSLATION_PREF=spot::postprocessor::Any",
-        "-DACACIA_TRANSLATION_PREFS=spot::postprocessor::Any",
         r'-DACACIA_DEFAULT_TRANSLATION_EFFORT=\"medium,unreal:formula:backward=low\"',
         "-DACACIA_BDD_MAX_INCREASE=4194304",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",
