@@ -463,8 +463,15 @@ if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release
         suite : ['unit', 'portfolio'], depends : [game_backend_integration])
 endif
 if native_test_hooks
+  native_contract_api = executable (
+    'native-contract-api',
+    'tlsf_native_contract_api.cc',
+    tlsf_native.get_variable ('reduction_contract_hooks'),
+    tlsf_native.get_variable ('gr1_reduction_source'),
+    cpp_args : ['-DTLSF_GR1_REDUCTION_TEST_FAULT'],
+    dependencies : tlsf_native.get_variable ('tlsf_internal_dep'))
   contract_record_args = [files ('check-attribution-contracts.py'), native_test_exe,
-                          tlsf_native.get_variable ('native_contract_api_exe'),
+                          native_contract_api,
                           meson.current_build_dir ()]
   if host_machine.system () == 'linux'
     contract_record_args += ['--record-ack-library', record_transport_ack,
@@ -1008,10 +1015,12 @@ test ('tlsf-dpa', tlsf_dpa_test, suite : ['unit', 'parity'], timeout : 120)
 
 # Ordinary GCC replay of the byte grammar shared with tlsf-tools' clang fuzzers.
 # Link the CLI parser only to query its default arms, and reuse the DPA importer.
+tlsf_fuzz_decoder = static_library (
+  'tlsf-fuzz-decode', 'tlsf_fuzz_decode.c')
 tlsf_fuzz_replay = executable ('tlsf-fuzz-replay',
   ['tlsf_fuzz_replay.cc', '../src/tlsf_frontend.cc', '../src/arg_parser.cc', '../src/portfolio_arm.cc',
    '../src/version.cc', version_h],
-  link_with : [tlsf_dpa_lib, tlsf_native.get_variable ('decoder')], include_directories : inc,
+  link_with : [tlsf_dpa_lib, tlsf_fuzz_decoder], include_directories : inc,
   dependencies : [posets_dep, stdsimd_dep, spot_dep, bddx_dep] + tlsf_deps)
 foreach kind : ['roundtrip', 'dpa']
   corpus = meson.project_source_root () / 'subprojects/tlsf-tools/test/fuzz/corpus' / kind
