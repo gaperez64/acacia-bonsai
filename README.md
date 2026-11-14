@@ -1,110 +1,93 @@
 # Acacia-Bonsai
 
-Acacia-Bonsai decides LTL realizability using antichains over downsets and
-synthesizes controllers. See the [TACAS 2023 paper](https://arxiv.org/abs/2204.06079).
+Acacia-Bonsai checks whether a controller can satisfy a Linear Temporal Logic
+(LTL) specification for every possible sequence of inputs. If it can, the tool
+can build that controller. The environment chooses the inputs; the controller
+chooses the outputs.
+
+It accepts LTL formulas and TLSF files. The solver uses antichains over downsets;
+the [TACAS 2023 paper](https://arxiv.org/abs/2204.06079) explains the method.
+
+## Build
+
+You need GCC with C++23 and C23 support, Spot 2.16 with development headers,
+Meson 1.7 or newer, Ninja, pkg-config, Zsh, Flex, Bison, Cargo with Rust 1.91 or newer,
+and cbindgen 0.29.4. For Python, also install SWIG and Python development headers.
+The Python package requires Python 3.13 or newer.
+
+Start with a checkout whose submodules, including nested submodules, are
+initialized. Run these commands from the repository root in Bash. This builds
+the CLI and Python module with the first configuration in `docker_default`:
+
+```bash
+export CARGO_BUILD_JOBS=2
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}
+build_dir=${ACACIA_BUILD_DIR:-build}
+preset=$(python3 scripts/acacia-config.py list-group docker_default | head -n1)
+read -r -a preset_args <<< "$(python3 scripts/acacia-config.py meson-args "$preset")"
+meson setup "$build_dir" --buildtype=debug -Dbuild_python=true \
+  "${preset_args[@]}" -Dtlsf-tools:cpu=baseline
+meson compile -C "$build_dir" -j 2
+```
+
+Keep using the same shell for the quick start below. Set `ACACIA_BUILD_DIR`
+before setup to put the build elsewhere. Spot must provide both `libspot` and
+`libbddx` through pkg-config; adjust `PKG_CONFIG_PATH` for a different install
+prefix. On macOS, use Homebrew GCC for both Spot and Acacia-Bonsai, and set
+`CC` and `CXX` before setup.
+
+## Quick start
+
+Ask whether repeated requests can be met by repeated grants:
+
+```bash
+"$build_dir/src/acacia-bonsai" -f 'G F req -> G F grant' -i req -o grant
+```
+
+The verdict is `REALIZABLE`. `G` means “always” and `F` means “eventually”, so
+`G F req` means requests occur infinitely often. To read a TLSF specification
+and write its controller as an ASCII AIGER circuit:
+
+```bash
+"$build_dir/src/acacia-bonsai" -T examples/realizable.tlsf -s controller.aag
+```
+
+## CLI
+
+The [CLI guide](docs/cli.md) covers input files, verdicts, exit codes, controller
+output, and solver selection. Use it when calling the tool from a script:
+`UNREALIZABLE` has exit status 1, even though the solver answered the question.
+
+## Python
+
+The build above also produces `acacia_boomslang`. The
+[Python guide](docs/python.md) shows how to import it, solve a bounded safety
+game, and inspect its winning region. It also explains how that API differs
+from the CLI and records an open grid-world discrepancy
+([#393](https://github.com/gaperez64/acacia-bonsai/issues/393)). Read that
+limitation before using winning regions as shields.
 
 ## Docker
 
-The CLI image includes sources and build dependencies. Compile inside the named
-container to target the host CPU, then run the wrappers:
+The [Docker guide](Docker/README.md) covers the CLI source image and the
+Boomslang notebook image. The CLI image needs a compile step inside the
+container; Boomslang includes a built Python module, Spot, and Jupyter.
 
-```sh
-docker pull ghcr.io/gaperez64/acacia-bonsai:latest
-docker run --name acacia -it ghcr.io/gaperez64/acacia-bonsai:latest
-./scripts/compile.sh
-./scripts/acacia-bonsai.sh -f 'G F req -> G F grant' -i req -o grant
-cat examples/realizable.tlsf | ./scripts/acacia-bonsai.sh --tlsf
-cat examples/realizable.tlsf | ./scripts/acacia-synthesis.sh --tlsf > controller.aag
-```
+## Presets and configuration
 
-Re-enter with `docker start -ai acacia`. The wrappers follow `docker_default`;
-pass a shipped configuration as the first argument to select another.
-The Boomslang image bundles the Python bindings, Spot and Jupyter:
+A preset chooses components at compile time. `docker_default` names the
+configurations used by the Docker wrappers; its first entry is also used by
+Python builds. Read the group instead of copying a preset name. The
+[configuration guide](docs/configuration.md) explains how to inspect presets,
+choose solver workers at runtime, and set translation effort.
 
-```sh
-docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
-```
+## Benchmarks
 
-## Build and run
-
-Install GCC with C++23 and C23 support, Spot, Meson, Ninja, Zsh, Flex, Bison,
-Cargo (Rust 1.91+) and cbindgen 0.29.4. Every build includes OxiDD and native
-GR(1); Meson builds the native library from the nested sources. Initialize them:
-
-```sh
-git submodule update --init --recursive
-meson setup build
-meson compile -C build
-build/src/acacia-bonsai -f 'G F req -> G F grant' -i req -o grant
-build/src/acacia-bonsai -T examples/realizable.tlsf
-```
-
-On macOS, install GCC with Homebrew, set `CC`/`CXX` to that GCC toolchain, and
-build Spot with the same compiler. If needed, set `PKG_CONFIG_PATH` to Spot's
-`lib/pkgconfig` directory before Meson setup.
-
-For an optimized build, read a shipping configuration from the registry:
-
-```sh
-preset=$(python3 scripts/acacia-config.py list-group docker_default | head -n1)
-./self-benchmark.sh -R -c "$preset"
-"build_${preset}/src/acacia-bonsai" -T examples/realizable.tlsf -s controller.aag
-```
-
-`-R` builds without benchmarking; add `-L` for the low-memory compile profile.
-Release builds target the local CPU. Native TLSF parsing needs no external
-converter at runtime. `-s` writes a controller for a REALIZABLE answer, including
-conversion for Moore targets. Use `-h` for CLI options.
-
-`-Dacacia_default_translation_effort=high` sets the build's native translation
-effort, using the same comma-separated levels and `ARM=LEVEL` overrides as
-`--translation-effort`. Both values are validated after selecting the active
-portfolio. Build-default overrides without an active `frozen-graph` arm are
-ignored; runtime overrides for inactive or unsupported arms are errors.
-Giving `--translation-effort` replaces the build default entirely, with implicit
-`high` for arms without an override.
-
-## Python module
-
-Install SWIG and Python development headers in addition to the build dependencies
-above. Python CI, Boomslang Docker and source/wheel builds use the first
-`docker_default` preset, resolved through `scripts/acacia-config.py meson-args`:
-
-```bash
-preset=$(python3 scripts/acacia-config.py list-group docker_default | head -1)
-read -r -a preset_args <<< "$(python3 scripts/acacia-config.py meson-args "$preset")"
-meson setup build_python -Dbuild_python=true "${preset_args[@]}" -Dtlsf-tools:cpu=baseline
-meson compile -C build_python -j 2
-python3 tests/check-python-preset.py build_python
-PYTHONPATH="$PWD/build_python/src/python${PYTHONPATH:+:$PYTHONPATH}" \
-  python3 -c 'import acacia_boomslang'
-```
-
-Set `LD_LIBRARY_PATH` to Spot's library directory if it is outside the loader's
-search path. The full pytest suite and notebooks also need Spot's Python bindings
-for the same interpreter; add their site-packages directory to `PYTHONPATH`.
-
-`python -m pip wheel . -Ccompile-args=-j2` uses meson-python with the same preset
-setup arguments, including when building from an sdist without Git metadata.
-Wheels keep `acacia_compiler_profile=debug` (Meson's wheel buildtype remains
-`release` with `-O3`) and `tlsf-tools:cpu=baseline` to use the compiler's default
-target ISA. `tests/check-python-preset.py --portable` rejects target ISA flags
-in the compile commands and checks that the tlsf-tools CPU option is baseline.
-The preset's `native` SIMD width then means the compiler's baseline target ABI,
-normally 128 bits on the supported wheel targets. These compile-time choices,
-including the downset, cannot be changed after installing a wheel.
-
-## Reference and results
-
-- [Build and development conventions](CLAUDE.md)
-- [Architecture and arm contracts](benchmarking/DATA-STRUCTURES.md),
-  including the [parity arm](benchmarking/coverage-first/parity-arm.md)
-- [Correctness and measurement protocol](benchmarking/README.md)
-- [Results and open gaps](benchmarking/RESULTS.md)
-- [Decisions and archive IDs](benchmarking/decisions.md)
-- [User-visible changes](CHANGELOG.md)
-
-Generate API documentation with `doxygen Doxyfile`.
+See [results and their measurement conditions](benchmarking/RESULTS.md) for
+performance comparisons. The [benchmarking guide](benchmarking/README.md)
+starts with a small local run and describes the correctness and measurement
+gates. Debug builds are useful for checking examples; use matched release
+builds for performance comparisons.
 
 ## Citing
 
@@ -118,3 +101,7 @@ Generate API documentation with `doxygen Doxyfile`.
   doi = {10.1007/978-3-031-30820-8_14}
 }
 ```
+
+The software is licensed under [GPLv3](LICENSE). See the
+[changelog](CHANGELOG.md) for user-visible changes and
+[CLAUDE.md](CLAUDE.md) for development conventions.

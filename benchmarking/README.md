@@ -1,11 +1,54 @@
-# Benchmarking protocol
+# Benchmarking
 
-[RESULTS.md](RESULTS.md) is the one current results-and-gaps report.
-[DATA-STRUCTURES.md](DATA-STRUCTURES.md) is the retained architecture reference
-for antichains, state vectors and the forward graph. Historical campaign
-narratives and original measurements are in the archives named by
-[evidence-index.tsv](evidence-index.tsv). Durable policies are in [decisions.md](decisions.md); runtime arm contracts are
-in [DATA-STRUCTURES.md](DATA-STRUCTURES.md). Campaign plans are archival history.
+Start with [RESULTS.md](RESULTS.md) for measured comparisons and their limits.
+The steps below show how to try the runner on a small input set, then describe
+how to collect results for a performance comparison. Run commands from the
+repository root in Bash.
+
+## Try a small run
+
+Use the debug build from the [README](../README.md#build). This example uses
+two checked-in TLSF inputs and needs neither a downloaded corpus nor systemd.
+Set `ACACIA_EXAMPLE_DIR` to choose where it writes its list, map, and results:
+
+```bash
+build_dir=${ACACIA_BUILD_DIR:-build}
+example_dir=${ACACIA_EXAMPLE_DIR:-_bm-logs/quickstart}
+mkdir -p "$example_dir"
+python3 - "$example_dir" <<'PYINPUTS'
+from pathlib import Path
+import sys
+
+out = Path(sys.argv[1])
+cases = {
+    'real': 'tests/ltl/realizable/01.tlsf',
+    'unreal': 'tests/ltl/unrealizable/simple_arbiter_unreal1_4_1.tlsf',
+}
+(out / 'inputs.list').write_text(''.join(f'{name}\n' for name in cases))
+(out / 'sources.tsv').write_text(''.join(f'{name}\t{path}\n' for name, path in cases.items()))
+PYINPUTS
+python3 -s benchmarking/run-syntcomp26-coverage.py subset \
+  --bin "$build_dir/src/acacia-bonsai" \
+  --list "$example_dir/inputs.list" --tlsf-map "$example_dir/sources.tsv" \
+  --timeout 17 --csv "$example_dir/run.csv"
+python3 -s benchmarking/cactus-report.py \
+  --csv "debug=$example_dir/run.csv" --timeout 17 \
+  --title 'Local debug example' --out-prefix "$example_dir/report" \
+  --markdown "$example_dir/report.md"
+```
+
+The two verdicts are `REALIZABLE` and `UNREALIZABLE`. Inspect `run.csv` for
+wall times and `report.md` for the summary. This checks the workflow; debug
+timings on two inputs say nothing about full-corpus performance.
+
+For performance work, compare release builds with the same input list,
+frontend, timeout, and resource limits. Record verdict, wall time, exit status,
+binary SHA-256, and build options. See the [gates](#gates) before collecting a
+comparison you intend to use for a change.
+
+[DATA-STRUCTURES.md](DATA-STRUCTURES.md) explains solver components and runtime
+contracts. [decisions.md](decisions.md) records benchmark policies, and
+[evidence-index.tsv](evidence-index.tsv) locates archived inputs and results.
 
 ## Evidence and retention
 
@@ -159,8 +202,7 @@ The shared thermal readers in `benchlib.py` support `tools/perarm-select.py`.
 `recycle_adjudication.py` remains the shared adjudication reader.
 `convert-tlsf-corpus.py native` keeps the native inspector route separate from
 SyFCo conversion and independent G5 cross-checks. The `convert-tlsf-corpus*.py`
-entry points remain available. Docker synthesis uses
-`scripts/acacia-bonsai.sh --synthesis`; `acacia-synthesis.sh` forwards to it.
+entry points remain available. See the [Docker guide](../Docker/README.md#write-a-controller) for synthesis wrappers.
 
 Historical tool versions and their dedicated tests are preserved in campaign
 archives listed in [evidence-index.tsv](evidence-index.tsv). Restore those
