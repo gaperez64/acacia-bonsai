@@ -74,16 +74,19 @@ shows the model, its LTL properties, and their automata. Local notebooks also
 need Jupyter, Spot's Python bindings, and Graphviz. The
 [Boomslang image](../Docker/README.md#use-python-notebooks) includes them.
 
-## Current limitation
+## Game semantics
 
-In the first `docker_default` debug build, the bounded Python solver reports
-a winning region for `finite_mdp.bare_ltl()`, while Spot's `ltlsynt` and the
-CLI's `both:parity:spot` worker both report `UNREALIZABLE`. Treat that Python
-result as a known discrepancy until
-[#393](https://github.com/gaperez64/acacia-bonsai/issues/393) is resolved. Its region also allows moves that leave the
-grid in the example with the gate-opening assumption. Use the grid-world
-notebook to inspect the model and translation, and the CLI parity worker to
-check the bare formula's verdict.
+Inputs belong to the environment and outputs to the controller. The bindings
+use Mealy semantics, like the CLI: each round the environment picks the inputs,
+then the controller picks the outputs, without seeing future inputs. So
+`G(a <-> z)` is realizable with input `z` and output `a`, while `G(a & z)` is
+not. Pass disjoint input and output lists that cover every proposition in the
+formula.
+
+Before [#393](https://github.com/gaperez64/acacia-bonsai/issues/393) was fixed,
+the bindings could treat an input as a controller choice and report such a
+formula realizable. If you used the Python API before that fix, rerun any
+result you rely on, including grid-world shields.
 
 ## Packaged builds
 
