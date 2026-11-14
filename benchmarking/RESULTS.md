@@ -1403,3 +1403,56 @@ Spot translation effort (new `--translation-effort`, same frozen binary, all 1,5
 | **Shipped portfolio, formula arm low** | **1368** (+1/−0) | **5948.4** |
 
 At 60 s (each configuration rerunning its own 17 s timeouts) the shipped portfolio with the formula arm at low decides 1387 against 1385, PAR-2 17776.7 against 17935.6 s, no loss. No run had a verdict conflict. No level dominates per input: phase records on the 42 inputs where high and low disagree show each level stalling where the other finishes, so no translation time budget can choose. The shipped preset now sets `unreal:formula:spot-guarded-sparse` to low; the build passes G3 (SYNTCOMP25 165/180, SYNTCOMP26 169/180 against 168, no verdict change or coverage loss) , G4 and G5 (0 opposite verdicts, 0 frontend errors). Two thirds of the translation-stuck inputs still stall at low. The first translation probe (`c2-translation`) used SyFCo formulas, not the native frontend's, and is kept only as disclosed; `c3-native-formula` repeats it on the formulas Acacia translates.
+
+## 2026-11-14: Split sparse Oracle payloads (C01); retain the storage saving
+
+Solver code changed in `src/solver/spot_lazy_game.hh`. The Oracle selects a scan
+or grouped table once; prepared scan entries own their three maps, and grouped
+entries own only their grouped payload, including the missing-destination
+threshold memo. The existing inline scan records and one allocation per grouped
+record are retained. The shared checked boundary in `spot_letter_oracle.hh` is
+unchanged. Memo charges, budgets, eviction checkpoints and failure cleanup retain
+their previous behavior. The 27 Oracle telemetry keys are unchanged; the ten
+observed worker records have identical sets of 139 keys and match all 70 selected
+work fields, as well as formulas, interfaces and worker construction boundaries.
+
+Measured on this host ABI: **96 bytes less per grouped prepared rank**, eight
+bytes less per scan record, and eight bytes more fixed Oracle storage. The C++
+allocation-refusal probe matches baseline counts: scan/grouped **21/25** for
+present destinations and **24/27** with a missing destination. Every one of the
+97 refused allocations per binary remains resource-limited, clears all predicate
+caches and identities, and restarts with the exact predicate.
+
+The first `docker_default` preset resolved to `otf_sparse_formula_parity`.
+Baseline and candidate use the normal release profile (`-O3`, native `-Ofast`,
+LTO), built with two jobs and `CARGO_BUILD_JOBS=2`. Ten frozen TLSF inputs come
+from `_bm-logs.kd20261111/prof/solved-2to17.tsv`; each is decided by
+`--arms unreal:formula:spot-guarded-sparse:frozen-graph`. Work is fixed at K=2
+for the two AllLights inputs and K=32 for the other eight, with weakening,
+equivariance and Spot fast paths off. Three serial alternating pairs per input
+run on CPU 15, each in its own `MemoryMax=8G`, `MemorySwapMax=0` systemd scope.
+`perf stat` measures user-mode instructions and cycles; GNU time records maximum
+process RSS, including waited-for children. No build or other test ran during
+the final timing screen, and no run hit the external 60-second guard.
+
+All **60/60 verdicts are UNREALIZABLE**. Candidate/base geometric means of the
+per-input medians are **1.001252 instructions, 0.993903 cycles, 0.997165 peak
+RSS**. Median RSS is lower on all ten inputs; `g-unreal-112` falls from 169,108
+to 167,828 KiB (1.25 MiB). Keep the measured storage saving; the small cycle
+change is not a speedup claim or an admission result. The capsule contains the
+full per-input table and raw counters, including the earlier candidate before
+the final teardown-order correction and the incomplete first RSS parsing attempt.
+
+Verification: the exact Oracle test checks 184,647 predicates, 1,122 fixed-K
+matches, 960 corrupted certificates, 2,384 inconclusive stops and 3,146 forced
+evictions. The complete checked unit suite passes **100/100**. Full pytest with
+the rebuilt Acacia and matching Spot 2.16 bindings passes **2,268 tests and 58
+subtests**, with five optional tests skipped. Ruff passes. The additional release
+unit run is **93/94**: tlsf-tools' allocation-witness test does not reach A3, A4,
+C7 and C8; that target does not include the changed solver header and passes in
+the checked profile. No subproject fix is included.
+
+Evidence: local capsule `acacia-c01-20261114`, archived with this sprint's
+evidence. It holds the frozen binaries (baseline `e126c9ed5452`, candidate
+`270bb8d6c5ea` on `ac90948faf69`), input hashes, build identities, raw counters
+and test logs. G3, G4 and G5 results are recorded in the pull request.

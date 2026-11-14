@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The formula arm's Oracle keeps only the payload its scan or grouped mode uses, 96 bytes less per grouped prepared rank; verdicts, telemetry and budgets are unchanged.
 - The Python bindings registered inputs and outputs after translating the formula, so an input could be treated as a controller choice and an unrealizable specification came back realizable (#393). They now register inputs, then outputs, before translating, as the CLI does; the CLI was not affected.
 - The Python bindings reject out-of-range bounds, increments, caps and ranks instead of narrowing them to signed char, which could report a losing game as realizable (#383); `successor()` saturates at the cap instead of wrapping at 127 (#389). The solver checks the initial state is in the region before declaring success on picker exhaustion.
 - Bump tlsf-tools to 9a2f748 (exact symmetry census `tlsfsym`, integer-overflow rejection in ranges and literals, and Lean proofs for literal decoding, checked arithmetic and indexed next strength) and posets to 81b0e5b (LLVM 22 lint). The shipped portfolio decides the same 1,368 of 1,524 SYNTCOMP26 inputs at 17 s with no verdict change.
