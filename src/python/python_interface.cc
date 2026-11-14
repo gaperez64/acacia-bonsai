@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <ranges>
 #include <spot/misc/optionmap.hh>
 #include <spot/tl/formula.hh>
@@ -52,29 +53,27 @@ Game* create_twa (const std::string& formula_str, const std::vector<std::string>
   if constexpr (ACACIA_BDD_MAX_INCREASE > 0)
     acacia::configure_bdd ();
 
-  // Build the automaton first so all APs that appear in the formula are
-  // already registered before we register the input/output sets.
-  auto twa = build_twa (formula, dict);
-
-  // Register input/output APs owned by the Game* we're about to create.
-  // The Game destructor calls dict->unregister_all_my_variables(this) to
-  // undo these registrations, keeping assert_emptiness() happy.
-  auto game = new Game {.dict = dict, .twa = twa};
+  // As in the CLI, register inputs before outputs and before translation.
+  // MONA partitions the BDD order at the first output variable: translating
+  // first can put inputs after that boundary and let the controller choose
+  // them. Keep the registration owner alive, including if translation throws.
+  auto game = std::unique_ptr<Game> (new Game {.dict = dict});
   bdd all_inputs = bddtrue;
   bdd all_outputs = bddtrue;
   for (const std::string& ap : input_aps) {
-    const unsigned v = dict->register_proposition (spot::formula::ap (ap), game);
+    const unsigned v = dict->register_proposition (spot::formula::ap (ap), game.get ());
     all_inputs &= bdd_ithvar (v);
   }
   for (const std::string& ap : output_aps) {
-    const unsigned v = dict->register_proposition (spot::formula::ap (ap), game);
+    const unsigned v = dict->register_proposition (spot::formula::ap (ap), game.get ());
     all_outputs &= bdd_ithvar (v);
   }
   game->inputs = all_inputs;
   game->outputs = all_outputs;
   game->input_aps = input_aps;
   game->output_aps = output_aps;
-  return game;
+  game->twa = build_twa (formula, dict);
+  return game.release ();
 }
 
 void prep_unreal_automaton (Game& game) {

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The Python bindings registered inputs and outputs after translating the formula, so an input could be treated as a controller choice and an unrealizable specification came back realizable (#393). They now register inputs, then outputs, before translating, as the CLI does; the CLI was not affected.
 - The Python bindings reject out-of-range bounds, increments, caps and ranks instead of narrowing them to signed char, which could report a losing game as realizable (#383); `successor()` saturates at the cap instead of wrapping at 127 (#389). The solver checks the initial state is in the region before declaring success on picker exhaustion.
 - Bump tlsf-tools to 9a2f748 (exact symmetry census `tlsfsym`, integer-overflow rejection in ranges and literals, and Lean proofs for literal decoding, checked arithmetic and indexed next strength) and posets to 81b0e5b (LLVM 22 lint). The shipped portfolio decides the same 1,368 of 1,524 SYNTCOMP26 inputs at 17 s with no verdict change.
 - The shipped preset stores downsets in lazy KD trees instead of rank buckets. Posets now prunes lazy KD searches with per-subtree and per-block coordinate bounds, which takes 28% fewer cycles than rank buckets on captured antichain updates. The shipped portfolio decides the same 1,368 of 1,524 SYNTCOMP26 inputs at 17 s, PAR-2 5,943 s against 5,947 s, with no verdict change and no memory failure. On a 30-input panel of search-bound inputs it decides three more. The other presets keep rank buckets (#384).
