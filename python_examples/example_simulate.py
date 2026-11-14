@@ -1,35 +1,14 @@
-"""
-Showcase for issue #51: simulate a non-deterministic controller from the
-winning region in a loop, and bump k whenever the user picks an output that
-drives the system out of the currently-known winning region.
+"""Simulate a controller by staying inside a bounded winning region.
 
-Flow
-----
-1. Build the UCB for the negated spec and solve the safety game with an
-   initial bound k = INITIAL_K.
-2. Start from the initial state vector (which is in the winning region iff
-   the spec is realizable at this k).
-3. At each step:
-   * The environment is asked for an input valuation.
-   * We enumerate all output valuations; those that keep the state vector
-     inside the winning region form the "winning outputs" (the
-     non-deterministic controller).  The "losing outputs" are shown too.
-   * The user picks *any* output.  We compute the forward successor.
-   * If the successor is still winning, the loop continues.
-     Otherwise we call acacia again with a bigger k; if the larger winning
-     region now contains the successor, we keep going with the new solver
-     result.  If not, the play really has left every winning region we can
-     afford and we stop.
+At each step, choose environment inputs and a controller output. The script
+shows which outputs keep the successor in the winning region. If you choose
+another output, it tries larger bounds up to MAX_K. Failure to recover at
+those bounds does not prove the LTL specification unrealizable.
 
-This mirrors the old `scripts/simwreg.py` design but does not depend on a
-synthesised AIGER circuit: it works directly on the Python-exposed UCB and
-winning region.
+Run from the repository root after setting the Python module path:
+    python3 python_examples/example_simulate.py auto
 
-Run:
-    PYTHONPATH=<build>/src/python python3 python_examples/example_simulate.py
-
-The script accepts one optional CLI arg: "auto" to drive the simulation
-automatically (useful as a smoke test); without it, the user is prompted.
+Omit auto to choose inputs and outputs interactively.
 """
 import itertools
 import sys
@@ -99,11 +78,9 @@ def classify_outputs(game, v, true_inputs, false_inputs, winreg, k_cap):
 def pick_output(winning, losing, interactive):
     """Ask the user (or autopick) for an output choice.
 
-    Auto-mode picks a winning output to smoke-test the happy path. The
-    escape-and-grow-k branch is best exercised interactively (the winning
-    region for a finite-memory spec stabilises quickly, so "grow k to
-    recover" is visible mostly when the spec is truly unrealisable and the
-    re-solve attempts surface that fact — not a great demo value).
+    Auto-mode picks a winning output at each step.
+    Interactive mode also lets the user choose a losing output and try
+    larger bounds. Exhausting those bounds does not prove unrealizability.
     """
     if not interactive:
         if winning:
@@ -144,8 +121,8 @@ def main(interactive):
     k = INITIAL_K
     result = solve(game, k)
     if not result.is_real():
-        print(f"Unrealizable at k={k}.  Increasing won't help for a safety game "
-              f"at this engine, aborting.")
+        print(f"No winning region found up to k={k}; stopping. "
+              "A larger bound may still succeed.")
         return 1
 
     winreg = result.get_winning_region()

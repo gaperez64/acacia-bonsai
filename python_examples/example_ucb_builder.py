@@ -1,34 +1,12 @@
-"""
-Showcase for issue #72: reimplement the `UCBBuilder.py` helper from
-synth-learn (https://github.com/mrudu/synth-learn) entirely in Python, using
-the acacia_boomslang bindings — no subprocess call to the acacia binary, no
-parsing of --K output.
+"""Inspect a universal co-Büchi automaton and its winning region.
 
-Reference implementation:
-    https://github.com/mrudu/synth-learn/blob/master/LTLsynthesis/UCBBuilder.py
+The UCB class wraps acacia_boomslang to build a game, find a winning region,
+and compute successors from lists of true and false propositions. Pass the
+negated LTL specification to UCB.build(). It returns None if no region is
+found up to the bound; that does not prove the specification unrealizable.
 
-Mapping from the reference to this implementation
--------------------------------------------------
-Reference                              | Our port
----------------------------------------|------------------------------------
-subprocess call + ANTICHAIN parsing    | ab.create_twa +
-                                       |   solve_acacia_safety_game
-spot.automata(AUTOMATA section)        | ab.get_aut_hoa +
-                                       |   spot.automaton
-self.num_states                        | ab.num_states(game)
-self.antichain_heads (list of lists)   | WinningRegion (kept as-is) +
-                                       |   WinningRegion.contains
-get_bdd_propositions(aps)              | unchanged — uses spot.automaton +
-                                       |   buddy.bdd_ithvar exactly like
-                                       |   the reference
-get_transition_state(v, edge_label)    | ab.successor +
-                                       |   classify_by_cube, no BDD needed
-is_safe(v)                             | WinningRegion.contains
-
-The only places where BDDs are still used are when the caller actually
-wants to operate on BDDs (build cubes, enumerate minterms). Our
-`successor` takes true/false AP lists instead of a BDD, so the whole
-transition-state computation runs without touching buddy.
+The helper follows synth-learn's UCBBuilder interface:
+https://github.com/mrudu/synth-learn/blob/master/LTLsynthesis/UCBBuilder.py
 """
 from __future__ import annotations
 
@@ -79,8 +57,7 @@ class UCB:
     @classmethod
     def build(cls, psi: str, inputs: List[str], outputs: List[str],
               k: int = 2, limit: int = 10) -> Optional["UCB"]:
-        """Mimic the reference's build_UCB: try increasing k until the
-        spec is realisable at that bound (or we run out of budget)."""
+        """Try increasing bounds up to limit; return None if none yields a region."""
         while k <= limit:
             game = ab.create_twa(psi, inputs, outputs)
             ab.preprocess_aut_standard(game, k_max=k)
@@ -125,13 +102,7 @@ class UCB:
     def get_transition_state(self, state_vector: List[int],
                              true_aps: Iterable[str],
                              false_aps: Iterable[str]) -> List[int]:
-        """Forward-simulate the UCB by one step under an IO cube.
-
-        Replaces the BDD-based signature of the reference's method:
-        instead of taking an `edge_label` BDD we accept the two literal
-        lists that describe the cube, which is strictly more Pythonic and
-        drops the buddy dependency for the common case.
-        """
+        """Compute one successor from the true and false proposition lists."""
         v = ab.make_vector(self.game, ab.IntVector(state_vector))
         s = ab.successor(self.game, v,
                          ab.StringVector(list(true_aps)),
