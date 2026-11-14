@@ -29,6 +29,9 @@ bddx_dep = dependency ('libbddx')  # Spot's copy of BuDDy
 posets_dep = dependency ('posets')
 tlsf_native = subproject ('tlsf-tools', default_options : [
   'cpp_std=c++23', 'research_tools=false',
+  # The upstream test suite requires its CLI tools. Acacia builds just the
+  # contract helper and fuzz decoder it uses in tests/meson.build instead.
+  'tests=false', 'tools=false', 'examples=false',
 ])
 tlsf_deps = [tlsf_native.get_variable ('tlsf_dep')]
 native_test_hooks = get_option ('build_tests') and \

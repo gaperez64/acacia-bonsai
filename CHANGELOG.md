@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Bump posets to 82cd7bf (#51–#56) and tlsf-tools to dce8e00 (#123–#127): signed bin keys and CST arithmetic no longer wrap or miss dominators, lazy KD bounds and TLSF sets allocate less, finite-word preprocessing preserves strong indexed next, and OxiDD options have the same layout in debug and release builds. Normalization statistics count actual pass work, installed Posets headers are complete, release tests retain their checks, and unused APIs are removed. Acacia skips upstream tools, examples and unrelated tests, building only the contract helper and fuzz decoder its own tests use.
 - The formula arm's Oracle keeps only the payload its scan or grouped mode uses, 96 bytes less per grouped prepared rank; verdicts, telemetry and budgets are unchanged.
 - The Python bindings registered inputs and outputs after translating the formula, so an input could be treated as a controller choice and an unrealizable specification came back realizable (#393). They now register inputs, then outputs, before translating, as the CLI does; the CLI was not affected.
 - The Python bindings reject out-of-range bounds, increments, caps and ranks instead of narrowing them to signed char, which could report a losing game as realizable (#383); `successor()` saturates at the cap instead of wrapping at 127 (#389). The solver checks the initial state is in the region before declaring success on picker exhaustion.
