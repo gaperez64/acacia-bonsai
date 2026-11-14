@@ -63,9 +63,7 @@ output, and solver selection. Use it when calling the tool from a script:
 The build above also produces `acacia_boomslang`. The
 [Python guide](docs/python.md) shows how to import it, solve a bounded safety
 game, and inspect its winning region. It also explains how that API differs
-from the CLI and records an open grid-world discrepancy
-([#393](https://github.com/gaperez64/acacia-bonsai/issues/393)). Read that
-limitation before using winning regions as shields.
+from the CLI.
 
 ## Docker
 
