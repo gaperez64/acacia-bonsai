@@ -4,23 +4,42 @@
 import json
 import os
 from pathlib import Path
-import select
 import signal
 import subprocess
 import sys
 import tempfile
+import time
 
 binary, build, solver, faults = map(Path, sys.argv[1:5])
 binary = binary.resolve()
 base = ["-f", "G o", "-i", "i", "-o", "o", "--arms", "unreal:formula:backward,real:small:backward"]
 
 
-def records(directory):
+def records(directory, live=False):
     return [
         json.loads(line)
         for path in directory.glob("*.jsonl")
-        for line in path.read_text().splitlines()
+        for line in path.read_text().splitlines(keepends=True)
+        if not live or line.endswith("\n")
     ]
+
+
+def check_accounting(events):
+    for pid in {e.get("worker_pid") for e in events}:
+        segments = sorted(
+            (
+                e
+                for e in events
+                if e.get("event") == "accounting_segment" and e.get("worker_pid") == pid
+            ),
+            key=lambda e: e["entry_ns"],
+        )
+        assert all(a["mono_ns"] <= b["entry_ns"] for a, b in zip(segments, segments[1:])), (
+            segments
+        )
+    for e in events:
+        if e.get("event") == "accounting_censored":
+            assert e["cpu_ns"] is None and e["entry_ns"] <= e["mono_ns"], e
 
 
 with tempfile.TemporaryDirectory(dir=build) as location:
@@ -86,18 +105,7 @@ with tempfile.TemporaryDirectory(dir=build) as location:
         run = subprocess.run([str(binary), *base], env=env, capture_output=True, timeout=10)
         assert run.returncode == 0, run.stderr
         events = records(directory)
-        for pid in {e.get("worker_pid") for e in events}:
-            segments = sorted(
-                (
-                    e
-                    for e in events
-                    if e.get("event") == "accounting_segment" and e.get("worker_pid") == pid
-                ),
-                key=lambda e: e["entry_ns"],
-            )
-            assert all(a["mono_ns"] <= b["entry_ns"] for a, b in zip(segments, segments[1:])), (
-                segments
-            )
+        check_accounting(events)
         specs = [e for e in events if e.get("event") == "worker_spec"]
         reaps = [e for e in events if e.get("event") == "worker_reap"]
         assert len(specs) == len(reaps) == 2, events
@@ -111,8 +119,9 @@ with tempfile.TemporaryDirectory(dir=build) as location:
         if "stall" in modes:
             cancelled = next(e for e in events if e.get("boundary") == "winner_cancelled")
             assert cancelled["process_cpu_ns"] is not None and cancelled["rss_kb"] > 0
-            censored = next(e for e in events if e.get("event") == "accounting_censored")
-            assert censored["phase"] == "fake_unfinished_phase" and censored["cpu_ns"] is None
+            for e in events:
+                if e.get("event") == "accounting_censored":
+                    assert e["phase"] == "fake_unfinished_phase", e
         if modes.startswith("flood"):
             assert any(e["dropped_records"] > 0 for e in reaps)
         if modes.startswith("descendant"):
@@ -130,14 +139,16 @@ with tempfile.TemporaryDirectory(dir=build) as location:
         stderr=subprocess.PIPE,
         bufsize=0,
     )
-    # The pipe reports each fake worker at startup; no solver or elapsed gate.
+    # Wait for phase entry, not startup or an elapsed delay. Both existing stall
+    # hooks stay in this phase forever, so interruption must censor both workers.
     try:
-        seen = 0
-        while seen < 2:
-            ready, _, _ = select.select([process.stderr], [], [], 5)
-            assert ready, "fake workers failed to start"
-            if b"child_group" in process.stderr.readline():
-                seen += 1
+        deadline = time.monotonic() + 5
+        while len({e["worker_pid"] for e in records(directory, live=True)
+                   if e.get("event") == "accounting_entry"
+                   and e["phase"] == "fake_unfinished_phase"}) < 2:
+            assert process.poll() is None, process.communicate()
+            assert time.monotonic() < deadline, "fake workers failed to enter their phases"
+            time.sleep(.01)
         process.send_signal(signal.SIGTERM)
         process.communicate(timeout=10)
     finally:
@@ -145,7 +156,12 @@ with tempfile.TemporaryDirectory(dir=build) as location:
             process.kill()
             process.wait()
     events = records(directory)
+    check_accounting(events)
     reaps = [e for e in events if e.get("event") == "worker_reap"]
     assert len(reaps) == 2 and all(e["reason"] == "interrupted" for e in reaps), events
     assert sum(e.get("boundary") == "interrupted" for e in events) == 2, events
+    censored = [e for e in events if e.get("event") == "accounting_censored"]
+    assert len(censored) == 2, events
+    assert {e["worker_pid"] for e in censored} == {e["worker_pid"] for e in reaps}, events
+    assert all(e["phase"] == "fake_unfinished_phase" for e in censored), censored
 print("required supervision, recorder failure verdict parity and wait4 accounting passed")
