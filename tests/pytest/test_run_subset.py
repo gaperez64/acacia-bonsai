@@ -4,6 +4,8 @@ import subprocess
 import sys
 from types import SimpleNamespace
 
+import pytest
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "benchmarking" / "run-syntcomp26-coverage.py"
@@ -108,12 +110,20 @@ def test_preconverted_ltlsynt_uses_frozen_semantics_map(monkeypatch, tmp_path):
     assert "--semantics=Moore" in commands[0]
 
 
-def test_convert_tlsf_returns_declared_model_without_overwriting_semantics(tmp_path):
+@pytest.mark.parametrize("machine_model", ["Mealy", "Moore"])
+@pytest.mark.parametrize("is_strict", [False, True])
+def test_convert_tlsf_preserves_source_semantics_and_refreshes_strict_cache(
+    tmp_path, machine_model, is_strict,
+):
     module = load_module()
     tlsf = tmp_path / "example.tlsf"
     tlsf.write_text("INFO {}\n")
     output_dir = tmp_path / "converted"
     output_dir.mkdir()
+    if is_strict:
+        (output_dir / "example.ltl").write_text("old non-strict formula\n")
+        (output_dir / "example.part").write_text(".inputs: i\n.outputs: o\n")
+    semantics = f"Strict,{machine_model}" if is_strict else machine_model
     log = tmp_path / "syfco.log"
     syfco = tmp_path / "syfco"
     syfco.write_text(
@@ -124,26 +134,35 @@ def test_convert_tlsf_returns_declared_model_without_overwriting_semantics(tmp_p
         "with log.open('a') as stream:\n"
         "    stream.write(' '.join(sys.argv[1:]) + '\\n')\n"
         "if sys.argv[1] == '--print-semantics':\n"
-        "    print('Strict,Moore')\n"
+        f"    print({semantics!r})\n"
         "else:\n"
         "    part = pathlib.Path(sys.argv[sys.argv.index('--part-file') + 1])\n"
         "    part.write_text('.inputs: i\\n.outputs: o\\n')\n"
-        "    print('G(i -> o)')\n"
+        "    if '--overwrite-semantics' in sys.argv:\n"
+        f"        assert sys.argv[sys.argv.index('--overwrite-semantics') + 1] == {machine_model!r}\n"
+        "        assert '-pxo' in sys.argv\n"
+        "        print('(o U !i) || G o')\n"
+        "    else:\n"
+        "        print('G(i -> o)')\n"
     )
     syfco.chmod(0o755)
 
-    expected = (output_dir / "example.ltl", "Moore")
+    expected = (output_dir / "example.ltl", machine_model)
     assert module.subset_convert_tlsf(str(syfco), tlsf, output_dir) == expected
     assert module.subset_convert_tlsf(str(syfco), tlsf, output_dir) == expected
 
     calls = log.read_text().splitlines()
+    flags = f"--overwrite-semantics {machine_model} -pxo " if is_strict else ""
+    conversion = ("--format ltlxba --mode fully " + flags +
+                  f"--part-file {output_dir / 'example.part'} {tlsf}")
     assert calls == [
         f"--print-semantics {tlsf}",
-        "--format ltlxba --mode fully "
-        f"--part-file {output_dir / 'example.part'} {tlsf}",
+        conversion,
         f"--print-semantics {tlsf}",
-    ]
-    assert "--overwrite-semantics" not in log.read_text()
+    ] + ([conversion] if is_strict else [])
+    assert expected[0].read_text() == (
+        "(o U !i) || G o\n" if is_strict else "G(i -> o)\n"
+    )
 
 
 def test_resource_limit_is_not_reported_as_unknown():
