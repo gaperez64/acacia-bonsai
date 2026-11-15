@@ -22,9 +22,19 @@ def convert_pair(syfco, source, part, timeout, target=None, canonicalizer=None,
     def run(cmd, **kwargs):
         return subprocess.run(cmd, check=True, capture_output=True, text=True,
                               timeout=timeout, **kwargs).stdout
+    semantics = subprocess.run([syfco, "--print-semantics", str(source)],
+                               capture_output=True, text=True, timeout=timeout)
+    tokens = {token.strip() for token in semantics.stdout.strip().split(",")}
+    models = tokens & {"Mealy", "Moore"}
+    valid_semantics = tokens <= {"Mealy", "Moore", "Strict"} and len(models) == 1
+    model = next(iter(models)) if valid_semantics else None
+    # Preserve the source timing model here; target adaptation follows below.
+    # Pull next outwards to avoid SyFCo's unsupported strong-next printing.
+    strict_flags = (["--overwrite-semantics", model, "-pxo"]
+                    if valid_semantics and "Strict" in tokens else [])
     try:
         formula = run([syfco, "--format", "ltlxba", "--mode", "fully",
-                       "--part-file", str(part), str(source)])
+                       *strict_flags, "--part-file", str(part), str(source)])
     except subprocess.CalledProcessError as error:
         if fallback_inspect is None or target != "Mealy":
             raise
@@ -33,14 +43,13 @@ def convert_pair(syfco, source, part, timeout, target=None, canonicalizer=None,
                         "\n.outputs" + (" " + outputs.replace(",", " ") if outputs else "") + "\n")
         reason = (error.stderr or error.stdout or str(error)).strip()
         return formula.rstrip() + "\n", "tlsf-tools", reason
+    # Only formula-conversion rejection permits the native fallback. A metadata
+    # failure after successful conversion must still be reported as an error.
+    semantics.check_returncode()
+    if not valid_semantics:
+        raise ValueError(f"unsupported source semantics: {semantics.stdout.strip()}")
     if target:
-        # SyFCo's overwrite-target changes metadata; overwrite-semantics can
-        # introduce unsupported strong-next. Adapt its plain infinite-LTL AST.
-        semantics = run([syfco, "--print-semantics", str(source)])
-        tokens = {token.strip() for token in semantics.strip().split(",")}
-        if not tokens <= {"Mealy", "Moore", "Strict"} or len(tokens & {"Mealy", "Moore"}) != 1:
-            raise ValueError(f"unsupported source semantics: {semantics.strip()}")
-        model = "Moore" if "Moore" in tokens else "Mealy"
+        # SyFCo's overwrite-target changes metadata. Adapt the infinite-LTL AST.
         if model != target:
             if canonicalizer is None:
                 raise ValueError("target adaptation requires --canonicalizer")

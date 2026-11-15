@@ -1517,12 +1517,9 @@ def subset_convert_tlsf(syfco, tlsf, output_dir):
     semantics = subset__parse_tlsf_semantics(semantics_run.stdout.strip())
     if semantics is None:
         return None
-    machine_model, _is_strict = semantics
-    # IMPORTANT: TLSF Strict semantics has no ltlsynt counterpart.  syfco's
-    # ltlxba printer emits the plain assumption-implies-guarantee reading, not
-    # the strict one, so ltlsynt solves a genuinely different specification
-    # from Acacia on Strict instances.
-    if ltl.exists() and part.exists():
+    machine_model, is_strict = semantics
+    # Regenerate Strict pairs: older caches contain the non-strict formula.
+    if not is_strict and ltl.exists() and part.exists():
         return ltl, machine_model
 
     ltl.unlink(missing_ok=True)
@@ -1534,6 +1531,9 @@ def subset_convert_tlsf(syfco, tlsf, output_dir):
         "ltlxba",
         "--mode",
         "fully",
+        # Overwriting with the source model applies only the strict rewrite.
+        # Pull next outwards to keep SyFCo from printing unsupported strong next.
+        *(["--overwrite-semantics", machine_model, "-pxo"] if is_strict else []),
         "--part-file",
         str(part),
         str(tlsf),
