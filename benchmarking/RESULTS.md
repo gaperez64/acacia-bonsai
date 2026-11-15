@@ -12,6 +12,32 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-15: Cleanup sprint report
+
+Archive `cleanup-20261113` (release `evidence-2026-11-15-cleanup`), which also
+holds the sprint's gate runs and reviews. Master 216fdf36 with posets 82cd7bf
+and tlsf-tools dce8e00, release build of the first `docker_default` preset.
+Only this binary ran fresh, on all 1,524 SYNTCOMP26 inputs at 17 s, then its
+17 s timeouts at 60 s and its 60 s timeouts at 120 s; references are recycled
+from earlier archives.
+
+| Series | 17 s | 60 s | 120 s |
+|---|---:|---:|---:|
+| This build (7 arms) | 1367 | 1388 | 1394 |
+| Seven-arm default before the sprint (`native-20261107`) | 1368 | 1387 | — |
+| Previous report's 8-arm final (`sprint-performance-20261102`) | 1351 | 1379 | 1387 |
+| SemML | 1271 | 1334 | 1355 |
+| ltlsynt 2.16 | 1264 | 1290 | — |
+
+PAR-2 at 17/60/120 s is 5959.0, 17660.6 and 33105.1 s. No verdict disagrees
+with any reference. Against the 8-arm final at 120 s the build gains seven
+inputs, loses none, and its commonly solved inputs take a geometric mean 0.664
+of the time; the one slower input, `generalized_buffer_pb_5_pe_` (100.5 s
+against 1.4 s), is the arm removed in #359. Native arms alone at 17 s on the
+same tree decide 1214 with lazy KD and 1211 with rank buckets; three inputs only
+lazy KD decides, none only rank buckets. Plots, score and per-arm tables are
+release assets.
+
 ## 2026-11-12: Shipped lazy KD build, native arms and gates
 
 Archive `sprint-20261111` (release `evidence-2026-11-12-sprint`) holds this sprint's
