@@ -193,7 +193,7 @@ def test_planned_order_is_saved_and_source_timeout_never_qualifies(tmp_path, mon
     from benchlib import RunResult
 
     monkeypatch.setattr(M, "campaign_scope_guard", lambda _: nullcontext())
-    mode = {"binary": "/trusted/fixture", "backends": ["vector_backed", "vector_backed_bin"]}
+    mode = {"binary": "/trusted/fixture", "backends": ["vector_backed", "filtered_vector_backed"]}
     metadata = {"modes": {"compatible": mode, "native": mode},
                 "aliases": {"compatible": "compatible", "native": "native"}}
     args = Namespace(case_timeout=1, check_timeout=4, source_timeout=7, memory_max="8G", backends=mode["backends"], measure=True,

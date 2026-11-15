@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MODES = ("compatible", "native", "max")
 CASES = ("vectors", "nonempty", "empty", "zero")
 BACKENDS = {"bboxtree_backed", "comptrie_backed", "kdtree_backed", "vector_or_kdtree_backed",
-            "vector_backed", "rank_bucketed_vector_backed", "filtered_vector_backed", "vector_backed_bin",
+            "vector_backed", "rank_bucketed_vector_backed", "filtered_vector_backed",
             "vector_backed_one_dim_split_intersection_only", "sharingtree_backed", "simple_sharingtree_backed",
             "sharingtrie_backed", "skiplist_backed", "cst_backed"}
 
@@ -396,8 +396,8 @@ def provenance(build, output):
         aliases[mode] = seen.setdefault(key, mode)
         selected = [row for row in commands if f"downset-matrix-{mode}.p/" in row.get("output", "")]
         require(len(selected) == 1, f"Missing/ambiguous compiler command for {mode}")
-        require(len(metadata["backends"]) == 14 and set(metadata["backends"]) == BACKENDS,
-                "The requested14-backend inventory changed")
+        require(len(metadata["backends"]) == len(BACKENDS) and set(metadata["backends"]) == BACKENDS,
+                "The requested backend inventory changed")
         modes[mode] = {**metadata, "binary": str(binary), "binary_sha256": sha(binary),
                        "libraries": libraries(binary),
                        "comparison_instructions_sha256": instruction_hash, "compiler_command": selected[0]}

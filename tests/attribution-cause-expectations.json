@@ -2587,7 +2587,7 @@
     "cause": "check_certificate_mode",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_certificate_mode |  if (!bdd_or_into(ck, &covered, ck->rank[j].x[k][i])) { oxidd_bdd_unref(covered);  | 0": {
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_certificate_mode |  if (!bdd_or_into(ck, &covered, rank_x(ck, j, k, i))) { oxidd_bdd_unref(covered);  | 0": {
     "cause": "check_certificate_mode",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
   },
@@ -2651,7 +2651,7 @@
     "cause": "check_region_mode",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_region_mode |  if (!bdd_or_into(ck, &covered, ck->rank[j].x[k][i])) { oxidd_bdd_unref(covered);  | 0": {
+  "subprojects/tlsf-tools/src/lib/gr1_check.c | return | CHECK_UNKNOWN | check_region_mode |  if (!bdd_or_into(ck, &covered, rank_x(ck, j, k, i))) { oxidd_bdd_unref(covered);  | 0": {
     "cause": "check_region_mode",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
   },
