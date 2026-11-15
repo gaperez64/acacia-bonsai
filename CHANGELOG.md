@@ -1,7 +1,8 @@
 # Acacia-Bonsai changelog
 
-## Unreleased
+## 2.9.0 (2026-11-15)
 
+- Bump posets to 7e75c1f (posets 1.4) and tlsf-tools to 1e94604 (tlsf-tools v1.11). Posets retires the unused `vector_backed_bin` backend and shares its trie and antichain code; tlsf-tools routes residual reduction through one plan, flattens checker rank storage and shares the symmetry DAG between candidates. Behaviour is unchanged: the shipped preset decides the same 165/180 SYNTCOMP25 and 169/180 SYNTCOMP26 panel inputs with no verdict change, and native TLSF and converted runs on all 1,524 SYNTCOMP26 inputs give no opposite verdicts.
 - Bump posets to 82cd7bf (#51–#56) and tlsf-tools to dce8e00 (#123–#127): signed bin keys and CST arithmetic no longer wrap or miss dominators, lazy KD bounds and TLSF sets allocate less, finite-word preprocessing preserves strong indexed next, and OxiDD options have the same layout in debug and release builds. Normalization statistics count actual pass work, installed Posets headers are complete, release tests retain their checks, and unused APIs are removed. Acacia skips upstream tools, examples and unrelated tests, building only the contract helper and fuzz decoder its own tests use.
 - The formula arm's Oracle keeps only the payload its scan or grouped mode uses, 96 bytes less per grouped prepared rank; verdicts, telemetry and budgets are unchanged.
 - The Python bindings registered inputs and outputs after translating the formula, so an input could be treated as a controller choice and an unrealizable specification came back realizable (#393). They now register inputs, then outputs, before translating, as the CLI does; the CLI was not affected.
