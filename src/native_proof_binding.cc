@@ -47,6 +47,9 @@ namespace acacia {
            std::string_view (yyjson_get_str (field), yyjson_get_len (field)) == expected;
   }
 
+  // I10: hashes bind the exact byte spans, including length; metadata fields
+  // bind decoded JSON strings without truncation or duplicate-key ambiguity.
+  // These checks identify artifacts, not their validity for a prepared target.
   bool native_sha256_matches (yyjson_val* object, const char* key, const char* bytes,
                                      size_t size) {
     char actual[65] {};
@@ -56,6 +59,8 @@ namespace acacia {
 
   bool native_lift_policy_hash_matches (yyjson_val* evidence, bool certificate_method,
                                                const char* policy, size_t policy_size) {
+    // I10: certificate evidence must hash its policy; region evidence must
+    // omit that field entirely (even a JSON null would claim a policy).
     if (!certificate_method)
       return !yyjson_obj_get (evidence, "policy_sha256");
     return native_sha256_matches (evidence, "policy_sha256", policy, policy_size);
@@ -65,6 +70,9 @@ namespace acacia {
                                      const char* policy, size_t policy_size,
                                      std::string_view semantics, bool needs_policy,
                                      bool unreal) {
+    // I10: certificate side/status and every required policy side must match
+    // the requested verdict, and both sidecars must use the target semantics.
+    // A region proof has no policy sidecar; absence is a null, zero-size span.
     native_json_doc parsed_certificate (nullptr, yyjson_doc_free);
     native_json_doc parsed_policy (nullptr, yyjson_doc_free);
     yyjson_val* cert = native_json_object (certificate, certificate_size, parsed_certificate);
