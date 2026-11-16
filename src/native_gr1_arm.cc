@@ -236,6 +236,10 @@ namespace acacia {
       worker_stage ("target_check");
       worker_event (*worker, "verification_start");
     }
+    // I07: solver polarity and bound sidecars are only claims. Accept a verdict
+    // only after fresh certificate/policy checking against this exact target
+    // game; neither matching hashes nor a strategy object proves semantics.
+    // Non-OK/non-VERIFIED outcomes retain their diagnostics and return UNKNOWN.
     phase_scope check_phase (arm, "independent_check");
     const TlsfGr1CheckStatus status = tlsf_gr1_check (&input, &check_options, &checked.value);
     check_phase.finish (static_cast<long long> (checked.value.peak_nodes));

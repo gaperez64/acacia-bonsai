@@ -680,6 +680,89 @@ struct Kernel {
     auto view () const { return std::make_shared<lazy::LazyBuchiView> (graph); }
 };
 
+void fresh_certificate_invariant () {
+  unsigned rejected = 0;
+  for (bool frozen : {false, true})
+    for (bool accepting : {false, true}) {
+      Kernel k {1};
+      k.graph->new_edge (0, 0, bddtrue,
+                         accepting ? spot::acc_cond::mark_t {0} : spot::acc_cond::mark_t {});
+      k.graph->prop_state_acc (true); // one self-loop is also state-based
+      auto store = frozen
+          ? std::make_unique<RowStore> (rows::FrozenAcacia {k.graph, 1}, rows::RowLimits {})
+          : std::make_unique<RowStore> (k.view (), rows::RowLimits {}, Reporter {});
+      store->enumerate_and_freeze ();
+      // Independent mathematical oracle: no APs, one mandatory self-loop,
+      // K=1, initial counter 0. x' = min(1, x + accepting); safety is x < 1.
+      // Thus the nonaccepting loop wins forever; the accepting loop loses.
+      const auto expected = accepting ? forward_result_status::lose_k
+                                      : forward_result_status::win_k;
+      auto good = Search {*store, k.alphabet, 1}.solve ();
+      expect (good.status == expected && good.failure == Unknown::none,
+              "I07 one-state verdict agrees with the mathematical oracle");
+      good.status = forward_result_status::unknown;
+      if (accepting)
+        expect (verify_losing_proof (*store, k.alphabet, 1, good).value.has_value (),
+                "I07 valid losing proof replays without trusting result.status");
+      else
+        expect (verify_winning_certificate (*store, k.alphabet, 1, good).value.has_value (),
+                "I07 valid winning certificate replays without trusting result.status");
+
+      Limits limits;
+      limits.verifier_queries.max_steps = 0;
+      const auto limited = Search {*store, k.alphabet, 1, limits}.solve ();
+      expect (limited.status == forward_result_status::unknown &&
+              limited.failure == Unknown::resource_limit && limited.generators.empty (),
+              "I07 verifier resource exhaustion cannot publish a verdict");
+
+      // Negative control: poison only search arithmetic, preserving the row's
+      // digest and immutable Spot edge/acceptance data. Search now claims the
+      // opposite verdict, with internally consistent flags/choices/proofs.
+      auto& row = const_cast<rows::CompleteRankRow&> (store->get (0));
+      expect (row.edges.size () == 1 && row.edges[0].increment == accepting,
+              "I07 fixture has the intended mandatory transition");
+      const auto digest = row.digest;
+      row.edges[0].increment = not accepting;
+      const auto rebuilt_before = store->verifier_rebuilt;
+      const auto bad = Search {*store, k.alphabet, 1}.solve ();
+      expect (bad.status == forward_result_status::unknown &&
+              bad.failure == Unknown::invalid_query && bad.generators.empty (),
+              "I07 fresh semantics rejects the false search verdict");
+      expect (row.digest == digest && row.edges[0].increment != accepting &&
+              store->verifier_rebuilt > rebuilt_before,
+              "I07 rejection rebuilds rows without repairing search or changing identity");
+      Reader fresh {*store, true, {}};
+      expect (fresh.row (0).digest == digest && fresh.row (0).edges[0].increment == accepting,
+              "I07 equal row digests coexist with different search/replay semantics");
+      auto claim = bad;
+      claim.failure = Unknown::none; // replay the claim, without the prior rejection flag
+      if (accepting) {
+        const auto& initial = bad.nodes.at (bad.initial);
+        expect (not initial.losing && initial.active_rows_complete &&
+                initial.covered_inputs == bddtrue && not initial.choices.empty (),
+                "I07 negative control reaches a complete false winning claim");
+        const auto checked = verify_winning_certificate (*store, k.alphabet, 1, claim);
+        expect (not checked.value && checked.unknown == Unknown::invalid_query,
+                "I07 false winning claim fails certificate replay");
+      }
+      else {
+        expect (bad.nodes.at (bad.initial).losing && bad.initial_proof.has_value (),
+                "I07 negative control reaches a false losing claim");
+        const auto& proof = bad.proofs.at (*bad.initial_proof);
+        expect (proof.record.reason == losing_reason::env_losing_input &&
+                proof.rows == std::vector<RowIdentity> {{0, digest}},
+                "I07 false losing proof passes the row identity obligation");
+        const auto checked = verify_losing_proof (*store, k.alphabet, 1, claim);
+        expect (not checked.value && checked.unknown == Unknown::invalid_query,
+                "I07 matching row identity cannot replace the Bad obligation");
+      }
+      ++rejected;
+    }
+  expect (rejected == 4, "I07 generic and frozen readers reject both false verdicts");
+  std::cout << "I07: 4 mathematical verdicts and verifier resource limits checked; "
+               "4 unchanged-digest search mutations rejected as UNKNOWN/invalid_query\n";
+}
+
 void constant_output_invariant () {
   unsigned valid = 0, mutations = 0;
   for (unsigned outputs : {0, 1, 2}) {
@@ -1476,17 +1559,21 @@ void closure_mutations_and_growth () {
 }
 
 int main (int argc, char** argv) {
+  const bool i07_only = argc == 2 && std::string (argv[1]) == "--i07-only";
   if (argc == 3 && std::string (argv[1]) == "--oracle-layout") {
     const auto layout = acacia::parse_oracle_layout (argv[2]);
     if (!layout)
       return 1;
     acacia::selected_oracle_layout = *layout;
   }
-  else if (argc != 1)
+  else if (argc != 1 && not i07_only)
     return 1;
   const int report_fd = open ("/dev/null", O_WRONLY);
   const auto report = pipe_reporter (report_fd);
   try {
+    fresh_certificate_invariant ();
+    if (i07_only)
+      return 0;
     losing_region_invariant ();
      {
       if (const int code = differential (report))
