@@ -18,7 +18,9 @@
 namespace {
 
   // Keep test actions and their contracts active in release builds.
-  void check (bool condition) {
+  void check (bool condition, const char* message = "test condition failed") {
+    if (!condition)
+      std::cerr << message << '\n';
     assert (condition);
     if (!condition)
       std::abort ();
@@ -61,6 +63,98 @@ namespace {
     const auto maximum = std::numeric_limits<uint64_t>::max ();
     b = make_budget (maximum - 1, 0, {maximum, maximum});
     check (b.until == maximum && b.per_attempt <= maximum);
+  }
+
+  void i09_invariant_tests () {
+    using namespace acacia::unreal_witnesses;
+    const auto parse = [] (const char* text) {
+      const auto parsed = spot::parse_infix_psl (text);
+      check (parsed.f && parsed.errors.empty ());
+      return parsed.f;
+    };
+    const auto bind = [] (spot::formula f) {
+      return source_binding {spot::str_psl (f), "ltl", "-", "Mealy", "Mealy", {},
+                             {"a", "unused_input"}, {"b", "c", "unused_output"}};
+    };
+    // Language emptiness and parity solving do not use derive/verify_derivation.
+    const auto implies = [] (spot::formula f, spot::formula g) {
+      return spot::translator {}.run (spot::formula::And ({f, spot::formula::Not (g)}))
+          ->is_empty ();
+    };
+    const auto real = [] (spot::formula f, bool moore) {
+      spot::synthesis_info info;
+      info.moore = moore;
+      info.s = spot::synthesis_info::algo::DPA_SPLIT;
+      return spot::solve_game (spot::ltl_to_game (f, {"b", "c", "unused_output"}, info));
+    };
+    for (const auto* text : {"GF a -> (G b & GF !b & GF c)",
+                             "G a -> (G a & GF b & GF c)",
+                             "GF a -> G((a -> b) & (a -> !b) & F c)",
+                             "GF a -> F(b & c & X !b)"}) {
+      const auto original = parse (text);
+      auto source = bind (original);
+      for (bool moore : {false, true}) {
+        source.target = source.effective_target = moore ? "Moore" : "Mealy";
+        const auto p = make_plan (original, source);
+        check (std::string (p.reason) == "eligible" && p.guarantees.size () == 3);
+        const bool original_real = real (original, moore);
+        // Exhaust every nonempty proper subset, including the joint obligation.
+        for (unsigned mask = 1; mask < 7; ++mask) {
+          std::vector<size_t> kept;
+          for (size_t j = 0; j < 3; ++j)
+            if (mask & (1U << j))
+              kept.push_back (j);
+          const derivation d {p, kept, derive (p, kept)};
+          check (d.objective && verify_derivation (d, original, source));
+          check (implies (original, d.objective), "I09: original must imply derived");
+          check (real (d.objective, moore) || !original_real);
+        }
+      }
+    }
+    // Negative control: REAL of a weakening cannot decide the original game.
+    const auto original = parse ("GF a -> (G b & GF !b & GF c)");
+    const auto source = bind (original);
+    const auto p = make_plan (original, source);
+    for (size_t j = 0; j < p.guarantees.size (); ++j) {
+      const auto weakened = derive (p, {j});
+      check (implies (original, weakened) && !implies (weakened, original));
+      for (bool moore : {false, true})
+        check (real (weakened, moore) && !real (original, moore));
+    }
+    // Negative control: removing the assumption strengthens a REAL source to
+    // an UNREAL candidate; the same implication oracle must reject this mutation.
+    const auto framed = parse ("G a -> (G a & GF b & GF c)");
+    const auto framed_source = bind (framed);
+    const auto framed_plan = make_plan (framed, framed_source);
+    const auto guarantee = parse ("G a");
+    const auto index = std::ranges::find (framed_plan.guarantees, guarantee);
+    check (index != framed_plan.guarantees.end ());
+    const std::vector<size_t> kept {size_t (index - framed_plan.guarantees.begin ())};
+    derivation damaged {framed_plan, kept, {}};
+    damaged.premise.frames.clear ();
+    damaged.objective = derive (damaged.premise, kept);
+    check (damaged.objective == guarantee && !implies (framed, damaged.objective));
+    check (!verify_derivation (damaged, framed, framed_source));
+    for (bool moore : {false, true})
+      check (real (framed, moore) && !real (damaged.objective, moore));
+
+    // A completed search flag without a checked receipt, a failed attempt and
+    // an exception must all leave the original fallback undecided.
+    records silent;
+    auto unverified = [] (spot::formula) { return true; };
+    auto inconclusive = [] (spot::formula) { return false; };
+    auto error = [] (spot::formula) -> bool { throw std::runtime_error ("I09 control"); };
+    check (!try_extended_witnesses (original, source, true, unverified, silent, 0),
+           "I09: an unverified search flag must not transfer UNREAL");
+    check (!try_extended_witnesses (original, source, true, inconclusive, silent, 0),
+           "I09: an inconclusive candidate must not transfer a verdict");
+    check (!try_extended_witnesses (original, source, true, error, silent, 0));
+    auto must_not_run = [] (spot::formula) -> bool { std::abort (); };
+    check (!try_extended_witnesses (original, source, false, must_not_run, silent, 0));
+    check (!try_extended_witnesses (original, source, true, must_not_run, silent, 0, {0, 0}));
+    check (!try_extended_witnesses (original, source, true, must_not_run, silent,
+                                    acacia::phase_clock (CLOCK_MONOTONIC)));
+    std::cout << "I09: inclusion, one-way UNREAL transfer, negative controls and fallback pass\n";
   }
 
   void extended_contract_tests () {
@@ -318,6 +412,10 @@ namespace {
 }  // namespace
 
 int main (int argc, char** argv) {
+  if (argc == 2 && std::string (argv[1]) == "--i09-only") {
+    i09_invariant_tests ();
+    return 0;
+  }
   if (argc == 3 && std::string (argv[1]) == "--extended-candidates") {
     using namespace acacia::unreal_witnesses;
     const auto f = spot::parse_infix_psl (argv[2]).f;
@@ -451,6 +549,7 @@ int main (int argc, char** argv) {
     return 0;
   }
   allowance_tests ();
+  i09_invariant_tests ();
   extended_contract_tests ();
   const auto oversized = make_formula (64, true);
   const auto witnesses = acacia::unreal_witnesses::make_safety_core_witnesses (oversized);
