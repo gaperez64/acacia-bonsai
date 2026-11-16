@@ -12,6 +12,36 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-16: The shipped portfolio drops `unreal:automaton:forward` (#384)
+
+Archive `preset384-20261115` (release `evidence-2026-11-16-preset384`). Same frozen
+binary as the cleanup report (`80827c26`, source 480b7676), all 1,524 SYNTCOMP26
+inputs, 8G/no swap, serial; arm sets chosen with `--arms`. The seven-arm reference
+is `final17/60/120` from `cleanup-20261113`. Later caps rerun only the previous
+cap's timeouts.
+
+| Arm set | 17 s | PAR-2 (s) | 60 s | PAR-2 (s) | 120 s | PAR-2 (s) |
+|---|---:|---:|---:|---:|---:|---:|
+| Shipped seven | 1367 | 5959.0 | 1388 | 17660.6 | 1394 | 33105.1 |
+| **C1: six, without `unreal:automaton:forward`** | **1370** | **5871.9** | **1392** | **17193.1** | **1398** | **32117.5** |
+| C2: seven, `real:small:forward` in its place | 1366 | 5987.3 | — | — | — | — |
+| C3: six, the fallback set without parity arms | 1256 | 9967.3 | — | — | — | — |
+
+No run has a verdict conflict or a memory failure. C1 gains `amba_decomposed_arbiter_pb_9`,
+`amba_gr_pb_2` (Strict, from the TLSF source), `robot_grid_pb_6_6` and, at 17 s, `08`
+(16.7 s) or, from 60 s, `lift_gr1+_pb_7`. Its only loss is `lift_wrong_physics_unreal_pb_10`
+at 17 s (1.0 s with seven arms), solved again at 60 s. PAR-2 is 87 s, 468 s and 988 s
+lower, well outside the 12.1 s floor. C2 gains `generalized_buffer_pb_5` but loses
+`robot_repair5` and the same lift input. Without the parity arms C3 loses 115 inputs,
+most solved in under 2 s by the shipped set, so it is not a useful fallback either.
+The first `docker_default` preset now runs C1; `unreal:automaton:forward` remains
+selectable with `--arms`.
+
+The archive also holds the #373 rerun of the 22 Strict specs at 120 s: ltlsynt times
+out on all of them with both the old and the strict formula, and native and strict
+converted Acacia agree (all time out). Only the old non-strict conversion answers,
+REALIZABLE on `amba_gr_pb_2` and `amba_gr+_pb_2`, which is the weaker specification.
+
 ## 2026-11-15: Cleanup sprint report
 
 Archive `cleanup-20261113` (release `evidence-2026-11-15-cleanup`), which also

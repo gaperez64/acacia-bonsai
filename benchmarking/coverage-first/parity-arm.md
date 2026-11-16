@@ -1,6 +1,6 @@
 # Deterministic automaton and parity arm
 
-The first `docker_default` portfolio has seven arms, including `both:parity:spot`
+The first `docker_default` portfolio has six arms, including `both:parity:spot`
 and `both:parity:oxidd`. The Spot arm translates the
 original positive specification with Spot's deterministic, generic-acceptance,
 high-level translation through `src/solver/parity/route.{hh,cc}`.
