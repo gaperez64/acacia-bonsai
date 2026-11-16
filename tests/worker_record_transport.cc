@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstdio>
+#include <new>
 #include <poll.h>
 
 namespace {
@@ -53,6 +54,51 @@ namespace {
     while (waitpid (state.writer, nullptr, 0) < 0 && errno == EINTR) {}
     state.writer = -1;
   }
+
+  void reaped_snapshots () {
+    void* memory = mmap (nullptr, sizeof (acacia::worker_record), PROT_READ | PROT_WRITE,
+                         MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    if (memory == MAP_FAILED)
+      std::abort ();
+    // Enumerate every subset of the five published boundaries. Nonzero poison
+    // in unpublished slots models death between payload and commit stores.
+    for (unsigned mask = 0; mask < 32; ++mask) {
+      auto* record = new (memory) acacia::worker_record {};
+      const pid_t child = fork ();
+      if (child < 0)
+        std::abort ();
+      if (child == 0) {
+        acacia::phase_records_init ();
+        acacia::active_worker_record () = record;
+        record->pid = getpid ();
+        record->start_mono_ns = mask + 1;
+        record->terminal = record->verified = true;
+        // An oversized packet must be lost, with its loss in the shared record.
+        acacia::phase_records_send ("", sizeof (acacia::phase_packet::line) + 1);
+        for (unsigned i = 0; i < 5; ++i) {
+          record->boundaries[i].mono_ns = 100 + i;
+          record->boundaries[i].cpu_ns = 200 + i;
+          record->boundaries[i].have_cpu = true;
+          std::atomic_thread_fence (std::memory_order_release);
+          record->boundary_committed[i] = (mask >> i) & 1;
+        }
+        raise (SIGKILL);
+        _exit (3);
+      }
+      int status = 0;
+      rusage usage {};
+      pid_t reaped;
+      do {
+        reaped = wait4 (child, &status, 0, &usage);
+      } while (reaped < 0 && errno == EINTR);
+      if (reaped != child || !WIFSIGNALED (status) || WTERMSIG (status) != SIGKILL)
+        std::abort ();
+      acacia::worker_reaped (*record, &usage, status, "signal", 300);
+    }
+    munmap (memory, sizeof (acacia::worker_record));
+    finish ();
+    std::puts ("32 reaped snapshots");
+  }
 }
 
 int main () {
@@ -67,6 +113,10 @@ int main () {
   const int command = std::getchar ();
   if (command == EOF)
     return 3;
+  if (command == 's') {
+    reaped_snapshots ();
+    return 0;
+  }
   const bool reliable = getenv ("ACACIA_TEST_RECORD_DRAIN");
   acacia::worker_record record;
   record.pid = getpid ();

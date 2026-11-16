@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import resource
+import signal
 import subprocess
 import sys
 import tempfile
@@ -15,10 +16,64 @@ def rows(directory):
             for line in path.read_text().splitlines()]
 
 
+def check_snapshots(records):
+    """Independent subset oracle: unpublished payloads never become evidence."""
+    boundaries = ("decline", "route_stopped", "verification_complete", "terminal_result", "exit")
+    reaps = [r for r in records if r.get("event") == "worker_reap"]
+    assert sorted(r["start_mono_ns"] for r in reaps) == list(range(1, 33)), reaps
+    recovered = [r for r in records if r.get("event") == "worker_resource"]
+    assert len(recovered) == 80, "I11: expected 5 * 16 committed boundaries"
+    for reap in reaps:
+        mask = reap["start_mono_ns"] - 1
+        assert reap["signal"] == signal.SIGKILL and reap["exit_code"] == -1, (
+            "I11: killed worker has no verdict", reap)
+        assert reap["dropped_records"] == 1, ("I11: retain shared loss counter", reap)
+        samples = [r for r in recovered if r["worker_pid"] == reap["worker_pid"]]
+        expected = {name for i, name in enumerate(boundaries) if mask & (1 << i)}
+        assert len(samples) == len(expected) and {r["boundary"] for r in samples} == expected, (
+            "I11: recover exactly committed boundaries", mask, samples)
+        for sample in samples:
+            i = boundaries.index(sample["boundary"])
+            assert sample["recovered"] and sample["dropped_records"] == 1, sample
+            assert (sample["mono_ns"], sample["process_cpu_ns"]) == (100 + i, 200 + i), sample
+
+
+def check_snapshot_controls(records):
+    check_snapshots(records)
+    empty = next(r for r in records if r.get("event") == "worker_reap"
+                 and r["start_mono_ns"] == 1)
+    sample = next(r for r in records if r.get("event") == "worker_resource")
+    # Keep mutations of the observation in-suite as negative controls for the
+    # same oracle used on production output, including fabricated completion.
+    controls = {
+        "uncommitted boundary": [dict(r, worker_pid=empty["worker_pid"], start_mono_ns=1)
+                                 if r is sample else r for r in records],
+        "missing committed boundary": [r for r in records if r is not sample],
+        "lost loss counter": [dict(r, dropped_records=0) if r is empty else r for r in records],
+        "killed worker verdict": [dict(r, exit_code=0, signal=0) if r is empty else r
+                                  for r in records],
+    }
+    for name, mutated in controls.items():
+        try:
+            check_snapshots(mutated)
+        except AssertionError:
+            continue
+        raise AssertionError(f"I11: oracle accepted mutation: {name}")
+
+
 def main():
     binary = Path(sys.argv[1]).resolve()
     with tempfile.TemporaryDirectory(dir=sys.argv[2]) as temporary:
         root = Path(temporary)
+        directory = root / "snapshots"
+        directory.mkdir()
+        process = subprocess.run([str(binary)], input="s", text=True,
+                                 env=dict(os.environ, ACACIA_PHASE_RECORDS=str(directory)),
+                                 capture_output=True, timeout=5)
+        assert (process.returncode, process.stdout, process.stderr) == (
+            0, "32 reaped snapshots\n", ""), process
+        check_snapshot_controls(rows(directory))
+        print("I11: 32 killed snapshots, 80 committed boundaries, 4 oracle mutations rejected")
         for pipe in ("native", "512"):
             directory = root / pipe
             directory.mkdir()
