@@ -1760,6 +1760,15 @@ namespace acacia::spot_lazy_game {
         }));
       }
 #endif
+      // I02, after each completed expansion or loss update: active outgoing
+      // input regions C_i are pairwise disjoint and covered_inputs = OR_i C_i.
+      // expand adds only C_i contained in NOT covered_inputs, so removing an
+      // active C_j preserves the union via covered_inputs AND NOT C_j.
+      // Incoming references may be stale or repeated: subtract only when the
+      // referenced choice is still active AND its current successor is this
+      // loss target, then deactivate it once. Inactive history may overlap
+      // replacement regions. Failed checked updates leave solve inconclusive;
+      // this invariant does not turn a partial exceptional exit into a verdict.
       void propagate_losses () {
         while (not losses_.empty ()) {
           const auto id = losses_.front ();
@@ -1769,11 +1778,7 @@ namespace acacia::spot_lazy_game {
             auto& source = result_.nodes[ref.source];
             auto& choice = source.choices[ref.choice];
             if (choice.active && choice.successor == id) {
-              // Active regions are pairwise disjoint: expand intersects every
-              // new region with the still-missing inputs. Thus removing C_j
-              // from their union is exactly Covered AND NOT C_j. Check the
-              // current flag and target above: inactive historical regions can
-              // overlap newer choices and must never be subtracted twice.
+              // I02 requires both guards above before subtracting this region.
               source.covered_inputs = detail::take (oracle_.query<bdd> ([&] (auto& b) {
                 return b.land (source.covered_inputs, b.negate (choice.input_region));
               }));

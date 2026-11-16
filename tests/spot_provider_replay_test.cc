@@ -17,6 +17,8 @@ void expect (bool condition, const std::string& name) {
     throw std::runtime_error ("FAIL: " + name);
 }
 
+void check_input_partition (const SolveResult&, const letters::WorkerAlphabet&);
+
 void check_verifier_split (const Fields& fields) {
   for (const auto* key : {"queries", "steps", "bdd_operations"}) {
     std::size_t sum = 0;
@@ -122,6 +124,7 @@ struct SearchTestAccess {
       s.losses_.push_back (target);
     }
     static void check_coverage (Search& s) {
+      check_input_partition (s.result_, s.alphabet_);
       for (RankNodeId id = 0; id < s.result_.nodes.size (); ++id)
         expect (s.reconstruct_coverage (id) == s.result_.nodes[id].covered_inputs,
                 "incremental coverage equals a fresh left-to-right OR");
@@ -282,6 +285,24 @@ std::vector<bdd> valuations (const letters::WorkerAlphabet& a, bdd vars) {
   }
   return out;
 }
+
+// I02 truth-table oracle: count owners of each total input valuation instead
+// of reproducing the incremental BDD union/subtraction or calling Search.
+// The fixtures use input-only regions; an empty input alphabet has one cube.
+void check_input_partition (const SolveResult& result, const letters::WorkerAlphabet& a) {
+  const auto inputs = valuations (a, a.inputs);
+  for (const auto& node : result.nodes)
+    for (const auto& input : inputs) {
+      std::size_t owners = 0;
+      for (const auto& choice : node.choices)
+        if (choice.active && (choice.input_region & input) != bddfalse)
+          ++owners;
+      expect (owners <= 1, "I02: active input regions are pairwise disjoint");
+      expect (((node.covered_inputs & input) != bddfalse) == (owners != 0),
+              "I02: covered_inputs is exactly the active union");
+    }
+}
+
 // Independent arithmetic contract, including deactivated choices: target loss
 // does not change the promise originally made by a region.
 int choice_regions (RowStore& store, const letters::WorkerAlphabet& a, int K,
@@ -830,6 +851,54 @@ void incremental_coverage_property () {
             << overlaps << " activations overlap inactive history\n";
 }
 
+void input_partition_negative_controls () {
+  Kernel k {1};
+  const bdd u = k.ap ("u", true);
+  RowStore store {k.view (), {}, {}};
+  Search s {store, k.alphabet, 1};
+  auto& result = SearchTestAccess::result (s);
+  result.nodes.resize (3, GuardedRankNode {Rank {{}, 1}});
+  SearchTestAccess::activate (s, 0, u, 1);
+  SearchTestAccess::activate (s, 0, !u, 2);
+  SearchTestAccess::loss (s, 1);
+  SearchTestAccess::drain (s);
+  SearchTestAccess::activate (s, 0, u, 2); // Overlaps only inactive history.
+  check_input_partition (result, k.alphabet);
+  expect (not result.nodes[0].choices[0].active &&
+          result.nodes[0].covered_inputs == bddtrue, "I02 negative-control baseline");
+
+  unsigned rejected = 0;
+  auto reject = [&] (const char* obligation, auto mutate) {
+    auto bad = result;
+    mutate (bad.nodes[0]);
+    try {
+      check_input_partition (bad, k.alphabet);
+    } catch (const std::runtime_error& e) {
+      expect (e.what () == std::string ("FAIL: I02: ") + obligation,
+              "I02 mutation fails the intended obligation");
+      ++rejected;
+      return;
+    }
+    expect (false, "I02 oracle must reject the mutation");
+  };
+  // An OR-only reconstruction would accept this overlapping active family.
+  reject ("active input regions are pairwise disjoint", [] (auto& node) {
+    node.choices[1].input_region = bddtrue;
+  });
+  reject ("covered_inputs is exactly the active union", [] (auto& node) {
+    node.covered_inputs = bddfalse; // Omit covered valuations.
+  });
+  reject ("covered_inputs is exactly the active union", [] (auto& node) {
+    node.choices[1].active = false; // Retain extra covered valuations.
+  });
+  reject ("active input regions are pairwise disjoint", [] (auto& node) {
+    node.choices[0].active = true; // Resurrect history overlapping its replacement.
+  });
+  expect (rejected == 4, "all I02 negative controls exercised");
+  std::cout << "I02: " << rejected
+            << " partition/coverage mutations rejected by truth-table oracle\n";
+}
+
 void incremental_coverage_failure () {
   Kernel k {1};
   const bdd u = k.ap ("u", true);
@@ -1299,6 +1368,7 @@ int main (int argc, char** argv) {
     certificate_shape_metrics ();
     incremental_coverage_events ();
     incremental_coverage_property ();
+    input_partition_negative_controls ();
     incremental_coverage_failure ();
     missing_output_kernel ();
     corrupt_certificates ();
