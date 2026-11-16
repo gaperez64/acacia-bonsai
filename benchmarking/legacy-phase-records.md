@@ -89,7 +89,9 @@ references at one rank node, not a global edge count.
 
 Byte estimates count accounted object/vector payload capacities. They omit
 allocator/list/tree/hash-node overhead, bucket storage, BDD manager allocations,
-and the immutable Spot graph. Decoding is append-only, so its accounted peak is
+and the immutable Spot graph. `rank_interner_bytes` counts the hash/ID index
+payload; the search nodes own and account for the rank entries separately.
+Decoding is append-only, so its accounted peak is
 its retained payload. Action-construction peak includes retained unique tables
 and the pending input's table before deduplication. Search snapshots include
 ranks, choices, proofs, incoming references, queued identifiers, oracle entries

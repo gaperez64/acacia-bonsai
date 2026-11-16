@@ -1452,12 +1452,8 @@ namespace acacia::spot_lazy_game {
       void report_counters () const {
         if (!view_.report.sink)
           return;
-        size_t bytes = 0;
-        for (const auto& [rank, id] : interned_) {
-          (void) id;
-          bytes += rank_bytes (rank);
-        }
-        view_.report.count ("rank_interner_bytes", bytes);
+        // solve() moves the nodes out; reporting must never resolve index IDs.
+        view_.report.count ("rank_interner_bytes", rank_interner_bytes ());
         view_.report.count ("queue_pushes", queue_pushes_);
         view_.report.count ("queue_pops", queue_pops_);
         view_.report.count ("queue_peak", queue_peak_);
@@ -1556,10 +1552,7 @@ namespace acacia::spot_lazy_game {
             (open_.size () + losses_.size ()) * sizeof (RankNodeId) +
             view_.cache->complete_rows () * sizeof (rows::CompleteRankRow) +
             view_.generated_edges * (sizeof (decltype (rows::CompleteRankRow::edges)::value_type));
-        for (const auto& [rank, id] : interned_) {
-          (void) id;
-          bytes += rank_bytes (rank);
-        }
+        bytes += rank_interner_bytes ();
         bytes += result_.nodes.capacity () * sizeof (GuardedRankNode);
         bytes += result_.proofs.capacity () * sizeof (GuardedLosingProof);
         for (const auto& node : result_.nodes)
@@ -1670,7 +1663,15 @@ namespace acacia::spot_lazy_game {
       std::shared_ptr<Reader> rows_;
       Oracle oracle_;
       SolveResult result_;
-      std::unordered_map<Rank, RankNodeId> interned_;
+      // Node ranks are immutable during search and IDs are append-only offsets.
+      // Hashes only select candidates; full entry equality establishes identity.
+      std::unordered_multimap<size_t, RankNodeId> interned_;
+#ifdef ACACIA_PROVIDER_REPLAY_TESTING
+      size_t interner_hash_mask_ = SIZE_MAX;
+#endif
+      size_t rank_interner_bytes () const {
+        return interned_.size () * sizeof (decltype (interned_)::value_type);
+      }
       size_t before_search_ = view_.cache->complete_rows ();
       solver_detail::forward_work_queue<RankNodeId> open_, losses_;
       LossSet losing_;
@@ -1694,14 +1695,28 @@ namespace acacia::spot_lazy_game {
         }
       }
       RankNodeId intern (Rank rank) {
-        const auto found = interned_.find (rank);
-        if (found != interned_.end ())
-          return found->second;
+        auto hash = rank.hash ();  // Cache before moving the caller's entries.
+#ifdef ACACIA_PROVIDER_REPLAY_TESTING
+        hash &= interner_hash_mask_;
+#endif
+        const auto [first, last] = interned_.equal_range (hash);
+        for (auto it = first; it != last; ++it)
+          if (result_.nodes[it->second].rank == rank)
+            return it->second;
         if (result_.nodes.size () >= limits_.max_rank_nodes)
           throw detail::Failure {Unknown::resource_limit};
         const auto id = result_.nodes.size ();
-        interned_.emplace (rank, id);
-        result_.nodes.push_back (GuardedRankNode {std::move (rank)});
+        const auto indexed = interned_.emplace (hash, id);
+        // GuardedRankNode moves cannot throw, so failed growth preserves existing nodes.
+        // Publish the pair before enqueueing; failed node allocation rolls back
+        // the index without allocating. No lookup can observe the temporary ID.
+        try {
+          result_.nodes.push_back (GuardedRankNode {std::move (rank)});
+        }
+        catch (...) {
+          interned_.erase (indexed);
+          throw;
+        }
         enqueue (id);
         return id;
       }

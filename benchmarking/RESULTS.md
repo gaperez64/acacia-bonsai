@@ -1518,3 +1518,73 @@ Evidence: local capsule `acacia-c01-20261114`, archived with this sprint's
 evidence. It holds the frozen binaries (baseline `e126c9ed5452`, candidate
 `270bb8d6c5ea` on `ac90948faf69`), input hashes, build identities, raw counters
 and test logs. G3, G4 and G5 results are recorded in the pull request.
+
+## 2026-11-15: Index sparse search ranks through node IDs (#397)
+
+Remove only the sparse search interner's rank copy. During search, normalized
+node ranks are immutable, node IDs are append-only offsets, and node moves
+cannot throw. The index stores cached hash/ID pairs and compares complete
+entries for every matching hash. Failed node growth rolls back exactly its
+index iterator before propagating the failure; enqueue order and
+resource/cancellation outcomes remain unchanged. Proof, losing-antichain,
+Oracle and independent verifier ranks keep their owners. `rank_interner_bytes`
+accounts for index payload without reading moved-out nodes; its exclusion of
+hash-node overhead and buckets is unchanged.
+
+Matched normal release builds use the first `docker_default` preset,
+`otf_sparse_formula_parity`, from `origin/master` at `02d40827` and the candidate,
+with GCC 15.3.1, private Spot 2.16 (64 acceptance sets), one compile job and one
+LTO thread. The earlier 32-set setup failed the same G4 row on both binaries;
+final matched runs use the repository's 64-set setting and retain those earlier
+observations separately. The same ten fixed-K formula-arm inputs as C01 run in
+three serial alternating pairs on CPU 2, each in a 5 GiB/no-swap scope. All
+**60/60 verdicts are UNREALIZABLE**, with valid process RSS on all 60 runs and
+no multiplexed hardware counters. Candidate/base geometric means of per-input
+medians are **0.998887 instructions, 0.999805 cycles and 0.993931 process RSS**.
+Median RSS falls on all ten inputs; `heim-double-x12` falls from 197,536 to
+195,648 KiB. These counters support the storage saving; they establish no
+wall-time speedup or G3 admission. RSS is the `wait4` maximum for the reaped
+process tree, not a concurrent cgroup peak; cgroup peaks are not collected by
+this probe and carry explicit missing reasons.
+
+For 4,096 ranks at supports 1/8/64, matched release probes remove **4,096
+allocations** and **192/416/2,208 KiB** of requested allocation bytes. The storage
+check requires those allocation/byte savings and a paired median RSS geometric
+mean below baseline; it rejects a derived control using the measured baseline
+allocation rows as the candidate. Ten further paired worker records preserve all **139
+telemetry names**; all **128 fields** outside timings, worker PID and the two
+intended byte changes agree. Each retained-payload estimate falls by exactly its
+interner-payload saving. Actual and forced collisions, copied/moved ranks,
+growth/rehash, allocation refusal, limits, cancellation and moved-result
+destruction pass the focused unit gate; hash-only, missing-rollback and whole
+hash-group rollback mutants are rejected at the intended checks. The
+lifetime/growth Memcheck probe reports zero errors. G0 passes **95/95 Acacia**
+and **100/100 Posets** tests. G1 passes **40/40** with no verdict change or
+coverage loss. G4 passes with **592 OK and 33 permitted timeouts**; all 625
+expected invocations are present, with no false-verdict marker. The Oracle
+gate still rejects 960 corrupted certificates, and sparse normalization and
+mass/equality checks pass.
+
+G5 passes all **1,524 instances**, with zero missing conversions, opposite
+verdicts or frontend errors. Preparation converts all 1,586 source inputs with
+zero skips; all ten spot-checks pass, with no tlsf-tools fallback pairs. Native
+solves 1,356 instances and times out on 168; the converted route solves 1,317
+and times out on 207. There are 41 native-only and two converted-only answers.
+These are coverage results, not timing comparisons.
+
+Review follow-up repeats all six rank/interner/Oracle/provider tests, all three
+mutants, the allocation probes, the storage gate and its no-saving control.
+They pass, including rejection of all 960 corrupt certificates; the separate
+Memcheck lifetime probe again reports zero errors. Reclassifying the retained
+G4 records still reports `GATE PASS`; the full corpus campaigns were not rerun.
+
+Evidence: archive `acacia-397-20261116` (release `evidence-2026-11-16-acacia-397`,
+`partial`: everything except G3), with session environments removed from Meson logs
+and a redaction ledger of the changed paths. Round-2 review found no new
+implementation defects and repeated the focused tests, mutants, allocation probes,
+storage controls and Memcheck (zero errors) without rerunning full campaigns.
+
+G3 ran on the benchmarking machine (archive `g3-20261116`): a release build of this
+change merged onto master c9d40890 against the 2.9.0 gate binary passes both panels,
+SYNTCOMP25 165/180 and SYNTCOMP26 169/180, with no verdict change or coverage loss and
+PAR-2 within 0.9 s.

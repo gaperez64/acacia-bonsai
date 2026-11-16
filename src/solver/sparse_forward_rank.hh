@@ -43,8 +43,8 @@ namespace acacia::spot_rows {
         }
         // Summaries of the normalized entries, computed once here because
         // entries_ cannot change afterwards.  hash() used to recompute its
-        // chain on every call, and both Search::interned_ and Oracle::prepared_
-        // are unordered_map<Rank, ...>, so every lookup re-hashed the vector.
+        // chain on every call; search interning and Oracle memo lookups both
+        // use this cached hash rather than re-hashing the vector.
         for (const auto& [q, value] : entries_) {
           for (const auto v : {std::size_t (q), std::size_t (value)})
             hash_ ^= v + std::size_t (0x9e3779b9) + (hash_ << 6) + (hash_ >> 2);
@@ -123,8 +123,8 @@ namespace acacia::spot_rows {
       // Derived from entries_ by the constructor, which is the only writer.
       // Defaulted copy and move carry it; a moved-from rank keeps a hash for
       // entries it no longer owns, which no caller observes because interning
-      // copies into the map before moving into the node (spot_lazy_game.hh
-      // intern()) and never reads the source again.
+      // caches the hash before moving into the node (spot_lazy_game.hh intern())
+      // and never reads the source again.
       std::size_t hash_ = 0;
       // Shifted support mass; -1 means the accumulation left the checked range
       // and the filter must be skipped rather than trusted.

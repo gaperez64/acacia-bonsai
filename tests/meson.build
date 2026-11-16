@@ -240,6 +240,13 @@ sparse_forward_rank_test = executable (
 test ('sparse-forward-rank', sparse_forward_rank_test,
       suite : ['unit', 'sparse-rank'])
 
+spot_rank_interner_test = executable (
+  'spot-rank-interner-test', 'spot_rank_interner_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test ('spot-rank-interner', spot_rank_interner_test, suite : ['unit', 'sparse-rank'])
+
 spot_letter_oracle_test = executable (
   'spot-letter-oracle-test',
   'spot_letter_oracle_test.cc',
