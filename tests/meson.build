@@ -1,6 +1,18 @@
 fs = import ('fs')
 py = import ('python').find_installation ('python3')
 
+python_game_layout_test = executable (
+  'python-game-layout-test',
+  ['python_game_layout_test.cc', '../src/python/python_interface.cc'],
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,
+)
+test ('python-game-layout', python_game_layout_test, suite : ['unit', 'python-layout'])
+foreach mutation : ['foreign-layout', 'drop-bdd-owner']
+  test ('python-game-layout-' + mutation, python_game_layout_test,
+        args : ['--' + mutation], should_fail : true, suite : ['unit', 'python-layout'])
+endforeach
+
 ltl_formula_canonicalize = executable (
   'ltl-formula-canonicalize',
   'ltl_formula_canonicalize.cc',

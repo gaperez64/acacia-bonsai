@@ -32,6 +32,15 @@ using winreg_type = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vector_type
  * the calls used by the Python API (preprocessing, bool threshold, solving)
  * so we don't have to recompute the BDDs at every step.
  *
+ * I08: Game owns the IO variable registrations until its destructor; twa
+ * owns its edge registrations and retains dict. Borrowed BDDs must not be
+ * used after their registration owner dies. This does not give Game its own
+ * Boolean layout: the set_bool_thresh_* functions select shared state.
+ * Reselect the target game's layout before rank operations after switching
+ * games. Forward saturation also renumbers states, so select it before
+ * creating ranks/regions and do not reuse ranks across such preprocessing.
+ * Arbitrary interleaving/concurrent use is not supported by this contract.
+ *
  * Member declaration order matters: C++ destroys members in reverse order, so
  * twa (declared last) is destroyed first, allowing it to unregister its BDD
  * variables before dict's destructor calls assert_emptiness().
