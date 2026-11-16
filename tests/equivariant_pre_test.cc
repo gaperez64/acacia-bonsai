@@ -981,6 +981,112 @@ namespace {
     return ok;
   }
 
+  struct bound_trace_picker_maker {
+      std::vector<std::vector<int>>* trace;
+      template <typename Picker>
+      struct traced_picker {
+          Picker picker;
+          std::vector<std::vector<int>>* trace;
+          auto operator() (const SetOfStates& f) {
+            for (const auto& maximal : f) {
+              std::vector<int> row;
+              for (size_t q = 0; q < maximal.size (); ++q)
+                row.push_back (maximal[q]);
+              trace->push_back (std::move (row));
+            }
+            return picker (f);
+          }
+      };
+      template <typename Actions, typename Actioner>
+      auto make (Actions& actions, Actioner& actioner) const {
+        auto picker = input_pickers::critical::make (actions, actioner);
+        return traced_picker<decltype (picker)> {std::move (picker), trace};
+      }
+  };
+
+  bool run_i05_bound_oracle (unsigned n) {
+    // Every selected client follows root -> a_i -> b_i -> sink, visiting
+    // exactly two accepting states. Hence root wins iff K >= 3. There are no
+    // output choices. Independently, a_i allows ranks <= K-2, b_i <= K-1,
+    // and sink <= K-1; the Boolean root allows 0. Root is last so a failed K sets a
+    // Boolean coordinate to -1, exercising its reset on the next raise.
+    fixture fx;
+    fx.aut = spot::make_twa_graph (spot::make_bdd_dict ());
+    fx.aut->set_buchi ();
+    fx.aut->prop_state_acc (true);
+    fx.aut->new_states (2 * n + 2);
+    const unsigned sink = 2 * n, root = sink + 1;
+    fx.aut->set_init_state (root);
+    fx.aut->new_edge (sink, sink, bddtrue);
+    bdd idle = bddtrue;
+    for (unsigned i = 0; i < n; ++i) {
+      const bdd request = bdd_ithvar (fx.aut->register_ap ("r_" + std::to_string (i)));
+      fx.all_inputs &= request;
+      idle &= !request;
+      fx.aut->new_edge (root, i, request);
+      fx.aut->new_edge (i, n + i, bddtrue, {0});
+      fx.aut->new_edge (n + i, sink, bddtrue, {0});
+    }
+    fx.aut->new_edge (root, sink, idle);
+    posets::vectors::bool_threshold = root;
+    const ios_precomputers::mona precomputer;
+    const actioners::standard<state> actioner;
+    bool ok = true;
+    // Expected successful K (0 means no winning region), from counting the
+    // two visits and listing bounds on paper, without either schedule helper.
+    struct bounds { int min, max, inc, ordinary, equivariant; };
+    for (const auto [lo, hi, inc, ordinary_k, equivariant_k] : {
+             bounds {1, 1, 3, 0, 0}, bounds {1, 2, 1, 0, 0},
+             bounds {1, 2, 3, 0, 4}, bounds {1, 3, 3, 3, 4},
+             bounds {1, 4, 1, 3, 3}, bounds {2, 3, 3, 3, 5},
+             bounds {3, 3, 3, 3, 3}}) {
+      auto check = [&] (const auto& win, int expected_k, const std::string& path) {
+        const std::string label = "I05 " + path + " n=" + std::to_string (n)
+                                  + " bounds=" + std::to_string (lo) + ","
+                                  + std::to_string (hi) + "," + std::to_string (inc);
+        if (not expect (label + " verdict", win.has_value () == (expected_k != 0)))
+          return false;
+        if (not win)
+          return true;
+        bool matches = win->first == expected_k and win->second.size () == 1;
+        for (const auto& maximal : win->second)
+          for (unsigned q = 0; q <= root; ++q) {
+            const int expected = q < n ? expected_k - 2 : q < root ? expected_k - 1 : 0;
+            matches &= maximal[q] == expected;
+          }
+        return expect (label + " exact K and principal winning region", matches);
+      };
+      std::vector<std::vector<int>> trace;
+      const bound_trace_picker_maker picker {&trace};
+      k_bounded_safety_aut_detail<SetOfStates, ios_precomputers::mona,
+                                  actioners::standard<state>, bound_trace_picker_maker>
+          ordinary (fx.aut, lo, hi, inc, fx.all_inputs, fx.all_outputs,
+                    precomputer, actioner, picker);
+      ok &= check (ordinary.solve (), ordinary_k, "ordinary");
+      // At the first raise, the refuted region has a_i=lo-2, b_i=lo-1,
+      // root=-1. Observe the production lift before another CPre can mask a
+      // wrong delta by tightening it back to the correct final fixed point.
+      if (lo < 3 and lo < hi) {
+        const int next = std::min (hi, lo + inc);
+        auto raised = std::find_if (trace.begin (), trace.end (), [&] (const auto& row) {
+          return row[n] != lo - 1;
+        });
+        bool matches = raised != trace.end ();
+        if (matches)
+          for (unsigned q = 0; q <= root; ++q)
+            matches &= (*raised)[q] == (q < n ? next - 2 : q < root ? next - 1 : 0);
+        ok &= expect ("I05 actual ordinary delta, counting -1 lift and Boolean reset", matches);
+      }
+      auto equivariant = eq::try_solve<SetOfStates> (
+          fx.aut, hi, lo, inc, fx.all_inputs, fx.all_outputs,
+          precomputer, actioner, input_pickers::critical ());
+      ok &= expect ("I05 equivariant completes, without decline or stop",
+                    equivariant.outcome == eq::status::completed);
+      ok &= check (equivariant.win, equivariant_k, n <= 4 ? "sweep" : "representative");
+    }
+    return ok;
+  }
+
   bool run_unreal_case (unsigned n) {
     posets::vectors::bool_threshold = 1 + 2 * n;
     const fixture fx = make_aut (n, true);
@@ -1033,6 +1139,7 @@ int main () {
   ok &= run_mixed_io_family_case ();
   ok &= run_syntax_hint_case ();
   for (unsigned n : {3U, 5U}) {
+    ok &= run_i05_bound_oracle (n);
     ok &= run_unreal_case (n);
     ok &= run_k_overflow_case (n);
   }

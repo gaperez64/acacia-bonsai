@@ -215,6 +215,11 @@ class k_bounded_safety_aut_detail {
     template <typename Actioner>
     bool raise_bound_to_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner,
                                     long long next_k) {
+      // I05: use the actual positive delta, including a shortened final step.
+      // For old counting ranks -1 <= s[i] <= k-1, adding delta gives ranks
+      // in [-1, next_k-1], representable whenever next_k is. Lift even -1;
+      // reset Boolean coordinates to 0. The actioner and returned region must
+      // use this same K; exhausting the schedule supplies no winning region.
       const long long current_k = static_cast<long long> (k);
       const long long delta = next_k - current_k;
       assert (delta > 0);
