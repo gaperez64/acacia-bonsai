@@ -462,6 +462,14 @@ namespace acacia::solver_detail {
           account_losing_antichain_change (old_antichain_size, env.rank);
           ++invalidation_scans;
 
+          // I03 (when use_losing_antichain): at fixed game, K and Boolean
+          // layout, componentwise r <= s and losing(r) imply losing(s).
+          // Forward max/increment/saturation is monotone, unsafe is upward
+          // closed, and exists-input/forall-action preserves upward closure
+          // at each step of the losing attractor's least fixed point.
+          // Every inserted generator must invalidate all existing ranks above
+          // it before returning; later ranks consult the same region before
+          // expansion in expand_environment() (and advance_lazy_controller()).
           // This is a full scan of every environment rank interned so far.
           // Marking a match queues the ordinary selected-controller
           // propagation; a recursively attempted insertion is already
@@ -541,6 +549,7 @@ namespace acacia::solver_detail {
         void expand_environment (std::size_t env_id) {
           if (env_nodes[env_id].status != node_status::open)
             return;
+          // I03: a rank interned after a generator's scan must still lose.
           if (use_losing_antichain
               and losing_antichain.subsumes (env_nodes[env_id].rank, env_sums[env_id])) {
             // The stored generator is a complete losing proof for this rank:
