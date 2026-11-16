@@ -704,9 +704,12 @@ equivariant_pre_test = executable ('equivariant-pre-test',
                                    link_with : equivariant_invariant_test_helper,
                                    include_directories : inc,
                                    dependencies : [spot_dep, bddx_dep, posets_dep])
+# Debug builds under three-way parallel CI took 16-28 s (two runs hit the
+# 30 s default) once the K-schedule cases were added in #417.
 test ('equivariant-pre',
       equivariant_pre_test,
-      suite : ['unit', 'symmetry'])
+      suite : ['unit', 'symmetry'],
+      timeout : 60)
 
 small_invariant_test = executable ('small-invariant-test',
                                   'small_invariant_test.cc',
