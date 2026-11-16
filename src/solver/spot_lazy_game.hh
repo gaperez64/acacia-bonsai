@@ -1177,10 +1177,17 @@ namespace acacia::spot_lazy_game {
   using guarded::ChoiceRef;
   using guarded::RankNodeId;
   using guarded::RowIdentity;
+  // I01: every production choice, including one later deactivated, retains a
+  // present constant_output equal to one total valuation of alphabet.outputs:
+  // a satisfiable conjunction fixing every output once, with no other APs.
+  // For an empty output alphabet the sole total cube is bddtrue. expand() gets
+  // this witness from Oracle::model before publishing the choice. This is not
+  // a trusted certificate precondition: validate_outputs rejects absence and
+  // the winning verifier's restrict_total rejects malformed reachable active
+  // witnesses before projection. Replacing optional<bdd> requires an explicit
+  // valid-choice type while preserving these malformed-certificate rejections.
   struct SparseChoice {
       bdd input_region;
-      // Present exactly in constant mode, where it must be a total output cube.
-      // Existential choices store no output witness or cached projection.
       std::optional<bdd> constant_output;
       RankNodeId successor;
       bool active = true;
@@ -1317,6 +1324,9 @@ namespace acacia::spot_lazy_game {
           // from the search: a choice that claims too much input space must
           // fail this. The validated certificate tag selects the obligation.
           const bdd reaches = detail::take (oracle.eq (node.rank, target.rank));
+          // I01 is rechecked at this certificate boundary: presence was checked
+          // above; restrict_total checks totality and exact output support.
+          // A partial cube must not turn the constant choice into an output set.
           const bdd projection = detail::take (
               oracle.restrict_total (reaches, *choice.constant_output, Variables::outputs));
           covered = detail::take (oracle.query<bdd> ([&] (auto& b) {
