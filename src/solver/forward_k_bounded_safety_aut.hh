@@ -158,6 +158,10 @@ namespace acacia::solver_detail {
           const auto verify_started = clock::now ();
           unsigned long long verification_applications = 0;
           bool verification_budget_exhausted = false;
+          // I07: win_k is only a search claim. Recompute every generator's
+          // semantic image for every input, checking initial inclusion, safety
+          // and closure in this candidate; cached targets/covers cannot certify
+          // themselves. Rejection or exhaustion takes the fallback below.
           // A zero budget is the verifier's explicit unbounded mode.
           const bool verified = verify_winning_certificate (
               envelope, candidate, initial, input_output_fwd_actions, actioner,

@@ -1281,6 +1281,13 @@ namespace acacia::spot_lazy_game {
     }
   }
 
+  // I07: a verdict requires fresh semantic replay at this game's alphabet/K.
+  // Search status, node flags and RowIdentity digests are not proofs: winning
+  // choices must reach their claimed targets and form an inductive region;
+  // losing inputs must force unsafe or earlier-proved losing successors.
+  // Both verifiers rebuild rows/predicates independently of search's normalized
+  // increments and predicate caches. Row digests check correspondence but cannot
+  // replace the Bad obligation below. Failed replay stays inconclusive.
   // P4 certificate rules, with fresh P2 normalization via construction/state
   // correspondence and a fresh sparse P3 oracle. Only immutable provider rows
   // are shared: search flags, predicates and strategy selections cannot certify
@@ -1412,6 +1419,7 @@ namespace acacia::spot_lazy_game {
           case losing_reason::env_losing_input: {
             detail::require (safe && proof.input.has_value ());
             detail::require (detail::complete_rows (*rows, oracle, proof.rank) == proof.rows);
+            // I07: row identity agrees; now check the actual losing semantics.
             std::vector<Rank> earlier;
             for (const auto dep : record.dependencies)
               earlier.push_back (certificate.proofs[dep].rank);
