@@ -37,6 +37,12 @@ most solved in under 2 s by the shipped set, so it is not a useful fallback eith
 The first `docker_default` preset now runs C1; `unreal:automaton:forward` remains
 selectable with `--arms`.
 
+Gates for the six-arm release build against the 2.9.0 gate binary: G4 and G5 pass
+(no opposite verdicts or frontend errors on 1,524 inputs). G3 fails on both panels
+(SYNTCOMP25 165 → 164, SYNTCOMP26 169 → 168, no verdict change) with the same single
+loss, `lift_wrong_physics_unreal_pb_10` at 17 s. The owner admitted that known loss
+given the full-corpus gains above; the input is solved again at 60 s.
+
 The archive also holds the #373 rerun of the 22 Strict specs at 120 s: ltlsynt times
 out on all of them with both the old and the strict formula, and native and strict
 converted Acacia agree (all time out). Only the old non-strict conversion answers,
