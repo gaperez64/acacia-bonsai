@@ -150,6 +150,8 @@ namespace acacia {
     Gr1CertificateStats solver_stats {};
     solve_options.certificate = &certificate;
     solve_options.stats = phase_records_enabled () ? &solver_stats : nullptr;
+    // Invariant: exports are caller-owned malloc buffers independent of strategy;
+    // this owner and the reduction's game AAG remain alive through the synchronous checker.
     struct ArtifactOwner {
         std::array<char*, 4>& bytes;
         ~ArtifactOwner () {
@@ -200,38 +202,27 @@ namespace acacia {
         return EXIT_CODE_UNKNOWN;
       }
     }
-    std::array<std::string, 4> stable_artifacts;
-    for (size_t i = 0; i < bytes.size (); ++i)
-      stable_artifacts[i].assign (bytes[i], sizes[i]);
 # ifdef ACACIA_NATIVE_TEST_HOOKS
-    native_corrupt_gr1_artifact (stable_artifacts[0]);
+    native_corrupt_gr1_artifact (bytes[0]);
 # endif
-    if (!native_proof_sidecars (stable_artifacts[1].data (), stable_artifacts[1].size (),
-                                stable_artifacts[3].data (), stable_artifacts[3].size (), "exact",
+    if (!native_proof_sidecars (bytes[1], sizes[1], bytes[3], sizes[3], "exact",
                                 true, proof_unreal)) {
       native_arm_diagnostic (arm, "metadata", -1, "proof side or semantics mismatch");
       return EXIT_CODE_UNKNOWN;
     }
-    const std::string stable_game (reduction.value.aag, reduction.value.aag_size);
     proof_phase.finish ();
     phase_scope strategy_teardown (arm, "teardown_strategy");
     strategy.reset ();
     strategy_teardown.finish ();
-    phase_scope export_teardown (arm, "teardown_export_buffers");
-    for (char*& p : bytes) {
-      std::free (p);
-      p = nullptr;
-    }
-    export_teardown.finish ();
     const auto span = [] (const char* data, size_t size) -> TlsfGr1Bytes {
       return {reinterpret_cast<const uint8_t*> (data), size};
     };
     TlsfGr1CheckInput input {};
-    input.game_aag = span (stable_game.data (), stable_game.size ());
-    input.certificate_aag = span (stable_artifacts[0].data (), stable_artifacts[0].size ());
-    input.certificate_json = span (stable_artifacts[1].data (), stable_artifacts[1].size ());
-    input.policy_aag = span (stable_artifacts[2].data (), stable_artifacts[2].size ());
-    input.policy_json = span (stable_artifacts[3].data (), stable_artifacts[3].size ());
+    input.game_aag = span (reduction.value.aag, reduction.value.aag_size);
+    input.certificate_aag = span (bytes[0], sizes[0]);
+    input.certificate_json = span (bytes[1], sizes[1]);
+    input.policy_aag = span (bytes[2], sizes[2]);
+    input.policy_json = span (bytes[3], sizes[3]);
     TlsfGr1CheckOptions check_options {};
     check_options.method = TLSF_GR1_CHECK_CERTIFICATE;
     check_options.node_cap = checker_nodes;
@@ -248,6 +239,12 @@ namespace acacia {
     phase_scope check_phase (arm, "independent_check");
     const TlsfGr1CheckStatus status = tlsf_gr1_check (&input, &check_options, &checked.value);
     check_phase.finish (static_cast<long long> (checked.value.peak_nodes));
+    phase_scope export_teardown (arm, "teardown_export_buffers");
+    for (char*& p : bytes) {
+      std::free (p);
+      p = nullptr;
+    }
+    export_teardown.finish ();
     if (status != TLSF_GR1_CHECK_OK || checked.value.verdict != TLSF_GR1_CHECK_VERIFIED) {
       native_arm_diagnostic (arm, checked.value.stage[0] ? checked.value.stage : "check",
                          status == TLSF_GR1_CHECK_OK ? int (checked.value.verdict) : int (status),

@@ -79,7 +79,7 @@ namespace acacia {
         replace_field (result.evidence_json, result.evidence_size, "certificate_sha256", hash);
     }
   }
-  void native_corrupt_gr1_artifact (std::string& artifact) {
+  void native_corrupt_gr1_artifact (char* artifact) {
     if (std::getenv ("ACACIA_NATIVE_TEST_CORRUPT_PROOF"))
       artifact[0] = 'X';
   }
