@@ -59,6 +59,9 @@ namespace acacia {
       char name[64] {};
   };
 
+  // I11: telemetry is optional evidence, never a verdict. A missing record,
+  // decline, resource/error exit or killed worker cannot establish REAL/UNREAL;
+  // the supervisor decides from a reaped worker's eligible normal exit status.
   // One pipe packet is one atomic write, including its framing. The writer is
   // the only process that opens record paths. A full pipe only loses a sample.
   // PIPE_BUF is 4096 on Linux but 512 on macOS, so the line shrinks to fit;
@@ -76,8 +79,12 @@ namespace acacia {
       char line[phase_line_max];
   };
   static_assert (sizeof (phase_packet) <= PIPE_BUF);
-  // Single child writes; the parent reads only after waitpid has reaped it.
-  // The snapshot survives SIGKILL and does not depend on pipe delivery.
+  // I11: the child owns the live snapshot; parent terminal/recovery reads follow
+  // reaping (pre-kill resource observations are not terminal snapshots). SIGKILL
+  // preserves shared bytes, not completion: recover only boundary_committed
+  // stamps, published after their payload, and retain dropped-record counters.
+  // Signal handlers only flag/sample/kill; formatting, recovery and reaping run
+  // on the ordinary parent path, using only signal-safe operations in handlers.
   struct worker_record {
       unsigned index = 0;
       pid_t pid = -1;

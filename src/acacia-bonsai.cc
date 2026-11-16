@@ -68,6 +68,9 @@ namespace {
 
   void record_parent_terminal (sig_atomic_t index, int status, const char* reason, pid_t pid,
                                const rusage* usage, uint64_t reaped_mono_ns) {
+    // I11: callers have reaped this worker before reading its final snapshot.
+    // terminal/verified and telemetry completeness describe evidence only;
+    // the verdict path must still check WIFEXITED and the accepted exit code.
     // Interrupted workers can be reaped by either the ordinary loop or cleanup.
     // Preserve that cancellation cause, but keep normally exited, rejected verdicts distinct.
     if (g_child_interrupted[index] && WIFSIGNALED (status) && WTERMSIG (status) == SIGKILL)
