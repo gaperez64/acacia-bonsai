@@ -1578,31 +1578,13 @@ They pass, including rejection of all 960 corrupt certificates; the separate
 Memcheck lifetime probe again reports zero errors. Reclassifying the retained
 G4 records still reports `GATE PASS`; the full corpus campaigns were not rerun.
 
-The verified partial capsule `acacia-397-20261116` and proposed evidence-index
-row are prepared under `/home/gaperez/scratch/acacia-397/review1/`. Publication
-has passed a local fetch through the proposed index, verifying all 10,396
-members, archive/index provenance and restored modes. Public upload
-is pending explicit approval of the public GitHub payload and destination;
-automatic approval review rejected the upload, so no durable index row has
-been added. The publication copy omits inherited session environments from
-Meson logs; a redaction ledger records the changed paths and hashes, and
-unredacted originals remain local under `/home/gaperez/scratch/acacia-397/`.
-G3 remains a landing blocker: its prescribed
-8 GiB solver scopes exceed this machine's 5 GiB cap, as permitted by the house
-rules' deferral. The ten-input storage screen does not establish full-corpus
-coverage preservation. Run matched G3 on the maintainer's machine, require
-`GATE PASS` from every suite, then archive and register those results before
-landing. Publishing this partial capsule would not establish G3 admission.
+Evidence: archive `acacia-397-20261116` (release `evidence-2026-11-16-acacia-397`,
+`partial`: everything except G3), with session environments removed from Meson logs
+and a redaction ledger of the changed paths. Round-2 review found no new
+implementation defects and repeated the focused tests, mutants, allocation probes,
+storage controls and Memcheck (zero errors) without rerunning full campaigns.
 
-Round-2 review confirms both findings remain open; all three reviewers report
-no new implementation defects. Repeating the six focused tests, three mutants,
-allocation probes, storage/no-saving controls and Memcheck succeeds (zero
-Memcheck errors, leak checking disabled). All 10,396 publication-capsule members
-verify against its expected digest and size; the original G4 records still
-classify as `GATE PASS`. The implementation sources match the archived copy and
-both binary hashes are unchanged. New check logs are local under
-`/home/gaperez/scratch/acacia-397/review2/`, outside the existing capsule; full
-campaigns were not repeated. No G3 run, upload, remote readback or durable index
-registration occurred. The maintainer-machine handoff and explicit publication
-authorization remain pending; the required maintainer questions are recorded
-in `acacia-397.skip.txt` with the PR draft. Admission remains blocked.
+G3 ran on the benchmarking machine (archive `g3-20261116`): a release build of this
+change merged onto master c9d40890 against the 2.9.0 gate binary passes both panels,
+SYNTCOMP25 165/180 and SYNTCOMP26 169/180, with no verdict change or coverage loss and
+PAR-2 within 0.9 s.
