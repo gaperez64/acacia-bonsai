@@ -282,13 +282,21 @@ std::vector<bdd> valuations (const letters::WorkerAlphabet& a, bdd vars) {
   }
   return out;
 }
+// Independent I01 oracle: the exhaustive output minterms are exactly the total
+// output cubes, including bddtrue for zero outputs. Equality also excludes input
+// or foreign support. Do not use production model/restrict_total to check this.
+bool total_output_cube (const std::optional<bdd>& witness, const std::vector<bdd>& minterms) {
+  return witness && std::find (minterms.begin (), minterms.end (), *witness) != minterms.end ();
+}
+
 // Independent arithmetic contract, including deactivated choices: target loss
 // does not change the promise originally made by a region.
 int choice_regions (RowStore& store, const letters::WorkerAlphabet& a, int K,
                     const SolveResult& actual, std::size_t& region_inputs) {
+  const auto output_minterms = valuations (a, a.outputs);
   for (const auto& node : actual.nodes)
     for (const auto& choice : node.choices) {
-      if (not choice.constant_output.has_value ())
+      if (not total_output_cube (choice.constant_output, output_minterms))
         return 6;
       const std::vector<bdd> outputs {*choice.constant_output};
       const auto& target = actual.nodes.at (choice.successor).rank;
@@ -595,6 +603,63 @@ struct Kernel {
     }
     auto view () const { return std::make_shared<lazy::LazyBuchiView> (graph); }
 };
+
+void constant_output_invariant () {
+  unsigned valid = 0, mutations = 0;
+  for (unsigned outputs : {0, 1, 2}) {
+    Kernel k {1};
+    const bdd u = k.ap ("u", true);
+    std::vector<bdd> variables;
+    for (unsigned i = 0; i < outputs; ++i)
+      variables.push_back (k.ap ("c" + std::to_string (i), false));
+    // No transition constrains any output: production must still totalize it.
+    // All output assignments reach the same safe self-loop, so rejection below
+    // can only be due to witness shape, not a changed successor or final region.
+    k.graph->new_edge (0, 0, bddtrue);
+    RowStore store {k.view (), {}, {}};
+    store.enumerate_and_freeze ();
+    const auto good = Search {store, k.alphabet, 1}.solve ();
+    expect (good.status == forward_result_status::win_k && good.choices_created == 1,
+            "I01 unconstrained-output fixture produces a winning choice");
+    const auto minterms = valuations (k.alphabet, k.alphabet.outputs);
+    expect (minterms.size () == (1u << outputs), "I01 oracle enumerates every output assignment");
+    std::size_t inputs = 0;
+    expect (choice_regions (store, k.alphabet, 1, good, inputs) == 0 && inputs == 2,
+            "I01 production witness is total even for unconstrained outputs");
+    for (auto cube : minterms) {
+      auto certificate = good;
+      certificate.nodes.at (certificate.initial).choices.at (0).constant_output = cube;
+      expect (total_output_cube (cube, minterms) &&
+              verify_winning_certificate (store, k.alphabet, 1, certificate).value.has_value (),
+              "I01 every total output cube replays, including the empty cube");
+      ++valid;
+    }
+    auto reject = [&] (std::optional<bdd> witness, const std::string& name) {
+      auto bad = good;
+      bad.nodes.at (bad.initial).choices.at (0).constant_output = witness;
+      expect (not total_output_cube (witness, minterms), "I01 oracle rejects " + name);
+      std::size_t checked_inputs = 0;
+      expect (choice_regions (store, k.alphabet, 1, bad, checked_inputs) != 0,
+              "I01 choice check fails after mutation: " + name);
+      const auto checked = verify_winning_certificate (store, k.alphabet, 1, bad);
+      expect (not checked.value && checked.unknown == Unknown::invalid_query,
+              "I01 verifier rejects malformed witness: " + name);
+      ++mutations;
+    };
+    reject (std::nullopt, "absent output");
+    reject (bddfalse, "unsatisfiable output");
+    reject (u & minterms.front (), "input-contaminated output");
+    if (outputs != 0)
+      reject (bddtrue, "all output literals missing");
+    if (outputs == 2) {
+      reject (variables[0], "one output literal missing");
+      reject (bdd_xor (variables[0], variables[1]), "non-cube with full output support");
+    }
+  }
+  expect (valid == 7 && mutations == 13, "I01 positive and negative controls all exercised");
+  std::cout << "I01: " << valid << " total output cubes accepted; " << mutations
+            << " witness mutations fail the independent check and return invalid_query\n";
+}
 
 void verifier_phase_metrics () {
   Kernel k {1};
@@ -1295,6 +1360,7 @@ int main (int argc, char** argv) {
     closure_games ();
     closure_mutations_and_growth ();
     copy_kernels ();
+    constant_output_invariant ();
     verifier_phase_metrics ();
     certificate_shape_metrics ();
     incremental_coverage_events ();
