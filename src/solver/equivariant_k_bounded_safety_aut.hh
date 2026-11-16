@@ -50,9 +50,13 @@ namespace acacia::solver_detail::equivariant {
 
   namespace detail {
 
-    // Preserve full shared steps; the ordinary fallback uses a clamped schedule.
-    // Needs 0 <= k <= max and kinc > 0 (the parser enforces both); compares
-    // without widening, so it holds for any integer VECTOR_ELT_T.
+    // I05: unlike the ordinary clamped schedule, keep the full positive kinc.
+    // Needs 0 <= k <= max and kinc > 0 (the parser enforces both). A step that
+    // exceeds the rank range must decline without a verdict, allowing fallback.
+    // Both loops below lift every counting rank, including -1, by this delta
+    // and reset Boolean ranks to 0: [-1,k-1] maps into [-1,next_k-1]. A winning
+    // result is at the actual next_k, possibly above kmax, not a proof at kmax.
+    // Compare without widening so the guard also holds for the widest integer.
     template <typename T>
     inline std::optional<T> checked_next_k (T k, T kinc) {
       if (kinc > std::numeric_limits<T>::max () - k)
@@ -768,6 +772,7 @@ namespace acacia::solver_detail::equivariant {
           k = *next_k;
           actioner.setK (k);
           acacia::diagnostics::set_support_k (static_cast<int> (k));
+          // I05: checked_next_k retained the full step, so delta == kinc.
           f = f.apply ([&] (const state& maximal) {
             acacia::equivariance_budget::checkpoint ();
             posets::utils::vector_mm<VECTOR_ELT_T> bumped (maximal.size (), 0);
@@ -979,6 +984,7 @@ namespace acacia::solver_detail::equivariant {
         k = *next_k;
         actioner.setK (k);
         acacia::diagnostics::set_support_k (static_cast<int> (k));
+        // I05: same full-step lift and Boolean reset as the orbit sweep.
         f = f.apply ([&] (const state& s) {
           acacia::equivariance_budget::checkpoint ();
           auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
