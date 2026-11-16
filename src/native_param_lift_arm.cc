@@ -113,6 +113,15 @@ namespace acacia {
     native_lift_test_fault (lifted.value);
 # endif
     const auto& result = lifted.value;
+    // I10: accept REAL only when all bindings agree with this source snapshot:
+    // recomputed source hash == snapshot hash == evidence hash; game,
+    // certificate and (certificate method only) policy hashes match their bytes;
+    // side/status are system/realizable and semantics agree across artifacts.
+    // Method/verdict must be CERTIFICATE/VERIFIED or REGION/REGION_VERIFIED;
+    // region evidence/sidecars omit policy, and moves use target_transition.
+    // Finally target_matches seals these artifacts, semantics and method to
+    // the independently checked prepared target. Consistent hashes alone do
+    // not establish that binding. Every failed obligation remains UNKNOWN.
     phase_scope binding_phase (arm, "proof_binding");
     const bool certificate_method =
         result.method == TLSF_GR1_CHECK_CERTIFICATE && result.verdict == TLSF_GR1_CHECK_VERIFIED;
