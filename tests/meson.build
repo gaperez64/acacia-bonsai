@@ -210,6 +210,28 @@ closure_buchi_provider_test = executable (
 test ('closure_buchi_provider_test', closure_buchi_provider_test,
       suite : ['unit', 'closure-buchi'])
 
+# Keep replay/integration tests on the production library. A distinct namespace
+# prevents cross-linking; this dependency keeps the reference flag on both TUs.
+closure_buchi_reference_args = ['-DACACIA_CLOSURE_BUCHI_REFERENCE=1']
+closure_buchi_reference_lib = static_library (
+  'closure-buchi-reference', '../src/solver/closure_buchi_provider.cc',
+  include_directories : inc,
+  cpp_args : closure_buchi_reference_args,
+  dependencies : [spot_dep, bddx_dep],
+  install : false,
+)
+closure_buchi_reference_dep = declare_dependency (
+  link_with : closure_buchi_reference_lib,
+  compile_args : closure_buchi_reference_args,
+)
+closure_buchi_reference_test = executable (
+  'closure-buchi-reference-test', 'closure_buchi_provider_test.cc',
+  include_directories : inc,
+  dependencies : [closure_buchi_reference_dep, spot_dep, bddx_dep],
+)
+test ('closure-buchi-reference', closure_buchi_reference_test,
+      suite : ['unit', 'closure-buchi'])
+
 # The previous sprint's P5 headers and regressions compile in the default build; no backend gate.
 spot_lazy_buchi_view_test = executable (
   'spot-lazy-buchi-view-test',

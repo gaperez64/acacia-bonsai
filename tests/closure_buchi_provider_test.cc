@@ -13,7 +13,11 @@
 #include <spot/twaalgos/translate.hh>
 
 namespace {
+#ifdef ACACIA_CLOSURE_BUCHI_REFERENCE
+  namespace cb = acacia::closure_buchi_reference;
+#else
   namespace cb = acacia::closure_buchi;
+#endif
   using F = spot::formula;
   using Op = spot::op;
   using Provider = cb::Provider;
@@ -656,42 +660,43 @@ namespace {
     for (unsigned n : {1u, 3u, 8u}) {
       auto f = wide_and_or (n);
       auto dict = spot::make_bdd_dict ();
+      cb::Options os;
+      auto ps = value (Provider::create (f, dict, os));
+      auto rs = value (ps->request_row (0));
+#ifdef ACACIA_CLOSURE_BUCHI_REFERENCE
       cb::Options oe;
       oe.row_expansion = cb::RowExpansion::enumerative;
-      cb::Options os;
-      os.row_expansion = cb::RowExpansion::symbolic_boolean;
       auto pe = value (Provider::create (f, dict, oe));
-      auto ps = value (Provider::create (f, dict, os));
       auto re = value (pe->request_row (0));
-      auto rs = value (ps->request_row (0));
       require (signature (*pe, re) == signature (*ps, rs),
                "enumerative and symbolic raw maps agree: n=" + std::to_string (n));
+      if (n >= 3)
+        require (pe->counters ().branches_considered >= (1u << n),
+                 "enumerative branch count confirms the exponential baseline: n=" +
+                     std::to_string (n));
+#endif
       require (rs.size () == 1 && rs[0].destination == 0 && rs[0].accepting,
                "G(AND(p_i|q_i)) is a single guarded accepting self-loop: n=" +
                    std::to_string (n));
       require (ps->counters ().branches_considered <= 10,
                "symbolic branch count does not grow with n: n=" + std::to_string (n));
-      if (n >= 3)
-        require (pe->counters ().branches_considered >= (1u << n),
-                 "enumerative branch count confirms the exponential baseline: n=" +
-                     std::to_string (n));
     }
-    std::cout << "boolean_folding: small family (n=1,3,8) raw-map equality and branch counts\n";
+    std::cout << "boolean_folding: small family (n=1,3,8) branch counts\n";
 
     // Larger version: symbolic completes under a deliberately small branch
     // budget; the enumerative control's UNKNOWN there is not a mismatch.
     {
       auto f = wide_and_or (20);
       auto dict = spot::make_bdd_dict ();
-      cb::Options oe;
-      oe.row_expansion = cb::RowExpansion::enumerative;
-      oe.max_branches_per_row = 100;
       cb::Options os;
-      os.row_expansion = cb::RowExpansion::symbolic_boolean;
       os.max_branches_per_row = 100;
-      auto pe = value (Provider::create (f, dict, oe));
       auto ps = value (Provider::create (f, dict, os));
+#ifdef ACACIA_CLOSURE_BUCHI_REFERENCE
+      cb::Options oe = os;
+      oe.row_expansion = cb::RowExpansion::enumerative;
+      auto pe = value (Provider::create (f, dict, oe));
       failure (pe->request_row (0), cb::FailureKind::branch_limit);
+#endif
       auto rs = value (ps->request_row (0));
       require (rs.size () == 1 && rs[0].accepting,
                "symbolic completes n=20 under a 100-branch budget where enumerative cannot");
