@@ -742,6 +742,10 @@ semantic_mona_test = executable ('semantic-mona-test',
 test ('semantic-mona',
       semantic_mona_test,
       suite : ['unit', 'ios-precomputer'])
+foreach mutation : ['reverse-inputs', 'reverse-actions', 'sort-actions', 'drop-action']
+  test ('semantic-mona-' + mutation, semantic_mona_test,
+        args : ['--' + mutation], should_fail : true, suite : ['unit', 'ios-precomputer'])
+endforeach
 
 component_concepts_test = executable ('component-concepts-test',
                                       'component_concepts_test.cc',

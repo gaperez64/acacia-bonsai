@@ -22,6 +22,7 @@
 #include "solver/k_bounded_safety_aut.hh"
 #include "utils/verbose.hh"
 
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <ranges>
@@ -334,6 +335,128 @@ namespace {
             total_actions (actual) <= total_actions (as_vectors (full)));
   }
 
+  void check_i12_guard_oracle (const std::string& mutation) {
+    using table = std::list<std::pair<bdd, std::list<transset>>>;
+    for (bool disjunctive : {false, true}) {
+      fixture fx;
+      fx.aut = spot::make_twa_graph (spot::make_bdd_dict ());
+      fx.aut->new_states (3);
+      const bdd r = bdd_ithvar (fx.aut->register_ap ("r"));
+      fx.all_inputs = r;
+      std::vector<bdd> outputs;
+      for (unsigned j = 0; j < 3; ++j) {
+        outputs.push_back (bdd_ithvar (fx.aut->register_ap ("g_" + std::to_string (j))));
+        fx.all_outputs &= outputs.back ();
+      }
+      // OR gives unsorted responses; XOR repeats a response nonadjacently.
+      // !r has the empty relation as its sole (legal) response.
+      const bdd guard = disjunctive ? outputs[0] | outputs[1] | outputs[2] : outputs[0] ^ outputs[1];
+      fx.aut->new_edge (0, 2, r & guard);
+      fx.aut->new_edge (0, 1, r & !guard);
+      table expected, exhaustive;
+      // Independent of MONA's relation encoding, traversal and endpoint decoder:
+      // enumerate total letters, evaluate raw guards, and collect endpoint sets.
+      for (bdd input : {!r, r}) {
+        auto& kept = expected.emplace_back (input, std::list<transset> {}).second;
+        auto& all = exhaustive.emplace_back (input, std::list<transset> {}).second;
+        for (int letter = 7; letter >= 0; --letter) {  // high-first outputs
+          bdd valuation = input;
+          for (unsigned j = 0; j < outputs.size (); ++j)
+            valuation &= (letter & (1u << (2 - j))) ? outputs[j] : !outputs[j];
+          std::set<std::pair<unsigned, unsigned>> endpoints;
+          for (unsigned p = 0; p < fx.aut->num_states (); ++p)
+            for (const auto& edge : fx.aut->out (p))
+              if ((edge.cond & valuation) != bddfalse)
+                endpoints.emplace (p, edge.dst);
+          transset relation (endpoints.begin (), endpoints.end ());
+          all.push_back (relation);
+          if (std::find (kept.begin (), kept.end (), relation) == kept.end ())
+            kept.push_back (relation);  // this total output letter witnesses it
+        }
+      }
+      const auto check = [&] (table actual, const std::string& route) {
+        // Retained negative controls: use the very same oracle on corrupt tables.
+        if (mutation == "--reverse-inputs")
+          actual.reverse ();
+        if (mutation == "--reverse-actions")
+          for (auto& [input, actions] : actual)
+            actions.reverse ();
+        if (mutation == "--sort-actions")
+          for (auto& [input, actions] : actual)
+            actions.sort ();
+        if (mutation == "--drop-action" and not actual.empty () and
+            not actual.front ().second.empty ())
+          actual.front ().second.pop_front ();
+        expect ("I12 " + route + ": first-occurrence guard oracle", actual == expected);
+
+        // Boolean CPre oracle: for every source/target subset, there must exist
+        // an output whose enabled successors all lie in the target. No actioner
+        // or downset implementation participates in this calculation.
+        const auto cpre = [] (const auto& actions, unsigned source, unsigned target) {
+          return std::any_of (actions.begin (), actions.end (), [&] (const auto& relation) {
+            return std::all_of (relation.begin (), relation.end (), [&] (auto edge) {
+              return not (source & (1u << edge.first)) or (target & (1u << edge.second));
+            });
+          });
+        };
+        for (const auto& [input, all] : exhaustive) {
+          const auto found = std::find_if (actual.begin (), actual.end (), [&] (const auto& row) {
+            return row.first == input;
+          });
+          if (not expect ("I12 " + route + ": input class present", found != actual.end ()))
+            continue;
+          for (unsigned source = 0; source < 8; ++source)
+            for (unsigned target = 0; target < 8; ++target)
+              expect ("I12 " + route + ": union over outputs",
+                      cpre (all, source, target) == cpre (found->second, source, target));
+        }
+      };
+      const auto computer = ios_precomputers::semantic_mona::make<spot::twa_graph_ptr, transset> (
+          fx.aut, fx.all_inputs, fx.all_outputs);
+      check (computer.symbolic (), "symbolic");
+      const auto letters = computer.explicit_letters ();
+      if (expect ("I12: explicit letters admitted", letters.has_value ()))
+        check (*letters, "explicit");
+      check (computer (), "selected");
+    }
+  }
+
+  struct picker_probe {
+      std::vector<int> calls;
+      state apply (const state&, int action, actioners::direction direction) {
+        expect ("I12: picker applies forward", direction == actioners::direction::forward);
+        calls.push_back (action);
+        return state (posets::utils::vector_mm<VECTOR_ELT_T> (
+            1, (action == 2 or action == 3) ? 0 : 1));
+      }
+  };
+
+  void check_i12_picker_order () {
+    posets::vectors::bool_threshold = 1;
+    const SetOfStates region {state (posets::utils::vector_mm<VECTOR_ELT_T> (1, 0))};
+    // Actions 2 and 3 both succeed: 2 must be selected and promoted first.
+    // Inputs 20 and 30 both witness loss: the first one must be returned.
+    std::list<std::pair<int, std::list<int>>> actions {{10, {1, 2, 3}}, {20, {4}}, {30, {4}}};
+    picker_probe probe;
+    auto picker = input_pickers::critical::make (actions, probe);
+    for (unsigned pass = 0; pass < 2; ++pass) {
+      probe.calls.clear ();
+      const auto picked = picker (region);
+      expect ("I12: first critical input", picked and picked->get ().first == 20);
+      expect ("I12: first successful output and subsequent work",
+              probe.calls == (pass == 0 ? std::vector<int> {1, 2, 4} : std::vector<int> {2, 4}));
+      expect ("I12: only the successful action moves to front",
+              actions.front ().second == std::list<int> {2, 1, 3});
+    }
+    actions.pop_back ();
+    actions.pop_back ();
+    expect ("I12: no critical input remains explicit", not picker (region));
+    actions.emplace_back (40, std::list<int> {});
+    const auto empty = picker (region);
+    expect ("I12: no responses is a losing input", empty and empty->get ().first == 40);
+    std::cout << "I12: guard oracle, Boolean CPre and picker order checked\n";
+  }
+
   /// Exhaustive rank vectors over {-1, 0, .. K} for the automaton's states.
   std::vector<posets::utils::vector_mm<VECTOR_ELT_T>> all_vectors (unsigned states) {
     std::vector<posets::utils::vector_mm<VECTOR_ELT_T>> out;
@@ -468,7 +591,9 @@ namespace {
 
 }  // namespace
 
-int main () {
+int main (int argc, char** argv) {
+  check_i12_guard_oracle (argc == 2 ? argv[1] : "");
+  check_i12_picker_order ();
   check_endpoint_order ();
   check_empty_responses ();
   check_ltl_empty_responses ();
