@@ -12,6 +12,17 @@ namespace acacia::spot_rows {
   // states, mutates the automaton in place AND sets the global
   // posets::vectors::bool_threshold defining the safe envelope. It cannot run
   // here: the lazy path is structurally Boolean-state-free, unlike the frozen graph.
+  // I04: for a constructed rank (including copy/move destinations), entries are
+  // strictly increasing by StateId, unique, and in [0,K]; absence denotes -1.
+  // Duplicate input coordinates contribute their maximum and -1 is omitted.
+  // The immutable entries define M(r) = sum_q (r(q)+1) over the finite support,
+  // independent of discovered states. mass_ is exactly M while checked, or -1
+  // after exceeding mass_limit; accumulation widens before adding and cannot wrap.
+  // Componentwise a <= b implies supp(a) subset supp(b) and M(a) <= M(b).
+  // Equal VALID masses under that order imply equality (proof in leq below).
+  // An invalid mass must never reject order or trigger the equality shortcut:
+  // after the independent support-size check, comparison must use the exact merge.
+  // Moved-from sources are not observed; see the cached-summary ownership note below.
   template <std::signed_integral Value = std::int32_t>
     requires (sizeof (Value) <= sizeof (std::int32_t))
   class SparseForwardRank {

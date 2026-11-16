@@ -1,6 +1,7 @@
 #include "solver/sparse_forward_rank.hh"
 #include "utils/verbose.hh"
 
+#include <array>
 #include <iostream>
 #include <unordered_set>
 
@@ -21,6 +22,80 @@ namespace {
     bool rejected = false;
     try { f (); } catch (const std::invalid_argument&) { rejected = true; }
     expect (name, rejected);
+  }
+
+  // Independent dense oracle for I04: no production at/leq/mass operation is
+  // used to derive the expected coordinates, order or shifted mass. A local
+  // header-copy experiment passes a smaller checked limit to exercise -1 mass
+  // without allocating billions of entries; production keeps its real limit.
+  template <typename Value>
+  void invariant_i04 (std::int64_t checked_limit = std::numeric_limits<std::int64_t>::max () / 2) {
+    using Rank = SparseForwardRank<Value>;
+    constexpr std::array<StateId, 3> ids {0, 9, std::numeric_limits<StateId>::max ()};
+    std::vector<Rank> ranks;
+    std::vector<std::array<int, 3>> dense;
+    std::vector<std::int64_t> masses;
+    std::vector<std::size_t> supports;
+    unsigned invalid_masses = 0;
+    for (unsigned code = 0; code < 64; ++code) {
+      std::array<int, 3> coordinates;
+      std::vector<typename Rank::Entry> raw, expected;
+      std::int64_t mass = 0;
+      for (unsigned q = 0; q < ids.size (); ++q) {
+        const int value = int ((code >> (2 * q)) & 3) - 1;
+        coordinates[q] = value;
+        mass += value + 1;  // dense -1 contributes zero
+        if (value >= 0) expected.emplace_back (ids[q], Value (value));
+      }
+      // Reverse input order, duplicate coordinates with different values,
+      // and supply explicit -1 entries, even for absent coordinates.
+      for (unsigned q = ids.size (); q-- > 0;) {
+        raw.emplace_back (ids[q], Value (coordinates[q]));
+        raw.emplace_back (ids[q], Value (-1));
+        if (coordinates[q] > 0) raw.emplace_back (ids[q], Value (coordinates[q] - 1));
+      }
+      const Rank rank {raw, 2};
+      expect ("I04 normalized entries match dense oracle", rank.entries () == expected);
+      for (unsigned q = 0; q < ids.size (); ++q)
+        expect ("I04 lookup matches dense oracle", rank.at (ids[q]) == coordinates[q]);
+      expect ("I04 absent coordinate is -1", rank.at (1) == -1);
+      const auto checked = mass <= checked_limit ? mass : -1;
+      expect ("I04 checked mass matches dense oracle", rank.mass () == checked);
+      invalid_masses += checked < 0;
+      const Rank canonical {expected, 3}, copied {rank};
+      Rank source {raw, 2};
+      const Rank moved {std::move (source)};
+      expect ("I04 canonical, copy and move destinations retain summaries",
+              canonical == rank && copied == rank && moved == rank
+              && canonical.hash () == rank.hash () && copied.hash () == rank.hash ()
+              && moved.hash () == rank.hash () && canonical.mass () == checked
+              && copied.mass () == checked && moved.mass () == checked);
+      ranks.push_back (rank);
+      dense.push_back (coordinates);
+      masses.push_back (mass);
+      supports.push_back (expected.size ());
+    }
+    expect ("I04 invalid-summary coverage matches checked limit", (invalid_masses > 0) == (checked_limit < 9));
+    const auto max = std::numeric_limits<Value>::max ();
+    const Rank ceiling {{{ids.front (), max}, {ids.back (), max}}, max};
+    const auto ceiling_mass = 2 * (std::int64_t (max) + 1);
+    expect ("I04 maximum-value mass widens before addition",
+            ceiling.mass () == (ceiling_mass <= checked_limit ? ceiling_mass : -1));
+    for (unsigned a = 0; a < ranks.size (); ++a)
+      for (unsigned b = 0; b < ranks.size (); ++b) {
+        bool ordered = true;
+        for (unsigned q = 0; q < ids.size (); ++q) ordered &= dense[a][q] <= dense[b][q];
+        expect ("I04 exact order matches dense oracle", ranks[a].leq (ranks[b]) == ordered);
+        if (ordered) {
+          expect ("I04 prefilter cannot reject dense order", ranks[a].prefilter_leq (ranks[b]));
+          expect ("I04 support and mathematical mass are monotone",
+                  supports[a] <= supports[b] && masses[a] <= masses[b]);
+          if (ranks[a].mass () >= 0 && ranks[b].mass () >= 0 && masses[a] == masses[b])
+            expect ("I04 equal valid mass and order force equality", dense[a] == dense[b]);
+        }
+      }
+    std::cerr << "I04: " << sizeof (Value) * 8 << "-bit dense oracle checked 64 ranks, 4096 pairs; "
+              << invalid_masses << " invalid summaries\n";
   }
 
   void values () {
@@ -107,10 +182,10 @@ namespace {
             near.mass () == remote.mass () && Sparse ({}, 3).mass () == 0);
 
     // A term is at most K+1 <= 2^31 and the guard trips at int64max/2, so a
-    // rank that abandons its mass would need about 2^33 entries -- tens of
-    // gigabytes of pairs. The branch is therefore unreachable by construction,
-    // and exists so that correctness does not rest on that being true. What is
-    // testable is that a large but valid mass stays usable and exact.
+    // rank that abandons its mass would need about 2^31 entries -- tens of
+    // gigabytes of pairs, infeasible under this machine's memory cap. I04's
+    // copied-header experiment exercises the fallback at a smaller limit;
+    // here a large but valid mass must stay usable and exact.
     using Byte8 = SparseForwardRank<std::int8_t>;
     std::vector<Byte8::Entry> heavy_entries;
     for (StateId q = 0; q < 8; ++q) heavy_entries.emplace_back (q, 127);
@@ -177,7 +252,7 @@ namespace {
 }
 
 int main () {
-  try { values (); rows_and_discovery (); }
+  try { invariant_i04<std::int8_t> (); invariant_i04<std::int32_t> (); values (); rows_and_discovery (); }
   catch (const std::exception& e) { expect (std::string ("unexpected exception: ") + e.what (), false); }
   if (not failures) std::cerr << "sparse-forward-rank: normalization, order, late discovery, arithmetic and budgets pass\n";
   return failures ? 1 : 0;
