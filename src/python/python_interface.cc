@@ -30,7 +30,12 @@
 utils::voutstream utils::vout;
 unsigned int utils::verbose = 0;
 
-// TODO We need to figure out some clean way to define these, instead of copying them everywhere
+// I08: this is the active game's numeric/Boolean boundary, not a process-wide
+// property of all Games. Every rank operation must use that game's layout:
+// [0, threshold) counts, [threshold, num_states) encodes absence/presence (-1/0).
+// The Python API does not save/restore it per Game. Select the layout after
+// preprocessing and reselect it before solving another live Game; arbitrary
+// interleaving is unsafe (see python-game-layout's foreign-layout control).
 size_t posets::vectors::bool_threshold = 0;
 
 // Build the TWA for the given formula using an already-created dict.
@@ -56,7 +61,9 @@ Game* create_twa (const std::string& formula_str, const std::vector<std::string>
   // As in the CLI, register inputs before outputs and before translation.
   // MONA partitions the BDD order at the first output variable: translating
   // first can put inputs after that boundary and let the controller choose
-  // them. Keep the registration owner alive, including if translation throws.
+  // them. I08: the Game registration owner and dictionary must remain alive
+  // while its IO BDDs are used. Keep temporary ownership through registration,
+  // AP-vector/string assignment and translation; release only on success.
   auto game = std::unique_ptr<Game> (new Game {.dict = dict});
   bdd all_inputs = bddtrue;
   bdd all_outputs = bddtrue;
