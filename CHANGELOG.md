@@ -1,5 +1,9 @@
 # Acacia-Bonsai changelog
 
+## Unreleased
+
+- The default portfolio drops `unreal:automaton:forward`, going from seven arms to six (#384). On all 1,524 SYNTCOMP26 inputs it decides 1,370 / 1,392 / 1,398 at 17 / 60 / 120 s, against 1,367 / 1,388 / 1,394 for seven arms, with PAR-2 87 s, 468 s and 988 s lower and no verdict disagreement. The only loss, `lift_wrong_physics_unreal_pb_10` at 17 s, is solved again at 60 s. The arm stays available through `--arms`.
+
 ## 2.9.0 (2026-11-15)
 
 - Bump posets to 7e75c1f (posets 1.4) and tlsf-tools to 1e94604 (tlsf-tools v1.11). Posets retires the unused `vector_backed_bin` backend and shares its trie and antichain code; tlsf-tools routes residual reduction through one plan, flattens checker rank storage and shares the symmetry DAG between candidates. Behaviour is unchanged: the shipped preset decides the same 165/180 SYNTCOMP25 and 169/180 SYNTCOMP26 panel inputs with no verdict change, and native TLSF and converted runs on all 1,524 SYNTCOMP26 inputs give no opposite verdicts.
