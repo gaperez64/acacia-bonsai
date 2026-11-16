@@ -5,6 +5,7 @@
 
 #include "tiny_game_oracle.hh"
 
+#include <array>
 #include <cstdlib>
 #include <fcntl.h>
 #include <random>
@@ -105,6 +106,61 @@ struct SearchTestAccess {
     static void initialize (Search& s) {
       s.result_.initial = s.intern (s.rows_->initial_rank ());
       detail::take (s.oracle_.query<bool> ([] (auto&) { return true; }));
+    }
+    static void losing_region (RowStore& store, const letters::WorkerAlphabet& alphabet) {
+      Search s {store, alphabet, 2};
+      std::vector<std::array<int, 2>> coordinates, generators;
+      const auto intern = [&] (int x, int y) {
+        const auto id = s.intern (Rank {{{0, x}, {1, y}}, 2});
+        expect (id == coordinates.size (), "I03 fixture interns distinct ranks");
+        coordinates.push_back ({x, y});
+        return id;
+      };
+      // Independent dense arithmetic over every historical generator: no
+      // LossSet, sparse leq, mass summary or production subsumption query.
+      const auto closed = [&] {
+        for (std::size_t id = 0; id < coordinates.size (); ++id) {
+          const auto& r = coordinates[id];
+          const bool implied = std::ranges::any_of (generators, [&] (const auto& g) {
+            return g[0] <= r[0] && g[1] <= r[1];
+          });
+          if (s.result_.nodes[id].losing != implied)
+            return false;
+        }
+        return true;
+      };
+      for (int x = -1; x <= 1; ++x)
+        for (int y = -1; y <= 0; ++y)
+          intern (x, y);
+      // The accepting self-loop makes (1,-1) lose in one step at K=2.
+      // Discover the proof normally, then check the entire existing lattice.
+      s.expand (4);
+      generators.push_back ({1, -1});
+      expect (closed (), "I03 insertion invalidates every existing larger rank only");
+      s.result_.nodes[5].losing = false;  // mutation: miss an existing larger rank
+      expect (not closed (), "I03 oracle rejects a missed broadcast invalidation");
+      s.result_.nodes[5].losing = true;
+
+      const auto late = intern (1, 1);
+      s.expand (late);
+      expect (closed () && not s.result_.nodes[late].active_rows_complete &&
+              s.result_.proofs.back ().record.reason == losing_reason::env_subsumed,
+              "I03 late rank loses by subsumption before row completion");
+      s.result_.nodes[late].losing = false;  // mutation: omit the late-rank check
+      expect (not closed (), "I03 oracle rejects a missed late-rank loss");
+      s.result_.nodes[late].losing = true;
+
+      intern (0, 1);
+      s.expand (2);  // (0,-1) now reaches the previously proved losing region
+      generators.push_back ({0, -1});
+      expect (closed () && s.losing_.size () == 1 && s.subsumption_scans_ == 2,
+              "I03 smaller generator replaces the old one and broadcasts once");
+      const auto incomparable = intern (-1, 1);
+      s.expand (incomparable);
+      expect (closed () && s.result_.nodes[incomparable].active_rows_complete,
+              "I03 incomparable late rank remains available for expansion");
+      std::cout << "I03: 9 sparse ranks, 2 generator insertions; "
+                   "broadcast and late-rank mutations rejected\n";
     }
     static SolveResult scan_buckets (RowStore& store, const letters::WorkerAlphabet& alphabet) {
       Search s {store, alphabet, 2};
@@ -679,6 +735,16 @@ void constant_output_invariant () {
   expect (valid == 7 && mutations == 13, "I01 positive and negative controls all exercised");
   std::cout << "I01: " << valid << " total output cubes accepted; " << mutations
             << " witness mutations fail the independent check and return invalid_query\n";
+}
+
+void losing_region_invariant () {
+  Kernel k {2};
+  k.graph->new_edge (0, 0, bddtrue, {0});
+  k.graph->new_edge (0, 1, bddtrue);  // discover both coordinates through the lazy provider
+  k.graph->new_edge (1, 1, bddtrue);
+  RowStore store {k.view (), {}, {}};
+  store.enumerate_and_freeze ();
+  SearchTestAccess::losing_region (store, k.alphabet);
 }
 
 void verifier_phase_metrics () {
@@ -1421,6 +1487,7 @@ int main (int argc, char** argv) {
   const int report_fd = open ("/dev/null", O_WRONLY);
   const auto report = pipe_reporter (report_fd);
   try {
+    losing_region_invariant ();
      {
       if (const int code = differential (report))
         return code;

@@ -172,6 +172,42 @@ namespace {
   }
 
 
+  void check_losing_upward_closure () {
+    // Exhaust the full two-coordinate lattice, including absent and unsafe
+    // ranks. The explicit oracle builds the graph without antichain pruning.
+    const auto game = make_game (2, 2, {{make_action (2, {{0, 0, true}, {1, 1, false}})}});
+    std::vector<rank_vector> ranks;
+    std::vector<bool> losing;
+    for (int x = -1; x <= game.K; ++x)
+      for (int y = -1; y <= game.K; ++y) {
+        ranks.push_back (vec ({x, y}));
+        const auto ref = solve_explicit_forward_game (ranks.back (), game.inputs, game.K, 2);
+        expect ("I03 oracle is conclusive", ref.status != forward_status::resource_limit);
+        losing.push_back (ref.status == forward_status::lose_k);
+        for (bool pruning : {false, true}) {
+          const auto actual = solve_f1 (game, 2, ranks.back (), {}, pruning);
+          const auto expected =
+              losing.back () ? acacia::solver_detail::forward_result_status::lose_k
+                             : acacia::solver_detail::forward_result_status::win_k;
+          expect ("I03 all-rank verdict agrees with explicit oracle", actual.status == expected);
+        }
+      }
+    const auto upward_closed = [&] {
+      for (std::size_t i = 0; i < ranks.size (); ++i)
+        for (std::size_t j = 0; j < ranks.size (); ++j)
+          if (losing[i] && leq (ranks[i], ranks[j]) && not losing[j])
+            return false;
+      return true;
+    };
+    expect ("I03 oracle has both winning and losing ranks",
+            std::ranges::count (losing, true) == 13);
+    expect ("I03 explicit losing region is upward closed", upward_closed ());
+    losing[8] = false;  // mutation: (1,-1) wins although the smaller (0,-1) loses
+    expect ("I03 oracle rejects a hole above a losing rank", not upward_closed ());
+    std::cout << "I03: 16 oracle ranks, 32 forward comparisons; "
+                 "upward-closure mutation rejected\n";
+  }
+
   void check_antichain_unit_behaviour () {
     using antichain = acacia::solver_detail::minimal_losing_antichain<state>;
 
@@ -819,6 +855,7 @@ int main () {
   check_hash_collisions ();
   check_hash_block_boundaries ();
   check_resource_limit_is_inconclusive ();
+  check_losing_upward_closure ();
 
   if (failures != 0) {
     std::cerr << failures << " check(s) failed\n";

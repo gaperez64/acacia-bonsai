@@ -1727,6 +1727,14 @@ namespace acacia::spot_lazy_game {
           loss_queue_peak_ = std::max (loss_queue_peak_, losses_.size ());
         if (not losing_.insert (rank, proof_id))
           return;  // rank was already inside the region: nothing new is implied
+        // I03: for this game and K, r <= s means componentwise order with
+        // absent coordinates equal to -1. The losing set is upward closed:
+        // each letter's max/increment/saturation update is monotone, unsafe
+        // ranks are upward closed, and exists-input/forall-output preserves
+        // that closure through the losing attractor's least fixed point.
+        // After inserting g, every existing node r >= g must be marked losing
+        // before returning; ranks interned later must consult the region in
+        // expand() before completing rows or selecting a successor.
         // The region grew, so broadcast the one generator that grew it.  Only
         // ranks above `rank` can be newly implied: everything above an older
         // generator was marked when that generator was inserted, and this scan
@@ -1828,6 +1836,7 @@ namespace acacia::spot_lazy_game {
           enqueue_loss (id, losing_reason::env_unsafe);
           return;
         }
+        // I03's other boundary: this rank may postdate the generator's scan.
         if (const auto proof = subsumer (rank)) {
           enqueue_loss (id, losing_reason::env_subsumed, {*proof});
           return;
