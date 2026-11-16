@@ -73,6 +73,10 @@ namespace input_pickers {
                 break;
               }
 
+              // I12: the first action returning to F is the retained output
+              // witness; move only it to the front. Input order decides the
+              // first critical input, and action order decides subsequent work.
+              // Semantic deduplication may remove repeats, never sort either list.
               if (it_act != actions.begin ())
                 actions.splice (actions.begin (), actions, it_act);
             }

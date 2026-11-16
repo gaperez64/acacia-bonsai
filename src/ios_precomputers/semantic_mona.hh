@@ -9,6 +9,11 @@
 // predecessor unions over outputs and union is idempotent, so keeping one copy
 // cannot change the fixed point. The symbolic fallback shares MONA's traversal;
 // the bounded letter path preserves its reductions and first-occurrence order.
+// I12: for each input class, keep exactly the first occurrence of every endpoint
+// relation, in traversal order, and keep input classes in their original order.
+// Thus union_o Pre(R(i,o), F) is unchanged for every F, and the first output path
+// remains a witness for its retained relation (this layer stores no output cube).
+// The empty relation is a legal response too; it must not be dropped.
 //
 // The quotient keeps the FIRST occurrence of each residual root, which leaves a
 // subsequence of the order `mona` already produces.  That matters: the input
