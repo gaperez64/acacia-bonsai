@@ -341,6 +341,13 @@ namespace acacia::unreal_witnesses {
       spot::formula objective;
   };
 
+  // I09: for the same source, normalization, I/O partition and move timing,
+  // deleting positive guarantees yields original => derived. Conjunction,
+  // implication consequents and G/F are monotone; retain every antecedent,
+  // sibling and enclosing frame (F keeps one shared eventual witness).
+  // Thus every original winning strategy also wins the derived game, so only
+  // checked UNREAL(derived) transfers to UNREAL(original). REAL(derived) says
+  // nothing about the original; neither does an unchecked/inconclusive attempt.
   inline spot::formula derive (const plan& p, const std::vector<size_t>& kept,
                                uint64_t deadline = 0) {
     if (kept.empty () || kept.size () >= p.guarantees.size ())
@@ -391,6 +398,7 @@ namespace acacia::unreal_witnesses {
 
   inline bool accept (const derivation& d, spot::formula original, const source_binding& source,
                       const checked_game& proof, uint64_t deadline = 0) {
+    // I09 needs both exact source/frame replay and a checked derived-game receipt.
     return verify_derivation (d, original, source, deadline) && proof.valid () &&
            proof.objective == binding_hash (spot::str_psl (d.objective)) &&
            proof.context == source.hash ();

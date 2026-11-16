@@ -250,6 +250,17 @@ Replay the AST/source derivation. A checked guarded derived-game certificate plu
 source/normalization/partition/timing/game-bound receipt and parent replay proves
 original UNREAL. Candidates, exceptions, cancellation and inconclusive results cannot.
 
+Invariant I09: with the exact source/normalization, I/O partition and move timing
+fixed, positive guarantee deletion gives `original => derived`. Conjunction,
+implication consequents and G/F preserve implication when antecedents, siblings
+and enclosing frames stay exact; F retains a shared eventual witness. Hence an
+original winning strategy would also win the derived game. Only independently
+verified UNREAL of that weakening transfers to original UNREAL; derived REAL
+does not transfer. UNKNOWN, decline, resource limits and errors remain inconclusive.
+`unreal_safety_core_witnesses_test.cc` checks language inclusion and games with
+Spot's independent parity oracle, retaining reversed-direction and dropped-frame
+negative controls alongside source/receipt rejection and bounded fallback checks.
+
 At most eight singleton attempts and four AP-support groups of four guarantees run
 serially in killable children, reaped before fallback. Each group anchor retains
 the first following guarantees sharing any AP, in guarantee order; selection
