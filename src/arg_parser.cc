@@ -136,10 +136,11 @@ void show_help (const char* program_name) {
       << "                    when given, replaces the build default entirely (implicit level high)\n"
       << "                    comma-separated LEVEL and ARM=LEVEL entries; one bare level sets\n"
       << "                    the default; arm overrides win, with the last override used\n"
-      << "                    overrides apply only to translation-based providers (frozen-graph)\n"
+      << "                    overrides apply only to translating arms (frozen-graph, and\n"
+      << "                    closure-recurrence with --candidate-mode fallback)\n"
       << "                    ARM must match a selected translation arm exactly; :provider may\n"
       << "                    be omitted only if unique; if given, it matches the effective provider\n"
-      << "                    build overrides without an active frozen-graph arm are ignored;\n"
+      << "                    build overrides without an active translating arm are ignored;\n"
       << "                    runtime overrides for inactive or unsupported arms are errors\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
@@ -945,11 +946,15 @@ arg_parse_result arg_parser (int argc, char** argv) {
   for (auto& arm : *retval.arms)
     if (arm.legacy)
       arm.legacy->translation_effort = retval.translation_effort;
+  const auto translates = [&] (const auto& legacy) {
+    return legacy.provider == acacia::automaton_provider::frozen_graph ||
+           (legacy.provider == acacia::automaton_provider::closure_recurrence &&
+            retval.candidate == acacia::candidate_mode::fallback);
+  };
   for (const auto& [name, effort] : effort_overrides) {
     portfolio_arm* match = nullptr;
     for (auto& arm : *retval.arms) {
-      if (!arm.legacy || (build_default_effort &&
-                          arm.legacy->provider != acacia::automaton_provider::frozen_graph))
+      if (!arm.legacy || (build_default_effort && !translates (*arm.legacy)))
         continue;
       const auto& legacy = *arm.legacy;
       const std::string base = std::string (arm.unreal ? "unreal:" : "real:") +
@@ -969,7 +974,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       error (EXIT_CODE_ERROR, "Error: unknown translation arm '%s' in %s.\n", name.c_str (),
              effort_option);
     }
-    if (match->legacy->provider != acacia::automaton_provider::frozen_graph)
+    if (!translates (*match->legacy))
       error (EXIT_CODE_ERROR,
              "Error: arm '%s' in %s uses provider '%s', which does not use "
              "effort-aware translation.\n",

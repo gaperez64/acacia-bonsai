@@ -314,6 +314,7 @@ namespace {
       const acacia::game_backend backend;
       const acacia::automaton_provider provider;
       const acacia::candidate_mode candidate;
+      const std::size_t worker_count;
       const bool equivariance;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
@@ -337,6 +338,7 @@ namespace {
                    spot::postprocessor::optimization_level translation_effort,
                    SPOT_FAST_T spot_fast, acacia::game_backend backend,
                    acacia::automaton_provider provider, acacia::candidate_mode candidate,
+                   std::size_t worker_count,
                    bool equivariance, const std::optional<std::string>& synth_fname,
                    controller_conversion conversion,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints,
@@ -355,6 +357,7 @@ namespace {
           backend {backend},
           provider {provider},
           candidate {candidate},
+          worker_count {worker_count},
           equivariance {equivariance},
           synth_fname {synth_fname},
           conversion {conversion},
@@ -522,6 +525,16 @@ namespace {
           acacia::closure_recurrence::Options options;
           options.max_states = acacia::diagnostics::env_size (
               "ACACIA_SPOT_MAX_PROVIDER_STATES", options.max_states, true);
+          options.max_bytes = acacia::diagnostics::env_size (
+              "ACACIA_SPOT_MAX_PROVIDER_BYTES", acacia::obligation::rss_share (worker_count), true);
+          options.hooks = std::make_shared<acacia::closure_buchi::Hooks> ();
+          // Retained estimates include rows/caches and graph entries. RSS also
+          // covers BDD storage, vector capacity and allocator overhead. Sample
+          // every 1024 checkpoints, starting before normalization.
+          options.hooks->memory_exhausted = [limit = options.max_bytes, checks = 0u] () mutable {
+            return checks++ % 1024 == 0 && acacia::obligation::resident_bytes (getpid ()) > limit;
+          };
+          acacia::legacy_count ("max_provider_bytes", options.max_bytes);
           const auto built = acacia::closure_recurrence::build (spot_formula, dict, options, &counts);
           acacia::legacy_count ("branches", counts.branches);
           acacia::legacy_count ("recurrence_blocks", counts.blocks);
@@ -1108,7 +1121,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               acacia::candidate_mode candidate, bool equivariance, uint64_t diagnostic_deadline_ns,
               const std::string& diagnostic_source_sha256, weakening_mode weakening,
               const acacia::unreal_witnesses::allowances& weakening_allowances,
-              acacia::obligation::control* obligation_eligibility) {
+              acacia::obligation::control* obligation_eligibility, std::size_t worker_count) {
   // Protect internal callers as well as the CLI synthesis route.
   if (synth_fname.has_value ()) {
     backend = acacia::synthesis_backend (backend, true);
@@ -1265,7 +1278,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (
       dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal, translation_pref,
-      translation_effort, spot_fast, backend, provider, candidate, equivariance, synth_fname,
+      translation_effort, spot_fast, backend, provider, candidate, worker_count, equivariance, synth_fname,
       conversion, indexed_family_hints,
       metadata.source_format + ";semantics=" + metadata.tlsf_semantics +
           ";target=" + metadata.tlsf_target + ";effective=" +

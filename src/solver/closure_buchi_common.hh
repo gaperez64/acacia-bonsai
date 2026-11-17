@@ -47,6 +47,8 @@ namespace acacia::closure_buchi {
         fail (FailureKind::cancelled);
       if (static_cast<std::size_t> (bdd_getnodenum ()) > o.max_live_bdd_nodes)
         fail (FailureKind::guard_limit);
+      if (o.hooks && o.hooks->memory_exhausted && o.hooks->memory_exhausted ())
+        fail (FailureKind::memory_limit);
     }
     inline void hit (const Options& o, FaultPoint point) {
       check (o);

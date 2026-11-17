@@ -2972,15 +2972,15 @@
     "telemetry": "STOPPED/resource"
   },
   "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 2": {
-    "cause": "FailureKind::injected",
-    "telemetry": "STOPPED/error"
-  },
-  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 3": {
     "cause": "FailureKind::memory_limit",
     "telemetry": "STOPPED/resource"
   },
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 3": {
+    "cause": "FailureKind::injected",
+    "telemetry": "STOPPED/error"
+  },
   "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 4": {
-    "cause": "FailureKind::normalization_limit",
+    "cause": "FailureKind::memory_limit",
     "telemetry": "STOPPED/resource"
   },
   "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 5": {
@@ -2992,10 +2992,14 @@
     "telemetry": "STOPPED/resource"
   },
   "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 7": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 8": {
     "cause": "FailureKind::unsupported_operator",
     "telemetry": "DECLINE/applicability"
   },
-  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 8": {
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 9": {
     "cause": "FailureKind::normalization_limit",
     "telemetry": "STOPPED/resource"
   },

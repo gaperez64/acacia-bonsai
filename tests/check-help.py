@@ -53,10 +53,10 @@ with tempfile.TemporaryDirectory(dir=Path.cwd(), prefix="check-help-") as direct
                     "[high|medium|low]\n" in result.stdout)
             assert f"build default: {build_effort}\n" in result.stdout
             assert "when given, replaces the build default entirely (implicit level high)" in result.stdout
-            assert "build overrides without an active frozen-graph arm are ignored" in result.stdout
+            assert "build overrides without an active translating arm are ignored" in result.stdout
             assert "runtime overrides for inactive or unsupported arms are errors" in result.stdout
             assert "comma-separated LEVEL and ARM=LEVEL entries" in result.stdout
-            assert "overrides apply only to translation-based providers (frozen-graph)" in result.stdout
+            assert "overrides apply only to translating arms (frozen-graph, and" in result.stdout
             assert "ARM must match a selected translation arm exactly" in result.stdout
             assert "be omitted only if unique" in result.stdout
             assert "--obligation-helper" not in result.stdout

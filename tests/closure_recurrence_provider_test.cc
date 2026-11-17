@@ -268,6 +268,9 @@ int main () {
     failed (F::tt (), o, cb::FailureKind::memory_limit);
     o = {};
     o.hooks = std::make_shared<cb::Hooks> ();
+    o.hooks->memory_exhausted = [] { return true; };
+    failed (f, o, cb::FailureKind::memory_limit);
+    o.hooks->memory_exhausted = {};
     o.hooks->cancelled = [] { return true; };
     failed (f, o, cb::FailureKind::cancelled);
     o.hooks->cancelled = {};

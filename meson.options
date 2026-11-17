@@ -30,7 +30,7 @@ option('acacia_translation_pref', type: 'combo',
        description: 'Spot translator postprocessor preference list for realizability checks')
 
 option('acacia_default_translation_effort', type: 'string', value: 'high',
-       description: 'Default translation effort in --translation-effort syntax; overrides without an active frozen-graph arm are ignored; runtime replaces it entirely')
+       description: 'Default translation effort in --translation-effort syntax; overrides without an active translating arm are ignored; runtime replaces it entirely')
 
 option('acacia_bdd_max_increase', type: 'integer', value: 4194304, min: 0, max: 16777216,
        description: 'Maximum BDD nodes added when the node table grows; ' +

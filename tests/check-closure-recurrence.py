@@ -1,5 +1,6 @@
 """Materialized provider parity and transactional fallback checks."""
 import json
+from itertools import product
 import os
 from pathlib import Path
 import subprocess
@@ -70,17 +71,17 @@ for arm in arms[1:]:
         actual = run(args, ["--candidate-mode", mode], arm=arm + ":closure-recurrence")
         assert actual[0] == (2 if arm.startswith("unreal:") else 0), (arm, mode, actual)
 
-# Force construction failure through the existing provider state cap; records
+# Force construction failure through provider state and byte caps; records
 # must identify the actual translation route, including the failure in only.
 with tempfile.TemporaryDirectory(prefix="closure-recurrence-") as tmp:
     args = ["-f", "G F i <-> G F o", "-i", "i", "-o", "o"]
-    for arm in arms:
+    for arm, (cap, value) in product(arms, (("STATES", "1"), ("BYTES", "0"))):
         reference = run(args, arm=arm)
         for mode in ("only", "fallback"):
-            records = Path(tmp) / (arm + mode)
+            records = Path(tmp) / (arm + mode + cap)
             records.mkdir()
-            env = dict(os.environ, ACACIA_SPOT_MAX_PROVIDER_STATES="1",
-                       ACACIA_PHASE_RECORDS=str(records))
+            env = dict(os.environ, ACACIA_PHASE_RECORDS=str(records))
+            env["ACACIA_SPOT_MAX_PROVIDER_" + cap] = value
             result = run(args, ["--candidate-mode", mode], env, arm + ":closure-recurrence")
             assert result[0] == (2 if mode == "only" else reference[0]), (arm, mode, result)
             events = [json.loads(line) for path in records.glob("*.jsonl")
@@ -88,6 +89,7 @@ with tempfile.TemporaryDirectory(prefix="closure-recurrence-") as tmp:
             metrics = {(e.get("key"), e.get("value")) for e in events}
             assert ("provider", "closure-recurrence") in metrics, events
             assert ("construction_result", "unknown" if mode == "only" else "fallback") in metrics
+            assert ("failure_kind", "6" if cap == "BYTES" else "4") in metrics, events
             assert any(e.get("event") == "route_stopped" and e.get("reason") == "resource"
                        and e.get("stage") == "closure-recurrence" for e in events), events
             assert any(e.get("event") == "stage_stopped" and e.get("reason") == "resource"
@@ -97,11 +99,44 @@ with tempfile.TemporaryDirectory(prefix="closure-recurrence-") as tmp:
                            and e.get("exit_code") == 2 for e in events), events
                 assert not any(e.get("stage") in ("translation", "preprocessing", "k-attempt")
                                for e in events), events
+                assert not any(key == "graph_provider" for key, _ in metrics), events
             else:
                 assert ("graph_provider", "frozen-graph") in metrics, events
                 assert any(e.get("route") == "frozen_fallback" and
                            e.get("effective_backend") == arm.split(":")[-1] for e in events), events
                 assert any(e.get("stage") == "translation" for e in events), events
+
+    build_options = {o["name"]: o["value"] for o in json.loads(
+        (Path(binary).resolve().parent.parent / "meson-info/intro-buildoptions.json").read_text())}
+    for arm in arms:
+        entries = build_options["acacia_default_translation_effort"].split(",")
+        default = next((e for e in entries if "=" not in e), "high")
+        for entry in entries:
+            name, equal, level = entry.partition("=")
+            if equal and name in (arm, arm + ":closure-recurrence"):
+                default = level
+        for selector, effort in ((None, default), (arm, "low"),
+                                 (arm + ":closure-recurrence", "low")):
+            records = Path(tmp) / (arm + "effort" + str(selector))
+            records.mkdir()
+            env = dict(os.environ, ACACIA_SPOT_MAX_PROVIDER_BYTES="0",
+                       ACACIA_PHASE_RECORDS=str(records))
+            extra = ["--candidate-mode", "fallback"]
+            if selector:
+                extra += ["--translation-effort", selector + "=" + effort]
+            result = run(args, extra, env, arm + ":closure-recurrence")
+            assert result[:2] == run(args, arm=arm)[:2], (arm, selector, result)
+            events = [json.loads(line) for path in records.glob("*.jsonl")
+                      for line in path.read_text().splitlines()]
+            assert any(e.get("stage") == "translation" for e in events), events
+            assert any(e.get("event") == "worker_spec" and
+                       e.get("translation_effort") == effort for e in events), events
+            if selector:
+                rejected = subprocess.run(
+                    base + ["--arms", arm + ":closure-recurrence", "--candidate-mode", "only",
+                            "--translation-effort", selector + "=low"] + args,
+                    text=True, capture_output=True, timeout=15)
+                assert rejected.returncode == 3 and "does not use effort-aware translation" in rejected.stderr, rejected
 
     for arm in arms:
         records = Path(tmp) / (arm + "success")

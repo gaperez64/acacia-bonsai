@@ -65,4 +65,5 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               const std::string& diagnostic_source_sha256 = {},
               weakening_mode weakening = weakening_mode::basic,
               const acacia::unreal_witnesses::allowances& weakening_allowances = {},
-              acacia::obligation::control* obligation_eligibility = nullptr);
+              acacia::obligation::control* obligation_eligibility = nullptr,
+              std::size_t worker_count = 1);
