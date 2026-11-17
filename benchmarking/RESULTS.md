@@ -12,6 +12,28 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-17: Local G3 admits A11 and A12 under a 6G regime (#403)
+
+Archive `g3-local-20261117` (release `evidence-2026-11-17-g3local`). The
+benchmarking computer was busy, so G3 for #427 (A12) and #428 (A11) ran on the
+maintainer's 4-core, 7 GB workstation. The regime deviates from the README in
+one way: `--scope-mode instance` with a 6G per-solver cap instead of 8G. This
+was a local, uncommitted patch to `landing-campaign.sh`, also applied to
+`landing-bar.py` remeasures. Each campaign used the 17 s cap and both 180-input
+panels. All three campaigns shared one origin/master `1c61eda5` baseline
+binary. No solver scope hit the cap.
+
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| #427 A12 | 162 → 162 / 804.3 → 805.8 s | 166 → 166 / 578.4 → 571.9 s | PASS |
+| #428 A11 | 162 → 162 / 804.0 → 799.7 s | 166 → 166 / 569.7 → 569.3 s | PASS |
+| control (base vs base) | 162 → 162 / 796.5 → 796.4 s | 166 → 166 / 571.7 → 574.4 s | PASS |
+
+No campaign had a verdict change or coverage loss. The four baseline-binary
+runs set a local noise floor: PAR-2 spread is 7.9 s on SYNTCOMP25 and 8.7 s on
+SYNTCOMP26. Both candidates fall inside it, so no speed claim is made. These
+local timings are not comparable to the benchmarking computer's 12.1 s floor.
+
 ## 2026-11-17: Optimizing the forward arms would not recover coverage (#378)
 
 Archive `fwd-20261117` (release `evidence-2026-11-17-fwd`). The campaign has
