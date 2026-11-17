@@ -445,10 +445,12 @@ def test_exact_arm_inventory_matches_worker_spec(specification):
     assert context == dict(r_prepass=True, equivariance=True)
 
 
-def test_shipped_six_arm_default_inventory():
-    _, presets = reader.CONFIG.load_registry()
+@pytest.mark.parametrize("slot", [0, 1])
+def test_shipped_parity_default_inventories(slot):
+    presets = json.loads((SCRIPT.parent.parent / "config/acacia-presets.json").read_text())
+    preset = presets["groups"]["docker_default"][slot]
     inventory, context = reader.expected_configuration(row(
-        flags="", preset=presets["groups"]["docker_default"][0]))
+        flags="", preset=preset))
     expected = [
         dict(kind="legacy", requested_polarity=polarity, translation="small",
              transform=transform, provider=provider, requested_backend=backend,
@@ -461,8 +463,13 @@ def test_shipped_six_arm_default_inventory():
     expected += [dict(kind="both:gr1-real-lift:oxidd", requested_backend="oxidd",
                       requested_polarity="both", translation="native", transform="exact",
                       provider="native", r_prepass=True, equivariance=True), *EXACT_WORKER_SPECS]
+    if slot == 1:
+        expected += [dict(kind="legacy", requested_polarity=polarity, translation="small",
+                          transform=transform, provider="frozen-graph", requested_backend="forward",
+                          r_prepass=True, equivariance=True)
+                     for polarity, transform in [("REAL", "real"), ("UNREAL", "automaton")]]
     assert inventory == expected
-    assert len(inventory) == 6
+    assert len(inventory) == 6 + 2 * slot
     assert context == dict(r_prepass=True, equivariance=True)
 
 

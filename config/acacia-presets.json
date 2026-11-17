@@ -77,7 +77,7 @@
     },
     "otf_sparse_formula": {
       "description": "Retain backward and forward realizability and forward automaton-unreal solving, adding a sparse guarded formula-unreal worker. Include one bounded Spot obligation decision arm for eligible objectives.",
-      "role": "shipping",
+      "role": "legacy",
       "forced_output_contradiction": true,
       "vector_downset": "rank_bucketed_vector_backed",
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,both:obligation:spot",
@@ -141,6 +141,21 @@
       "aut_preprocessor": "standard",
       "ios_precomputer": "semantic_mona",
       "input_picker": "critical"
+    },
+    "otf_sparse_formula_parity_forward": {
+      "description": "Extend the six-arm parity portfolio with forward realizability and automaton-unrealizability workers, retaining its lazy-KD downsets, providers, pickers and translation effort.",
+      "role": "shipping",
+      "forced_output_contradiction": true,
+      "vector_downset": "lazy_kd",
+      "default_arms": "real:small:backward,unreal:formula:spot-guarded-sparse:closure-recurrence,both:gr1-real-lift:oxidd,both:obligation:spot,both:parity:spot,both:parity:oxidd,real:small:forward,unreal:automaton:forward",
+      "default_translation_effort": "high,unreal:formula:spot-guarded-sparse=low",
+      "default_candidate_mode": "fallback",
+      "spot_lazy_provider": true,
+      "spot_guarded_backend": true,
+      "forward_safety_solver": true,
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "semantic_mona",
+      "input_picker": "critical"
     }
   },
   "tool_baselines": {
@@ -181,9 +196,9 @@
   "groups": {
     "docker_default": [
       "otf_sparse_formula_parity",
-      "otf_sparse_formula_gr1_real_prepass",
-      "otf_sparse_formula",
-      "best_decomp_rank_bucketed_semantic_mona"
+      "otf_sparse_formula_parity_forward",
+      "best_decomp_rank_bucketed_semantic_mona",
+      "otf_sparse_formula_gr1_real_prepass"
     ],
     "local_tuning_default": [
       "best_decomp_mona",

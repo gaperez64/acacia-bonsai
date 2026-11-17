@@ -116,8 +116,9 @@ def test_gr1_real_prepass_preset_is_six_arms():
     module = load_module()
     options, presets = module.load_registry()
     shipping = presets["groups"]["docker_default"]
-    parent = module.normalize_preset(options, presets, shipping[2])
-    name = shipping[1]
+    # This historical five-arm label remains selectable outside the shipping group.
+    parent = module.normalize_preset(options, presets, "otf_sparse_formula")
+    name = shipping[3]
     data = presets["presets"][name]
     assert data["role"] == "shipping"
     assert name in presets["groups"]["docker_default"]
@@ -135,7 +136,7 @@ def test_gr1_real_prepass_preset_is_six_arms():
     } == {"default_arms"}
 
 
-def test_obligation_membership_is_explicit_in_shipping_portfolios():
+def test_obligation_membership_is_explicit_in_shipping_and_historical_portfolios():
     module = load_module()
     options, presets = module.load_registry()
     shipping = presets["groups"]["docker_default"]
@@ -143,14 +144,14 @@ def test_obligation_membership_is_explicit_in_shipping_portfolios():
     for name, data in presets["presets"].items():
         values = module.normalize_preset(options, presets, name)
         arms = values["default_arms"].split(",")
-        if name in shipping and data.get("default_arms"):
+        if data.get("default_arms") and data["role"] in {"shipping", "legacy"}:
             assert arms.count(arm) == 1, name
             assert f"-Dacacia_default_arms={values['default_arms']}" in module.meson_args(
                 options, values)
         else:
             assert arm not in arms, name
     fallback = module.normalize_preset(
-        options, presets, presets["groups"]["docker_default"][2])
+        options, presets, shipping[3])
     assert arm in fallback["default_arms"].split(",")
     assert options["options"]["default_arms"]["default"] == ""
 
@@ -159,7 +160,7 @@ def test_first_shipping_preset_replaces_both_forward_arms_with_both_parity_arms(
     module = load_module()
     options, presets = module.load_registry()
     shipping = presets["groups"]["docker_default"]
-    name, previous = shipping[:2]
+    name, previous = shipping[0], shipping[3]
     assert presets["presets"][name]["role"] == "shipping"
     baseline = module.normalize_preset(options, presets, previous)
     candidate = module.normalize_preset(options, presets, name)
@@ -175,19 +176,38 @@ def test_first_shipping_preset_replaces_both_forward_arms_with_both_parity_arms(
             "default_candidate_mode", "vector_downset"
         }:
             assert candidate[key] == baseline[key], key
-    # Only the shipped preset moved to lazy KD; the fallback presets keep rank buckets.
+    # The parity portfolios use lazy KD; the historical GR(1) portfolio keeps rank buckets.
     assert candidate["vector_downset"] == "lazy_kd"
     assert baseline["vector_downset"] == "rank_bucketed_vector_backed"
 
 
-def test_only_first_shipping_preset_changes_default_translation_effort():
+def test_second_shipping_preset_adds_only_the_two_forward_arms():
+    module = load_module()
+    options, presets = module.load_registry()
+    first, second, backward, _previous = presets["groups"]["docker_default"]
+    baseline = module.normalize_preset(options, presets, first)
+    candidate = module.normalize_preset(options, presets, second)
+    assert candidate["default_arms"].split(",") == baseline["default_arms"].split(",") + [
+        "real:small:forward", "unreal:automaton:forward",
+    ]
+    assert len(set(candidate["default_arms"].split(","))) == 8
+    # Preset fields record identity; the eight-arm variant changes only arm membership.
+    assert {key for key in candidate if key not in {"_preset", "preset"}
+            and candidate[key] != baseline[key]} == {"default_arms"}
+    fallback = module.normalize_preset(options, presets, backward)
+    assert fallback["default_arms"] == ""
+    assert fallback["ios_precomputer"] == "semantic_mona"
+    assert fallback["vector_downset"] == "rank_bucketed_vector_backed"
+
+
+def test_parity_shipping_presets_share_default_translation_effort():
     module = load_module()
     options, presets = module.load_registry()
     default = options["options"]["default_translation_effort"]["default"]
-    first = presets["groups"]["docker_default"][0]
+    parity = presets["groups"]["docker_default"][:2]
     for name in presets["presets"]:
         values = module.normalize_preset(options, presets, name)
-        expected = default + ",unreal:formula:spot-guarded-sparse=low" if name == first else default
+        expected = default + ",unreal:formula:spot-guarded-sparse=low" if name in parity else default
         assert values["default_translation_effort"] == expected, name
         assert f"-Dacacia_default_translation_effort={expected}" in module.meson_args(
             options, values)
@@ -197,14 +217,15 @@ def test_only_first_shipping_preset_changes_default_translation_effort():
             "#endif" in template)
 
 
-def test_only_first_shipping_preset_defaults_to_candidate_fallback():
+def test_only_parity_shipping_presets_default_to_candidate_fallback():
     module = load_module()
     options, presets = module.load_registry()
     assert options["options"]["default_candidate_mode"]["default"] == "only"
-    first = presets["groups"]["docker_default"][0]
+    # The first two docker_default presets: six arms, and the same plus forward arms.
+    parity = set(presets["groups"]["docker_default"][:2])
     for name in presets["presets"]:
         values = module.normalize_preset(options, presets, name)
-        expected = "fallback" if name == first else "only"
+        expected = "fallback" if name in parity else "only"
         assert values["default_candidate_mode"] == expected, name
         assert f"-Dacacia_default_candidate_mode={expected}" in module.meson_args(options, values)
 
@@ -227,6 +248,30 @@ def test_config_validation_rejects_stale_docker_list(tmp_path, monkeypatch):
     monkeypatch.setattr(module, "DOCKER_DEFAULT_LIST", stale)
     with pytest.raises(SystemExit, match="docker-default.list must match"):
         module.command_validate(options, presets)
+
+
+def test_docker_launcher_selects_the_group_in_order(tmp_path):
+    module = load_module()
+    _options, presets = module.load_registry()
+    names = presets["groups"]["docker_default"]
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "config").mkdir()
+    launcher = tmp_path / "scripts/acacia-bonsai.sh"
+    shutil.copy2(ROOT / "scripts/acacia-bonsai.sh", launcher)
+    shutil.copy2(ROOT / "config/docker-default.list", tmp_path / "config/docker-default.list")
+    for name in names:
+        binary = tmp_path / f"build_{name}/src/acacia-bonsai"
+        binary.parent.mkdir(parents=True)
+        binary.write_text(f"#!/bin/sh\necho {name}\nprintf '%s\\n' \"$@\"\n")
+        binary.chmod(0o755)
+    for selection in [[], *([name] for name in names)]:
+        result = subprocess.run([str(launcher), *selection, "-f", "G o"],
+                                text=True, capture_output=True, check=True)
+        assert result.stdout.splitlines() == [selection[0] if selection else names[0], "-f", "G o"]
+    for name in presets["presets"].keys() - set(names):
+        result = subprocess.run([str(launcher), name], text=True, capture_output=True)
+        assert result.returncode != 0
+        assert "unknown configuration" in result.stderr
 
 
 

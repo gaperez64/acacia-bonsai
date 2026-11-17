@@ -21,6 +21,11 @@ python3 scripts/acacia-config.py meson-args "$preset"
 `docker_default` lists the configurations accepted by the Docker wrappers.
 Its first entry is also the Python build default. Names such as `best_…`
 are historical labels; use the group to find the current choices.
+The ordered slots are the six-arm default, its eight-arm forward-inclusive
+variant, the historical backward solver, and the previous second slot's
+six-arm GR(1) portfolio. The second slot changes only `default_arms` from
+the first, appending `real:small:forward` and `unreal:automaton:forward`.
+Presets that leave the group remain selectable through `list-presets`.
 `list-presets --unique` lists one name for each distinct set of component
 options, ignoring the label used to record its origin.
 
@@ -31,10 +36,10 @@ Use `meson-args` to translate a preset into build options, as in the
 changing compiler, compile profile, or native file. The build wrappers reject
 directories whose recorded build identity no longer matches.
 
-The first `docker_default` preset uses
+The first two `docker_default` presets use
 `unreal:formula:spot-guarded-sparse:closure-recurrence`, with candidate mode
 `fallback` and `low` effort for fallback translation through `frozen-graph`.
-It sets `acacia_default_candidate_mode=fallback`; the option's general default
+They set `acacia_default_candidate_mode=fallback`; the option's general default
 is `only`. `--candidate-mode only|fallback` overrides the build default globally.
 Other arms, translation efforts and presets are unchanged. During controller
 synthesis (`-s`), the default formula arm retains its `frozen-graph` provider.

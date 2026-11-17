@@ -12,6 +12,104 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-18: The formula-unreal arm builds its automaton directly (#407)
+
+Archive `ucw407-20261118` (release `evidence-2026-11-18-ucw407`). The shipped
+parity presets now run `unreal:formula:spot-guarded-sparse` on the
+`closure-recurrence` provider in fallback mode: the arm builds its Büchi
+automaton from the formula, and falls back to Spot's translation (low effort,
+direct checks first) when the construction hits a limit. All runs serial,
+8 GiB and no swap per call, SYNTCOMP26.
+
+| 17 s, all 1,524 inputs, one binary (57b76fc7) | Solved | REAL / UNREAL | PAR-2 (s) |
+|---|---:|---:|---:|
+| Shipped six arms | 1370 | 632 / 738 | 5871.6 |
+| **Same, formula-unreal arm on closure-recurrence** | **1376** | 632 / 744 | **5809.0** |
+
+The six gains are `ltl2dba_C2_unreal_pb_25, 50, 60, 70, 80, 100`, decided
+UNREALIZABLE in 0.2-11.4 s, matching SemML's verdicts; Spot's translation of
+their worker formula does not finish. No input is lost and no verdict
+disagrees. PAR-2 is 62.6 s lower, beyond the 12.1 s floor. The arm decides
+them because rows are now built as maps from (next set, postponement bit) to
+guard, merged after every union and product (C2 has 300 implications under G
+at n=25, which previously exceeded the branch limit), with each obligation
+expanded once per row and the step limit per row.
+
+Two defects found on the way were fixed before this run and stay recorded in
+the archive: without a memory budget the construction grew until the
+portfolio's scope was killed (7 round_robin_arbiter_unreal1 MEMOUTs on the
+126-input screen; it now fails with a typed memory limit inside the worker's
+share and falls back), and the closure route skipped the arm's direct checks,
+losing 23 full_arbiter_unreal inputs in a first full-corpus run (1,353
+solved).
+
+Gates for 4584dafb against frozen master a3fdd342 (`MASTERA3F`, includes #427
+and #428): G3 unchanged on both panels (164/180 and 168/180), G4 pass, G5 pass
+(1,524 pairs, no opposite verdicts or frontend errors). The eight-arm
+forward-inclusive preset (#433) takes the same arm setting so that it stays the
+six-arm preset plus the forward arms; it was not measured separately.
+
+Still open on the unrealizable side: `load_balancer_unreal1/2` and
+`amba_case_study_unreal` exceed the per-row guard limit (one row's product has
+over 500,000 distinct next sets from `GF(!req | XX grant)`), and
+`ltl2dba_theta` builds 166 states but its K=2 search is exponential in the
+number of recurrent inputs.
+
+## 2026-11-17: Eight-arm second Docker slot (#431)
+
+Local partial campaign `acacia-431-20261117`, pinned to master `0b369526`.
+Matched normal release builds ran all 1,524 SYNTCOMP26 inputs through `-T`,
+sequentially, at 17 s with per-instance 5G scopes and no swap on the 4-core,
+7 GB workstation. These are local coverage/verdict observations and descriptive
+PAR-2 totals; no speedup or comparison to the 12.1 s noise floor is claimed.
+
+| Preset position | Solved | REAL | UNREAL | TIMEOUT | PAR-2 total (s) |
+|---|---:|---:|---:|---:|---:|
+| Previous second slot | 1,217 | 573 | 644 | 307 | 11,530.625 |
+| New eight-arm second slot | 1,352 | 619 | 733 | 172 | 6,784.008 |
+
+The eight-arm preset has 138 exclusive gains and three losses, with zero
+verdict conflicts. All nonsolves are timeouts; neither leg has resource
+limits, UNKNOWNs or errors. The losses, with the previous preset's solve
+times, are `06.ltl` (12.689 s), `collector_v2_pb_15_pe_.ltl` (14.479 s), and
+`load_balancer_unreal1_pb_5_5_pe_.ltl` (16.369 s). Each times out at 17 s in
+the eight-arm leg. The raw gain/loss lists remain with the campaign evidence.
+
+The new second slot shares all six arms with the first slot and appends
+`real:small:forward` and `unreal:automaton:forward`. The first slot retains
+its identity, arm order, options and hash (`e1f7cf334444`); all 13 pre-existing
+preset option vectors and hashes are unchanged. The revised group also
+retains the historical backward solver in slot three and the previous second
+preset in slot four. Historical labels remain selectable outside the group.
+
+G0 passed (release: 90 OK, six expected failures, zero failures; Posets:
+110 OK, zero failures). G1 passed all 40 frozen rows with zero verdict
+changes or coverage losses, using the same eight-arm configuration built
+from the captured master source. G4 passed all 625 records with 32 permitted
+timeouts. G5 passed all 1,524 inputs and ten independent spot checks, with
+zero missing conversions, fallback pairs, frontend errors or opposite
+verdicts; 39 answers are native-only and two converted-only.
+
+Evidence: archive `acacia-431-20261117` (status partial: it predates G3), release
+`evidence-2026-11-17-issue431`, SHA-256 `92f9b3ce…`, 77,488,200 bytes.
+
+G3 passed on both panels, run locally under the maintainer-approved regime:
+`--scope-mode instance`, a 6G per-solver cap instead of 8G (an uncommitted
+local patch to `landing-campaign.sh`), 17 s, both 180-input panels. The baseline
+is the previous second preset's release build (`33956fc9…`), the candidate the
+eight-arm release build (`8b263f58…`). No solver scope hit the cap. Archive
+`g3-431-20261117`, release `evidence-2026-11-17-g3-431`.
+
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| eight-arm vs previous second slot | 136 → 162 / 1711.4 → 835.1 s | 147 → 167 / 1219.8 → 549.1 s | PASS |
+| control (previous vs previous) | 136 → 136 / 1712.1 → 1709.6 s | 147 → 147 / 1219.9 → 1218.4 s | PASS |
+
+Neither campaign has a verdict change or coverage loss. The three baseline runs
+give a local noise floor of 2.5 s (SYNTCOMP25) and 1.6 s (SYNTCOMP26) PAR-2;
+the eight-arm gains are far outside it. These local timings are not comparable
+to the 12.1 s floor.
+
 ## 2026-11-17: Local G3 admits A11 and A12 under a 6G regime (#403)
 
 Archive `g3-local-20261117` (release `evidence-2026-11-17-g3local`). The
