@@ -1226,8 +1226,11 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   if (obligation_eligibility)
     acacia::obligation::publish_eligibility (obligation_eligibility, spot_formula);
 
+  // closure-recurrence in fallback mode may use Spot anyway, so it keeps the
+  // cheap Spot checks that decide many inputs before any construction.
   if (!acacia::is_closure_provider (provider) &&
-      provider != acacia::automaton_provider::closure_recurrence) {
+      (provider != acacia::automaton_provider::closure_recurrence ||
+       candidate == acacia::candidate_mode::fallback)) {
     acacia::legacy_phase bypass ("direct-checks");
     if (auto answer = try_degenerate_io (input_aps, output_aps, spot_formula, check_unreal,
                                          translation_pref, translation_effort, synth_fname,

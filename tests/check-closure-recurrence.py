@@ -74,7 +74,9 @@ for arm in arms[1:]:
 # Force construction failure through provider state and byte caps; records
 # must identify the actual translation route, including the failure in only.
 with tempfile.TemporaryDirectory(prefix="closure-recurrence-") as tmp:
-    args = ["-f", "G F i <-> G F o", "-i", "i", "-o", "o"]
+    # The direct checks (kept in fallback mode) decide GF i <-> GF o; this one
+    # reaches the construction.
+    args = ["-f", "G(i -> F o) & G(o -> X !o)", "-i", "i", "-o", "o"]
     for arm, (cap, value) in product(arms, (("STATES", "1"), ("BYTES", "0"))):
         reference = run(args, arm=arm)
         for mode in ("only", "fallback"):
