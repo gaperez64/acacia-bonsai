@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Restrict enumerative closure-row expansion to the differential test build; production closure providers continue to use symbolic Boolean folding.
+- Remove the unused benchmark timed-run marker API: `timed_run_marker`, `MarkerTimeout`, `DEFAULT_BLOCKING_MARKERS` and `TIMED_RUN_MARKER`.
 - The default portfolio drops `unreal:automaton:forward`, going from seven arms to six (#384). On all 1,524 SYNTCOMP26 inputs it decides 1,370 / 1,392 / 1,398 at 17 / 60 / 120 s, against 1,367 / 1,388 / 1,394 for seven arms, with PAR-2 87 s, 468 s and 988 s lower and no verdict disagreement. The only loss, `lift_wrong_physics_unreal_pb_10` at 17 s, is solved again at 60 s. The arm stays available through `--arms`.
 
 ## 2.9.0 (2026-11-15)

@@ -378,6 +378,7 @@ def check_campaign_scopes(name: str, *, allow_strays: bool = False, scopes=None)
     return False
 
 
+# Invariant: campaign scope lifecycle checks do not depend on marker files.
 @contextmanager
 def campaign_scope_guard(name: str):
     """Check campaign isolation on entry and report/clean survivors on exit.
@@ -956,70 +957,6 @@ def load_phase_records(directory) -> PhaseRecords:
                            *(int(event.get("dropped_records") or 0) for event in events)])
             processes.append(PhaseProcess(path.name, tuple(events), bool(summaries), dropped))
     return PhaseRecords(directory, tuple(processes))
-
-
-# --- Timed-run marker protocol ------------------------------------------------
-#
-# Sprint scripts share one directory of marker files.  A timed run waits while
-# any blocking marker exists (a build, another timed run), then creates its own
-# marker atomically and removes it on exit.  Builds and other timed runs wait
-# for that marker in turn.
-
-DEFAULT_BLOCKING_MARKERS = ("DRIVER-BUILDING", "TRACKB-BUILDING", "TIMED-RUN-ACTIVE")
-TIMED_RUN_MARKER = "TIMED-RUN-ACTIVE"
-
-
-class MarkerTimeout(RuntimeError):
-    """The blocking markers did not clear within the allowed wait."""
-
-
-@contextmanager
-def timed_run_marker(marker_dir, owner: str, *, blocking=DEFAULT_BLOCKING_MARKERS,
-                     marker: str = TIMED_RUN_MARKER, poll: float = 5.0,
-                     max_wait: float | None = None, sleep=time.sleep,
-                     announce=None):
-    """Hold the timed-run marker for the duration of the block.
-
-    Creation uses O_EXCL, so two drivers cannot both pass the wait and start
-    timing: the loser sees the winner's marker and keeps waiting.  The marker
-    is removed on exit only if it still holds this owner's token.
-    """
-    marker_dir = pathlib.Path(marker_dir)
-    if not marker_dir.is_dir():
-        raise FileNotFoundError(f"marker directory does not exist: {marker_dir}")
-    path = marker_dir / marker
-    token = json.dumps({"owner": owner, "pid": os.getpid(), "token": uuid.uuid4().hex,
-                        "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())},
-                       sort_keys=True) + "\n"
-    waited = 0.0
-    announced = False
-    while True:
-        present = [name for name in blocking if (marker_dir / name).exists()]
-        if not present:
-            try:
-                descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
-            except FileExistsError:
-                present = [marker]
-            else:
-                with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
-                    stream.write(token)
-                break
-        if max_wait is not None and waited >= max_wait:
-            raise MarkerTimeout(f"blocking markers still present after {waited:g} s: "
-                                + ", ".join(present))
-        if announce is not None and not announced:
-            announce(f"waiting for marker(s) to clear: {', '.join(present)}")
-            announced = True
-        sleep(poll)
-        waited += poll
-    try:
-        yield path
-    finally:
-        try:
-            if path.read_text(encoding="utf-8") == token:
-                path.unlink()
-        except FileNotFoundError:
-            pass
 
 
 # --- Host-condition sampling (§9.1) ------------------------------------------
