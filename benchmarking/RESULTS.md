@@ -50,9 +50,13 @@ No screen has a verdict conflict.
   branch or guard limit on 31 and falls back to Spot, which is still
   translating at the cap.
 
-So a better automaton alone does not decide these inputs: the antichain search
-at small K is the next limit. The construction is kept on branch
-`ucw-recurrence-407` (`dbe18139`) for later reuse; the split is not kept.
+So on the realizability side a better automaton alone does not decide these
+inputs: the antichain search at small K is the next limit. The unrealizability
+side was not tested fairly. SemML's 120 s run (`c120-syntcomp26-20261024`)
+decides 46 of the 126, 34 of them unrealizable, and on 25 of those the shipped
+unrealizability arm never leaves Spot's translation while the new construction
+stops at its branch limit within a second. The construction stays on branch
+`ucw-recurrence-407` (`dbe18139`) while that is pursued; the split is not kept.
 
 ## 2026-11-17: Optimizing the forward arms would not recover coverage (#378)
 
