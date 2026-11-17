@@ -3044,11 +3044,11 @@
     "telemetry": "STOPPED/resource"
   },
   "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 10": {
-    "cause": "FailureKind::branch_limit",
+    "cause": "FailureKind::guard_limit",
     "telemetry": "STOPPED/resource"
   },
   "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 11": {
-    "cause": "FailureKind::guard_limit",
+    "cause": "FailureKind::branch_limit",
     "telemetry": "STOPPED/resource"
   },
   "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 12": {

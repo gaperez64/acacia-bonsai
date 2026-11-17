@@ -1,6 +1,7 @@
 #include "solver/closure_recurrence_provider.hh"
 
 #include "solver/configured_components.hh"
+#include "solver/formula_input.hh"
 #include "solver/k_bounded_safety_aut.hh"
 
 #include <iostream>
@@ -75,6 +76,19 @@ namespace {
     auto result = cr::build (bad, spot::make_bdd_dict (), options);
     auto failure = std::get_if<cb::Failure> (&result);
     require (failure && failure->kind == expected, "typed failure, no partial graph");
+  }
+
+  F c2 (unsigned n) {
+    std::vector<F> fair, exclusive;
+    const auto g = F::ap ("g");
+    for (unsigned i = 0; i < n; ++i) {
+      const auto r = F::ap ("r" + std::to_string (i));
+      fair.push_back (F::G (F::F (r)));
+      for (unsigned j = i + 1; j < n; ++j)
+        exclusive.push_back (F::Implies (F::And ({r, F::ap ("r" + std::to_string (j))}),
+                                         F::G (F::Not (g))));
+    }
+    return F::And ({F::Equiv (F::And (fair), F::G (F::F (g))), F::G (F::And (exclusive))});
   }
 
   bool backward_win (F positive) {
@@ -163,6 +177,34 @@ int main () {
     require (counts.blocks == 1 && counts.watches == 3, "sibling block and separate eventuality");
     equivalent (parse ("X G(F p & F q)"), &counts);
     require (counts.blocks == 1 && counts.watches == 2, "block below X remains reachable");
+
+    for (unsigned n : {4, 6, 25}) {
+      auto phi = c2 (n);
+      const auto real_bad = F::Not (phi);
+      // The formula-unreal arm swaps I/O, shifts the new input g, and
+      // translates the positive objective (without negating it).
+      acacia::formula_input::shift_inputs (phi, {"g"});
+      for (auto bad : {real_bad, phi})
+        if (n > 4)  // Spot's equivalence check itself runs out of memory at n = 6.
+          structure (graph (bad, spot::make_bdd_dict ()));
+        else
+          equivalent (bad);
+    }
+
+    // Theta's duplicate F X acc expansion, with only one watch so its
+    // state count does not depend on the order of other obligations.
+    auto repeated = graph (parse ("G F X p"), spot::make_bdd_dict ());
+    structure (repeated);
+    require (repeated->num_states () == 5 && repeated->num_edges () == 11,
+             "a pending release right operand is expanded once");
+    // A release left operand is not on every path, so it must not be dropped.
+    equivalent (parse ("(p R q) & X p"));
+    // Obligations shared between a pending G and the pending set are expanded
+    // once (the per-path DFS built 62 states; expanding them twice built 290).
+    auto shared = graph (parse ("G(F X p0 & F X p1 & F X p2 & F X p3)"), spot::make_bdd_dict ());
+    structure (shared);
+    std::cout << "shared obligations: " << shared->num_states () << " states\n";
+    require (shared->num_states () <= 62, "shared obligations are expanded once per row");
 
     std::vector<F> members;
     for (unsigned i = 0; i < 70; ++i)

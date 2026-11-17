@@ -114,8 +114,13 @@ namespace acacia::closure_recurrence {
             };
             std::vector<Watch> watches;
             std::vector<Set> reachable;
+            std::vector<Set> relevant;
             std::set<ClosureId> blocks;
             using Key = std::pair<Set, std::size_t>;
+            using AltKey = std::pair<Set, bool>;
+            using Alternatives = std::map<AltKey, bdd>;
+            std::map<std::pair<ClosureId, std::size_t>, Alternatives> memo;
+            std::map<Set, Alternatives> conjunctions;
             std::map<Key, std::vector<Alternative>> expansions;
             std::map<Key, unsigned> states;
 
@@ -193,6 +198,7 @@ namespace acacia::closure_recurrence {
               intern_formula (group (f));
               owner.stats.watches += watches.size ();
               reachable.resize (closure.size ());
+              relevant.resize (closure.size ());
               // Shared DAG nodes need a dependency traversal, not an assumption
               // that every child was assigned a larger interned ID.
               std::vector<bool> done (closure.size ());
@@ -204,7 +210,16 @@ namespace acacia::closure_recurrence {
                   for (auto c : closure[id])
                     visit (ids.at (c));
                 reachable[id] = can_pending (id);
-                owner.retain (reachable[id].size () * sizeof (ClosureId));
+                for (auto w : reachable[id])
+                  if (watches[w].obligation == id)
+                    insert (relevant[id], w);
+                if (!blocks.contains (id) && !closure[id].is (Op::X))
+                  for (auto c : closure[id])
+                    for (auto w : relevant[ids.at (c)]) {
+                      owner.step ();
+                      insert (relevant[id], w);
+                    }
+                owner.retain ((reachable[id].size () + relevant[id].size ()) * sizeof (ClosureId));
               };
               visit (0);
             }
@@ -235,6 +250,7 @@ namespace acacia::closure_recurrence {
             }
 
             const std::vector<Alternative>& expand (const Set& pending, std::size_t watch) {
+              owner.steps = 0;  // the step limit is per row, as in closure_buchi
               const Key key {pending, watch};
               if (auto p = expansions.find (key); p != expansions.end ())
                 return p->second;
@@ -242,22 +258,20 @@ namespace acacia::closure_recurrence {
                 fail (FailureKind::row_limit);
               if (owner.options.max_branches_per_row == 0)
                 fail (FailureKind::branch_limit);
-              struct Partial {
-                  Set work, next, done;
-                  bool postponed = false;
-                  bdd guard = bddtrue;
+              // Share results across rows and across irrelevant watches.
+              // Merge each union/product before using it in the next product.
+              std::size_t branches = 0, guard_ops = 0, scratch = 0;
+              const auto entry_bytes = [] (const AltKey& k) {
+                return 96 + k.first.capacity () * sizeof (ClosureId);
               };
-              std::vector<Partial> stack {{pending, {}, {}}};
-              std::map<std::pair<Set, bool>, bdd> merged;
-              std::size_t forks = 1, guard_ops = 0;
-              const auto fork = [&] (Partial p) {
-                if (forks++ >= owner.options.max_branches_per_row)
-                  fail (FailureKind::branch_limit);
-                bytes (owner.options, owner.retained,
-                       (stack.size () + 1) * (128 + 3 * closure.size () * sizeof (ClosureId)));
-                stack.push_back (std::move (p));
+              const auto retain = [&] (const Alternatives& result) {
+                for (const auto& [k, guard] : result) {
+                  scratch -= entry_bytes (k);
+                  owner.retain (entry_bytes (k));
+                }
               };
               const auto combine = [&] (bdd a, bdd b, bool disjoin = false) {
+                owner.step ();
                 hit (owner.options, FaultPoint::guard);
                 if (guard_ops++ >= owner.options.max_guards_per_row)
                   fail (FailureKind::guard_limit);
@@ -265,83 +279,188 @@ namespace acacia::closure_recurrence {
                 check (owner.options);
                 return result;
               };
-              while (!stack.empty ()) {
+              const auto add = [&] (Alternatives& result, AltKey k, bdd guard) {
+                owner.step ();
                 hit (owner.options, FaultPoint::branch);
-                auto p = std::move (stack.back ());
-                stack.pop_back ();
-                while (!p.work.empty () && p.guard != bddfalse) {
-                  owner.step ();
-                  const auto id = p.work.back ();
-                  p.work.pop_back ();
-                  if (std::binary_search (p.done.begin (), p.done.end (), id))
-                    continue;
-                  insert (p.done, id);
-                  const auto f = closure[id];
-                  const auto child = [&] (unsigned i) { return ids.at (f[i]); };
-                  if (blocks.contains (id)) {
-                    insert (p.next, id);
-                    if (watch < watches.size () && watches[watch].obligation == id) {
-                      const auto event = boolean (watches[watch].event);
-                      auto other = p;
-                      other.guard = combine (p.guard, !event);
-                      other.postponed = true;
-                      fork (std::move (other));
-                      p.guard = combine (p.guard, event);
+                if (branches++ >= owner.options.max_branches_per_row)
+                  fail (FailureKind::branch_limit);
+                if (guard == bddfalse)
+                  return;
+                auto [it, fresh] = result.emplace (std::move (k), guard);
+                if (fresh)
+                  scratch += entry_bytes (it->first);
+                else
+                  it->second = combine (it->second, guard, true);
+                bytes (owner.options, owner.retained, scratch);
+              };
+              const auto append = [&] (Alternatives& result, const Alternatives& other) {
+                for (const auto& [k, guard] : other)
+                  add (result, k, guard);
+              };
+              const auto product = [&] (Alternatives& result, const Alternatives& other) {
+                auto left = std::move (result);
+                result.clear ();
+                for (const auto& [a, ga] : left)
+                  for (const auto& [b, gb] : other) {
+                    const auto guard = combine (ga, gb);
+                    if (guard == bddfalse)
+                      continue;
+                    AltKey k {a.first, a.second || b.second};
+                    for (auto id : b.first) {
+                      owner.step ();
+                      insert (k.first, id);
                     }
+                    add (result, std::move (k), guard);
                   }
-                  else if (f.is_boolean ()) {
-                    p.guard = combine (p.guard, boolean (f));
+                for (const auto& [k, guard] : left)
+                  scratch -= entry_bytes (k);
+              };
+              std::function<const Alternatives& (ClosureId)> expand_formula = [&] (ClosureId id)
+                  -> const Alternatives& {
+                owner.step ();
+                const auto phase = std::binary_search (relevant[id].begin (), relevant[id].end (),
+                                                       watch) ? watch : absent;
+                auto [it, fresh] = memo.try_emplace (std::make_pair (id, phase));
+                if (!fresh)
+                  return it->second;
+                owner.retain (128);
+                auto& result = it->second;
+                const auto f = closure[id];
+                const auto child = [&] (unsigned i) -> const Alternatives& {
+                  return expand_formula (ids.at (f[i]));
+                };
+                const bool watched = watch < watches.size () && watches[watch].obligation == id;
+                if (blocks.contains (id)) {
+                  if (watched) {
+                    const auto event = boolean (watches[watch].event);
+                    add (result, {{id}, false}, event);
+                    add (result, {{id}, true}, !event);
                   }
                   else
-                    switch (f.kind ()) {
-                      case Op::And:
-                        for (auto c : f)
-                          p.work.push_back (ids.at (c));
-                        break;
-                      case Op::Or:
-                        for (unsigned i = 1; i < f.size (); ++i) {
-                          auto other = p;
-                          other.work.push_back (child (i));
-                          fork (std::move (other));
-                        }
-                        p.work.push_back (child (0));
-                        break;
-                      case Op::X: insert (p.next, child (0)); break;
-                      case Op::U: {
-                        auto other = p;
-                        other.work.push_back (child (0));
-                        insert (other.next, id);
-                        other.postponed = other.postponed || (watch < watches.size () &&
-                                                              watches[watch].obligation == id);
-                        fork (std::move (other));
-                        p.work.push_back (child (1));
-                        break;
-                      }
-                      case Op::R: {
-                        p.work.push_back (child (1));
-                        auto other = p;
-                        insert (other.next, id);
-                        fork (std::move (other));
-                        p.work.push_back (child (0));
-                        break;
-                      }
-                      default: fail (FailureKind::unsupported_operator);
-                    }
+                    add (result, {{id}, false}, bddtrue);
                 }
-                if (p.guard == bddfalse)
+                else if (f.is_boolean ())
+                  add (result, {{}, false}, combine (bddtrue, boolean (f)));
+                else
+                  switch (f.kind ()) {
+                    case Op::And:
+                      add (result, {{}, false}, bddtrue);
+                      for (auto c : f) {
+                        product (result, expand_formula (ids.at (c)));
+                        if (result.empty ())
+                          break;
+                      }
+                      break;
+                    case Op::Or:
+                      for (auto c : f)
+                        append (result, expand_formula (ids.at (c)));
+                      break;
+                    case Op::X: add (result, {{ids.at (f[0])}, false}, bddtrue); break;
+                    case Op::U:
+                      append (result, child (1));
+                      for (const auto& [k, guard] : child (0)) {
+                        auto next = k.first;
+                        insert (next, id);
+                        add (result, {std::move (next), k.second || watched}, guard);
+                      }
+                      break;
+                    case Op::R:
+                      append (result, child (0));
+                      add (result, {{id}, false}, bddtrue);
+                      product (result, child (1));
+                      break;
+                    default: fail (FailureKind::unsupported_operator);
+                  }
+                // Entries now belong to the branch, rather than this row's scratch.
+                retain (result);
+                return result;
+              };
+              // Expand each obligation once per row: A & A = A, and expanding a
+              // copy again only adds mixed choices (e.g. fulfilling and postponing
+              // F X p in the same G(F X p & ...) row). Flatten the pending set
+              // through And and G (= false R f, which carries itself and expands f
+              // on every path); a general R also expands its right operand on every
+              // path, so conjuncts of that operand are covered wherever they recur.
+              const auto conjuncts = [&] (ClosureId root) {
+                Set out;
+                std::vector<ClosureId> work {root};
+                while (!work.empty ()) {
+                  owner.step ();
+                  const auto id = work.back ();
+                  work.pop_back ();
+                  const auto f = closure[id];
+                  if (!blocks.contains (id) && !f.is_boolean () && f.is (Op::And))
+                    for (auto c : f)
+                      work.push_back (ids.at (c));
+                  else
+                    insert (out, id);
+                }
+                return out;
+              };
+              Set leaves, redundant, seen;
+              std::vector<ClosureId> work (pending.begin (), pending.end ());
+              while (!work.empty ()) {
+                owner.step ();
+                const auto id = work.back ();
+                work.pop_back ();
+                if (std::binary_search (seen.begin (), seen.end (), id))
                   continue;
-                auto [it, fresh] = merged.emplace (std::make_pair (p.next, p.postponed), p.guard);
-                if (!fresh)
-                  it->second = combine (it->second, p.guard, true);
-                bytes (owner.options, owner.retained,
-                       merged.size () * (96 + closure.size () * sizeof (ClosureId)));
+                insert (seen, id);
+                const auto f = closure[id];
+                const bool plain = !blocks.contains (id) && !f.is_boolean ();
+                if (plain && f.is (Op::And))
+                  for (auto c : f)
+                    work.push_back (ids.at (c));
+                else if (plain && f.is (Op::R) && f[0].is_ff ()) {
+                  insert (leaves, id);  // G: the R itself only carries to next
+                  work.push_back (ids.at (f[1]));
+                }
+                else {
+                  insert (leaves, id);
+                  if (plain && f.is (Op::R))
+                    for (auto c : conjuncts (ids.at (f[1])))
+                      insert (redundant, c);
+                }
               }
+              Set fixed, varying, carried;
+              for (auto id : leaves) {
+                const auto f = closure[id];
+                if (!blocks.contains (id) && !f.is_boolean () && f.is (Op::R) && f[0].is_ff ())
+                  carried.push_back (id);  // leaves is sorted, so carried is too
+                else if (!std::binary_search (redundant.begin (), redundant.end (), id))
+                  (std::binary_search (relevant[id].begin (), relevant[id].end (), watch)
+                       ? varying : fixed).push_back (id);
+              }
+              // Pending rows share large conjunctions of watch-independent
+              // obligations too. Cache their product instead of rebuilding
+              // increasingly long next sets for every phase.
+              auto [it, fresh] = conjunctions.try_emplace (fixed);
+              if (fresh) {
+                owner.retain (128 + fixed.size () * sizeof (ClosureId));
+                add (it->second, {{}, false}, bddtrue);
+                for (auto id : fixed) {
+                  product (it->second, expand_formula (id));
+                  if (it->second.empty ())
+                    break;
+                }
+                retain (it->second);
+              }
+              Alternatives merged;
+              append (merged, it->second);
+              for (auto id : varying) {
+                if (merged.empty ())
+                  break;
+                product (merged, expand_formula (id));
+              }
+              if (!carried.empty () && !merged.empty ())
+                product (merged, Alternatives {{{carried, false}, bddtrue}});
               std::vector<Alternative> result;
-              for (auto& [k, guard] : merged)
+              for (const auto& [k, guard] : merged)
                 result.push_back ({k.first, k.second, guard});
               owner.retain (128 + pending.size () * sizeof (ClosureId));
               for (auto& a : result)
                 owner.retain (sizeof (Alternative) + a.next.size () * sizeof (ClosureId));
+              bytes (owner.options, owner.retained, scratch);
               return expansions.emplace (key, std::move (result)).first->second;
             }
 
