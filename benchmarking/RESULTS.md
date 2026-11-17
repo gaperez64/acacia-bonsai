@@ -1158,6 +1158,9 @@ has separate admission evidence. This is a development corpus, not a holdout.
 
 ## Extended UNREAL weakening experiment, not admitted
 
+Status: retired by the maintainer in #403 (A12); see the superseding
+2026-11-17 entry in [decisions.md](decisions.md). The results below are historical.
+
 Extended weakening remains opt-in. The supplied 82-input 17 s no-deadline screen
 had zero gains: 136/149 extended attempts were cancelled, none proved UNREAL.
 Broadened positive G/F scopes have correctness evidence, not fresh admission data.

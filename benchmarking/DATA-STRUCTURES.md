@@ -235,45 +235,29 @@ Archive history: `refactor-closeout20261017`, `cov20261007-eqfull`,
 
 ## Weakening and fallback
 
-`--weakening basic|extended|off` defaults to basic. Extended remains opt-in and uses
-the frozen sparse formula-UNREAL route; automaton-UNREAL retains basic. Preserve
-requested/effective modes. Basic retains the original safety-core rules: more than
-64 immediate children of an immediate G conjunction in a top-level AND, at most
-eight singleton obligations in existing order, and the invocation deadline.
+`--weakening basic|off` defaults to basic. Basic retains the original safety-core
+rules: more than 64 immediate children of an immediate G conjunction in a top-level
+AND, at most eight singleton obligations in existing order, and the invocation
+deadline. Each candidate is a logical consequence of the simplified original;
+only a proved UNREAL candidate transfers to original UNREAL. An inconclusive
+pre-pass falls back to the full objective. Synthesis skips weakening.
 
-Extended starts with the exact parsed objective, retains assumptions/antecedents
-and siblings, and weakens only positive conjunction/implication-consequent and G/F
-scopes. G may distribute over conjunction; F wraps the whole selected conjunction
-and preserves its shared witness. Do not traverse negation, disjunction, X, U,
-equivalence or assumptions; strict weak-until and ambiguous outer TLSF scopes decline.
-Replay the AST/source derivation. A checked guarded derived-game certificate plus a
-source/normalization/partition/timing/game-bound receipt and parent replay proves
-original UNREAL. Candidates, exceptions, cancellation and inconclusive results cannot.
+The invariant behind extension retirement is that every shipped configuration
+selects basic by default; only explicit extended selection entered its planner,
+supervised attempts and checked-game receipts. Basic retains its candidate order,
+telemetry, threshold and fallback. The independent guarded certificate checker,
+frontend normalization metadata and descendant accounting remain shared contracts.
+`check-weakening-games.py` compares basic/off and implicit defaults with Spot's
+exact parity oracle over generated LTL/TLSF, strict semantics and renamings;
+`unreal_safety_core_witnesses_test.cc` checks threshold, order and implication.
 
-Invariant I09: with the exact source/normalization, I/O partition and move timing
-fixed, positive guarantee deletion gives `original => derived`. Conjunction,
-implication consequents and G/F preserve implication when antecedents, siblings
-and enclosing frames stay exact; F retains a shared eventual witness. Hence an
-original winning strategy would also win the derived game. Only independently
-verified UNREAL of that weakening transfers to original UNREAL; derived REAL
-does not transfer. UNKNOWN, decline, resource limits and errors remain inconclusive.
-`unreal_safety_core_witnesses_test.cc` checks language inclusion and games with
-Spot's independent parity oracle, retaining reversed-direction and dropped-frame
-negative controls alongside source/receipt rejection and bounded fallback checks.
-
-At most eight singleton attempts and four AP-support groups of four guarantees run
-serially in killable children, reaped before fallback. Each group anchor retains
-the first following guarantees sharing any AP, in guarantee order; selection
-uses neither pair enumeration nor AP-name ranking. Structural ceilings are
-16,384 unique AST nodes, 32,768 edges, 8,192 flattened guarantees, 32,768 AP-support
-memberships and 32,768 support visits. Without a deadline defaults are 250 ms per
-attempt and 1 s total. `--weakening-attempt-ms`/`--weakening-total-ms` select nonnegative
-integer research allowances, zero skips work. With a deadline they are capped by
-5%/20% of entry remainder; reserve half the remaining slice for cleanup/replay.
-Planning shares that deadline, polling is at most 1 ms, arithmetic saturates and the
-original invocation deadline never resets. Inherited memory/work limits remain.
-Missing telemetry leaves fallback starvation UNKNOWN; winner cancellation is separate.
-History: `refactor-closeout20261017`, `cov20261006-p1ablation`, `cov20261007-screens`.
+Extended weakening and its allowance flags were retired by the maintainer in
+#403 (A12), superseding the 2026-10-08 retain-opt-in policy. The CLI explicitly
+rejects `--weakening extended`, `--weakening-attempt-ms` and `--weakening-total-ms`;
+select basic or off instead. This removes a sound experimental capability after
+zero-gain screens, not a claim of equivalence for the removed mode. Historical
+measurements and record readers remain available: `cov20261006-p1ablation`,
+`cov20261007-screens`, `refactor-closeout20261017`.
 
 ## Forced-output contradiction proof
 
