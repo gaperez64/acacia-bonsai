@@ -66,8 +66,9 @@ void show_help (const char* program_name) {
       << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] "
          "game backend for real arms\n"
       << "  --real-provider VAL      use "
-         "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager] automaton "
+         "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager|closure-recurrence] automaton "
          "provider (default frozen-graph)\n"
+      << "  --automaton-provider VAL alias for --real-provider (closure-recurrence: real:small:backward)\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
          "requires frozen-graph\n"
       << "  --weakening VAL          [basic|extended|off] (default basic)\n"
@@ -249,7 +250,7 @@ void process_arg_provider (const std::string& arg, acacia::automaton_provider& p
   if (not parsed)
     error (EXIT_CODE_ERROR,
            "Error: unexpected value %s for --%s; expected frozen-graph, spot-lazy or spot-eager, "
-           "closure-buchi or closure-buchi-eager.\n",
+           "closure-buchi, closure-buchi-eager or closure-recurrence.\n",
            arg.c_str (), option);
   provider = *parsed;
 #if !ACACIA_SPOT_GUARDED_BACKEND
@@ -470,6 +471,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"obligation-memory-share", required_argument, nullptr, OPT_OBLIGATION_MEMORY_SHARE},
       {"parity-memory-share", required_argument, nullptr, OPT_PARITY_MEMORY_SHARE},
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
+      {"automaton-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
       {"weakening", required_argument, nullptr, OPT_WEAKENING},
@@ -863,7 +865,13 @@ arg_parse_result arg_parser (int argc, char** argv) {
       legacy.provider = arm.unreal ? retval.unreal_provider : retval.real_provider;
     process_arg_provider (acacia::automaton_provider_name (legacy.provider), legacy.provider,
                           "arms");
-    if (legacy.provider != acacia::automaton_provider::frozen_graph) {
+    if (legacy.provider == acacia::automaton_provider::closure_recurrence) {
+      if (arm.unreal || legacy.translation_pref != spot::postprocessor::Small ||
+          legacy.backend != acacia::game_backend::backward || retval.synth_fname)
+        error (EXIT_CODE_ERROR,
+               "Error: closure-recurrence requires real:small:backward, decision only.\n");
+    }
+    else if (legacy.provider != acacia::automaton_provider::frozen_graph) {
       if (arm.unreal && legacy.unreal_x == UNREAL_X_AUTOMATON)
         error (EXIT_CODE_ERROR,
                "Error: unsupported configuration: the automaton-unreal route must remain eager; "

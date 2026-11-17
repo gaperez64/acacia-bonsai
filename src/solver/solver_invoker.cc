@@ -9,6 +9,7 @@
 #include "solver/controller_check.hh"
 #include "solver/controller_writer.hh"
 #include "solver/create_automaton.hh"
+#include "solver/closure_recurrence_provider.hh"
 #include "solver/degenerate_io.hh"
 #include "solver/diagnostics.hh"
 #include "solver/forced_output_contradiction.hh"
@@ -510,8 +511,65 @@ namespace {
           acacia::diagnostics::snapshot ("support-before-translation");
         }
         auto effective_backend = backend;
+        spot::twa_graph_ptr aut;
+        const bool recurrence = provider == acacia::automaton_provider::closure_recurrence;
+        if (recurrence) {
+          acacia::spot_records::route ("closure-recurrence", "backward");
+          acacia::legacy_phase constructing ("closure-recurrence");
+          acacia::legacy_metric ("provider", "closure-recurrence");
+          acacia::closure_recurrence::Counters counts;
+          acacia::closure_recurrence::Options options;
+          options.max_states = acacia::diagnostics::env_size (
+              "ACACIA_SPOT_MAX_PROVIDER_STATES", options.max_states, true);
+          const auto built = acacia::closure_recurrence::build (spot_formula, dict, options, &counts);
+          acacia::legacy_count ("branches", counts.branches);
+          acacia::legacy_count ("recurrence_blocks", counts.blocks);
+          acacia::legacy_count ("watches", counts.watches);
+          acacia::legacy_count ("states", counts.states);
+          acacia::legacy_count ("edges", counts.edges);
+          acacia::legacy_count ("construction_ns", counts.construction_ns);
+          if (const auto* graph = std::get_if<spot::twa_graph_ptr> (&built)) {
+            aut = *graph;
+            acacia::legacy_metric ("construction_result", "used");
+            acacia::spot_records::put ("construction_result", "used");
+          } else {
+            const auto failure = std::get<acacia::closure_recurrence::Failure> (built);
+            acacia::legacy_count ("failure_kind", static_cast<unsigned> (failure.kind));
+            using F = acacia::closure_recurrence::FailureKind;
+            const char* reason = "error";
+            switch (failure.kind) {
+              case F::unsupported_operator: reason = "unsupported_operator"; break;
+              case F::normalization_limit:
+              case F::branch_limit:
+              case F::guard_limit:
+              case F::state_limit:
+              case F::row_limit:
+              case F::memory_limit: reason = "resource"; break;
+              case F::cancelled: reason = "cancelled"; break;
+              default: break;
+            }
+            const bool inapplicable = failure.kind == F::unsupported_operator;
+            if (inapplicable)
+              acacia::worker_decline (reason);
+            else
+              acacia::worker_stopped (reason);
+            const bool fallback = candidate == acacia::candidate_mode::fallback;
+            acacia::legacy_metric ("construction_result", fallback ? "fallback" : "unknown");
+            acacia::spot_records::put ("construction_result", fallback ? "fallback" : "unknown");
+            std::cerr << "closure-recurrence UNKNOWN: construction failure="
+                      << static_cast<unsigned> (failure.kind)
+                      << (fallback ? "; fallback provider=frozen-graph\n" : "\n");
+            constructing.finish (reason, !inapplicable);
+            if (!fallback)
+              return acacia::diagnostics::finish (false, "closure-recurrence-inconclusive");
+            acacia::spot_records::route ("frozen_fallback", "backward");
+            acacia::spot_records::put ("fallback", "frozen-graph:backward");
+            acacia::spot_records::phase ("fallback-translation");
+          }
+        }
+        const bool fallback_translation = !aut && provider != acacia::automaton_provider::frozen_graph;
 #if ACACIA_COMPILE_DEMAND_PROVIDER
-        if (provider != acacia::automaton_provider::frozen_graph) {
+        if (!recurrence && provider != acacia::automaton_provider::frozen_graph) {
           assert ((!check_unreal || *check_unreal == UNREAL_X_FORMULA) && !synth_fname);
           // This is the EXACT spot::formula the eager worker passes below to
           // create_automaton(). The lazy branch performs no further adaptation.
@@ -548,15 +606,13 @@ namespace {
           acacia::diagnostics::set_support_backend ("backward");
         }
 #endif
-        const auto fallback_started = provider != acacia::automaton_provider::frozen_graph
-                                          ? std::chrono::steady_clock::now ()
-                                          : std::chrono::steady_clock::time_point {};
-        spot::translator trans (dict, &extra_options);
-        if (translation_effort != spot::postprocessor::High)
-          trans.set_level (translation_effort);
-        acacia::translation::validate_options (extra_options);
-        spot::twa_graph_ptr aut;
-        {
+        const auto fallback_started = fallback_translation ? std::chrono::steady_clock::now ()
+                                                          : std::chrono::steady_clock::time_point {};
+        if (!aut) {
+          spot::translator trans (dict, &extra_options);
+          if (translation_effort != spot::postprocessor::High)
+            trans.set_level (translation_effort);
+          acacia::translation::validate_options (extra_options);
           ACACIA_DIAG_SCOPED_TIMER (translation_ms);
           const acacia::translation_identity identity {
               input_aps, output_aps, translation_pref_name (translation_pref),
@@ -565,7 +621,7 @@ namespace {
               check_unreal && *check_unreal == UNREAL_X_AUTOMATON};
           aut = translate_with_diagnostics (spot_formula, trans, translation_pref, &identity);
         }
-        if (provider != acacia::automaton_provider::frozen_graph)
+        if (fallback_translation)
           std::cerr << acacia::automaton_provider_name (provider) << " fallback translation_ms="
                     << std::chrono::duration<double, std::milli> (
                            std::chrono::steady_clock::now () - fallback_started)
@@ -763,7 +819,7 @@ namespace {
         });
         verb_do (4, dict->dump (utils::vout));
 
-        if (provider != acacia::automaton_provider::frozen_graph)
+        if (fallback_translation)
           std::cerr << acacia::automaton_provider_name (provider) << " fallback rebuild_ms="
                     << std::chrono::duration<double, std::milli> (
                            std::chrono::steady_clock::now () - fallback_started)
@@ -1051,7 +1107,12 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     backend = acacia::synthesis_backend (backend, true);
     provider = acacia::synthesis_provider (provider, true);
   }
-  if (provider != acacia::automaton_provider::frozen_graph and
+  if (provider == acacia::automaton_provider::closure_recurrence &&
+      (check_unreal || backend != acacia::game_backend::backward ||
+       translation_pref != spot::postprocessor::Small))
+    std::abort ();
+  if (provider != acacia::automaton_provider::frozen_graph &&
+      provider != acacia::automaton_provider::closure_recurrence and
       ((check_unreal && *check_unreal != UNREAL_X_FORMULA) or
        backend != (acacia::is_closure_provider (provider)
                        ? acacia::game_backend::spot_guarded_sparse
@@ -1143,7 +1204,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   if (obligation_eligibility)
     acacia::obligation::publish_eligibility (obligation_eligibility, spot_formula);
 
-  if (!acacia::is_closure_provider (provider)) {
+  if (!acacia::is_closure_provider (provider) &&
+      provider != acacia::automaton_provider::closure_recurrence) {
     acacia::legacy_phase bypass ("direct-checks");
     if (auto answer = try_degenerate_io (input_aps, output_aps, spot_formula, check_unreal,
                                          translation_pref, translation_effort, synth_fname,

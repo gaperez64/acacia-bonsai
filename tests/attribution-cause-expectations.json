@@ -128,88 +128,48 @@
     "telemetry": "STOPPED/error"
   },
   "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 0": {
-    "cause": "FailureKind::cancelled",
-    "telemetry": "STOPPED/cancelled"
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
   },
   "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 1": {
-    "cause": "FailureKind::guard_limit",
+    "cause": "FailureKind::state_limit",
     "telemetry": "STOPPED/resource"
   },
   "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 2": {
-    "cause": "FailureKind::injected",
-    "telemetry": "STOPPED/error"
+    "cause": "FailureKind::state_limit",
+    "telemetry": "STOPPED/resource"
   },
   "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 3": {
-    "cause": "FailureKind::memory_limit",
-    "telemetry": "STOPPED/resource"
-  },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 4": {
-    "cause": "FailureKind::normalization_limit",
-    "telemetry": "STOPPED/resource"
-  },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 5": {
-    "cause": "FailureKind::normalization_limit",
-    "telemetry": "STOPPED/resource"
-  },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 6": {
-    "cause": "FailureKind::normalization_limit",
-    "telemetry": "STOPPED/resource"
-  },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 7": {
-    "cause": "FailureKind::unsupported_operator",
-    "telemetry": "DECLINE/applicability"
-  },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 8": {
-    "cause": "FailureKind::normalization_limit",
-    "telemetry": "STOPPED/resource"
-  },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 9": {
-    "cause": "FailureKind::normalization_limit",
-    "telemetry": "STOPPED/resource"
-  },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 10": {
-    "cause": "FailureKind::state_limit",
-    "telemetry": "STOPPED/resource"
-  },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 11": {
-    "cause": "FailureKind::state_limit",
-    "telemetry": "STOPPED/resource"
-  },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 12": {
     "cause": "FailureKind::guard_limit",
     "telemetry": "STOPPED/resource"
   },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 13": {
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 4": {
     "cause": "FailureKind::branch_limit",
     "telemetry": "STOPPED/resource"
   },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 14": {
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 5": {
     "cause": "FailureKind::branch_limit",
     "telemetry": "STOPPED/resource"
   },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 15": {
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 6": {
     "cause": "FailureKind::unexpected",
     "telemetry": "STOPPED/error"
   },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 16": {
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 7": {
     "cause": "FailureKind::row_limit",
     "telemetry": "STOPPED/resource"
   },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 17": {
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 8": {
     "cause": "FailureKind::invalid_state",
     "telemetry": "STOPPED/error"
   },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 18": {
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 9": {
     "cause": "FailureKind::row_limit",
     "telemetry": "STOPPED/resource"
   },
-  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 19": {
+  "src/solver/closure_buchi_provider.cc | fail | UNKNOWN | closure provider | typed failure | 10": {
     "cause": "FailureKind::unsupported_operator",
     "telemetry": "DECLINE/applicability"
-  },
-  "src/solver/closure_buchi_provider.cc | throw Failure | UNKNOWN | provider | kind | 0": {
-    "cause": "kind",
-    "telemetry": "STOPPED/error/resource/deadline/cancelled"
   },
   "src/solver/closure_buchi_provider.cc | throw AdapterFailure | UNKNOWN | provider | {FailureKind::invalid_state | 0": {
     "cause": "{FailureKind::invalid_state",
@@ -624,6 +584,14 @@
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
   },
   "src/solver/solver_invoker.cc | worker_stopped | UNKNOWN | worker | \"error\" | 0": {
+    "cause": "worker_stopped",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/solver_invoker.cc | worker_decline | UNKNOWN | worker | reason | 0": {
+    "cause": "worker_decline",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/solver_invoker.cc | worker_stopped | UNKNOWN | worker | reason | 0": {
     "cause": "worker_stopped",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
   },
@@ -2994,5 +2962,101 @@
   "subprojects/tlsf-tools/src/lib/gr1_reduction.cc | throw std::bad_alloc | UNKNOWN | provider |  | 1": {
     "cause": "std::bad_alloc",
     "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 0": {
+    "cause": "FailureKind::cancelled",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 1": {
+    "cause": "FailureKind::guard_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 2": {
+    "cause": "FailureKind::injected",
+    "telemetry": "STOPPED/error"
+  },
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 3": {
+    "cause": "FailureKind::memory_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 4": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 5": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 6": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 7": {
+    "cause": "FailureKind::unsupported_operator",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/closure_buchi_common.hh | fail | UNKNOWN | closure provider | typed failure | 8": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_buchi_common.hh | throw Failure | UNKNOWN | provider | kind | 0": {
+    "cause": "kind",
+    "telemetry": "STOPPED/error/resource/deadline/cancelled"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 0": {
+    "cause": "FailureKind::branch_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 1": {
+    "cause": "FailureKind::state_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 2": {
+    "cause": "FailureKind::row_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 3": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 4": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 5": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 6": {
+    "cause": "FailureKind::normalization_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 7": {
+    "cause": "FailureKind::unsupported_operator",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 8": {
+    "cause": "FailureKind::row_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 9": {
+    "cause": "FailureKind::branch_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 10": {
+    "cause": "FailureKind::branch_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 11": {
+    "cause": "FailureKind::guard_limit",
+    "telemetry": "STOPPED/resource"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 12": {
+    "cause": "FailureKind::unsupported_operator",
+    "telemetry": "DECLINE/applicability"
+  },
+  "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 13": {
+    "cause": "FailureKind::unsupported_operator",
+    "telemetry": "DECLINE/applicability"
   }
 }

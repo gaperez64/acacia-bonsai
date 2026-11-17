@@ -210,6 +210,16 @@ closure_buchi_provider_test = executable (
 test ('closure_buchi_provider_test', closure_buchi_provider_test,
       suite : ['unit', 'closure-buchi'])
 
+closure_recurrence_provider_test = executable (
+  'closure-recurrence-provider-test', 'closure_recurrence_provider_test.cc',
+  include_directories : inc, link_with : closure_buchi_provider_lib,
+  dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('closure-recurrence-provider', closure_recurrence_provider_test,
+      suite : ['unit', 'closure-buchi'])
+test ('closure-recurrence-cli', py,
+      args : [files ('check-closure-recurrence.py'), ab_exe, meson.current_source_dir ()],
+      suite : ['unit', 'closure-buchi'], depends : ab_exe, timeout : 60)
+
 # The previous sprint's P5 headers and regressions compile in the default build; no backend gate.
 spot_lazy_buchi_view_test = executable (
   'spot-lazy-buchi-view-test',

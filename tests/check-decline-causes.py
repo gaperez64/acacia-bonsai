@@ -12,7 +12,8 @@ EXPECTATIONS = ROOT / "tests/attribution-cause-expectations.json"
 SOURCES = (
     "src/parity_arm.cc", "src/native_support.cc", "src/native_proof_binding.cc",
     "src/native_gr1_arm.cc", "src/native_gr1_lift_arm.cc", "src/native_param_lift_arm.cc",
-    "src/solver/closure_buchi_provider.cc", "src/solver/spot_state_ids.hh",
+    "src/solver/closure_buchi_provider.cc", "src/solver/closure_buchi_common.hh",
+    "src/solver/closure_recurrence_provider.cc", "src/solver/spot_state_ids.hh",
     "src/solver/spot_rows.hh", "src/solver/spot_letter_oracle.hh",
     "src/solver/spot_lazy_game.hh", "src/solver/spot_guarded_forward_safety.hh",
     "src/solver/solver_invoker.cc", "src/solver/synthesis_rendezvous.hh",

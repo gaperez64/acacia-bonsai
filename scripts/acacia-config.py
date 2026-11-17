@@ -97,7 +97,7 @@ def validate_translation_effort(value: Any) -> None:
     arm_pattern = (
         r"(?:(?:real:(?:small|any)|unreal:(?:formula|automaton)):"
         r"(?:backward|forward|spot-guarded(?:-sparse)?)"
-        r"(?::(?:frozen-graph|spot-lazy|spot-eager|closure-buchi(?:-eager)?))?"
+        r"(?::(?:frozen-graph|spot-lazy|spot-eager|closure-buchi(?:-eager)?|closure-recurrence))?"
         r"|(?:real|unreal|both):gr1:oxidd"
         r"|both:(?:gr1-lift|gr1-real-lift):oxidd|real:param-lift:oxidd"
         r"|both:parity:(?:spot|oxidd)|both:obligation:spot)"
