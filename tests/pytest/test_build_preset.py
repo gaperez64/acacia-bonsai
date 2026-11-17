@@ -17,7 +17,7 @@ def benchlib(monkeypatch):
 
 
 @pytest.mark.parametrize("value,expected", [
-    ("best_decomp_rank_bucketed_semantic_mona", "best_decomp_rank_bucketed_semantic_mona"),
+    ("historical_label", "historical_label"),
     ("", None), (None, None), (False, None), (42, None),
 ])
 def test_build_preset_reads_recorded_option(benchlib, tmp_path, value, expected):

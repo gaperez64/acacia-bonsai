@@ -12,6 +12,61 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-17: Eight-arm second Docker slot (#431)
+
+Local partial campaign `acacia-431-20261117`, pinned to master `0b369526`.
+Matched normal release builds ran all 1,524 SYNTCOMP26 inputs through `-T`,
+sequentially, at 17 s with per-instance 5G scopes and no swap on the 4-core,
+7 GB workstation. These are local coverage/verdict observations and descriptive
+PAR-2 totals; no speedup or comparison to the 12.1 s noise floor is claimed.
+
+| Preset position | Solved | REAL | UNREAL | TIMEOUT | PAR-2 total (s) |
+|---|---:|---:|---:|---:|---:|
+| Previous second slot | 1,217 | 573 | 644 | 307 | 11,530.625 |
+| New eight-arm second slot | 1,352 | 619 | 733 | 172 | 6,784.008 |
+
+The eight-arm preset has 138 exclusive gains and three losses, with zero
+verdict conflicts. All nonsolves are timeouts; neither leg has resource
+limits, UNKNOWNs or errors. The losses, with the previous preset's solve
+times, are `06.ltl` (12.689 s), `collector_v2_pb_15_pe_.ltl` (14.479 s), and
+`load_balancer_unreal1_pb_5_5_pe_.ltl` (16.369 s). Each times out at 17 s in
+the eight-arm leg. The raw gain/loss lists remain with the campaign evidence.
+
+The new second slot shares all six arms with the first slot and appends
+`real:small:forward` and `unreal:automaton:forward`. The first slot retains
+its identity, arm order, options and hash (`e1f7cf334444`); all 13 pre-existing
+preset option vectors and hashes are unchanged. The revised group also
+retains the historical backward solver in slot three and the previous second
+preset in slot four. Historical labels remain selectable outside the group.
+
+G0 passed (release: 90 OK, six expected failures, zero failures; Posets:
+110 OK, zero failures). G1 passed all 40 frozen rows with zero verdict
+changes or coverage losses, using the same eight-arm configuration built
+from the captured master source. G4 passed all 625 records with 32 permitted
+timeouts. G5 passed all 1,524 inputs and ten independent spot checks, with
+zero missing conversions, fallback pairs, frontend errors or opposite
+verdicts; 39 answers are native-only and two converted-only.
+
+Evidence: archive `acacia-431-20261117` (status partial: it predates G3), release
+`evidence-2026-11-17-issue431`, SHA-256 `92f9b3ce…`, 77,488,200 bytes.
+
+G3 passed on both panels, run locally under the maintainer-approved regime:
+`--scope-mode instance`, a 6G per-solver cap instead of 8G (an uncommitted
+local patch to `landing-campaign.sh`), 17 s, both 180-input panels. The baseline
+is the previous second preset's release build (`33956fc9…`), the candidate the
+eight-arm release build (`8b263f58…`). No solver scope hit the cap. Archive
+`g3-431-20261117`, release `evidence-2026-11-17-g3-431`.
+
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| eight-arm vs previous second slot | 136 → 162 / 1711.4 → 835.1 s | 147 → 167 / 1219.8 → 549.1 s | PASS |
+| control (previous vs previous) | 136 → 136 / 1712.1 → 1709.6 s | 147 → 147 / 1219.9 → 1218.4 s | PASS |
+
+Neither campaign has a verdict change or coverage loss. The three baseline runs
+give a local noise floor of 2.5 s (SYNTCOMP25) and 1.6 s (SYNTCOMP26) PAR-2;
+the eight-arm gains are far outside it. These local timings are not comparable
+to the 12.1 s floor.
+
 ## 2026-11-17: Local G3 admits A11 and A12 under a 6G regime (#403)
 
 Archive `g3-local-20261117` (release `evidence-2026-11-17-g3local`). The
