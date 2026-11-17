@@ -49,6 +49,11 @@ Usage: $0 [--synthesis] [config_name] [--tlsf] [acacia-bonsai arguments...]
                     workers (equal, default) or give all of it to the helper
                     (alone). The separate 8 GiB address-space cap still applies.
 
+  --weakening basic|off
+                    Forwarded unchanged (default basic). Extended weakening and
+                    its --weakening-attempt-ms/--weakening-total-ms flags were
+                    removed; the binary rejects them explicitly.
+
 Available configurations:
 EOF
     for c in "${CONFIGS[@]}"; do

@@ -557,8 +557,7 @@ namespace {
                                   : arg_values.synth_fname,
                               arg_values.objective.metadata, provider, arg_values.candidate,
                               arg_values.equivariance, deadline_mono_ns, arg_values.tlsf_sha256,
-                              arg_values.weakening, arg_values.weakening_allowances,
-                              eligibility_channel);
+                              arg_values.weakening, eligibility_channel);
     if (res && g_synthesis)
       acacia::synthesis::await_selection (arm.unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL);
     verb_do (1, vout << "returning " << res << "\n");
