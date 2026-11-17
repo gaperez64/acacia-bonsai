@@ -12,6 +12,134 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-17: Local G3 admits A11 and A12 under a 6G regime (#403)
+
+Archive `g3-local-20261117` (release `evidence-2026-11-17-g3local`). The
+benchmarking computer was busy, so G3 for #427 (A12) and #428 (A11) ran on the
+maintainer's 4-core, 7 GB workstation. The regime deviates from the README in
+one way: `--scope-mode instance` with a 6G per-solver cap instead of 8G. This
+was a local, uncommitted patch to `landing-campaign.sh`, also applied to
+`landing-bar.py` remeasures. Each campaign used the 17 s cap and both 180-input
+panels. All three campaigns shared one origin/master `1c61eda5` baseline
+binary. No solver scope hit the cap.
+
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| #427 A12 | 162 → 162 / 804.3 → 805.8 s | 166 → 166 / 578.4 → 571.9 s | PASS |
+| #428 A11 | 162 → 162 / 804.0 → 799.7 s | 166 → 166 / 569.7 → 569.3 s | PASS |
+| control (base vs base) | 162 → 162 / 796.5 → 796.4 s | 166 → 166 / 571.7 → 574.4 s | PASS |
+
+No campaign had a verdict change or coverage loss. The four baseline-binary
+runs set a local noise floor: PAR-2 spread is 7.9 s on SYNTCOMP25 and 8.7 s on
+SYNTCOMP26. Both candidates fall inside it, so no speed claim is made. These
+local timings are not comparable to the benchmarking computer's 12.1 s floor.
+## 2026-11-17: Translation and recurrence experiments for #407 decide nothing
+
+Archive `issue407-20261117` (release `evidence-2026-11-17-issue407`). Offline
+censuses and three screens on SYNTCOMP26 inputs left unsolved at 120 s, all on
+master `1c61eda5`, serial, 120 s, 8G/no swap. None of the candidates is merged.
+
+**Census.** On the 50 inputs where every antichain arm was still translating,
+Spot translates the whole negated specification on none within 60 s, but
+translates every per-guarantee piece on 11 and all but one piece on 23. The lift
+declines on 30 inputs for two proof limits in tlsf-tools: the encoding width of
+binary indices (12) and the large-template bound in `bus_schema` (13). Every
+GR(1) fragment rejection comes from a guarantee at the reactivity level, so a
+cheap fragment extension does not exist.
+
+| Candidate | Binary | Inputs | Solved |
+|---|---|---:|---:|
+| `--translation-split guarantees` (Spot per piece, joined with `spot::sum`) | `0afe219c` | 50 | 0 |
+| Recurrence-aware Büchi construction on `real:small:backward` | `4663c8f4` | 126 | 0 |
+| Same construction on both guarded-sparse arms, fallback to Spot | `40dc762b` | 36 | 0 |
+
+No screen has a verdict conflict.
+
+- **Splitting with Spot** fails because Spot's simplification of the negated
+  formula hides the guarantee structure (Demo1 and Felix split into 2 pieces,
+  not 8 and 11), and where the split works, summing 36-61 pieces and lowering
+  back to state-based Büchi does not finish.
+- **The direct construction** gives small automata fast (theta(500): 2,012
+  states in under a second, where Spot runs past 120 s). On the backward arm,
+  36 inputs then stop in I/O preparation and 38 in the antichain search. I/O
+  preparation builds one BDD relation over inputs, outputs and states, which
+  grows exponentially with the number of outputs: `abcg_arbiter_pb_5` has 89
+  states and 25 propositions and did not finish in 180 s or 3.3 GB.
+- **On the guarded-sparse arms**, which work on symbolic rows, the
+  realizability arm gets past I/O on 32 of the 36 and is still searching at the
+  cap (K=2 on 28, K=5 on 4). The unrealizability arm hits the construction's
+  branch or guard limit on 31 and falls back to Spot, which is still
+  translating at the cap.
+
+So on the realizability side a better automaton alone does not decide these
+inputs: the antichain search at small K is the next limit. The unrealizability
+side was not tested fairly. SemML's 120 s run (`c120-syntcomp26-20261024`)
+decides 46 of the 126, 34 of them unrealizable, and on 25 of those the shipped
+unrealizability arm never leaves Spot's translation while the new construction
+stops at its branch limit within a second. The construction stays on branch
+`ucw-recurrence-407` (`dbe18139`) while that is pursued; the split is not kept.
+
+## 2026-11-17: Optimizing the forward arms would not recover coverage (#378)
+
+Archive `fwd-20261117` (release `evidence-2026-11-17-fwd`). The campaign has
+three parts:
+
+- a read-only source pass;
+- a phase-record reading of `cleanup-20261113`;
+- a solo-arm census on the maintainer's 4-core, 7 GB workstation, with one arm
+  per run, `-T`, a 3G scope with no swap and a 120 s cap.
+
+The census binary is a release `otf_sparse_formula_parity` build at
+02d4082-dirty. Verdicts and coverage are the evidence here; the timings are
+not comparable to the 12.1 s floor.
+
+Where `unreal:automaton:forward` decides at 17 s, search is 0.3% of CPU. At
+120 s it is unsolved on 127 inputs that have records:
+
+| State at 120 s | Inputs |
+|---|---:|
+| still translating | 95 |
+| early quit on caps (13 input-push edge, 1 state, 8 forward node) | 22 |
+| still searching, all Morning2/Morning2s at K=2 | 10 |
+
+The 10 searching inputs are bound by the explicit action table. For example,
+`Morning2s_06cf2373` holds 590k actions in a 2.4 GB table at 5 GB RSS while
+18 of 348 states are live.
+
+| Input | `unreal:automaton:forward` | `real:small:forward` | `both:parity:spot` | Current six default arms |
+|---|---|---|---|---|
+| `lift_wrong_physics_unreal_pb_10` | UNREAL 1.8 s | timeout | UNREAL 25.4 s | — |
+| `load_balancer_unreal1_pb_6_4` | UNREAL 19.8 s | inconclusive | UNREAL 19.9 s | — |
+| `load_balancer_unreal1_pb_4_8` | UNREAL 56.8 s | inconclusive | UNREAL 59.1 s | — |
+| `generalized_buffer_pb_5` | inconclusive | **REAL 1.2 s** | timeout | timeout (120 s) |
+
+On the 15 Morning2/Morning2s inputs:
+
+- `unreal:automaton:forward` solves none. On three of them it is oom-killed
+  at 3G during action construction.
+- The forward and backward small arms tie on the two trivial inputs.
+- `unreal:formula:spot-guarded-sparse` solves one.
+- No arm solves the other 12.
+
+`generalized_buffer_pb_5` is the only exclusive forward solve found. In the
+same family, pb_2 to pb_4 are solved by both and pb_6 by neither.
+
+**Rejected for now.** The forward-engine optimizations are rejected, because
+the only coverage they could recover is the Morning family, which no arm
+reaches:
+
+- successors from live states only;
+- memory-based caps;
+- indexed action access;
+- selective invalidation;
+- demand-driven obligations;
+- conditional proof payloads;
+- `push_aps` partition memoization.
+
+Both forward arms stay in the code and are selectable with `--arms`, outside
+the default portfolio.
+
+
 ## 2026-11-16: The shipped portfolio drops `unreal:automaton:forward` (#384)
 
 Archive `preset384-20261115` (release `evidence-2026-11-16-preset384`). Same frozen
@@ -1157,6 +1285,9 @@ has separate admission evidence. This is a development corpus, not a holdout.
 | INC (frozen) | on | on | 559 | 647 | 1,206 | 11,711 |
 
 ## Extended UNREAL weakening experiment, not admitted
+
+Status: retired by the maintainer in #403 (A12); see the superseding
+2026-11-17 entry in [decisions.md](decisions.md). The results below are historical.
 
 Extended weakening remains opt-in. The supplied 82-input 17 s no-deadline screen
 had zero gains: 136/149 extended attempts were cancelled, none proved UNREAL.

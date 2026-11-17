@@ -3,7 +3,6 @@
 #include "phase_records.hh"
 #include "utils/parse_text.hh"
 
-#include <charconv>
 #include <cmath>
 #include <utility>
 
@@ -71,10 +70,7 @@ void show_help (const char* program_name) {
       << "  --automaton-provider VAL alias for --real-provider\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
          "requires frozen-graph\n"
-      << "  --weakening VAL          [basic|extended|off] (default basic)\n"
-      << "  --weakening-attempt-ms N   absolute extended-attempt allowance (default 250 ms)\n"
-      << "  --weakening-total-ms N     absolute extended pre-pass allowance (default 1000 ms)\n"
-      << "                            invocation deadline bounds still apply; 0 skips work\n"
+      << "  --weakening VAL          [basic|off] (default basic)\n"
       << "  --candidate-mode VAL     [only|fallback] on candidate resource limits (default "
       << acacia::candidate_mode_name (acacia::candidate_mode::only) << ")\n"
       << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] "
@@ -478,8 +474,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
       {"weakening", required_argument, nullptr, OPT_WEAKENING},
-      {"weakening-attempt-ms", required_argument, nullptr, OPT_WEAKENING_ATTEMPT_MS},
-      {"weakening-total-ms", required_argument, nullptr, OPT_WEAKENING_TOTAL_MS},
+      {"weakening-attempt-ms", optional_argument, nullptr, OPT_WEAKENING_ATTEMPT_MS},
+      {"weakening-total-ms", optional_argument, nullptr, OPT_WEAKENING_TOTAL_MS},
       {"r-prepass", required_argument, nullptr, OPT_R_PREPASS},
       {"equivariance", required_argument, nullptr, OPT_EQUIVARIANCE},
       {"equivariance-budget", required_argument, nullptr, OPT_EQUIVARIANCE_BUDGET},
@@ -579,29 +575,23 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case OPT_UNREAL_PROVIDER:
         process_arg_provider (optarg, retval.unreal_provider, "unreal-provider");
         break;
+      // Tombstones accept either spelling so retired flags always get a clear error.
       case OPT_WEAKENING_ATTEMPT_MS:
-      case OPT_WEAKENING_TOTAL_MS: {
-        const std::string_view text {optarg};
-        uint64_t value = 0;
-        const auto parsed = std::from_chars (text.data (), text.data () + text.size (), value);
-        if (parsed.ec != std::errc {} || parsed.ptr != text.data () + text.size () ||
-            value > std::numeric_limits<uint64_t>::max () / acacia::unreal_witnesses::ns_per_ms)
-          error (EXIT_CODE_ERROR,
-                 "Error: --%s expects a nonnegative integer millisecond allowance.\n",
-                 opt == OPT_WEAKENING_ATTEMPT_MS ? "weakening-attempt-ms" : "weakening-total-ms");
-        (opt == OPT_WEAKENING_ATTEMPT_MS ? retval.weakening_allowances.attempt_ms
-                                         : retval.weakening_allowances.total_ms) = value;
+      case OPT_WEAKENING_TOTAL_MS:
+        error (EXIT_CODE_ERROR,
+               "Error: --%s was removed with extended weakening; use --weakening basic or off.\n",
+               opt == OPT_WEAKENING_ATTEMPT_MS ? "weakening-attempt-ms" : "weakening-total-ms");
         break;
-      }
       case OPT_WEAKENING:
         if (std::string_view {optarg} == "basic")
           retval.weakening = weakening_mode::basic;
         else if (std::string_view {optarg} == "extended")
-          retval.weakening = weakening_mode::extended;
+          error (EXIT_CODE_ERROR,
+                 "Error: --weakening extended was removed; use --weakening basic or off.\n");
         else if (std::string_view {optarg} == "off")
           retval.weakening = weakening_mode::off;
         else
-          error (EXIT_CODE_ERROR, "Error: --weakening expects basic, extended or off.\n");
+          error (EXIT_CODE_ERROR, "Error: --weakening expects basic or off.\n");
         break;
       case OPT_CANDIDATE_MODE:
         if (auto mode = acacia::parse_candidate_mode (optarg))

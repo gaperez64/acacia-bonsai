@@ -36,7 +36,7 @@ The added event forms are:
 `worker` is the physical portfolio index, `worker_pid` its PID. `stage_id` is a
 worker-local monotonically allocated stage occurrence, including nested stages.
 `subjob` is one-based for executed runner jobs; zero denotes worker preparation.
-`subjobs` is null until planned jobs are known (extended witnesses remain lazy).
+`subjobs` is null until planned jobs are known.
 `run_id` is the existing weakening/fallback identity. `k` is null before search.
 Counters are decimal strings in `value`; distributions, reasons and statuses are
 strings. All stage/metric keys are bounded internal metadata, never source text.
@@ -128,7 +128,11 @@ verdict. Historical event/API details: `refactor-closeout20261017`,
 IDs use invocation directory, `worker_pid` and `prepass`; `run_id=0` names the full
 objective and positive IDs are candidate index + 1. Lifecycle fields
 `weakening_requested_mode` / `weakening_mode` retain requested/effective modes
-(`basic`, `extended`, `off`); automaton-UNREAL coerces extended to basic.
+(`basic`, `off`). Extended and its allowance flags were retired in #403 (A12).
+The contracts below also document historical `extended` records, which remain
+readable by the census, phase and profiling readers with their existing fixtures.
+Historically automaton-UNREAL coerced extended to basic; extension-only budget,
+selection and checked-game receipt events are no longer emitted.
 
 | Event | Payload contract |
 |---|---|
@@ -431,7 +435,7 @@ positive IDs identify candidate index + 1. Generated candidates, started attempt
 proof receipts and accepted original verdicts are separate. Bind source digest,
 ordered alphabet including unused signals, normalization, objective and derivation;
 FNV checksums bind invocation artifacts and do not prove implication. Basic proofs
-are on the simplified original; extended replay starts at the exact parsed objective.
+are on the simplified original; historical extended replay started at the exact parsed objective.
 Unobserved eligibility, cancellations, generation counts and fallback budget stay
 unknown. A never-started fallback can be starved; winner cancellation is separate.
 

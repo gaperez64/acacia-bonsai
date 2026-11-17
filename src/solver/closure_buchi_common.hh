@@ -12,7 +12,11 @@
 #include <optional>
 #include <set>
 
+#ifdef ACACIA_CLOSURE_BUCHI_REFERENCE
+namespace acacia::closure_buchi_reference {
+#else
 namespace acacia::closure_buchi {
+#endif
   namespace detail {
     using Clock = std::chrono::steady_clock;
     using Formula = spot::formula;

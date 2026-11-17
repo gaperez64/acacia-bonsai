@@ -8,8 +8,7 @@
 
 namespace acacia::equivariance_budget {
 
-  // One global 5 s optional-work horizon, matching extended weakening's
-  // no-deadline reference. Fractions cap this pre-pass before ordinary backward;
+  // One global 5 s optional-work horizon. Fractions cap this pre-pass before ordinary backward;
   // it is a fixed time policy, independent of input structure or measured verdicts.
   inline constexpr uint64_t reference_ns = 5000000000ULL;
 

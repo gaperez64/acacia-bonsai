@@ -73,6 +73,10 @@ test ('help-output',
       suite : ['unit', 'cli'],
       depends : [ab_exe])
 
+test ('weakening-cli', py,
+      args : [files ('check-weakening-cli.py'), ab_exe],
+      suite : ['unit', 'cli'], depends : [ab_exe])
+
 # Pure source inspection: no binary, so it runs even when nothing is built yet.
 test ('config-frontends-agree',
       py,
@@ -220,6 +224,27 @@ test ('closure-recurrence-cli', py,
       args : [files ('check-closure-recurrence.py'), ab_exe, meson.current_source_dir (),
               get_option ('acacia_spot_guarded_backend').to_string ()],
       suite : ['unit', 'closure-buchi'], depends : ab_exe, timeout : 60)
+# Keep replay/integration tests on the production library. A distinct namespace
+# prevents cross-linking; this dependency keeps the reference flag on both TUs.
+closure_buchi_reference_args = ['-DACACIA_CLOSURE_BUCHI_REFERENCE=1']
+closure_buchi_reference_lib = static_library (
+  'closure-buchi-reference', '../src/solver/closure_buchi_provider.cc',
+  include_directories : inc,
+  cpp_args : closure_buchi_reference_args,
+  dependencies : [spot_dep, bddx_dep],
+  install : false,
+)
+closure_buchi_reference_dep = declare_dependency (
+  link_with : closure_buchi_reference_lib,
+  compile_args : closure_buchi_reference_args,
+)
+closure_buchi_reference_test = executable (
+  'closure-buchi-reference-test', 'closure_buchi_provider_test.cc',
+  include_directories : inc,
+  dependencies : [closure_buchi_reference_dep, spot_dep, bddx_dep],
+)
+test ('closure-buchi-reference', closure_buchi_reference_test,
+      suite : ['unit', 'closure-buchi'])
 
 # The previous sprint's P5 headers and regressions compile in the default build; no backend gate.
 spot_lazy_buchi_view_test = executable (
@@ -675,9 +700,9 @@ tlsf_conversion_compare = executable (
 test ('tlsf-conversion-focused', tlsf_conversion_compare, args : ['--focused'],
       suite : ['unit', 'tlsf'])
 if ltlsynt_exe.found () and get_option ('acacia_spot_guarded_backend')
-  test ('extended-weakening-games', py,
-        args : [files ('check-extended-weakening.py'), ab_exe,
-                unreal_safety_core_witnesses_test, tlsf_frontend_inspect, ltlsynt_exe,
+  test ('weakening-games', py,
+        args : [files ('check-weakening-games.py'), ab_exe,
+                tlsf_frontend_inspect, ltlsynt_exe,
                 meson.current_build_dir ()],
         suite : ['unit', 'tlsf', 'translation'], timeout : 60)
 endif
