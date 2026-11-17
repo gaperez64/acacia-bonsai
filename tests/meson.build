@@ -217,7 +217,8 @@ closure_recurrence_provider_test = executable (
 test ('closure-recurrence-provider', closure_recurrence_provider_test,
       suite : ['unit', 'closure-buchi'])
 test ('closure-recurrence-cli', py,
-      args : [files ('check-closure-recurrence.py'), ab_exe, meson.current_source_dir ()],
+      args : [files ('check-closure-recurrence.py'), ab_exe, meson.current_source_dir (),
+              get_option ('acacia_spot_guarded_backend').to_string ()],
       suite : ['unit', 'closure-buchi'], depends : ab_exe, timeout : 60)
 
 # The previous sprint's P5 headers and regressions compile in the default build; no backend gate.

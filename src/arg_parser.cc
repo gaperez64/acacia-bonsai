@@ -68,7 +68,7 @@ void show_help (const char* program_name) {
       << "  --real-provider VAL      use "
          "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager|closure-recurrence] automaton "
          "provider (default frozen-graph)\n"
-      << "  --automaton-provider VAL alias for --real-provider (closure-recurrence: real:small:backward)\n"
+      << "  --automaton-provider VAL alias for --real-provider\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
          "requires frozen-graph\n"
       << "  --weakening VAL          [basic|extended|off] (default basic)\n"
@@ -90,6 +90,8 @@ void show_help (const char* program_name) {
       << "                    provider options apply to arms without an explicit provider\n"
       << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, "
          "decision only\n"
+      << "                    closure-recurrence: real:small:backward or spot-guarded-sparse\n"
+      << "                    (real:small/any or unreal:formula), decision only\n"
       << "                    both:obligation:spot: syntactic obligations, "
          "trusted Spot synthesis;\n"
       << "                    membership follows the build default; starts only when eligible;\n"
@@ -806,14 +808,17 @@ arg_parse_result arg_parser (int argc, char** argv) {
           retval.arms->emplace_back (true, retval.primary_translation_pref, strategy,
                                      retval.unreal_backend);
     }
+    const auto decision_only = [] (acacia::automaton_provider provider) {
+      return acacia::is_closure_provider (provider) ||
+             provider == acacia::automaton_provider::closure_recurrence;
+    };
     const bool closure =
-        acacia::is_closure_provider (retval.real_provider) ||
-        acacia::is_closure_provider (retval.unreal_provider) ||
-        (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-           return arm.legacy && acacia::is_closure_provider (arm.legacy->provider);
+        decision_only (retval.real_provider) || decision_only (retval.unreal_provider) ||
+        (retval.arms && std::ranges::any_of (*retval.arms, [&] (const auto& arm) {
+           return arm.legacy && decision_only (arm.legacy->provider);
          }));
     if (closure)
-      error (EXIT_CODE_ERROR, "Error: closure-buchi does not support controller synthesis.\n");
+      error (EXIT_CODE_ERROR, "Error: a closure provider does not support controller synthesis.\n");
     if (retval.arms.has_value ()) {
       bool kept_real_arm = false;
       std::erase_if (*retval.arms, [&kept_real_arm] (const portfolio_arm& arm) {
@@ -866,10 +871,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
     process_arg_provider (acacia::automaton_provider_name (legacy.provider), legacy.provider,
                           "arms");
     if (legacy.provider == acacia::automaton_provider::closure_recurrence) {
-      if (arm.unreal || legacy.translation_pref != spot::postprocessor::Small ||
-          legacy.backend != acacia::game_backend::backward || retval.synth_fname)
+      const bool backward = !arm.unreal && legacy.translation_pref == spot::postprocessor::Small &&
+                            legacy.backend == acacia::game_backend::backward;
+      const bool sparse = legacy.backend == acacia::game_backend::spot_guarded_sparse &&
+                          (!arm.unreal || legacy.unreal_x == UNREAL_X_FORMULA);
+      if ((!backward && !sparse) || retval.synth_fname)
         error (EXIT_CODE_ERROR,
-               "Error: closure-recurrence requires real:small:backward, decision only.\n");
+               "Error: closure-recurrence requires real:small:backward or spot-guarded-sparse "
+               "(real or unreal:formula), decision only.\n");
     }
     else if (legacy.provider != acacia::automaton_provider::frozen_graph) {
       if (arm.unreal && legacy.unreal_x == UNREAL_X_AUTOMATON)

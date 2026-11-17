@@ -514,7 +514,8 @@ namespace {
         spot::twa_graph_ptr aut;
         const bool recurrence = provider == acacia::automaton_provider::closure_recurrence;
         if (recurrence) {
-          acacia::spot_records::route ("closure-recurrence", "backward");
+          acacia::spot_records::route ("closure-recurrence",
+                                       acacia::game_backend_name (effective_backend));
           acacia::legacy_phase constructing ("closure-recurrence");
           acacia::legacy_metric ("provider", "closure-recurrence");
           acacia::closure_recurrence::Counters counts;
@@ -562,8 +563,10 @@ namespace {
             constructing.finish (reason, !inapplicable);
             if (!fallback)
               return acacia::diagnostics::finish (false, "closure-recurrence-inconclusive");
-            acacia::spot_records::route ("frozen_fallback", "backward");
-            acacia::spot_records::put ("fallback", "frozen-graph:backward");
+            acacia::spot_records::route ("frozen_fallback",
+                                         acacia::game_backend_name (effective_backend));
+            acacia::spot_records::put (
+                "fallback", std::string ("frozen-graph:") + acacia::game_backend_name (effective_backend));
             acacia::spot_records::phase ("fallback-translation");
           }
         }
@@ -606,6 +609,10 @@ namespace {
           acacia::diagnostics::set_support_backend ("backward");
         }
 #endif
+        // Both materialized providers share the same preprocessing and game entry point.
+        const char* graph_provider = aut ? "closure-recurrence" : "frozen-graph";
+        acacia::legacy_metric ("graph_provider", graph_provider);
+        acacia::spot_records::put ("provider", graph_provider);
         const auto fallback_started = fallback_translation ? std::chrono::steady_clock::now ()
                                                           : std::chrono::steady_clock::time_point {};
         if (!aut) {
@@ -1108,8 +1115,10 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     provider = acacia::synthesis_provider (provider, true);
   }
   if (provider == acacia::automaton_provider::closure_recurrence &&
-      (check_unreal || backend != acacia::game_backend::backward ||
-       translation_pref != spot::postprocessor::Small))
+      !((!check_unreal && backend == acacia::game_backend::backward &&
+         translation_pref == spot::postprocessor::Small) ||
+        (backend == acacia::game_backend::spot_guarded_sparse &&
+         (!check_unreal || *check_unreal == UNREAL_X_FORMULA))))
     std::abort ();
   if (provider != acacia::automaton_provider::frozen_graph &&
       provider != acacia::automaton_provider::closure_recurrence and
