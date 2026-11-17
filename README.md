@@ -79,6 +79,11 @@ Python builds. Read the group instead of copying a preset name. The
 [configuration guide](docs/configuration.md) explains how to inspect presets,
 choose solver workers at runtime, and set translation effort.
 
+The four slots offer the unchanged six-arm default, its eight-arm variant
+with both forward workers, the historical backward solver, and the previous
+six-arm GR(1) portfolio. The eight-arm option keeps the default's other
+settings. Historical presets outside the group remain available by name.
+
 ## Benchmarks
 
 See [results and their measurement conditions](benchmarking/RESULTS.md) for

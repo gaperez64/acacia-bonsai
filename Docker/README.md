@@ -34,6 +34,17 @@ The wrapper defaults to the first configuration in `docker_default`. To
 select another, pass a name from that group as the first argument. See
 [presets](../docs/configuration.md#inspect-a-preset) for the list.
 
+The second slot adds `real:small:forward` and `unreal:automaton:forward` to
+the first slot's six arms with the same remaining build options. The third
+slot provides the historical backward solver; the fourth retains the
+previous second slot's GR(1) portfolio. Select the forward-inclusive build
+from the group in the container:
+
+```sh
+preset=$(python3 scripts/acacia-config.py list-group docker_default | sed -n '2p')
+./scripts/acacia-bonsai.sh "$preset" --tlsf < examples/realizable.tlsf
+```
+
 ## Write a controller
 
 In the container, the synthesis wrapper sends an ASCII AIGER controller to

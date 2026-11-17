@@ -21,6 +21,11 @@ python3 scripts/acacia-config.py meson-args "$preset"
 `docker_default` lists the configurations accepted by the Docker wrappers.
 Its first entry is also the Python build default. Names such as `best_…`
 are historical labels; use the group to find the current choices.
+The ordered slots are the six-arm default, its eight-arm forward-inclusive
+variant, the historical backward solver, and the previous second slot's
+six-arm GR(1) portfolio. The second slot changes only `default_arms` from
+the first, appending `real:small:forward` and `unreal:automaton:forward`.
+Presets that leave the group remain selectable through `list-presets`.
 `list-presets --unique` lists one name for each distinct set of component
 options, ignoring the label used to record its origin.
 
