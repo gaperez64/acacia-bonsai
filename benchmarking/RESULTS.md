@@ -12,6 +12,48 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-17: Translation and recurrence experiments for #407 decide nothing
+
+Archive `issue407-20261117` (release `evidence-2026-11-17-issue407`). Offline
+censuses and three screens on SYNTCOMP26 inputs left unsolved at 120 s, all on
+master `1c61eda5`, serial, 120 s, 8G/no swap. None of the candidates is merged.
+
+**Census.** On the 50 inputs where every antichain arm was still translating,
+Spot translates the whole negated specification on none within 60 s, but
+translates every per-guarantee piece on 11 and all but one piece on 23. The lift
+declines on 30 inputs for two proof limits in tlsf-tools: the encoding width of
+binary indices (12) and the large-template bound in `bus_schema` (13). Every
+GR(1) fragment rejection comes from a guarantee at the reactivity level, so a
+cheap fragment extension does not exist.
+
+| Candidate | Binary | Inputs | Solved |
+|---|---|---:|---:|
+| `--translation-split guarantees` (Spot per piece, joined with `spot::sum`) | `0afe219c` | 50 | 0 |
+| Recurrence-aware Büchi construction on `real:small:backward` | `4663c8f4` | 126 | 0 |
+| Same construction on both guarded-sparse arms, fallback to Spot | `40dc762b` | 36 | 0 |
+
+No screen has a verdict conflict.
+
+- **Splitting with Spot** fails because Spot's simplification of the negated
+  formula hides the guarantee structure (Demo1 and Felix split into 2 pieces,
+  not 8 and 11), and where the split works, summing 36-61 pieces and lowering
+  back to state-based Büchi does not finish.
+- **The direct construction** gives small automata fast (theta(500): 2,012
+  states in under a second, where Spot runs past 120 s). On the backward arm,
+  36 inputs then stop in I/O preparation and 38 in the antichain search. I/O
+  preparation builds one BDD relation over inputs, outputs and states, which
+  grows exponentially with the number of outputs: `abcg_arbiter_pb_5` has 89
+  states and 25 propositions and did not finish in 180 s or 3.3 GB.
+- **On the guarded-sparse arms**, which work on symbolic rows, the
+  realizability arm gets past I/O on 32 of the 36 and is still searching at the
+  cap (K=2 on 28, K=5 on 4). The unrealizability arm hits the construction's
+  branch or guard limit on 31 and falls back to Spot, which is still
+  translating at the cap.
+
+So a better automaton alone does not decide these inputs: the antichain search
+at small K is the next limit. The construction is kept on branch
+`ucw-recurrence-407` (`dbe18139`) for later reuse; the split is not kept.
+
 ## 2026-11-17: Optimizing the forward arms would not recover coverage (#378)
 
 Archive `fwd-20261117` (release `evidence-2026-11-17-fwd`). The campaign has
@@ -71,6 +113,7 @@ reaches:
 
 Both forward arms stay in the code and are selectable with `--arms`, outside
 the default portfolio.
+
 
 ## 2026-11-16: The shipped portfolio drops `unreal:automaton:forward` (#384)
 
