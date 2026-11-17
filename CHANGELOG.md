@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The first `docker_default` preset uses `closure-recurrence` for its formula-unrealizability arm in `fallback` candidate mode, keeping `low` effort for fallback translation and the existing frozen-graph route for synthesis (#407). Add `acacia_default_candidate_mode` (default `only`); `--candidate-mode` overrides it. Other presets are unchanged.
 - Restrict enumerative closure-row expansion to the differential test build; production closure providers continue to use symbolic Boolean folding.
 - Remove experimental `--weakening extended`, `--weakening-attempt-ms` and `--weakening-total-ms` after zero-gain screens; retain default basic weakening and `--weakening off`.
 - Remove the unused benchmark timed-run marker API: `timed_run_marker`, `MarkerTimeout`, `DEFAULT_BLOCKING_MARKERS` and `TIMED_RUN_MARKER`.

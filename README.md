@@ -78,6 +78,10 @@ configurations used by the Docker wrappers; its first entry is also used by
 Python builds. Read the group instead of copying a preset name. The
 [configuration guide](docs/configuration.md) explains how to inspect presets,
 choose solver workers at runtime, and set translation effort.
+The first preset uses `closure-recurrence` for its formula-unrealizability arm,
+with `fallback` candidate mode and `low` effort for fallback translation.
+`--candidate-mode only` overrides that build default.
+Controller synthesis keeps that arm's `frozen-graph` provider.
 
 ## Benchmarks
 

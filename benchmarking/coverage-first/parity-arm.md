@@ -68,5 +68,8 @@ Developer measurements and admission history live in the evidence archives and
 `otd-parity-engines20261015` (engine comparisons), `otd-gates-OTF20261016` (gates),
 and `otd-OTF-owner20261016` (default admission). Resolve the shipped preset through
 `python3 scripts/acacia-config.py list-group docker_default`; the parity portfolio
-drops `real:small:forward` and adds both parity arms to the previous shipped
-portfolio, retained second in the group.
+drops both forward arms and adds both parity arms to the previous shipped
+portfolio, retained second in the group. Its formula-unrealizability arm is
+`unreal:formula:spot-guarded-sparse:closure-recurrence`, with candidate mode
+`fallback` and `low` effort for fallback translation. The other arms and
+providers are unchanged; `--candidate-mode only` overrides the build default.

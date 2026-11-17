@@ -31,6 +31,15 @@ Use `meson-args` to translate a preset into build options, as in the
 changing compiler, compile profile, or native file. The build wrappers reject
 directories whose recorded build identity no longer matches.
 
+The first `docker_default` preset uses
+`unreal:formula:spot-guarded-sparse:closure-recurrence`, with candidate mode
+`fallback` and `low` effort for fallback translation through `frozen-graph`.
+It sets `acacia_default_candidate_mode=fallback`; the option's general default
+is `only`. `--candidate-mode only|fallback` overrides the build default globally.
+Other arms, translation efforts and presets are unchanged. During controller
+synthesis (`-s`), the default formula arm retains its `frozen-graph` provider.
+Explicit closure-provider selections remain decision-only.
+
 ## Compile profiles
 
 | Profile | Settings | Use |

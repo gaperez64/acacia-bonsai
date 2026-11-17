@@ -795,7 +795,7 @@ def completeness_expected_configuration(row):
             provider = parts[3] if len(parts) == 4 else completeness_flag_value(
                 flags, f"--{polarity}-provider", "frozen-graph")
             if provider not in ("frozen-graph", "spot-lazy", "spot-eager", "closure-buchi",
-                                "closure-buchi-eager"):
+                                "closure-buchi-eager", "closure-recurrence"):
                 raise ValueError(f"invalid arm provider {arm!r}")
             translation = transform if polarity == "real" else (
                 values["translation_pref"].split("+", 1)[0] if values else None)

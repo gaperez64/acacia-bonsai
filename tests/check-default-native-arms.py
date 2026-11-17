@@ -63,6 +63,13 @@ assert not any(record.get("phase") == "child_startup" and
                record.get("arm") in native for record in made_records), (made, made_records)
 assert made.stderr.count("Skipping default arm") == len(native), made
 assert sum(record.get("event") == "obligation_start" for record in made_records) <= 1
+if "unreal:formula:spot-guarded-sparse:closure-recurrence" in arms:
+    assert any(record.get("event") == "worker_spec" and
+               record.get("requested_polarity") == "UNREAL" and
+               record.get("transform") == "formula" and
+               record.get("requested_backend") == "spot-guarded-sparse" and
+               record.get("provider") == "frozen-graph"
+               for record in made_records), (made, made_records)
 synth.unlink()
 
 explicit = subprocess.run([str(binary), *ltl, "--arms", native[0]],

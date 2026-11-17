@@ -446,15 +446,16 @@ def test_exact_arm_inventory_matches_worker_spec(specification):
 
 
 def test_shipped_six_arm_default_inventory():
+    _, presets = reader.CONFIG.load_registry()
     inventory, context = reader.expected_configuration(row(
-        flags="", preset="otf_sparse_formula_parity"))
+        flags="", preset=presets["groups"]["docker_default"][0]))
     expected = [
         dict(kind="legacy", requested_polarity=polarity, translation="small",
-             transform=transform, provider="frozen-graph", requested_backend=backend,
+             transform=transform, provider=provider, requested_backend=backend,
              r_prepass=True, equivariance=True)
-        for polarity, transform, backend in [
-            ("REAL", "real", "backward"),
-            ("UNREAL", "formula", "spot-guarded-sparse"),
+        for polarity, transform, backend, provider in [
+            ("REAL", "real", "backward", "frozen-graph"),
+            ("UNREAL", "formula", "spot-guarded-sparse", "closure-recurrence"),
         ]
     ]
     expected += [dict(kind="both:gr1-real-lift:oxidd", requested_backend="oxidd",

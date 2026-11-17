@@ -85,6 +85,23 @@
         }
       ]
     },
+    "default_candidate_mode": {
+      "meson": "acacia_default_candidate_mode",
+      "type": "combo",
+      "default": "only",
+      "choices": [
+        "only",
+        "fallback"
+      ],
+      "description": "Default candidate resource-limit mode; --candidate-mode overrides it",
+      "macros": [
+        {
+          "name": "ACACIA_DEFAULT_CANDIDATE_MODE",
+          "emit": "always",
+          "encoding": "c_string"
+        }
+      ]
+    },
     "bdd_max_increase": {
       "meson": "acacia_bdd_max_increase",
       "type": "integer",

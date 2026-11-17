@@ -32,6 +32,9 @@ option('acacia_translation_pref', type: 'combo',
 option('acacia_default_translation_effort', type: 'string', value: 'high',
        description: 'Default translation effort in --translation-effort syntax; overrides without an active translating arm are ignored; runtime replaces it entirely')
 
+option('acacia_default_candidate_mode', type: 'combo', choices: ['only', 'fallback'], value: 'only',
+       description: 'Default candidate resource-limit mode; --candidate-mode overrides it')
+
 option('acacia_bdd_max_increase', type: 'integer', value: 4194304, min: 0, max: 16777216,
        description: 'Maximum BDD nodes added when the node table grows; ' +
                     '0 keeps Spot\'s default')

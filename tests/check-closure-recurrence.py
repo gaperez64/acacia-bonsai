@@ -8,6 +8,8 @@ import sys
 import tempfile
 
 binary, test_dir, guarded = sys.argv[1:]
+build_options = {o["name"]: o["value"] for o in json.loads(
+    (Path(binary).resolve().parent.parent / "meson-info/intro-buildoptions.json").read_text())}
 base = [binary, "-K", "5", "--weakening", "off"]
 arms = ["real:small:backward"]
 if guarded == "true":
@@ -79,12 +81,14 @@ with tempfile.TemporaryDirectory(prefix="closure-recurrence-") as tmp:
     args = ["-f", "G(i -> F o) & G(o -> X !o)", "-i", "i", "-o", "o"]
     for arm, (cap, value) in product(arms, (("STATES", "1"), ("BYTES", "0"))):
         reference = run(args, arm=arm)
-        for mode in ("only", "fallback"):
-            records = Path(tmp) / (arm + mode + cap)
+        for selection in (None, "only", "fallback"):
+            mode = selection or build_options["acacia_default_candidate_mode"]
+            records = Path(tmp) / (arm + str(selection) + cap)
             records.mkdir()
             env = dict(os.environ, ACACIA_PHASE_RECORDS=str(records))
             env["ACACIA_SPOT_MAX_PROVIDER_" + cap] = value
-            result = run(args, ["--candidate-mode", mode], env, arm + ":closure-recurrence")
+            extra = ["--candidate-mode", selection] if selection else []
+            result = run(args, extra, env, arm + ":closure-recurrence")
             assert result[0] == (2 if mode == "only" else reference[0]), (arm, mode, result)
             events = [json.loads(line) for path in records.glob("*.jsonl")
                       for line in path.read_text().splitlines()]
@@ -108,8 +112,6 @@ with tempfile.TemporaryDirectory(prefix="closure-recurrence-") as tmp:
                            e.get("effective_backend") == arm.split(":")[-1] for e in events), events
                 assert any(e.get("stage") == "translation" for e in events), events
 
-    build_options = {o["name"]: o["value"] for o in json.loads(
-        (Path(binary).resolve().parent.parent / "meson-info/intro-buildoptions.json").read_text())}
     for arm in arms:
         entries = build_options["acacia_default_translation_effort"].split(",")
         default = next((e for e in entries if "=" not in e), "high")

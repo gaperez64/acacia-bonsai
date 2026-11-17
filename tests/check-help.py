@@ -13,6 +13,7 @@ binary = Path(sys.argv[1]).resolve()
 build_options = {option["name"]: option["value"] for option in json.loads(
     (binary.parent.parent / "meson-info/intro-buildoptions.json").read_text())}
 build_effort = build_options["acacia_default_translation_effort"]
+build_candidate = build_options["acacia_default_candidate_mode"]
 
 
 def worker_arm(row):
@@ -26,7 +27,9 @@ def expected_effort(value, arm, provider="frozen-graph"):
     level = next((entry for entry in entries if "=" not in entry), "high")
     for entry in entries:
         name, equal, override = entry.partition("=")
-        if equal and provider == "frozen-graph" and name in (arm, arm + ":" + provider):
+        translates = provider == "frozen-graph" or (
+            provider == "closure-recurrence" and build_candidate == "fallback")
+        if equal and translates and name in (arm, arm + ":" + provider):
             level = override
     return level
 
@@ -46,6 +49,8 @@ with tempfile.TemporaryDirectory(dir=Path.cwd(), prefix="check-help-") as direct
             assert result.returncode == 0, (option, invalid_deadline, result)
             assert result.stdout.startswith("Usage:"), (option, invalid_deadline, result)
             assert "--arms LIST" in result.stdout, (option, invalid_deadline, result)
+            assert ("--candidate-mode VAL     [only|fallback] on candidate resource limits "
+                    f"(default {build_candidate})\n" in result.stdout)
             assert "--equivariance-budget F|DURATION|unbounded (default 3s)" in result.stdout
             assert "[scan|grouped] (default: grouped)" in result.stdout
             assert "--spot-fast VAL   use Spot NBA fast path from [off|det]\n" in result.stdout
@@ -148,7 +153,8 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G(i <-> X o); } }
                 selected = build_options["acacia_default_arms"].split(",")
                 if selected != [""]:
                     assert {worker_arm(r) for r in native_translations} == {
-                        arm for arm in selected if not arm.startswith("both:")}, specs
+                        ":".join(arm.split(":")[:3]) for arm in selected
+                        if not arm.startswith("both:")}, specs
                 # An override alone starts from high and discards build defaults.
                 runtime_values.append(worker_arm(native_translations[0]) + "=medium")
     tlsf.unlink()

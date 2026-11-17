@@ -72,7 +72,7 @@ void show_help (const char* program_name) {
          "requires frozen-graph\n"
       << "  --weakening VAL          [basic|off] (default basic)\n"
       << "  --candidate-mode VAL     [only|fallback] on candidate resource limits (default "
-      << acacia::candidate_mode_name (acacia::candidate_mode::only) << ")\n"
+      << ACACIA_DEFAULT_CANDIDATE_MODE << ")\n"
       << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] "
          "game backend for unreal arms\n"
       << "  --arms LIST       run exactly the comma-separated portfolio arms\n"
@@ -746,6 +746,11 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   if (build_default_arms && (not retval.tlsf_specified || retval.synth_fname)) {
+    // Recurrence is decision-only; keep the default arm's existing synthesis route.
+    if (retval.synth_fname)
+      for (auto& arm : *retval.arms)
+        if (arm.legacy && arm.legacy->provider == acacia::automaton_provider::closure_recurrence)
+          arm.legacy->provider = acacia::automaton_provider::frozen_graph;
     const bool needed_real = std::ranges::any_of (
         *retval.arms, [] (const auto& arm) { return !arm.unreal || arm.both; });
     const bool needed_unreal = std::ranges::any_of (
