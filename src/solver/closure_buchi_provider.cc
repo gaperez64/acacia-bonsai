@@ -11,7 +11,11 @@
 #include <optional>
 #include <set>
 
+#ifdef ACACIA_CLOSURE_BUCHI_REFERENCE
+namespace acacia::closure_buchi_reference {
+#else
 namespace acacia::closure_buchi {
+#endif
   namespace {
     using Clock = std::chrono::steady_clock;
     using Formula = spot::formula;
@@ -424,7 +428,13 @@ namespace acacia::closure_buchi {
             if (b.done[id])
               continue;
             b.done[id] = 1;  // only the CURRENT (root) obligation, never a descendant
+            // Invariant: production folds every pure Boolean obligation;
+            // mixed temporal And/Or still need the generic expansion below.
+#ifdef ACACIA_CLOSURE_BUCHI_REFERENCE
             if (options.row_expansion == RowExpansion::symbolic_boolean && is_boolean[id]) {
+#else
+            if (is_boolean[id]) {
+#endif
               // Sound because expanding a Boolean obligation introduces no
               // future/postponed obligation: every satisfying alternative
               // shares the same temporal continuation, so their guards
@@ -704,4 +714,4 @@ namespace acacia::closure_buchi {
       return caught ();
     }
   }
-}  // namespace acacia::closure_buchi
+}  // namespace acacia::closure_buchi[_reference]
