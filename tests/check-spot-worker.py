@@ -42,6 +42,7 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ {formula}; }} }}
             assert record["outputs"] == (["o"] if polarity == "real" else ["i"])
             assert record["requested_provider"] == provider and record["provider"] == provider
             if provider.startswith("closure"):
+                assert record["row_expansion_mode"] == "symbolic-boolean", record
                 checksum = 14695981039346656037
                 for byte in record["worker_boundary"].encode():
                     checksum = ((checksum ^ byte) * 1099511628211) & ((1 << 64) - 1)
