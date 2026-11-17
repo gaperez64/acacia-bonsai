@@ -62,6 +62,14 @@ for formula in ("G(i <-> X(o))", "G(o <-> X(i))"):
             actual = run(args, ["--candidate-mode", mode], arm=arm + ":closure-recurrence")
             assert actual[:2] == reference[:2], (formula, arm, mode, reference, actual)
 
+# Realizable under Mealy semantics (o copies i); without the input shift the
+# formula-unreal arm would answer a false UNREALIZABLE.
+args = ["-f", "G(i <-> o)", "-i", "i", "-o", "o", "--spot-fast", "off"]
+for arm in arms[1:]:
+    for mode in ("only", "fallback"):
+        actual = run(args, ["--candidate-mode", mode], arm=arm + ":closure-recurrence")
+        assert actual[0] == (2 if arm.startswith("unreal:") else 0), (arm, mode, actual)
+
 # Force construction failure through the existing provider state cap; records
 # must identify the actual translation route, including the failure in only.
 with tempfile.TemporaryDirectory(prefix="closure-recurrence-") as tmp:
