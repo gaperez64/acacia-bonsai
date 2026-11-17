@@ -73,6 +73,10 @@ test ('help-output',
       suite : ['unit', 'cli'],
       depends : [ab_exe])
 
+test ('weakening-cli', py,
+      args : [files ('check-weakening-cli.py'), ab_exe],
+      suite : ['unit', 'cli'], depends : [ab_exe])
+
 # Pure source inspection: no binary, so it runs even when nothing is built yet.
 test ('config-frontends-agree',
       py,
@@ -686,9 +690,9 @@ tlsf_conversion_compare = executable (
 test ('tlsf-conversion-focused', tlsf_conversion_compare, args : ['--focused'],
       suite : ['unit', 'tlsf'])
 if ltlsynt_exe.found () and get_option ('acacia_spot_guarded_backend')
-  test ('extended-weakening-games', py,
-        args : [files ('check-extended-weakening.py'), ab_exe,
-                unreal_safety_core_witnesses_test, tlsf_frontend_inspect, ltlsynt_exe,
+  test ('weakening-games', py,
+        args : [files ('check-weakening-games.py'), ab_exe,
+                tlsf_frontend_inspect, ltlsynt_exe,
                 meson.current_build_dir ()],
         suite : ['unit', 'tlsf', 'translation'], timeout : 60)
 endif

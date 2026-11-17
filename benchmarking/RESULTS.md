@@ -12,6 +12,66 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-17: Optimizing the forward arms would not recover coverage (#378)
+
+Archive `fwd-20261117` (release `evidence-2026-11-17-fwd`). The campaign has
+three parts:
+
+- a read-only source pass;
+- a phase-record reading of `cleanup-20261113`;
+- a solo-arm census on the maintainer's 4-core, 7 GB workstation, with one arm
+  per run, `-T`, a 3G scope with no swap and a 120 s cap.
+
+The census binary is a release `otf_sparse_formula_parity` build at
+02d4082-dirty. Verdicts and coverage are the evidence here; the timings are
+not comparable to the 12.1 s floor.
+
+Where `unreal:automaton:forward` decides at 17 s, search is 0.3% of CPU. At
+120 s it is unsolved on 127 inputs that have records:
+
+| State at 120 s | Inputs |
+|---|---:|
+| still translating | 95 |
+| early quit on caps (13 input-push edge, 1 state, 8 forward node) | 22 |
+| still searching, all Morning2/Morning2s at K=2 | 10 |
+
+The 10 searching inputs are bound by the explicit action table. For example,
+`Morning2s_06cf2373` holds 590k actions in a 2.4 GB table at 5 GB RSS while
+18 of 348 states are live.
+
+| Input | `unreal:automaton:forward` | `real:small:forward` | `both:parity:spot` | Current six default arms |
+|---|---|---|---|---|
+| `lift_wrong_physics_unreal_pb_10` | UNREAL 1.8 s | timeout | UNREAL 25.4 s | — |
+| `load_balancer_unreal1_pb_6_4` | UNREAL 19.8 s | inconclusive | UNREAL 19.9 s | — |
+| `load_balancer_unreal1_pb_4_8` | UNREAL 56.8 s | inconclusive | UNREAL 59.1 s | — |
+| `generalized_buffer_pb_5` | inconclusive | **REAL 1.2 s** | timeout | timeout (120 s) |
+
+On the 15 Morning2/Morning2s inputs:
+
+- `unreal:automaton:forward` solves none. On three of them it is oom-killed
+  at 3G during action construction.
+- The forward and backward small arms tie on the two trivial inputs.
+- `unreal:formula:spot-guarded-sparse` solves one.
+- No arm solves the other 12.
+
+`generalized_buffer_pb_5` is the only exclusive forward solve found. In the
+same family, pb_2 to pb_4 are solved by both and pb_6 by neither.
+
+**Rejected for now.** The forward-engine optimizations are rejected, because
+the only coverage they could recover is the Morning family, which no arm
+reaches:
+
+- successors from live states only;
+- memory-based caps;
+- indexed action access;
+- selective invalidation;
+- demand-driven obligations;
+- conditional proof payloads;
+- `push_aps` partition memoization.
+
+Both forward arms stay in the code and are selectable with `--arms`, outside
+the default portfolio.
+
 ## 2026-11-16: The shipped portfolio drops `unreal:automaton:forward` (#384)
 
 Archive `preset384-20261115` (release `evidence-2026-11-16-preset384`). Same frozen
@@ -1157,6 +1217,9 @@ has separate admission evidence. This is a development corpus, not a holdout.
 | INC (frozen) | on | on | 559 | 647 | 1,206 | 11,711 |
 
 ## Extended UNREAL weakening experiment, not admitted
+
+Status: retired by the maintainer in #403 (A12); see the superseding
+2026-11-17 entry in [decisions.md](decisions.md). The results below are historical.
 
 Extended weakening remains opt-in. The supplied 82-input 17 s no-deadline screen
 had zero gains: 136/149 extended attempts were cancelled, none proved UNREAL.

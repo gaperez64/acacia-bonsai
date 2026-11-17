@@ -57,7 +57,6 @@ struct arg_parse_result {
     acacia::automaton_provider unreal_provider = acacia::automaton_provider::frozen_graph;
     acacia::candidate_mode candidate = acacia::candidate_mode::only;
     weakening_mode weakening = weakening_mode::basic;
-    acacia::unreal_witnesses::allowances weakening_allowances;
     bool obligation_explicit = false;
     acacia::obligation::memory_share obligation_memory_share =
         acacia::obligation::memory_share::equal;
