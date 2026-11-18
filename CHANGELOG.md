@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Bump posets to 313fbfcd (documents and checks the lazy KD epoch invariants, #402 I06) and tlsf-tools to 78185dc (a fuzz test's R3 mutant now targets a printer change that reparsing can expose). Behaviour is unchanged; both changes are comments, assertions and tests.
 - Restrict enumerative closure-row expansion to the differential test build; production closure providers continue to use symbolic Boolean folding.
 - Remove experimental `--weakening extended`, `--weakening-attempt-ms` and `--weakening-total-ms` after zero-gain screens; retain default basic weakening and `--weakening off`.
 - Remove the unused benchmark timed-run marker API: `timed_run_marker`, `MarkerTimeout`, `DEFAULT_BLOCKING_MARKERS` and `TIMED_RUN_MARKER`.
