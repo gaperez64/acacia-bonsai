@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 env:
-  SPOT_VERSION: 2.16
+  SPOT_VERSION: 2.16.3
   CARGO_BUILD_JOBS: 2
 
 jobs:
