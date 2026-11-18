@@ -12,6 +12,39 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-18: The cheaper lazy KD intersection ships; theta persistence blocks do not
+
+Archive `gates-cpre407-20261118` (release `evidence-2026-11-18-gates-cpre407`).
+
+**Admitted: the posets intersection that skips contained maxima.** The entry below recorded it
+as not admitted because it decides no new input. The owner's rule (2026-11-18) is that a change
+that cuts time or space with no regression is merged anyway. Its runs from `cpre407-20261118`:
+- all 1,524 inputs at 17 s: 1,376 against 1,376 solved, PAR-2 unchanged;
+- the 41 search-bound inputs at 120 s: memory-outs drop from 3 to 1;
+- posets microbenchmark: CPre 3.7x faster at dimension 10, 72x at dimension 128.
+
+Gates against master b951fbcc, all passing:
+- **G3:** 164/180 and 168/180, unchanged (first attempt refused by a leftover scope, logged; rerun passed);
+- **G4:** pass;
+- **G5:** pass, 1,524 pairs.
+
+Posets is pinned at main a4387cb7 (posets #71), the same tree that was measured.
+
+**Not merged: persistence blocks for theta.** Branch `theta-persistence` builds sibling
+`FG c_1 | ... | FG c_m` disjuncts in closure-recurrence as one block, with a shared round-robin
+counter and a single commit, the dual of a recurrence block. The language is unchanged (Spot
+equivalence tests). It removes the subset blowup on `ltl2dba_theta`: in the formula-unreal frame
+it decides n=13 in 5.5 s and n=17 in 44 s, where master gave up. The rank vectors now have
+supports of 11-16 states instead of binomially many. But none of the corpus theta inputs
+(n >= 25) is decided in 120 s, even with the arm alone.
+
+At 17 s on all 1,524 inputs it solves 1,369 against 1,376, PAR-2 6047.3 against 5811.0 s. It
+loses the six `ltl2dba_C2_unreal` inputs (and Morning2_1cf58fc1, which master solves at 15.0 s).
+C2's negated objective also contains `FG ¬r_i` disjunctions; with the block, the construction
+still succeeds (233 states), but the K-bounded search no longer finishes at K=2 and is still
+at K=14 after 30 s. The encoding keeps the language but costs the bounded game far more.
+A lead for later, not a merge candidate.
+
 ## 2026-11-18: A faster lazy KD intersection does not move the backward search (#407)
 
 Archive `cpre407-20261118` (release `evidence-2026-11-18-cpre407`). Frame-pointer
