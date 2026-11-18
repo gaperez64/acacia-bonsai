@@ -65,13 +65,14 @@ void show_help (const char* program_name) {
       << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] "
          "game backend for real arms\n"
       << "  --real-provider VAL      use "
-         "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager] automaton "
+         "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager|closure-recurrence] automaton "
          "provider (default frozen-graph)\n"
+      << "  --automaton-provider VAL alias for --real-provider\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
          "requires frozen-graph\n"
       << "  --weakening VAL          [basic|off] (default basic)\n"
       << "  --candidate-mode VAL     [only|fallback] on candidate resource limits (default "
-      << acacia::candidate_mode_name (acacia::candidate_mode::only) << ")\n"
+      << ACACIA_DEFAULT_CANDIDATE_MODE << ")\n"
       << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] "
          "game backend for unreal arms\n"
       << "  --arms LIST       run exactly the comma-separated portfolio arms\n"
@@ -85,6 +86,8 @@ void show_help (const char* program_name) {
       << "                    provider options apply to arms without an explicit provider\n"
       << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, "
          "decision only\n"
+      << "                    closure-recurrence: real:small:backward or spot-guarded-sparse\n"
+      << "                    (real:small/any or unreal:formula), decision only\n"
       << "                    both:obligation:spot: syntactic obligations, "
          "trusted Spot synthesis;\n"
       << "                    membership follows the build default; starts only when eligible;\n"
@@ -129,10 +132,11 @@ void show_help (const char* program_name) {
       << "                    when given, replaces the build default entirely (implicit level high)\n"
       << "                    comma-separated LEVEL and ARM=LEVEL entries; one bare level sets\n"
       << "                    the default; arm overrides win, with the last override used\n"
-      << "                    overrides apply only to translation-based providers (frozen-graph)\n"
+      << "                    overrides apply only to translating arms (frozen-graph, and\n"
+      << "                    closure-recurrence with --candidate-mode fallback)\n"
       << "                    ARM must match a selected translation arm exactly; :provider may\n"
       << "                    be omitted only if unique; if given, it matches the effective provider\n"
-      << "                    build overrides without an active frozen-graph arm are ignored;\n"
+      << "                    build overrides without an active translating arm are ignored;\n"
       << "                    runtime overrides for inactive or unsupported arms are errors\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
@@ -245,7 +249,7 @@ void process_arg_provider (const std::string& arg, acacia::automaton_provider& p
   if (not parsed)
     error (EXIT_CODE_ERROR,
            "Error: unexpected value %s for --%s; expected frozen-graph, spot-lazy or spot-eager, "
-           "closure-buchi or closure-buchi-eager.\n",
+           "closure-buchi, closure-buchi-eager or closure-recurrence.\n",
            arg.c_str (), option);
   provider = *parsed;
 #if !ACACIA_SPOT_GUARDED_BACKEND
@@ -466,6 +470,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"obligation-memory-share", required_argument, nullptr, OPT_OBLIGATION_MEMORY_SHARE},
       {"parity-memory-share", required_argument, nullptr, OPT_PARITY_MEMORY_SHARE},
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
+      {"automaton-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
       {"weakening", required_argument, nullptr, OPT_WEAKENING},
@@ -741,6 +746,11 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   if (build_default_arms && (not retval.tlsf_specified || retval.synth_fname)) {
+    // Recurrence is decision-only; keep the default arm's existing synthesis route.
+    if (retval.synth_fname)
+      for (auto& arm : *retval.arms)
+        if (arm.legacy && arm.legacy->provider == acacia::automaton_provider::closure_recurrence)
+          arm.legacy->provider = acacia::automaton_provider::frozen_graph;
     const bool needed_real = std::ranges::any_of (
         *retval.arms, [] (const auto& arm) { return !arm.unreal || arm.both; });
     const bool needed_unreal = std::ranges::any_of (
@@ -794,14 +804,17 @@ arg_parse_result arg_parser (int argc, char** argv) {
           retval.arms->emplace_back (true, retval.primary_translation_pref, strategy,
                                      retval.unreal_backend);
     }
+    const auto decision_only = [] (acacia::automaton_provider provider) {
+      return acacia::is_closure_provider (provider) ||
+             provider == acacia::automaton_provider::closure_recurrence;
+    };
     const bool closure =
-        acacia::is_closure_provider (retval.real_provider) ||
-        acacia::is_closure_provider (retval.unreal_provider) ||
-        (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-           return arm.legacy && acacia::is_closure_provider (arm.legacy->provider);
+        decision_only (retval.real_provider) || decision_only (retval.unreal_provider) ||
+        (retval.arms && std::ranges::any_of (*retval.arms, [&] (const auto& arm) {
+           return arm.legacy && decision_only (arm.legacy->provider);
          }));
     if (closure)
-      error (EXIT_CODE_ERROR, "Error: closure-buchi does not support controller synthesis.\n");
+      error (EXIT_CODE_ERROR, "Error: a closure provider does not support controller synthesis.\n");
     if (retval.arms.has_value ()) {
       bool kept_real_arm = false;
       std::erase_if (*retval.arms, [&kept_real_arm] (const portfolio_arm& arm) {
@@ -853,7 +866,17 @@ arg_parse_result arg_parser (int argc, char** argv) {
       legacy.provider = arm.unreal ? retval.unreal_provider : retval.real_provider;
     process_arg_provider (acacia::automaton_provider_name (legacy.provider), legacy.provider,
                           "arms");
-    if (legacy.provider != acacia::automaton_provider::frozen_graph) {
+    if (legacy.provider == acacia::automaton_provider::closure_recurrence) {
+      const bool backward = !arm.unreal && legacy.translation_pref == spot::postprocessor::Small &&
+                            legacy.backend == acacia::game_backend::backward;
+      const bool sparse = legacy.backend == acacia::game_backend::spot_guarded_sparse &&
+                          (!arm.unreal || legacy.unreal_x == UNREAL_X_FORMULA);
+      if ((!backward && !sparse) || retval.synth_fname)
+        error (EXIT_CODE_ERROR,
+               "Error: closure-recurrence requires real:small:backward or spot-guarded-sparse "
+               "(real or unreal:formula), decision only.\n");
+    }
+    else if (legacy.provider != acacia::automaton_provider::frozen_graph) {
       if (arm.unreal && legacy.unreal_x == UNREAL_X_AUTOMATON)
         error (EXIT_CODE_ERROR,
                "Error: unsupported configuration: the automaton-unreal route must remain eager; "
@@ -918,11 +941,15 @@ arg_parse_result arg_parser (int argc, char** argv) {
   for (auto& arm : *retval.arms)
     if (arm.legacy)
       arm.legacy->translation_effort = retval.translation_effort;
+  const auto translates = [&] (const auto& legacy) {
+    return legacy.provider == acacia::automaton_provider::frozen_graph ||
+           (legacy.provider == acacia::automaton_provider::closure_recurrence &&
+            retval.candidate == acacia::candidate_mode::fallback);
+  };
   for (const auto& [name, effort] : effort_overrides) {
     portfolio_arm* match = nullptr;
     for (auto& arm : *retval.arms) {
-      if (!arm.legacy || (build_default_effort &&
-                          arm.legacy->provider != acacia::automaton_provider::frozen_graph))
+      if (!arm.legacy || (build_default_effort && !translates (*arm.legacy)))
         continue;
       const auto& legacy = *arm.legacy;
       const std::string base = std::string (arm.unreal ? "unreal:" : "real:") +
@@ -942,7 +969,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       error (EXIT_CODE_ERROR, "Error: unknown translation arm '%s' in %s.\n", name.c_str (),
              effort_option);
     }
-    if (match->legacy->provider != acacia::automaton_provider::frozen_graph)
+    if (!translates (*match->legacy))
       error (EXIT_CODE_ERROR,
              "Error: arm '%s' in %s uses provider '%s', which does not use "
              "effort-aware translation.\n",

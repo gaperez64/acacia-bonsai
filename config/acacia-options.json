@@ -76,10 +76,27 @@
       "meson": "acacia_default_translation_effort",
       "type": "string",
       "default": "high",
-      "description": "Default translation effort in --translation-effort syntax; overrides without an active frozen-graph arm are ignored; runtime replaces it entirely",
+      "description": "Default translation effort in --translation-effort syntax; overrides without an active translating arm are ignored; runtime replaces it entirely",
       "macros": [
         {
           "name": "ACACIA_DEFAULT_TRANSLATION_EFFORT",
+          "emit": "always",
+          "encoding": "c_string"
+        }
+      ]
+    },
+    "default_candidate_mode": {
+      "meson": "acacia_default_candidate_mode",
+      "type": "combo",
+      "default": "only",
+      "choices": [
+        "only",
+        "fallback"
+      ],
+      "description": "Default candidate resource-limit mode; --candidate-mode overrides it",
+      "macros": [
+        {
+          "name": "ACACIA_DEFAULT_CANDIDATE_MODE",
           "emit": "always",
           "encoding": "c_string"
         }

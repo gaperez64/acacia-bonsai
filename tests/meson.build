@@ -214,6 +214,16 @@ closure_buchi_provider_test = executable (
 test ('closure_buchi_provider_test', closure_buchi_provider_test,
       suite : ['unit', 'closure-buchi'])
 
+closure_recurrence_provider_test = executable (
+  'closure-recurrence-provider-test', 'closure_recurrence_provider_test.cc',
+  include_directories : inc, link_with : closure_buchi_provider_lib,
+  dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('closure-recurrence-provider', closure_recurrence_provider_test,
+      suite : ['unit', 'closure-buchi'])
+test ('closure-recurrence-cli', py,
+      args : [files ('check-closure-recurrence.py'), ab_exe, meson.current_source_dir (),
+              get_option ('acacia_spot_guarded_backend').to_string ()],
+      suite : ['unit', 'closure-buchi'], depends : ab_exe, timeout : 60)
 # Keep replay/integration tests on the production library. A distinct namespace
 # prevents cross-linking; this dependency keeps the reference flag on both TUs.
 closure_buchi_reference_args = ['-DACACIA_CLOSURE_BUCHI_REFERENCE=1']
@@ -535,7 +545,7 @@ test ('game-backend-integration', game_backend_cli,
       args : [game_backend_integration,
               'true', 'true', 'true',
               (compiler_profile == 'debug').to_string (),
-              'only',
+              get_option ('acacia_default_candidate_mode'),
               '200000',
               'false'],
       suite : ['unit', 'game-backend'], depends : [game_backend_integration])
@@ -548,7 +558,7 @@ test ('game-backend-cli',
               get_option ('acacia_spot_guarded_backend').to_string (),
               get_option ('acacia_spot_lazy_provider').to_string (),
               (compiler_profile == 'debug').to_string (),
-              'only',
+              get_option ('acacia_default_candidate_mode'),
               '200000'],
       suite : ['unit', 'game-backend'],
       depends : [ab_exe])

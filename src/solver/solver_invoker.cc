@@ -9,6 +9,7 @@
 #include "solver/controller_check.hh"
 #include "solver/controller_writer.hh"
 #include "solver/create_automaton.hh"
+#include "solver/closure_recurrence_provider.hh"
 #include "solver/degenerate_io.hh"
 #include "solver/diagnostics.hh"
 #include "solver/forced_output_contradiction.hh"
@@ -313,6 +314,7 @@ namespace {
       const acacia::game_backend backend;
       const acacia::automaton_provider provider;
       const acacia::candidate_mode candidate;
+      const std::size_t worker_count;
       const bool equivariance;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
@@ -336,6 +338,7 @@ namespace {
                    spot::postprocessor::optimization_level translation_effort,
                    SPOT_FAST_T spot_fast, acacia::game_backend backend,
                    acacia::automaton_provider provider, acacia::candidate_mode candidate,
+                   std::size_t worker_count,
                    bool equivariance, const std::optional<std::string>& synth_fname,
                    controller_conversion conversion,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints,
@@ -354,6 +357,7 @@ namespace {
           backend {backend},
           provider {provider},
           candidate {candidate},
+          worker_count {worker_count},
           equivariance {equivariance},
           synth_fname {synth_fname},
           conversion {conversion},
@@ -507,8 +511,78 @@ namespace {
           acacia::diagnostics::snapshot ("support-before-translation");
         }
         auto effective_backend = backend;
+        spot::twa_graph_ptr aut;
+        const bool recurrence = provider == acacia::automaton_provider::closure_recurrence;
+        if (recurrence) {
+          acacia::spot_records::route ("closure-recurrence",
+                                       acacia::game_backend_name (effective_backend));
+          acacia::legacy_phase constructing ("closure-recurrence");
+          acacia::legacy_metric ("provider", "closure-recurrence");
+          acacia::closure_recurrence::Counters counts;
+          acacia::closure_recurrence::Options options;
+          options.max_states = acacia::diagnostics::env_size (
+              "ACACIA_SPOT_MAX_PROVIDER_STATES", options.max_states, true);
+          options.max_bytes = acacia::diagnostics::env_size (
+              "ACACIA_SPOT_MAX_PROVIDER_BYTES", acacia::obligation::rss_share (worker_count), true);
+          options.hooks = std::make_shared<acacia::closure_buchi::Hooks> ();
+          // Retained estimates include rows/caches and graph entries. RSS also
+          // covers BDD storage, vector capacity and allocator overhead. Sample
+          // every 1024 checkpoints, starting before normalization.
+          options.hooks->memory_exhausted = [limit = options.max_bytes, checks = 0u] () mutable {
+            return checks++ % 1024 == 0 && acacia::obligation::resident_bytes (getpid ()) > limit;
+          };
+          acacia::legacy_count ("max_provider_bytes", options.max_bytes);
+          const auto built = acacia::closure_recurrence::build (spot_formula, dict, options, &counts);
+          acacia::legacy_count ("branches", counts.branches);
+          acacia::legacy_count ("recurrence_blocks", counts.blocks);
+          acacia::legacy_count ("watches", counts.watches);
+          acacia::legacy_count ("states", counts.states);
+          acacia::legacy_count ("edges", counts.edges);
+          acacia::legacy_count ("construction_ns", counts.construction_ns);
+          if (const auto* graph = std::get_if<spot::twa_graph_ptr> (&built)) {
+            aut = *graph;
+            acacia::legacy_metric ("construction_result", "used");
+            acacia::spot_records::put ("construction_result", "used");
+          } else {
+            const auto failure = std::get<acacia::closure_recurrence::Failure> (built);
+            acacia::legacy_count ("failure_kind", static_cast<unsigned> (failure.kind));
+            using F = acacia::closure_recurrence::FailureKind;
+            const char* reason = "error";
+            switch (failure.kind) {
+              case F::unsupported_operator: reason = "unsupported_operator"; break;
+              case F::normalization_limit:
+              case F::branch_limit:
+              case F::guard_limit:
+              case F::state_limit:
+              case F::row_limit:
+              case F::memory_limit: reason = "resource"; break;
+              case F::cancelled: reason = "cancelled"; break;
+              default: break;
+            }
+            const bool inapplicable = failure.kind == F::unsupported_operator;
+            if (inapplicable)
+              acacia::worker_decline (reason);
+            else
+              acacia::worker_stopped (reason);
+            const bool fallback = candidate == acacia::candidate_mode::fallback;
+            acacia::legacy_metric ("construction_result", fallback ? "fallback" : "unknown");
+            acacia::spot_records::put ("construction_result", fallback ? "fallback" : "unknown");
+            std::cerr << "closure-recurrence UNKNOWN: construction failure="
+                      << static_cast<unsigned> (failure.kind)
+                      << (fallback ? "; fallback provider=frozen-graph\n" : "\n");
+            constructing.finish (reason, !inapplicable);
+            if (!fallback)
+              return acacia::diagnostics::finish (false, "closure-recurrence-inconclusive");
+            acacia::spot_records::route ("frozen_fallback",
+                                         acacia::game_backend_name (effective_backend));
+            acacia::spot_records::put (
+                "fallback", std::string ("frozen-graph:") + acacia::game_backend_name (effective_backend));
+            acacia::spot_records::phase ("fallback-translation");
+          }
+        }
+        const bool fallback_translation = !aut && provider != acacia::automaton_provider::frozen_graph;
 #if ACACIA_COMPILE_DEMAND_PROVIDER
-        if (provider != acacia::automaton_provider::frozen_graph) {
+        if (!recurrence && provider != acacia::automaton_provider::frozen_graph) {
           assert ((!check_unreal || *check_unreal == UNREAL_X_FORMULA) && !synth_fname);
           // This is the EXACT spot::formula the eager worker passes below to
           // create_automaton(). The lazy branch performs no further adaptation.
@@ -545,15 +619,17 @@ namespace {
           acacia::diagnostics::set_support_backend ("backward");
         }
 #endif
-        const auto fallback_started = provider != acacia::automaton_provider::frozen_graph
-                                          ? std::chrono::steady_clock::now ()
-                                          : std::chrono::steady_clock::time_point {};
-        spot::translator trans (dict, &extra_options);
-        if (translation_effort != spot::postprocessor::High)
-          trans.set_level (translation_effort);
-        acacia::translation::validate_options (extra_options);
-        spot::twa_graph_ptr aut;
-        {
+        // Both materialized providers share the same preprocessing and game entry point.
+        const char* graph_provider = aut ? "closure-recurrence" : "frozen-graph";
+        acacia::legacy_metric ("graph_provider", graph_provider);
+        acacia::spot_records::put ("provider", graph_provider);
+        const auto fallback_started = fallback_translation ? std::chrono::steady_clock::now ()
+                                                          : std::chrono::steady_clock::time_point {};
+        if (!aut) {
+          spot::translator trans (dict, &extra_options);
+          if (translation_effort != spot::postprocessor::High)
+            trans.set_level (translation_effort);
+          acacia::translation::validate_options (extra_options);
           ACACIA_DIAG_SCOPED_TIMER (translation_ms);
           const acacia::translation_identity identity {
               input_aps, output_aps, translation_pref_name (translation_pref),
@@ -562,7 +638,7 @@ namespace {
               check_unreal && *check_unreal == UNREAL_X_AUTOMATON};
           aut = translate_with_diagnostics (spot_formula, trans, translation_pref, &identity);
         }
-        if (provider != acacia::automaton_provider::frozen_graph)
+        if (fallback_translation)
           std::cerr << acacia::automaton_provider_name (provider) << " fallback translation_ms="
                     << std::chrono::duration<double, std::milli> (
                            std::chrono::steady_clock::now () - fallback_started)
@@ -761,7 +837,7 @@ namespace {
         });
         verb_do (4, dict->dump (utils::vout));
 
-        if (provider != acacia::automaton_provider::frozen_graph)
+        if (fallback_translation)
           std::cerr << acacia::automaton_provider_name (provider) << " fallback rebuild_ms="
                     << std::chrono::duration<double, std::milli> (
                            std::chrono::steady_clock::now () - fallback_started)
@@ -1034,13 +1110,20 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               const specification_metadata& metadata, acacia::automaton_provider provider,
               acacia::candidate_mode candidate, bool equivariance, uint64_t diagnostic_deadline_ns,
               const std::string& diagnostic_source_sha256, weakening_mode weakening,
-              acacia::obligation::control* obligation_eligibility) {
+              acacia::obligation::control* obligation_eligibility, std::size_t worker_count) {
   // Protect internal callers as well as the CLI synthesis route.
   if (synth_fname.has_value ()) {
     backend = acacia::synthesis_backend (backend, true);
     provider = acacia::synthesis_provider (provider, true);
   }
-  if (provider != acacia::automaton_provider::frozen_graph and
+  if (provider == acacia::automaton_provider::closure_recurrence &&
+      !((!check_unreal && backend == acacia::game_backend::backward &&
+         translation_pref == spot::postprocessor::Small) ||
+        (backend == acacia::game_backend::spot_guarded_sparse &&
+         (!check_unreal || *check_unreal == UNREAL_X_FORMULA))))
+    std::abort ();
+  if (provider != acacia::automaton_provider::frozen_graph &&
+      provider != acacia::automaton_provider::closure_recurrence and
       ((check_unreal && *check_unreal != UNREAL_X_FORMULA) or
        backend != (acacia::is_closure_provider (provider)
                        ? acacia::game_backend::spot_guarded_sparse
@@ -1122,7 +1205,11 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   if (obligation_eligibility)
     acacia::obligation::publish_eligibility (obligation_eligibility, spot_formula);
 
-  if (!acacia::is_closure_provider (provider)) {
+  // closure-recurrence in fallback mode may use Spot anyway, so it keeps the
+  // cheap Spot checks that decide many inputs before any construction.
+  if (!acacia::is_closure_provider (provider) &&
+      (provider != acacia::automaton_provider::closure_recurrence ||
+       candidate == acacia::candidate_mode::fallback)) {
     acacia::legacy_phase bypass ("direct-checks");
     if (auto answer = try_degenerate_io (input_aps, output_aps, spot_formula, check_unreal,
                                          translation_pref, translation_effort, synth_fname,
@@ -1173,7 +1260,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (
       dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal, translation_pref,
-      translation_effort, spot_fast, backend, provider, candidate, equivariance, synth_fname,
+      translation_effort, spot_fast, backend, provider, candidate, worker_count, equivariance, synth_fname,
       conversion, indexed_family_hints,
       metadata.source_format + ";semantics=" + metadata.tlsf_semantics +
           ";target=" + metadata.tlsf_target + ";effective=" +

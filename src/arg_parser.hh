@@ -55,7 +55,8 @@ struct arg_parse_result {
     unsigned verbose_level = 0;
     acacia::automaton_provider real_provider = acacia::automaton_provider::frozen_graph;
     acacia::automaton_provider unreal_provider = acacia::automaton_provider::frozen_graph;
-    acacia::candidate_mode candidate = acacia::candidate_mode::only;
+    acacia::candidate_mode candidate =
+        *acacia::parse_candidate_mode (ACACIA_DEFAULT_CANDIDATE_MODE);
     weakening_mode weakening = weakening_mode::basic;
     bool obligation_explicit = false;
     acacia::obligation::memory_share obligation_memory_share =

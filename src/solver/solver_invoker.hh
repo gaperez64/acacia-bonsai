@@ -63,4 +63,5 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               bool equivariance = true, uint64_t diagnostic_deadline_ns = 0,
               const std::string& diagnostic_source_sha256 = {},
               weakening_mode weakening = weakening_mode::basic,
-              acacia::obligation::control* obligation_eligibility = nullptr);
+              acacia::obligation::control* obligation_eligibility = nullptr,
+              std::size_t worker_count = 1);

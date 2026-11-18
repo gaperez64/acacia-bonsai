@@ -296,7 +296,6 @@ namespace acacia::solver_detail {
                                                  spot_candidate_limits ()));
         };
         if (spot_records::active) {
-          spot_records::put ("provider", "frozen-graph");
           spot_records::put ("backend", acacia::game_backend_name (backend));
           spot_records::put ("k", std::to_string (k));
           spot_records::phase ("search");

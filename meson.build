@@ -89,6 +89,8 @@ translation_preference = translation_preferences[get_option ('acacia_translation
 build_conf.set ('ACACIA_TRANSLATION_PREF', translation_preference)
 build_conf.set_quoted ('ACACIA_DEFAULT_TRANSLATION_EFFORT',
                        get_option ('acacia_default_translation_effort'))
+build_conf.set_quoted ('ACACIA_DEFAULT_CANDIDATE_MODE',
+                       get_option ('acacia_default_candidate_mode'))
 build_conf.set ('ACACIA_BDD_MAX_INCREASE', get_option ('acacia_bdd_max_increase'))
 build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION',
                 get_option ('acacia_forced_output_contradiction') ? 1 : 0)

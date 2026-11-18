@@ -78,8 +78,12 @@ configurations used by the Docker wrappers; its first entry is also used by
 Python builds. Read the group instead of copying a preset name. The
 [configuration guide](docs/configuration.md) explains how to inspect presets,
 choose solver workers at runtime, and set translation effort.
+The first two presets use `closure-recurrence` for their formula-unrealizability
+arm, with `fallback` candidate mode and `low` effort for fallback translation.
+`--candidate-mode only` overrides that build default.
+Controller synthesis keeps that arm's `frozen-graph` provider.
 
-The four slots offer the unchanged six-arm default, its eight-arm variant
+The four slots offer the six-arm default, its eight-arm variant
 with both forward workers, the historical backward solver, and the previous
 six-arm GR(1) portfolio. The eight-arm option keeps the default's other
 settings. Historical presets outside the group remain available by name.

@@ -165,13 +165,15 @@ def test_first_shipping_preset_replaces_both_forward_arms_with_both_parity_arms(
     baseline = module.normalize_preset(options, presets, previous)
     candidate = module.normalize_preset(options, presets, name)
     assert candidate["default_arms"].split(",") == [
-        arm for arm in baseline["default_arms"].split(",")
+        arm + ":closure-recurrence" if arm == "unreal:formula:spot-guarded-sparse" else arm
+        for arm in baseline["default_arms"].split(",")
         if arm not in {"real:small:forward", "unreal:automaton:forward"}
     ] + ["both:parity:spot", "both:parity:oxidd"]
     assert len(candidate["default_arms"].split(",")) == 6
     for key in baseline:
         if key not in {
-            "_preset", "preset", "default_arms", "default_translation_effort", "vector_downset"
+            "_preset", "preset", "default_arms", "default_translation_effort",
+            "default_candidate_mode", "vector_downset"
         }:
             assert candidate[key] == baseline[key], key
     # The parity portfolios use lazy KD; the historical GR(1) portfolio keeps rank buckets.
@@ -213,6 +215,19 @@ def test_parity_shipping_presets_share_default_translation_effort():
     assert ("#ifndef ACACIA_DEFAULT_TRANSLATION_EFFORT\n"
             "# define ACACIA_DEFAULT_TRANSLATION_EFFORT @ACACIA_DEFAULT_TRANSLATION_EFFORT@\n"
             "#endif" in template)
+
+
+def test_only_parity_shipping_presets_default_to_candidate_fallback():
+    module = load_module()
+    options, presets = module.load_registry()
+    assert options["options"]["default_candidate_mode"]["default"] == "only"
+    # The first two docker_default presets: six arms, and the same plus forward arms.
+    parity = set(presets["groups"]["docker_default"][:2])
+    for name in presets["presets"]:
+        values = module.normalize_preset(options, presets, name)
+        expected = "fallback" if name in parity else "only"
+        assert values["default_candidate_mode"] == expected, name
+        assert f"-Dacacia_default_candidate_mode={expected}" in module.meson_args(options, values)
 
 
 def test_docker_launcher_uses_registry_group_without_python():
@@ -789,6 +804,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     values.update({
         "translation_pref": "any",
         "default_translation_effort": "medium,unreal:formula:backward=low",
+        "default_candidate_mode": "fallback",
         "simd_width": "compatible",
         "enable_diagnostics": True,
         "default_arms": "real:identity:backward,unreal:identity:forward",
@@ -797,6 +813,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
     expected = [
         "-DACACIA_TRANSLATION_PREF=spot::postprocessor::Any",
         r'-DACACIA_DEFAULT_TRANSLATION_EFFORT=\"medium,unreal:formula:backward=low\"',
+        r'-DACACIA_DEFAULT_CANDIDATE_MODE=\"fallback\"',
         "-DACACIA_BDD_MAX_INCREASE=4194304",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",
         "-DPOSETS_SIMD_WIDTH=0",

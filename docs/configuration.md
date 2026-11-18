@@ -36,6 +36,15 @@ Use `meson-args` to translate a preset into build options, as in the
 changing compiler, compile profile, or native file. The build wrappers reject
 directories whose recorded build identity no longer matches.
 
+The first two `docker_default` presets use
+`unreal:formula:spot-guarded-sparse:closure-recurrence`, with candidate mode
+`fallback` and `low` effort for fallback translation through `frozen-graph`.
+They set `acacia_default_candidate_mode=fallback`; the option's general default
+is `only`. `--candidate-mode only|fallback` overrides the build default globally.
+Other arms, translation efforts and presets are unchanged. During controller
+synthesis (`-s`), the default formula arm retains its `frozen-graph` provider.
+Explicit closure-provider selections remain decision-only.
+
 ## Compile profiles
 
 | Profile | Settings | Use |
@@ -69,8 +78,15 @@ The Meson option `acacia_default_translation_effort` uses the same syntax
 for a build default. A runtime value replaces that default entirely; arms
 without an override then use `high` unless a bare level sets another default.
 
-Overrides apply only to selected arms using the `frozen-graph` provider,
-which translates the whole automaton before search. A runtime override for
+Overrides apply to selected arms using the `frozen-graph` provider and to
+`closure-recurrence` arms in `--candidate-mode fallback`, where effort controls
+the fallback translation. A runtime override for
 an inactive arm or unsupported provider is an error. Build-default overrides
-without an active `frozen-graph` arm are ignored. Add `:provider` to an arm
+without an active translating arm are ignored. Add `:provider` to an arm
 name if it would otherwise match more than one selected worker.
+
+The `closure-recurrence` construction uses the existing equal worker memory
+share: half the smaller of the scope/address-space limit and 8 GiB, divided
+by the selected worker count. `ACACIA_SPOT_MAX_PROVIDER_BYTES` overrides this
+budget in bytes (zero forces failure). Both retained storage estimates and
+sampled worker RSS enforce it, including BDD storage and allocator overhead.

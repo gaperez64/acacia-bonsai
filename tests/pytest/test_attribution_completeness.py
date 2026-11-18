@@ -453,11 +453,11 @@ def test_shipped_parity_default_inventories(slot):
         flags="", preset=preset))
     expected = [
         dict(kind="legacy", requested_polarity=polarity, translation="small",
-             transform=transform, provider="frozen-graph", requested_backend=backend,
+             transform=transform, provider=provider, requested_backend=backend,
              r_prepass=True, equivariance=True)
-        for polarity, transform, backend in [
-            ("REAL", "real", "backward"),
-            ("UNREAL", "formula", "spot-guarded-sparse"),
+        for polarity, transform, backend, provider in [
+            ("REAL", "real", "backward", "frozen-graph"),
+            ("UNREAL", "formula", "spot-guarded-sparse", "closure-recurrence"),
         ]
     ]
     expected += [dict(kind="both:gr1-real-lift:oxidd", requested_backend="oxidd",

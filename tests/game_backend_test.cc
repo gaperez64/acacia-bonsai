@@ -46,7 +46,8 @@ int main () {
     return 1;
 
   for (auto provider : {automaton_provider::frozen_graph, automaton_provider::spot_lazy, automaton_provider::spot_eager,
-                        automaton_provider::closure_buchi, automaton_provider::closure_buchi_eager}) {
+                        automaton_provider::closure_buchi, automaton_provider::closure_buchi_eager,
+                        automaton_provider::closure_recurrence}) {
     if (acacia::parse_automaton_provider (acacia::automaton_provider_name (provider)) != provider)
       return 1;
     if (acacia::synthesis_provider (provider, true) != automaton_provider::frozen_graph)

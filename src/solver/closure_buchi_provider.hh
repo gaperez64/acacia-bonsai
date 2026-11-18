@@ -39,11 +39,13 @@ namespace acacia::closure_buchi {
   using Result = std::variant<T, Failure>;
 
   enum class FaultPoint { branch, guard, interning, publication };
-  // Optional per-provider test hooks. Changing the hook permits a failed row
+  // Optional per-provider resource and test hooks. Changing a hook permits a failed row
   // to be retried; neither failures nor partial rows are cached.
   struct Hooks {
       std::function<bool ()> cancelled;
       std::function<bool (FaultPoint)> fail;
+      // Optional worker-wide check, including BDD tables and allocator overhead.
+      std::function<bool ()> memory_exhausted;
   };
 #ifdef ACACIA_CLOSURE_BUCHI_REFERENCE
   // enumerative is the reference expansion: a pure Boolean Or still forks one
