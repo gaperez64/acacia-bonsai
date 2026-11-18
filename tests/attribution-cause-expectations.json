@@ -3033,7 +3033,8 @@
   },
   "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 6": {
     "cause": "FailureKind::normalization_limit",
-    "telemetry": "STOPPED/resource"
+    "telemetry": "STOPPED/resource",
+    "note": "Moved to shared node allocation; also bounds synthetic persistence modes."
   },
   "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 7": {
     "cause": "FailureKind::unsupported_operator",

@@ -91,6 +91,14 @@ namespace {
     return F::And ({F::Equiv (F::And (fair), F::G (F::F (g))), F::G (F::And (exclusive))});
   }
 
+  F theta (unsigned n) {
+    std::vector<F> fair;
+    for (unsigned i = 0; i < n; ++i)
+      fair.push_back (F::G (F::F (F::ap ("p" + std::to_string (i)))));
+    return F::Equiv (F::Not (F::Implies (F::And (fair), parse ("G(q -> F r)"))),
+                     parse ("GF acc"));
+  }
+
   bool backward_win (F positive) {
     auto dict = spot::make_bdd_dict ();
     const auto i = dict->register_proposition (F::ap ("i"), &dict);
@@ -153,6 +161,18 @@ int main () {
                              "G F p",
                              "G(F p & F q)",
                              "G F p & G F q",
+                             "FG a",
+                             "FG a | FG b",
+                             "FG a | FG b | FG c",
+                             "FG(a & b) | FG(!a | b)",
+                             "(true U (false R a)) | (true U (false R b))",
+                             "G(!q | Fr) | FG!p0 | FG!p1 | FG!p2",
+                             "X(FG a | FG b)",
+                             "G(FG a | FG b)",
+                             "G(p -> X(FG a | FG b))",
+                             "(FG a | FG b) & GF !a & GF b",
+                             "(FG a | FG b) & F !b",
+                             "(FG a | FG b) | (GF a & GF b)",
                              "X(G F p & G F q)",
                              "(G F p & G F q) | G !p",
                              "F p & G F p",
@@ -177,6 +197,23 @@ int main () {
     require (counts.blocks == 1 && counts.watches == 3, "sibling block and separate eventuality");
     equivalent (parse ("X G(F p & F q)"), &counts);
     require (counts.blocks == 1 && counts.watches == 2, "block below X remains reachable");
+    equivalent (parse ("FG a | FG b | FG c"), &counts);
+    require (counts.blocks == 1 && counts.watches == 1, "persistence shares one commit watch");
+    equivalent (parse ("FG a"), &counts);
+    require (counts.blocks == 0 && counts.watches == 1, "lone persistence is unchanged");
+    equivalent (parse ("X(FG a | FG b)"), &counts);
+    require (counts.blocks == 1 && counts.watches == 1, "persistence below X remains reachable");
+    equivalent (parse ("(FG a | FG b) & GF !a & GF b"), &counts);
+    require (counts.blocks == 2 && counts.watches == 3, "persistence and recurrence watches coexist");
+    for (auto bad : {theta (3), F::Not (theta (3))})
+      equivalent (bad);
+    std::vector<F> persistent;
+    for (unsigned i = 0; i < 70; ++i)
+      persistent.push_back (F::F (F::G (F::ap ("p" + std::to_string (i)))));
+    auto persistence_graph = graph (F::Or (persistent), spot::make_bdd_dict (), &counts);
+    structure (persistence_graph);
+    require (counts.blocks == 1 && counts.watches == 1, "wide persistence has one watch");
+    require (persistence_graph->num_states () == 141, "two modes per index plus dead sink");
 
     for (unsigned n : {4, 6, 25}) {
       auto phi = c2 (n);

@@ -107,7 +107,14 @@ namespace acacia::closure_recurrence {
             std::vector<Formula> closure;
             std::unordered_map<Formula, ClosureId> ids;
             std::map<Formula, Formula> grouped;
+            std::map<Formula, std::vector<Formula>> persistence_groups;
             std::map<Formula, bdd> guards;
+            struct Persistence {
+                Formula condition;
+                ClosureId next, committed;
+                std::size_t watch_owner;
+            };
+            std::map<ClosureId, Persistence> persistence;
             struct Watch {
                 ClosureId obligation;
                 Formula event;
@@ -145,28 +152,74 @@ namespace acacia::closure_recurrence {
                     rest.push_back (Formula::R (Formula::ff (), Formula::And (members)));
                   result = Formula::And (rest);
                 }
+                else if (result.is (Op::Or)) {
+                  // The normalizer has lowered FG c to true U (false R c).
+                  // Factor sibling guesses into F(G c1 | ... | G cm), used as
+                  // an opaque block below; a lone FG keeps its usual expansion.
+                  std::vector<Formula> rest, members, conditions;
+                  for (auto c : result) {
+                    if (c.is (Op::U) && c[0].is_tt () && c[1].is (Op::R) &&
+                        c[1][0].is_ff () && c[1][1].is_boolean ()) {
+                      members.push_back (c[1]);
+                      conditions.push_back (c[1][1]);
+                    }
+                    else
+                      rest.push_back (c);
+                  }
+                  if (members.size () >= 2) {
+                    const auto block = Formula::U (Formula::tt (), Formula::Or (members));
+                    owner.retain (96 + conditions.size () * sizeof (Formula));
+                    persistence_groups.emplace (block, std::move (conditions));
+                    rest.push_back (block);
+                    result = Formula::Or (rest);
+                  }
+                }
               }
               owner.retain (96);
               grouped.emplace (f, result);
               return result;
             }
 
+            ClosureId node (Formula f) {
+              if (closure.size () >= owner.options.max_normalization_nodes)
+                fail (FailureKind::normalization_limit);
+              const auto id = static_cast<ClosureId> (closure.size ());
+              closure.push_back (f);
+              owner.retain (160);
+              return id;
+            }
+
             ClosureId intern_formula (Formula f) {
               owner.step ();
               if (auto p = ids.find (f); p != ids.end ())
                 return p->second;
-              if (closure.size () >= owner.options.max_normalization_nodes)
-                fail (FailureKind::normalization_limit);
-              const auto id = static_cast<ClosureId> (closure.size ());
+              const auto id = node (f);
               ids.emplace (f, id);
-              closure.push_back (f);
-              owner.retain (160);
               auto es = events (f);
               if (!es.empty ()) {
                 ++owner.stats.blocks;
                 blocks.insert (id);
                 for (auto e : es)
                   watches.push_back ({id, e});
+              }
+              else if (auto p = persistence_groups.find (f); p != persistence_groups.end ()) {
+                ++owner.stats.blocks;
+                watches.push_back ({id, {}});
+                const auto n = static_cast<ClosureId> (p->second.size ());
+                for (std::size_t i = 1; i < 2 * std::size_t (n); ++i) {
+                  owner.step ();
+                  node (f);
+                }
+                for (ClosureId w = 0; w < n; ++w) {
+                  owner.step ();
+                  const auto next = (w + 1) % n;
+                  persistence.emplace (id + w, Persistence {p->second[w], id + next, id + n + w, id});
+                  persistence.emplace (id + n + w,
+                                       Persistence {p->second[w], id + n + next, id + n + w, absent});
+                  blocks.insert (id + w);
+                  blocks.insert (id + n + w);
+                  owner.retain (2 * (128 + sizeof (Persistence)));
+                }
               }
               else {
                 if (f.is (Op::U))
@@ -177,12 +230,17 @@ namespace acacia::closure_recurrence {
               return id;
             }
 
+            std::size_t obligation (ClosureId id) const {
+              const auto p = persistence.find (id);
+              return p == persistence.end () ? id : p->second.watch_owner;
+            }
+
             Set can_pending (ClosureId id) {
               owner.step ();
               Set result;
               for (std::size_t i = 0; i < watches.size (); ++i) {
                 owner.step ();
-                if (watches[i].obligation == id)
+                if (watches[i].obligation == obligation (id))
                   insert (result, static_cast<ClosureId> (i));
               }
               if (!blocks.contains (id))
@@ -211,7 +269,7 @@ namespace acacia::closure_recurrence {
                     visit (ids.at (c));
                 reachable[id] = can_pending (id);
                 for (auto w : reachable[id])
-                  if (watches[w].obligation == id)
+                  if (watches[w].obligation == obligation (id))
                     insert (relevant[id], w);
                 if (!blocks.contains (id) && !closure[id].is (Op::X))
                   for (auto c : closure[id])
@@ -221,7 +279,8 @@ namespace acacia::closure_recurrence {
                     }
                 owner.retain ((reachable[id].size () + relevant[id].size ()) * sizeof (ClosureId));
               };
-              visit (0);
+              for (ClosureId id = 0; id < closure.size (); ++id)
+                visit (id);
             }
 
             bdd boolean (Formula f) {
@@ -329,8 +388,34 @@ namespace acacia::closure_recurrence {
                 const auto child = [&] (unsigned i) -> const Alternatives& {
                   return expand_formula (ids.at (f[i]));
                 };
-                const bool watched = watch < watches.size () && watches[watch].obligation == id;
-                if (blocks.contains (id)) {
+                const bool watched = watch < watches.size () &&
+                                     watches[watch].obligation == obligation (id);
+                if (auto p = persistence.find (id); p != persistence.end ()) {
+                  // L(block) = L(FG c1 | ... | FG cm). Waiting shares one
+                  // eventuality watch at every index; committed has no watch.
+                  // A waiting step may commit after consuming this letter, at
+                  // the updated index. Only committing discharges the watch.
+                  // If ci holds forever after t, wrapping eventually stops;
+                  // committing after the last wrap accepts. Conversely, an
+                  // accepting block run commits once and never wraps, advances
+                  // at most m-1 more times, then stays at j with bj = !cj false
+                  // forever. All commits from one waiting run share its index
+                  // and subsequent events until they die on a wrap. Canonical
+                  // IDs therefore give at most one waiting and one committed
+                  // obligation per index, not a subset of member guesses.
+                  const auto& s = p->second;
+                  const auto event = !boolean (s.condition);
+                  const bool waiting = s.watch_owner != absent;
+                  add (result, {{id}, waiting && watched}, !event);
+                  // A committed wrap targets a smaller ID; it is dead.
+                  if (waiting || s.next > id)
+                    add (result, {{s.next}, waiting && watched}, event);
+                  if (waiting) {
+                    add (result, {{s.committed}, false}, !event);
+                    add (result, {{persistence.at (s.next).committed}, false}, event);
+                  }
+                }
+                else if (blocks.contains (id)) {
                   if (watched) {
                     const auto event = boolean (watches[watch].event);
                     add (result, {{id}, false}, event);
