@@ -10,7 +10,7 @@ the [TACAS 2023 paper](https://arxiv.org/abs/2204.06079) explains the method.
 
 ## Build
 
-You need GCC with C++23 and C23 support, Spot 2.16 with development headers,
+You need GCC with C++23 and C23 support, Spot 2.16.3 with development headers,
 Meson 1.7 or newer, Ninja, pkg-config, Zsh, Flex, Bison, Cargo with Rust 1.91 or newer,
 and cbindgen 0.29.4. For Python, also install SWIG and Python development headers.
 The Python package requires Python 3.13 or newer.
