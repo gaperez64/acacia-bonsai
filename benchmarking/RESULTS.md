@@ -12,6 +12,28 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-18: Spot 2.16.3 fixes the obligation-synthesis bug and adds three solves (#375)
+
+Archive `spot2163-20261118` (release `evidence-2026-11-18-spot2163`). Spot 2.16.3 fixes
+the simplification that made `spot::obligation_synthesis` answer REALIZABLE for
+`G i -> G(i <-> XXX false)` (Spot issue #666). The #375 reproducer with
+`--arms both:obligation:spot` answers UNREALIZABLE on 2.16.3 (REALIZABLE on 2.16.0), and
+the `fuzz-portfolio` replay passes.
+
+Shipped preset, all 1,524 SYNTCOMP26 inputs at 17 s, 8G/no swap, serial; the same
+source (master b951fbcc, the 2.16.0 leg from `cpre407-20261118`) on each Spot:
+
+| Spot | Solved | PAR-2 (s) |
+|---|---:|---:|
+| 2.16.0 | 1376 | 5811.0 |
+| **2.16.3** | **1379** | **5743.4** |
+
+Gains: abcg_arbiter_pb_4 (9.4 s), load_balancer_unreal1_pb_6_4 (14.4 s) and
+full_arbiter_enc_pb_10 (17.0 s, at the cap). No losses and no verdict conflicts. G3, G4 and
+G5 pass against master. The installed Spot on the benchmarking machine stays at 2.16.0 so
+that frozen binaries keep their runtime. Binaries for this release are built against
+2.16.3 with an rpath.
+
 ## 2026-11-18: The cheaper lazy KD intersection ships; theta persistence blocks do not
 
 Archive `gates-cpre407-20261118` (release `evidence-2026-11-18-gates-cpre407`).
