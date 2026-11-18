@@ -12,6 +12,32 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-18: A faster lazy KD intersection does not move the backward search (#407)
+
+Archive `cpre407-20261118` (release `evidence-2026-11-18-cpre407`). Frame-pointer
+profiles of `real:small:backward` on four inputs where it searches at the 120 s cap
+(simple_arbiter_enc_pb_14, prioritized_arbiter_enc_pb_13, arbiter_on_inpchange_pb_6,
+robot_grid_pb_7_7) put 82-99% of the time in CPre's `lazy_kdtree_backed::intersect_with`
+and the domination checks of its inserts. The critical input picker and union copies do
+not appear, so #407 items 3 and 4 are dropped.
+
+Candidate for items 8/9: posets branch `intersect-contained-rhs` (5f1f3cc), which inserts
+each right-hand maximum already contained in the left side once and skips all its meets.
+It keeps the exact maximal set and runs CPre 3.7x faster at dimension 10 and 72x at
+dimension 128 on posets' microbenchmark. Shipped preset, 8G/no swap, serial, master
+b951fbcc against the candidate (51b89da1):
+
+| Run | Before | After |
+|---|---:|---:|
+| All 1,524 inputs, 17 s: solved / PAR-2 (s) | 1376 / 5811.0 | 1376 / 5810.8 |
+| 41 search-bound inputs, 120 s: solved / MEMOUT | 0 / 3 | 0 / 1 |
+
+No gains, losses or verdict conflicts, and the backward arm reaches the same highest K
+on all 41 inputs: within one K the search still needs far more than 120 s. Not admitted.
+About 20 of the 41 are unrealizable per SemML (round_robin_arbiter_unreal1 16,
+amba_case_study_unreal 2, load_balancer_unreal2 2), which the realizability arm cannot
+decide in any case.
+
 ## 2026-11-18: The formula-unreal arm builds its automaton directly (#407)
 
 Archive `ucw407-20261118` (release `evidence-2026-11-18-ucw407`). The shipped
