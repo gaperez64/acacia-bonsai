@@ -47,6 +47,27 @@ Exceptions produce stopped events through scope unwinding. SIGKILL cannot unwind
 the parent's shared-memory stage snapshot preserves its identity and entry time.
 A dropped snapshot remains missing evidence, never an algorithmic outcome.
 
+Native lift declines retain the short stage label in the lifecycle `reason`.
+An accompanying supplemental `event: "decline_detail"` carries the observer message
+(combined arms) or result's per-axis log (`real:param-lift:oxidd`) in `decline_detail`.
+Retained diagnostics also accompany successful lifts and resource stops; resource
+outcomes remain `route_stopped` lifecycle events.
+The text is bounded to 4607 bytes, JSON-escaped and split into atomic packets.
+Each packet has `worker`, `worker_pid`, monotonic `seq`, `mono_ns`, `dropped_records`,
+`detail_id` (the worker sequence before the log), `stage`, `route`, and byte
+`offset`/`total` in the unescaped UTF-8 text. Fragments participate in strict worker
+sequence validation without changing lifecycle classifications.
+Offsets begin at zero; contiguous fragments covering `total` form a complete log.
+`benchlib.load_phase_records` preserves the wire objects;
+`PhaseProcess.decline_details()` joins fragments and marks gaps as incomplete.
+Cross-run comparisons use `PhaseProcess.reassembled_events()` after raw delivery
+and sequence checks; packet boundaries and sequence-based `detail_id` values are
+transport metadata. Incomplete or reordered logs cannot establish equal work.
+The library log uses `axis[window]:side=reason(details); ...` (window/side optional),
+for example `n=insufficient_sizes`. Its own overflow marker is `[truncated]`.
+`lifting-report.py` retains raw logs and per-input axis/reason entries in JSON/TSV
+and emits a reason histogram, deduplicating repeated axis/reason pairs per input.
+
 Stages: `simplification`, `direct-checks`, `pre-pass`, `decomposition`, `subjob`,
 `subjob-summary`, `translation`, `translation-event-univ`, `translation-lowering`, `input-push`,
 `input-push-lowering`, `preprocessing`, `booleanization`, `io-preparation`,

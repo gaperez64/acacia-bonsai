@@ -10,6 +10,9 @@ import subprocess
 import sys
 import tempfile
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarking"))
+from benchlib import PhaseProcess, PhaseRecords  # noqa: E402
+
 
 def rows(directory):
     return [json.loads(line) for path in directory.glob("*.jsonl")
@@ -98,6 +101,34 @@ def main():
             assert accounting["phase_id"] == entry["stage_id"] and accounting["parent_phase_id"] == 0
             assert accounting["subjob"] == entry["subjob"] and accounting["run_id"] == entry["run_id"]
             assert metric["key"] == "states" and metric["value"] == "7"
+            detail_dir = root / f"{pipe}-details"
+            detail_dir.mkdir()
+            env["ACACIA_PHASE_RECORDS"] = str(detail_dir)
+            process = subprocess.run([str(binary)], input="d", text=True, env=env,
+                                     capture_output=True, timeout=3)
+            assert process.returncode == 0, process
+            details = rows(detail_dir)
+            groups = {}
+            for row in details:
+                if row.get("event") == "decline_detail":
+                    groups.setdefault(row["detail_id"], []).append(row)
+            joined = []
+            for packets in groups.values():
+                offset = 0
+                for packet in packets:
+                    assert packet["offset"] == offset, packets
+                    offset += len(packet["decline_detail"].encode())
+                assert offset == packets[0]["total"], packets
+                joined.append("".join(packet["decline_detail"] for packet in packets))
+            assert joined == ["x" * 4607, 'n[3]:R=probe_failure:"\\\n\t' + "é" * 400,
+                              "p" * 1558, "p" * 1558], joined
+            probes = [[row for row in details if row.get("worker_pid") == pid]
+                      for pid in (123, 123456)]
+            assert probes[0][1]["offset"] != probes[1][1]["offset"], probes
+            canonical = [PhaseRecords(detail_dir, (PhaseProcess("probe", tuple(probe), True, 0),))
+                         .canonical("", {"worker_pid", "seq", "mono_ns"}) for probe in probes]
+            assert canonical[0] == canonical[1], canonical
+            assert all(row.get("dropped_records", 0) == 0 for row in details), details
         directory = root / "full"
         directory.mkdir()
         env.pop("ACACIA_TEST_RECORD_DRAIN")

@@ -928,7 +928,7 @@ def completeness_audit_row(row, directory, expected_workers=None):
             continue
         stage_record = event in {'stage_entry', 'stage_completion', 'stage_stopped',
                                  'stage_metric', 'stage_censored'}
-        supplemental = stage_record or event.startswith('weakening_')
+        supplemental = stage_record or event.startswith('weakening_') or event == 'decline_detail'
         if supplemental and 'worker' not in record:
             record['worker'] = worker_indices.get(record.get('worker_pid'))
         pid, index = record.get("worker_pid"), record.get("worker")

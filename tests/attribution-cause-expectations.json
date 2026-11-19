@@ -1047,35 +1047,35 @@
     "cause": "FailureCause::error",
     "telemetry": "STOPPED/error"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"declaration ABI changed\" | 0": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"declaration_abi_changed\" | 0": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"declaration ABI changed\" | 1": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"declaration_abi_changed\" | 1": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"unproved encoding width\" | 0": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"encoding_width\" | 0": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"unproved encoding width\" | 1": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"encoding_width\" | 1": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"inconsistent coordinates\" | 0": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"inconsistent_coordinates\" | 0": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"inconsistent coordinates\" | 1": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"inconsistent_coordinates\" | 1": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"parameter does not index elements\" | 0": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"axis\" | \"parameter_not_indexed\" | 0": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"bus_schema\" | \"unproved large template\" | 0": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"bus_schema\" | reason | 0": {
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
@@ -1095,11 +1095,11 @@
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_window\" | \"fixed seed probe budget exhausted\" | 0": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_window\" | \"probe_budget_exhausted: fixed seed probe budget exhausted\" | 0": {
     "cause": "FailureCause::resource",
     "telemetry": "STOPPED/resource"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_window\" | \"fixed seed probe budget exhausted\" | 1": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_window\" | \"probe_budget_exhausted: fixed seed probe budget exhausted\" | 1": {
     "cause": "FailureCause::resource",
     "telemetry": "STOPPED/resource"
   },

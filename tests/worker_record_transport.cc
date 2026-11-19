@@ -164,6 +164,31 @@ int main () {
   acacia::worker_decline ("translation-acceptance-set-limit");
   if (reliable || command == 'f')
     drain ();
+  if (command == 'd') {
+    char detail[4608];
+    memset (detail, 'x', sizeof detail - 1);
+    detail[sizeof detail - 1] = 0;
+    acacia::worker_decline_detail (detail);
+    drain ();
+    char escaped[1024] = "n[3]:R=probe_failure:\"\\\n\t";
+    size_t used = strlen (escaped);
+    for (unsigned i = 0; i < 400; ++i) {
+      escaped[used++] = '\xc3';
+      escaped[used++] = '\xa9';
+    }
+    escaped[used] = 0;
+    acacia::worker_decline_detail (escaped);
+    drain ();
+    memset (detail, 'p', 1558);
+    detail[1558] = 0;
+    const auto actual_pid = record.pid;
+    for (const pid_t pid : {123, 123456}) {
+      record.pid = pid;
+      acacia::worker_decline_detail (detail);
+      drain ();
+    }
+    record.pid = actual_pid;
+  }
   acacia::worker_terminal (2);
   if (reliable || command == 'f')
     drain ();

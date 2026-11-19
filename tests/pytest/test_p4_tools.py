@@ -524,6 +524,47 @@ def test_reporting_requires_explicit_provenance(tmp_path):
         lifting.report([row], tmp_path, "synthetic")
 
 
+def test_lifting_axis_reasons_and_fragment_loss(tmp_path):
+    arm = lifting.NATIVE_ARM
+    row = observation("arbiter", "REALIZABLE")
+    message = ('no stable index axis: n=insufficient_sizes; '
+               'span[1]=encoding_width(stage=axis,cause=applicability):"\\\né"; '
+               'width=large_template(arity 5>4)(stage=bus_schema,cause=applicability)')
+    parts = [message[:40], message[40:83], message[83:]]
+
+    def packets(detail_id):
+        offset = 0
+        for part in parts:
+            yield {"event": "decline_detail", "worker_pid": 1, "detail_id": detail_id,
+                   "stage": "seed_window", "route": "seed_discovery", "offset": offset,
+                   "total": len(message.encode()), "decline_detail": part}
+            offset += len(part.encode())
+
+    logs = list(packets(1)) + list(packets(2))  # repeated terminal observer message
+    logs += list(packets(3))[1:]  # a lost initial fragment
+    logs += list(packets(4))[:1] + list(packets(4))[2:]  # a lost middle fragment
+    logs += list(packets(5))[:-1]  # a lost final fragment
+    phase_dir(tmp_path, row, [
+        {"arm": arm, "phase": "route_direct"}, *logs,
+        {"arm": arm, "phase": "record_summary", "dropped_records": 3}])
+    summary, detail = lifting.report([row], tmp_path, arm)
+    assert summary["decline_reasons"] == {
+        "insufficient_sizes": 1, "encoding_width": 1, "large_template": 1}
+    assert summary["incomplete_decline_details"] == 3
+    item, = detail
+    assert item["decline_details"][0]["decline_detail"] == message
+    assert [entry["axis"] for entry in item["decline_reasons"]] == ["n", "span[1]", "width"]
+    assert not item["records_complete"]
+    lifting.write_report(summary, detail, tmp_path / "report")
+    with (tmp_path / "report/lifting.tsv").open(newline="") as stream:
+        tsv, = csv.DictReader(stream, delimiter="\t")
+    assert json.loads(tsv["decline_reasons"]) == item["decline_reasons"]
+    assert json.loads(tsv["decline_details"]) == item["decline_details"]
+    markdown = (tmp_path / "report/lifting.md").read_text()
+    assert "- insufficient_sizes: 1" in markdown
+    assert "| arbiter | n | insufficient_sizes |" in markdown
+
+
 def test_manifest_join_checks_list_corpus_and_row_provenance(tmp_path):
     listing = tmp_path / "all.list"
     listing.write_text("a\n")

@@ -140,6 +140,12 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'user-facing option syntax or error help',
     ('src/arg_parser.cc', '                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\\n'):
         'user-facing option syntax',
+    **{('src/arg_parser.cc', message): 'native lifting arity option syntax or help'
+       for message in (
+           '  --lift-max-predicate-arity N\\n',
+           '                    the lift answers only REALIZABLE, certified by a region check\\n',
+           'lift-max-predicate-arity',
+           'Error: --lift-max-predicate-arity expects an integer in 1..2147483647.\\n')},
     ('src/arg_parser.cc', '  -I VAL            increment value for K, used when M < K\\n'):
         'user-facing option syntax or error help',
     ('src/arg_parser.cc', 'Error: invalid field count in --arms spec %s; expected polarity:transform:backend[:provider]; native forms are both:gr1:oxidd, real:gr1:oxidd, unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\\n'):
@@ -280,6 +286,8 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'included header, proof-side schema, or lift stage name',
     ('subprojects/tlsf-tools/src/lib/gr1_lift.cc', 'system'):
         'proof-side schema or proof diagnostic',
+    ('subprojects/tlsf-tools/src/lib/gr1_lift.cc', 'time_budget'):
+        'per-axis resource diagnostic',
     ('subprojects/tlsf-tools/src/lib/gr1_lift.cc', 'tlsf/gr1_lift.h'):
         'included header, proof-side schema, or lift stage name',
     ('subprojects/tlsf-tools/src/lib/gr1_oxidd.c', 'The all-zero state means fairness counter 0. At a state where fair_i holds the counter advances to (i+1) modulo the number of fairness assumptions. The uncontrollable outputs do not read the current controllable letter.'):

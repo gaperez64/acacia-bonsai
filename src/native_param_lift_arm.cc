@@ -63,6 +63,7 @@ namespace acacia {
     const uint64_t construction_started_ns = phase_clock (CLOCK_MONOTONIC);
 
     TlsfGr1LiftOptions options {};
+    options.max_predicate_arity = args.lift_max_predicate_arity;
     options.deadline_mono_ns = deadline_mono_ns;
     const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
     TlsfGr1LiftStats stats {};
@@ -106,8 +107,11 @@ namespace acacia {
       native_arm_diagnostic (arm, lift_error.stage, int (lift_status),
                              native_budget_message (lift_error.stage, lift_error.message, work),
                              native_failure (failure_status));
+      worker_decline_detail (lifted.value.decline_detail[0] ? lifted.value.decline_detail
+                                                          : lift_error.message);
       return EXIT_CODE_UNKNOWN;
     }
+    worker_decline_detail (lifted.value.decline_detail);
 
 # ifdef ACACIA_NATIVE_TEST_HOOKS
     native_lift_test_fault (lifted.value);

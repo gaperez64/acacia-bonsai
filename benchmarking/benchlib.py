@@ -857,6 +857,39 @@ class PhaseProcess:
         return frozenset(event.get("arm", "") for event in self.events
                          if event.get("phase") != "record_summary")
 
+    def reassembled_events(self) -> tuple:
+        """Replace detail fragments with one log at its first packet's position."""
+        groups = {}
+        for event in self.events:
+            if event.get("event") == "decline_detail":
+                groups.setdefault(event["detail_id"], []).append(event)
+        result = []
+        for event in self.events:
+            if event.get("event") != "decline_detail":
+                result.append(event)
+                continue
+            packets = groups.pop(event["detail_id"], None)
+            if packets is None:
+                continue
+            first = packets[0]
+            offset = 0
+            complete = True
+            for packet in packets:
+                complete &= packet["offset"] == offset and all(
+                    packet.get(key) == first.get(key) for key in
+                    ("total", "stage", "route", "worker", "worker_pid"))
+                offset = packet["offset"] + len(packet["decline_detail"].encode("utf-8"))
+            result.append({**{key: value for key, value in first.items()
+                              if key not in {"detail_id", "offset"}},
+                           "decline_detail": "".join(p["decline_detail"] for p in packets),
+                           "complete": complete and offset == first["total"]})
+        return tuple(result)
+
+    def decline_details(self) -> list[dict]:
+        """Join bounded decline-detail packets, retaining partial logs as incomplete."""
+        return [{key: event[key] for key in ("stage", "route", "decline_detail", "complete")}
+                for event in self.reassembled_events() if event.get("event") == "decline_detail"]
+
 
 @dataclass(frozen=True)
 class PhaseRecords:
@@ -898,7 +931,7 @@ class PhaseRecords:
 
         Native summary identity comes from the emitting PID file and the explicit
         arm. Parent annotations already carry the supervised PID. Raw records stay
-        unchanged so canonical comparisons still compare original wire content.
+        unchanged for transport validation before canonical comparisons reassemble logs.
         """
         workers = {}
         for process in self.processes:
@@ -917,17 +950,20 @@ class PhaseRecords:
     def canonical(self, arm: str, volatile=PHASE_VOLATILE_FIELDS) -> tuple:
         """Order-independent, time-free content of one arm's records.
 
-        Each process contributes its event sequence with volatile fields and
+        Each process contributes its reassembled event sequence with volatile fields and
         the drop counter removed; processes are sorted, because PIDs (and
         hence file names and order) differ between runs.
         """
         sequences = []
         for process in self.arm_processes(arm):
+            events = process.reassembled_events()
+            if any(e.get("event") == "decline_detail" and not e["complete"] for e in events):
+                raise ValueError(f"{self.directory}: {process.name}: incomplete decline_detail log")
             sequences.append(tuple(
                 json.dumps({key: value for key, value in event.items()
                             if key not in volatile and key != "dropped_records"},
                            sort_keys=True)
-                for event in process.events))
+                for event in events))
         return tuple(sorted(sequences))
 
 

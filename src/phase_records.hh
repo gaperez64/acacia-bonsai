@@ -618,6 +618,49 @@ namespace acacia {
       worker_event (*worker, "decline", worker->reason);
     }
   }
+  inline void worker_decline_detail (const char* detail) noexcept {
+    auto* worker = active_worker_record ();
+    if (!worker || !phase_records_enabled () || !detail || !*detail)
+      return;
+    // The native observer adds at most 512 bytes to its 4096-byte decline log.
+    const size_t total = strnlen (detail, 4607);
+    const auto id = worker->sequence;
+    size_t offset = 0;
+    while (offset < total) {
+      char line[phase_line_max];
+      const size_t cap = std::min (sizeof line, phase_record_process_state ().packet_bytes -
+                                                  offsetof (phase_packet, line));
+      const int prefix = snprintf (
+          line, cap,
+          "{\"event\":\"decline_detail\",\"worker\":%u,\"worker_pid\":%ld,\"seq\":%llu,"
+          "\"mono_ns\":%llu,\"dropped_records\":%llu,\"detail_id\":%llu,"
+          "\"stage\":\"%s\",\"route\":\"%s\",\"offset\":%zu,\"total\":%zu,\"decline_detail\":\"",
+          worker->index, long (worker->pid), ++worker->sequence,
+          (unsigned long long) phase_clock (CLOCK_MONOTONIC), worker->dropped, id,
+          worker->stage, worker->route, offset, total);
+      if (prefix < 0 || size_t (prefix) + 10 >= cap) {
+        phase_records_drop ();
+        return;
+      }
+      size_t used = size_t (prefix);
+      do {
+        const auto ch = static_cast<unsigned char> (detail[offset++]);
+        if (ch < 32)
+          used += size_t (snprintf (line + used, cap - used, "\\u%04x", ch));
+        else {
+          if (ch == '"' || ch == '\\')
+            line[used++] = '\\';
+          line[used++] = char (ch);
+        }
+        // Do not split a UTF-8 character across JSON packets.
+      } while (offset < total &&
+               (used + 10 < cap ||
+                (used + 4 < cap &&
+                 (static_cast<unsigned char> (detail[offset]) & 0xc0) == 0x80)));
+      memcpy (line + used, "\"}\n", 3);
+      phase_records_send (line, used + 3);
+    }
+  }
   inline void worker_stopped (const char* reason) noexcept {
     if (auto* worker = active_worker_record ()) {
       ++worker->stops;

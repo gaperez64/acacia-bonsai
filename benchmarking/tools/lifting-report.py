@@ -9,6 +9,7 @@ import csv
 import importlib.util
 import json
 import pathlib
+import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -55,6 +56,21 @@ def summarize_row(row, records, arm, *, single_arm_leg=False, seed_phases=SEED_P
             declines.append(f"budget_decline:{event.get('stage', '')}")
         elif phase.startswith("decline_") or "_decline_" in phase:
             declines.append(phase)
+    decline_details = [detail for process in processes for detail in process.decline_details()]
+    decline_reasons = []
+    seen_reasons = set()
+    for detail in decline_details:
+        if not detail["complete"]:
+            continue
+        for entry in detail["decline_detail"].split("; "):
+            axis, separator, reason = entry.partition("=")
+            # Observer messages prefix the axis log with a human-readable message.
+            axis = axis.rsplit(": ", 1)[-1]
+            code = re.match(r"[a-z_]+", reason)
+            if not separator or not code or (axis, reason) in seen_reasons:
+                continue
+            seen_reasons.add((axis, reason))
+            decline_reasons.append({"axis": axis, "reason": code[0], "detail": reason})
 
     def totals(names):
         relevant = [event for name in names for event in phases[name]]
@@ -94,6 +110,7 @@ def summarize_row(row, records, arm, *, single_arm_leg=False, seed_phases=SEED_P
                             for event in phases[name]) if native_arm else
                         sum(len(phases[name]) for name in seed_phases if "seed_solve" in name)),
         "check_method": method, "declines": declines,
+        "decline_details": decline_details, "decline_reasons": decline_reasons,
         "route": route,
         "route_solve": (native_arm and row["result"] in SOLVED and bool(route) and
                         records_complete and
@@ -158,6 +175,10 @@ def report(rows, records_root, arm, *, single_arm_leg=False, short_records_root=
                                                          if item["route_solve"]).items())),
         "check_methods": dict(sorted(methods.items())),
         "declines": dict(sorted(declines.items())),
+        "decline_reasons": dict(sorted(collections.Counter(
+            reason["reason"] for item in detail for reason in item["decline_reasons"]).items())),
+        "incomplete_decline_details": sum(not log["complete"] for item in detail
+                                          for log in item["decline_details"]),
         "target_solve_attributed": attributed,
         "unattributed_solves": [item["instance"] for item in detail
                                 if item["outcome"] in SOLVED and
@@ -179,7 +200,8 @@ def write_report(summary, detail, out):
                "records_complete", "route", "route_solve", "seed_probes", "seed_solves",
                "seed_wall_ns", "seed_cpu_ns", "seed_work", "target_wall_ns",
                "target_cpu_ns", "target_work", "target_checks", "check_method",
-               "declines", "target_checked", "target_solve_attributed",
+               "declines", "decline_reasons", "decline_details", "target_checked",
+               "target_solve_attributed",
                "attribution_basis", "phase_work")
     with (out / "lifting.tsv").open("w", newline="") as stream:
         writer = csv.DictWriter(stream, columns, delimiter="\t", lineterminator="\n")
@@ -192,6 +214,8 @@ def write_report(summary, detail, out):
                     "target_cpu_ns": item["target"]["cpu_ns"],
                     "target_work": item["target"]["work"],
                     "declines": ";".join(item["declines"]),
+                    "decline_reasons": json.dumps(item["decline_reasons"], sort_keys=True),
+                    "decline_details": json.dumps(item["decline_details"], sort_keys=True),
                     "phase_work": json.dumps(item["phase_work"], sort_keys=True)}
             writer.writerow({name: flat[name] for name in columns})
     lines = [f"# Lifting arm: {summary['arm']}", "",
@@ -217,6 +241,15 @@ def write_report(summary, detail, out):
     lines += [f"- {name}: {count}" for name, count in summary["check_methods"].items()]
     lines += ["", "## Declines", ""]
     lines += [f"- {name}: {count}" for name, count in summary["declines"].items()]
+    lines += ["", "## Per-axis decline reasons", "",
+              "Counts are per distinct axis/reason per input; repeated terminal messages "
+              "count once. Incomplete detail logs are excluded from the histogram.", ""]
+    lines += [f"- {name}: {count}" for name, count in summary["decline_reasons"].items()]
+    lines += ["", f"Incomplete detail logs: {summary['incomplete_decline_details']}.", "",
+              "| Input | Axis | Reason |", "|---|---|---|"]
+    lines += ["| " + " | ".join(str(value).replace("|", "\\|").replace("\n", " ")
+                               for value in (item["instance"], reason["axis"], reason["detail"]))
+              + " |" for item in detail for reason in item["decline_reasons"]]
     if summary["arm"] == NATIVE_ARM:
         lines += ["", "The native seed_cache work count combines probes, reductions, solves, "
                   "checks, and cache hits; individual probe counts and the proof method "
