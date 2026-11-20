@@ -135,6 +135,10 @@ test ('native-gr1-lift-cli', py,
       args : native_gr1_lift_cli_args,
       suite : ['unit', 'native-gr1'], timeout : 180,
       depends : native_cli_depends)
+test ('native-gr1-fold-lift-cli', py,
+      args : [files ('check-native-gr1-fold-lift-cli.py'), ab_exe,
+              meson.project_build_root ()],
+      suite : ['unit', 'native-gr1'], timeout : 30, depends : [ab_exe])
 test ('native-gr1-same-thread', py,
       args : [files ('check-native-gr1-same-thread.py'), ab_exe,
               meson.project_build_root ()],
