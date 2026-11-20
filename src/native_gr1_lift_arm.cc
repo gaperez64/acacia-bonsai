@@ -34,7 +34,7 @@ namespace acacia {
         accounting_end ();
     }
     void record_combined_event (void*, TlsfGr1BothEventKind kind, TlsfGr1BothEventRoute route,
-                                int proof_unreal, const char* stage, const char*,
+                                int proof_unreal, const char* stage, const char* message,
                                 TlsfGr1LiftStatus failure) {
       auto* worker = active_worker_record ();
       if (!worker)
@@ -67,6 +67,9 @@ namespace acacia {
         worker_stage (stage);
         worker_stopped (native_failure_reason (native_failure (failure)));
       }
+      if (kind == TLSF_GR1_BOTH_EVENT_DECLINE || kind == TLSF_GR1_BOTH_EVENT_STOPPED ||
+          (kind == TLSF_GR1_BOTH_EVENT_VERIFIED && message && std::strcmp (message, "none")))
+        worker_decline_detail (message);
 # ifdef ACACIA_NATIVE_TEST_HOOKS
       native_attribution_test_pause (kind, name);
 # endif
@@ -81,6 +84,7 @@ namespace acacia {
     const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
     TlsfGr1LiftStats stats {};
     TlsfGr1LiftOptions options {};
+    options.max_predicate_arity = args.lift_max_predicate_arity;
     options.deadline_mono_ns = deadline_mono_ns;
     options.budget = budget;
     options.env_budget.max_rss_bytes = budget.max_rss_bytes;
@@ -96,11 +100,13 @@ namespace acacia {
       const int count =
           snprintf (configuration, sizeof configuration,
                     "exact:proof_order=%d:env=%d:r_prepass=%d:solver_nodes=%zu:solver_cache=%zu:"
-                    "checker_nodes=%zu:checker_cache=%zu:env_candidate_ns=%llu",
+                    "checker_nodes=%zu:checker_cache=%zu:env_candidate_ns=%llu:max_predicate_arity=%u",
                     int (options.proof_order), !options.disable_env_lift, args.r_prepass,
                     size_t (options.solver_nodes), size_t (options.solver_cache),
                     size_t (options.checker_nodes), size_t (options.checker_cache),
-                    (unsigned long long) options.env_candidate_ns);
+                    (unsigned long long) options.env_candidate_ns,
+                    options.max_predicate_arity ? options.max_predicate_arity
+                                                : TLSF_GR1_LIFT_DEFAULT_MAX_PREDICATE_ARITY);
       tlsf_pipeline_source_sha256 (configuration, size_t (count), options_hash);
       const int n = snprintf (
           line, sizeof line,

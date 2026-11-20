@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Bump tlsf-tools to abcca72 (per-axis lift decline reasons, #437; result ABI changed, so rebuild from scratch). Carry those reasons into phase records and lifting reports; add runtime `--lift-max-predicate-arity` with the library default unchanged.
 - The first two `docker_default` presets (six arms, and the same plus the forward arms) use `closure-recurrence` for their formula-unrealizability arm in `fallback` candidate mode, keeping `low` effort for fallback translation and the existing frozen-graph route for synthesis (#407). Add `acacia_default_candidate_mode` (default `only`); `--candidate-mode` overrides it. Other presets are unchanged.
 - Bump posets to 313fbfcd (documents and checks the lazy KD epoch invariants, #402 I06) and tlsf-tools to 78185dc (a fuzz test's R3 mutant now targets a printer change that reparsing can expose). Behaviour is unchanged; both changes are comments, assertions and tests.
 - Restrict enumerative closure-row expansion to the differential test build; production closure providers continue to use symbolic Boolean folding.

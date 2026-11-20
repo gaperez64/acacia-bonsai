@@ -64,6 +64,8 @@ struct arg_parse_result {
     acacia::obligation::memory_share parity_memory_share =
         acacia::obligation::memory_share::headroom;
     bool r_prepass = true;
+    // Zero leaves the native library's default in force.
+    uint32_t lift_max_predicate_arity = 0;
     bool equivariance = ACACIA_ENABLE_EQUIVARIANT_SOLVER;
     std::optional<double> equivariance_budget;
     // Global 3 s optional-work allowance; explicit unbounded restores the previous unbounded

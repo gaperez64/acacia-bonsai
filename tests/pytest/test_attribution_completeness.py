@@ -144,6 +144,34 @@ def test_child_sequence_gap_and_independent_parent_spawn(tmp_path, lifecycle):
     assert result["producer"] == "complete"
 
 
+@pytest.mark.parametrize("fault", [None, "missing", "duplicate", "identity", "mono_ns",
+                                   "dropped_records"])
+def test_decline_detail_supplements_lifecycle(tmp_path, lifecycle, fault):
+    detail = dict(event="decline_detail", worker=0, worker_pid=20, seq=4,
+                  mono_ns=100, dropped_records=0, detail_id=3, stage="seed_window",
+                  route="R", offset=0, total=20, decline_detail="n=insufficient_sizes")
+    lifecycle[20].insert(3, detail)
+    lifecycle[20][4]["seq"] = 5
+    lifecycle[10][2]["seq"] = 6
+    lifecycle[10][3]["seq"] = 7
+    if fault == "missing":
+        lifecycle[20].remove(detail)
+    elif fault == "duplicate":
+        lifecycle[20].insert(3, detail.copy())
+    elif fault == "identity":
+        detail["worker"] = 1
+    elif fault:
+        detail.pop(fault)
+    write_records(tmp_path, lifecycle)
+    result = reader.audit_row(row(), tmp_path)
+    if fault is None:
+        assert result["complete"], result["issues"]
+    else:
+        assert result["delivery"] == "incomplete", result
+        if fault in ("missing", "duplicate"):
+            assert "sequence_gap" in reasons(result, "delivery")
+
+
 @pytest.mark.parametrize("cause", ["deadline", "winner_cancelled"])
 def test_killed_worker_has_delivered_prefix_but_incomplete_producer(tmp_path, lifecycle, cause):
     lifecycle[20] = lifecycle[20][:3]

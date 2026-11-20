@@ -105,6 +105,81 @@ def test_current_pids_clocks_sequences_stage_ids_and_race_work_validate(tmp_path
     assert any("real:small:forward race-truncated" in note for note in notes)
 
 
+def add_detail_logs(files, pid, packet_cap):
+    child = files[str(pid)]
+    terminal = next(e for e in child if e.get("event") == "terminal_result")
+    terminal_seq = terminal["seq"]
+    sequence = terminal_seq - 1
+    packets = []
+    message = "; ".join(f"axis{i:02d}[1]=parameter_not_indexed(stage=axis,cause=applicability)"
+                        for i in range(24))
+    assert len(message.encode()) == 1558
+    for text in (message, "a second log with a different sequence-based detail_id"):
+        detail_id, offset = sequence, 0
+        while offset < len(text):
+            sequence += 1
+            packet = dict(event="decline_detail", worker=0, worker_pid=pid, seq=sequence,
+                          mono_ns=10000000000000, dropped_records=0, detail_id=detail_id,
+                          stage="seed_window", route="seed_discovery", offset=offset,
+                          total=len(text))
+            # ASCII packing in worker_decline_detail includes the JSON prefix.
+            prefix = json.dumps(packet, separators=(",", ":"))[:-1] + ',"decline_detail":"'
+            packet["decline_detail"] = text[offset:offset + packet_cap - 10 - len(prefix)]
+            offset += len(packet["decline_detail"])
+            packets.append(packet)
+    for event in child + files[str(pid - 1)]:
+        if (event.get("worker_pid") == pid and "seq" in event
+                and event["seq"] >= terminal_seq):
+            event["seq"] += len(packets)
+    child[child.index(terminal):child.index(terminal)] = packets
+    return packets
+
+
+@pytest.mark.parametrize("packet_cap", [1024, 512])
+@pytest.mark.parametrize("fault", [None, "text", "missing", "duplicate", "reordered",
+                                  "sequence", "offset", "total", "route"])
+def test_detail_comparison_reassembles_after_raw_validation(tmp_path, monkeypatch, packet_cap,
+                                                          fault):
+    short = helpers.observation("input", "REALIZABLE")
+    long = helpers.observation("input", "REALIZABLE", cap=60)
+    roots = tmp_path / "short", tmp_path / "long"
+    fragments = []
+    for root, row, pid, capacity in ((roots[0], short, 123, 1024),
+                                     (roots[1], long, 123456, packet_cap)):
+        directory, files = current_records(root, row, pid=pid)
+        packets = add_detail_logs(files, pid, capacity)
+        fragments.append(packets)
+        if root == roots[1]:
+            child = files[str(pid)]
+            if fault == "text":
+                packets[0]["decline_detail"] = "!" + packets[0]["decline_detail"][1:]
+            elif fault == "missing":
+                child.remove(packets[0])
+            elif fault == "duplicate":
+                child.insert(child.index(packets[0]), packets[0])
+            elif fault == "reordered":
+                index = child.index(packets[0])
+                child[index:index + 2] = reversed(child[index:index + 2])
+            elif fault == "sequence":
+                packets[0]["seq"] += 100
+            elif fault in {"offset", "total"}:
+                packets[0][fault] += 1
+            elif fault == "route":
+                packets[1]["route"] = "different"
+        write_current(directory, files)
+    assert fragments[0][1]["offset"] != fragments[1][1]["offset"]
+    checked, failures, _ = capcheck.compare({"input": short}, {"input": long}, *roots,
+                                            allow_race_truncation=True)
+    assert checked == 1
+    assert bool(failures) == (fault is not None)
+    monkeypatch.setattr(capcheck, "ARM", "real:small:backward")
+    if fault is None:
+        assert capcheck.record(short, roots[0]) == capcheck.record(long, roots[1])
+    elif fault != "text":
+        with pytest.raises(ValueError):
+            capcheck.record(long, roots[1])
+
+
 @pytest.mark.parametrize("change,field,kind", [
     ("winner", "winning_arm", "decision"),
     ("verdict", "exit_code", "outcome"),

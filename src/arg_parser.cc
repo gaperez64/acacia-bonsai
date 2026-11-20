@@ -4,6 +4,7 @@
 #include "utils/parse_text.hh"
 
 #include <cmath>
+#include <charconv>
 #include <utility>
 
 /**
@@ -119,6 +120,10 @@ void show_help (const char* program_name) {
       << "                    it behaves like equal\n"
       << "  --r-prepass VAL   [on|off] R discovery/candidates in combined native arms (default "
          "on)\n"
+      << "  --lift-max-predicate-arity N\n"
+      << "                    predicate arity bound for native lifting (1..2147483647;\n"
+      << "                    default: library default, currently 4). Raising it is sound:\n"
+      << "                    the lift answers only REALIZABLE, certified by a region check\n"
       << "  --equivariance VAL [on|off] exact pre-pass in backward decision workers (default "
       << (ACACIA_ENABLE_EQUIVARIANT_SOLVER ? "on" : "off") << ")\n"
       << "                    off keeps ordinary backward solving; on requires compiled support\n"
@@ -440,6 +445,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_OBLIGATION_MEMORY_SHARE = 1015;
   static constexpr int OPT_PARITY_MEMORY_SHARE = 1016;
   static constexpr int OPT_TRANSLATION_EFFORT = 1017;
+  static constexpr int OPT_LIFT_MAX_PREDICATE_ARITY = 1018;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
   static constexpr int OPT_REAL_BACKEND = 1002;
@@ -477,6 +483,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"weakening-attempt-ms", optional_argument, nullptr, OPT_WEAKENING_ATTEMPT_MS},
       {"weakening-total-ms", optional_argument, nullptr, OPT_WEAKENING_TOTAL_MS},
       {"r-prepass", required_argument, nullptr, OPT_R_PREPASS},
+      {"lift-max-predicate-arity", required_argument, nullptr, OPT_LIFT_MAX_PREDICATE_ARITY},
       {"equivariance", required_argument, nullptr, OPT_EQUIVARIANCE},
       {"equivariance-budget", required_argument, nullptr, OPT_EQUIVARIANCE_BUDGET},
       {"tlsf", required_argument, nullptr, 'T'},
@@ -649,6 +656,16 @@ arg_parse_result arg_parser (int argc, char** argv) {
         else
           error (EXIT_CODE_ERROR, "Error: --parity-memory-share expects equal or headroom.\n");
         break;
+      case OPT_LIFT_MAX_PREDICATE_ARITY: {
+        const std::string_view text (optarg);
+        int value = 0;
+        const auto parsed = std::from_chars (text.data (), text.data () + text.size (), value);
+        if (parsed.ec != std::errc {} || parsed.ptr != text.data () + text.size () || value < 1)
+          error (EXIT_CODE_ERROR,
+                 "Error: --lift-max-predicate-arity expects an integer in 1..2147483647.\n");
+        retval.lift_max_predicate_arity = value;
+        break;
+      }
       case OPT_R_PREPASS:
       case OPT_EQUIVARIANCE: {
         const bool enabled = case_insensitive_equals (optarg, "on");

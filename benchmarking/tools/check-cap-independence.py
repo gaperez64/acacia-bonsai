@@ -76,27 +76,18 @@ def rows(path):
 
 
 def record(row, root):
-    """Legacy single-arm view: the lifting arm's events, in file order."""
+    """Validated, reassembled records for the historical default lifting arm."""
     safe_name = re.sub(r"[^A-Za-z0-9_.-]", "_", row["instance"])
     base = (root / row["solver_label"] / row["cap_s"] /
             f'{safe_name}-{row["run_index"]}')
-    paths = sorted(base.glob("*.jsonl"))
-    if not paths:
+    records = comparison_records(base)
+    if not records.processes:
         raise ValueError(f"{row['instance']}: missing or empty records: {base}")
-    entries = []
-    for path in paths:
-        for line in path.read_text().splitlines():
-            event = json.loads(line)
-            if event.get("arm") == ARM:
-                entries.append(event)
-    if not entries:
+    if not records.arm_processes(ARM):
         raise ValueError(f"{row['instance']}: no {ARM} records: {base}")
-    if any(event.get("phase") == "record_summary" and
-           event.get("dropped_records") for event in entries):
+    if any(process.dropped for process in records.arm_processes(ARM)):
         raise ValueError(f"{row['instance']}: dropped records: {base}")
-    return tuple({key: value for key, value in event.items()
-                  if key not in VOLATILE_FIELDS and
-                  key != "dropped_records"} for event in entries)
+    return records.canonical(ARM, VOLATILE_FIELDS)
 
 
 @dataclass(frozen=True)
@@ -213,11 +204,18 @@ def comparison_records(directory):
         if finished and not drops.get(worker, 0) and not any(
                 e.get("event") == "worker_start" for e in group):
             invalid(f"{arm}: completed worker has no child records")
-        sequence = sorted({e["seq"] for e in events
-                           if str(e.get("worker_pid")) == pid and "seq" in e})
+        sequence = sorted(e["seq"] for e in events
+                          if str(e.get("worker_pid")) == pid and "seq" in e)
         if not drops.get(worker, 0) and sequence and (
                 sequence[0] != 1 or any(b != a + 1 for a, b in zip(sequence, sequence[1:]))):
-            invalid(f"{arm}: missing worker sequence records")
+            invalid(f"{arm}: missing or duplicate worker sequence records")
+        for process in raw.processes:
+            if Path(process.name).stem != pid:
+                continue
+            sequence = [e["seq"] for e in process.events
+                        if str(e.get("worker_pid")) == pid and "seq" in e]
+            if any(b <= a for a, b in zip(sequence, sequence[1:])):
+                invalid(f"{arm}: reordered worker sequence records")
         # Parent records are in a different producer file. Append lifecycle
         # snapshots after the child's ordered work, independent of filename order.
         child = [e for e in group if e.get("event") not in
@@ -450,7 +448,11 @@ def compare(short, long, short_records=None, long_records=None, *, arms=None,
                     fail(name, arm, "completion",
                          f"{name}: {arm} completed in {'short' if done_one else 'long'} run only")
                     continue
-            a, b = first.canonical(arm, volatile), second.canonical(arm, volatile)
+            try:
+                a, b = first.canonical(arm, volatile), second.canonical(arm, volatile)
+            except ValueError as error:
+                fail(name, arm, "records", f"{name}: {error}")
+                continue
             if a != b:
                 for kind, differences in record_differences(a, b).items():
                     fail(name, arm, kind,

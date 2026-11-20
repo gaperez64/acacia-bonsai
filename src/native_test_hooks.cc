@@ -84,6 +84,10 @@ namespace acacia {
       artifact[0] = 'X';
   }
   void native_lift_test_options (TlsfGr1LiftOptions& options) {
+    if (const char* expected = std::getenv ("ACACIA_NATIVE_TEST_EXPECT_LIFT_ARITY")) {
+      if (options.max_predicate_arity != std::strtoul (expected, nullptr, 10))
+        _exit (93);
+    }
     if (const char* value = std::getenv ("ACACIA_NATIVE_TEST_LIFT_PAUSE_FD")) {
       char pid[32];
       const int size = std::snprintf (pid, sizeof pid, "%ld\n", long (getpid ()));
