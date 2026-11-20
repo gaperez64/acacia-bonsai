@@ -15,7 +15,8 @@ from benchlib import PhaseProcess, PhaseRecords  # noqa: E402
 
 
 def rows(directory):
-    return [json.loads(line) for path in directory.glob("*.jsonl")
+    return [dict(json.loads(line), durable=path.stem.endswith("-final"))
+            for path in directory.glob("*.jsonl")
             for line in path.read_text().splitlines()]
 
 
@@ -156,7 +157,7 @@ def main():
         assert any(row.get("phase") == "flood" for row in records), records
         summary, = [row for row in records if row.get("event") == "writer_summary"]
         assert summary["failed_records"] == 0 and not summary["incomplete_packet"], summary
-        assert summary["delivered_records"] == len(records) - 1, summary
+        assert summary["delivered_records"] == sum(not r["durable"] for r in records) - 1, summary
         for mode in ("fifo", "full_disk", "broken", "slow"):
             directory = root / mode
             directory.mkdir()

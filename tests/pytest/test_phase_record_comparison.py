@@ -17,7 +17,8 @@ capcheck = helpers.capcheck
 recycle = helpers.recycle
 
 
-def current_records(root, row, *, pid=100, clock=1000, stage_id=1, extra_timing=False):
+def current_records(root, row, *, pid=100, clock=1000, stage_id=1, extra_timing=False,
+                    durable=False):
     directory = recycle.phase_record_dir(root, row["solver_label"], row["cap_s"],
                                         row["instance"], row["run_index"])
     directory.mkdir(parents=True)
@@ -52,7 +53,7 @@ def current_records(root, row, *, pid=100, clock=1000, stage_id=1, extra_timing=
     if extra_timing:
         child.insert(3, {"event": "stage_metric", "stage_id": stage_id,
                          "key": "bdd_gc_wall_ns", "value": str(clock)})
-    seq = 1
+    seq = 0
     for event in child:
         if "event" in event:
             seq += 1
@@ -62,14 +63,20 @@ def current_records(root, row, *, pid=100, clock=1000, stage_id=1, extra_timing=
          "signal": 0, "exit_code": 0, "reason": "exit", "telemetry": "complete"},
         {"event": "parent_winner", "worker": 0, "worker_pid": pid, "seq": seq + 2,
          "signal": 0, "exit_code": 0, "reason": "accepted", "telemetry": "complete"},
-        {"event": "parent_terminal", "worker": 1, "worker_pid": pid + 1, "seq": 3,
+        {"event": "parent_terminal", "worker": 1, "worker_pid": pid + 1, "seq": 2,
          "signal": 9, "exit_code": -1, "reason": "winner_cancelled",
          "telemetry": "incomplete"},
         {"arm": "legacy_parent", "phase": "record_summary", "dropped_records": 0},
     ])
     loser = [{"event": "worker_start", "worker": 1, "worker_pid": pid + 1,
-              "seq": 2, "mono_ns": clock, "states": clock}]
+              "seq": 1, "mono_ns": clock, "states": clock}]
     files = {str(pid - 1): parent, str(pid): child, str(pid + 1): loser}
+    if durable:
+        final_events = {"worker_spec", "parent_terminal", "parent_winner"}
+        files[f"{pid - 1}-final"] = [e for e in parent if e.get("event") in final_events]
+        files[f"{pid - 1}-final"].append(
+            {"event": "parent_record_summary", "pid": pid - 1, "dropped_records": 0})
+        files[str(pid - 1)] = [e for e in parent if e.get("event") not in final_events]
     write_current(directory, files)
     return directory, files
 
@@ -81,7 +88,8 @@ def write_current(directory, files):
         (directory / f"{name}.jsonl").write_text(
             "".join(json.dumps(event) + "\n" for event in events))
     (directory / "writer.jsonl").write_text(json.dumps({
-        "event": "writer_summary", "delivered_records": sum(map(len, files.values())),
+        "event": "writer_summary", "delivered_records": sum(
+            len(events) for name, events in files.items() if not name.endswith("-final")),
         "failed_records": 0, "incomplete_packet": False}) + "\n")
 
 
@@ -193,7 +201,7 @@ def test_changed_decision_or_deterministic_work_fails(tmp_path, change, field, k
     def mutate(files):
         if change == "winner":
             winner = next(e for e in files["199"] if e.get("event") == "parent_winner")
-            winner.update(worker=1, worker_pid=201, seq=4)
+            winner.update(worker=1, worker_pid=201, seq=3)
         elif change in {"verdict", "reason"}:
             terminal = next(e for e in files["200"] if e.get("event") == "terminal_result")
             terminal["exit_code" if change == "verdict" else "reason"] = (
@@ -236,6 +244,27 @@ def test_writer_integrity_is_checked(tmp_path, field, value):
         capcheck.comparison_records(directory)
 
 
+@pytest.mark.parametrize("pipe_delta", [0, -1, 1], ids=["complete", "missing", "extra"])
+def test_durable_records_do_not_mask_pipe_delivery_mismatches(tmp_path, pipe_delta):
+    row = helpers.observation("input", "REALIZABLE")
+    directory, files = current_records(tmp_path, row, durable=True)
+    child = files["100"]
+    # Change an unsequenced pipe record without changing the writer's receipt.
+    if pipe_delta < 0:
+        child.pop(1)
+    elif pipe_delta > 0:
+        child.insert(1, dict(child[1]))
+    (directory / "100.jsonl").write_text(
+        "".join(json.dumps(event) + "\n" for event in child))
+    if pipe_delta:
+        with pytest.raises(ValueError, match="delivered_records does not match"):
+            capcheck.comparison_records(directory)
+    else:
+        records = capcheck.comparison_records(directory)
+        assert records.arm_finished("real:small:backward")
+        assert not records.transport_failures
+
+
 def test_unknown_counter_is_retained(tmp_path):
     def mutate(files):
         next(e for e in files["200"] if e.get("event") == "stage_completion")[
@@ -244,7 +273,8 @@ def test_unknown_counter_is_retained(tmp_path):
     assert any("new_work_counter" in f["message"] for f in failures)
 
 
-def test_current_format_passes_native_recycle_validation(tmp_path):
+@pytest.mark.parametrize("durable", [False, True])
+def test_current_format_passes_native_recycle_validation(tmp_path, durable):
     short = helpers.observation("input", "REALIZABLE")
     short["flags"] = "--arms real:small:backward,real:small:forward"
     long = {**short, "cap_s": "60"}
@@ -252,8 +282,8 @@ def test_current_format_passes_native_recycle_validation(tmp_path):
     helpers.write_observations(short_path, [short])
     helpers.write_observations(long_path, [long])
     first, second = tmp_path / "first", tmp_path / "second"
-    current_records(first, short)
-    current_records(second, long, pid=200, clock=9000, extra_timing=True)
+    current_records(first, short, durable=durable)
+    current_records(second, long, pid=200, clock=9000, extra_timing=True, durable=durable)
     recycle.plan(argparse.Namespace(short=short_path, list=None, long_cap=60,
                                     deadline_margin=1, deadline_stage_regex="deadline",
                                     memory_max="8G", memory_swap_max="0", records=first,

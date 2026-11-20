@@ -968,8 +968,9 @@ class PhaseRecords:
 
 
 def load_phase_records(directory) -> PhaseRecords:
-    """Read every <pid>.jsonl below one run's record directory.
+    """Read pipe <pid>.jsonl and durable <pid>-final.jsonl files for one run.
 
+    Preserve filenames: durable records bypass the pipe writer's delivery count.
     A missing directory yields no processes; malformed JSON raises ValueError,
     because a torn record cannot establish what the run decided.
     """

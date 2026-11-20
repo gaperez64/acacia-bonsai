@@ -321,9 +321,10 @@ These exact top-level fields are excluded from equality:
 | `pid`, `worker_pid` | OS process identities differ on every invocation; used to join before exclusion. |
 | `seq` | Transport serial number, including events carrying only timing. Audited for gaps within each run. |
 | `scope`, `unit`, `scope_name`, `unit_name` | Invocation-specific resource scope/unit names. |
-| `mono_ns`, `entry_ns`, `completion_ns`, `stage_start_ns` | Absolute monotonic timestamps. |
+| `mono_ns`, `entry_ns`, `completion_ns`, `stage_start_ns`, `start_mono_ns`, `start_ticks` | Absolute monotonic timestamps and process start identity. |
 | `deadline_ns`, `outer_deadline_ns`, `absolute_ns`, `reference_ns` | Absolute deadline/reference clocks; different launches/caps necessarily change them. |
 | `wall_ns`, `cpu_ns`, `elapsed_ns` | Observed wall/CPU durations. |
+| `entry_cpu_ns`, `process_cpu_ns`, `self_cpu_ns`, `user_ns`, `sys_ns` | Accounting CPU clocks and reaped process CPU usage. |
 | `remaining_ns`, `initial_remaining_ns`, `allowance_ns`, `consumed_ns`, `total_ns` | Time remaining, allocated or consumed in the invocation/relative time budget. Policy mode and fraction remain compared. |
 | `rss_kb`, `peak_rss_kb`, `peak_rss_bytes` | Observed process resident memory, affected by runtime and scheduling. |
 | `mallinfo2` | Allocator residency/free-arena snapshot, affected by runtime allocation history. Deterministic payload byte counts remain compared. |
@@ -349,12 +350,17 @@ reported even when the first run already has a drop.
 
 For the current transport,
 missing/duplicate writer summaries, nonzero `failed_records`, `incomplete_packet`, a
-`delivered_records` count that disagrees with the number of stored packets, worker sequence
+`delivered_records` count that disagrees with the number of stored pipe packets, worker sequence
 gaps, conflicting worker identities, missing terminal records and missing child records for
 completed workers fail validation. Writer delivery totals are audited within each run;
 they are not equated across runs because race losers can emit different numbers of packets.
-`writer_summary` is transport evidence rather than solver work. Its fields are consumed by
-these checks instead of contributing a fictitious solver arm.
+The pre-fork `worker_spawn` sequence is checked separately from the child's sequence.
+`writer_summary` and `parent_record_summary` are transport evidence rather than solver work.
+Their fields are consumed by these checks instead of contributing a fictitious solver arm.
+Durable `<pid>-final.jsonl` files bypass the pipe writer and its delivery counter;
+the filename identifies them, not the event type. Exclude those files and the
+writer summary itself from the delivered packet count, retaining their records
+for lifecycle and work comparisons.
 
 All other content remains compared, including verdict/exit/signal, reason, backend, route,
 polarity, telemetry, source/proof bindings, limits, K, states, edges, rows, queries, work counts,

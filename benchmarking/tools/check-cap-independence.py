@@ -11,7 +11,7 @@ What is compared, per instance:
   records   per configured arm, decision, terminal outcome/reason and work;
             parent winner and configuration are checked independently. Only
             documented run identity, clocks, durations and RSS are excluded.
-            See phase-record-comparison.md for the schema and exact exclusions.
+            See legacy-phase-records.md for the schema and exact exclusions.
 
 Race truncation: in a portfolio, losing arms are killed when the winner
 answers, at a point that depends on timing, not on the cap. An arm's records
@@ -43,12 +43,14 @@ from benchlib import (  # noqa: E402
 
 from recycle_adjudication import adjudicate, paired_evidence, section  # noqa: E402
 
-# Exact exclusions and their meanings are documented in phase-record-comparison.md.
+# Exact exclusions and their meanings are documented in legacy-phase-records.md.
 VOLATILE_FIELDS = PHASE_VOLATILE_FIELDS | frozenset({
     "pid", "worker_pid", "seq", "scope", "unit", "scope_name", "unit_name",
     "mono_ns", "entry_ns", "completion_ns", "stage_start_ns", "deadline_ns",
     "outer_deadline_ns", "absolute_ns", "reference_ns", "remaining_ns",
     "initial_remaining_ns", "allowance_ns", "consumed_ns", "total_ns",
+    "start_mono_ns", "start_ticks", "entry_cpu_ns", "process_cpu_ns",
+    "self_cpu_ns", "user_ns", "sys_ns",
 })
 VOLATILE_METRICS = frozenset({
     "first_useful_action_query_ns", "query_snapshot_ns",
@@ -120,7 +122,10 @@ def comparison_records(directory):
     writer = writers[0]
     if writer.get("failed_records") != 0 or writer.get("incomplete_packet") is not False:
         invalid("failed or incomplete phase-record delivery")
-    if writer.get("delivered_records") != len(events) - 1:
+    # Durable final files bypass the pipe writer, including its delivery counter.
+    pipe_records = sum(len(process.events) for process in raw.processes
+                       if not process.name.endswith("-final.jsonl"))
+    if writer.get("delivered_records") != pipe_records - 1:
         invalid("writer delivered_records does not match records present")
     spec_workers = {str(e.get("worker_pid")): e.get("worker") for e in specs}
     drops = {}
@@ -144,7 +149,7 @@ def comparison_records(directory):
         spawn = [event for event in events if event.get("event") == "worker_spawn"
                  and str(event.get("worker_pid")) == pid]
         if (len(spawn) != 1 or spawn[0].get("worker") != worker
-                or "requested_backend" not in spawn[0]):
+                or spawn[0].get("seq") != 1 or "requested_backend" not in spawn[0]):
             invalid(f"worker {worker}: missing or conflicting worker_spawn")
         if spec["kind"] == "legacy":
             polarity = spec["requested_polarity"].lower()
@@ -163,7 +168,7 @@ def comparison_records(directory):
         file_pid = Path(process.name).stem
         for event in process.events:
             kind = event.get("event")
-            if kind in {"writer_summary", "worker_spawn", "worker_spec"}:
+            if kind in {"writer_summary", "parent_record_summary", "worker_spawn", "worker_spec"}:
                 continue
             pid = str(event.get("worker_pid", event.get("pid", file_pid)))
             if (pid not in by_pid and "worker" in event
@@ -204,8 +209,10 @@ def comparison_records(directory):
         if finished and not drops.get(worker, 0) and not any(
                 e.get("event") == "worker_start" for e in group):
             invalid(f"{arm}: completed worker has no child records")
+        # Spawn uses a pre-fork copy; the child starts its own sequence at one.
         sequence = sorted(e["seq"] for e in events
-                          if str(e.get("worker_pid")) == pid and "seq" in e)
+                          if str(e.get("worker_pid")) == pid and "seq" in e
+                          and e.get("event") != "worker_spawn")
         if not drops.get(worker, 0) and sequence and (
                 sequence[0] != 1 or any(b != a + 1 for a, b in zip(sequence, sequence[1:]))):
             invalid(f"{arm}: missing or duplicate worker sequence records")
