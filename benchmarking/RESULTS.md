@@ -12,6 +12,29 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-20: Recording the lift's decline reasons is timing-neutral (#440, #437)
+
+Archive `g3-local-20261120` (release `evidence-2026-11-20-g3local440`). #440 makes
+the native GR(1) lift arms record the per-axis reasons why seed discovery rejects
+each axis (tlsf-tools #141). It is not meant to change verdicts or speed. G3 ran on
+the maintainer's 4-core, 7 GB workstation under the regime of `g3-local-20261117`:
+`--scope-mode instance` with a 6G per-solver cap instead of 8G, applied by a local
+uncommitted patch to `landing-campaign.sh`, the 17 s cap and both 180-input
+panels. Both binaries are release `otf_sparse_formula_parity` builds against a
+locally built Spot 2.16.3 (`--enable-max-accsets=64`). They share one master
+`6a2586a0` baseline with a baseline-vs-baseline control. No solver scope hit the
+cap.
+
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| #440 `786b15c3` | 163 → 163 / 800.5 → 798.6 s | 167 → 167 / 592.7 → 588.1 s | PASS |
+| control (base vs base) | 163 → 163 / 794.7 → 794.2 s | 167 → 167 / 591.0 → 587.7 s | PASS |
+
+Neither campaign changed a verdict or lost coverage. Across the three baseline-binary
+runs, the PAR-2 spread is 6.4 s on SYNTCOMP25 and 5.0 s on SYNTCOMP26. The candidate
+falls inside it, so no speed claim is made. These timings are not comparable to the
+benchmarking computer's floors.
+
 ## 2026-11-18: Spot 2.16.3 fixes the obligation-synthesis bug and adds three solves (#375)
 
 Archive `spot2163-20261118` (release `evidence-2026-11-18-spot2163`). Spot 2.16.3 fixes
