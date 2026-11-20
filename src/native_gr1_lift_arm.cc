@@ -152,6 +152,10 @@ namespace acacia {
                                         !args.r_prepass};
     status = tlsf_gr1_both_from_target_v2 (target.get (), &routing, &result, &error);
     combined_phase.finish ();
+# ifdef ACACIA_NATIVE_TEST_HOOKS
+    if (status == TLSF_GR1_LIFT_OK)
+      native_lift_test_fault (result);
+# endif
     if (real_only && result.route == TLSF_GR1_BOTH_ENV_LIFT) {
       native_arm_diagnostic (arm, "route", -1, "R-only arm selected U");
       return EXIT_CODE_UNKNOWN;
@@ -176,22 +180,25 @@ namespace acacia {
                              native_failure (status));
       return EXIT_CODE_UNKNOWN;
     }
-# ifdef ACACIA_NATIVE_TEST_HOOKS
-    native_lift_test_fault (result.proof);
-# endif
     const auto& proof = result.proof;
     phase_scope binding_phase (arm, "proof_binding");
     const bool region =
         proof.method == TLSF_GR1_CHECK_REGION && proof.verdict == TLSF_GR1_CHECK_REGION_VERIFIED;
     const bool certificate =
         proof.method == TLSF_GR1_CHECK_CERTIFICATE && proof.verdict == TLSF_GR1_CHECK_VERIFIED;
+    // R permits one fold retry; direct also counts the preceding failed lift checks.
+    const unsigned max_checks =
+        result.route == TLSF_GR1_BOTH_REAL_LIFT  ? 2
+        : result.route == TLSF_GR1_BOTH_ENV_LIFT ? 1
+        : result.route == TLSF_GR1_BOTH_DIRECT   ? 3
+                                                : 0;
     if ((!region && !certificate) || proof.semantics != TLSF_GR1_EXACT || !proof.game_aag ||
         !proof.game_size || !proof.certificate_aag || !proof.certificate_size ||
         !proof.certificate_json || !proof.certificate_json_size ||
         (certificate && (!proof.policy_aag || !proof.policy_size || !proof.policy_json ||
                          !proof.policy_json_size)) ||
         !proof.evidence_json || !proof.evidence_size || result.target_checks < 1 ||
-        (result.route != TLSF_GR1_BOTH_DIRECT && result.target_checks != 1)) {
+        result.target_checks > max_checks) {
       native_arm_diagnostic (arm, "artifact", -1, "incomplete checked proof");
       return EXIT_CODE_UNKNOWN;
     }

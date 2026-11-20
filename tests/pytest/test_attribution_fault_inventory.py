@@ -91,6 +91,11 @@ def telemetry_class(row: dict) -> str:
         ):
             return "DECLINE/applicability or STOPPED/resource/deadline/cancelled"
         return "STOPPED/error"
+    if c == (
+        "spec->arena->cancelled && spec->arena->failed ? "
+        "TLSF_PIPELINE_LIMIT : TLSF_PIPELINE_DECLINED"
+    ):
+        return "DECLINE/applicability or STOPPED/resource"
     if c in ("worker_decline", "native_failure_category::decline") or c.endswith(
         ("::applicability", "::unsupported_operator", "_UNSUPPORTED", "_DECLINED")
     ):

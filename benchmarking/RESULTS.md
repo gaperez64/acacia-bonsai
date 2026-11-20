@@ -12,6 +12,42 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-21: The fold lift solves simple_arbiter_enc n=11 to 16 (#448, #437)
+
+Archive `lift437-20261121` (release `evidence-2026-11-21-lift437`). #448 pins
+tlsf-tools 219270e, whose GR(1) lift gains a fold fallback for binary-encoded index
+families (#437 route A). When seed discovery rejects every axis on encoding width,
+the lift builds width-stratified seeds whose monitor states fold into Live or
+LiveExcept classes. It answers REALIZABLE only when the region checker verifies
+the certificate on the target AIGER (tlsf-tools #142 proves the checker sound), so
+a wrong candidate can only cost coverage.
+
+**Local G3** ran under the regime of `g3-local-20261120`: `--scope-mode instance`,
+a 6G cap, 17 s, a shared master `9e379f95` baseline and a base-vs-base control.
+
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| #448 `c9839ef4` | 163 → 164 / 799.6 → 774.7 s | 167 → 167 / 589.3 → 592.9 s | PASS |
+| control (base vs base) | 163 → 163 / 792.2 → 796.4 s | 167 → 167 / 593.8 → 588.1 s | PASS |
+
+The one new solve is simple_arbiter_enc n=14 (REALIZABLE, 10.2 s). No verdict
+changed. The SYNTCOMP26 difference is within the control's spread.
+
+**Full-corpus screen.** All 1,524 SYNTCOMP26 inputs ran at 17 s, serially, under
+the same 6G scope. #448 solves 1,371 against master's 1,365, and PAR-2 falls from
+6,471.7 to 6,340.1 s. The six gains are simple_arbiter_enc n=11 to 16, all
+REALIZABLE in 6.8 to 14.9 s. There are no losses and no verdict conflicts. Among
+inputs both binaries solve, the largest slowdown is 2.1 s (prioritized_arbiter_enc
+n=10, 13.3 → 15.5 s). No input that master leaves unsolved runs more than 1 s
+longer.
+
+**Census rerun.** The 30 inputs of `census437-20261120` were rerun with the lift arm
+alone (60 s). simple_arbiter_enc n=14, 15 and 16 now lift (REALIZABLE in 6 to 8 s).
+The other 27 keep their groups. prioritized_arbiter_enc n=13 to 15 reach the fold
+but decline on `fold_seed_mismatch`. simple_arbiter_enc n=32 and
+full_arbiter_enc n=12 used to decline (in 25 s and 57 s) and now time out at 60 s.
+Neither is solved by either binary at 17 s, so this costs CPU but no coverage.
+
 ## 2026-11-20: v2.10.0 release candidate against master, SemML, ltlsynt and Acacia v1
 
 Archive `final-20261120` (release `evidence-2026-11-20-final`, with plots and tables attached).

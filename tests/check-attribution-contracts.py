@@ -46,7 +46,7 @@ PREPARATION_CASES = (
 PROOF_CASES = (
     "source-hash", "swap-game", "swapped-game-with-matching-hash", "swap-certificate",
     "wrong-side", "wrong-method", "missing-policy-hash", "policy-hash",
-    "unexpected-region-policy-hash", "corrupt-proof",
+    "unexpected-region-policy-hash", "unverified-region", "corrupt-proof",
 )
 ARMS = ("both:gr1-lift:oxidd", "both:gr1-real-lift:oxidd", "real:param-lift:oxidd")
 SOURCE = '''INFO { TITLE: "contract" SEMANTICS: Mealy TARGET: Mealy }

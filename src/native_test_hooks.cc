@@ -72,12 +72,19 @@ namespace acacia {
     else if (std::strcmp (fault, "unexpected-region-policy-hash") == 0)
       replace_field (result.evidence_json, result.evidence_size, "policy_sha256",
                      "0000000000000000000000000000000000000000000000000000000000000000");
+    else if (std::strcmp (fault, "unverified-region") == 0)
+      result.verdict = TLSF_GR1_CHECK_UNKNOWN;
     else if (std::strcmp (fault, "corrupt-proof") == 0) {
       result.certificate_aag[0] = 'X';
       char hash[65] {};
       if (tlsf_pipeline_source_sha256 (result.certificate_aag, result.certificate_size, hash))
         replace_field (result.evidence_json, result.evidence_size, "certificate_sha256", hash);
     }
+  }
+  void native_lift_test_fault (TlsfGr1BothResult& result) {
+    native_lift_test_fault (result.proof);
+    if (const char* checks = std::getenv ("ACACIA_NATIVE_TEST_TARGET_CHECKS"))
+      result.target_checks = std::strtoull (checks, nullptr, 10);
   }
   void native_corrupt_gr1_artifact (char* artifact) {
     if (std::getenv ("ACACIA_NATIVE_TEST_CORRUPT_PROOF"))

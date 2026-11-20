@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Bump tlsf-tools to 219270e (v1.12-5-g219270e): the GR(1) lift learns monitor-state folds for binary-encoded index families and accepts them only after target region verification; frontend expansion respects the lift budget, and frontend adaptation allocation failure now reports as a resource limit (#437).
+
 ## 2.10.0 (2026-11-20)
 
 - Built on [posets 1.5](https://github.com/michaelcadilhac/posets/releases/tag/1.5) (a4387cb7) and [tlsf-tools v1.12](https://github.com/gaperez64/tlsf-tools/releases/tag/v1.12) (da66170e). The tlsf-tools release adds a Lean proof of the GR(1) region-certificate method to the abcca72 pin; the compiled code is the same.
