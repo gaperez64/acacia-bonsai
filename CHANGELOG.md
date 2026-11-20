@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.10.0 (2026-11-20)
+
+- Built on [posets 1.5](https://github.com/michaelcadilhac/posets/releases/tag/1.5) (a4387cb7) and [tlsf-tools v1.12](https://github.com/gaperez64/tlsf-tools/releases/tag/v1.12) (da66170e). The tlsf-tools release adds a Lean proof of the GR(1) region-certificate method to the abcca72 pin; the compiled code is the same.
+- Bump Spot to 2.16.3 (#439), which fixes the obligation-synthesis bug behind #375: `both:obligation:spot` no longer answers REALIZABLE for `G i -> G(i <-> XXX false)`. On all 1,524 SYNTCOMP26 inputs at 17 s the shipped portfolio decides 1,379 against 1,376 on Spot 2.16.0, with no input lost and no verdict change.
+- Pin posets to the lazy KD intersection that skips right-hand maxima the left side already contains (#438). CPre's microbenchmark runs 3.7–72× faster; coverage and PAR-2 are unchanged at 17 s, and two memory-outs disappear at 120 s.
 - Fix cap-independence and recycle validation counting durable final phase records as pipe deliveries (#443); keep missing or extra pipe records invalid.
 - Bump tlsf-tools to abcca72 (per-axis lift decline reasons, #437; result ABI changed, so rebuild from scratch). Carry those reasons into phase records and lifting reports; add runtime `--lift-max-predicate-arity` with the library default unchanged.
 - The first two `docker_default` presets (six arms, and the same plus the forward arms) use `closure-recurrence` for their formula-unrealizability arm in `fallback` candidate mode, keeping `low` effort for fallback translation and the existing frozen-graph route for synthesis (#407). Add `acacia_default_candidate_mode` (default `only`); `--candidate-mode` overrides it. Other presets are unchanged.
