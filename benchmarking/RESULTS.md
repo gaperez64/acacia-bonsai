@@ -12,6 +12,55 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-20: v2.10.0 release candidate against master, SemML, ltlsynt and Acacia v1
+
+Archive `final-20261120` (release `evidence-2026-11-20-final`, with plots and tables attached).
+All 1,524 SYNTCOMP26 inputs, 8G/no swap per call, serial, staged caps (each stage reruns what the
+previous left undecided). "new" is master 6a2586a (#435, #438, #439) on Spot 2.16.3, run fresh,
+and SemML (20ad6ec7, JDK 21) was rerun fresh. master, ltlsynt and Acacia v1 are earlier measured
+runs: master is the six-arm portfolio from `preset384-20261115` (80827c26, Spot 2.16.0); ltlsynt
+2.16 and Acacia v1 come from the adjudicated tables of `threeway-syntcomp26-20261019`, with no
+120 s run and conversion untimed.
+
+| Series | 17 s solved | 17 s PAR-2 (s) | 60 s solved | 60 s PAR-2 (s) | 120 s solved | 120 s PAR-2 (s) |
+|---|---:|---:|---:|---:|---:|---:|
+| **new (v2.10.0 RC)** | **1379** | **5749.9** | **1399** | **16514.7** | **1404** | **30752.6** |
+| master (six arms) | 1370 | 5871.9 | 1392 | 17193.1 | 1398 | 32117.5 |
+| SemML | 1274 | 11614.5 | 1333 | 27836.5 | 1352 | 47818.0 |
+| ltlsynt 2.16 | 1264 | 9420.7 | 1290 | 29523.6 | — | — |
+| Acacia v1 | 812 | 24778.5 | 854 | 82407.0 | — | — |
+
+No series disagrees with another on any verdict. Against master, new solves 9, 7 and 6 more inputs
+at 17, 60 and 120 s, all of them unrealizable, and PAR-2 is lower by 122, 678 and 1,365 s. New at
+60 s already decides more than master at 120 s.
+
+Who wins the race in new (phase records, `parent_winner`) at 17 s, out of 1,379 decided:
+- native Acacia antichain 755 (54.7%):
+  - backward 442, on a Spot-translated automaton;
+  - the formula-unreal arm 313: 180 in its direct checks, 110 on the closure-recurrence automaton,
+    23 after falling back to Spot;
+- Spot 525 (38.1%): parity 499, obligation 26;
+- SemML-style parity in tlsf-tools/OxiDD 64 (4.6%);
+- the GR(1) lift 35 (2.5%).
+
+The 60 and 120 s stages add 20 and 5 more, mostly Spot parity and the GR(1) lift.
+
+Family ablations (shipped arms minus one family, 17 s), with the inputs each lost rerun at 120 s:
+
+| Family removed | Solved at 17 s | Lost | PAR-2 change (s) | Recovered by others at 120 s | Unique at 120 s |
+|---|---:|---:|---:|---:|---:|
+| Native Acacia antichain | 1254 | 129 | +4210.2 | 14 | 115 |
+| Spot (parity + obligation) | 1333 | 46 | +1656.7 | 9 | 37 |
+| SemML-style parity (OxiDD) | 1353 | 26 | +864.8 | 8 | 18 |
+| GR(1) lift | 1363 | 16 | +520.9 | 5 | 11 |
+
+Every family decides inputs no other family decides within 120 s. Removing the native antichain
+arms frees a worker and gains 4 inputs, but loses 115 that no other arm decides. Dropping each of
+the other families gains nothing.
+
+The `preset384-20261115` index row now records its full source revision, so `fetch` accepts it;
+the row had an abbreviated revision that did not match the archive.
+
 ## 2026-11-20: The lift's large-template bound grows with the instance (#437)
 
 Archive `census437-20261120` (release `evidence-2026-11-20-census437`). The #407 lift
