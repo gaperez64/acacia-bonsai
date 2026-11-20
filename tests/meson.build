@@ -97,6 +97,9 @@ test ('record-transport', py,
       args : [files ('check-record-transport.py'), worker_record_transport,
               meson.project_build_root ()],
       suite : ['unit', 'attribution'], depends : [worker_record_transport])
+test ('cap-independence', py,
+      args : [files ('check-cap-independence.py'), ab_exe, meson.project_build_root ()],
+      suite : ['unit', 'attribution', 'native-gr1'], depends : [ab_exe], timeout : 45)
 native_attribution_api = executable (
   'native-attribution-api', 'native_attribution_api.cc', dependencies : tlsf_deps)
 test ('native-attribution-api', native_attribution_api,

@@ -1,0 +1,4 @@
+INFO { TITLE: "repeated liveness" SEMANTICS: Mealy TARGET: Mealy }
+GLOBAL { PARAMETERS { aaa00 = 3; aaa01 = 3; aaa02 = 3; aaa03 = 3; aaa04 = 3; aaa05 = 3; aaa06 = 3; aaa07 = 3; aaa08 = 3; aaa09 = 3; aaa10 = 3; aaa11 = 3; aaa12 = 3; extent = 5; } }
+MAIN { INPUTS { demand[extent]; } OUTPUTS { response[extent]; }
+GUARANTEES { &&[0 <= i < extent] G F response[i]; } }
