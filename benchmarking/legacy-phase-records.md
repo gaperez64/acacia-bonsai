@@ -440,6 +440,8 @@ exhaustion is resource; an unclassified false/UNKNOWN is inconclusive. Only
 CHECK_OK/CERT_FAILED or REFUTED declines; CHECK_OK/INVALID or UNKNOWN is error.
 Keep diagnostic cause independent of legacy return/fallback. Failed alternatives
 retain earlier integrity causes; successful recovery clears them.
+Frontend-only and cover preparation share `pipeline_adapt_target`: unsupported
+adaptation is DECLINED/applicability; adaptation allocation failure is LIMIT/resource.
 
 Machine-readable [cause expectations](../tests/attribution-cause-expectations.json)
 checked by
@@ -522,6 +524,8 @@ Exact attribution, cause/hook censuses, timeout and comparison predecessors are 
 | `lift_test_fault` 5 | VERIFIED, no failure | `native_failure_census`: recovered game mutation with matching binding, one final check |
 | `lift_test_fault` 6,8 | STOPPED/error | `native_failure_census`, `native_corruption_guards`: corrupt R justice metadata or verified U verdict; verified direct fallback with unchanged proof |
 | `lift_test_fault` 7 | STOPPED/error | `native_failure_census`, `native_lift_api`: corrupt verified R verdict; legacy DECLINED, no published proof, both proof orders |
+| `lift_test_fault` 9 | DECLINE/applicability | `native_fold_budgets`, `native_failure_census`: CHECK_OK/CERT_FAILED, R/DECLINE/fold_seed_check, then DIRECT VERIFIED; retained check counters |
+| `lift_test_fault` 10,11,12,13 | STOPPED/resource | `native_fold_budgets`, `native_failure_census`: allocation failure during discovery, folded candidate construction, region checking or checker JSON copy; UNKNOWN, no certificate, JSON cleanup for 13 |
 | `both_test_seed_fault` 1 | DECLINE/applicability | `native_failure_census`: mixed seed polarity, verified direct fallback |
 | `both_test_seed_fault` 2 | STOPPED/error | `native_failure_census`: unknown seed, verified direct fallback |
 | `both_test_seed_fault` 3 | STOPPED/resource | `native_failure_census`: U schema capacity, verified direct fallback |
@@ -536,7 +540,7 @@ Exact attribution, cause/hook censuses, timeout and comparison predecessors are 
 | Preparation `provenance-recover` | OK, no retained failure | `native_contract_api`: successful strict retry clears cause; exact preparation still rejects |
 | `seed-null`; null, constraints/no justice, nonsingleton justice, nonconstant reset | STOPPED/error | `native_contract_validators`: all three seed solvers; `attribution-contracts`: shared seeds followed by verified direct fallback in both combined modes |
 | U unnamed latch, missing unique bad predicate, nonsingleton justice, Skolem letter dependency | STOPPED/error | `native_env_contract_validators`: each original guard, immutable cause and legacy DECLINED; both environment/system dependency sets |
-| Acacia `source-hash`, `swap-game`, `swapped-game-with-matching-hash`, `swap-certificate`, `wrong-side`, `wrong-method`, `missing-policy-hash`, `policy-hash`, `unexpected-region-policy-hash`, `corrupt-proof` | STOPPED/error | `attribution-contracts`: every hook in all three lifting arms, complete lifecycle, UNKNOWN, no DECLINE |
+| Acacia `source-hash`, `swap-game`, `swapped-game-with-matching-hash`, `swap-certificate`, `wrong-side`, `wrong-method`, `missing-policy-hash`, `policy-hash`, `unexpected-region-policy-hash`, `unverified-region`, `corrupt-proof` | STOPPED/error | `attribution-contracts`: every hook in all three lifting arms, complete lifecycle, UNKNOWN, no DECLINE |
 | Acacia `ACACIA_NATIVE_TEST_CORRUPT_PROOF` | STOPPED/error | `attribution-contracts`: direct proof parser/checker rejection, UNKNOWN |
 | Acacia `r-decline` | STOPPED/resource | `attribution`: bounded schema resource exhaustion, verified direct fallback |
 | Acacia `region-method` | VERIFIED (region) | `native-gr1-lift-cli` / `native-param-lift-cli`: resource-limited policy alternative recovers via region verification |

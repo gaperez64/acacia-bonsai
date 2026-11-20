@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Bump tlsf-tools to 8c3d6cd (v1.12-2): the GR(1) lift learns monitor-state folds for binary-encoded index families and accepts them only after target region verification; frontend expansion respects the lift budget (#437).
+- Bump tlsf-tools to 219270e (v1.12-5-g219270e): the GR(1) lift learns monitor-state folds for binary-encoded index families and accepts them only after target region verification; frontend expansion respects the lift budget, and frontend adaptation allocation failure now reports as a resource limit (#437).
 
 ## 2.10.0 (2026-11-20)
 

@@ -787,10 +787,6 @@
     "cause": "TLSF_PIPELINE_INVALID",
     "telemetry": "STOPPED/error"
   },
-  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_DECLINED | \"expand\" | \"TLSF expansion failed\" | 0": {
-    "cause": "TLSF_PIPELINE_DECLINED",
-    "telemetry": "DECLINE/applicability"
-  },
   "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | TLSF_PIPELINE_DECLINED | \"provenance\" | \"ambiguous source origin\" | 0": {
     "cause": "TLSF_PIPELINE_DECLINED",
     "telemetry": "DECLINE/applicability"
@@ -3062,5 +3058,133 @@
   "src/solver/closure_recurrence_provider.cc | fail | UNKNOWN | closure provider | typed failure | 13": {
     "cause": "FailureKind::unsupported_operator",
     "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/pipeline_source.c | pipeline_error | spec->arena->cancelled && spec->arena->failed ? TLSF_PIPELINE_LIMIT : TLSF_PIPELINE_DECLINED | \"expand\" | \"TLSF expansion failed\" | 0": {
+    "cause": "spec->arena->cancelled && spec->arena->failed ? TLSF_PIPELINE_LIMIT : TLSF_PIPELINE_DECLINED",
+    "telemetry": "DECLINE/applicability or STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"budget-memory\" | \"cannot measure frontend RSS\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"budget-memory\" | \"frontend allocation exceeds arm RSS\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_unproved_width\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_unproved_width\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_generator_binding\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_generator_binding\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_monitor_inventory\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_monitor_inventory\" | 1": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_monitor_inventory\" | 2": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_monitor_inventory\" | 3": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_discovery\" | \"fold_semantics\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"fold_discovery\" | \"fold_probe_budget\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_binding\" | \"fold_seed_binding\" | 0": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_discovery\" | \"fold_schema_mismatch\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_discovery\" | \"fold_insufficient_strata\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_goal_inventory\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_goal_inventory\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_seed_interface\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_detection\" | \"fold_seed_interface\" | 1": {
+    "cause": "FailureCause::error",
+    "telemetry": "STOPPED/error"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_learning\" | \"fold_fairness_changed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_learning\" | \"fold_rank_depth_changed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_learning\" | \"fold_no_candidate\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_instantiation\" | \"fold_missing_tag\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_CANCELLED | \"fold_region_check\" | \"fold_cancelled\" | 0": {
+    "cause": "FailureCause::cancelled",
+    "telemetry": "STOPPED/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | status == TLSF_GR1_CHECK_LIMIT ? TLSF_GR1_LIFT_LIMIT : TLSF_GR1_LIFT_DECLINED | \"fold_region_check\" | \"fold_region_failed\" | 0": {
+    "cause": "check_failure_cause(status, verdict)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | status == TLSF_GR1_CHECK_DEADLINE ? TLSF_GR1_LIFT_DEADLINE : status == TLSF_GR1_CHECK_LIMIT ? TLSF_GR1_LIFT_LIMIT : TLSF_GR1_LIFT_DECLINED | \"fold_seed_check\" | \"fold_seed_mismatch\" | 0": {
+    "cause": "check_failure_cause(status, verdict)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"fold_discovery\" | \"fold_no_candidate\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | throw std::bad_alloc | UNKNOWN | provider |  | 0": {
+    "cause": "std::bad_alloc",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | throw std::bad_alloc | UNKNOWN | provider |  | 1": {
+    "cause": "std::bad_alloc",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | throw std::bad_alloc | UNKNOWN | provider |  | 2": {
+    "cause": "std::bad_alloc",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | throw std::bad_alloc | UNKNOWN | provider |  | 3": {
+    "cause": "std::bad_alloc",
+    "telemetry": "STOPPED/resource"
   }
 }

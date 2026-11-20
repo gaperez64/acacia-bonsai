@@ -165,6 +165,7 @@ def main() -> None:
             expect(hook_binary, ["-T", str(paths[0]), "--arms", ARM],
                    0, "REALIZABLE", fault="region-method")
             for fault, marker in (("source-hash", '"stage":"source"'),
+                                  ("unverified-region", '"stage":"artifact"'),
                                   ("swap-certificate", '"stage":"certificate"'),
                                   ("swap-game", '"stage":"game"'),
                                   ("swapped-game-with-matching-hash",

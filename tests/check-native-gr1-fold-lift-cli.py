@@ -20,11 +20,12 @@ def main() -> None:
     arm = "both:gr1-real-lift:oxidd"
     with tempfile.TemporaryDirectory(dir=build) as temporary:
         records = Path(temporary)
+        # Measured 7.34 s at -O0 in a 5 GiB scope; allow CI contention and sanitizer overhead.
         env = dict(os.environ, ACACIA_PHASE_RECORDS=str(records),
-                   ACACIA_OUTER_DEADLINE_MONOTONIC=str(time.monotonic() + 20))
+                   ACACIA_OUTER_DEADLINE_MONOTONIC=str(time.monotonic() + 120))
         result = subprocess.run(
             [str(binary), "-T", str(ROOT / "tests/fixtures/encoded-fold.tlsf"), "--arms", arm],
-            env=env, capture_output=True, text=True, timeout=25)
+            env=env, capture_output=True, text=True, timeout=130)
         rows = [row for process in load_phase_records(records).processes
                 for row in process.events]
         assert result.returncode == 0 and "REALIZABLE" in result.stdout, (result, rows)

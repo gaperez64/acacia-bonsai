@@ -133,12 +133,13 @@ if native_test_hooks
 endif
 test ('native-gr1-lift-cli', py,
       args : native_gr1_lift_cli_args,
-      suite : ['unit', 'native-gr1'], timeout : 180,
+      # Sequential hook cases measured 139 s; allow CI contention and instrumentation.
+      suite : ['unit', 'native-gr1'], timeout : 450,
       depends : native_cli_depends)
 test ('native-gr1-fold-lift-cli', py,
       args : [files ('check-native-gr1-fold-lift-cli.py'), ab_exe,
               meson.project_build_root ()],
-      suite : ['unit', 'native-gr1'], timeout : 30, depends : [ab_exe])
+      suite : ['unit', 'native-gr1'], timeout : 150, depends : [ab_exe])
 test ('native-gr1-same-thread', py,
       args : [files ('check-native-gr1-same-thread.py'), ab_exe,
               meson.project_build_root ()],
