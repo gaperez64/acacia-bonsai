@@ -12,6 +12,34 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-20: The lift's large-template bound grows with the instance (#437)
+
+Archive `census437-20261120` (release `evidence-2026-11-20-census437`). The #407 lift
+census was rerun on its 30 inputs with the committed per-axis decline reasons
+(#440), using the `both:gr1-real-lift:oxidd` arm alone. The setup was 60 s, a 6G
+scope and the release binary from `g3-local-20261120`. Every input lands in the
+same group as in the #407 traces:
+
+| Group | Inputs | Realizable variants by family name |
+|---|---:|---:|
+| Encoding width of binary indices (`axis`) | 12 | 10 |
+| Large template (`bus_schema`) | 13 | 7 |
+| Other: unindexed parameter, shape mismatch, unstable roles | 5 | 0 |
+
+No run decided anything. The large-template arity equals the instance parameter
+(`arity 10>4` on load_balancer n=10), so raising `--lift-max-predicate-arity` only
+clears instances with n at or below the bound. The 7 realizable large-template
+inputs were rerun at 120 s with bounds 4, 6 and 8:
+- **rw_arbiter n=5 and lift_unary_enc n=6** (at 6), and **lift_unary_enc n=7** (at 8):
+  the bound clears, then every seed window declines on a structural shape mismatch.
+- **load_balancer n=10, 11 and lift n=9, 10:** still decline on the large template
+  at 8.
+
+The bound is therefore not the lever. A lift for these families would need
+templates whose predicate arity is parametric. Independent ground truth is thin:
+TLSF status is unknown for most of these instances, and SemML's 120 s run decides
+only lift_unary_enc n=6 (REALIZABLE, 96 s).
+
 ## 2026-11-20: Recording the lift's decline reasons is timing-neutral (#440, #437)
 
 Archive `g3-local-20261120` (release `evidence-2026-11-20-g3local440`). #440 makes
