@@ -1898,7 +1898,7 @@ caches and identities, and restarts with the exact predicate.
 The first `docker_default` preset resolved to `otf_sparse_formula_parity`.
 Baseline and candidate use the normal release profile (`-O3`, native `-Ofast`,
 LTO), built with two jobs and `CARGO_BUILD_JOBS=2`. Ten frozen TLSF inputs come
-from `_bm-logs.kd20261111/prof/solved-2to17.tsv`; each is decided by
+from `prof/solved-2to17.tsv` of campaign kd20261111 in archive `sprint-20261111`; each is decided by
 `--arms unreal:formula:spot-guarded-sparse:frozen-graph`. Work is fixed at K=2
 for the two AllLights inputs and K=32 for the other eight, with weakening,
 equivariance and Spot fast paths off. Three serial alternating pairs per input
