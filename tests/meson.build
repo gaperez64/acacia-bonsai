@@ -140,6 +140,15 @@ test ('native-gr1-fold-lift-cli', py,
       args : [files ('check-native-gr1-fold-lift-cli.py'), ab_exe,
               meson.project_build_root ()],
       suite : ['unit', 'native-gr1'], timeout : 150, depends : [ab_exe])
+native_parametric_fold_cli_args = [files ('check-native-gr1-parametric-fold-lift-cli.py'),
+                                  ab_exe, meson.project_build_root ()]
+if native_test_hooks
+  native_parametric_fold_cli_args += [native_test_exe.full_path ()]
+endif
+test ('native-gr1-parametric-fold-lift-cli', py,
+      args : native_parametric_fold_cli_args,
+      # Five cases measured 28.79 s at -O0; allow CI contention and instrumentation.
+      suite : ['unit', 'native-gr1'], timeout : 300, depends : native_cli_depends)
 test ('native-gr1-same-thread', py,
       args : [files ('check-native-gr1-same-thread.py'), ab_exe,
               meson.project_build_root ()],
@@ -542,7 +551,8 @@ if native_test_hooks
   endif
   test ('attribution-contracts', py,
         args : contract_record_args,
-        suite : ['unit', 'attribution'], timeout : 180)
+        # Measured 150 s including missing-target-check cases; allow CI instrumentation.
+        suite : ['unit', 'attribution'], timeout : 450)
   test ('attribution', py,
         args : [files ('check-attribution.py'), ab_exe, native_test_exe,
                 game_backend_integration, meson.project_build_root ()],

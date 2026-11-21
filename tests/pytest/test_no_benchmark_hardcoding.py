@@ -182,6 +182,8 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'native arm label',
     ('src/native_gr1_lift_arm.cc', 'both:gr1-real-lift:oxidd'):
         'native arm label selected by the user',
+    ('src/native_gr1_lift_arm.cc', 'lift_generator_'):
+        'phase-record prefix for the checked fold generator metadata',
     ('src/native_param_lift_arm.cc', 'incomplete or unverified system proof'):
         'native arm label or proof diagnostic',
     ('src/native_param_lift_arm.cc', 'invalid lift evidence JSON'):
@@ -280,6 +282,8 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'proof-side schema or timing diagnostic',
     ('subprojects/tlsf-tools/src/lib/gr1_lift.cc', 'fairness_assumptions'):
         'included header, proof-side schema, or lift stage name',
+    ('subprojects/tlsf-tools/src/lib/gr1_lift.cc', 'full Boolean BDD equality of W/X/Y/goals'):
+        'evidence describing exact seed-predicate reconstruction, not a family identity',
     ('subprojects/tlsf-tools/src/lib/gr1_lift.cc', 'no system certificate'):
         'proof-side schema or proof diagnostic',
     ('subprojects/tlsf-tools/src/lib/gr1_lift.cc', 'seed_window'):

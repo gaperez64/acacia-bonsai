@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Bump tlsf-tools to c47a040 (v1.12-8-gc47a040): the GR(1) lift learns parametric-support folds for games whose global monitors keep constant state counts, such as load_balancer, and accepts them only after target region verification; both fold routes choose axes independently of names (#437).
+
 - Bump tlsf-tools to 219270e (v1.12-5-g219270e): the GR(1) lift learns monitor-state folds for binary-encoded index families and accepts them only after target region verification; frontend expansion respects the lift budget, and frontend adaptation allocation failure now reports as a resource limit (#437).
 
 ## 2.10.0 (2026-11-20)

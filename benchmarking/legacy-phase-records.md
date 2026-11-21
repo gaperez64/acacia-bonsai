@@ -526,6 +526,9 @@ Exact attribution, cause/hook censuses, timeout and comparison predecessors are 
 | `lift_test_fault` 7 | STOPPED/error | `native_failure_census`, `native_lift_api`: corrupt verified R verdict; legacy DECLINED, no published proof, both proof orders |
 | `lift_test_fault` 9 | DECLINE/applicability | `native_fold_budgets`, `native_failure_census`: CHECK_OK/CERT_FAILED, R/DECLINE/fold_seed_check, then DIRECT VERIFIED; retained check counters |
 | `lift_test_fault` 10,11,12,13 | STOPPED/resource | `native_fold_budgets`, `native_failure_census`: allocation failure during discovery, folded candidate construction, region checking or checker JSON copy; UNKNOWN, no certificate, JSON cleanup for 13 |
+| `lift_test_fault` 14,15 | DECLINE/applicability | Upstream `native_parametric_fold_both`, `native_failure_census`: seed-window state growth / ordered-domain rejection |
+| `lift_test_fault` 16–21 | DECLINE/applicability | Upstream `native_parametric_fold_both`, `native_failure_census`: tag transport, candidate, seed agreement, region rejection, rank depth and fairness; no verified R event |
+| `lift_test_fault` 22–26 | STOPPED/resource | Upstream `native_parametric_fold_both`, `native_failure_census`: allocation failure in support discovery, candidate construction, region checking, JSON copy or cached-seed discovery; no published proof, JSON cleanup for 25 |
 | `both_test_seed_fault` 1 | DECLINE/applicability | `native_failure_census`: mixed seed polarity, verified direct fallback |
 | `both_test_seed_fault` 2 | STOPPED/error | `native_failure_census`: unknown seed, verified direct fallback |
 | `both_test_seed_fault` 3 | STOPPED/resource | `native_failure_census`: U schema capacity, verified direct fallback |
@@ -544,6 +547,7 @@ Exact attribution, cause/hook censuses, timeout and comparison predecessors are 
 | Acacia `ACACIA_NATIVE_TEST_CORRUPT_PROOF` | STOPPED/error | `attribution-contracts`: direct proof parser/checker rejection, UNKNOWN |
 | Acacia `r-decline` | STOPPED/resource | `attribution`: bounded schema resource exhaustion, verified direct fallback |
 | Acacia `region-method` | VERIFIED (region) | `native-gr1-lift-cli` / `native-param-lift-cli`: resource-limited policy alternative recovers via region verification |
+| Acacia `ACACIA_NATIVE_TEST_TARGET_CHECKS` | VERIFIED for R 1–2, U 1, direct 1–3; otherwise STOPPED/error | `native-gr1-lift-cli`, `attribution-contracts`: missing/excess checks rejected; `native-gr1-parametric-fold-lift-cli`: parametric R retry accepted and excess rejected with bindings retained |
 | Acacia exceptions `bad-alloc`, `standard`, `unknown` | STOPPED/resource, error, error | `attribution`: complete terminal UNKNOWN lifecycle, no DECLINE |
 | Spot provider faults `allocation`, `length`, `capacity`, `bdd_growth` | STOPPED/resource | `spot-lazy-buchi-view`: original provider/BDD checks + serialized lifecycle |
 | Spot provider faults `count`, `meaning`, `late_meaning`, `mark`, `ap_inventory`, `null_iterator`; missing provider, foreign/null state | STOPPED/error | `spot-lazy-buchi-view`: original contract checks, UNKNOWN, serialized lifecycle, no partial row |
