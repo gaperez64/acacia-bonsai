@@ -12,6 +12,42 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-21: The parametric-support fold solves load_balancer n=9 to 11 (#449, #437)
+
+Archive `lift437b-20261121` (release `evidence-2026-11-21-lift437b`). #449 pins
+tlsf-tools 9246712, whose GR(1) lift gains a parametric-support fold for
+bus-wide monitors (#437 route B, tlsf-tools #147). When seed discovery declines
+on a large template and the global monitors keep their state counts, the lift
+binds monitor states across sizes and learns the seeds' regions as folds. It
+answers REALIZABLE only when the region checker verifies the certificate on the
+target, so a wrong candidate can only cost coverage. The pin also adds `tlsfobf`
+(tlsf-tools #145).
+
+**Local G3** ran under the regime of `g3-local-20261120`: `--scope-mode instance`,
+a 6G cap, 17 s, a shared master `28b8b4b9` baseline and a base-vs-base control.
+
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| #449 `26fccc41` | 164 → 164 / 782.8 → 778.2 s | 167 → 167 / 591.0 → 590.7 s | PASS |
+| control (base vs base) | 164 → 164 / 771.2 → 770.0 s | 167 → 167 / 588.8 → 588.8 s | PASS |
+
+No verdict changed, and both PAR-2 differences are within the control's spread.
+
+**Full-corpus screen.** All 1,524 SYNTCOMP26 inputs ran at 17 s, serially, under
+the same 6G scope. #449 solves 1,374 against master's 1,371, and PAR-2 falls from
+6,329.8 to 6,253.6 s. The three gains are load_balancer n=9, 10 and 11, all
+REALIZABLE in 5.0 to 6.6 s, and load_balancer n=8 drops from 9.7 to 5.0 s. There
+are no losses and no verdict conflicts. The fold also runs on load_balancer n=7
+and prioritized_arbiter n=8, 9, 10 and 12, which both binaries solve; there it
+costs 0.5 to 1.4 s each. No other input changes by more than 3 s.
+
+**Renamed corpus.** `benchmarking/obfuscate-corpus.py` renamed every identifier of
+all 1,524 inputs with `tlsfobf` (rename mode, seed 145) and gave the files neutral
+names. #449 on the renamed corpus solves the same 1,374 inputs with the same
+verdicts (PAR-2 6,217.7 s against 6,253.6 s on the plain corpus), with no
+coverage flips and no exclusions. This includes the three load_balancer gains,
+so the fold does not depend on benchmark names or identifiers.
+
 ## 2026-11-21: The fold lift solves simple_arbiter_enc n=11 to 16 (#448, #437)
 
 Archive `lift437-20261121` (release `evidence-2026-11-21-lift437`). #448 pins
