@@ -63,6 +63,7 @@ EXCLUDED = {
         "subprojects/tlsf-tools/src/tools/tlsfcompose/main.c",
         "subprojects/tlsf-tools/src/tools/tlsfinfo/main.c",
         "subprojects/tlsf-tools/src/tools/tlsfnorm/main.c",
+        "subprojects/tlsf-tools/src/tools/tlsfobf/main.c",
         "subprojects/tlsf-tools/src/tools/tlsfresidual/main.c",
         "subprojects/tlsf-tools/src/tools/tlsfsolve/main.c",
         "subprojects/tlsf-tools/src/tools/tlsftemplates/main.c")},
