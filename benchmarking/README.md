@@ -144,6 +144,69 @@ native or converted-pair input, including ltlsynt; conversion remains untimed.
 `summarize` and `export-cactus` rebuild reports from saved observations without
 entering a campaign guard or invoking a solver.
 
+### Obfuscated SYNTCOMP26 screens
+
+Prepare one treatment per directory, using the self-checking `tlsfobf` from
+[tlsf-tools #145](https://github.com/gaperez64/tlsf-tools/issues/145):
+
+```sh
+python3 -s benchmarking/obfuscate-corpus.py \
+  --tlsfobf /path/to/tlsfobf \
+  --tlsf-map tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv \
+  --tlsf-corpus /path/to/original-corpus \
+  --list tests/suites/benchmarks/syntcomp26/all.list \
+  --mode all --seed 145 --output /path/to/evidence/obfuscated
+
+python3 -s benchmarking/run-syntcomp26-coverage.py \
+  --bin /path/to/acacia-bonsai --solver-label obfuscated \
+  --list /path/to/evidence/obfuscated/instances.list \
+  --tlsf-map /path/to/evidence/obfuscated/tlsf-sources.tsv \
+  --tlsf-corpus /path/to/evidence/obfuscated/corpus \
+  --status-exceptions /path/to/evidence/obfuscated/status-exceptions.tsv \
+  --caps 17 --memory-max 8G --memory-swap-max 0 \
+  --conflict-policy collect --output /path/to/evidence/obfuscated-screen.tsv
+
+python3 -s benchmarking/compare-obfuscated-screen.py \
+  --plain /path/to/evidence/plain-screen.tsv \
+  --obfuscated /path/to/evidence/obfuscated-screen.tsv \
+  --manifest /path/to/evidence/obfuscated/manifest.tsv \
+  --noise-s 0.5 --output /path/to/evidence/comparison.tsv
+```
+
+Use the same binary, flags, single cap and resource limits for the plain run.
+The comparison requires a complete obfuscated screen; the plain screen may
+cover a larger panel. Solved counts and PAR-2 totals use only accepted inputs,
+and rejected inputs appear separately in the per-instance report. Opposing
+REALIZABLE/UNREALIZABLE answers exit 3; coverage flips do not fail the comparison.
+`--noise-s` is an absolute per-instance threshold (the example is illustrative,
+not a calibrated floor). Deltas use observed wall times; an unsolved observation
+is censored and does not establish a performance change.
+
+`rename` removes identifier and INFO text cues; `reorder` permutes declarations,
+clauses and commutative operands; `all` combines them. The printer drops comments
+and the `//#!SYNTCOMP` trailer in every mode. Thus `//STATUS`, `//REF_SIZE`,
+commentary and original textual formatting are lost; semantics and target remain.
+The runner normally derives expectations from `//STATUS`, with reviewed
+corrections in `benchmarking/syntcomp26-status-exceptions.tsv`. Preparation applies
+those corrections to the original corpus, then carries decisive expectations
+in the generated exceptions table, bound to absent annotations via
+`annotated_status=<none>`. **Pass that generated table to the obfuscated run**:
+its `expectation_source` becomes `exception` instead of `status`; original sources
+and effective expectations remain in the manifest. Unknown expectations stay
+unknown. No trailer is reinserted. For a different corpus, preparation accepts
+`--status-exceptions` with an appropriate table (an empty table means no corrections).
+
+Preparation runs serially in the caller's environment, without a systemd scope;
+wrap it externally if needed. `--timeout` defaults to 60 seconds per input.
+Failures, including self-check rejection and timeouts, are recorded and omitted
+from the generated map/list; partial outputs are removed. Repeating the command
+resumes checked outputs and cached failures, verifies output/map hashes, and
+repairs missing or corrupted outputs. Changed source bytes, tool bytes, mode,
+seed or timeout require a new output directory. Neutral filenames follow a seeded
+permutation of list order, never a name sort or hash. Renaming maps stay outside
+`corpus/`, in `maps/`; retain them to translate synthesized controller names back.
+Keep all generated evidence outside the checkout or in ignored `_bm-logs*/`.
+
 The default `<output>-summary.tsv` covers the sorted union of every instance
 observed for the current label in the accumulated raw TSV **and its conflicts
 sidecar**, regardless of the latest execution `--list`, `--limit`, or

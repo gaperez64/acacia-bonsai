@@ -279,6 +279,9 @@ def read_status_exceptions(
 ) -> dict[str, str | None]:
     """Load status corrections and verify them against the current corpus.
 
+    `annotated_status=<none>` binds an expectation to a file with no STATUS
+    annotation, such as an obfuscated input whose trailer was removed.
+
     `required` says the caller named this path rather than inheriting the
     default.  A named file that is not there is a misconfiguration, and a silent
     empty table is the worst way to report it: every catalogued wrong //STATUS
@@ -353,8 +356,8 @@ def read_status_exceptions(
 
             tlsf_path = corpus / instance
             actual = tlsf_status(tlsf_path)
-            if annotated != actual:
-                actual_display = actual if actual is not None else "<none>"
+            actual_display = actual if actual is not None else "<none>"
+            if annotated != actual_display:
                 raise CoverageError(
                     f"status exception for {instance} says annotated_status="
                     f"{annotated!r}, but the TLSF //STATUS is {actual_display!r}; "

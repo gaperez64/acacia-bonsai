@@ -292,6 +292,21 @@ def test_status_exception_rejects_empty_evidence(tmp_path):
         coverage.read_status_exceptions(exceptions, tmp_path)
 
 
+def test_status_exception_can_bind_a_missing_annotation(tmp_path):
+    tlsf = tmp_path / "neutral.tlsf"
+    tlsf.write_text("INFO { TITLE: \"neutral\" }\n")
+    exceptions = tmp_path / "exceptions.tsv"
+    write_status_exceptions(
+        exceptions, [("neutral.tlsf", "<none>", "unrealizable", "original SHA-256 in manifest")],
+    )
+    assert coverage.read_status_exceptions(exceptions, tmp_path) == {
+        "neutral.tlsf": "UNREALIZABLE",
+    }
+    tlsf.write_text("//STATUS: unrealizable\n")
+    with pytest.raises(coverage.CoverageError, match="corpus changed"):
+        coverage.read_status_exceptions(exceptions, tmp_path)
+
+
 def run_result(*, returncode=0, timed_out=False, resource_limited=False):
     return coverage.RunResult(
         stdout="",
