@@ -219,6 +219,13 @@ def main() -> None:
                 assert not any(row.get("event") == "decline" and
                                row.get("route") == stops[0]["route"] for row in records), records
                 attribution.complete_records(records, expected_winners=0)
+        # A checked artifact still needs a recorded target check in either combined arm.
+        for arm in ARMS[:2]:
+            directory = root / f"zero-target-checks-{arm}"
+            directory.mkdir()
+            result = recorded(["-T", str(fixtures), "--arms", arm], directory,
+                              {"ACACIA_NATIVE_TEST_TARGET_CHECKS": "0"})
+            stopped(result, attribution.rows(directory), Contract("zero-target-checks", "artifact"))
         directory = root / "direct-proof"
         directory.mkdir()
         result = recorded(["-T", str(source), "--arms", "both:gr1:oxidd"], directory,

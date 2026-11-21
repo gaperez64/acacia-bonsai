@@ -170,6 +170,8 @@ namespace acacia {
       phase_finish (arm, "seed_cache", phase_start (), -1, -1,
                     result.seed_probes + result.seed_reductions + result.seed_solves +
                         result.seed_checks + result.seed_cache_hits);
+      phase_finish (arm, "seed_checks", phase_start (), -1, -1, result.seed_checks);
+      phase_finish (arm, "seed_cache_hits", phase_start (), -1, -1, result.seed_cache_hits);
       phase_finish (arm, "final_checks", phase_start (), -1, -1, result.target_checks);
       phase_finish (arm, "target_reductions", phase_start (), -1, -1, result.target_reductions);
     }
@@ -186,7 +188,7 @@ namespace acacia {
         proof.method == TLSF_GR1_CHECK_REGION && proof.verdict == TLSF_GR1_CHECK_REGION_VERIFIED;
     const bool certificate =
         proof.method == TLSF_GR1_CHECK_CERTIFICATE && proof.verdict == TLSF_GR1_CHECK_VERIFIED;
-    // R permits one fold retry; direct also counts the preceding failed lift checks.
+    // Both fold generators permit one order retry; direct includes failed lift checks.
     const unsigned max_checks =
         result.route == TLSF_GR1_BOTH_REAL_LIFT  ? 2
         : result.route == TLSF_GR1_BOTH_ENV_LIFT ? 1
@@ -241,6 +243,13 @@ namespace acacia {
       return EXIT_CODE_UNKNOWN;
     }
     binding_phase.finish ();
+    if (phase_records_enabled ()) {
+      auto* generator = yyjson_obj_get (yyjson_obj_get (evidence, "fold"), "generator");
+      if (yyjson_is_str (generator)) {
+        const std::string phase = std::string ("lift_generator_") + yyjson_get_str (generator);
+        phase_finish (arm, phase.c_str (), phase_start ());
+      }
+    }
     worker_verified (unreal ? "UNREAL" : "REAL", unreal ? "UNREAL" : "REAL");
     return unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL;
   }
