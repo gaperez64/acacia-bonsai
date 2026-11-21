@@ -71,7 +71,8 @@ def compact(value: str) -> str:
 def origins() -> list[dict[str, str | int]]:
     """Enumerate origins as well as boolean validator checks below status adapters."""
     rows = []
-    calls = (r"\b(decline|Declined|Failure|ResourceLimit|fail|pipeline_status|pipeline_error|"
+    calls = (r"\b(decline|param_decline|note|Declined|Failure|ResourceLimit|fail|"
+             r"pipeline_status|pipeline_error|"
              r"oxidd_record_failure|check_failure|native_arm_diagnostic|"
              r"worker_decline|worker_stopped|require)\s*\(")
     for name in SOURCES:
@@ -92,6 +93,16 @@ def origins() -> list[dict[str, str | int]]:
                     raise ValueError(f"{name}: untyped decline: {args}")
                 cause, stage, message = args
                 legacy = "DECLINED"
+            elif call == "param_decline":
+                if args[0].startswith("const "):
+                    continue
+                cause, stage, message, legacy = (
+                    "FailureCause::applicability", '"param_schema"', args[0], "DECLINED")
+            elif call == "note":
+                if "_axis_ambiguous" not in args[0]:
+                    continue
+                cause, stage, message, legacy = (
+                    "FailureCause::applicability", '"axis"', args[0], "DECLINED")
             elif call == "Declined":
                 if len(args) != 2:
                     raise ValueError(f"{name}: untyped provider decline: {args}")
@@ -222,6 +233,10 @@ def generate() -> str:
         "and all closure-provider cause conversions on serialized lifecycle packets. "
         "The per-origin source assertions cover branches that are not individually forced "
         "at runtime; this census does not claim branch coverage.\n\n"
+        "Parametric fold helper call sites are enumerated individually: unsupported "
+        "encodings/domains, monitor/tag/goal inventories, seed agreement, rank depth and "
+        "fairness changes and ambiguous axes decline; probe/subset budgets and allocation "
+        "failures stop as resource limits. Region-check outcomes retain the checker's typed cause.\n\n"
         "DECLINE means genuine applicability/unsupported input or a completed logical "
         "certificate rejection. STOPPED/error means integrity, invalid input, internal or "
         "operational failure. Limits, allocation/capacity, deadlines and cancellation stop "

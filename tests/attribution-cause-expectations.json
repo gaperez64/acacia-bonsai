@@ -3159,10 +3159,6 @@
     "cause": "FailureCause::cancelled",
     "telemetry": "STOPPED/cancelled"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | status == TLSF_GR1_CHECK_LIMIT ? TLSF_GR1_LIFT_LIMIT : TLSF_GR1_LIFT_DECLINED | \"fold_region_check\" | \"fold_region_failed\" | 0": {
-    "cause": "check_failure_cause(status, verdict)",
-    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
-  },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | status == TLSF_GR1_CHECK_DEADLINE ? TLSF_GR1_LIFT_DEADLINE : status == TLSF_GR1_CHECK_LIMIT ? TLSF_GR1_LIFT_LIMIT : TLSF_GR1_LIFT_DECLINED | \"fold_seed_check\" | \"fold_seed_mismatch\" | 0": {
     "cause": "check_failure_cause(status, verdict)",
     "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
@@ -3186,5 +3182,193 @@
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | throw std::bad_alloc | UNKNOWN | provider |  | 3": {
     "cause": "std::bad_alloc",
     "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"param_schema\" | reason | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_encoding\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_ordered_domain\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_monitor_inventory\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_encoding\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_ordered_domain\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_ordered_domain\" | 2": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_state_growth\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_ordered_domain\" | 3": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_semantics\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_state_growth\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_insufficient_seeds\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"param_discovery\" | \"probe_budget_exhausted\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_fairness_changed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_fairness_changed\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_tag_transport\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_feature_alphabet\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_monitor_inventory\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_tag_transport\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_tag_transport\" | 2": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_goal_inventory\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_tag_transport\" | 3": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_state_growth\" | 2": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_tag_transport\" | 4": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_fairness_changed\" | 2": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_tag_transport\" | 5": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_no_candidate\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"param_schema\" | \"param_subset_budget\" | 0": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_monitor_inventory\" | 2": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_no_candidate\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_no_candidate\" | 2": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"param_schema\" | \"param_subset_budget\" | 1": {
+    "cause": "FailureCause::resource",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_seed_mismatch\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_no_candidate\" | 3": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_seed_mismatch\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_rank_depth_changed\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_seed_mismatch\" | 2": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_seed_mismatch\" | 3": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_no_candidate\" | 4": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_rank_depth_changed\" | 1": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_fairness_changed\" | 3": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | param_decline | DECLINED | \"param_schema\" | \"param_no_candidate\" | 5": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | status == TLSF_GR1_CHECK_LIMIT ? TLSF_GR1_LIFT_LIMIT : TLSF_GR1_LIFT_DECLINED | candidate.param ? \"param_region_check\" : \"fold_region_check\" | candidate.param ? \"param_region_failed\" : \"fold_region_failed\" | 0": {
+    "cause": "check_failure_cause(status, verdict)",
+    "telemetry": "DECLINE/applicability or STOPPED/error/resource/deadline/cancelled"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | throw std::bad_alloc | UNKNOWN | provider |  | 4": {
+    "cause": "std::bad_alloc",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | throw std::bad_alloc | UNKNOWN | provider |  | 5": {
+    "cause": "std::bad_alloc",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | throw std::bad_alloc | UNKNOWN | provider |  | 6": {
+    "cause": "std::bad_alloc",
+    "telemetry": "STOPPED/resource"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | note | DECLINED | \"axis\" | encoded ? \"fold_axis_ambiguous\" : \"param_axis_ambiguous\" | 0": {
+    "cause": "FailureCause::applicability",
+    "telemetry": "DECLINE/applicability"
   }
 }

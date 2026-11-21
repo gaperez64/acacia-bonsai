@@ -34,6 +34,29 @@ def test_native_fault_classification_inventory(hook: str, table: str) -> None:
     assert tested == modes, f"{hook}: missing={modes - tested}, obsolete={tested - modes}"
 
 
+@pytest.mark.parametrize(("fault", "kind", "stage", "reason"), (
+    (14, "DECLINE", "seed_window", "param_state_growth"),
+    (15, "DECLINE", "seed_window", "param_ordered_domain"),
+    (16, "DECLINE", "param_schema", "param_tag_transport"),
+    (17, "DECLINE", "param_schema", "param_no_candidate"),
+    (18, "DECLINE", "param_schema", "param_seed_mismatch"),
+    (19, "DECLINE", "param_region_check", "param_region_failed(input-first)"),
+    (20, "DECLINE", "param_schema", "param_rank_depth_changed"),
+    (21, "DECLINE", "param_schema", "param_fairness_changed"),
+    (22, "STOPPED", "allocation", "host allocation failed"),
+    (23, "STOPPED", "allocation", "param_failed"),
+    (24, "STOPPED", "allocation", "fold_region_stopped"),
+    (25, "STOPPED", "allocation", "fold_region_stopped"),
+    (26, "STOPPED", "allocation", "host allocation failed"),
+))
+def test_parametric_fold_fault_classifications(fault, kind, stage, reason) -> None:
+    cause = "DECLINED" if kind == "DECLINE" else "LIMIT"
+    entry = re.search(
+        rf'\{{{fault},\s*TLSF_GR1_BOTH_EVENT_(\w+),\s*TLSF_GR1_LIFT_(\w+),'
+        r'\s*"([^"]+)",\s*"([^"]+)"\}', PANEL.read_text())
+    assert entry and entry.groups() == (kind, cause, stage, reason)
+
+
 def test_decline_cause_census_export_and_staleness(tmp_path: Path) -> None:
     import subprocess
     import sys
@@ -53,6 +76,15 @@ def test_decline_cause_census_export_and_staleness(tmp_path: Path) -> None:
 GENERATOR = runpy.run_path(str(ROOT / "tests/check-decline-causes.py"))
 ORIGINS = GENERATOR["origins"]()
 EXPECTED_CAUSES = json.loads(GENERATOR["EXPECTATIONS"].read_text())
+
+
+def test_parametric_decline_reasons_are_enumerated() -> None:
+    reasons = re.findall(r'\bparam_decline\("([^"]+)"\)', (LIB / "gr1_lift.cc").read_text())
+    rows = [row for row in ORIGINS if row["call"] == "param_decline"]
+    assert reasons and sorted(row["message"] for row in rows) == sorted(
+        f'"{reason}"' for reason in reasons)
+    assert any(row["call"] == "note" and "param_axis_ambiguous" in row["message"]
+               for row in ORIGINS)
 
 
 def telemetry_class(row: dict) -> str:
