@@ -27,9 +27,22 @@ COLUMNS = (
     "wall_seconds", "exit_code", "failure_kind", "M", "I", "L", "O", "A", "REF_SIZE",
     "verification", "verify_seconds", "verify_exit_code",
 )
+SUMMARY_FAILURES = {
+    "failed_verification": "failed_verification",
+    "synthesis_timeout": "timeout",
+    "unrealizable": "unrealizable",
+    "synthesis_resource_limit": "resource_limit",
+    "synthesis_error": "error",
+    "synthesis_unknown": "unknown",
+    "invalid_controller": "invalid_controller",
+    "verify_timeout": "verify_timeout",
+    "verify_resource_limit": "verify_resource_limit",
+    "verify_error": "verify_error",
+    "verify_unsupported": "verify_unsupported",
+}
 SUMMARY_COLUMNS = (
     "member", "attempted", "realizable", "controllers_produced", "verified",
-    "failed_verification", "verify_timeout", "commonly_verified", "total_ands_latches",
+    *SUMMARY_FAILURES, "commonly_verified", "total_ands_latches",
     "median_ands_latches",
 )
 
@@ -47,7 +60,7 @@ def ref_size(path):
 
 
 def measure(instance, source, member, binary, digest, checker, directory, timeout,
-            verify_timeout, launch, expected, expectation_source):
+            verify_timeout, launch, expected, expectation_source, verify_max_states=200000):
     directory.mkdir(parents=True)
     controller = directory / "controller.aag"
     run = launch([str(binary), "-T", str(source), "-s", str(controller)], timeout)
@@ -72,7 +85,8 @@ def measure(instance, source, member, binary, digest, checker, directory, timeou
         row.update(failure_kind="invalid_controller", verification="unparsable")
         (directory / "verify.stderr").write_text(str(error) + "\n")
         return row
-    check = launch([str(checker), str(source), str(controller)], verify_timeout)
+    check = launch([str(checker), str(source), str(controller),
+                    "--max-states", str(verify_max_states)], verify_timeout)
     (directory / "verify.stdout").write_text(check.stdout)
     (directory / "verify.stderr").write_text(check.stderr)
     verification = "verify_error"
@@ -84,6 +98,8 @@ def measure(instance, source, member, binary, digest, checker, directory, timeou
         verification = "verified"
     elif check.returncode == 1 and check.stdout.strip() == "failed_verification":
         verification = "failed_verification"
+    elif check.returncode == 3 and check.stdout.strip() == "verify_unsupported":
+        verification = "verify_unsupported"
     row.update(verification=verification, verify_seconds=f"{check.seconds:.6f}",
                verify_exit_code=check.returncode,
                failure_kind="" if verification == "verified" else verification)
@@ -103,9 +119,8 @@ def summarize(rows, members):
             realizable=sum(r["verdict"] == "REALIZABLE" for r in group),
             controllers_produced=sum(r["A"] != "" for r in group),
             verified=sum(r["verification"] == "verified" for r in group),
-            failed_verification=sum(r["verification"] != "verified"
-                                    and r["verification"] != "verify_timeout" for r in group),
-            verify_timeout=sum(r["verification"] == "verify_timeout" for r in group),
+            **{column: sum(r["failure_kind"] == kind for r in group)
+               for column, kind in SUMMARY_FAILURES.items()},
             commonly_verified=len(common), total_ands_latches=sum(sizes) if sizes else "",
             median_ands_latches=statistics.median(sizes) if sizes else "",
         ))
@@ -125,12 +140,16 @@ def main(argv=None):
                         default="REALIZABLE")
     parser.add_argument("--timeout", type=positive_seconds, default=17)
     parser.add_argument("--verify-timeout", type=positive_seconds, default=60)
+    parser.add_argument("--verify-max-states", type=int, default=200000,
+                        help="reachable latch valuations allowed per controller (default: 200000)")
     parser.add_argument("--systemd-scope", action="store_true")
     parser.add_argument("--memory-max", default="5G")
     parser.add_argument("--memory-swap-max", default="0")
     parser.add_argument("--output", type=Path, required=True,
                         help="new result directory (refuses to overwrite an existing run)")
     args = parser.parse_args(argv)
+    if not 0 < args.verify_max_states <= 2**32 - 1:
+        parser.error("--verify-max-states must be a positive 32-bit unsigned integer")
     binaries = {}
     for entry in args.bin:
         member, separator, path = entry.partition("=")
@@ -182,7 +201,7 @@ def main(argv=None):
             for member_index, (member, (binary, digest)) in enumerate(binaries.items()):
                 row = measure(instance, source, member, binary, digest, checker,
                               args.output.resolve() / f"{index:05d}-{member_index}", args.timeout,
-                              args.verify_timeout, launch, expected, origin)
+                              args.verify_timeout, launch, expected, origin, args.verify_max_states)
                 rows.append(row)
                 writer.writerow(row)
                 stream.flush()

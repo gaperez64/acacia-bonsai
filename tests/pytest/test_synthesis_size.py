@@ -48,12 +48,14 @@ def test_fake_binary_row_and_summary(tmp_path, tools):
     assert float(row["wall_seconds"]) >= 0
     assert runner.summarize([row], ["member"])[0] == dict(
         member="member", attempted=1, realizable=1, controllers_produced=1, verified=1,
-        failed_verification=0, verify_timeout=0, commonly_verified=1,
+        **dict.fromkeys(runner.SUMMARY_FAILURES, 0), commonly_verified=1,
         total_ands_latches=0, median_ands_latches=0)
 
 
 @pytest.mark.parametrize("body,kind", [
     ("print('failed_verification'); raise SystemExit(1)", "failed_verification"),
+    ("print('verify_unsupported'); raise SystemExit(3)", "verify_unsupported"),
+    ("print('verify_unsupported')", "verify_error"),
     ("raise SystemExit(1)", "verify_error"),
     ("raise SystemExit(2)", "verify_error"),
     ("print('something else')", "verify_error"),
@@ -62,7 +64,10 @@ def test_verifier_failures(tmp_path, tools, body, kind):
     executable(tools[1], body)
     row = measure(tmp_path, tools)
     assert row["verification"] == row["failure_kind"] == kind
-    assert runner.summarize([row], ["member"])[0]["commonly_verified"] == 0
+    summary = runner.summarize([row], ["member"])[0]
+    assert summary["commonly_verified"] == 0
+    assert summary[kind] == 1
+    assert summary["failed_verification"] == int(kind == "failed_verification")
 
 
 @pytest.mark.parametrize("timed_out,resource_limited,kind", [
@@ -78,7 +83,8 @@ def test_verification_limits_are_separate(tmp_path, tools, timed_out, resource_l
     assert row["verification"] == kind
     summary = runner.summarize([row], ["member"])[0]
     assert summary["verify_timeout"] == int(timed_out)
-    assert summary["failed_verification"] == int(not timed_out)
+    assert summary["verify_resource_limit"] == int(resource_limited)
+    assert summary["failed_verification"] == 0
 
 
 @pytest.mark.parametrize("body,kind", [
@@ -96,6 +102,12 @@ def test_synthesis_failures(tmp_path, tools, body, kind):
     assert row["failure_kind"] == kind
     assert row["verification"] != "verified"
     assert row["A"] == ""
+    summary = runner.summarize([row], ["member"])[0]
+    assert summary["failed_verification"] == 0
+    assert sum(summary[column] for column in runner.SUMMARY_FAILURES) == 1
+    column = {"timeout": "synthesis_timeout", "unrealizable": "unrealizable",
+              "invalid_controller": "invalid_controller"}.get(kind, f"synthesis_{kind}")
+    assert summary[column] == 1
     if kind == "error":
         assert row["verdict"] == "UNKNOWN"
 
@@ -103,7 +115,8 @@ def test_synthesis_failures(tmp_path, tools, body, kind):
 def test_summary_intersects_verified_inputs():
     def row(instance, member, verified, ands, latches):
         return dict(instance=instance, member=member, verification=verified,
-                    verdict="REALIZABLE", A=ands, L=latches)
+                    verdict="REALIZABLE", A=ands, L=latches,
+                    failure_kind="" if verified == "verified" else verified)
 
     rows = [row("a", "one", "verified", 4, 1), row("b", "one", "verified", 100, 2),
             row("a", "two", "verified", 2, 1),
@@ -112,8 +125,19 @@ def test_summary_intersects_verified_inputs():
     assert one["commonly_verified"] == two["commonly_verified"] == 1
     assert one["total_ands_latches"] == one["median_ands_latches"] == 5
     assert two["total_ands_latches"] == two["median_ands_latches"] == 3
+    assert one["failed_verification"] == 0 and two["failed_verification"] == 1
     empty = runner.summarize(rows, ["one", "two", "absent"])
     assert all(s["total_ands_latches"] == s["median_ands_latches"] == "" for s in empty)
+
+
+@pytest.mark.parametrize("budget", ["0", "-1", "4294967296", "invalid"])
+def test_cli_rejects_invalid_state_budget(tmp_path, budget):
+    with pytest.raises(SystemExit) as error:
+        runner.main(["--bin", "member=unused", "--checker", "unused", "--list", "unused",
+                     "--tlsf-map", "unused", "--output", str(tmp_path / "output"),
+                     "--verify-max-states", budget])
+    assert error.value.code == 2
+    assert not (tmp_path / "output").exists()
 
 
 @pytest.mark.parametrize("status,selected", [
@@ -144,12 +168,14 @@ def test_cli_status_selection_and_corrections(tmp_path, tools, monkeypatch, stat
     arguments = ["--bin", f"member={binary}", "--checker", str(checker),
                  "--list", str(instances), "--tlsf-map", str(mapping),
                  "--tlsf-corpus", str(source.parent), "--status-exceptions", str(exceptions),
-                 "--output", str(output),
+                 "--output", str(output), "--verify-max-states", "17",
                  "--systemd-scope", "--memory-max", "5G", "--memory-swap-max", "0"]
     if status != "REALIZABLE":
         arguments.extend(["--expected-status", status])
     def scoped(command, timeout, **kwargs):
         assert kwargs == dict(memory_max="5G", memory_swap_max="0")
+        if command[0] == str(checker):
+            assert command[-2:] == ["--max-states", "17"]
         return run_process_group(command, timeout)
 
     monkeypatch.setattr(runner, "run_systemd_scope", scoped)
