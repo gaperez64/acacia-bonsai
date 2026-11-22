@@ -711,6 +711,14 @@ tlsf_frontend_inspect = executable (
   include_directories : inc,
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
+controller_check = executable (
+  'controller-check', 'controller_check.cc',
+  dependencies : tlsf_deps + [spot_dep, bddx_dep],
+)
+test ('controller-check', py,
+      args : [files ('check-controller.py'), ab_exe, controller_check],
+      suite : ['unit', 'synthesis'], timeout : 120,
+      depends : [ab_exe, controller_check])
 tlsf_conversion_compare = executable (
   'tlsf-conversion-compare',
   ['tlsf_conversion_compare.cc', '../src/tlsf_frontend.cc'],

@@ -414,7 +414,7 @@ namespace {
           return;
         }
 
-        // try both ITE and SoP encodings
+        // Encode with irredundant sum of products.
         spot::aig_ptr mealy_aig = mealy_machines_to_aig (nonempty_strats, "isop",
                                                          // make sure all
                                                          // inputs and outputs
