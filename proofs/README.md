@@ -134,7 +134,8 @@ build. The library disables asynchronous elaboration and uses one worker.
 export LEAN_NUM_THREADS=1 LEAN_STACK_SIZE_KB=2048 LEAN_MAIN_USE_THREAD=0
 for module in Automaton Detector Game Equivariance FixedPoint Transports Reuse \
   Backward Closure Enumeration NextPermutation LayoutBuilder PlanBuilder \
-  Pickers BooleanBoundary ActionTable Mona AdaptiveK BuilderExamples Examples; do
+  Pickers BooleanBoundary ActionTable Mona AdaptiveK BuilderExamples Examples \
+  Quotient CountTemporal CountGame; do
   timeout 300 lake env lean "SymmetryProofs/$module.lean" || exit $?
   timeout 300 lake build "SymmetryProofs.$module" || exit $?
 done
@@ -144,7 +145,12 @@ timeout 1500 lake build
 ## Issue #454 obligations
 
 `Quotient.lean` proves orbit quotients of turn-based games sound for any
-objective on the priority sequence, parity included.
+objective on the priority sequence, parity included. `CountGame.lean` and
+`CountTemporal.lean` instantiate the count builder and its temporal encodings at
+`symmetric_count.cc` revision `da7e5621`. Their namespaces are
+`Symmetry.CountGame` and `Symmetry.CountTemporal`. The model uses mathematical
+counts and deterministic transition tables; the existing compiled-code, BDD,
+translation and machine-arithmetic correspondence boundary still applies.
 
 | Obligation | Definition or theorem |
 | --- | --- |
@@ -154,3 +160,14 @@ objective on the priority sequence, parity included.
 | A transported winning quotient strategy wins, for either player | `Action.lift`, `Action.lift_legal`, `Action.lift_wins` |
 | No vertex is won by both players; the certified verdict transfers | `exclusive`, `Action.verdict` |
 | Controller outputs are those of the quotient strategy | `Action.lift_output` |
+| Indexed Mealy game, simultaneous client permutations, exact state/input count orbits | `Machine`, `game`, `counts_orbit`, `key_orbit`, `canonical_vertex`, `action` |
+| Compositions enumerate precisely the input and output stabilizer orbits | `stabilizer_orbit`, `compositions_exact`, `input_edges`, `output_edges` |
+| Occupied-cell events and weighted count successors equal concrete successors | `occupied_events`, `push_counts`, `count_successor`, `count_canonical` |
+| Successor sharing retains incoming colors and lifts winning strategies | `successor_reuse`, `incoming_color_prefix` |
+| Absorbing collapse preserves max-odd parity at every entrance time | `maxOdd_prefix`, `collapse_wins` |
+| Full count quotient, sharing and collapse certify either original winner | `engine_counts`, `engineAction`, `engine_verdict` |
+| Pointwise letter events and all four finite temporal aggregates at every suffix | `letter_events`, `breakpoint_gf`, `aggregate_encodings` |
+| Prefix independence and substitution in arbitrary contexts and polarities | `gf_suffix`, `fg_suffix`, `context` |
+| Deterministic local Inf/Fin runs and permanent missing-transition rejection | `deterministic_local_events`, `rejecting_sink` |
+| Initially false since monitors, position-0 rewrite and later-position counterexample | `monitor_stable`, `since_zero`, `since_encoded`, `since_later_counterexample` |
+| Flattening exposes positive conjuncts at the original position only | `flatten`, `flatten_correct`, `top_conjunct_replacement` |
