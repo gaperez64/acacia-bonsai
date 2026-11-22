@@ -1,6 +1,7 @@
 """Synthesis rows retain failures; size comparisons use the same verified panel."""
 
 import csv
+import json
 from pathlib import Path
 import sys
 
@@ -190,3 +191,55 @@ def test_cli_status_selection_and_corrections(tmp_path, tools, monkeypatch, stat
     assert (output / "summary.tsv").is_file()
     with pytest.raises(FileExistsError):
         runner.main(arguments)
+
+
+def test_cli_labelled_arguments_are_independent(tmp_path, tools, monkeypatch):
+    binary, checker, source = tools
+    inputs = tmp_path / "inputs.list"
+    inputs.write_text("input.ltl\n")
+    mapping = tmp_path / "sources.tsv"
+    mapping.write_text("instance\ttlsf\ninput.ltl\tinput.tlsf\n")
+    exceptions = tmp_path / "exceptions.tsv"
+    exceptions.write_text("instance\tannotated_status\tcorrected_status\tevidence\n")
+    calls = []
+
+    def launch(command, timeout):
+        calls.append(command)
+        return run_process_group(command, timeout)
+
+    monkeypatch.setattr(runner, "run_process_group", launch)
+    output = tmp_path / "output"
+    assert runner.main([
+        "--bin", f"base={binary}", "--bin", f"alternative={binary}",
+        "--extra-args", "alternative=--aiger-mode both+dc --tag 'two words'",
+        "--checker", str(checker), "--list", str(inputs), "--tlsf-map", str(mapping),
+        "--tlsf-corpus", str(source.parent), "--status-exceptions", str(exceptions),
+        "--output", str(output),
+    ]) == 0
+    assert len(calls) == 4
+    assert calls[0][-2] == "-s"
+    assert calls[2][-4:] == ["--aiger-mode", "both+dc", "--tag", "two words"]
+    assert calls[1][0] == calls[3][0] == str(checker)
+    assert calls[1][2] != calls[3][2]
+    assert all("--aiger-mode" not in call for call in calls[1::2])
+    metadata = json.loads((output / "run.json").read_text())
+    assert metadata["solver_args"] == {
+        "alternative": ["--aiger-mode", "both+dc", "--tag", "two words"]}
+    summaries = list(csv.DictReader((output / "summary.tsv").open(), delimiter="\t"))
+    assert [row["verified"] for row in summaries] == ["1", "1"]
+
+
+@pytest.mark.parametrize("entries", [
+    ["absent=--flag"], ["member"], ["=--flag"],
+    ["member=--flag", "member=--other"], ['member=--flag "unterminated'],
+])
+def test_cli_rejects_invalid_extra_arguments(tmp_path, tools, entries, capsys):
+    arguments = ["--bin", f"member={tools[0]}", "--checker", str(tools[1]),
+                 "--list", "unused", "--tlsf-map", "unused", "--output", str(tmp_path / "out")]
+    for entry in entries:
+        arguments.extend(["--extra-args", entry])
+    with pytest.raises(SystemExit) as error:
+        runner.main(arguments)
+    assert error.value.code == 2
+    assert "--extra-args" in capsys.readouterr().err
+    assert not (tmp_path / "out").exists()
