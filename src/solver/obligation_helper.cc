@@ -1,6 +1,7 @@
 #include "solver/obligation_helper.hh"
 
 #include "solver/accounting_identity.hh"
+#include "solver/aiger_mode.hh"
 #include "solver/bdd_config.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/synthesis_rendezvous.hh"
@@ -85,6 +86,7 @@ namespace acacia::obligation {
   result solve (spot::formula objective, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs, timing semantics, bool synthesis,
                 conversion convert, const std::string& aiger_mode) {
+    acacia::synthesis::validate_aiger_mode (aiger_mode);
     if (!eligible (objective))
       return {outcome::inapplicable, "non_obligation"};
     try {

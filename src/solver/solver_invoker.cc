@@ -3,6 +3,7 @@
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
 #include "solver/accounting_identity.hh"
+#include "solver/aiger_mode.hh"
 #include "solver/ap_partition.hh"
 #include "solver/bdd_config.hh"
 #include "solver/closure_recurrence_provider.hh"
@@ -1112,6 +1113,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               const std::string& diagnostic_source_sha256, weakening_mode weakening,
               acacia::obligation::control* obligation_eligibility, std::size_t worker_count,
               bool restriction_prepass, const std::string& aiger_mode) {
+  acacia::synthesis::validate_aiger_mode (aiger_mode);
   // Protect internal callers as well as the CLI synthesis route.
   if (synth_fname.has_value ()) {
     backend = acacia::synthesis_backend (backend, true);

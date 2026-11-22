@@ -171,10 +171,6 @@ SAFE_IDENTITY_LITERALS: dict[tuple[str, str], str] = {
         'user-facing native arm polarity error',
     ('src/arg_parser.cc', 'Error: polarity both requires gr1, gr1-lift, or gr1-real-lift with oxidd in --arms spec %s.\\n'):
         'user-facing native arm polarity error',
-    ('src/arg_parser.cc', '                    +dc is disabled: incorrect controllers; see issue #466\\n'):
-        'required issue reference in CLI help, not benchmark dispatch',
-    ('src/arg_parser.cc', "Error: --aiger-mode '%s': +dc is disabled because it can produce incorrect controllers with Acacia's original BDD dictionary; see issue #466.\\n"):
-        'required issue reference in argument validation, not benchmark dispatch',
     ('src/boolean_states/transition_core.hh', 'solver/acceptance_core.hh'):
         'included solver header',
     ('src/native_gr1_arm.cc', 'native_test_hooks.hh'):

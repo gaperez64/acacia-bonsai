@@ -1,11 +1,11 @@
 #include "arg_parser.hh"
 
 #include "phase_records.hh"
+#include "solver/aiger_mode.hh"
 #include "utils/parse_text.hh"
 
 #include <charconv>
 #include <cmath>
-#include <regex>
 #include <utility>
 
 /**
@@ -43,6 +43,7 @@ void show_help (const char* program_name) {
       << "  --aiger-mode MODE  Spot encoding (default isop): ite|isop|both|optim\n"
       << "                    with +ud, +sub0|+sub1|+sub2 in any order;\n"
       << "                    comma-separated alternatives keep the smallest circuit\n"
+      << "                    a canonical subset of Spot's syntax: no empty components\n"
       << "                    +dc is disabled: incorrect controllers; "
          "see issue #466\n"
       << "  -V, --version     print program version and configuration\n"
@@ -592,21 +593,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
         break;
       case 's': retval.synth_fname = optarg; break;
       case OPT_AIGER_MODE: {
-        // Spot 2.16 aiger.cc accepts reordered/repeated modifiers and alternative methods.
-        static const std::regex mode (
-            "(ite|isop|both|optim)(\\+(dc|ud|sub[0-2]))*"
-            "(,(ite|isop|both|optim)(\\+(dc|ud|sub[0-2]))*)*");
-        if (!std::regex_match (optarg, mode))
-          error (EXIT_CODE_ERROR,
-                 "Error: invalid --aiger-mode '%s'; expected ite|isop|both|optim followed by "
-                 "+ud or +sub0|+sub1|+sub2, or comma-separated alternatives.\n",
-                 optarg);
-        if (std::string (optarg).find ("+dc") != std::string::npos)
-          error (EXIT_CODE_ERROR,
-                 "Error: --aiger-mode '%s': +dc is disabled because it can produce incorrect "
-                 "controllers with Acacia's original BDD dictionary; "
-                 "see issue #466.\n",
-                 optarg);
+        acacia::synthesis::validate_aiger_mode (optarg);
         retval.aiger_mode = optarg;
         break;
       }

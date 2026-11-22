@@ -1,5 +1,6 @@
 #include "solver/parity/route.hh"
 
+#include "solver/aiger_mode.hh"
 #include "solver/bdd_config.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/spot_nba_fastpath.hh"
@@ -84,6 +85,7 @@ namespace acacia::parity_route {
   }
 
   static result run_impl (request input, options config, observer observe, bool positive_dpa) {
+    acacia::synthesis::validate_aiger_mode (config.aiger_mode);
     result output;
     if (config.check)
       config.check ();

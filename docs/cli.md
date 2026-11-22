@@ -80,11 +80,13 @@ modifiers follow Spot's behavior (the last `subN` wins). For example:
 
 Spot 2.16 also accepts `optim` (experimental global BDD encoding) and a
 comma-separated list of alternatives, retaining the circuit with the fewest
-gates. Empty methods/modifiers and unknown tokens are rejected at parse time.
+gates. Acacia accepts a canonical subset of Spot's syntax: no empty components.
+Empty methods/modifiers (including trailing `+` or `,`) and unknown tokens are
+rejected before solving, both by the CLI parser and direct C++ entry points.
 The flag is case-sensitive; the dual modifier is spelled `+ud`, not `+dual`.
 This option changes encoding only; strategy extraction and minimization stay
 at their existing settings. Compare sizes only after independent verification.
-The `+dc` output don't-care modifier is rejected at parse time, including in
+The `+dc` output don't-care modifier is rejected before solving, including in
 comma-separated alternatives. The smoke sweep found incorrect controllers with
 Acacia's original BDD dictionary; fresh-dictionary HOA replay did not reproduce
 them. The cause may involve Acacia's machine/BDD-variable handling as well as
