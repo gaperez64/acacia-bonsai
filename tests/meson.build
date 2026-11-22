@@ -631,13 +631,7 @@ endif
 # cases that pass -r or -u explicitly, and those bypass the shipped portfolio
 # and still take the compile-time backend.
 default_arms_opt = get_option ('acacia_default_arms').strip ()
-native_arm_kinds = []
-foreach kind : fs.read ('../src/portfolio_arm.hh').split ('enum class portfolio_arm_kind {')[1].split ('};')[0].split (',')
-  kind = kind.strip ()
-  if kind not in ['legacy', 'obligation', 'parity']
-    native_arm_kinds += [kind.replace ('_', '-')]
-  endif
-endforeach
+native_arm_kinds = ['gr1', 'gr1-lift', 'gr1-real-lift', 'param-lift', 'symcount']
 default_native_arms = []
 if default_arms_opt != ''
   default_check_children = 0
