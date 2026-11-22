@@ -84,6 +84,9 @@ gates. Empty methods/modifiers and unknown tokens are rejected at parse time.
 The flag is case-sensitive; the dual modifier is spelled `+ud`, not `+dual`.
 This option changes encoding only; strategy extraction and minimization stay
 at their existing settings. Compare sizes only after independent verification.
+The Spot 2.16.3 smoke sweep found incorrect controllers with several `+dc`
+combinations; see the [measured rejections](../benchmarking/RESULTS.md).
+The default remains `isop`.
 
 ## Choose solver workers
 
