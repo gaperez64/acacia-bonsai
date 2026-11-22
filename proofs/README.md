@@ -92,13 +92,15 @@ large fixed points by brute-force `decide`.
 | `input_pickers/critical.hh#actions.splice (actions.begin (), actions, it_act);`; `input_pickers/critical_pq.hh#critical_input = fwd_actions_pq.emplace (priority - 1, ref);` | Nested scans, response splices, signed priorities and exhaustion |
 | `boolean_states/forward_saturation.hh#c[e.dst] = c_src_mod;`; `boolean_states/forward_saturation.hh#e.acc = spot::acc_cond::mark_t {};`; `boolean_states/forward_saturation.hh#g.rename_states_ (rename);` | Rank saturation, acceptance clearing, state reordering, `preprocessBoolean_closed` |
 | `solver/solve_game_vector.cc#using Vector = posets::vectors::VECTOR_IMPL_AUTO<VECTOR_ELT_T>;`; `../subprojects/posets/include/posets/vectors/X_and_boolvec.hh#bools.push_back (v[i] + 1);` | Scalar `applyAction` versus presence-compressed `storedSucc` |
-| `solver/k_bounded_safety_aut.hh#bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner) {`; `solver/k_schedule.hh#? kmax : std::min (kmax, k + kinc);`; `solver/equivariant_k_bounded_safety_aut.hh#const auto next_k = detail::checked_next_k (k, kinc);` | Early exits, `bump`, `AdaptiveReach`, shared and ordinary schedules |
+| `solver/k_bounded_safety_aut.hh#bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner) {`; `solver/k_schedule.hh#? kmax : std::min (kmax, k + kinc);`; `solver/equivariant_k_bounded_safety_aut.hh#const auto next_k = detail::checked_next_k (k, kinc);`; `solver/equivariant_k_bounded_safety_aut.hh#const auto next_k = detail::checked_next_k (k, kinc);` | Early exits, `bump`, `AdaptiveReach`, shared and ordinary schedules (both equivariant increments) |
 | `solver/solver_invoker.cc#input_aps.swap (output_aps);` | `swapFrame`, `swapped_engine_cpre` |
 | `../tests/equivariant_pre_test.cc#bool run_mixed_io_family_case () {` | `Reproducer331`, mixed I/O regression fixture |
 
 `#` separates each file from an exact source-line anchor. Run
 `python3 tests/check-proof-references.py` from the repository root to check the
 anchors and ensure every C++ file referenced by a proof has a documented anchor.
+Each anchor must occur exactly as many times in the source as in the table;
+the repeated `checked_next_k` anchor covers both shared-loop increments.
 This check also runs in pytest and the always-running Lean CI job, alongside
 tlsf-tools' existing checker. Moving code between lines is harmless; changing an
 anchor requires reviewing its correspondence with the proof. This is a drift
@@ -157,3 +159,27 @@ warnings as errors and timing for each step. Source elaboration always runs,
 including after an exact Lake cache hit. This project has no `lean_exe` targets
 or external Lean/golden/data inputs; tlsf-tools' executables are a separate Lake
 project and are not part of this build.
+
+After the full build, `AuditAxioms.lean` imports every library module and uses
+`Lean.collectAxioms` on every declaration defined there, including private and
+generated constants. Only `propext`, `Classical.choice` and `Quot.sound` are
+allowed; `sorryAx` and generated native-decision axioms fail the check.
+CI also runs `python3 proofs/test-axiom-audit.py`: tiny compiled fixtures verify
+the allowlist and reject `native_decide`, `sorry` and custom axioms without
+building the library. On the shared machine, run these fixtures only with:
+
+```sh
+TMPDIR=/home/gaperez/scratch/leanci/tmp LEAN_NUM_THREADS=1 \
+  systemd-run --user --scope -p MemoryMax=2G -p MemorySwapMax=0 \
+  python3 proofs/test-axiom-audit.py
+```
+
+Mark **Lean required** as the required branch-protection check. It always runs
+after both `changes` and `lean`, and fails on detector/correspondence failures
+or any unsuccessful required Lean run. It accepts a skipped Lean run only when
+the successful detector explicitly returned `false`. The workflow runs both
+correspondence checkers on every PR, regardless of target branch. The detector
+uses NUL-delimited Git paths and checks both sides of renames.
+
+Run `python3 -m pytest tests/pytest/test_lean_ci.py -q` for the lightweight path,
+gate, command-failure and correspondence regressions; CI runs them in `changes`.

@@ -27,3 +27,11 @@ done
 time timeout 300 lake env lean -j"$LEAN_NUM_THREADS" -s"$LEAN_STACK_SIZE_KB" \
   -DElab.async=false -DwarningAsError=true SymmetryProofs.lean
 time timeout 1500 lake build
+
+# Import every library source, including modules not reached by the root import.
+shopt -s globstar nullglob
+modules=(SymmetryProofs.lean SymmetryProofs/**/*.lean)
+modules=("${modules[@]%.lean}")
+modules=("${modules[@]//\//.}")
+time timeout 300 lake env lean -j"$LEAN_NUM_THREADS" -s"$LEAN_STACK_SIZE_KB" \
+  --run AuditAxioms.lean "${modules[@]}"

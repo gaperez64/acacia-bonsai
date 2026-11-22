@@ -1,6 +1,7 @@
 """Check the README's stable C++ anchors and coverage of proof source references."""
 
 from pathlib import Path
+from collections import Counter
 import re
 
 
@@ -13,12 +14,14 @@ def check(root: Path) -> int:
     references = list(ANCHOR.finditer(readme))
     assert references, "no C++ correspondence anchors found"
     documented = set()
-    for match in references:
-        name, anchor = match["name"], match["anchor"]
+    expected = Counter((match["name"], match["anchor"]) for match in references)
+    for (name, anchor), count in expected.items():
         # As in the correspondence table, paths are relative to src/.
         path = root / "src" / name
-        lines = {line.strip() for line in path.read_text().splitlines()}
-        assert anchor in lines, f"{name}: missing correspondence anchor {anchor!r}"
+        lines = Counter(line.strip() for line in path.read_text().splitlines())
+        assert lines[anchor] == count, (
+            f"{name}: missing correspondence anchor or wrong occurrence count for {anchor!r}: "
+            f"expected {count}, found {lines[anchor]}")
         documented.add(name)
 
     documents = [root / "proofs/README.md", *sorted((root / "proofs").rglob("*.lean"))]

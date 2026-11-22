@@ -29,6 +29,10 @@ jobs:
           time python3 tests/check-proof-references.py
           # Acacia disables tlsf-tools' upstream Meson tests.
           time python3 subprojects/tlsf-tools/test/cli/check_proof_references.py subprojects/tlsf-tools
+      - name: Test CI selection, gate and correspondence regressions
+        run: |
+          python3 -m pip install pytest
+          python3 -m pytest tests/pytest/test_lean_ci.py -q
       - name: Decide whether to build Lean
         id: changes
         env:
@@ -76,4 +80,20 @@ jobs:
           restore-keys: |
             lake-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('proofs/lean-toolchain') }}-
       - name: Check Lean proofs
-        run: time proofs/check.sh
+        run: |
+          time python3 proofs/test-axiom-audit.py
+          time proofs/check.sh
+
+  required:
+    name: Lean required
+    if: always()
+    needs: [changes, lean]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Enforce detector and Lean results
+        env:
+          DETECTOR_RESULT: ${{ needs.changes.result }}
+          LEAN_NEEDED: ${{ needs.changes.outputs.run }}
+          LEAN_RESULT: ${{ needs.lean.result }}
+        run: bash proofs/ci-gate.sh
