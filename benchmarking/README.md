@@ -289,6 +289,9 @@ legacy arms. One existing formula-unreal arm tries input identification; one
 existing real arm tries constant outputs. Other arms start normally, with no
 new portfolio member or serial work before the race. Native-only portfolios
 and `-s` skip these attempts; synthesis retains the ordinary complete controller.
+Arms fork before full-objective BDD preparation, except that the obligation
+eligibility source first publishes its normal eligibility result. This avoids
+inheriting unnecessary BDD preparation without delaying the helper's admission.
 
 Candidates come only from the frontend's expanded declaration provenance:
 identify every input bus of at least two members with its first member, then

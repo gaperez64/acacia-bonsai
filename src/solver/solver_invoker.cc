@@ -1168,12 +1168,38 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
   validate_ltl_partition (input_aps, output_aps);
   spot::formula spot_formula = parse_ltl_string (formula);
-  spot::formula restriction_objective = restriction_prepass ? spot_formula : nullptr;
+  const bool restrictions = restriction_prepass && !synth_fname &&
+                            metadata.source_format == "tlsf" &&
+                            metadata.tlsf_effective_target == "Mealy" &&
+                            metadata.tlsf_semantics.find ("Finite") == std::string::npos &&
+                            (!check_unreal || *check_unreal == UNREAL_X_FORMULA);
+  spot::formula restriction_objective = restrictions ? spot_formula : nullptr;
   acacia::unreal_witnesses::records weakening_records;
   weakening_records.bind_source (formula, input_aps, output_aps);
-  weakening_records.event ("weakening_requested_mode",
-                           weakening == weakening_mode::off ? "\"mode\":\"off\""
-                                                            : "\"mode\":\"basic\"");
+  weakening_records.event ("weakening_requested_mode", weakening == weakening_mode::off
+                                                           ? "\"mode\":\"off\""
+                                                           : "\"mode\":\"basic\"");
+  const auto try_restrictions = [&] {
+    const auto solve = [&] (spot::formula restricted) {
+      const bool proof =
+          run_ltl (input_aps, output_aps, opt_k, opt_kmin, opt_kinc, spot::str_psl (restricted),
+                   check_unreal, translation_pref, translation_effort, spot_fast, backend,
+                   std::nullopt, metadata, provider, candidate, false, diagnostic_deadline_ns,
+                   diagnostic_source_sha256, weakening_mode::off, nullptr, 1);
+      return proof ? (check_unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL) : EXIT_CODE_UNKNOWN;
+    };
+    const bool proof = acacia::restriction::try_prepass (
+        restriction_objective, metadata, input_aps, output_aps, check_unreal.has_value (),
+        diagnostic_deadline_ns, solve);
+    restriction_objective = nullptr;
+    if (!proof)
+      acacia::worker_route (check_unreal ? "unreal_formula" : "real",
+                            acacia::game_backend_name (backend), "REAL");
+    return proof;
+  };
+  // Fork before inheriting full-objective BDD preparation, except for the eligibility source.
+  if (restrictions && !obligation_eligibility && try_restrictions ())
+    return acacia::diagnostics::finish (true, "one-sided-restriction");
   const size_t original_inputs = input_aps.size (), original_outputs = output_aps.size ();
   bool rsimp_changed = false;
 
@@ -1208,26 +1234,9 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   if (obligation_eligibility)
     acacia::obligation::publish_eligibility (obligation_eligibility, spot_formula);
 
-  if (restriction_prepass && !synth_fname && metadata.source_format == "tlsf" &&
-      metadata.tlsf_effective_target == "Mealy" &&
-      metadata.tlsf_semantics.find ("Finite") == std::string::npos &&
-      (!check_unreal || *check_unreal == UNREAL_X_FORMULA)) {
-    // Use the unsimplified positive root, after publishing eligibility so other arms never wait.
-    const auto solve = [&] (spot::formula restricted) {
-      const bool proof =
-          run_ltl (input_aps, output_aps, opt_k, opt_kmin, opt_kinc, spot::str_psl (restricted),
-                   check_unreal, translation_pref, translation_effort, spot_fast, backend,
-                   std::nullopt, metadata, provider, candidate, false, diagnostic_deadline_ns,
-                   diagnostic_source_sha256, weakening_mode::off, nullptr, 1);
-      return proof ? (check_unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL) : EXIT_CODE_UNKNOWN;
-    };
-    if (acacia::restriction::try_prepass (restriction_objective, metadata, input_aps, output_aps,
-                                         check_unreal.has_value (), diagnostic_deadline_ns, solve))
-      return acacia::diagnostics::finish (true, "one-sided-restriction");
-    acacia::worker_route (check_unreal ? "unreal_formula" : "real",
-                          acacia::game_backend_name (backend), "REAL");
-  }
-  restriction_objective = nullptr;
+  // Keep the helper's ordinary eligibility notification ahead of this arm's optional work.
+  if (restrictions && obligation_eligibility && try_restrictions ())
+    return acacia::diagnostics::finish (true, "one-sided-restriction");
 
   // closure-recurrence in fallback mode may use Spot anyway, so it keeps the
   // cheap Spot checks that decide many inputs before any construction.
