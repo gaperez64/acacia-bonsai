@@ -12,66 +12,29 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
-## 2026-11-22: A count-quotiented game decides collector_v1 n=11 to 15 and collector_v2 n=27 in milliseconds (#454, stage 1)
+## 2026-11-22: A count-quotiented game decides seven unsolved collector inputs in milliseconds (#454, stage 1)
 
-Archive `sym454-20261122` (release `evidence-2026-11-22-sym454`). This is a
-scratch prototype outside the solver: no solver code changed. Stage 0 (rerunning
-the residual join after #451) waits for #451, which is still open. The targets
-below are not among the inputs #451 is expected to decide.
+Archives `sym454-20261122` (prototype and checks) and `sym454b-20261122` (sibling-repo
+census, master runs). Scratch prototype; no solver code changed. collector_v1 and v2 are
+played on exact deterministic monitors of their specs (TLSF v1.1 standard Mealy semantics),
+quotiented by S_n; letter orbits count arrivals per cell, keeping seen and unseen apart.
 
-**Models.** Each family is played on an exact deterministic monitor of its spec
-under TLSF v1.1's standard Mealy semantics (arXiv:1604.02284, §3.1 and §3.2.1),
-built by hand from the formula. collector_v1 tracks the set S of clients finished
-since the last `allFinished`. collector_v2 also tracks a breakpoint set P for
-`/\ GF finished[i]`. Both are products of identical per-client components and a
-global mode bit, and the game is max-parity with three priorities. The S_n
-quotient keeps the size of each cell. A letter's orbit is the number of arrivals
-per cell, so arrivals among seen and unseen clients stay distinct. A bare count
-of true inputs would not determine the successor. The archive README gives the
-exact encoding.
+| Input | master `7c07d934`, 17 s / 120 s | Quotient states / joint orbits | Solve |
+|---|---|---:|---:|
+| collector_v1 n=11 | TIMEOUT / 19.1 s | 24 / 728 | < 1 ms |
+| collector_v1 n=12 to 15 | TIMEOUT / TIMEOUT | 26 to 32 / 910 to 1,632 | ≤ 1 ms |
+| collector_v1 n=27 (selection-2025, not in the 1,524) | TIMEOUT / TIMEOUT | 56 / 8,120 | 4 ms |
+| collector_v2 n=27 | TIMEOUT / TIMEOUT | 810 / 402,696 | 0.10 s |
 
-| Input | Quotient states / joint orbits | Build + solve | Unquotiented states / joint pairs |
-|---|---:|---:|---:|
-| collector_v1 n=11 | 24 / 728 | < 1 ms | 4,096 / 8.4M (2.5 s, 2.3 GiB) |
-| collector_v1 n=12 | 26 / 910 | < 1 ms | 8,192 / 33.6M (28 s, 4.09 GiB, at the 4G cap) |
-| collector_v1 n=15 | 32 / 1,632 | 1 ms | 65,536 / 2.1·10⁹ (not built) |
-| collector_v2 n=27 | 810 / 402,696 | 0.10 s (113 MiB) | 1.5·10¹³ / 2.0·10²¹ (not built) |
-
-The quotient answers REALIZABLE at every target size. The unquotiented counts
-are reachable concrete states and (state, letter) pairs: 2·2ⁿ and 2·4ⁿ for v1,
-and 2·3ⁿ−2 states for v2 (built up to n=8: 13,120 states, 3.4M pairs, 0.9 s,
-918 MiB). The blow-up the issue predicts is confirmed, and the quotient removes
-it.
-
-**Checks.**
-- **Quotient against the concrete game,** for collector_v1 n=1 to 10 and
-  collector_v2 n=1 to 6. Every concrete transition, up to 2.1M at v1 n=10, maps to
-  the quotient transition of its orbits. Every reachable quotient vertex is hit,
-  and every concrete vertex has its orbit's winner.
-- **Strategy verifier.** At every size, a verifier independent of the solver
-  confirms that the solver's strategy wins. It rejects a never-fire control.
-- **Spot model checking.** The quotient strategy, lifted to a concrete Mealy
-  controller, satisfies the spec's LTL for v1 n=1 to 6 and v2 n=1 to 5.
-  Never-fire and always-fire controls are rejected at every size.
-
-For context, ltlsynt 2.16 on the plain specs (60 s cap) needs 13.6 s for v1 n=9
-and 21.8 s for v2 n=11, and times out on v1 n≥11 and v2 n≥13.
-
-**What this does not show.**
-- The monitors were written by hand. A production construction must derive
-  them from the formula. The structure it needs is index-wise decomposition into
-  identical components followed by a counter abstraction: m local states give
-  C(n+m−1, m−1) state orbits.
-- The game is solved directly as a parity game, not through the K-bounded
-  reduction, so a production version would be a new arm under #359's budget.
-- The verdicts at the target sizes rest on the quotient's soundness for
-  symmetric games, for which stage 3 requires a Lean proof first, and on the
-  small-n checks above.
-- prioritized_arbiter_enc n=15 was not modelled.
-
-Stage 1 therefore pays for at most six inputs (collector_v1 n=11 to 15,
-collector_v2 n=27). Whether to build stage 2 is a cost decision, since the
-investigation estimates 3 to 7k lines plus the Lean proof.
+Unquotiented, collector_v1 n=12 already needs 33.6M joint pairs and the 4G cap. The quotient
+matches the concrete game transition by transition (v1 n≤10, v2 n≤6), a solver-independent
+verifier accepts every strategy, and lifted controllers pass Spot against the TLSF LTL (v1
+n≤6, v2 n≤5); never-fire and always-fire controls are rejected. The native-20261107 `tlsfsym`
+over the 217 sibling-repo specs not among the 1,524 adds no other candidate: of its 7 full
+groups with n≥3, narylatch n=8 and ltl2dba_C2_unreal n=10 are solved, the collector templates
+are n=3, and collector_v3 n=27 is decided by a constant output (#451). The gain is 7 inputs
+at 17 s (6 in SYNTCOMP26) and 6 at 120 s (5), before stage 2 derives the monitors from formulas,
+a new arm (#359) and the Lean proof (stage 3).
 
 ## 2026-11-22: Formula symmetry cannot drive the K-bounded reduction; one-sided restrictions can decide 11 inputs (#370, #451)
 
