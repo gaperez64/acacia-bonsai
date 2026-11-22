@@ -12,6 +12,19 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-22: The count-quotient arm solves six more SYNTCOMP26 inputs with no conflict (#454, stage 2)
+
+Archive `sym454d-20261122`. `both:symcount:spot` runs as the seventh worker of
+`otf_sparse_formula_parity` (6c6da84a, frozen binary `3b300d6b…`, against master 7c07d934). G0, G1,
+G3, G4 and G5 pass. G3 gains one solve on each panel, with PAR-2 663.3 → 623.1 s (SYNTCOMP25) and
+508.8 → 476.3 s (SYNTCOMP26); the base-vs-base control moves less than 1 s. The full SYNTCOMP26
+screen at 17 s and 6G solves 1,386 instead of 1,381 with 0 verdict conflicts and PAR-2
+5,613.6 → 5,380.4 s. It gains collector_v1 n=11 to 15 (0.12 to 0.15 s) and ltl2dba_theta n=25
+(0.41 s). The only loss, load_balancer_unreal1 6_4, sits at the cap and flips in the control too.
+The tlsfobf-renamed screen has 0 conflicts and no plain-only solves. collector_v2 n=27 still times
+out: the arm's 512-byte-per-element budget declines its 1.2M edges once the 6G scope is split
+seven ways, though it solves in 1.5 s and 472 MB alone.
+
 ## 2026-11-22: acacia-symcount derives the collector quotient games from their formulas (#454, stage 2)
 
 Archive `sym454c-20261122`. `acacia-symcount` (standalone, not yet an arm) splits a spec into
