@@ -2,7 +2,8 @@ parity_lib = static_library ('parity', 'solver/parity/game.cc',
   include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
 tlsf_dpa_lib = static_library ('tlsf-dpa', 'solver/parity/tlsf_dpa.cc',
   include_directories : inc, dependencies : [spot_dep, bddx_dep] + tlsf_deps, install : false)
-parity_route_lib = static_library ('parity-route', 'solver/parity/route.cc',
+parity_route_lib = static_library ('parity-route',
+  ['solver/parity/route.cc', 'solver/parity/controller_reduction.cc'],
   include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
 
 # The recurrence graph is available to the backward worker without a demand-provider gate.

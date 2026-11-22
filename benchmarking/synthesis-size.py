@@ -12,6 +12,7 @@ import re
 import shlex
 import statistics
 import sys
+import time
 
 from benchlib import (
     ROOT, classify_run, load_tool, run_process_group, run_systemd_scope, tlsf_corpus_dir,
@@ -65,7 +66,9 @@ def measure(instance, source, member, binary, digest, checker, directory, timeou
             extra_args=()):
     directory.mkdir(parents=True)
     controller = directory / "controller.aag"
-    run = launch([str(binary), "-T", str(source), "-s", str(controller), *extra_args], timeout)
+    run = launch([str(binary), "-T", str(source), "-s", str(controller), *extra_args], timeout,
+                 env=dict(os.environ, ACACIA_OUTER_DEADLINE_MONOTONIC=
+                          repr(time.monotonic() + timeout)))
     (directory / "synthesis.stdout").write_text(run.stdout)
     (directory / "synthesis.stderr").write_text(run.stderr)
     result = classify_run(run)

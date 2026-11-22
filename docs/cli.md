@@ -75,9 +75,19 @@ runs do not execute any reduction. Machines above 512 states, 8,192 edges, or
 is deliberately excluded because Spot's API offers no cancellation budget.
 The default, `reselect`, additionally re-solves a copy of small tier-4 arenas after sorting
 outgoing edges by destination, then applies level 2. It retains the alternative
-only if its (states, edges) pair is smaller. The second solve is skipped above
-2,048 arena states, 8,192 arena edges, or four acceptance sets. It does not change
+only if its encoded circuit has fewer AND gates plus latches. The second solve is
+skipped above 2,048 arena states, 8,192 arena edges, or four acceptance sets. It does not change
 the decision solve, winning regions, or exported game certificates.
+
+The incumbent is encoded before optional work starts. Both attempts share at most
+200 ms and 5% of the time remaining before the invocation deadline. Each runs in a
+forked child with a private 512 MiB address-space/RSS cap; the restriction prepass
+uses the same subprocess supervisor. A timeout, resource limit, child failure,
+invalid result, or non-improvement retains the incumbent. Accepted AIGER is capped
+at 1 MiB and checked structurally without rebuilding BDDs in the parent. The
+200 ms cap also applies when no invocation deadline is supplied.
+`parity_reduction_attempt` phase records report the option, attempt, outcome,
+cause, wall time, deadline, and memory cap.
 
 `--aiger-mode MODE` selects Spot's runtime encoder for every synthesis route.
 The default encoder remains `isop`. Use `ite` (if-then-else),

@@ -18,7 +18,7 @@ def run(binary, *arguments, env=None):
 
 
 def main():
-    binary, checker = sys.argv[1:]
+    binary, checker, fixture = sys.argv[1:]
     assert "--parity-mealy-reduction MODE" in run(binary, "--help").stdout
     for mode in ("", "BISIM", "output", "2", "bisim-output,none"):
         answer = run(binary, "--parity-mealy-reduction", mode)
@@ -82,6 +82,38 @@ GUARANTEES {{ {formula}; }} }}''')
             explicit = run(binary, *command, "-s", str(circuit),
                            "--parity-mealy-reduction", "reselect")
             assert explicit.returncode == 0 and circuit.read_bytes() == expected, explicit
+        for option, inputs, outputs, objective in (
+                ("--budget-fallback", [f"i{n}" for n in range(6)],
+                 [f"o{n}" for n in range(40)], "G F o0"),
+                ("--reselection", ["i"], ["o"], "G F o")):
+            phases = root / option.removeprefix("--")
+            phases.mkdir()
+            answer = run(fixture, option, str(circuit),
+                         env=dict(os.environ, ACACIA_PHASE_RECORDS=str(phases)))
+            assert answer.returncode == 0, answer
+            rows = [json.loads(line) for path in phases.glob("*.jsonl")
+                    for line in path.read_text().splitlines()]
+            attempts = [row for row in rows if row.get("event") == "parity_reduction_attempt"]
+            assert attempts and all(row["option"] in MODES and row["wall_ns"] > 0
+                                    for row in attempts), rows
+            if option == "--budget-fallback":
+                assert len(attempts) == 1, attempts
+                assert attempts[0]["outcome"] == "fallback", attempts
+                assert attempts[0]["cause"] == "deadline", attempts
+                assert attempts[0]["wall_ns"] < 500_000_000, attempts
+                print(f'Adversarial deadline fallback: {attempts[0]["wall_ns"] / 1e6:.1f} ms')
+            else:
+                assert any(row["attempt"] == "reselect" and row["outcome"] == "accepted"
+                           for row in attempts), attempts
+            source.write_text('INFO { TITLE: "adversarial" SEMANTICS: Mealy TARGET: Mealy }\n'
+                              f'MAIN {{ INPUTS {{ {"; ".join(inputs)}; }} '
+                              f'OUTPUTS {{ {"; ".join(outputs)}; }} '
+                              f'GUARANTEES {{ {objective}; }} }}')
+            checked = run(checker, str(source), str(circuit))
+            assert checked.returncode == 0 and checked.stdout.strip() == "verified", checked
+            if option == "--reselection":
+                checked = run(checker, str(source), str(circuit) + ".incumbent")
+                assert checked.returncode == 0 and checked.stdout.strip() == "verified", checked
     print("Parity reduction grammar, unchanged decision stages, and independent controllers passed")
 
 

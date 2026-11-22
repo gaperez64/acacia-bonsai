@@ -1159,9 +1159,9 @@ parity_arm_test = executable ('parity-arm-test',
   dependencies : [spot_dep, bddx_dep])
 test ('parity-arm', parity_arm_test, suite : ['unit', 'parity'], timeout : 120)
 test ('parity-mealy-reduction', py,
-      args : [files ('check-parity-mealy-reduction.py'), ab_exe, controller_check],
+      args : [files ('check-parity-mealy-reduction.py'), ab_exe, controller_check, parity_arm_test],
       suite : ['unit', 'cli', 'parity', 'synthesis'], timeout : 120,
-      depends : [ab_exe, controller_check])
+      depends : [ab_exe, controller_check, parity_arm_test])
 parity_arm_cli_depends = [ab_exe, parity_arm_test]
 parity_arm_cli_args = [files ('check-parity-arm.py'), ab_exe, parity_arm_test,
                        meson.current_build_dir ()]

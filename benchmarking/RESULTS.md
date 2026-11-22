@@ -14,7 +14,7 @@ baseline identities remain provenance, not current build instructions.
 
 ## 2026-11-22: Bound parity strategy reduction and reselect small games (#467)
 
-Campaign `strat467-20261122` uses implementation `e018f539`, based on master
+Initial campaign `strat467-20261122` uses implementation `e018f539`, based on master
 `b28b0454`. The verified archive is retained locally under
 `~/scratch/strat467/` pending publication; no evidence-index row is added.
 Release GCC 15.3.1, private Spot 2.16.3, one compile job/LTO thread/test process,
@@ -38,13 +38,18 @@ bisimulation, and bisimulation with output assignment. Both are exact controller
 specializations. They skip machines above 512 states, 8,192 edges, or 65,536
 label BDD nodes summed over edges. The default, `reselect`, additionally copies
 small tier-4 arenas, stably sorts outgoing edges by destination, re-solves, extracts
-and reduces a second strategy, and keeps it only if (states, edges) is smaller.
+and reduces a second strategy, and keeps it only if encoded A+L is strictly smaller.
 That second solve skips above 2,048 arena states, 8,192 edges or four acceptance
 sets. Re-solving is necessary: arbitrary substitutions of winning-region edges
 can lose liveness. Original game certificates and decision solving are untouched.
-These are size guards on opaque Spot calls, not a hard wall-clock deadline.
+Fix pass 1 encodes the incumbent first and forks both optional attempts through
+the restriction prepass's shared supervisor. They share at most 200 ms and 5% of
+the remaining invocation time, with private 512 MiB AS/RSS limits. Failures,
+timeouts, invalid AIGER and non-improvements keep the best encoded incumbent.
+Bounded structural parsing avoids rebuilding BDDs in the parent; each attempt
+records its option, outcome, cause and wall time.
 
-**43-input smoke panel, not full-corpus admission.** The fixed panel contains the
+**Initial 43-input smoke panel, not full-corpus admission.** The fixed panel contains the
 three outliers, the previous encoder sweep's 30 varied realizable cases, and ten
 additional historical first-member size wins. Labelled arguments in
 `benchmarking/synthesis-size.py` compare identical frozen
@@ -95,11 +100,39 @@ completed fixed-machine diagnostic circuits and all 21 strategy-order trials
 verify. Reloaded-dictionary or post-encoding reductions can have different AIG
 sizes; the table above is the actual original-dictionary production pipeline.
 
-Validation: ruff passes, 127 Python regressions pass, and four focused release
+Initial validation: ruff passes, 127 Python regressions pass, and four focused release
 Meson tests pass. Fixtures cover exact output specialization, all three graph/BDD
 size guards, Mealy/Moore target timing and independent controller checks. CLI tests
 cover accepted, invalid and missing values, default bytes, and identical decision
 stage traces for every option without `-s`. Full corpus and G0–G5 are not run.
+
+
+**Review fix pass 1 (2026-11-23).** The final paired rerun uses exactly the same
+43 inputs, comparing only `none` and `reselect`, with one frozen binary
+(`1c4ea71eb777fdcf`) and the same independent checker. The measurement
+runner now supplies its absolute invocation deadline to synthesis.
+
+| Option | Verified / 43 | Rejected | Total A+L | Median A+L | Synthesis s | Check s |
+|---|---:|---:|---:|---:|---:|---:|
+| `none` | 43 | 0 | 36,146 | 41 | 7.99 | 14.71 |
+| `reselect` | 43 | 0 | 26,152 | 41 | 8.62 | 14.60 |
+
+Every input verified by `none` also verifies with `reselect`; there are zero
+synthesis or verification failures. Total A+L falls 27.6%, with no per-input size
+increase in this pair. These remain smoke measurements, including ordinary
+portfolio selection differences; no speedup or full-corpus admission is claimed.
+Raw rows, controllers and verification output are in `~/scratch/strat467/fix1-panel-run/`.
+
+All ten affected release Meson tests pass, along with 30 measurement-runner Python
+tests, Ruff and clang-format 22. A reachable, input-complete 41-state / 81-edge
+nested-output machine below every size cap exhausts its 50 ms child budget and
+returns the incumbent in 51.6 ms; `controller_check` verifies its liveness objective.
+A two-state arena seeded with a valid alternating strategy requires reselection
+to replace it with a zero-A+L constant strategy; both controllers independently
+verify `GF o`. Tests also cover child allocation/exception/signal failures, strict
+improvement, unchanged parent limits/cause state, expired-budget fallback,
+reordered signal names and malformed AIGER. The native arm's earlier construction
+deadline also bounds optional work. No evidence-index row is added.
 
 ## 2026-11-22: Select AIGER modes; +dc rejects controllers and large strategies remain the main gap (#280)
 

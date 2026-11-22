@@ -4,6 +4,7 @@ import csv
 import json
 from pathlib import Path
 import sys
+import time
 
 import pytest
 
@@ -75,9 +76,9 @@ def test_verifier_failures(tmp_path, tools, body, kind):
     (True, False, "verify_timeout"), (False, True, "verify_resource_limit"),
 ])
 def test_verification_limits_are_separate(tmp_path, tools, timed_out, resource_limited, kind):
-    def launch(command, timeout):
+    def launch(command, timeout, env=None):
         if command[0] == str(tools[0]):
-            return run_process_group(command, timeout)
+            return run_process_group(command, timeout, env=env)
         return RunResult("", "", -9, 1, timed_out, resource_limited=resource_limited)
 
     row = measure(tmp_path, tools, launch)
@@ -174,10 +175,11 @@ def test_cli_status_selection_and_corrections(tmp_path, tools, monkeypatch, stat
     if status != "REALIZABLE":
         arguments.extend(["--expected-status", status])
     def scoped(command, timeout, **kwargs):
+        env = kwargs.pop("env", None)
         assert kwargs == dict(memory_max="5G", memory_swap_max="0")
         if command[0] == str(checker):
             assert command[-2:] == ["--max-states", "17"]
-        return run_process_group(command, timeout)
+        return run_process_group(command, timeout, env=env)
 
     monkeypatch.setattr(runner, "run_systemd_scope", scoped)
     assert runner.main(arguments) == 0
@@ -203,9 +205,14 @@ def test_cli_labelled_arguments_are_independent(tmp_path, tools, monkeypatch):
     exceptions.write_text("instance\tannotated_status\tcorrected_status\tevidence\n")
     calls = []
 
-    def launch(command, timeout):
+    def launch(command, timeout, env=None):
         calls.append(command)
-        return run_process_group(command, timeout)
+        if command[0] == str(binary):
+            remaining = float(env["ACACIA_OUTER_DEADLINE_MONOTONIC"]) - time.monotonic()
+            assert timeout - 1 < remaining <= timeout
+        else:
+            assert env is None
+        return run_process_group(command, timeout, env=env)
 
     monkeypatch.setattr(runner, "run_process_group", launch)
     output = tmp_path / "output"
