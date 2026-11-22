@@ -27,7 +27,7 @@ namespace acacia::subprocess {
   };
 
   // Only a reaped normal exit transfers a result; child state and limits stay private.
-  template <typename Action>
+  template <bool check_peak_rss = false, typename Action>
   result run (uint64_t deadline, rlim_t memory_bytes, Action action) {
     const auto parent = getpid ();
     const auto child = fork ();
@@ -94,11 +94,11 @@ namespace acacia::subprocess {
       worker->descendant_pid = -1;
     }
     const int code = reaped && WIFEXITED (status) ? WEXITSTATUS (status) : error_exit;
-    // Enforce limits even if completion raced the final poll.
+    // Restriction prepasses retain master's deadline-only check after the final poll.
     if (phase_clock (CLOCK_MONOTONIC) >= deadline)
       cause = "deadline";
 #ifdef __linux__
-    else if (reaped && usage.ru_maxrss > long (memory_bytes / 1024))
+    else if (check_peak_rss && reaped && usage.ru_maxrss > long (memory_bytes / 1024))
       cause = "resource";
 #endif
     else if (std::strcmp (cause, "none") == 0) {

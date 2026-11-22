@@ -114,6 +114,51 @@ GUARANTEES {{ {formula}; }} }}''')
             if option == "--reselection":
                 checked = run(checker, str(source), str(circuit) + ".incumbent")
                 assert checked.returncode == 0 and checked.stdout.strip() == "verified", checked
+        # Suspended competitors retain their charges: almost no space remains below 7/8.
+        scope = root / "scope"
+        scope.mkdir()
+        limit = 5 * 1024**3
+        threshold = limit - limit // 8
+        for maximum, current, cause in (
+                (str(limit), str(threshold - 1), "scope_headroom"),
+                (str(limit), str(threshold), "scope_headroom"),
+                (str(limit), str(limit), "scope_headroom"),
+                ("max", "0", "scope_memory"),
+                (str(limit), None, "scope_memory")):
+            (scope / "memory.max").write_text(maximum + "\n")
+            (scope / "memory.current").unlink(missing_ok=True)
+            if current is not None:
+                (scope / "memory.current").write_text(current + "\n")
+            phases = root / f"scope-{current}-{maximum}"
+            phases.mkdir()
+            answer = run(fixture, "--scope-fallback", str(circuit), str(scope),
+                         env=dict(os.environ, ACACIA_PHASE_RECORDS=str(phases)))
+            assert answer.returncode == 0, answer
+            rows = [json.loads(line) for path in phases.glob("*.jsonl")
+                    for line in path.read_text().splitlines()]
+            attempts = [row for row in rows if row.get("event") == "parity_reduction_attempt"]
+            assert len(attempts) == 1, rows
+            assert attempts[0]["outcome"] == "skipped" and attempts[0]["cause"] == cause, attempts
+            assert attempts[0]["child_pid"] == -1 and attempts[0]["memory_bytes"] == 0, attempts
+            inputs, outputs = [f"i{n}" for n in range(6)], [f"o{n}" for n in range(40)]
+            source.write_text('INFO { TITLE: "scope" SEMANTICS: Mealy TARGET: Mealy }\n'
+                              f'MAIN {{ INPUTS {{ {"; ".join(inputs)}; }} '
+                              f'OUTPUTS {{ {"; ".join(outputs)}; }} GUARANTEES {{ G F o0; }} }}')
+            checked = run(checker, str(source), str(circuit))
+            assert checked.returncode == 0 and checked.stdout.strip() == "verified", checked
+        # With less headroom the private cap shrinks, while useful reductions still succeed.
+        (scope / "memory.max").write_text(str(1024**3) + "\n")
+        (scope / "memory.current").write_text("0\n")
+        phases = root / "scope-budget"
+        phases.mkdir()
+        answer = run(fixture, "--scope-reductions", str(scope),
+                     env=dict(os.environ, ACACIA_PHASE_RECORDS=str(phases)))
+        assert answer.returncode == 0, answer
+        rows = [json.loads(line) for path in phases.glob("*.jsonl")
+                for line in path.read_text().splitlines()]
+        attempts = [row for row in rows if row.get("event") == "parity_reduction_attempt"
+                    and row["child_pid"] > 0]
+        assert attempts and all(0 < row["memory_bytes"] < 512 * 1024**2 for row in attempts), rows
     print("Parity reduction grammar, unchanged decision stages, and independent controllers passed")
 
 

@@ -76,7 +76,7 @@ void check_controller (const spot::aig_ptr& circuit, spot::formula specification
            "exported controller violates the specification");
 }
 
-void check_reductions () {
+void check_reductions (const char* scope_directory = nullptr) {
   for (auto reduction : {route::mealy_reduction::none, route::mealy_reduction::bisim,
                          route::mealy_reduction::bisim_output, route::mealy_reduction::reselect}) {
     auto machine = spot::make_twa_graph (spot::make_bdd_dict ());
@@ -101,7 +101,8 @@ void check_reductions () {
     const auto reduce = [&] {
       incumbent.reduced_aiger.clear ();
       route::reduce_controller (incumbent, input, config,
-                                acacia::phase_clock (CLOCK_MONOTONIC) + 200000000);
+                                acacia::phase_clock (CLOCK_MONOTONIC) + 200000000, nullptr,
+                                scope_directory);
     };
     reduce ();
     require (machine->num_states () == 2, "reduction mutated the incumbent");
@@ -129,7 +130,8 @@ void check_reductions () {
           return incumbent.circuit;
         };
         route::reduce_controller (incumbent, input, config,
-                                  acacia::phase_clock (CLOCK_MONOTONIC) + 200000000);
+                                  acacia::phase_clock (CLOCK_MONOTONIC) + 200000000, nullptr,
+                                  scope_directory);
         require (incumbent.reduced_aiger == accepted,
                  "failure or larger result lost the best circuit");
       }
@@ -218,7 +220,7 @@ route::request nested_outputs () {
   return input;
 }
 
-void check_budget_fallback (const std::string& path) {
+void check_budget_fallback (const std::string& path, const char* scope_directory = nullptr) {
   auto input = nested_outputs ();
   route::result incumbent;
   incumbent.controller = input.automaton;
@@ -236,7 +238,7 @@ void check_budget_fallback (const std::string& path) {
   rlimit before {}, after {};
   require (getrlimit (RLIMIT_AS, &before) == 0, "cannot read parent limit");
   const auto start = acacia::phase_clock (CLOCK_MONOTONIC);
-  route::reduce_controller (incumbent, input, config, start + 50000000);
+  route::reduce_controller (incumbent, input, config, start + 50000000, nullptr, scope_directory);
   require (acacia::phase_clock (CLOCK_MONOTONIC) - start < 500000000,
            "adversarial reduction did not return within its budget");
   require (incumbent.reduced_aiger.empty () && incumbent.controller == input.automaton &&
@@ -321,12 +323,24 @@ void check_reselection (const std::string& path) {
 
 int main (int argc, char** argv) {
   try {
+    if (argc == 3 && std::string (argv[1]) == "--scope-reductions") {
+      acacia::phase_records_start_writer ();
+      check_reductions (argv[2]);
+      acacia::phase_records_close ();
+      return 0;
+    }
     if (argc == 3 && std::string (argv[1]) == "--budget-fallback") {
       acacia::phase_records_start_writer ();
       check_budget_fallback (argv[2]);
       acacia::phase_records_close ();
       int status;
       require (waitpid (-1, &status, WNOHANG) == -1 && errno == ECHILD, "child was not reaped");
+      return 0;
+    }
+    if (argc == 4 && std::string (argv[1]) == "--scope-fallback") {
+      acacia::phase_records_start_writer ();
+      check_budget_fallback (argv[2], argv[3]);
+      acacia::phase_records_close ();
       return 0;
     }
     if (argc == 3 && std::string (argv[1]) == "--reselection") {

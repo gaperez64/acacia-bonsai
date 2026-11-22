@@ -701,6 +701,7 @@ test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
 restriction_prepass_test = executable (
   'restriction-prepass-test', 'restriction_prepass_test.cc',
   '../src/solver/restriction_prepass.cc', '../src/tlsf_frontend.cc',
+  link_args : host_machine.system () == 'linux' ? ['-Wl,--wrap=wait4'] : [],
   include_directories : inc, dependencies : tlsf_deps + [spot_dep, bddx_dep])
 test ('restriction-prepass', restriction_prepass_test, suite : ['unit', 'tlsf'])
 # Keep the causal-frame check active even when the configured CLI omits guarded backends.

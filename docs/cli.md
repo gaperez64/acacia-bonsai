@@ -81,9 +81,14 @@ the decision solve, winning regions, or exported game certificates.
 
 The incumbent is encoded before optional work starts. Both attempts share at most
 200 ms and 5% of the time remaining before the invocation deadline. Each runs in a
-forked child with a private 512 MiB address-space/RSS cap; the restriction prepass
-uses the same subprocess supervisor. A timeout, resource limit, child failure,
-invalid result, or non-improvement retains the incumbent. Accepted AIGER is capped
+forked child with a private address-space/RSS cap of at most 512 MiB; the restriction
+prepass uses the same subprocess supervisor. Before each fork, scope usage must
+leave room below the portfolio's 7/8 kill threshold for the child plus a full
+resident copy-on-write margin (at least 64 MiB) and result transfer. The child cap
+uses at most half the headroom left after that margin. Insufficient headroom or an
+unbounded/unreadable scope skips reduction and records the cause. A timeout,
+resource limit, child failure, invalid result, or non-improvement retains the
+incumbent. Accepted AIGER is capped
 at 1 MiB and checked structurally without rebuilding BDDs in the parent. The
 200 ms cap also applies when no invocation deadline is supplied.
 `parity_reduction_attempt` phase records report the option, attempt, outcome,

@@ -4,6 +4,7 @@
 #include "solver/aiger_mode.hh"
 #include "solver/bdd_config.hh"
 #include "solver/mealy_to_moore.hh"
+#include "solver/scope_memory.hh"
 #include "solver/synthesis_rendezvous.hh"
 #include <unordered_set>
 
@@ -45,8 +46,8 @@ namespace acacia::obligation {
           std::memory_order_release);
   }
 
-  void record (const char* event, outcome value, const char* reason, uint64_t start_ns,
-               int worker, pid_t pid) noexcept {
+  void record (const char* event, outcome value, const char* reason, uint64_t start_ns, int worker,
+               pid_t pid) noexcept {
     if (!phase_records_enabled ())
       return;
     if (auto* current = active_worker_record ()) {
@@ -188,25 +189,7 @@ namespace acacia::obligation {
     if (!directory)
       directory = std::getenv ("ACACIA_TEST_CGROUP_DIRECTORY");
 #endif
-    char path[4608] {};
-    if (directory)
-      snprintf (path, sizeof path, "%s/%s", directory, file);
-    else if (FILE* membership = std::fopen ("/proc/self/cgroup", "r")) {
-      char line[4096] {};
-      if (std::fgets (line, sizeof line, membership))
-        if (const char* group = std::strstr (line, "::/"))
-          snprintf (path, sizeof path, "/sys/fs/cgroup%.*s/%s",
-                    int (std::strcspn (group + 2, "\n")), group + 2, file);
-      std::fclose (membership);
-    }
-    if (FILE* f = std::fopen (path, "r")) {
-      unsigned long long value = 0;
-      const bool read = std::fscanf (f, "%llu", &value) == 1;
-      std::fclose (f);
-      if (read)
-        return value;
-    }
-    return std::nullopt;
+    return acacia::scope_memory (file, directory);
   }
 
   bool rss_share_exceeded (uint64_t resident, uint64_t share, uint64_t scope_limit,

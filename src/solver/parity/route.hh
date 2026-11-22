@@ -62,7 +62,8 @@ namespace acacia::parity_route {
                                               uint64_t deadline = 0);
   // A supplied arena requests reselection. All opaque work stays inside the child.
   void reduce_controller (result& incumbent, const request& input, const options& config,
-                          uint64_t deadline, const spot::twa_graph_ptr& arena = nullptr);
+                          uint64_t deadline, const spot::twa_graph_ptr& arena = nullptr,
+                          const char* scope_directory = nullptr);
   result run (request input, options config = {}, observer observe = {});
   // Complete max-odd DPA for the positive objective; bypass translation and classification.
   result run_positive_dpa (request input, options config = {}, observer observe = {});

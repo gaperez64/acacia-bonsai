@@ -1,6 +1,7 @@
 #include "solver/bounded_subprocess.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/parity/route.hh"
+#include "solver/scope_memory.hh"
 #include <spot/twaalgos/mealy_machine.hh>
 
 #include <memory>
@@ -11,7 +12,7 @@
 
 namespace acacia::parity_route {
   namespace {
-    constexpr rlim_t memory_bytes = rlim_t {512} * 1024 * 1024;
+    constexpr rlim_t max_memory_bytes = rlim_t {512} * 1024 * 1024;
     constexpr size_t payload_bytes = 1024 * 1024;
     constexpr int unchanged_exit = 8, size_exit = 9;
     struct payload {
@@ -20,7 +21,7 @@ namespace acacia::parity_route {
     };
 
     void record (mealy_reduction option, bool reselect, const char* outcome, const char* cause,
-                 uint64_t start, uint64_t deadline, pid_t child = -1) noexcept {
+                 uint64_t start, uint64_t deadline, rlim_t memory_bytes, pid_t child) noexcept {
       if (!phase_records_enabled ())
         return;
       const char* names[] = {"none", "bisim", "bisim-output", "reselect"};
@@ -123,13 +124,15 @@ namespace acacia::parity_route {
   }
 
   void reduce_controller (result& incumbent, const request& input, const options& config,
-                          uint64_t deadline, const spot::twa_graph_ptr& arena) {
+                          uint64_t deadline, const spot::twa_graph_ptr& arena,
+                          const char* scope_directory) {
     if (config.reduction == mealy_reduction::none)
       return;
     const auto start = phase_clock (CLOCK_MONOTONIC);
     const char* outcome = "fallback";
     const char* cause = "error";
     pid_t child = -1;
+    rlim_t memory_bytes = 0;
     try {
       // Forking and polling need headroom even when the invocation is almost over.
       if (start >= deadline || deadline - start < 2000000)
@@ -138,6 +141,29 @@ namespace acacia::parity_route {
                          arena->num_sets () > 4))
         cause = "size";
       else {
+        const auto limit = scope_memory ("memory.max", scope_directory);
+        const auto used = scope_memory ("memory.current", scope_directory);
+        // Optional work is skipped when the scope is unbounded or cannot be read.
+        cause = "scope_memory";
+        if (limit && *limit && used) {
+          const auto threshold = *limit - *limit / 8;
+          const uint64_t headroom = threshold > *used ? threshold - *used : 0;
+          constexpr uint64_t reserve = uint64_t {64} * 1024 * 1024;
+          const auto rss_kb = resource_snapshot (getpid ()).rss_kb;
+          const uint64_t resident = rss_kb > 0 ? uint64_t (rss_kb) * 1024 : 0;
+          // Cover a full resident copy-on-write plus transfer; leave half the rest unused.
+          const auto margin = std::max (reserve, resident) + sizeof (payload);
+          if (resident && headroom > margin) {
+            memory_bytes = std::min<uint64_t> (max_memory_bytes, (headroom - margin) / 2);
+            if (memory_bytes < resident + reserve)
+              memory_bytes = 0;
+          }
+          cause = "scope_headroom";
+        }
+        if (!memory_bytes) {
+          record (config.reduction, bool (arena), "skipped", cause, start, deadline, 0, -1);
+          return;
+        }
         const unsigned original_size =
             incumbent.reduced_aiger.empty ()
                 ? incumbent.circuit->num_gates () + incumbent.circuit->num_latches ()
@@ -148,7 +174,7 @@ namespace acacia::parity_route {
         if (mapping == MAP_FAILED)
           throw std::bad_alloc ();
         std::unique_ptr<payload, decltype (unmap)> data (mapping, unmap);
-        const auto attempt = subprocess::run (deadline, memory_bytes, [&] {
+        const auto attempt = subprocess::run<true> (deadline, memory_bytes, [&] {
           auto candidate = incumbent.controller;
           if (arena) {
             auto alternative = spot::make_twa_graph (spot::const_twa_graph_ptr (arena),
@@ -223,6 +249,6 @@ namespace acacia::parity_route {
     } catch (...) {
       cause = phase_clock (CLOCK_MONOTONIC) >= deadline ? "deadline" : "error";
     }
-    record (config.reduction, bool (arena), outcome, cause, start, deadline, child);
+    record (config.reduction, bool (arena), outcome, cause, start, deadline, memory_bytes, child);
   }
 }

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `--parity-mealy-reduction`, defaulting to `reselect` under `-s` only. Reduction runs in a bounded subprocess with incumbent fallback; the 43-input panel measured a 28% cut in total controller AND gates plus latches (#467).
+
 - Add `--aiger-mode` to select Spot's AIGER encoding, keeping `isop` as the default and refusing unsafe `+dc` modes pending #466. Add per-label `--extra-args` support to `benchmarking/synthesis-size.py` (#280).
 
 - Add one-sided restriction attempts inside the existing formula workers (#451): replace each declared input family by its first member and accept only UNREALIZABLE, or set scalar outputs to false and accept only REALIZABLE. tlsf-tools `Restriction.lean` proves both transfers. Attempts are bounded (at most 1 s of input attempts, one 200 ms output attempt, 512 MiB each), are skipped under `-s`, and fall back to the normal solve. They add ten solves on SYNTCOMP26 at 17 s with no losses (`restrict451-20261122`). Disable with `--restriction-prepass off`.
