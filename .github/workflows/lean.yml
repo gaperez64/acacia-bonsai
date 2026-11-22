@@ -1,0 +1,99 @@
+name: Lean proofs
+
+# Filter inside the workflow so required checks always receive a result.
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lean-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      run: ${{ steps.changes.outputs.run }}
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0, submodules: recursive}
+      - name: Check proof correspondence on every PR
+        run: |
+          time python3 tests/check-proof-references.py
+          # Acacia disables tlsf-tools' upstream Meson tests.
+          time python3 subprojects/tlsf-tools/test/cli/check_proof_references.py subprojects/tlsf-tools
+      - name: Test CI selection, gate and correspondence regressions
+        run: |
+          python3 -m pip install pytest
+          python3 -m pytest tests/pytest/test_lean_ci.py -q
+      - name: Decide whether to build Lean
+        id: changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          base="$BEFORE_SHA"
+          if [[ "$EVENT_NAME" == pull_request ]]; then
+            base="$PR_BASE_SHA"
+          fi
+          run=$(proofs/ci-needed.sh "$EVENT_NAME" "$base")
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
+  lean:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-24.04
+    # Cold-cache full runs measured 1–1.5 minutes; allow room for runner variance.
+    timeout-minutes: 15
+    env:
+      ELAN_VERSION: v4.2.4
+    steps:
+      - uses: actions/checkout@v7
+      - name: Cache elan and the pinned toolchain
+        uses: actions/cache@v6
+        with:
+          path: ~/.elan
+          key: elan-${{ runner.os }}-${{ runner.arch }}-${{ env.ELAN_VERSION }}-${{ hashFiles('proofs/lean-toolchain') }}
+      - name: Install verified elan
+        working-directory: ${{ runner.temp }}
+        run: |
+          time curl --fail --location --retry 3 \
+            https://github.com/leanprover/elan/releases/download/v4.2.4/elan-x86_64-unknown-linux-gnu.tar.gz \
+            --output elan.tar.gz
+          echo '42b94d4244e8353142c456ec0e4ca6528fd898a6c604d4059f494e706e431f63  elan.tar.gz' | sha256sum --check
+          tar -xzf elan.tar.gz elan-init
+          time ./elan-init -y --default-toolchain none --no-modify-path
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Cache Lake build artifacts
+        uses: actions/cache@v6
+        with:
+          path: proofs/.lake
+          key: lake-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('proofs/lean-toolchain') }}-${{ hashFiles('proofs/**/*.lean', 'proofs/lakefile.toml', 'proofs/lake-manifest.json', 'proofs/check.sh') }}
+          restore-keys: |
+            lake-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('proofs/lean-toolchain') }}-
+      - name: Check Lean proofs
+        run: |
+          time python3 proofs/test-axiom-audit.py
+          time proofs/check.sh
+
+  required:
+    name: Lean required
+    if: always()
+    needs: [changes, lean]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Enforce detector and Lean results
+        env:
+          DETECTOR_RESULT: ${{ needs.changes.result }}
+          LEAN_NEEDED: ${{ needs.changes.outputs.run }}
+          LEAN_RESULT: ${{ needs.lean.result }}
+        run: bash proofs/ci-gate.sh
