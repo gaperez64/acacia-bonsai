@@ -1,1 +1,2 @@
 import SymmetryProofs.Examples
+import SymmetryProofs.Quotient
