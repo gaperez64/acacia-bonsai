@@ -483,6 +483,7 @@ game_backend_integration_sources = [
   '../src/version.cc',
   '../src/solver/mealy_to_moore.cc',
   '../src/solver/solver_invoker.cc',
+  '../src/solver/restriction_prepass.cc',
   '../src/solver/obligation_helper.cc',
   '../src/parity_arm.cc',
   '../src/solver/solve_game_vector.cc',
@@ -696,6 +697,15 @@ tlsf_frontend_test = executable (
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
 test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
+
+restriction_prepass_test = executable (
+  'restriction-prepass-test', 'restriction_prepass_test.cc',
+  '../src/solver/restriction_prepass.cc', '../src/tlsf_frontend.cc',
+  include_directories : inc, dependencies : tlsf_deps + [spot_dep, bddx_dep])
+test ('restriction-prepass', restriction_prepass_test, suite : ['unit', 'tlsf'])
+test ('restriction-prepass-cli', py,
+      args : [files ('check-restriction-prepass.py'), ab_exe],
+      suite : ['unit', 'cli', 'tlsf'], depends : [ab_exe], timeout : 60)
 
 test ('moore-synthesis-semantics',
       py,

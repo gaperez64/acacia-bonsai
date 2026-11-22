@@ -144,6 +144,20 @@ deadline/interrupt checks. Intermediate verification events establish no accepte
 verdict. Historical event/API details: `refactor-closeout20261017`,
 `cov20261006-p0exit`, `cov20261006-p1ablation`.
 
+One-sided restrictions run inside existing legacy arms. `restriction_attempt`
+records carry `candidate`, `family` (one-based declaration-family ordinal, zero
+for the combined/constant candidate), accepted `polarity`, `outcome`, `cause`,
+`mono_ns`, `wall_ns`, child PID and wall/memory limits. Start records precede
+forking; only a reaped, in-budget accepted exit produces `outcome=accepted`.
+`restriction_input` winners prove UNREAL of the positive restricted objective;
+`restriction_output` winners prove REAL. Opposite or inconclusive results
+decline with `restriction_opposite` or `restriction_inconclusive`; absent
+candidates decline with `restriction_no_candidate`. Deadline, resource and
+operational errors use the corresponding stop cause, then the original arm
+resumes. A killed arm may leave only an attempt start; its parent terminal and
+descendant cleanup retain cancellation/resource evidence. These attempts are
+independent of the older safety-core weakening records below.
+
 ## Weakening records and completeness
 
 IDs use invocation directory, `worker_pid` and `prepass`; `run_id=0` names the full
