@@ -15,7 +15,7 @@ arms = sys.argv[3].split(",")
 expected_ltl_children = int(sys.argv[4])
 verbose_enabled = sys.argv[5] == "true"
 ordinary = [a for a in arms if a != "both:obligation:spot"]
-native = [a for a in ordinary if a.endswith(":oxidd") and a != "both:parity:oxidd"]
+native = sys.argv[6].split(",")
 assert native
 
 

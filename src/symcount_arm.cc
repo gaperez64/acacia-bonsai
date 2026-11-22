@@ -32,8 +32,8 @@ namespace acacia {
     }
     symcount::limits bound;
     bound.deadline_mono_ns = deadline_mono_ns;
-    // Split the share between vertices (including count keys) and edges, with Spot and the check.
-    const auto share = obligation::rss_share (args.arms ? args.arms->size () : 1);
+    // Size from the scope/address-space cap; the parent enforces RSS sharing with parity workers.
+    const auto share = obligation::rss_share (1);
     bound.max_vertices = bound.max_edges = std::max<uint64_t> (1, share / 512);
     const auto result = symcount::solve (parsed.f, objective.inputs, objective.outputs,
                                          objective.metadata.tlsf_indexed_families, bound);

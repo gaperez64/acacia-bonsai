@@ -30,6 +30,11 @@ int main () {
   const auto spec = formula::G (formula::And ({formula::ap ("g_0"), formula::ap ("g_1")}));
   ok &= check (solve (spec, {}, outputs, {family}).outcome == verdict::realizable,
                "the deadline probe should be realizable without a deadline");
+  limits edge_bound;
+  edge_bound.max_edges = 0;
+  const auto exhausted = solve (spec, {}, outputs, {family}, edge_bound);
+  ok &= check (exhausted.outcome == verdict::declined,
+               "an exhausted edge budget should decline");
   limits bound;
   bound.deadline_mono_ns = 1;  // Already expired on CLOCK_MONOTONIC.
   const auto expired = solve (spec, {}, outputs, {family}, bound);

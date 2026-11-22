@@ -631,6 +631,14 @@ endif
 # cases that pass -r or -u explicitly, and those bypass the shipped portfolio
 # and still take the compile-time backend.
 default_arms_opt = get_option ('acacia_default_arms').strip ()
+native_arm_kinds = []
+foreach kind : fs.read ('../src/portfolio_arm.hh').split ('enum class portfolio_arm_kind {')[1].split ('};')[0].split (',')
+  kind = kind.strip ()
+  if kind not in ['legacy', 'obligation', 'parity']
+    native_arm_kinds += [kind.replace ('_', '-')]
+  endif
+endforeach
+default_native_arms = []
 if default_arms_opt != ''
   default_check_children = 0
   needs_real = false
@@ -643,7 +651,10 @@ if default_arms_opt != ''
     unreal_arm = spec.startswith ('unreal:') or spec.startswith ('both:')
     needs_real = needs_real or real_arm
     needs_unreal = needs_unreal or unreal_arm
-    native_arm = spec.contains (':gr1:oxidd') or spec.contains (':gr1-lift:oxidd') or spec.contains (':gr1-real-lift:oxidd') or spec.contains (':param-lift:oxidd')
+    native_arm = spec.split (':')[1] in native_arm_kinds
+    if native_arm
+      default_native_arms += [spec]
+    endif
     if not native_arm and spec != 'both:obligation:spot'
       default_check_children += 1
       has_legacy_real = has_legacy_real or real_arm
@@ -657,15 +668,13 @@ if default_arms_opt != ''
     default_check_children += default_unreal_children
   endif
 endif
-if (default_arms_opt.contains (':gr1:oxidd') or
-    default_arms_opt.contains (':gr1-lift:oxidd') or
-    default_arms_opt.contains (':gr1-real-lift:oxidd') or
-    default_arms_opt.contains (':param-lift:oxidd'))
+if default_native_arms.length () > 0
   test ('default-native-arms', py,
         args : [files ('check-default-native-arms.py'), ab_exe,
                 meson.project_build_root (), default_arms_opt,
                 default_check_children.to_string (),
-                (compiler_profile == 'debug').to_string ()],
+                (compiler_profile == 'debug').to_string (),
+                ','.join (default_native_arms)],
         suite : ['unit', 'cli', 'native-gr1', 'native-param-lift'],
         timeout : 60, depends : [ab_exe])
 endif
@@ -1098,7 +1107,8 @@ if host_machine.system () == 'linux'
   obligation_cli_args = [files ('check-obligation-helper.py'), ab_exe,
                          obligation_helper_test, obligation_helper_faults,
                          meson.current_build_dir (),
-                         '--default-arms', get_option ('acacia_default_arms')]
+                         '--default-arms', get_option ('acacia_default_arms'),
+                         '--default-native-arms', ','.join (default_native_arms)]
   if ltlsynt_exe.found ()
     obligation_cli_args += ['--ltlsynt', ltlsynt_exe.full_path ()]
   endif

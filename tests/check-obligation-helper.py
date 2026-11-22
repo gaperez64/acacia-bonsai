@@ -147,6 +147,7 @@ def main() -> None:
     parser.add_argument("--tlsf", action="store_true")
     parser.add_argument("--native", action="store_true")
     parser.add_argument("--default-arms", default="")
+    parser.add_argument("--default-native-arms", default="")
     options = parser.parse_args()
     binary, library = options.binary.resolve(), options.fault_lib.resolve()
     root = options.build_dir.resolve()
@@ -174,10 +175,10 @@ def main() -> None:
     race = ["--arms", ordinary_pair + "," + arm]
     real = ["--arms", "real:small:backward," + arm]
     default_arms = options.default_arms.split(",") if options.default_arms else []
+    native_defaults = options.default_native_arms.split(",")
     default_has_helper = arm in default_arms
     ordinary_defaults = [value for value in default_arms
-                         if value != arm and
-                         (":oxidd" not in value or value == "both:parity:oxidd")]
+                         if value != arm and value not in native_defaults]
     previous = ["--arms", ",".join(ordinary_defaults)] if ordinary_defaults else []
     for value in ("", "unknown", "Equal", "alone,equal", "4GiB"):
         invalid = subprocess.run([str(binary), *source, "--obligation-memory-share=" + value],

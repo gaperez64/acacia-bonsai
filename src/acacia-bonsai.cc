@@ -696,7 +696,7 @@ namespace {
           else
             acacia::phase_records_drop ();
         }
-        if (arm.kind == portfolio_arm_kind::parity)
+        if (arm.kind == portfolio_arm_kind::parity || arm.kind == portfolio_arm_kind::symcount)
           g_parity_workers.push_back (sig_atomic_t (g_child_count));
         g_child_pids[g_child_count] = pid;
         g_child_count = g_child_count + 1;
@@ -738,7 +738,7 @@ namespace {
     verb_do (1, vout << "Starting " << child_count << " solver children\n" << std::flush);
 
     if (std::ranges::any_of (*arg_values.arms, [] (const auto& arm) {
-          return arm.kind == portfolio_arm_kind::parity;
+          return arm.kind == portfolio_arm_kind::parity || arm.kind == portfolio_arm_kind::symcount;
         }))
       g_parity_rss_share = acacia::obligation::rss_share (
           child_count + size_t (g_obligation != nullptr), arg_values.parity_memory_share);
