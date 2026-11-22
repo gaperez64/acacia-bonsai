@@ -421,20 +421,6 @@ open CountTemporal
 def maxOdd (s : Nat → Nat) : Prop :=
   ∃ c, c % 2 = 1 ∧ GF (fun t => s t = c) 0 ∧ ∀ d, GF (fun t => s t = d) 0 → d ≤ c
 
-theorem gf_tail (p q : Trace) (k : Nat) (h : ∀ t, k ≤ t → (p t ↔ q t)) : GF p 0 ↔ GF q 0 := by
-  rw [← gf_suffix p k, ← gf_suffix q k]
-  exact ⟨fun hp u hu => by
-      obtain ⟨v, hv, hh⟩ := hp u hu; exact ⟨v, hv, (h v (by omega)).mp hh⟩,
-    fun hq u hu => by
-      obtain ⟨v, hv, hh⟩ := hq u hu; exact ⟨v, hv, (h v (by omega)).mpr hh⟩⟩
-
--- Dropping an incoming color from a SUCCESSOR CACHE KEY never drops its occurrence in the trace; symmetric_count.cc:564–569.
-theorem maxOdd_prefix (s t : Nat → Nat) (k : Nat) (h : ∀ u, k ≤ u → s u = t u) :
-    maxOdd s ↔ maxOdd t := by
-  have he (c : Nat) : GF (fun u => s u = c) 0 ↔ GF (fun u => t u = c) 0 :=
-    gf_tail _ _ k (fun u hu => by rw [h u hu])
-  simp only [maxOdd, he]
-
 -- A zero-priority intervening move cannot change the single recurrent nonzero color; symmetric_count.cc:485–498,592–593.
 theorem maxOdd_absorbing (s : Nat → Nat) (c : Nat)
     (tail : ∃ k, ∀ t, k ≤ t → s t = 0 ∨ s t = c) (recurs : GF (fun t => s t = c) 0) :
@@ -635,12 +621,6 @@ private theorem shared_edge_act (M : Machine Q L GI GO LI LO) (p : Perm (Fin n))
     | env q' c' x' =>
       obtain ⟨b, v, hv⟩ := h
       exact ⟨b, act p v, by rw [transition_act, hv]⟩
-
--- A finite initial color is immaterial, rather than a permutation of clients; symmetric_count.cc:564–569.
-theorem incoming_color_prefix (M : Machine Q L GI GO LI LO) (π ρ : Nat → Vertex n Q L GI LI)
-    (same : ∀ k, 1 ≤ k → π k = ρ k) :
-    maxOdd (fun k => (game M).prio (π k)) ↔ maxOdd (fun k => (game M).prio (ρ k)) :=
-  maxOdd_prefix _ _ 1 (fun k hk => congrArg (game M).prio (same k hk))
 
 private theorem shared_relaxed (M : Machine Q L GI GO LI LO) (s t : Vertex n Q L GI LI)
     (h : (sharedGame M).edge s t) : (relaxedGame M).edge s t := by
@@ -932,5 +912,239 @@ theorem engine_counts (M : Machine Q L GI GO LI LO) (absorbing : Q → Option Na
       (engineAction M absorbing initial).canon (collapse absorbing initial (share t)) ↔
     key (collapse absorbing initial (share s)) = key (collapse absorbing initial (share t)) :=
   canonical_vertex _ _
+
+-- Keys contain realizable histograms, never an independently canonicalized successor.
+abbrev RawKey (Q L GI LI : Type) :=
+  (Q × Nat × (L → Nat)) ⊕ (Q × Nat × GI × ((L × LI) → Nat))
+abbrev CountKey (n : Nat) (Q L GI LI : Type) :=
+  {k : RawKey Q L GI LI // ∃ s : Vertex n Q L GI LI, key s = k}
+noncomputable def countKey (s : Vertex n Q L GI LI) : CountKey n Q L GI LI := ⟨key s, s, rfl⟩
+noncomputable def countRep (k : CountKey n Q L GI LI) : Vertex n Q L GI LI := Classical.choose k.2
+
+theorem countRep_key (k : CountKey n Q L GI LI) : countKey (countRep k) = k :=
+  Subtype.ext (Classical.choose_spec k.2)
+
+private noncomputable def distinct [DecidableEq L] : List L → List L
+  | [] => []
+  | a :: xs => let ys := distinct xs; if a ∈ ys then ys else a :: ys
+private theorem distinct_mem [DecidableEq L] (xs : List L) (a : L) : a ∈ distinct xs ↔ a ∈ xs := by
+  induction xs generalizing a with
+  | nil => simp [distinct]
+  | cons b xs ih =>
+    simp only [distinct]; split <;> simp_all
+private theorem distinct_unique [DecidableEq L] (xs : List L) : (distinct xs).Nodup := by
+  induction xs with
+  | nil => exact List.nodup_nil
+  | cons a xs ih => simp only [distinct]; split <;> simp_all
+noncomputable def support (x : Fin n → L) : List L := by
+  classical exact distinct (List.ofFn x)
+private theorem support_unique (x : Fin n → L) : (support x).Nodup := by
+  classical exact distinct_unique _
+private theorem support_covers (x : Fin n → L) (i : Fin n) : x i ∈ support x := by
+  classical exact (distinct_mem _ _).mpr (List.mem_ofFn.mpr ⟨i, rfl⟩)
+
+def Rows (states : List L) (h : L → Nat) (split : (L × Fin k) → Nat) : Prop :=
+  (∀ z ∈ states, List.ofFn (fun j => split (z, j)) ∈ Builders.typeCounts k (h z)) ∧
+  (∀ z, z ∉ cells states k → split z = 0)
+
+noncomputable def normalizeCounts (absorbing : Q → Option Nat) (initial : L)
+    (z : Q × Nat × (L → Nat)) : RawKey Q L GI LI :=
+  match absorbing z.1 with
+  | none => .inl z
+  | some c => .inl (z.1, c, counts (fun _ : Fin n => initial))
+
+private theorem normalized_key (absorbing : Q → Option Nat) (initial : L)
+    (q : Q) (c : Nat) (x : Fin n → L) :
+    key (collapse absorbing initial (.env q c x : Vertex n Q L GI LI)) =
+      normalizeCounts (n := n) absorbing initial (q, c, counts x) := by
+  cases h : absorbing q <;> simp [collapse, globalState, h, normalizeCounts, key]
+
+-- Exactly the occupied input/output compositions and weighted updates in :614–712 at 6c6da84a.
+noncomputable def countMoves (M : Machine Q L GI GO (Fin ki) (Fin ko))
+    (absorbing : Q → Option Nat) (initial : L) (s : Vertex n Q L GI (Fin ki))
+    (target : RawKey Q L GI (Fin ki)) : Prop :=
+  match absorbing (globalState s) with
+  | some _ => target = key (collapse absorbing initial s)
+  | none => match s with
+    | .env q _ x => ∃ a h, Rows (support x) (counts x) h ∧ target = .inr (q, 0, a, h)
+    | .sys q _ x a u => ∃ b h, Rows (support (fun i => (x i, u i))) (counts (fun i => (x i, u i))) h ∧
+        target = normalizeCounts (n := n) absorbing initial
+          (countTransition M (cells (support (fun i => (x i, u i))) ko) h q a b)
+
+-- Both directions choose the raw edge witness, before either normalization.
+theorem countMoves_edges (M : Machine Q L GI GO (Fin ki) (Fin ko))
+    (absorbing : Q → Option Nat) (initial : L) (s : Vertex n Q L GI (Fin ki)) (target) :
+    countMoves M absorbing initial s target ↔
+      ∃ w, (collapsedGame M absorbing initial).edge s w ∧ key w = target := by
+  cases ha : absorbing (globalState s) with
+  | some c =>
+    simp only [countMoves, collapsedGame, ha]
+    exact ⟨fun h => ⟨_, rfl, h.symm⟩, by rintro ⟨w, rfl, h⟩; exact h.symm⟩
+  | none =>
+    cases s with
+    | env q c x =>
+      change absorbing q = none at ha
+      simp only [countMoves, collapsedGame, globalState, ha]
+      constructor
+      · rintro ⟨a, h, hr, ht⟩
+        obtain ⟨u, hu⟩ := (compositions_exact _ (support_unique x) x (support_covers x) h).mp hr
+        refine ⟨.sys q 0 x a u, ⟨.sys q 0 x a u, ⟨rfl, rfl, rfl⟩, ?_⟩, ?_⟩
+        · simp [collapse, globalState, ha]
+        · simp only [key, hu, ht]
+      · rintro ⟨w, ⟨z, hz, rfl⟩, ht⟩
+        cases z with
+        | env => exact False.elim hz
+        | sys q' c' x' a u =>
+          obtain ⟨rfl, rfl, rfl⟩ := hz
+          refine ⟨a, counts (fun i => (x i, u i)),
+            (compositions_exact _ (support_unique x) x (support_covers x) _).mpr ⟨u, rfl⟩, ?_⟩
+          simpa [collapse, globalState, ha, key] using ht.symm
+    | sys q c x a u =>
+      change absorbing q = none at ha
+      simp only [countMoves, collapsedGame, globalState, ha]
+      constructor
+      · rintro ⟨b, h, hr, ht⟩
+        obtain ⟨v, hv⟩ := (output_edges M _ (support_unique _) q x a b u (support_covers _) _).mp
+          ⟨h, hr.1, hr.2, rfl⟩
+        let z := transition M q x a b u v
+        refine ⟨collapse absorbing initial (.env z.1 z.2.1 z.2.2),
+          ⟨.env z.1 z.2.1 z.2.2, ⟨b, v, rfl⟩, rfl⟩, ?_⟩
+        rw [normalized_key, hv, ht]
+      · rintro ⟨w, ⟨z, hz, rfl⟩, ht⟩
+        cases z with
+        | sys => exact False.elim hz
+        | env q' c' x' =>
+          obtain ⟨b, v, hv⟩ := hz
+          obtain ⟨h, hr, ho, hh⟩ := (output_edges M _ (support_unique _) q x a b u (support_covers _)
+            (q', c', counts x')).mpr ⟨v, by rw [hv]⟩
+          exact ⟨b, h, ⟨hr, ho⟩, by rw [hh, ← normalized_key]; exact ht.symm⟩
+
+noncomputable def countGame (M : Machine Q L GI GO (Fin ki) (Fin ko))
+    (absorbing : Q → Option Nat) (initial : L) : Game (CountKey n Q L GI (Fin ki)) where
+  owner k := (collapsedGame M absorbing initial).owner (countRep k)
+  prio k := (collapsedGame M absorbing initial).prio (countRep k)
+  edge k k' := countMoves M absorbing initial (countRep k) k'.val
+
+private theorem countRep_orbit (s : Vertex n Q L GI LI) : ∃ p, permute p s = countRep (countKey s) :=
+  (key_orbit _ _).mp (congrArg Subtype.val (countRep_key (countKey s))).symm
+
+theorem countGame_owner (M : Machine Q L GI GO (Fin ki) (Fin ko)) (absorbing) (initial)
+    (s : Vertex n Q L GI (Fin ki)) :
+    (countGame M absorbing initial).owner (countKey s) = (collapsedGame M absorbing initial).owner s := by
+  obtain ⟨p, hp⟩ := countRep_orbit s
+  change (collapsedGame M absorbing initial).owner (countRep (countKey s)) = _
+  rw [← hp]
+  exact (engineAction M absorbing initial).owner_act p s
+
+theorem countGame_prio (M : Machine Q L GI GO (Fin ki) (Fin ko)) (absorbing) (initial)
+    (s : Vertex n Q L GI (Fin ki)) :
+    (countGame M absorbing initial).prio (countKey s) = (collapsedGame M absorbing initial).prio s := by
+  obtain ⟨p, hp⟩ := countRep_orbit s
+  change (collapsedGame M absorbing initial).prio (countRep (countKey s)) = _
+  rw [← hp]
+  exact (engineAction M absorbing initial).prio_act p s
+
+theorem countGame_edges (M : Machine Q L GI GO (Fin ki) (Fin ko)) (absorbing) (initial)
+    (s : Vertex n Q L GI (Fin ki)) (k) :
+    (countGame M absorbing initial).edge (countKey s) k ↔
+      ∃ w, (collapsedGame M absorbing initial).edge s w ∧ countKey w = k := by
+  change countMoves M absorbing initial (countRep (countKey s)) k.val ↔ _
+  rw [countMoves_edges]
+  obtain ⟨p, hp⟩ := countRep_orbit s
+  have same (g : Perm (Fin n)) (w : Vertex n Q L GI (Fin ki)) : key (permute g w) = key w :=
+    ((key_orbit _ _).mpr ⟨g, rfl⟩).symm
+  constructor
+  · rintro ⟨w, hw, hk⟩
+    refine ⟨permute p.symm w, ?_, Subtype.ext ((same _ _).trans hk)⟩
+    have he := collapsed_edge_act M absorbing initial p.symm _ _ hw
+    rw [← hp] at he
+    have hi : permute p.symm (permute p s) = s := (engineAction M absorbing initial).act_inv p s
+    rw [hi] at he
+    exact he
+  · rintro ⟨w, hw, hk⟩
+    exact ⟨permute p w, hp ▸ collapsed_edge_act M absorbing initial p _ _ hw,
+      (same _ _).trans (congrArg Subtype.val hk)⟩
+
+theorem countKey_canon (M : Machine Q L GI GO LI LO) (absorbing) (initial)
+    (s : Vertex n Q L GI LI) :
+    countKey ((engineAction M absorbing initial).canon s) = countKey s :=
+  Subtype.ext ((key_orbit _ _).mpr ⟨transporter s, rfl⟩).symm
+
+-- On represented vertices, these are exactly the edges of Quotient.lean.
+theorem count_quotient_edges (M : Machine Q L GI GO (Fin ki) (Fin ko)) (absorbing) (initial)
+    (s t : Vertex n Q L GI (Fin ki)) :
+    (countGame M absorbing initial).edge (countKey s) (countKey t) ↔
+      (engineAction M absorbing initial).quotient.edge
+        ((engineAction M absorbing initial).canon s) ((engineAction M absorbing initial).canon t) := by
+  rw [← countKey_canon M absorbing initial s, countGame_edges]
+  exact ⟨by rintro ⟨w, hw, hk⟩; exact ⟨w, hw, (canonical_vertex w t).mpr (congrArg Subtype.val hk)⟩,
+    by rintro ⟨w, hw, hk⟩; exact ⟨w, hw, Subtype.ext ((canonical_vertex w t).mp hk)⟩⟩
+
+private theorem shared_target (M : Machine Q L GI GO LI LO) (s t : Vertex n Q L GI LI)
+    (h : (sharedGame M).edge s t) : share t = t := by
+  cases s <;> cases t <;> first
+  | exact False.elim h
+  | rfl
+  | obtain ⟨rfl, rfl, rfl⟩ := h; rfl
+
+-- Every generated key has zero system color or the collapsed absorbing environment form.
+theorem count_normalized_target (M : Machine Q L GI GO (Fin ki) (Fin ko)) (absorbing) (initial)
+    (k k' : CountKey n Q L GI (Fin ki)) (h : (countGame M absorbing initial).edge k k') :
+    ∃ s, countKey (collapse absorbing initial (share s)) = k' := by
+  have he : (countGame M absorbing initial).edge (countKey (countRep k)) k' := by rw [countRep_key]; exact h
+  obtain ⟨w, hw, hk⟩ := (countGame_edges M absorbing initial (countRep k) k').mp he
+  cases ha : absorbing (globalState (countRep k)) with
+  | some c =>
+    have ht : w = collapse absorbing initial (countRep k) := by simpa only [collapsedGame, ha] using hw
+    refine ⟨countRep k, ?_⟩
+    have hs : globalState (share (countRep k)) = globalState (countRep k) := by cases countRep k <;> rfl
+    have hn : collapse absorbing initial (share (countRep k)) = collapse absorbing initial (countRep k) := by
+      simp only [collapse, hs, ha]
+    rw [hn, ← ht, hk]
+  | none =>
+    obtain ⟨z, hz, ht⟩ := (show ∃ z, (sharedGame M).edge (countRep k) z ∧ collapse absorbing initial z = w from by
+      simpa only [collapsedGame, ha] using hw)
+    exact ⟨z, by rw [shared_target M _ _ hz, ht, hk]⟩
+
+-- The premise is now an ordinary winning strategy on the computed count-key graph.
+theorem count_verdict (M : Machine Q L GI GO (Fin ki) (Fin ko)) (absorbing) (initial)
+    (valid : ∀ q c, absorbing q = some c → Absorbing M q c)
+    (a : GI) (b : GO) (u : Fin ki) (v : Fin ko) {p : Bool}
+    {σ : CountKey n Q L GI (Fin ki) → CountKey n Q L GI (Fin ki)} {s : Vertex n Q L GI (Fin ki)}
+    (h : Wins (countGame M absorbing initial) maxOdd p σ (countKey (collapse absorbing initial (share s)))) :
+    (∃ strategy, Wins (game M) maxOdd p strategy s) ∧ ∀ other, ¬ Wins (game M) maxOdd (!p) other s := by
+  have hc := (engineAction M absorbing initial).key_wins (countGame M absorbing initial) countKey
+    (countGame_owner M absorbing initial) (countGame_prio M absorbing initial)
+    (countKey_canon M absorbing initial)
+    (countGame_edges M absorbing initial) h
+  have hv := engine_verdict M absorbing initial valid a b u v hc
+  exact ⟨⟨_, hv.1⟩, hv.2⟩
+
+-- The graph is total even outside the explored, normalized keys.
+theorem countGame_total (M : Machine Q L GI GO (Fin ki) (Fin ko)) (absorbing) (initial)
+    (a : GI) (b : GO) (u : Fin ki) (v : Fin ko) (k : CountKey n Q L GI (Fin ki)) :
+    ∃ k', (countGame M absorbing initial).edge k k' := by
+  let s := countRep k
+  suffices ∃ w, (collapsedGame M absorbing initial).edge s w by
+    obtain ⟨w, hw⟩ := this
+    refine ⟨countKey w, ?_⟩
+    rw [← countRep_key k]
+    exact (countGame_edges M absorbing initial s _).mpr ⟨w, hw, rfl⟩
+  cases ha : absorbing (globalState s) with
+  | some c => exact ⟨collapse absorbing initial s, by simp [collapsedGame, ha]⟩
+  | none => exact ⟨collapse absorbing initial (sharedDefault M a b u v s), by
+      simp only [collapsedGame, ha]
+      exact ⟨sharedDefault M a b u v s, sharedDefault_edge M a b u v s, rfl⟩⟩
+
+-- This premise is only the reachable count graph checked by the engine's solver.
+theorem count_certificate (M : Machine Q L GI GO (Fin ki) (Fin ko)) (absorbing) (initial)
+    (valid : ∀ q c, absorbing q = some c → Absorbing M q c)
+    (a : GI) (b : GO) (u : Fin ki) (v : Fin ko) {p : Bool}
+    {σ : CountKey n Q L GI (Fin ki) → CountKey n Q L GI (Fin ki)} {s : Vertex n Q L GI (Fin ki)}
+    (h : Certified (countGame M absorbing initial) maxOdd p σ
+      (countKey (collapse absorbing initial (share s)))) :
+    (∃ strategy, Wins (game M) maxOdd p strategy s) ∧ ∀ other, ¬ Wins (game M) maxOdd (!p) other s := by
+  obtain ⟨τ, ht⟩ := h.wins (countGame_total M absorbing initial a b u v)
+  exact count_verdict M absorbing initial valid a b u v ht
 
 end Symmetry.CountGame

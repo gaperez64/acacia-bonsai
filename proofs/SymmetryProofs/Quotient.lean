@@ -41,6 +41,32 @@ def Wins (G : Game V) (W : (Nat → Nat) → Prop) (p : Bool) (σ : V → V) (v 
   Legal G p σ ∧ ∀ π, IsPlay G π → π 0 = v → Consistent G p σ π →
     Goal W p (fun k => G.prio (π k))
 
+/-- Only vertices explored from the initial key need entries in a solver certificate. -/
+inductive Reach (G : Game V) (start : V) : V → Prop where
+  | initial : Reach G start start
+  | step {v w} : Reach G start v → G.edge v w → Reach G start w
+
+def Certified (G : Game V) (W : (Nat → Nat) → Prop) (p : Bool) (σ : V → V) (start : V) : Prop :=
+  (∀ v, Reach G start v → G.owner v = p → G.edge v (σ v)) ∧
+  ∀ π, IsPlay G π → π 0 = start → Consistent G p σ π → Goal W p (fun k => G.prio (π k))
+
+/-- Complete unvisited strategy entries using arbitrary legal moves. -/
+theorem Certified.wins {G : Game V} {W : (Nat → Nat) → Prop} {p : Bool} {σ : V → V} {start : V}
+    (h : Certified G W p σ start) (total : ∀ v, ∃ w, G.edge v w) : ∃ τ, Wins G W p τ start := by
+  classical
+  let τ v := if Reach G start v then σ v else Classical.choose (total v)
+  refine ⟨τ, (fun v hv => ?_), fun π hp h0 hc => ?_⟩
+  · dsimp [τ]; split
+    · rename_i hr; exact h.1 v hr hv
+    · exact Classical.choose_spec (total v)
+  · have reach (k : Nat) : Reach G start (π k) := by
+      induction k with
+      | zero => rw [h0]; exact Reach.initial
+      | succ k ih => exact Reach.step ih (hp k)
+    apply h.2 π hp h0
+    intro k hk
+    simpa only [τ, ite_eq_left (reach k)] using hc k hk
+
 /-- A group acting by automorphisms, with orbit-invariant representatives. -/
 structure Action (G : Game V) (Γ : Type) where
   act : Γ → V → V
@@ -120,6 +146,40 @@ theorem Action.lift_wins {W : (Nat → Nat) → Prop} {p : Bool} {σ' : V → V}
   have hs : (fun k => G.prio (S.canon (π k))) = (fun k => G.prio (π k)) := by
     funext k; exact S.prio_canon _
   simpa [hs] using hg
+
+/-- A strategy on keys chooses an actual edge witness before canonicalization. -/
+noncomputable def keyStrategy (G : Game V) (key : V → K) (σ : K → K) (v : V) : V := by
+  classical
+  exact if h : ∃ w, G.edge v w ∧ key w = σ (key v) then Classical.choose h else v
+
+/-- A certificate on a key graph supplies the concrete-successor quotient certificate. -/
+theorem Action.key_wins (H : Game K) (key : V → K)
+    (owner : ∀ v, H.owner (key v) = G.owner v)
+    (prio : ∀ v, H.prio (key v) = G.prio v)
+    (canon : ∀ v, key (S.canon v) = key v)
+    (edges : ∀ v k, H.edge (key v) k ↔ ∃ w, G.edge v w ∧ key w = k)
+    {W : (Nat → Nat) → Prop} {p : Bool} {σ : K → K} {v : V}
+    (h : Wins H W p σ (key v)) :
+    S.QWins W p (keyStrategy G key σ) (S.canon v) := by
+  have chosen (u : V) (hu : G.owner u = p) :
+      G.edge u (keyStrategy G key σ u) ∧ key (keyStrategy G key σ u) = σ (key u) := by
+    have he := (edges u _).mp (h.1 _ (by rw [owner]; exact hu))
+    simp only [keyStrategy, dite_eq_left he]
+    exact Classical.choose_spec he
+  refine ⟨fun u hu => (chosen u hu).1, fun ρ hp h0 hc => ?_⟩
+  have play : IsPlay H (fun k => key (ρ k)) := by
+    intro k
+    obtain ⟨w, hw, ht⟩ := hp k
+    apply (edges _ _).mpr
+    exact ⟨w, hw, by change key w = key (ρ (k + 1)); rw [← ht, canon]⟩
+  have consistent : Consistent H p σ (fun k => key (ρ k)) := by
+    intro k hk
+    have ho : G.owner (ρ k) = p := by rw [← owner]; exact hk
+    change key (ρ (k + 1)) = σ (key (ρ k))
+    rw [hc k ho, canon]
+    exact (chosen _ ho).2
+  have win := h.2 _ play (by rw [h0, canon]) consistent
+  simpa only [prio] using win
 
 /-- The play from `v` that follows both players' positional strategies. -/
 def joint (G : Game V) (σt σf : V → V) (v : V) : Nat → V

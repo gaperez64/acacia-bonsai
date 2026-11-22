@@ -5,7 +5,6 @@ namespace Symmetry.CountTemporal
 abbrev Trace := Nat → Prop
 
 def G (p : Trace) (t : Nat) : Prop := ∀ u, t ≤ u → p u
-def F (p : Trace) (t : Nat) : Prop := ∃ u, t ≤ u ∧ p u
 def GF (p : Trace) (t : Nat) : Prop := ∀ u, t ≤ u → ∃ v, u ≤ v ∧ p v
 def FG (p : Trace) (t : Nat) : Prop := ∃ u, t ≤ u ∧ G p u
 
@@ -147,11 +146,6 @@ theorem aggregate_encodings (p : Fin n → Trace) (B : Breakpoint p)
 -- Pointwise equality permits substitution in every context, including X and negative polarity; symmetric_count.cc:192–219.
 theorem context (C : Trace → Trace) (p q : Trace) (h : ∀ t, p t ↔ q t) : C p = C q := by
   have : p = q := funext (fun t => propext (h t)); exact congrArg C this
-
--- The letter events are pointwise, without any temporal assumption; symmetric_count.cc:155–157,647–650.
-theorem letter_events (p : Fin n → Trace) (t : Nat) :
-    ((∀ i, p i t) ↔ (fun u => ∀ i, p i u) t) ∧
-    ((∃ i, p i t) ↔ (fun u => ∃ i, p i u) t) := ⟨Iff.rfl, Iff.rfl⟩
 
 -- Local Inf marks use all_inf; local Fin marks use any; symmetric_count.cc:364–404.
 theorem local_acceptance (inf : Fin a → Fin n → Trace) (fin : Fin b → Fin n → Trace)
