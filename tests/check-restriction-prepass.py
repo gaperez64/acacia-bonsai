@@ -16,20 +16,20 @@ ATTRIBUTION = runpy.run_path(str(ROOT / "tests/check-attribution.py"))
 
 
 def main():
-    binary = Path(sys.argv[1]).resolve()
+    binary, closure_binary = (Path(arg).resolve() for arg in sys.argv[1:3])
     obfuscator = os.environ.get("ACACIA_TLSFOBF") or shutil.which("tlsfobf")
     with tempfile.TemporaryDirectory(prefix="restriction-") as temporary:
         root = Path(temporary)
         sequence = 0
 
-        def run(source, arm, *, enabled=True, synthesis=False, capture=False):
+        def run(source, arm, *, enabled=True, synthesis=False, capture=False, solver=binary):
             nonlocal sequence
             sequence += 1
             directory = root / str(sequence)
             directory.mkdir()
             env = dict(os.environ, ACACIA_PHASE_RECORDS=str(directory),
                        ACACIA_PHASE_INVOCATION=f"restriction-{sequence}")
-            command = [str(binary), "-T", str(source), "--arms", arm, "-K", "4",
+            command = [str(solver), "-T", str(source), "--arms", arm, "-K", "4",
                        "--restriction-prepass", "on" if enabled else "off"]
             if capture:
                 env["ACACIA_SPOT_CAPTURE_DIR"] = str(directory / "captures")
@@ -91,7 +91,7 @@ def main():
                               f'GUARANTEES {{ {objective}; }} }}\n')
             result, attempts, controller = run(
                 source, "unreal:formula:spot-guarded-sparse:closure-buchi",
-                enabled=enabled, capture=True)
+                enabled=enabled, capture=True, solver=closure_binary)
             captures = [json.loads(p.read_text())
                         for p in (controller.parent / "captures").glob("*.json")]
             assert len(captures) == 1, (result, attempts, captures)

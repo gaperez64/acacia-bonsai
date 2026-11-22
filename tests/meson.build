@@ -703,9 +703,10 @@ restriction_prepass_test = executable (
   '../src/solver/restriction_prepass.cc', '../src/tlsf_frontend.cc',
   include_directories : inc, dependencies : tlsf_deps + [spot_dep, bddx_dep])
 test ('restriction-prepass', restriction_prepass_test, suite : ['unit', 'tlsf'])
+# Keep the causal-frame check active even when the configured CLI omits guarded backends.
 test ('restriction-prepass-cli', py,
-      args : [files ('check-restriction-prepass.py'), ab_exe],
-      suite : ['unit', 'cli', 'tlsf'], depends : [ab_exe], timeout : 60)
+      args : [files ('check-restriction-prepass.py'), ab_exe, game_backend_integration],
+      suite : ['unit', 'cli', 'tlsf'], depends : [ab_exe, game_backend_integration], timeout : 60)
 
 test ('moore-synthesis-semantics',
       py,
