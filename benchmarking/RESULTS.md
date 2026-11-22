@@ -12,6 +12,95 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-22: Bound parity strategy reduction and reselect small games (#467)
+
+Campaign `strat467-20261122` uses implementation `e018f539`, based on master
+`b28b0454`. The verified archive is retained locally under
+`~/scratch/strat467/` pending publication; no evidence-index row is added.
+Release GCC 15.3.1, private Spot 2.16.3, one compile job/LTO thread/test process,
+5G/no-swap scopes and serial measurements use `g3-440/env.sh`, with TMPDIR set
+to `strat467/tmp`. The frozen binary embeds its pre-commit base/dirty version;
+the archive retains the exact implementation sources, build options and hashes.
+
+**Diagnosis.** Tier four solves the expanded ACD parity arena globally with
+Spot's Zielonka solver. Its strategy is already positional, but the arena's
+translation/ACD state remains controller memory. `apply_strategy` follows that
+single chosen controller edge and every environment edge from the initial state,
+so extraction already excludes unreachable states. It also performs structural
+merging. `solved_game_to_separated_mealy` does **not** call a minimizer or consult
+`minimize_lvl`. The legacy backward extractor explicitly calls
+`simplify_mealy_here(mealy, 2, false)` on its antichain-based controller.
+
+The runtime option `--parity-mealy-reduction none|bisim|bisim-output|reselect`
+adds explicit post-selection work inside winning synthesis runs only. `none`
+retains the previous pipeline. `bisim` and `bisim-output` use Spot levels 1 and 2:
+bisimulation, and bisimulation with output assignment. Both are exact controller
+specializations. They skip machines above 512 states, 8,192 edges, or 65,536
+label BDD nodes summed over edges. The default, `reselect`, additionally copies
+small tier-4 arenas, stably sorts outgoing edges by destination, re-solves, extracts
+and reduces a second strategy, and keeps it only if (states, edges) is smaller.
+That second solve skips above 2,048 arena states, 8,192 edges or four acceptance
+sets. Re-solving is necessary: arbitrary substitutions of winning-region edges
+can lose liveness. Original game certificates and decision solving are untouched.
+These are size guards on opaque Spot calls, not a hard wall-clock deadline.
+
+**43-input smoke panel, not full-corpus admission.** The fixed panel contains the
+three outliers, the previous encoder sweep's 30 varied realizable cases, and ten
+additional historical first-member size wins. Labelled arguments in
+`benchmarking/synthesis-size.py` compare identical frozen
+`otf_sparse_formula_parity` executable bytes at 17 s, with fresh independent
+`tests/controller_check.cc` runs capped at 60 s / 200,000 states.
+
+Every option verifies all 43 inputs. There are **zero checker rejections**, synthesis
+or verification timeouts, resource limits, or other failures. Totals and medians
+use the same 43 commonly verified inputs; times sum wall seconds over all attempts.
+
+| Option | Verified / 43 | Rejected | Total A+L | Median A+L | Synthesis s | Check s |
+|---|---:|---:|---:|---:|---:|---:|
+| `none` | 43 | 0 | 36,347 | 45 | 8.04 | 14.68 |
+| `bisim` | 43 | 0 | 35,302 | 41 | 8.13 | 14.67 |
+| `bisim-output` | 43 | 0 | 34,055 | 41 | 8.17 | 14.71 |
+| `reselect` | 43 | 0 | 26,152 | 41 | 8.13 | 14.52 |
+
+Choose `reselect`: 28.0% lower total with unchanged coverage. No input's size
+increases in this panel. Median synthesis times are 0.168–0.169 s and the largest
+individual synthesis time is 0.626 s. This is no general speedup or full-corpus
+coverage claim; the totals include ordinary portfolio selection differences.
+
+Forced `both:parity:spot` reruns isolate the outliers, with all 12 circuits verified:
+
+| Input | `none` states / edges; A+L | `bisim` | `bisim-output` | `reselect` |
+|---|---:|---:|---:|---:|
+| prioritized_arbiter n=6 | 386 / 6,088; 13,070 | unchanged | unchanged | unchanged |
+| Lights_2c5b09da | 153 / 1,387; 10,765 | 117 / 1,225; 9,941 | 111 / 1,204; 9,265 | 25 / 300; 1,475 |
+| prioritized_arbiter n=5 | 162 / 1,748; 4,715 | unchanged | unchanged | unchanged |
+
+Lights shrinks by 86.3%; both arbiter gaps remain. The larger arbiter's 68,392
+label BDD nodes exceed the production cap; uncapped diagnostic levels 1 and 2
+also leave it unchanged. The smaller arbiter's alternative strategy has the same
+size and is discarded. Existing parity wins remain: forced parity with either
+`none` or `reselect` yields 2,752 versus forced legacy's 23,698 on ltl2dba_U1 n=7,
+and 203 versus 1,802 on ltl2dba_E n=7; all checks pass. The collector n=7 comparison
+also confirms that a first-member win is not necessarily a parity-route win:
+forced parity is 6,875, while its own legacy arm produces 936.
+
+**Rejected candidates.** Spot's public `minimize_mealy` API uses SAT, with premin
+-1/0/1 mapping to simplification levels 3/4/5. It has no cancellation or step
+budget; `max_letter_mult` bounds alphabet processing, not SAT solving. Every raw
+SAT level exceeds a 3 s diagnostic cap on each outlier. Canonical low output
+choices barely help the arbiters and can hinder output-assignment merging.
+Condition-BDD-ID ordering sometimes improves Lights further but is sensitive to
+BDD history; destination order is the structural candidate retained. All 21
+completed fixed-machine diagnostic circuits and all 21 strategy-order trials
+verify. Reloaded-dictionary or post-encoding reductions can have different AIG
+sizes; the table above is the actual original-dictionary production pipeline.
+
+Validation: ruff passes, 127 Python regressions pass, and four focused release
+Meson tests pass. Fixtures cover exact output specialization, all three graph/BDD
+size guards, Mealy/Moore target timing and independent controller checks. CLI tests
+cover accepted, invalid and missing values, default bytes, and identical decision
+stage traces for every option without `-s`. Full corpus and G0–G5 are not run.
+
 ## 2026-11-22: Select AIGER modes; +dc rejects controllers and large strategies remain the main gap (#280)
 
 **Correctness finding: eight of 495 smoke controllers are rejected.** All eight
