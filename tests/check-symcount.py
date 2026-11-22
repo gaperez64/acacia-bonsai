@@ -4,7 +4,7 @@
 Each case's verdict must match the SYNTCOMP status; the fragment cases cover
 local safety templates, the breakpoint aggregate (collector_v2), the since
 monitor (collector_v1), an UNREALIZABLE answer, an index output family
-(arbiter) and two declines.
+(arbiter), nested since patterns and count overflow.
 """
 
 from pathlib import Path
@@ -23,12 +23,22 @@ cases = {
     "collector_v3_pb_5_pe_.tlsf": "DECLINED",  # an aggregate in an assumption
     "01.tlsf": "DECLINED",  # no index family
 }
+fixtures = Path(__file__).resolve().parent / "fixtures" / "symcount"
+# Nested since monitors are outside the fragment; comments give the reference verdicts.
+regressions = {
+    "since-under-x.tlsf": "DECLINED",  # REALIZABLE
+    "since-under-next.tlsf": "DECLINED",  # REALIZABLE
+    "since-negated-next.tlsf": "DECLINED",  # UNREALIZABLE
+    "count-overflow-chunked.tlsf": "DECLINED",
+}
 codes = {"REALIZABLE": 0, "UNREALIZABLE": 1, "DECLINED": 2}
 failed = False
-for name, expected in cases.items():
-    done = subprocess.run([binary, corpus / name], capture_output=True, text=True, timeout=120)
+checks = [(corpus / name, expected) for name, expected in cases.items()]
+checks += [(fixtures / name, expected) for name, expected in regressions.items()]
+for path, expected in checks:
+    done = subprocess.run([binary, path], capture_output=True, text=True, timeout=120)
     word = (done.stdout.split() or ["?"])[0]
     if word != expected or done.returncode != codes[expected]:
-        print(f"{name}: expected {expected}, got {done.returncode} {done.stdout}{done.stderr}")
+        print(f"{path.name}: expected {expected}, got {done.returncode} {done.stdout}{done.stderr}")
         failed = True
 sys.exit(1 if failed else 0)

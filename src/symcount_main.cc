@@ -23,6 +23,12 @@ int main (int argc, char** argv) {
       bound.max_vertices = std::strtoull (argv[++i], nullptr, 10);
   try {
     const auto spec = acacia::tlsf_frontend::load (argv[1]);
+    // Check before Spot parses a conjunction too large for its uint16_t arity.
+    for (const auto& f : spec.metadata.tlsf_indexed_families)
+      if (f.members.size () > UINT16_MAX) {
+        std::puts ("DECLINED reason=index count exceeds uint16_t");
+        return EXIT_CODE_UNKNOWN;
+      }
     auto parsed = spot::parse_infix_psl (spec.formula);
     if (parsed.format_errors (std::cerr))
       return EXIT_CODE_ERROR;

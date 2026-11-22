@@ -19,6 +19,12 @@ namespace acacia {
     tlsf_frontend::specification child_local;
     const auto& objective = args.prepare_objective (child_local);
     validate_ltl_partition (objective.inputs, objective.outputs);
+    for (const auto& f : objective.metadata.tlsf_indexed_families)
+      if (f.members.size () > UINT16_MAX) {
+        worker_decline ("symcount_declined");
+        worker_decline_detail ("index count exceeds uint16_t");
+        return EXIT_CODE_UNKNOWN;
+      }
     const auto parsed = spot::parse_infix_psl (objective.formula);
     if (!parsed.f || !parsed.errors.empty ()) {
       worker_stopped ("invalid_formula");
@@ -26,9 +32,9 @@ namespace acacia {
     }
     symcount::limits bound;
     bound.deadline_mono_ns = deadline_mono_ns;
-    // About 256 bytes per vertex across the game, the Spot arena and the check.
-    bound.max_vertices =
-        std::max<uint64_t> (1, obligation::rss_share (args.arms ? args.arms->size () : 1) / 256);
+    // Split the share between vertices (including count keys) and edges, with Spot and the check.
+    const auto share = obligation::rss_share (args.arms ? args.arms->size () : 1);
+    bound.max_vertices = bound.max_edges = std::max<uint64_t> (1, share / 512);
     const auto result = symcount::solve (parsed.f, objective.inputs, objective.outputs,
                                          objective.metadata.tlsf_indexed_families, bound);
     if (result.outcome == symcount::verdict::declined) {

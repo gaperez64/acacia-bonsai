@@ -189,26 +189,10 @@ namespace acacia::symcount {
           return true;
         }
 
-        // Replace aggregates in a symmetric conjunct; the result is index-free.
+        // Letter aggregates are pointwise; GF/FG aggregates are prefix-independent: valid anywhere.
         formula aggregates (const formula& f) {
           if (indices (f, fm).empty ())
             return f;
-          // G (G gamma -> || G lambda) == GF !gamma || || FG !m, with m the since monitor
-          // of gamma and lambda (t0 = the step after the last !gamma, or 0): if !gamma
-          // recurs, G gamma never holds; otherwise the obligation at t0 is the weakest
-          // and asks one client to keep lambda from t0, which is FG !m.
-          formula lambda;
-          if (f.is (op::G) and f[0].is (op::Implies) and f[0][0].is (op::G) and
-              f[0][0][0].is_boolean () and indices (f[0][0], fm).empty () and
-              always_orbit (f[0][1], lambda)) {
-            const formula gamma = f[0][0][0];
-            since.push_back ({spot::formula_to_bdd (gamma, dict, &owner_token),
-                              spot::formula_to_bdd (lambda, dict, &owner_token), bits++});
-            preds.push_back ({pred_kind::since, unsigned (since.size () - 1), bddfalse});
-            const formula e = new_event (event_kind::all_inf, unsigned (preds.size () - 1));
-            return formula::Or ({formula::G (formula::F (formula::Not (gamma))),
-                                 formula::F (formula::G (formula::Not (e)))});
-          }
           if (f.is (op::And) or f.is (op::Or)) {
             const bool conj = f.is (op::And);
             std::map<formula, std::set<unsigned>> groups;
@@ -262,7 +246,17 @@ namespace acacia::symcount {
     }
 
     // Compositions of `total` into `parts` ordered parts.
-    void compositions (unsigned total, unsigned parts, std::vector<std::vector<uint16_t>>& out) {
+    void compositions (unsigned total, unsigned parts, std::vector<std::vector<uint16_t>>& out,
+                       size_t& choices, size_t limit) {
+      if (choices > limit)
+        throw declined ("split limit");
+      uint64_t count = 1;
+      for (unsigned k = 1; k < parts; ++k) {
+        count = count * (total + k) / k;  // C(total + parts - 1, parts - 1), capped below
+        if (count > limit / choices)
+          throw declined ("split limit");
+      }
+      choices *= size_t (count);
       std::vector<uint16_t> cur (parts, 0);
       auto rec = [&] (auto&& self, unsigned i, unsigned left) -> void {
         if (i + 1 == parts) {
@@ -283,8 +277,16 @@ namespace acacia::symcount {
                 const limits& bound) {
       result r;
       r.n = fm.n;
+      if (fm.n > UINT16_MAX)
+        throw declined ("index count exceeds uint16_t");
       const auto t0 = std::chrono::steady_clock::now ();
       builder b {fm};
+      const auto table_size = [] (size_t states, size_t letters, size_t extra) {
+        constexpr size_t max_entries = size_t (1) << 24;
+        if (states > max_entries / letters / extra)
+          throw declined ("table limit");
+        return states * letters * extra;
+      };
 
       // Partition the APs: global inputs/outputs, then index 0's local inputs/outputs.
       std::vector<std::string> gi, go, li, lo;
@@ -316,7 +318,22 @@ namespace acacia::symcount {
             continue;  // a repeated conjunct
         }
         else {
-          const formula g = b.aggregates (c);
+          formula g, lambda;
+          // Only at position 0: G (G gamma -> || G lambda) == GF !gamma || || FG !m.
+          // If !gamma stops, one client must keep lambda after its last occurrence (or from 0).
+          if (c.is (op::G) and c[0].is (op::Implies) and c[0][0].is (op::G) and
+              c[0][0][0].is_boolean () and indices (c[0][0], fm).empty () and
+              b.always_orbit (c[0][1], lambda)) {
+            const formula gamma = c[0][0][0];
+            b.since.push_back ({spot::formula_to_bdd (gamma, b.dict, &b.owner_token),
+                                spot::formula_to_bdd (lambda, b.dict, &b.owner_token), b.bits++});
+            b.preds.push_back ({pred_kind::since, unsigned (b.since.size () - 1), bddfalse});
+            const formula e = b.new_event (event_kind::all_inf, unsigned (b.preds.size () - 1));
+            g = formula::Or ({formula::G (formula::F (formula::Not (gamma))),
+                              formula::F (formula::G (formula::Not (e)))});
+          }
+          else
+            g = b.aggregates (c);
           if (not indices (g, fm).empty ())
             throw declined ("an indexed atom outside an aggregate");
           global.push_back (g);
@@ -367,18 +384,18 @@ namespace acacia::symcount {
       la.initial = laut->get_init_state_number ();
       const unsigned gl = 1u << ng, ll = 1u << nl;
       // Fill the tables after all predicates exist; the sink predicate is added lazily.
-      std::vector<std::pair<unsigned, spot::acc_cond::mark_t>> step (la.states * gl * ll,
-                                                                     {UINT32_MAX, {}});
+      std::vector<std::pair<unsigned, spot::acc_cond::mark_t>> step (table_size (la.states, gl, ll),
+                                                                 {UINT32_MAX, {}});
       for (unsigned q = 0; q < la.states; ++q)
         for (unsigned g = 0; g < gl; ++g)
           for (unsigned x = 0; x < ll; ++x) {
             const bdd m = minterm (gvars, g) & minterm (lvars, x);
             for (const auto& e : laut->out (q))
               if ((m & e.cond) != bddfalse) {
-                step[(q * gl + g) * ll + x] = {e.dst, e.acc};
+                step[(size_t (q) * gl + g) * ll + x] = {e.dst, e.acc};
                 break;
               }
-            if (step[(q * gl + g) * ll + x].first == UINT32_MAX)
+            if (step[(size_t (q) * gl + g) * ll + x].first == UINT32_MAX)
               la.has_sink = true;
           }
       if (la.has_sink) {
@@ -390,12 +407,12 @@ namespace acacia::symcount {
         throw declined ("too many predicates or events");
       const unsigned qs = la.states + (la.has_sink ? 1 : 0);
       la.sink = la.states;
-      la.next.assign (qs * gl * ll, 0);
-      la.holds.assign (qs * gl * ll, 0);
+      la.next.assign (table_size (qs, gl, ll), 0);
+      la.holds.assign (table_size (qs, gl, ll), 0);
       for (unsigned q = 0; q < qs; ++q)
         for (unsigned g = 0; g < gl; ++g)
           for (unsigned x = 0; x < ll; ++x) {
-            const size_t i = (q * gl + g) * ll + x;
+            const size_t i = (size_t (q) * gl + g) * ll + x;
             const bool from_sink = q == la.sink and la.has_sink;
             const auto [dst, acc] = from_sink ? std::pair {la.sink, spot::acc_cond::mark_t {}}
                                               : step[i];
@@ -448,7 +465,7 @@ namespace acacia::symcount {
       spot::change_parity_here (gaut, spot::parity_kind_max, spot::parity_style_odd);
       const unsigned el = 1u << b.events.size ();
       const unsigned gstates = gaut->num_states ();
-      std::vector<std::pair<unsigned, unsigned>> gstep (size_t (gstates) * gl * el);
+      std::vector<std::pair<unsigned, unsigned>> gstep (table_size (gstates, gl, el));
       for (unsigned s = 0; s < gstates; ++s)
         for (unsigned g = 0; g < gl; ++g)
           for (unsigned ev = 0; ev < el; ++ev) {
@@ -480,6 +497,8 @@ namespace acacia::symcount {
         if (loops)
           absorbing[s] = col;
       }
+      if (b.bits >= 32 or qs > (UINT32_MAX >> b.bits))
+        throw declined ("local state limit");
       r.local_states = qs << b.bits;
       r.events = unsigned (b.events.size ());
       r.global_states = gstates;
@@ -487,9 +506,21 @@ namespace acacia::symcount {
       // Explore the count game. A state is (global state, counts per local state);
       // an environment vertex also carries the colour of the move into it.
       const unsigned nls = r.local_states, bitmask = (1u << b.bits) - 1;
+      // Charge the count-key copies in the state maps to the vertex budget (256-byte units).
+      const size_t max_vertices = std::min<size_t> (UINT32_MAX / 2, bound.max_vertices)
+                                  / (1 + size_t (nls) / 16);
+      const size_t max_edges = std::min<size_t> (UINT32_MAX / 2, bound.max_edges);
+      if (not max_vertices)
+        throw declined ("state storage limit");
+      size_t edges = 0;
+      const auto count_edges = [&] (size_t count) {
+        if (count > max_edges - edges)
+          throw declined ("edge limit");
+        edges += count;
+      };
       const unsigned nli = 1u << li.size (), nlo = 1u << lo.size ();
       const unsigned ngi = 1u << gi.size (), ngo = 1u << go.size ();
-      std::unordered_map<std::vector<uint32_t>, unsigned, vec_hash> env_index, state_sys;
+      std::unordered_map<std::vector<uint32_t>, unsigned, vec_hash> env_index;
       std::vector<std::vector<uint32_t>> env_key;  // per vertex: state, colour, counts
       std::vector<uint8_t> owner;                  // 1: system (Spot's controller)
       std::vector<unsigned> colour;                // of the edge into the vertex
@@ -502,7 +533,7 @@ namespace acacia::symcount {
         }
         auto [it, fresh] = env_index.try_emplace (key, unsigned (owner.size ()));
         if (fresh) {
-          if (owner.size () >= bound.max_vertices)
+          if (owner.size () >= max_vertices)
             throw declined ("vertex limit");
           owner.push_back (0);
           colour.push_back (key[1]);
@@ -526,12 +557,14 @@ namespace acacia::symcount {
         const unsigned v = work.back ();
         work.pop_back ();
         if (absorbing[env_key[v][0]] >= 0) {
+          count_edges (1);
           succ[v] = {v};  // its edges keep the sink's colour
           continue;
         }
         std::vector<uint32_t> state = env_key[v];
         state.erase (state.begin () + 1);  // drop the colour: (global, counts...)
         if (auto known = sys_of_state.find (state); known != sys_of_state.end ()) {
+          count_edges (known->second.size ());
           succ[v] = known->second;
           continue;
         }
@@ -542,8 +575,10 @@ namespace acacia::symcount {
             occupied.push_back (ls);
         // Environment: a global input and, per occupied local state, a split by local input.
         std::vector<std::vector<std::vector<uint16_t>>> in_splits (occupied.size ());
+        size_t input_choices = ngi;
         for (unsigned k = 0; k < occupied.size (); ++k)
-          compositions (state[1 + occupied[k]], nli, in_splits[k]);
+          compositions (state[1 + occupied[k]], nli, in_splits[k], input_choices,
+                        std::min (max_vertices - owner.size (), max_edges - edges));
         std::vector<unsigned> sys_vertices;
         std::vector<unsigned> pick (occupied.size (), 0);
         for (unsigned g_in = 0; g_in < ngi; ++g_in) {
@@ -551,7 +586,7 @@ namespace acacia::symcount {
           for (;;) {
             // One system vertex for (state, g_in, input split).
             const unsigned u = unsigned (owner.size ());
-            if (u >= bound.max_vertices)
+            if (u >= max_vertices)
               throw declined ("vertex limit");
             owner.push_back (1);
             colour.push_back (0);
@@ -565,8 +600,10 @@ namespace acacia::symcount {
                 if (unsigned c = in_splits[k][pick[k]][x])
                   cls.emplace_back (occupied[k], x, c);
             std::vector<std::vector<std::vector<uint16_t>>> out_splits (cls.size ());
+            size_t output_choices = ngo;
             for (unsigned k = 0; k < cls.size (); ++k)
-              compositions (std::get<2> (cls[k]), nlo, out_splits[k]);
+              compositions (std::get<2> (cls[k]), nlo, out_splits[k], output_choices,
+                            std::min (max_vertices - owner.size (), max_edges - edges));
             std::vector<unsigned> opick (cls.size (), 0);
             for (unsigned g_out = 0; g_out < ngo; ++g_out) {
               std::fill (opick.begin (), opick.end (), 0);
@@ -627,6 +664,7 @@ namespace acacia::symcount {
                 std::vector<uint32_t> key {s2, col};
                 key.insert (key.end (), counts.begin (), counts.end ());
                 const unsigned w = env_vertex (std::move (key));
+                count_edges (1);
                 succ[u].push_back (w);
                 // Next output split.
                 unsigned k = 0;
@@ -646,6 +684,7 @@ namespace acacia::symcount {
               break;
           }
         }
+        count_edges (sys_vertices.size ());
         succ[v] = sys_vertices;
         r.count_states++;
         sys_of_state.emplace (std::move (state), std::move (sys_vertices));

@@ -10,6 +10,7 @@
 //   - symmetric conjuncts whose index-dependent parts are aggregates over all
 //     indices of one local template: letter-level `&&`/`||` of a Boolean
 //     template, or `&&`/`||` of `GF b` / `FG b` with a Boolean template b.
+// The since-monitor rewrite of G (G gamma -> || G lambda) holds only at position 0.
 // The split itself checks the symmetry, so nothing comes from family names.
 // Each client runs a deterministic local automaton for the local templates,
 // whose acceptance must be a conjunction of single-mark Inf/Fin. Aggregates
@@ -33,6 +34,7 @@ namespace acacia::symcount {
 
   struct limits {
       size_t max_vertices = size_t (1) << 24;
+      size_t max_edges = size_t (1) << 24;
       size_t max_local_letters = 64;
       uint64_t deadline_mono_ns = 0;  // CLOCK_MONOTONIC, zero for none
   };
