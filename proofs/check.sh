@@ -22,16 +22,20 @@ for module in Automaton Detector Game Equivariance FixedPoint Transports Reuse \
   # match lakefile.toml, with worker/stack settings overridable for this check.
   time timeout 300 lake env lean -j"$LEAN_NUM_THREADS" -s"$LEAN_STACK_SIZE_KB" \
     -DElab.async=false -DwarningAsError=true "SymmetryProofs/$module.lean"
-  time timeout 300 lake build "SymmetryProofs.$module"
+  time timeout 300 lake --rehash build "SymmetryProofs.$module"
 done
 time timeout 300 lake env lean -j"$LEAN_NUM_THREADS" -s"$LEAN_STACK_SIZE_KB" \
   -DElab.async=false -DwarningAsError=true SymmetryProofs.lean
-time timeout 1500 lake build
+time timeout 1500 lake --rehash build
 
-# Import every library source, including modules not reached by the root import.
+# Build exactly the modules we audit, including unimported nested sources.
 shopt -s globstar nullglob
 modules=(SymmetryProofs.lean SymmetryProofs/**/*.lean)
 modules=("${modules[@]%.lean}")
 modules=("${modules[@]//\//.}")
-time timeout 300 lake env lean -j"$LEAN_NUM_THREADS" -s"$LEAN_STACK_SIZE_KB" \
-  --run AuditAxioms.lean "${modules[@]}"
+time timeout 1500 lake --rehash build "${modules[@]}"
+# Separate processes let executable roots declare the same global main.
+for module in "${modules[@]}"; do
+  time timeout 300 lake env lean -j"$LEAN_NUM_THREADS" -s"$LEAN_STACK_SIZE_KB" \
+    --run AuditAxioms.lean "$module"
+done

@@ -51,8 +51,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-24.04
-    # Tighten this from the first measured CI run.
-    timeout-minutes: 60
+    # Cold-cache full runs measured 1–1.5 minutes; allow room for runner variance.
+    timeout-minutes: 15
     env:
       ELAN_VERSION: v4.2.4
     steps:

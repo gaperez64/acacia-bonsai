@@ -151,22 +151,27 @@ Do not set `ulimit -v`. These environment variables may be overridden; direct
 source checks pass the worker and stack values to Lean explicitly. The library
 keeps its one-worker, synchronous elaboration settings from `lakefile.toml`.
 Module checks remain sequential everywhere so imports are refreshed before
-their users. CI keeps these conservative defaults until its timings are measured.
+their users. CI keeps these defaults; cold-cache full runs measured 1–1.5 minutes.
 
 The script rejects `sorry`, `admit`, custom `axiom`, `native_decide` and `partial`
 tokens, then elaborates and caches each module before the final build, with
 warnings as errors and timing for each step. Source elaboration always runs,
-including after an exact Lake cache hit. This project has no `lean_exe` targets
-or external Lean/golden/data inputs; tlsf-tools' executables are a separate Lake
+including after an exact Lake cache hit. Before auditing, the script explicitly
+builds every discovered module target with `--rehash`, including unimported nested
+sources, so a stale cache cannot hide a source error. This project has no
+`lean_exe` targets or external Lean/golden/data inputs; tlsf-tools' executables are a separate Lake
 project and are not part of this build.
 
-After the full build, `AuditAxioms.lean` imports every library module and uses
+After the full build, `AuditAxioms.lean` imports each library module in a separate
+Lean process, allowing executable roots to define their own global `main`, and uses
 `Lean.collectAxioms` on every declaration defined there, including private and
 generated constants. Only `propext`, `Classical.choice` and `Quot.sound` are
 allowed; `sorryAx` and generated native-decision axioms fail the check.
 CI also runs `python3 proofs/test-axiom-audit.py`: tiny compiled fixtures verify
 the allowlist and reject `native_decide`, `sorry` and custom axioms without
-building the library. On the shared machine, run these fixtures only with:
+building the library. Fixtures explicitly select `proofs/lean-toolchain`, and
+also cover duplicate `main` definitions, missing imports and stale unimported
+sources. On the shared machine, run these fixtures only with:
 
 ```sh
 TMPDIR=/home/gaperez/scratch/leanci/tmp LEAN_NUM_THREADS=1 \

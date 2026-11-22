@@ -14,8 +14,7 @@ def auditAxioms (modules : Array Name) : CoreM Nat := do
         for ax in ← collectAxioms name do
           unless #[``propext, ``Classical.choice, ``Quot.sound].contains ax do
             throwError "{name} depends on forbidden axiom {ax}"
-  if checked == 0 then
-    throwError "no project declarations audited"
+  -- An import-only root can have no declarations of its own.
   return checked
 
 def main (args : List String) : IO Unit := do
@@ -24,6 +23,6 @@ def main (args : List String) : IO Unit := do
   initSearchPath (← findSysroot)
   let modules := args.toArray.map String.toName
   unsafe enableInitializersExecution
-  let env ← importModules (modules.map fun name => { module := name }) {} (loadExts := true)
+  let env ← importModules (modules.map fun name => { module := name }) {} (loadExts := true) (level := .private)
   let count ← (auditAxioms modules).toIO' { fileName := "<axiom audit>", fileMap := default } { env }
   IO.println s!"audited axioms of {count} declarations in {modules.size} project modules"

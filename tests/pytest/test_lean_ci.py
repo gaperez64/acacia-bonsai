@@ -201,12 +201,16 @@ with open(os.environ["LAKE_LOG"], "a") as log:
     log.write(json.dumps(sys.argv[1:]) + "\\n")
 if sys.argv[1:3] == ["env", "lean"]:
     if "--run" in sys.argv:
-        if os.environ.get("FAIL_AUDIT"):
+        if os.environ.get("FAIL_AUDIT") or sys.argv[-1] == os.environ.get("FAIL_AUDIT_MODULE"):
             sys.exit(7)
     elif "INVALID_LEAN" in Path(sys.argv[-1]).read_text():
         sys.exit(9)
-elif os.environ.get("FAIL_BUILD"):
-    sys.exit(8)
+elif "build" in sys.argv:
+    for target in sys.argv[sys.argv.index("build") + 1:]:
+        if "INVALID_LEAN" in Path(target.replace(".", "/") + ".lean").read_text():
+            sys.exit(9)
+    if os.environ.get("FAIL_BUILD"):
+        sys.exit(8)
 ''')
     binary.chmod(0o755)
     env = dict(os.environ, PATH=f"{tmp_path}{os.pathsep}{os.environ['PATH']}",
@@ -228,33 +232,62 @@ def test_every_module_elaborates_before_its_build_even_with_cache(fake_lake, thr
     result = run_check(proofs, env)
     assert result.returncode == 0, result.stderr
     calls = [json.loads(line) for line in Path(env["LAKE_LOG"]).read_text().splitlines()]
+    root_check = next(i for i, call in enumerate(calls) if call[-1] == "SymmetryProofs.lean")
     sources = set()
-    for check, build in zip(calls[:-3:2], calls[1:-3:2]):
+    for check, build in zip(calls[:root_check:2], calls[1:root_check:2]):
         assert check[:2] == ["env", "lean"]
         assert f"-j{threads or '1'}" in check
         assert "-DwarningAsError=true" in check
         source = Path(check[-1])
         sources.add(source.name)
-        assert build == ["build", f"SymmetryProofs.{source.stem}"]
+        assert build == ["--rehash", "build", f"SymmetryProofs.{source.stem}"]
     assert sources == {path.name for path in (proofs / "SymmetryProofs").glob("*.lean")}
-    assert calls[-3][-1] == "SymmetryProofs.lean"
-    assert calls[-2] == ["build"]
-    audit = calls[-1]
-    assert audit[:2] == ["env", "lean"]
-    assert audit[audit.index("--run") + 1] == "AuditAxioms.lean"
-    assert set(audit[audit.index("--run") + 2:]) == {
-        "SymmetryProofs", *(f"SymmetryProofs.{Path(name).stem}" for name in sources)}
+    assert calls[root_check + 1] == ["--rehash", "build"]
+    modules = {"SymmetryProofs", *(f"SymmetryProofs.{Path(name).stem}" for name in sources)}
+    assert calls[root_check + 2][:2] == ["--rehash", "build"]
+    assert set(calls[root_check + 2][2:]) == modules
+    audits = calls[root_check + 3:]
+    assert len(audits) == len(modules)
+    for audit in audits:
+        assert audit[:2] == ["env", "lean"]
+        assert audit[audit.index("--run") + 1] == "AuditAxioms.lean"
+        assert len(audit[audit.index("--run") + 2:]) == 1
+    assert {audit[-1] for audit in audits} == modules
 
 
-def test_semantic_audit_includes_unimported_nested_modules(fake_lake):
+@pytest.mark.parametrize("valid", [True, False])
+def test_unimported_nested_source_must_build_before_audit(fake_lake, valid):
     proofs, env = fake_lake
     nested = proofs / "SymmetryProofs/Nested"
     nested.mkdir()
-    (nested / "Unimported.lean").write_text("theorem unused : True := True.intro\n")
+    (nested / "Unimported.lean").write_text(
+        "theorem unused : True := True.intro\n" if valid else "INVALID_LEAN\n")
     result = run_check(proofs, env)
-    assert result.returncode == 0, result.stderr
-    audit = json.loads(Path(env["LAKE_LOG"]).read_text().splitlines()[-1])
-    assert "SymmetryProofs.Nested.Unimported" in audit
+    calls = [json.loads(line) for line in Path(env["LAKE_LOG"]).read_text().splitlines()]
+    build = next(i for i, call in enumerate(calls)
+                 if "build" in call and "SymmetryProofs.Nested.Unimported" in call)
+    assert calls[build][:2] == ["--rehash", "build"]
+    if valid:
+        assert result.returncode == 0, result.stderr
+        audit = next(i for i, call in enumerate(calls)
+                     if "--run" in call and call[-1] == "SymmetryProofs.Nested.Unimported")
+        assert audit > build
+    else:
+        assert result.returncode == 9, result.stderr
+        assert not any("--run" in call for call in calls)
+
+
+def test_later_executable_audit_failure_is_fatal(fake_lake):
+    proofs, env = fake_lake
+    for name in ("First", "Second"):
+        (proofs / f"SymmetryProofs/{name}.lean").write_text("def main : IO Unit := pure ()\n")
+    env["FAIL_AUDIT_MODULE"] = "SymmetryProofs.Second"
+    result = run_check(proofs, env)
+    assert result.returncode == 7, result.stderr
+    calls = [json.loads(line) for line in Path(env["LAKE_LOG"]).read_text().splitlines()]
+    audits = [call for call in calls if "--run" in call]
+    assert audits[-1][-1] == "SymmetryProofs.Second"
+    assert any(call[-1] == "SymmetryProofs.First" for call in audits)
 
 
 @pytest.mark.parametrize("token", ["sorry", "admit", "axiom", "native_decide", "partial"])
