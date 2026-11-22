@@ -82,6 +82,20 @@ int main () {
 #endif
     return EXIT_CODE_REAL;
   }));
+  auto two_families = metadata;
+  two_families.tlsf_declared_families.push_back (metadata.tlsf_declared_families.front ());
+  two_families.tlsf_declared_families.back ().members = {"u", "v"};
+  check (try_prepass (
+      parse ("q ^ v"), two_families, {"p", "q", "u", "v"}, outputs, true, 0,
+      [] (auto f) { return f == parse ("q ^ u") ? EXIT_CODE_UNREAL : EXIT_CODE_UNKNOWN; }));
+  auto mixed = metadata;
+  mixed.tlsf_declared_families.front ().is_input = false;
+  mixed.tlsf_declared_families.front ().members = {"x", "y"};
+  check (try_prepass (parse ("!o"), mixed, inputs, {"o", "x", "y"}, false, 0, [] (auto f) {
+    return f == spot::formula::tt () ? EXIT_CODE_REAL : EXIT_CODE_ERROR;
+  }));
+  check (!try_prepass (parse ("x"), mixed, inputs, {"x", "y"}, false, 0,
+                       [] (auto) { return EXIT_CODE_REAL; }));
   check (!try_prepass (p, metadata, inputs, outputs, true, 1,
                        [] (auto) { return EXIT_CODE_UNREAL; }));
   check (!try_prepass (p, metadata, inputs, outputs, true, 0,

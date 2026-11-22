@@ -308,7 +308,8 @@ never accepted.
 
 Each attempt uses a private subprocess, a 200 ms wall cap, and a 512 MiB
 address-space/RSS cap; the arm's total allowance is 400 ms, further bounded by
-the invocation deadline. ASan omits the address-space limit for its shadow
+the invocation deadline. AP-map construction and substitution run inside that
+subprocess. ASan omits the address-space limit for its shadow
 mapping, retaining the RSS check. Timeout, resource/error, wrong-polarity and
 inconclusive results resume the original objective. `restriction_attempt`
 phase records identify the candidate, family ordinal, accepted polarity,

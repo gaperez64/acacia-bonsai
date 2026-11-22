@@ -136,12 +136,33 @@ namespace acacia::restriction {
     auto deadline = start + total_ns;
     if (outer_deadline)
       deadline = std::min (deadline, outer_deadline);
-    const auto items = candidates (metadata, outputs, restrict_inputs);
+    // Materialize AP maps only inside the bounded subprocess, including large combined maps.
+    std::vector<candidate> items;
+    unsigned input_families = 0;
+    size_t family_outputs = 0;
+    for (const auto& family : metadata.tlsf_declared_families) {
+      if (restrict_inputs) {
+        if (family.is_input && family.members.size () >= 2 && ++input_families == 2)
+          break;
+      }
+      else if (!family.is_input)
+        family_outputs += family.members.size ();
+    }
+    if (restrict_inputs && input_families) {
+      items.push_back ({"input_families", 0, {}});
+      if (input_families > 1) {
+        items.push_back ({"input_family", 1, {}});
+        items.push_back ({"input_family", 2, {}});
+      }
+    }
+    else if (!restrict_inputs && outputs.size () > family_outputs)
+      items.push_back ({"scalar_outputs_false", 0, {}});
     if (items.empty ()) {
       worker_decline ("restriction_no_candidate");
       return false;
     }
-    for (const auto& item : items) {
+    for (unsigned index = 0; index < items.size (); ++index) {
+      const auto& item = items[index];
       const auto entered = phase_clock (CLOCK_MONOTONIC);
       if (entered >= deadline) {
         worker_stopped ("deadline");
@@ -164,8 +185,11 @@ namespace acacia::restriction {
         try {
           if (!limit_memory ())
             _exit (error_exit);
+          const auto generated = candidates (metadata, outputs, restrict_inputs);
+          if (index >= generated.size ())
+            _exit (EXIT_CODE_UNKNOWN);
           const auto formula =
-              substitute (positive, item.values, inputs, outputs, restrict_inputs);
+              substitute (positive, generated[index].values, inputs, outputs, restrict_inputs);
           if (!formula)
             _exit (error_exit);
           const int verdict = solve (*formula);
