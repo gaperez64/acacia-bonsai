@@ -12,6 +12,74 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-22: Bounded one-sided restrictions gain ten decisions on the requested local panel (#451)
+
+Local archive `restriction451-local-20261122` is verified and indexed as
+**partial, local-only**. This is the requested 24-input target set plus 30 varied
+inputs, not a full-corpus or G3 admission result. The other inputs were selected
+before measurement: six distinct families in each of five historical runtime
+bins, ordered by SHA-256. The archive contains every input, per-input comparison,
+phase records, frozen executables, calibration/corrections and validation logs.
+
+The final release is source `c88f90d5`, preset `otf_sparse_formula_parity`, binary
+SHA-256 `1a645b85683ada96415c47c407c8603273596e64292ed3d3c38eab188eff4e24`.
+On and off use that same binary, serial 17 s invocations and 5G/no swap. The
+provided historical master table is source `26fccc41` at 6G; the new off run
+provides the direct control under the requested resource limit.
+
+| Panel | Master solved | Off solved | On solved | Master PAR-2 | Off PAR-2 | On PAR-2 |
+|---|---:|---:|---:|---:|---:|---:|
+| 24 targets | 6 | 6 | 16 | 642.918 s | 641.999 s | 286.573 s |
+| 30 varied | 24 | 24 | 24 | 278.250 s | 279.522 s | 279.627 s |
+| All 54 | 30 | 30 | 40 | 921.168 s | 921.520 s | 566.200 s |
+
+There are **ten gains, zero losses and zero verdict conflicts**, against both
+master and off. Gains are collector_v3 n=10, 11, 12, 13, 15 (REALIZABLE),
+ltl2dba_C2_unreal n=100 and ltl2dba_theta n=25, 50, 100, 300 (UNREALIZABLE),
+in 0.130 to 1.303 s. Theta n=500 still times out after its restricted attempt
+expires. Already-solved C2 n=25 to 80 improve by 0.093 to 8.545 s against off.
+On the 30 varied inputs, on adds 0.105 s total against off; the joint-solved
+median delta is +0.013 s and the largest increase is +0.423 s
+(round_robin_arbiter_unreal1 n=4,4). Against historical master, that input adds
+0.822 s and the varied panel adds 1.377 s total. These single-run timing
+differences do not establish a small speedup or slowdown beyond noise.
+
+The prepass keeps the six-arm preset. One existing formula-unreal arm tries
+at most three declaration-based input identifications, accepting only UNREAL;
+one existing real arm tries all scalar outputs false, accepting only REAL.
+It substitutes the complete positive effective Mealy Spot objective, including
+assumptions/strict guards, before the restricted worker's sign, timing or player
+transformation. AP ownership and declarations stay intact, with no TLSF
+reconversion. The eligibility source publishes normally before trying a
+restriction; other trial arms fork before full-objective simplification.
+`--restriction-prepass off` disables the default-on runtime option. `-s` uses
+the ordinary complete-controller path and skips these decision-only attempts.
+
+Input trials have 500 ms each / 1 s total; the single output trial has 200 ms.
+Each subprocess has a 512 MiB address-space/RSS limit. The first 200 ms
+calibration gained nine decisions but missed both large recurrence probes.
+A controlled fork of the same restricted formula, I/O map, game and search
+measured 164 ms to the first useful query after full-objective preparation
+versus 4 ms when forked earlier. The final placement and allowance gain n=300;
+the n=500 budget miss remains recorded rather than increasing the cap again.
+
+Final telemetry has 84 attempt starts, 70 ends and 14 starts censored by race
+termination. All 16 candidate accepts become parent winners (11 input, five
+output); the other completed attempts record 26 deadlines and 28 applicability
+fallbacks. Completed attempts have median 23 ms / p95 506 ms including cleanup;
+the longest completed prepass phase is 1.008 s. The largest reaped candidate
+process peak is 306.8 MiB including inherited mappings; the largest invocation
+cgroup peak is 3100.0 MiB on and 3100.1 MiB off. No record was dropped and at most
+six portfolio members were recorded.
+
+Validation: final nine affected release tests pass, including all three
+tlsfobf-renamed fixtures, polarity/causal-frame guards and complete `-s` outputs;
+983 source/attribution/phase pytest checks pass with one optional corpus skip.
+Before the final budget/placement changes, the full release unit suite had
+99 passes and six expected failures, with no failures. All 110 standalone
+Posets tests and changed-Python ruff checks pass. Full-corpus screening and G3
+remain pending.
+
 ## 2026-11-22: Formula symmetry cannot drive the K-bounded reduction; one-sided restrictions can decide 11 inputs (#370, #451)
 
 Archive `sym370-20261122` (release `evidence-2026-11-22-sym370`). This is a

@@ -314,8 +314,8 @@ Input attempts have a 500 ms wall cap and a 1 s total allowance; the single
 output attempt has a 200 ms cap. The invocation deadline further bounds both.
 The largest measured input restriction needed 219 ms of search alone, so a
 200 ms input allowance lost two measured cases. AP-map construction and
-substitution run inside the subprocess. ASan omits the address-space limit for its shadow
-mapping, retaining the RSS check. Timeout, resource/error, wrong-polarity and
+substitution run inside the subprocess. ASan omits the address-space limit for
+its shadow mapping, retaining the RSS check. Timeout, resource/error, wrong-polarity and
 inconclusive results resume the original objective. `restriction_attempt`
 phase records identify the candidate, family ordinal, accepted polarity,
 outcome, cause, wall time and limits; accepted winners use `restriction_input`
