@@ -73,6 +73,11 @@ test ('help-output',
       suite : ['unit', 'cli'],
       depends : [ab_exe])
 
+test ('symcount-verdicts', py,
+      args : [files ('check-symcount.py'), symcount_exe,
+              meson.project_source_root () / 'tlsf-corpus'],
+      suite : ['unit', 'symcount'], depends : [symcount_exe], timeout : 120)
+
 test ('weakening-cli', py,
       args : [files ('check-weakening-cli.py'), ab_exe],
       suite : ['unit', 'cli'], depends : [ab_exe])

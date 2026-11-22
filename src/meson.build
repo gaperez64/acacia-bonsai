@@ -44,6 +44,14 @@ ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
                      install_tag: 'cli',
                      dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps)
 
+# #454: the count-quotiented game, standalone until it becomes an arm.
+symcount_exe = executable ('acacia-symcount',
+  ['symcount_main.cc', 'solver/symmetric_count.cc', 'tlsf_frontend.cc'],
+  link_with : [parity_lib],
+  include_directories : inc,
+  install : false,
+  dependencies : [spot_dep, bddx_dep] + tlsf_deps)
+
 if native_test_hooks
   native_test_exe = executable ('acacia-bonsai-native-test', ab_sources,
     'native_test_hooks.cc', '../tests/native_attribution_hooks.cc', version_h,

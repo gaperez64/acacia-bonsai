@@ -12,6 +12,18 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-22: acacia-symcount derives the collector quotient games from their formulas (#454, stage 2)
+
+Archive `sym454c-20261122`. `acacia-symcount` (standalone, not yet an arm) splits a spec into
+index-free conjuncts, per-index templates and symmetric aggregates, translates the template and
+the residual formula with Spot, and solves the count game with Spot plus `check_strategy`.
+Over all 1,586 corpus files (30 s) it decides 52 with no conflict against SYNTCOMP statuses or
+`lift437b-20261121`'s screen, including collector_v1 n=11 to 15 (0.02 to 0.05 s) and collector_v2
+n=27 (1.2 s), which master leaves unsolved, and collector_v1 n=27 (0.5 s). With those times as an
+extra arm, that screen's PAR-2 would fall from 6,253.6 to 6,025.2 s. 900 random fragment specs
+at n=2 to 4 gave 631 decided verdicts, all equal to ltlsynt's; tlsfobf-renamed inputs give
+identical verdicts and game sizes. Admission (stage 4) needs the arm integration first.
+
 ## 2026-11-22: Formula symmetry cannot drive the K-bounded reduction; one-sided restrictions can decide 11 inputs (#370, #451)
 
 Archive `sym370-20261122` (release `evidence-2026-11-22-sym370`). This is a
