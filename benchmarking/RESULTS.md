@@ -31,11 +31,10 @@ correctness finding about these encoder/pipeline combinations, not a size win.
 These repeats retain the original BDD dictionary. Reloading the HOA into a fresh
 dictionary did not reproduce the fault; a portable upstream reproducer and exact
 root cause remain follow-up work. The smaller invalid circuits never count.
-Keep `isop` as the default; investigate
-Spot's handling of these component machines before considering a `+dc` default.
+Keep `isop` as the default. `--aiger-mode` refuses every `+dc` mode, at the CLI and
+at each synthesis entry point, until #466 finds the cause.
 
-Archive `enc280-20261122` is verified locally and indexed with a `file:` URL;
-it has not been uploaded or published. It contains the raw rows, circuits,
+Archive `enc280-20261122` (release `evidence-2026-11-22-enc280`) contains the raw rows, circuits,
 checks, counterexamples, phase records, captured Mealy graphs, explicit partitions,
 reproduction code, selected source files and hashes, and the release binary/checker.
 The implementation binary is from `b59f76cb` on `aiger-mode-280`, based on master
@@ -48,8 +47,9 @@ is `g3-440/env.sh`, with TMPDIR overridden to `enc280/tmp`.
 parity synthesis. Its default remains `isop`, and no extraction/minimization step
 changes. Validation follows Spot 2.16.3 `aiger.hh` and `aiger.cc`: `ite`, `isop`,
 `both`, source-supported `optim`, arbitrary-order/repeated `+dc`, `+ud`, `+sub0..2`,
-and comma-separated alternatives. The last `subN` wins. Empty components and unknown
-tokens fail during argument parsing; the accepted spelling is `+ud`, not the
+and comma-separated alternatives. The last `subN` wins. Acacia accepts only this
+canonical subset: empty components and unknown tokens fail during argument parsing,
+and `+dc` is refused (#466); the accepted spelling is `+ud`, not the
 header prose's `+dual`. No build option or registry entry is added.
 All 33 primary `isop` circuits are byte-identical to `syn280-20261122`'s first member;
 CLI tests additionally compare omitted mode with explicit `isop`.
@@ -73,8 +73,8 @@ its pre/post state counts are 1,441→12, 4→2 and 241→10. Applying that same
 step to copies of the parity machines leaves both arbiters unchanged and helps
 Lights only modestly. Plain ITE makes the arbiter circuits 62,556 and 14,622 A+L;
 Lights becomes 9,612. Even the best smoke mode on fixed parity machines remains
-orders of magnitude above the smaller strategies. Follow up on strategy extraction
-and bounded minimization (level 2 is worth measuring for Lights); adding the missing
+orders of magnitude above the smaller strategies. #467 follows up on strategy
+extraction and bounded minimization (level 2 is worth measuring for Lights); adding the missing
 level-2 call alone cannot repair the arbiter gap. No pipeline choice changes here.
 The obligation arm retains a racing legacy fallback; route records distinguish that
 fallback from actual helper encoding, and a direct C++ test exercises the helper.
