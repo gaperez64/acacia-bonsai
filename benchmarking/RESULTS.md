@@ -12,6 +12,42 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-22: Formula symmetry cannot drive the K-bounded reduction; one-sided restrictions can decide 11 inputs (#370, #451)
+
+Archive `sym370-20261122` (release `evidence-2026-11-22-sym370`). This is a
+read-only investigation; no solver code changed.
+
+**Census join.** The exact objective check of `tlsfsym` (`native-20261107`) verifies
+a group on 154 of 1,524 inputs, and the automaton detector of #205 on 45. The two
+sets share one input. Of the 154, 24 are unsolved by master at 17 s
+(`lift437b-20261121`) or in #407's 120 s set: collector_v1, v2 and v3 (11,
+REALIZABLE), ltl2dba_theta and ltl2dba_C2_unreal (11, UNREALIZABLE), and one each
+of prioritized_arbiter_enc and simple_arbiter_enc (REALIZABLE). The automaton
+detector finds none of the 24. The 11 cyclic-only inputs are all `shift`, which
+master already solves.
+
+**Why the current reduction cannot use them.** A formula-level symmetry preserves
+the language, not the structure of the UcB automaton Spot builds, and the
+K-bounded game counts rejecting visits on that structure. The certificate the
+equivariance proofs assume (`proofs/SymmetryProofs/Detector.lean`) needs a state
+bijection that fixes the initial state and preserves acceptance and edges.
+Language invariance does not give it. On small members, the collector_v1 and v3
+automata are structurally symmetric, but their state orbits (subsets of clients)
+do not fit the natural block layout `symmetry_blocks.hh` accepts. For
+collector_v2, ltl2dba_C2_unreal and ltl2dba_theta, Spot's automaton is already
+structurally asymmetric: the state signatures differ under a transposition. An
+exact quotient would need an equivariant monitor and a quotient built during
+construction, an estimated 3 to 7k lines with no measured solve. It is parked.
+
+**One-sided restrictions.** Merging a declared input family into one input restricts
+the environment, so an UNREALIZABLE answer transfers to the original. Fixing a
+scalar output to a constant restricts the system, so a REALIZABLE answer transfers.
+On hand-restricted copies (single runs), ltl2dba_theta n=25 to 500 and
+ltl2dba_C2_unreal n=25 to 100 are UNREALIZABLE in 0.03 to 0.31 s, and
+collector_v3 n=10 to 15 REALIZABLE in 0.02 to 0.03 s. Eleven of these are unsolved
+by master at 17 s. #451 builds this as a prepass, with a Lean proof of the
+transfer first.
+
 ## 2026-11-21: The parametric-support fold solves load_balancer n=9 to 11 (#449, #437)
 
 Archive `lift437b-20261121` (release `evidence-2026-11-21-lift437b`). #449 pins
