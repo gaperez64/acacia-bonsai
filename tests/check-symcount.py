@@ -13,7 +13,7 @@ binary = Path(sys.argv[1]).resolve()
 root = Path(__file__).resolve().parent / "fixtures" / "symcount"
 cases = {
     "indexed-copy.tlsf": "REALIZABLE",  # Mealy copy with paired input/output families
-    "breakpoint.tlsf": "REALIZABLE",  # GF of each input need not hold simultaneously
+    "breakpoint.tlsf": "UNREALIZABLE",  # alternating hits refute simultaneous recurrence
     "color-reset.tlsf": "REALIZABLE",  # top-level since monitor, reset on the first letter
     "event-collision.tlsf": "UNREALIZABLE",  # legal input name matches an internal event
     "event-renamed.tlsf": "UNREALIZABLE",  # same spec, unused input renamed
@@ -43,7 +43,9 @@ for name, expected in cases.items():
     path = root / name
     done = subprocess.run([binary, path], capture_output=True, text=True, timeout=120)
     word = (done.stdout.split() or ["?"])[0]
-    if word != expected or done.returncode != codes[expected]:
+    if (word != expected or done.returncode != codes[expected]
+            or (name == "partial-family.tlsf"
+                and "reason=a local conjunct is not instantiated at every index" not in done.stdout)):
         print(f"{path.name}: expected {expected}, got {done.returncode} {done.stdout}{done.stderr}")
         failed = True
 sys.exit(1 if failed else 0)

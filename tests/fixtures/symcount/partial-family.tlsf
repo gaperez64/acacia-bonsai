@@ -1,5 +1,5 @@
 INFO { TITLE: "Partial family" DESCRIPTION: "A conjunct covers only one index" SEMANTICS: Mealy TARGET: Mealy }
 MAIN {
   OUTPUTS { b[2]; }
-  GUARANTEES { G b[0]; }
+  GUARANTEES { G b[0]; &&[0 <= i < 2] F b[i]; }
 }

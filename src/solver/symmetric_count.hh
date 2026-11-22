@@ -21,11 +21,10 @@
 // is the state's S_n-orbit, and a letter's orbit is the split of each count by
 // the clients' local letters. Absorbing states are collapsed by a separate
 // parity reduction. The quotient game is solved with Spot and its strategy is
-// checked. The abstract theorem in proofs/SymmetryProofs/Quotient.lean transfers
+// checked. The abstract theorem in proofs/SymmetryProofs/ transfers
 // a verdict provided the concrete action and count-game correspondence hold;
 // the formula/monitor encoding and C++ correspondence remain trusted (see
-// https://github.com/gaperez64/acacia-bonsai/issues/461 and
-// https://github.com/gaperez64/acacia-bonsai/issues/462).
+// the Lean proof modules in proofs/SymmetryProofs/).
 // Anything outside this fragment is declined.
 
 #include "symmetry_certificate.hh"
