@@ -809,6 +809,8 @@ PHASE_DECLINE_PREFIXES = ("lift_decline_", "reduce_decline_")
 # intervals may contain nested work; mapping them never invents a completed query.
 PLAN_STAGES = {
     "simplification": "pre-translation checks", "direct-checks": "pre-translation checks",
+    "restriction_prepass": "pre-translation checks",
+    "restriction_input": "pre-translation checks", "restriction_output": "pre-translation checks",
     "startup": "pre-translation checks", "dispatch": "pre-translation checks",
     "child_startup": "pre-translation checks", "decomposition": "pre-translation checks",
     "pre-pass": "pre-translation checks", "rewrite": "rewrite",

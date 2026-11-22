@@ -20,6 +20,7 @@ ab_sources = [
   'version.cc',
   'solver/mealy_to_moore.cc',
   'solver/solver_invoker.cc',
+  'solver/restriction_prepass.cc',
   'solver/obligation_helper.cc',
   'parity_arm.cc',
   'solver/solve_game_vector.cc',

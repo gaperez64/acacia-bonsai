@@ -550,17 +550,25 @@ namespace {
                 << " translation_effort=" << translation_effort_name (arm.legacy->translation_effort)
                 << " candidate_mode=" << acacia::candidate_mode_name (arg_values.candidate) << "\n"
                 << std::flush);
-    const bool res = run_ltl (arg_values.objective.inputs, arg_values.objective.outputs,
-                              arg_values.opt_k, arg_values.opt_kmin, arg_values.opt_kinc,
-                              arg_values.objective.formula,
-                              unreal_x, translation_pref, arm.legacy->translation_effort,
-                              arg_values.spot_fast, backend,
-                              (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA)
-                                  ? std::nullopt
-                                  : arg_values.synth_fname,
-                              arg_values.objective.metadata, provider, arg_values.candidate,
-                              arg_values.equivariance, deadline_mono_ns, arg_values.tlsf_sha256,
-                              arg_values.weakening, eligibility_channel, arg_values.arms->size ());
+    const auto restriction_arm = std::ranges::find_if (*arg_values.arms, [&] (const auto& other) {
+      return other.legacy &&
+             (arm.unreal ? other.unreal && other.legacy->unreal_x == UNREAL_X_FORMULA
+                         : !other.unreal);
+    });
+    // shortcut: decision only; add output/counterstrategy decoding before enabling -s.
+    const bool restrictions =
+        arg_values.restriction_prepass && arg_values.tlsf_specified && !arg_values.synth_fname &&
+        restriction_arm != arg_values.arms->end () && &arm == &*restriction_arm &&
+        (!arm.unreal || arm.legacy->unreal_x == UNREAL_X_FORMULA);
+    const bool res = run_ltl (
+        arg_values.objective.inputs, arg_values.objective.outputs, arg_values.opt_k,
+        arg_values.opt_kmin, arg_values.opt_kinc, arg_values.objective.formula, unreal_x,
+        translation_pref, arm.legacy->translation_effort, arg_values.spot_fast, backend,
+        (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA) ? std::nullopt
+                                                                  : arg_values.synth_fname,
+        arg_values.objective.metadata, provider, arg_values.candidate, arg_values.equivariance,
+        deadline_mono_ns, arg_values.tlsf_sha256, arg_values.weakening, eligibility_channel,
+        arg_values.arms->size (), restrictions);
     if (res && g_synthesis)
       acacia::synthesis::await_selection (arm.unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL);
     verb_do (1, vout << "returning " << res << "\n");

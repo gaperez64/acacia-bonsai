@@ -282,6 +282,46 @@ use `ACACIA_TLSF_TOOLS_BUILD` for optional `tlsfinfo`/`tlsf2ltl` executables
 (default: `build/subprojects/tlsf-tools`). These are ordinary tlsf-tools Meson
 targets; the retired Python oracle/toolchain wrapper is not required.
 
+## Bounded one-sided restrictions
+
+`--restriction-prepass on|off` defaults to on for native TLSF decision runs with
+legacy arms. One existing formula-unreal arm tries input identification; one
+existing real arm tries constant outputs. Other arms start normally, with no
+new portfolio member or serial work before the race. Native-only portfolios
+and `-s` skip these attempts; synthesis retains the ordinary complete controller.
+Arms fork before full-objective BDD preparation, except that the obligation
+eligibility source first publishes its normal eligibility result. This avoids
+inheriting unnecessary BDD preparation without delaying the helper's admission.
+
+Candidates come only from the frontend's expanded declaration provenance:
+identify every input bus of at least two members with its first member, then
+try the first two such buses separately if there are multiple buses (at most
+three attempts). The real arm tries one assignment: all non-family outputs
+false. This fixed set covers the measured #370 restrictions; other constant
+assignments and output identification are not searched.
+
+Substitution traverses the complete positive effective Mealy Spot formula,
+including all assumptions and strict-semantics guards, with the original I/O
+map. Replacement leaves are inserted simultaneously. No TLSF reconversion,
+clause deletion or parameter reduction occurs. The unchanged worker then
+applies its normal simplification and timing/sign transformations. Only a
+completed UNREAL input-restricted verdict or REAL output-restricted verdict
+transfers, following tlsf-tools `Restriction.lean`; the opposite polarity is
+never accepted.
+
+Each attempt uses a private subprocess and a 512 MiB address-space/RSS cap.
+Input attempts have a 500 ms wall cap and a 1 s total allowance; the single
+output attempt has a 200 ms cap. The invocation deadline further bounds both.
+The largest measured input restriction needed 219 ms of search alone, so a
+200 ms input allowance lost two measured cases. AP-map construction and
+substitution run inside the subprocess. ASan omits the address-space limit for
+its shadow mapping, retaining the RSS check. Timeout, resource/error, wrong-polarity and
+inconclusive results resume the original objective. `restriction_attempt`
+phase records identify the candidate, family ordinal, accepted polarity,
+outcome, cause, wall time and limits; accepted winners use `restriction_input`
+or `restriction_output` routes. The ordinary attribution stream records
+declines/stops and descendant resource usage separately.
+
 ## Synthesis size
 
 `synthesis-size.py` measures each explicitly labelled member binary with `-s`,
