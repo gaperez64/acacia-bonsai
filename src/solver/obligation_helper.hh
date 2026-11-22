@@ -45,7 +45,8 @@ namespace acacia::obligation {
   outcome completed (const spot::mtdswa_ptr& answer, bool decision_only) noexcept;
   result solve (spot::formula objective, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs, timing semantics = timing::mealy,
-                bool synthesis = false, conversion convert = conversion::none);
+                bool synthesis = false, conversion convert = conversion::none,
+                const std::string& aiger_mode = "isop");
 
   // The helper's fixed RSS threshold is supervised by the parent.
   bool limit_address_space () noexcept;

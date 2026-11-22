@@ -75,6 +75,7 @@ struct arg_parse_result {
     acacia::OracleLayout oracle_layout = acacia::OracleLayout::grouped;
     SPOT_FAST_T spot_fast = SPOT_FAST_DET;
     std::optional<std::string> synth_fname = std::nullopt;
+    std::string aiger_mode = "isop";
     bool formula_specified = false;
     bool inputs_specified = false;
     bool outputs_specified = false;

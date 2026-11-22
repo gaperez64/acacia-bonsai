@@ -3,6 +3,7 @@
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
 #include "solver/accounting_identity.hh"
+#include "solver/aiger_mode.hh"
 #include "solver/ap_partition.hh"
 #include "solver/bdd_config.hh"
 #include "solver/closure_recurrence_provider.hh"
@@ -319,6 +320,7 @@ namespace {
       const bool equivariance;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
+      const std::string& aiger_mode;
       const controller_conversion conversion;
       const std::string target_semantics;
       const std::vector<symmetry::indexed_family_hint>& indexed_family_hints;
@@ -339,8 +341,8 @@ namespace {
                    spot::postprocessor::optimization_level translation_effort,
                    SPOT_FAST_T spot_fast, acacia::game_backend backend,
                    acacia::automaton_provider provider, acacia::candidate_mode candidate,
-                   std::size_t worker_count,
-                   bool equivariance, const std::optional<std::string>& synth_fname,
+                   std::size_t worker_count, bool equivariance,
+                   const std::optional<std::string>& synth_fname, const std::string& aiger_mode,
                    controller_conversion conversion,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints,
                    std::string target_semantics,
@@ -361,6 +363,7 @@ namespace {
           worker_count {worker_count},
           equivariance {equivariance},
           synth_fname {synth_fname},
+          aiger_mode {aiger_mode},
           conversion {conversion},
           target_semantics {std::move (target_semantics)},
           indexed_family_hints {indexed_family_hints},
@@ -415,12 +418,9 @@ namespace {
           return;
         }
 
-        // Encode with irredundant sum of products.
-        spot::aig_ptr mealy_aig = mealy_machines_to_aig (nonempty_strats, "isop",
-                                                         // make sure all
-                                                         // inputs and outputs
-                                                         // are in the AIG
-                                                         input_aps, nonempty_out_part);
+        // Keep all interface propositions in the AIG.
+        spot::aig_ptr mealy_aig = mealy_machines_to_aig (
+            nonempty_strats, aiger_mode.c_str (), input_aps, nonempty_out_part);
         spot::aig_ptr output_aig = convert_controller (mealy_aig, conversion);
         if (!acacia::synthesis::write_controller (*synth_fname, output_aig))
           throw std::runtime_error ("failed to write controller");
@@ -1112,7 +1112,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               acacia::candidate_mode candidate, bool equivariance, uint64_t diagnostic_deadline_ns,
               const std::string& diagnostic_source_sha256, weakening_mode weakening,
               acacia::obligation::control* obligation_eligibility, std::size_t worker_count,
-              bool restriction_prepass) {
+              bool restriction_prepass, const std::string& aiger_mode) {
+  acacia::synthesis::validate_aiger_mode (aiger_mode);
   // Protect internal callers as well as the CLI synthesis route.
   if (synth_fname.has_value ()) {
     backend = acacia::synthesis_backend (backend, true);
@@ -1293,8 +1294,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (
       dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal, translation_pref,
-      translation_effort, spot_fast, backend, provider, candidate, worker_count, equivariance, synth_fname,
-      conversion, indexed_family_hints,
+      translation_effort, spot_fast, backend, provider, candidate, worker_count, equivariance,
+      synth_fname, aiger_mode, conversion, indexed_family_hints,
       metadata.source_format + ";semantics=" + metadata.tlsf_semantics +
           ";target=" + metadata.tlsf_target + ";effective=" +
           ((metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-")
