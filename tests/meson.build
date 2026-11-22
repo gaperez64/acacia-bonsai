@@ -74,9 +74,20 @@ test ('help-output',
       depends : [ab_exe])
 
 test ('symcount-verdicts', py,
-      args : [files ('check-symcount.py'), symcount_exe,
-              meson.project_source_root () / 'tlsf-corpus'],
+      args : [files ('check-symcount.py'), symcount_exe],
       suite : ['unit', 'symcount'], depends : [symcount_exe], timeout : 120)
+
+if get_option ('acacia_tlsf_corpus_dir') != ''
+  test ('symcount-corpus-verdicts', py,
+        args : [files ('check-symcount.py'), symcount_exe,
+                get_option ('acacia_tlsf_corpus_dir')],
+        suite : ['corpus', 'symcount'], depends : [symcount_exe], timeout : 120)
+endif
+
+symcount_limits_test = executable (
+  'symcount-limits-test', ['symcount_limits_test.cc', '../src/solver/symmetric_count.cc'],
+  include_directories : inc, link_with : parity_lib, dependencies : [spot_dep, bddx_dep])
+test ('symcount-limits', symcount_limits_test, suite : ['unit', 'symcount'])
 
 test ('weakening-cli', py,
       args : [files ('check-weakening-cli.py'), ab_exe],

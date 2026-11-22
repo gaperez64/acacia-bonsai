@@ -1,0 +1,6 @@
+INFO { TITLE: "Breakpoint" DESCRIPTION: "Report completed rounds of input hits" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { r[2]; }
+  OUTPUTS { g; }
+  GUARANTEES { (&&[0 <= i < 2] G F r[i]) <-> G F g; }
+}

@@ -19,9 +19,14 @@
 // global APs and events is a deterministic parity automaton. A game state is
 // that automaton's state and the number of clients in each local state, so it
 // is the state's S_n-orbit, and a letter's orbit is the split of each count by
-// the clients' local letters. The quotient game is solved with Spot and its
-// strategy is checked; proofs/SymmetryProofs/Quotient.lean transfers the
-// verdict to the original game. Anything outside this fragment is declined.
+// the clients' local letters. Absorbing states are collapsed by a separate
+// parity reduction. The quotient game is solved with Spot and its strategy is
+// checked. The abstract theorem in proofs/SymmetryProofs/Quotient.lean transfers
+// a verdict provided the concrete action and count-game correspondence hold;
+// the formula/monitor encoding and C++ correspondence remain trusted (see
+// https://github.com/gaperez64/acacia-bonsai/issues/461 and
+// https://github.com/gaperez64/acacia-bonsai/issues/462).
+// Anything outside this fragment is declined.
 
 #include "symmetry_certificate.hh"
 

@@ -1,0 +1,5 @@
+INFO { TITLE: "Event renamed" DESCRIPTION: "The environment can keep every r false" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { unused; r[2]; }
+  GUARANTEES { &&[0 <= i < 2] G r[i]; }
+}

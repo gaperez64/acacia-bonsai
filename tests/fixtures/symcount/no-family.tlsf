@@ -1,0 +1,5 @@
+INFO { TITLE: "No family" DESCRIPTION: "No indexed declaration" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  OUTPUTS { g; }
+  GUARANTEES { G g; }
+}

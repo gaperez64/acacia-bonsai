@@ -1,6 +1,7 @@
 #include "symmetric_count.hh"
 
 #include "parity/game.hh"
+#include <unordered_map>
 
 #include <algorithm>
 #include <chrono>
@@ -15,7 +16,6 @@
 #include <spot/twaalgos/parity.hh>
 #include <spot/twaalgos/translate.hh>
 #include <stdexcept>
-#include <unordered_map>
 
 namespace acacia::symcount {
   namespace {
@@ -30,6 +30,15 @@ namespace acacia::symcount {
       timespec ts;
       clock_gettime (CLOCK_MONOTONIC, &ts);
       return uint64_t (ts.tv_sec) * 1000000000u + uint64_t (ts.tv_nsec);
+    }
+
+    bool deadline_expired (const limits& bound) {
+      return bound.deadline_mono_ns and now_ns () >= bound.deadline_mono_ns;
+    }
+
+    void check_deadline (const limits& bound) {
+      if (deadline_expired (bound))
+        throw declined ("deadline");
     }
 
     // The index family: every family of the chosen size, indexed together.
@@ -122,6 +131,8 @@ namespace acacia::symcount {
 
     struct builder {
         const family_map& fm;
+        std::set<std::string> ap_names;
+        unsigned next_event = 0;
         spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
         int owner_token = 0;
         std::vector<predicate> preds;
@@ -145,8 +156,11 @@ namespace acacia::symcount {
           for (const auto& e : events)
             if (e.kind == kind and e.pred == pred)
               return e.ap;
-          event e {kind, pred, kind == event_kind::all_inf ? bits++ : 0u,
-                   formula::ap ("__symcount_e" + std::to_string (events.size ()))};
+          std::string name;
+          do {
+            name = "__symcount_e" + std::to_string (next_event++);
+          } while (ap_names.count (name));
+          event e {kind, pred, kind == event_kind::all_inf ? bits++ : 0u, formula::ap (name)};
           events.push_back (e);
           return e.ap;
         }
@@ -189,7 +203,8 @@ namespace acacia::symcount {
           return true;
         }
 
-        // Letter aggregates are pointwise; GF/FG aggregates are prefix-independent: valid anywhere.
+        // Letter aggregates are pointwise; GF/FG aggregates are prefix-independent: valid
+        // anywhere.
         formula aggregates (const formula& f) {
           if (indices (f, fm).empty ())
             return f;
@@ -247,7 +262,7 @@ namespace acacia::symcount {
 
     // Compositions of `total` into `parts` ordered parts.
     void compositions (unsigned total, unsigned parts, std::vector<std::vector<uint16_t>>& out,
-                       size_t& choices, size_t limit) {
+                       size_t& choices, size_t limit, const limits& bound) {
       if (choices > limit)
         throw declined ("split limit");
       uint64_t count = 1;
@@ -260,6 +275,8 @@ namespace acacia::symcount {
       std::vector<uint16_t> cur (parts, 0);
       auto rec = [&] (auto&& self, unsigned i, unsigned left) -> void {
         if (i + 1 == parts) {
+          if ((out.size () & 255) == 0)
+            check_deadline (bound);
           cur[i] = uint16_t (left);
           out.push_back (cur);
           return;
@@ -275,12 +292,20 @@ namespace acacia::symcount {
     result run (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs, const family_map& fm,
                 const limits& bound) {
+      check_deadline (bound);
       result r;
       r.n = fm.n;
       if (fm.n > UINT16_MAX)
         throw declined ("index count exceeds uint16_t");
       const auto t0 = std::chrono::steady_clock::now ();
       builder b {fm};
+      b.ap_names.insert (inputs.begin (), inputs.end ());
+      b.ap_names.insert (outputs.begin (), outputs.end ());
+      uint64_t polls = 0;
+      const auto poll = [&] {
+        if ((++polls & 255) == 0)
+          check_deadline (bound);
+      };
       const auto table_size = [] (size_t states, size_t letters, size_t extra) {
         constexpr size_t max_entries = size_t (1) << 24;
         if (states > max_entries / letters / extra)
@@ -299,7 +324,8 @@ namespace acacia::symcount {
           go.push_back (a);
       for (const auto& names : fm.names)
         (in_set.count (names[0]) ? li : lo).push_back (names[0]);
-      const unsigned ng = unsigned (gi.size () + go.size ()), nl = unsigned (li.size () + lo.size ());
+      const unsigned ng = unsigned (gi.size () + go.size ()),
+                     nl = unsigned (li.size () + lo.size ());
       if (ng + nl > 16)
         throw declined ("too many letters for explicit local tables");
       if ((1u << nl) > bound.max_local_letters)
@@ -357,7 +383,9 @@ namespace acacia::symcount {
       spot::translator ltr (b.dict);
       ltr.set_type (spot::postprocessor::Generic);
       ltr.set_pref (spot::postprocessor::Deterministic);
+      check_deadline (bound);
       const auto laut = ltr.run (formula::And (templates));
+      check_deadline (bound);
       if (not spot::is_deterministic (laut))
         throw declined ("no deterministic local automaton");
       std::vector<formula> requirements;
@@ -384,11 +412,12 @@ namespace acacia::symcount {
       la.initial = laut->get_init_state_number ();
       const unsigned gl = 1u << ng, ll = 1u << nl;
       // Fill the tables after all predicates exist; the sink predicate is added lazily.
-      std::vector<std::pair<unsigned, spot::acc_cond::mark_t>> step (table_size (la.states, gl, ll),
-                                                                 {UINT32_MAX, {}});
+      std::vector<std::pair<unsigned, spot::acc_cond::mark_t>> step (
+          table_size (la.states, gl, ll), {UINT32_MAX, {}});
       for (unsigned q = 0; q < la.states; ++q)
         for (unsigned g = 0; g < gl; ++g)
           for (unsigned x = 0; x < ll; ++x) {
+            poll ();
             const bdd m = minterm (gvars, g) & minterm (lvars, x);
             for (const auto& e : laut->out (q))
               if ((m & e.cond) != bddfalse) {
@@ -400,8 +429,8 @@ namespace acacia::symcount {
           }
       if (la.has_sink) {
         b.preds.push_back ({pred_kind::sink, 0, bddfalse});
-        requirements.push_back (formula::G (formula::Not (
-            b.new_event (event_kind::any, unsigned (b.preds.size () - 1)))));
+        requirements.push_back (formula::G (
+            formula::Not (b.new_event (event_kind::any, unsigned (b.preds.size () - 1)))));
       }
       if (b.preds.size () > 64 or b.events.size () > 12)
         throw declined ("too many predicates or events");
@@ -412,10 +441,11 @@ namespace acacia::symcount {
       for (unsigned q = 0; q < qs; ++q)
         for (unsigned g = 0; g < gl; ++g)
           for (unsigned x = 0; x < ll; ++x) {
+            poll ();
             const size_t i = (size_t (q) * gl + g) * ll + x;
             const bool from_sink = q == la.sink and la.has_sink;
-            const auto [dst, acc] = from_sink ? std::pair {la.sink, spot::acc_cond::mark_t {}}
-                                              : step[i];
+            const auto [dst, acc] =
+                from_sink ? std::pair {la.sink, spot::acc_cond::mark_t {}} : step[i];
             const bool to_sink = dst == UINT32_MAX;
             la.next[i] = to_sink ? la.sink : dst;
             uint64_t holds = 0;
@@ -436,13 +466,16 @@ namespace acacia::symcount {
           }
 
       // Since monitors: gamma per global letter, lambda per global and local letter.
-      std::vector<std::vector<uint8_t>> since_gamma (b.since.size ()), since_lambda (b.since.size ());
+      std::vector<std::vector<uint8_t>> since_gamma (b.since.size ()),
+          since_lambda (b.since.size ());
       for (unsigned j = 0; j < b.since.size (); ++j)
         for (unsigned g = 0; g < gl; ++g) {
           since_gamma[j].push_back ((minterm (gvars, g) & b.since[j].gamma) != bddfalse);
-          for (unsigned x = 0; x < ll; ++x)
+          for (unsigned x = 0; x < ll; ++x) {
+            poll ();
             since_lambda[j].push_back (
                 (minterm (gvars, g) & minterm (lvars, x) & b.since[j].lambda) != bddfalse);
+          }
         }
       std::vector<unsigned> since_pred (b.since.size ());
       for (unsigned p = 0; p < b.preds.size (); ++p)
@@ -459,16 +492,20 @@ namespace acacia::symcount {
       gtr.set_type (spot::postprocessor::Parity);
       gtr.set_pref (spot::postprocessor::Deterministic | spot::postprocessor::Complete |
                     spot::postprocessor::Colored);
+      check_deadline (bound);
       auto gaut = gtr.run (formula::And (all));
+      check_deadline (bound);
       if (not spot::is_deterministic (gaut) or not spot::is_complete (gaut))
         throw declined ("no complete deterministic global parity automaton");
       spot::change_parity_here (gaut, spot::parity_kind_max, spot::parity_style_odd);
+      spot::colorize_parity_here (gaut, true);
       const unsigned el = 1u << b.events.size ();
       const unsigned gstates = gaut->num_states ();
       std::vector<std::pair<unsigned, unsigned>> gstep (table_size (gstates, gl, el));
       for (unsigned s = 0; s < gstates; ++s)
         for (unsigned g = 0; g < gl; ++g)
           for (unsigned ev = 0; ev < el; ++ev) {
+            poll ();
             const bdd m = minterm (gvars, g) & minterm (evars, ev);
             bool found = false;
             for (const auto& e : gaut->out (s))
@@ -490,6 +527,7 @@ namespace acacia::symcount {
         bool loops = true;
         for (unsigned g = 0; g < gl and loops; ++g)
           for (unsigned ev = 0; ev < el and loops; ++ev) {
+            poll ();
             const auto [dst, c] = gstep[(size_t (s) * gl + g) * el + ev];
             loops = dst == s and (col < 0 or col == int (c));
             col = int (c);
@@ -507,8 +545,8 @@ namespace acacia::symcount {
       // an environment vertex also carries the colour of the move into it.
       const unsigned nls = r.local_states, bitmask = (1u << b.bits) - 1;
       // Charge the count-key copies in the state maps to the vertex budget (256-byte units).
-      const size_t max_vertices = std::min<size_t> (UINT32_MAX / 2, bound.max_vertices)
-                                  / (1 + size_t (nls) / 16);
+      const size_t max_vertices =
+          std::min<size_t> (UINT32_MAX / 2, bound.max_vertices) / (1 + size_t (nls) / 16);
       const size_t max_edges = std::min<size_t> (UINT32_MAX / 2, bound.max_edges);
       if (not max_vertices)
         throw declined ("state storage limit");
@@ -550,10 +588,8 @@ namespace acacia::symcount {
         env_vertex (std::move (key));
       }
       std::unordered_map<std::vector<uint32_t>, std::vector<unsigned>, vec_hash> sys_of_state;
-      uint64_t polls = 0;
       while (not work.empty ()) {
-        if (bound.deadline_mono_ns and (++polls & 255) == 0 and now_ns () > bound.deadline_mono_ns)
-          throw declined ("deadline");
+        poll ();
         const unsigned v = work.back ();
         work.pop_back ();
         if (absorbing[env_key[v][0]] >= 0) {
@@ -570,20 +606,23 @@ namespace acacia::symcount {
         }
         const unsigned s = state[0];
         std::vector<unsigned> occupied;
-        for (unsigned ls = 0; ls < nls; ++ls)
+        for (unsigned ls = 0; ls < nls; ++ls) {
+          poll ();
           if (state[1 + ls])
             occupied.push_back (ls);
+        }
         // Environment: a global input and, per occupied local state, a split by local input.
         std::vector<std::vector<std::vector<uint16_t>>> in_splits (occupied.size ());
         size_t input_choices = ngi;
         for (unsigned k = 0; k < occupied.size (); ++k)
           compositions (state[1 + occupied[k]], nli, in_splits[k], input_choices,
-                        std::min (max_vertices - owner.size (), max_edges - edges));
+                        std::min (max_vertices - owner.size (), max_edges - edges), bound);
         std::vector<unsigned> sys_vertices;
         std::vector<unsigned> pick (occupied.size (), 0);
         for (unsigned g_in = 0; g_in < ngi; ++g_in) {
           std::fill (pick.begin (), pick.end (), 0);
           for (;;) {
+            poll ();
             // One system vertex for (state, g_in, input split).
             const unsigned u = unsigned (owner.size ());
             if (u >= max_vertices)
@@ -603,18 +642,20 @@ namespace acacia::symcount {
             size_t output_choices = ngo;
             for (unsigned k = 0; k < cls.size (); ++k)
               compositions (std::get<2> (cls[k]), nlo, out_splits[k], output_choices,
-                            std::min (max_vertices - owner.size (), max_edges - edges));
+                            std::min (max_vertices - owner.size (), max_edges - edges), bound);
             std::vector<unsigned> opick (cls.size (), 0);
             for (unsigned g_out = 0; g_out < ngo; ++g_out) {
               std::fill (opick.begin (), opick.end (), 0);
               for (;;) {
+                poll ();
                 const unsigned g = g_in | (g_out << gi.size ());
                 std::vector<uint32_t> counts (nls, 0);
                 uint64_t any = 0, all = ~uint64_t (0);
                 std::vector<std::pair<unsigned, unsigned>> moved;  // (new local state, count)
                 for (unsigned k = 0; k < cls.size (); ++k) {
+                  poll ();
                   const auto [ls, x_in, total] = cls[k];
-                  (void)total;
+                  (void) total;
                   const unsigned q = ls >> b.bits, bits = ls & bitmask;
                   for (unsigned y = 0; y < nlo; ++y) {
                     const unsigned c = out_splits[k][opick[k]][y];
@@ -626,8 +667,9 @@ namespace acacia::symcount {
                     unsigned nb = bits;
                     for (unsigned j = 0; j < b.since.size (); ++j) {
                       const unsigned bit = b.since[j].bit;
-                      const bool m2 = since_gamma[j][g] and
-                                      ((bits >> bit & 1) or not since_lambda[j][size_t (g) * ll + x]);
+                      const bool m2 =
+                          since_gamma[j][g] and
+                          ((bits >> bit & 1) or not since_lambda[j][size_t (g) * ll + x]);
                       nb = m2 ? nb | 1u << bit : nb & ~(1u << bit);
                       if (m2)
                         h |= uint64_t (1) << since_pred[j];
@@ -649,9 +691,8 @@ namespace acacia::symcount {
                   else if (e.kind == event_kind::all_now)
                     fired = all >> e.pred & 1;
                   else {
-                    fired = std::all_of (moved.begin (), moved.end (), [&] (const auto& m) {
-                      return m.first >> e.bit & 1;
-                    });
+                    fired = std::all_of (moved.begin (), moved.end (),
+                                         [&] (const auto& m) { return m.first >> e.bit & 1; });
                     if (fired)
                       reset |= 1u << e.bit;
                   }
@@ -692,7 +733,8 @@ namespace acacia::symcount {
       r.vertices = owner.size ();
       for (const auto& s : succ)
         r.edges += s.size ();
-      r.build_seconds = std::chrono::duration<double> (std::chrono::steady_clock::now () - t0).count ();
+      r.build_seconds =
+          std::chrono::duration<double> (std::chrono::steady_clock::now () - t0).count ();
 
       // Solve with Spot, then check the strategy independently.
       const auto t1 = std::chrono::steady_clock::now ();
@@ -705,21 +747,29 @@ namespace acacia::symcount {
       const unsigned sets = max_colour + 1;
       arena->set_acceptance (sets, spot::acc_cond::acc_code::parity_max_odd (sets));
       for (unsigned v = 0; v < owner.size (); ++v)
-        for (unsigned w : succ[v])
+        for (unsigned w : succ[v]) {
+          poll ();
           arena->new_edge (v, w, bddtrue, {colour[w]});
+        }
       std::vector<bool> players (owner.begin (), owner.end ());
       spot::set_state_players (arena, players);
+      check_deadline (bound);
       const bool system_wins = spot::solve_parity_game (arena, true);
-      r.solve_seconds = std::chrono::duration<double> (std::chrono::steady_clock::now () - t1).count ();
+      check_deadline (bound);
+      r.solve_seconds =
+          std::chrono::duration<double> (std::chrono::steady_clock::now () - t1).count ();
       const auto t2 = std::chrono::steady_clock::now ();
       parity::arena_game checked (arena);
       const auto solution = checked.extract ();
+      check_deadline (bound);
       std::string why;
       if (not parity::check_strategy (checked.explicit_game, solution, &why))
         throw declined ("strategy check failed: " + why);
       if (solution.winner[0] != (system_wins ? 1 : 0))
         throw declined ("solver and strategy disagree on the initial vertex");
-      r.check_seconds = std::chrono::duration<double> (std::chrono::steady_clock::now () - t2).count ();
+      r.check_seconds =
+          std::chrono::duration<double> (std::chrono::steady_clock::now () - t2).count ();
+      check_deadline (bound);
       r.outcome = system_wins ? verdict::realizable : verdict::unrealizable;
       return r;
     }
@@ -728,6 +778,8 @@ namespace acacia::symcount {
   result solve (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs,
                 const std::vector<symmetry::indexed_family_hint>& families, const limits& bound) {
+    if (deadline_expired (bound))
+      return {verdict::declined, "deadline"};
     // Try each family size, largest first; families of that size are indexed together.
     std::set<unsigned, std::greater<>> sizes;
     for (const auto& f : families)
@@ -748,11 +800,12 @@ namespace acacia::symcount {
       }
       try {
         return run (spec, inputs, outputs, fm, bound);
-      }
-      catch (const declined& d) {
+      } catch (const declined& d) {
         last = result {};
         last.n = n;
         last.reason = d.what ();
+        if (deadline_expired (bound))
+          return {verdict::declined, "deadline"};
       }
     }
     return last;

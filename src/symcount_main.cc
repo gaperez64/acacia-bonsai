@@ -37,16 +37,16 @@ int main (int argc, char** argv) {
     const char* verdict = r.outcome == acacia::symcount::verdict::realizable     ? "REALIZABLE"
                           : r.outcome == acacia::symcount::verdict::unrealizable ? "UNREALIZABLE"
                                                                                  : "DECLINED";
-    std::printf ("%s n=%u local_states=%u events=%u global_states=%u count_states=%zu "
-                 "vertices=%zu edges=%zu build_s=%.3f solve_s=%.3f check_s=%.3f%s%s\n",
-                 verdict, r.n, r.local_states, r.events, r.global_states, r.count_states,
-                 r.vertices, r.edges, r.build_seconds, r.solve_seconds, r.check_seconds,
-                 r.reason.empty () ? "" : " reason=", r.reason.c_str ());
+    std::printf (
+        "%s n=%u local_states=%u events=%u global_states=%u count_states=%zu "
+        "vertices=%zu edges=%zu build_s=%.3f solve_s=%.3f check_s=%.3f%s%s\n",
+        verdict, r.n, r.local_states, r.events, r.global_states, r.count_states, r.vertices,
+        r.edges, r.build_seconds, r.solve_seconds, r.check_seconds,
+        r.reason.empty () ? "" : " reason=", r.reason.c_str ());
     return r.outcome == acacia::symcount::verdict::realizable     ? EXIT_CODE_REAL
            : r.outcome == acacia::symcount::verdict::unrealizable ? EXIT_CODE_UNREAL
                                                                   : EXIT_CODE_UNKNOWN;
-  }
-  catch (const std::exception& e) {
+  } catch (const std::exception& e) {
     std::fprintf (stderr, "acacia-symcount: %s\n", e.what ());
     return EXIT_CODE_ERROR;
   }
