@@ -44,7 +44,7 @@ void show_help (const char* program_name) {
       << "                    with +ud, +sub0|+sub1|+sub2 in any order;\n"
       << "                    comma-separated alternatives keep the smallest circuit\n"
       << "                    +dc is disabled: incorrect controllers; "
-         "see the +dc follow-up issue (#280)\n"
+         "see issue #466\n"
       << "  -V, --version     print program version and configuration\n"
       << "  -f STRING         process the formula STRING\n"
       << "  -F VAL            process formula in file VAL\n"
@@ -605,7 +605,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
           error (EXIT_CODE_ERROR,
                  "Error: --aiger-mode '%s': +dc is disabled because it can produce incorrect "
                  "controllers with Acacia's original BDD dictionary; "
-                 "see the +dc follow-up issue (#280).\n",
+                 "see issue #466.\n",
                  optarg);
         retval.aiger_mode = optarg;
         break;

@@ -88,7 +88,7 @@ The `+dc` output don't-care modifier is rejected at parse time, including in
 comma-separated alternatives. The smoke sweep found incorrect controllers with
 Acacia's original BDD dictionary; fresh-dictionary HOA replay did not reproduce
 them. The cause may involve Acacia's machine/BDD-variable handling as well as
-Spot; see the +dc follow-up issue (#280) and the
+Spot; see issue #466 and the
 [measured rejections](../benchmarking/RESULTS.md). The default remains `isop`.
 
 ## Choose solver workers

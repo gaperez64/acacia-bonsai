@@ -61,7 +61,7 @@ output, and solver selection. Use it when calling the tool from a script:
 `--aiger-mode MODE` selects the controller encoding (default `isop`); for example,
 use `both+ud` to try both encoders and negated conditions. Modes containing `+dc`
 are rejected because they can produce incorrect controllers with Acacia's original
-BDD dictionary; see the +dc follow-up issue (#280) and the [CLI guide](docs/cli.md).
+BDD dictionary; see issue #466 and the [CLI guide](docs/cli.md).
 
 ## Python
 

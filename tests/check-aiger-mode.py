@@ -33,7 +33,7 @@ def main():
         assert result.returncode == 3, (mode, result)
         assert "+dc is disabled" in result.stderr, result
         assert "incorrect controllers" in result.stderr, result
-        assert "see the +dc follow-up issue (#280)" in result.stderr, result
+        assert "see issue #466" in result.stderr, result
         assert not result.stdout, result
     for mode in ("", "ISOP", "unknown", "both+dual", "isop+sub3", "ite+sub",
                  "isop+sub00", "both+", "+dc", "ite++dc", "ite,", ",ite", "ite,,isop",

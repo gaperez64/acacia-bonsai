@@ -344,8 +344,8 @@ Each label accepts one `--extra-args` entry; unknown or repeated labels and
 malformed shell quoting are errors. Omitted labels get no extra arguments.
 `run.json` records both the supplied entries and their parsed `solver_args`.
 Acacia rejects encoder modes containing `+dc` at parse time because they can
-produce incorrect controllers with its original BDD dictionary; see the +dc
-follow-up issue (#280). Other encoder modes remain available; see the
+produce incorrect controllers with its original BDD dictionary; see issue
+#466. Other encoder modes remain available; see the
 [CLI guide](../docs/cli.md#write-a-controller).
 The runner does not change the synthesis portfolio or encoder on its own. Read
 the shipping members from the registry; do not substitute a fixed list. For example, on a memory-constrained host:
