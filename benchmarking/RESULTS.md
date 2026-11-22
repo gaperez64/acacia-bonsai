@@ -33,8 +33,12 @@ n≤6, v2 n≤5); never-fire and always-fire controls are rejected. The native-2
 over the 217 sibling-repo specs not among the 1,524 adds no other candidate: of its 7 full
 groups with n≥3, narylatch n=8 and ltl2dba_C2_unreal n=10 are solved, the collector templates
 are n=3, and collector_v3 n=27 is decided by a constant output (#451). The gain is 7 inputs
-at 17 s (6 in SYNTCOMP26) and 6 at 120 s (5), before stage 2 derives the monitors from formulas,
-a new arm (#359) and the Lean proof (stage 3).
+at 17 s (6 in SYNTCOMP26) and 6 at 120 s (5). PAR-2 moves more than coverage: replacing the 19
+collector_v1/v2 results of `lift437b-20261121`'s 17 s screen with 0.15 s (master's start-up
+floor) cuts PAR-2 by up to 224 s of 6,253.6, 21 s of it on inputs master already solves
+(collector_v2 n=15 takes 16.6 s). The same bound over every symmetric input with n≥3 is 687 s
+(101 inputs, 18 unsolved), the ceiling for a generic stage 2. Open: deriving the monitors from
+formulas (stage 2), a new arm (#359) and the Lean proof (stage 3).
 
 ## 2026-11-22: Formula symmetry cannot drive the K-bounded reduction; one-sided restrictions can decide 11 inputs (#370, #451)
 
