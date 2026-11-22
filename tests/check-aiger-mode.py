@@ -15,15 +15,26 @@ def run(binary, *arguments):
 def main():
     binary, checker = sys.argv[1:]
     assert "--aiger-mode MODE" in run(binary, "--help").stdout
-    methods = ("ite", "isop", "both")
-    modifiers = ("", "+dc", "+ud", "+dc+ud")
+    methods = ("ite", "isop", "both", "optim")
+    modifiers = ("", "+ud")
     splits = ("", "+sub0", "+sub1", "+sub2")
     modes = [a + b + c for a, b, c in product(methods, modifiers, splits)]
-    modes += ["both+sub2+ud+dc", "isop+dc+dc+sub0+sub1", "optim", "ite,isop+dc"]
+    modes += ["both+sub2+ud", "isop+ud+ud+sub0+sub1", "ite,isop+ud"]
     for mode in modes:
         result = run(binary, "--aiger-mode", mode, "-f", "true", "-i", "", "-o", "",
                      "-r", "small")
         assert result.returncode == 0, (mode, result)
+    dc_modes = [a + b + c for a, b, c in
+                product(methods, ("+dc", "+dc+ud", "+ud+dc"), splits)]
+    dc_modes += ["both+sub2+ud+dc", "isop+dc+dc+sub0+sub1", "ite,isop+dc",
+                 "both+dc,optim", "isop,optim+sub1+dc,ite"]
+    for mode in dc_modes:
+        result = run(binary, "--aiger-mode", mode)
+        assert result.returncode == 3, (mode, result)
+        assert "+dc is disabled" in result.stderr, result
+        assert "incorrect controllers" in result.stderr, result
+        assert "see the +dc follow-up issue (#280)" in result.stderr, result
+        assert not result.stdout, result
     for mode in ("", "ISOP", "unknown", "both+dual", "isop+sub3", "ite+sub",
                  "isop+sub00", "both+", "+dc", "ite++dc", "ite,", ",ite", "ite,,isop",
                  "both +dc", "ite+dc,invalid"):
@@ -47,8 +58,8 @@ MAIN { INPUTS { a; b; c; d; } OUTPUTS { grant; }
             assert default.returncode == 0, (arm, default)
             original = circuit.read_bytes()
             encodings = set()
-            for mode in ("isop", "ite", "both", "both+dc+ud+sub0", "isop+dc+ud+sub1",
-                         "both+sub2+ud+dc", "optim", "ite,isop+dc"):
+            for mode in ("isop", "ite", "both", "both+ud+sub0", "isop+ud+sub1",
+                         "both+sub2+ud", "optim", "ite,isop+ud"):
                 result = run(binary, *command, "--aiger-mode", mode)
                 assert result.returncode == 0, (arm, mode, result)
                 if mode == "isop":

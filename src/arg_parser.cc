@@ -41,8 +41,10 @@ void show_help (const char* program_name) {
       << "  -h, --help        print this help message\n"
       << "  -s FILE           synthesize controller and store in FILE\n"
       << "  --aiger-mode MODE  Spot encoding (default isop): ite|isop|both|optim\n"
-      << "                    with +dc, +ud, +sub0|+sub1|+sub2 in any order;\n"
+      << "                    with +ud, +sub0|+sub1|+sub2 in any order;\n"
       << "                    comma-separated alternatives keep the smallest circuit\n"
+      << "                    +dc is disabled: incorrect controllers; "
+         "see the +dc follow-up issue (#280)\n"
       << "  -V, --version     print program version and configuration\n"
       << "  -f STRING         process the formula STRING\n"
       << "  -F VAL            process formula in file VAL\n"
@@ -597,7 +599,13 @@ arg_parse_result arg_parser (int argc, char** argv) {
         if (!std::regex_match (optarg, mode))
           error (EXIT_CODE_ERROR,
                  "Error: invalid --aiger-mode '%s'; expected ite|isop|both|optim followed by "
-                 "+dc, +ud or +sub0|+sub1|+sub2, or comma-separated alternatives.\n",
+                 "+ud or +sub0|+sub1|+sub2, or comma-separated alternatives.\n",
+                 optarg);
+        if (std::string (optarg).find ("+dc") != std::string::npos)
+          error (EXIT_CODE_ERROR,
+                 "Error: --aiger-mode '%s': +dc is disabled because it can produce incorrect "
+                 "controllers with Acacia's original BDD dictionary; "
+                 "see the +dc follow-up issue (#280).\n",
                  optarg);
         retval.aiger_mode = optarg;
         break;

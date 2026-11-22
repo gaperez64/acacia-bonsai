@@ -211,20 +211,20 @@ def test_cli_labelled_arguments_are_independent(tmp_path, tools, monkeypatch):
     output = tmp_path / "output"
     assert runner.main([
         "--bin", f"base={binary}", "--bin", f"alternative={binary}",
-        "--extra-args", "alternative=--aiger-mode both+dc --tag 'two words'",
+        "--extra-args", "alternative=--aiger-mode both+ud --tag 'two words'",
         "--checker", str(checker), "--list", str(inputs), "--tlsf-map", str(mapping),
         "--tlsf-corpus", str(source.parent), "--status-exceptions", str(exceptions),
         "--output", str(output),
     ]) == 0
     assert len(calls) == 4
     assert calls[0][-2] == "-s"
-    assert calls[2][-4:] == ["--aiger-mode", "both+dc", "--tag", "two words"]
+    assert calls[2][-4:] == ["--aiger-mode", "both+ud", "--tag", "two words"]
     assert calls[1][0] == calls[3][0] == str(checker)
     assert calls[1][2] != calls[3][2]
     assert all("--aiger-mode" not in call for call in calls[1::2])
     metadata = json.loads((output / "run.json").read_text())
     assert metadata["solver_args"] == {
-        "alternative": ["--aiger-mode", "both+dc", "--tag", "two words"]}
+        "alternative": ["--aiger-mode", "both+ud", "--tag", "two words"]}
     summaries = list(csv.DictReader((output / "summary.tsv").open(), delimiter="\t"))
     assert [row["verified"] for row in summaries] == ["1", "1"]
 

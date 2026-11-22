@@ -333,7 +333,7 @@ appear under several labels, each measured and verified independently:
 ```bash
 python3 -s benchmarking/synthesis-size.py \
   --bin baseline=/path/to/acacia-bonsai --bin candidate=/path/to/acacia-bonsai \
-  --extra-args candidate='--aiger-mode both+dc' \
+  --extra-args candidate='--aiger-mode both+ud' \
   --checker /path/to/controller-check --list panel.list \
   --tlsf-map tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv \
   --tlsf-corpus /path/to/materialized-corpus --timeout 17 --verify-timeout 60 \
@@ -343,6 +343,10 @@ python3 -s benchmarking/synthesis-size.py \
 Each label accepts one `--extra-args` entry; unknown or repeated labels and
 malformed shell quoting are errors. Omitted labels get no extra arguments.
 `run.json` records both the supplied entries and their parsed `solver_args`.
+Acacia rejects encoder modes containing `+dc` at parse time because they can
+produce incorrect controllers with its original BDD dictionary; see the +dc
+follow-up issue (#280). Other encoder modes remain available; see the
+[CLI guide](../docs/cli.md#write-a-controller).
 The runner does not change the synthesis portfolio or encoder on its own. Read
 the shipping members from the registry; do not substitute a fixed list. For example, on a memory-constrained host:
 

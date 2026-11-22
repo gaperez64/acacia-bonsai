@@ -276,7 +276,7 @@ int main () {
   // Call the helper directly: the CLI's obligation arm also retains a racing legacy fallback.
   const auto encoding_objective = parse ("G (grant <-> ((a & b) | (!a & c) | (a & d)))");
   std::vector<std::string> encodings;
-  for (const char* mode : {"isop", "ite", "both+dc+ud+sub1", "both+dc+ud+sub2"}) {
+  for (const char* mode : {"isop", "ite", "both+ud+sub1", "both+ud+sub2"}) {
     const auto encoded = solve (encoding_objective, {"a", "b", "c", "d"}, {"grant"}, timing::mealy,
                                 true, conversion::none, mode);
     require (encoded.value == outcome::real && bool (encoded.controller),

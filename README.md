@@ -58,6 +58,11 @@ The [CLI guide](docs/cli.md) covers input files, verdicts, exit codes, controlle
 output, and solver selection. Use it when calling the tool from a script:
 `UNREALIZABLE` has exit status 1, even though the solver answered the question.
 
+`--aiger-mode MODE` selects the controller encoding (default `isop`); for example,
+use `both+ud` to try both encoders and negated conditions. Modes containing `+dc`
+are rejected because they can produce incorrect controllers with Acacia's original
+BDD dictionary; see the +dc follow-up issue (#280) and the [CLI guide](docs/cli.md).
+
 ## Python
 
 The build above also produces `acacia_boomslang`. The
