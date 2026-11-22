@@ -140,3 +140,17 @@ for module in Automaton Detector Game Equivariance FixedPoint Transports Reuse \
 done
 timeout 1500 lake build
 ```
+
+## Issue #454 obligations
+
+`Quotient.lean` proves orbit quotients of turn-based games sound for any
+objective on the priority sequence, parity included.
+
+| Obligation | Definition or theorem |
+| --- | --- |
+| Group acting by owner-, priority- and edge-preserving maps, orbit-invariant representatives with transporters | `Action`, `Action.canon_act` |
+| Quotient game and its plays and strategies | `Action.quotient`, `Action.QWins` |
+| Plays and strategy-following project to the quotient | `Action.project_play`, `Action.project_consistent` |
+| A transported winning quotient strategy wins, for either player | `Action.lift`, `Action.lift_legal`, `Action.lift_wins` |
+| No vertex is won by both players; the certified verdict transfers | `exclusive`, `Action.verdict` |
+| Controller outputs are those of the quotient strategy | `Action.lift_output` |
