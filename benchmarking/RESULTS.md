@@ -12,6 +12,43 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-22: The first synthesis member is the right one, but best-of-four controllers are half the size (#280)
+
+Archive `syn280-20261122` (release `evidence-2026-11-22-syn280`). This is the first
+measurement of synthesis output. `benchmarking/synthesis-size.py` (#453) ran `-s` at
+17 s on all 433 SYNTCOMP26 inputs whose expected status is REALIZABLE, for each
+`docker_default` member, serially under a 5G scope. Every controller was checked
+independently by `tests/controller_check.cc`. That check explores the circuit's
+reachable latch states, takes the product with the negated full TLSF objective,
+and has a 60 s cap.
+
+| Member | Controllers | Verified | Checker rejected | Synthesis timeout | Verify timeout | Ands+latches on 330 common | Median |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| otf_sparse_formula_parity | 401 | 362 | 0 | 32 | 37 | 93,498 | 25.5 |
+| otf_sparse_formula_parity_forward | 401 | 362 | 0 | 32 | 37 | 93,481 | 27.0 |
+| best_decomp_rank_bucketed_semantic_mona | 346 | 331 | 0 | 87 | 14 | 211,000 | 25.0 |
+| otf_sparse_formula_gr1_real_prepass | 365 | 338 | 0 | 68 | 26 | 210,722 | 26.5 |
+
+**No controller was rejected.** Unverified controllers are verification timeouts,
+one checker error (amba_decomposed_lock n=30) and the resource limit on
+ltl2dba_C2 n=14.
+
+**The member choice stands.** `scripts/acacia-bonsai.sh --synthesis` uses the first
+member, `otf_sparse_formula_parity`. It produces the most controllers, ties for the
+most verified, and has the smallest total size. Only one input is verified by
+another member and not by it.
+
+**Size is where the room is.** On the 330 inputs every member verifies, the
+first member and the per-input smallest of the four differ by 2.2x: 93,498
+against 42,807 ands and latches. The gap is concentrated on a few inputs.
+prioritized_arbiter n=6 is 13,070 against 66, Lights_2c5b09da 10,765 against 63,
+and prioritized_arbiter n=5 4,715 against 55. On those three the parity route's
+controller is about 200 times larger than the other routes'. Against the
+competition's `REF_SIZE` (237 inputs), the first member's median ratio is 2.7x. It
+is at or below the reference on 40 inputs and more than 10x above it on 27.
+Median synthesis time is 0.16 s. The next steps of #280 (Spot encoder options,
+then an ABC post-pass, both re-verified) target this gap.
+
 ## 2026-11-22: Formula symmetry cannot drive the K-bounded reduction; one-sided restrictions can decide 11 inputs (#370, #451)
 
 Archive `sym370-20261122` (release `evidence-2026-11-22-sym370`). This is a
