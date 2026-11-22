@@ -282,6 +282,103 @@ use `ACACIA_TLSF_TOOLS_BUILD` for optional `tlsfinfo`/`tlsf2ltl` executables
 (default: `build/subprojects/tlsf-tools`). These are ordinary tlsf-tools Meson
 targets; the retired Python oracle/toolchain wrapper is not required.
 
+## Synthesis size
+
+`synthesis-size.py` measures each explicitly labelled member binary with `-s`,
+then checks the emitted controller in a separate invocation. It does not change
+the synthesis portfolio or encoder. Read the shipping members from the registry;
+do not substitute a fixed list. For example, on a memory-constrained host:
+
+```bash
+# Activate the environment for your installed Spot and C++ toolchain first.
+export TMPDIR="$PWD/build_scratch/synthesis-size/tmp"
+export BENCHMARK_COMPILE_JOBS=1
+mkdir -p "$TMPDIR"
+mapfile -t members < <(python3 scripts/acacia-config.py list-group docker_default)
+bins=()
+for member in "${members[@]}"; do
+  systemd-run --user --scope -p MemoryMax=5G -p MemorySwapMax=0 \
+    ./self-benchmark.sh -R -c "$member"
+  bins+=(--bin "$member=$PWD/build_${member}/src/acacia-bonsai")
+done
+checker="build_${members[0]}/tests/controller-check"
+systemd-run --user --scope -p MemoryMax=5G -p MemorySwapMax=0 \
+  meson test -C "build_${members[0]}" --no-rebuild --num-processes 1 controller-check
+systemd-run --user --scope -p MemoryMax=5G -p MemorySwapMax=0 \
+  python3 -s benchmarking/synthesis-size.py "${bins[@]}" --checker "$checker" \
+  --list tests/suites/benchmarks/syntcomp26/all.list \
+  --tlsf-map tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv \
+  --tlsf-corpus /path/to/materialized-corpus --timeout 17 --verify-timeout 60 \
+  --verify-max-states 200000 \
+  --systemd-scope --memory-max 5G --memory-swap-max 0 \
+  --output _bm-logs/synthesis-size
+```
+
+The list may be a small panel using the same logical IDs. Selection uses the
+TLSF `//STATUS` annotations and the reviewed corrections in
+`syntcomp26-status-exceptions.tsv`, just as the coverage runner does.
+`--expected-status` defaults to `REALIZABLE`; it also accepts `UNREALIZABLE`,
+`UNKNOWN` (no decisive expectation), or `all`. A named `--status-exceptions`
+table replaces the default. Corpus lookup follows the shared CLI, environment,
+build option, and recorded-pointer order. A new output directory is required;
+there is no resume or overwrite. Runs are serial. Keep the directory as evidence:
+it contains the circuits and stdout/stderr from synthesis and verification.
+`run.json` retains the command options, checker digest, and selected source digests.
+
+`rows.tsv` has one row per selected input and member:
+
+| Columns | Meaning |
+| --- | --- |
+| `instance`, `member`, `binary_sha256` | Logical input ID, supplied member label, digest of the executable bytes. |
+| `expected`, `expectation_source` | Effective status and `status`, `exception`, or `none`. |
+| `verdict` | Decisive answer with matching exit status, otherwise `UNKNOWN`. |
+| `wall_seconds`, `exit_code`, `failure_kind` | Bounded synthesis invocation time (including launcher/teardown), raw exit status, and failure classification; empty failure means verified success. Verification is excluded from this time. |
+| `M`, `I`, `L`, `O`, `A` | Parsed basic ASCII AIGER header: maximum variable, inputs, latches, outputs, AND gates. Empty if no usable controller was produced. |
+| `REF_SIZE` | TLSF competition reference size, when annotated; it is contextual and does not affect selection or verification. |
+| `verification`, `verify_seconds`, `verify_exit_code` | `verified`, `failed_verification`, `unparsable`, `unverified`, `verify_error`, `verify_resource_limit`, `verify_timeout`, or `verify_unsupported`, with separately measured time and exit status when the checker ran. |
+
+Synthesis failure kinds are `timeout`, `resource_limit`, `error`, `unknown`,
+`unrealizable`, or `invalid_controller`; checker failures use their verification
+name. A printed realizable answer followed by a crash or timeout is not a
+successful answer. Unsupported or malformed circuits never count as verified.
+
+`summary.tsv` gives each member's `attempted`, `realizable` answers,
+`controllers_produced` (parsed controllers from successful synthesis), `verified`,
+and `failed_verification` (only controllers rejected by the checker). Synthesis
+outcomes have separate counters: `synthesis_timeout`, `unrealizable`,
+`synthesis_resource_limit`, `synthesis_error`, `synthesis_unknown`, and
+`invalid_controller`. Inconclusive checks count as `verify_timeout`,
+`verify_resource_limit`, `verify_error`, or `verify_unsupported`.
+`commonly_verified` is the intersection of verified input IDs
+across **every supplied member**. `total_ands_latches` and `median_ands_latches`
+use only that intersection, counting `A + L`; they are empty when it is empty.
+Do not select a member on size without also considering controller coverage.
+
+`tests/controller-check` is a standalone C++ helper linked against Spot and the
+existing TLSF frontend library. It converts the whole objective with the source
+TARGET retained, including strict assumptions and semantics/target adaptation,
+because the emitted circuit has already undone the solver's internal Mealy
+lowering. It requires the circuit's named input/output partition to match the
+declarations. Starting from the all-zero initial latch valuation, the helper
+explores reachable latch valuations using arbitrary-width keys, with no latch
+count limit. BDDs group all environment input choices by their successor and
+constrain each edge with the exact output functions. Moore outputs must be
+independent of current inputs at each reachable latch valuation; unreachable
+states do not cause rejections. Spot's width-limited `as_automaton` is not used.
+A fresh Spot translation of the negated LTL objective must have an empty
+intersection with it. This checks safety and liveness independently of the
+winning strategy and of debug-only solver checks. It trusts Spot's restricted
+AAG parser, BDDs, translator and product algorithms and the shared TLSF
+conversion, but no solver verdict or proof.
+`--verify-max-states` caps the number of reachable latch valuations (default
+200000); the standalone helper accepts `--max-states N` after its two paths.
+Exceeding the budget returns `verify_unsupported` (exit 3), never success.
+Explicit AIGER 1.9 latch reset fields, including zero, one and uninitialised
+self-literals, remain unsupported by the parser and receive the same verdict.
+They are never silently interpreted as all-zero initialization. A verification
+timeout also remains inconclusive. Every inconclusive result excludes the
+circuit from size comparisons.
+
 ## Memory collection
 
 `benchlib.run_systemd_scope` remains the shared invocation runner. On Linux it
