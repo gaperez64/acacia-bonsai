@@ -145,7 +145,7 @@ verdict. Historical event/API details: `refactor-closeout20261017`,
 `cov20261006-p0exit`, `cov20261006-p1ablation`.
 
 One-sided restrictions run inside existing legacy arms. `restriction_attempt`
-records carry `candidate`, `family` (one-based declaration-family ordinal, zero
+records carry `candidate`, `family` (one-based eligible input-family ordinal, zero
 for the combined/constant candidate), accepted `polarity`, `outcome`, `cause`,
 `mono_ns`, `wall_ns`, child PID and wall/memory limits. Start records precede
 forking; only a reaped, in-budget accepted exit produces `outcome=accepted`.

@@ -11,7 +11,8 @@ commit `4105caf1f1e5fd3b76657879bfce8021d130cbde`, under
 `pair-input.tlsf` from `tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf`, and
 `scalar-output.tlsf` from `tlsf/collector/parametric/collector_v3.tlsf`.
 Titles are shortened, descriptions/comments/status trailers removed, formatting
-condensed, and each default parameter reduced to 3; the objectives are retained.
+condensed, and each fixture uses `n=3` (upstream defaults are 2, 10 and 3,
+respectively); the objectives are retained.
 
 `encoded-fold.tlsf` is adapted from the [SYNTCOMP benchmarks repository](https://github.com/SYNTCOMP/benchmarks),
 path `tlsf/simple_arbiter_log/parametric/simple_arbiter_enc.tlsf`,

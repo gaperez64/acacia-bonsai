@@ -6,7 +6,8 @@
 
 namespace acacia::restriction {
   namespace {
-    constexpr uint64_t attempt_ns = 200000000, total_ns = 400000000;
+    constexpr uint64_t input_attempt_ns = 500000000, input_total_ns = 1000000000;
+    constexpr uint64_t output_attempt_ns = 200000000;
     constexpr rlim_t memory_bytes = rlim_t {512} * 1024 * 1024;
     constexpr int resource_exit = 4, error_exit = 5, deadline_exit = 6, cancelled_exit = 7;
 
@@ -26,8 +27,10 @@ namespace acacia::restriction {
           "\"attempt_budget_ns\":%llu,\"total_budget_ns\":%llu,\"memory_bytes\":%llu}\n",
           worker ? worker->index : 0, long (getpid ()), long (getpid ()), long (child), item.name,
           item.family, inputs ? "UNREAL" : "REAL", outcome, cause, (unsigned long long) now,
-          (unsigned long long) (now - start), (unsigned long long) attempt_ns,
-          (unsigned long long) total_ns, (unsigned long long) memory_bytes);
+          (unsigned long long) (now - start),
+          (unsigned long long) (inputs ? input_attempt_ns : output_attempt_ns),
+          (unsigned long long) (inputs ? input_total_ns : output_attempt_ns),
+          (unsigned long long) memory_bytes);
       if (size > 0 && size_t (size) < sizeof line)
         phase_records_send (line, size_t (size));
       else
@@ -133,7 +136,7 @@ namespace acacia::restriction {
                     uint64_t outer_deadline, const std::function<int (spot::formula)>& solve) try {
     legacy_phase phase ("restriction_prepass");
     const auto start = phase_clock (CLOCK_MONOTONIC);
-    auto deadline = start + total_ns;
+    auto deadline = start + (restrict_inputs ? input_total_ns : output_attempt_ns);
     if (outer_deadline)
       deadline = std::min (deadline, outer_deadline);
     // Materialize AP maps only inside the bounded subprocess, including large combined maps.
@@ -168,7 +171,8 @@ namespace acacia::restriction {
         worker_stopped ("deadline");
         break;
       }
-      const auto attempt_deadline = std::min (deadline, entered + attempt_ns);
+      const auto attempt_deadline =
+          std::min (deadline, entered + (restrict_inputs ? input_attempt_ns : output_attempt_ns));
       record (item, restrict_inputs, "start", "none", entered);
       const auto parent = getpid ();
       const auto child = fork ();

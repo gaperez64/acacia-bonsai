@@ -102,6 +102,14 @@ int main () {
                        [] (auto) -> int { throw std::bad_alloc (); }));
   check (!try_prepass (p, metadata, inputs, outputs, true, 0,
                        [] (auto) -> int { throw std::runtime_error ("test"); }));
+  check (try_prepass (p, metadata, inputs, outputs, true, 0, [] (auto) {
+    usleep (300000);
+    return EXIT_CODE_UNREAL;
+  }));
+  check (!try_prepass (parse ("!o"), metadata, inputs, outputs, false, 0, [] (auto) {
+    usleep (300000);
+    return EXIT_CODE_REAL;
+  }));
   check (!try_prepass (p, metadata, inputs, outputs, true, 0, [] (auto) {
     sleep (2);
     return EXIT_CODE_UNREAL;
