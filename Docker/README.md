@@ -1,20 +1,18 @@
-# Docker usage
+# Docker
 
-Run host commands from the repository root. The CLI image contains source
-code and build dependencies. The Boomslang image contains the Python module,
-Spot's Python bindings, and Jupyter.
+Run host commands from the repository root. The CLI image contains sources and
+build dependencies; Boomslang includes the Python module, Spot and Jupyter.
 
 ## Build and run the CLI
 
-On the host, pull the image and create a named container:
+On the host:
 
 ```sh
 docker pull ghcr.io/gaperez64/acacia-bonsai:latest
 docker run --name acacia -it ghcr.io/gaperez64/acacia-bonsai:latest
 ```
 
-In the container's shell, compile Spot and the configurations in
-`docker_default`, then run a formula or pipe in a TLSF file:
+In the container, compile Spot and the `docker_default` configurations, then run:
 
 ```sh
 ./scripts/compile.sh
@@ -22,23 +20,16 @@ In the container's shell, compile Spot and the configurations in
 ./scripts/acacia-bonsai.sh --tlsf < examples/realizable.tlsf
 ```
 
-Compilation targets the local CPU. The compile script chooses its own job
-count, including all available cores for Spot. Keep the named container to
-reuse its builds. From the host, re-enter it with:
+Compilation targets the local CPU and uses all available cores for Spot.
+Keep the named container to reuse builds; re-enter from the host with:
 
 ```sh
 docker start -ai acacia
 ```
 
-The wrapper defaults to the first configuration in `docker_default`. To
-select another, pass a name from that group as the first argument. See
-[presets](../docs/configuration.md#inspect-a-preset) for the list.
-
-The second slot adds `real:small:forward` and `unreal:automaton:forward` to
-the first slot's six arms with the same remaining build options. The third
-slot provides the historical backward solver; the fourth retains the
-previous second slot's GR(1) portfolio. Select the forward-inclusive build
-from the group in the container:
+The wrapper defaults to the first `docker_default` member. Pass another member
+as its first argument; the [configuration guide](../docs/configuration.md#inspect-a-preset)
+describes the slots. For example, select the forward-inclusive second slot:
 
 ```sh
 preset=$(python3 scripts/acacia-config.py list-group docker_default | sed -n '2p')
@@ -47,26 +38,23 @@ preset=$(python3 scripts/acacia-config.py list-group docker_default | sed -n '2p
 
 ## Write a controller
 
-In the container, the synthesis wrapper sends an ASCII AIGER controller to
-stdout and sends the solver verdict and diagnostics to stderr:
+Inside the container, send the ASCII AIGER controller to stdout and diagnostics
+to stderr:
 
 ```sh
 ./scripts/acacia-synthesis.sh --tlsf < examples/realizable.tlsf > controller.aag
 ```
 
-The file is inside the container. After compilation, you can instead run
-from the host and save it in the host's current directory:
+To save it on the host after compilation, with the container running:
 
 ```sh
 docker exec -i acacia ./scripts/acacia-synthesis.sh --tlsf \
   < examples/realizable.tlsf > controller.aag
 ```
 
-The container must be running. `acacia-synthesis.sh` forwards to
-`acacia-bonsai.sh --synthesis`; do not add `-s` to either form. The binary
-itself uses `-s FILE`, while the wrapper uses `--tlsf` without a filename to
-read stdin. Both return the solver's exit status, including 1 for
-`UNREALIZABLE`.
+`acacia-synthesis.sh` forwards to `acacia-bonsai.sh --synthesis`; do not add `-s`.
+The binary uses `-s FILE`, while wrappers use `--tlsf` without a filename for stdin.
+Both preserve the solver's exit status, including 1 for `UNREALIZABLE`.
 
 ## Use Python notebooks
 
@@ -76,10 +64,9 @@ On the host:
 docker run --rm -p 127.0.0.1:8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
-Open the localhost URL with the token printed by Jupyter. The server starts
-in `python_examples/` with Spot and Acacia-Bonsai on the Python search path.
-The `--rm` container is deleted when it stops. To keep edited notebooks,
-mount the local examples directory:
+Open the localhost URL with Jupyter's printed token. It starts in
+`python_examples/` with Spot and Acacia-Bonsai on the Python path.
+`--rm` deletes the container when it stops; mount examples to keep edits:
 
 ```sh
 docker run --rm -p 127.0.0.1:8888:8888 \
@@ -87,8 +74,6 @@ docker run --rm -p 127.0.0.1:8888:8888 \
   ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
-The image definitions are [Dockerfile.cd](../Dockerfile.cd) and
-[Dockerfile.boomslang](../Dockerfile.boomslang). Their entry points are
-[compile.sh](../scripts/compile.sh), the
-[CLI wrapper](../scripts/acacia-bonsai.sh), and
-[launch-jupyter.sh](../scripts/launch-jupyter.sh).
+Image definitions: [CLI](../Dockerfile.cd), [Boomslang](../Dockerfile.boomslang).
+Entry points: [compile](../scripts/compile.sh), [CLI wrapper](../scripts/acacia-bonsai.sh),
+[Jupyter](../scripts/launch-jupyter.sh).

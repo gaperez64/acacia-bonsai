@@ -1,35 +1,18 @@
-# SYNTCOMP 2024 panel construction
+# SYNTCOMP 2024 panel
 
-The repository's converted 2024 LTL formula/partition pairs were added in
-commit `104cef3d7427121f2d94b7744fc2dc98a331909a`. Their logical names now
-resolve through `sources.tsv` into the shared, content-addressed corpus at
-`tests/ltl/syntcomp`, which fixes the exact inputs used by current runs. The
-historical import did not retain the upstream archive URL, archive checksum,
-or conversion command, so this suite is reproducible from checked-in content
-but cannot claim archive-level provenance.
+Converted LTL pairs arrived in `104cef3d7427121f2d94b7744fc2dc98a331909a`;
+`sources.tsv` resolves them into the shared [corpus](../../../ltl/syntcomp/README.md).
+The import retained no upstream archive URL/checksum or conversion command.
 
-`panel.list` is the deterministic panel generated in commit `87e9b391` from a
-complete paired reference campaign at repository commit
-`5c589692a84480f7267b0efcabde66afc21d5f8e`. The reference is retained outside
-the tree in evidence campaign `gap-plan-20260804-localrest` and compared
-`best_decomp_mona` with Spot 2.15.1.dev's default `ltlsynt` at a 17-second cap,
-one test at a time, with 8 GiB of memory and no swap.
+`panel.list` has 174 inputs: 40 easy (Acacia <1 s), 59 border (1 to <17 s), 60 gap
+(only ltlsynt answers) and 15 open (neither answers). The requested border quota
+was 65, but the 1,195-input reference had only 59. Selection is verdict-proportional,
+then family-round-robin with seed `20260804`; `panel.tsv` records every selection.
 
-The common `benchmarking/make-panel.py` rules classify targets as `easy`
-(Acacia below 1 second), `border` (Acacia from 1 to below 17 seconds), `gap`
-(only `ltlsynt` answers), or `open` (neither answers). The requested quotas
-were 40/65/60/15. The 1,195-instance reference pool contained only 59 border
-targets, so the resulting panel has 174 instances: 40 easy, all 59 border, 60
-gap, and 15 open. Sampling is verdict-proportional and family-round-robin with
-seed `20260804`.
-
-`panel.tsv` is the audit trail for every selected logical instance, including
-stratum, reference times, verdict, normalized family, and source campaign.
-The generating command was equivalent to:
-
-Restore `gap-plan-20260804-localrest` into `restore/gap-plan`;
-see [evidence retention](../../../../benchmarking/README.md#evidence-and-retention).
-The archive retains the original campaign paths.
+The reference `gap-plan-20260804-localrest` compared `best_decomp_mona` at
+`5c589692a84480f7267b0efcabde66afc21d5f8e` with Spot 2.15.1.dev's default
+ltlsynt, serially at 17 s, 8 GiB/no swap. [Restore it](../../../../benchmarking/README.md#evidence-and-retention)
+under `restore/gap-plan`, then recreate the panel:
 
 ```sh
 python3 benchmarking/make-panel.py \
@@ -40,7 +23,5 @@ python3 benchmarking/make-panel.py \
   --cap 17 --seed 20260804 --easy 40 --border 65 --gap 60 --open 15
 ```
 
-The remaining `.list` files are historical runtime, regression, translation,
-or solver-success slices. `0s-20s.list`, the panel used by the current paper
-campaign, expands to the complete sub-20-second historical buckets rather
-than to `panel.list`.
+Other lists are historical slices. `0s-20s.list` expands the complete historical
+sub-20-second buckets, independently of `panel.list`.

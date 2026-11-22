@@ -1,23 +1,18 @@
 # Acacia-Bonsai
 
-Acacia-Bonsai checks whether a controller can satisfy a Linear Temporal Logic
-(LTL) specification for every possible sequence of inputs. If it can, the tool
-can build that controller. The environment chooses the inputs; the controller
-chooses the outputs.
-
-It accepts LTL formulas and TLSF files. The solver uses antichains over downsets;
-the [TACAS 2023 paper](https://arxiv.org/abs/2204.06079) explains the method.
+Acacia-Bonsai decides whether a controller can satisfy a Linear Temporal Logic
+(LTL) specification for every input sequence, and can build the controller.
+It accepts LTL formulas and TLSF files, using antichains over downsets. See the
+[TACAS 2023 paper](https://arxiv.org/abs/2204.06079) for the method.
 
 ## Build
 
-You need GCC with C++23 and C23 support, Spot 2.16.3 with development headers,
-Meson 1.7 or newer, Ninja, pkg-config, Zsh, Flex, Bison, Cargo with Rust 1.91 or newer,
-and cbindgen 0.29.4. For Python, also install SWIG and Python development headers.
-The Python package requires Python 3.13 or newer.
+You need GCC with C++23/C23 support, Spot 2.16.3 development headers, Meson 1.7+,
+Ninja, pkg-config, Zsh, Flex, Bison, Cargo with Rust 1.91+, and cbindgen 0.29.4.
+Python builds also need SWIG, Python development headers and Python 3.13+.
 
-Start with a checkout whose submodules, including nested submodules, are
-initialized. Run these commands from the repository root in Bash. This builds
-the CLI and Python module with the first configuration in `docker_default`:
+Initialize submodules recursively. From the repository root in Bash, build the
+CLI and Python module with the first `docker_default` configuration:
 
 ```bash
 export CARGO_BUILD_JOBS=2
@@ -30,71 +25,39 @@ meson setup "$build_dir" --buildtype=debug -Dbuild_python=true \
 meson compile -C "$build_dir" -j 2
 ```
 
-Keep using the same shell for the quick start below. Set `ACACIA_BUILD_DIR`
-before setup to put the build elsewhere. Spot must provide both `libspot` and
-`libbddx` through pkg-config; adjust `PKG_CONFIG_PATH` for a different install
-prefix. On macOS, use Homebrew GCC for both Spot and Acacia-Bonsai, and set
-`CC` and `CXX` before setup.
+Set `ACACIA_BUILD_DIR` to change the directory. Spot must expose `libspot` and
+`libbddx` through pkg-config; adjust `PKG_CONFIG_PATH` for its prefix. On macOS,
+use Homebrew GCC for Spot and Acacia-Bonsai, setting `CC`/`CXX` before setup.
 
 ## Quick start
 
-Ask whether repeated requests can be met by repeated grants:
+In the same shell, check whether repeated requests can receive repeated grants:
 
 ```bash
 "$build_dir/src/acacia-bonsai" -f 'G F req -> G F grant' -i req -o grant
 ```
 
-The verdict is `REALIZABLE`. `G` means “always” and `F` means “eventually”, so
-`G F req` means requests occur infinitely often. To read a TLSF specification
-and write its controller as an ASCII AIGER circuit:
+The verdict is `REALIZABLE`. `G` means "always" and `F` means "eventually";
+`G F req` means requests recur infinitely often. Read TLSF and write an ASCII
+AIGER controller with:
 
 ```bash
 "$build_dir/src/acacia-bonsai" -T examples/realizable.tlsf -s controller.aag
 ```
 
-## CLI
+## Guides
 
-The [CLI guide](docs/cli.md) covers input files, verdicts, exit codes, controller
-output, and solver selection. Use it when calling the tool from a script:
-`UNREALIZABLE` has exit status 1, even though the solver answered the question.
-
-## Python
-
-The build above also produces `acacia_boomslang`. The
-[Python guide](docs/python.md) shows how to import it, solve a bounded safety
-game, and inspect its winning region. It also explains how that API differs
-from the CLI.
-
-## Docker
-
-The [Docker guide](Docker/README.md) covers the CLI source image and the
-Boomslang notebook image. The CLI image needs a compile step inside the
-container; Boomslang includes a built Python module, Spot, and Jupyter.
-
-## Presets and configuration
-
-A preset chooses components at compile time. `docker_default` names the
-configurations used by the Docker wrappers; its first entry is also used by
-Python builds. Read the group instead of copying a preset name. The
-[configuration guide](docs/configuration.md) explains how to inspect presets,
-choose solver workers at runtime, and set translation effort.
-The first two presets use `closure-recurrence` for their formula-unrealizability
-arm, with `fallback` candidate mode and `low` effort for fallback translation.
-`--candidate-mode only` overrides that build default.
-Controller synthesis keeps that arm's `frozen-graph` provider.
-
-The four slots offer the six-arm default, its eight-arm variant
-with both forward workers, the historical backward solver, and the previous
-six-arm GR(1) portfolio. The eight-arm option keeps the default's other
-settings. Historical presets outside the group remain available by name.
-
-## Benchmarks
-
-See [results and their measurement conditions](benchmarking/RESULTS.md) for
-performance comparisons. The [benchmarking guide](benchmarking/README.md)
-starts with a small local run and describes the correctness and measurement
-gates. Debug builds are useful for checking examples; use matched release
-builds for performance comparisons.
+- [CLI](docs/cli.md): inputs, verdicts, exit codes, controllers and solver arms.
+  `UNREALIZABLE` returns status 1, which matters in scripts using `set -e`.
+- [Python](docs/python.md): import `acacia_boomslang`, solve a bounded safety game
+  and inspect its region.
+- [Docker](Docker/README.md): CLI source image and Boomslang notebooks.
+- [Configuration](docs/configuration.md): compile-time presets and runtime options.
+  Read current shipping choices with
+  `python3 scripts/acacia-config.py list-group docker_default`.
+- [Benchmarks](benchmarking/README.md): local runs and measurement gates;
+  [results](benchmarking/RESULTS.md) records comparisons. Use matched release
+  builds for performance work.
 
 ## Citing
 
@@ -109,6 +72,5 @@ builds for performance comparisons.
 }
 ```
 
-The software is licensed under [GPLv3](LICENSE). See the
-[changelog](CHANGELOG.md) for user-visible changes and
-[CLAUDE.md](CLAUDE.md) for development conventions.
+Licensed under [GPLv3](LICENSE). See the [changelog](CHANGELOG.md) for releases
+and [CLAUDE.md](CLAUDE.md) for repository conventions.
