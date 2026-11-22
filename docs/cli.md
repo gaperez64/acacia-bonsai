@@ -65,6 +65,26 @@ targets. Request synthesis in the solver call; a verdict alone does not write
 a controller. The [Docker synthesis wrapper](../Docker/README.md#write-a-controller)
 can send the circuit to stdout.
 
+`--aiger-mode MODE` selects Spot's runtime encoder for every synthesis route.
+The default is `isop`, preserving existing controller bytes. Use `ite` (if-then-else),
+`isop` (irredundant sum of products), or `both` (try both and keep the smaller encoding).
+Append `+dc` to use output don't-cares, `+ud` to try negated conditions too, and
+`+sub0`, `+sub1`, or `+sub2` for no splitting, input/latch/gate splitting (ISOP),
+or common-subexpression search. Modifiers may appear in any order; repeated
+modifiers follow Spot's behavior (the last `subN` wins). For example:
+
+```bash
+"$build_dir/src/acacia-bonsai" -T examples/realizable.tlsf -s controller.aag \
+  --aiger-mode both+dc+ud
+```
+
+Spot 2.16 also accepts `optim` (experimental global BDD encoding) and a
+comma-separated list of alternatives, retaining the circuit with the fewest
+gates. Empty methods/modifiers and unknown tokens are rejected at parse time.
+The flag is case-sensitive; the dual modifier is spelled `+ud`, not `+dual`.
+This option changes encoding only; strategy extraction and minimization stay
+at their existing settings. Compare sizes only after independent verification.
+
 ## Choose solver workers
 
 The default portfolio runs several solver workers, called **arms**. They try

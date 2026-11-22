@@ -270,8 +270,8 @@ namespace acacia::parity_route {
       stage ("encode-controller", [&] {
         if (not output.controller)
           throw std::runtime_error ("missing controller strategy");
-        output.circuit =
-            spot::mealy_machine_to_aig (output.controller, "isop", input.inputs, input.outputs);
+        output.circuit = spot::mealy_machine_to_aig (output.controller, config.aiger_mode.c_str (),
+                                                     input.inputs, input.outputs);
         if (input.moore and input.frame == timing_frame::effective_mealy)
           output.circuit = acacia::synthesis::mealy_to_moore (output.circuit, true);
       });

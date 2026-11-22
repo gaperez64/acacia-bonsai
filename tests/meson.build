@@ -726,6 +726,10 @@ controller_check = executable (
   'controller-check', 'controller_check.cc',
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
+test ('aiger-mode', py,
+      args : [files ('check-aiger-mode.py'), ab_exe, controller_check],
+      suite : ['unit', 'cli', 'synthesis'], timeout : 120,
+      depends : [ab_exe, controller_check])
 test ('controller-check', py,
       args : [files ('check-controller.py'), ab_exe, controller_check],
       suite : ['unit', 'synthesis'], timeout : 120,
