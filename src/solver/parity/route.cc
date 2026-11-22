@@ -6,6 +6,7 @@
 #include "solver/spot_nba_fastpath.hh"
 #include "solver/synthesis_rendezvous.hh"
 #include "solver/translator_options.hh"
+#include <spot/twaalgos/mealy_machine.hh>
 
 #include <algorithm>
 #include <chrono>
@@ -26,6 +27,7 @@
 #include <spot/twaalgos/translate.hh>
 #include <spot/twaalgos/zlktree.hh>
 #include <stdexcept>
+#include <tuple>
 
 namespace acacia::parity_route {
   namespace {
@@ -51,6 +53,21 @@ namespace acacia::parity_route {
         throw std::runtime_error ("deterministic conversion did not produce Buchi acceptance");
       return aut;
     }
+  }
+
+  void reduce_controller (spot::twa_graph_ptr& controller, mealy_reduction reduction) {
+    if (not controller or reduction == mealy_reduction::none)
+      return;
+    // shortcut: skip large graphs; use a cancellable reducer before raising these limits.
+    if (controller->num_states () > 512 or controller->num_edges () > 8192)
+      return;
+    unsigned nodes = 0;
+    for (const auto& edge : controller->edges ()) {
+      nodes += bdd_nodecount (edge.cond);
+      if (nodes > 65536)
+        return;
+    }
+    spot::simplify_mealy_here (controller, reduction == mealy_reduction::bisim ? 1 : 2, false);
   }
 
   classification classify (spot::twa_graph_ptr worker) {
@@ -269,6 +286,25 @@ namespace acacia::parity_route {
         else
           output.controller = spot::solved_game_to_separated_mealy (arena, synthesis);
       });
+      if (config.reduction != mealy_reduction::none)
+        stage ("reduce-controller",
+               [&] { reduce_controller (output.controller, config.reduction); });
+      if (config.reduction == mealy_reduction::reselect and output.tier == 4 and
+          arena->num_states () <= 2048 and arena->num_edges () <= 8192 and arena->num_sets () <= 4)
+        stage ("reselect-controller", [&] {
+          auto alternative = spot::make_twa_graph (spot::const_twa_graph_ptr (arena),
+                                                   spot::twa::prop_set::all (), true);
+          // Re-solve after reordering: arbitrary changes to winning edges can lose liveness.
+          alternative->get_graph ().sort_edges_of_<true> (
+              [] (const auto& left, const auto& right) { return left.dst < right.dst; });
+          if (not spot::solve_parity_game (alternative, true))
+            throw std::runtime_error ("strategy reselection changed the winning player");
+          auto candidate = spot::solved_game_to_separated_mealy (alternative, synthesis);
+          reduce_controller (candidate, config.reduction);
+          if (std::tuple (candidate->num_states (), candidate->num_edges ()) <
+              std::tuple (output.controller->num_states (), output.controller->num_edges ()))
+            output.controller = std::move (candidate);
+        });
       stage ("encode-controller", [&] {
         if (not output.controller)
           throw std::runtime_error ("missing controller strategy");

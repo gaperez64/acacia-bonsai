@@ -347,8 +347,11 @@ Acacia rejects encoder modes containing `+dc` at parse time because they can
 produce incorrect controllers with its original BDD dictionary; see issue
 #466. Other encoder modes remain available; see the
 [CLI guide](../docs/cli.md#write-a-controller).
-The runner does not change the synthesis portfolio or encoder on its own. Read
-the shipping members from the registry; do not substitute a fixed list. For example, on a memory-constrained host:
+The runner does not change the synthesis portfolio or encoder on its own.
+`--parity-mealy-reduction none|bisim|bisim-output|reselect` selects bounded, synthesis-only
+strategy simplification; use labelled arguments to compare it on the same binary.
+See the [CLI guide](../docs/cli.md#write-a-controller) for limits and defaults.
+Read the shipping members from the registry; do not substitute a fixed list. For example, on a memory-constrained host:
 
 ```bash
 # Activate the environment for your installed Spot and C++ toolchain first.

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "solver/parity/game.hh"
+#include "solver/parity/mealy_reduction.hh"
 
 #include <functional>
 #include <memory>
@@ -23,6 +24,7 @@ namespace acacia::parity_route {
   struct options {
       bool synthesis = true;
       std::string aiger_mode = "isop";
+      mealy_reduction reduction = default_mealy_reduction;
       bool use_lar = false;
       bool verify = false;
       // Cooperative checks around opaque Spot calls and before publishing a verdict.
@@ -39,6 +41,9 @@ namespace acacia::parity_route {
       spot::twa_graph_ptr buchi;
   };
   classification classify (spot::twa_graph_ptr worker);
+
+  // Exact specialization; oversized machines retain their original strategy.
+  void reduce_controller (spot::twa_graph_ptr& controller, mealy_reduction reduction);
 
   // Seconds < 0 is stage entry; completed stages publish size and elapsed time.
   using observer = std::function<void (const char*, const spot::twa_graph_ptr&, double)>;

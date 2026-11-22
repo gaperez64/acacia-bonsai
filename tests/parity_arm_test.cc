@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <spot/tl/parse.hh>
+#include <spot/twaalgos/game.hh>
+#include <spot/twaalgos/mealy_machine.hh>
 #include <spot/twaalgos/translate.hh>
 #include <stdexcept>
 
@@ -70,6 +72,59 @@ void check_controller (const spot::aig_ptr& circuit, spot::formula specification
            "exported controller violates the specification");
 }
 
+void check_reductions () {
+  for (auto reduction : {route::mealy_reduction::none, route::mealy_reduction::bisim,
+                         route::mealy_reduction::bisim_output, route::mealy_reduction::reselect}) {
+    auto machine = spot::make_twa_graph (spot::make_bdd_dict ());
+    const auto i = bdd_ithvar (machine->register_ap (spot::formula::ap ("i")));
+    const auto o = bdd_ithvar (machine->register_ap (spot::formula::ap ("o")));
+    spot::set_synthesis_outputs (machine, o);
+    machine->new_states (2);
+    machine->set_init_state (0);
+    machine->new_edge (0, 1, !i);
+    machine->new_edge (0, 0, i & o);
+    machine->new_edge (1, 1, (!i) & (!o));
+    machine->new_edge (1, 0, i & o);
+    const auto original = spot::split_separated_mealy (machine);
+    route::reduce_controller (machine, reduction);
+    require (machine->num_states () == (reduction == route::mealy_reduction::none or
+                                                reduction == route::mealy_reduction::bisim
+                                            ? 2u
+                                            : 1u),
+             "output assignment did not merge compatible states");
+    require (spot::is_split_mealy_specialization (original, spot::split_separated_mealy (machine)),
+             "reduction did not specialize the original controller");
+    check_controller (spot::mealy_machine_to_aig (machine, "isop", {"i"}, {"o"}),
+                      formula ("G(i -> o)"), false);
+    if (reduction == route::mealy_reduction::none)
+      continue;
+    // Each size guard must preserve the original graph, including unreachable states.
+    machine->new_states (513 - machine->num_states ());
+    auto edges = machine->num_edges ();
+    route::reduce_controller (machine, reduction);
+    require (machine->num_states () == 513 && machine->num_edges () == edges,
+             "state cap changed the controller");
+    machine->purge_unreachable_states ();
+    while (machine->num_edges () <= 8192)
+      machine->new_edge (0, 0, bddtrue);
+    route::reduce_controller (machine, reduction);
+    require (machine->num_edges () == 8193, "edge cap changed the controller");
+    auto labels = spot::make_twa_graph (machine->get_dict ());
+    labels->copy_ap_of (machine);
+    spot::set_synthesis_outputs (labels, o);
+    labels->new_states (2);
+    labels->set_init_state (0);
+    bdd condition = o;
+    for (unsigned bit = 0; bit < 16; ++bit)
+      condition &= bdd_ithvar (labels->register_ap ("v" + std::to_string (bit)));
+    for (unsigned edge = 0; edge < 4096; ++edge)
+      labels->new_edge (0, 1, condition);
+    route::reduce_controller (labels, reduction);
+    require (labels->num_states () == 2 && labels->num_edges () == 4096,
+             "BDD node cap changed the controller");
+  }
+}
+
 int main (int argc, char** argv) {
   try {
     if (argc == 5 && std::string (argv[1]) == "--check-controller") {
@@ -77,6 +132,7 @@ int main (int argc, char** argv) {
       check_controller (circuit, formula (argv[3]), std::string (argv[4]) == "moore");
       return 0;
     }
+    check_reductions ();
     const char* specifications[] = {"", "FG !x", "FG !x | FG !y", "G x", "GF x"};
     for (unsigned tier = 1; tier <= 4; ++tier)
       for (bool moore : {false, true})
@@ -98,8 +154,9 @@ int main (int argc, char** argv) {
             published = true;
           };
           auto answer = route::run (input, decision, [&] (const char* stage, const auto&, double) {
-            exported |=
-                std::string (stage) == "strategy" || std::string (stage) == "encode-controller";
+            exported |= std::string (stage) == "strategy" ||
+                        std::string (stage) == "reduce-controller" ||
+                        std::string (stage) == "encode-controller";
             verification |= std::string (stage).starts_with ("verify-");
           });
           require (published && !exported && !verification && !answer.circuit,
@@ -118,7 +175,7 @@ int main (int argc, char** argv) {
           };
           auto made =
               route::run (input, synthesis, [&] (const char* stage, const auto&, double) {
-                if (std::string (stage) == "strategy" ||
+                if (std::string (stage) == "strategy" || std::string (stage) == "reduce-controller" ||
                     std::string (stage) == "encode-controller")
                   require (selected, "controller construction preceded selection");
               });
@@ -163,7 +220,8 @@ int main (int argc, char** argv) {
         selected = true;
       };
       auto answer = route::run (input, synthesis, [&] (const char* stage, const auto&, double) {
-        if (std::string (stage) == "strategy" || std::string (stage) == "encode-controller")
+        if (std::string (stage) == "strategy" || std::string (stage) == "reduce-controller" ||
+            std::string (stage) == "encode-controller")
           require (selected, "controller construction preceded selection");
       });
       require (selected && answer.circuit, "missing selected controller");

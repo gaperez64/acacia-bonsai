@@ -7,6 +7,7 @@
 #include "solver/game_backend.hh"
 #include "solver/obligation_memory.hh"
 #include "solver/oracle_layout.hh"
+#include "solver/parity/mealy_reduction.hh"
 #include "solver/solver_invoker.hh"
 #include "tlsf_frontend.hh"
 #include "utils/verbose.hh"
@@ -76,6 +77,8 @@ struct arg_parse_result {
     SPOT_FAST_T spot_fast = SPOT_FAST_DET;
     std::optional<std::string> synth_fname = std::nullopt;
     std::string aiger_mode = "isop";
+    acacia::parity_route::mealy_reduction parity_mealy_reduction =
+        acacia::parity_route::default_mealy_reduction;
     bool formula_specified = false;
     bool inputs_specified = false;
     bool outputs_specified = false;
