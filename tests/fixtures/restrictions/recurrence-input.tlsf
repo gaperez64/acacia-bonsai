@@ -1,0 +1,10 @@
+// Adapted from SYNTCOMP; attribution and changes in ../README.md.
+INFO { TITLE: "Recurrence monitor" SEMANTICS: Mealy TARGET: Mealy }
+GLOBAL { PARAMETERS { n = 3; }
+  DEFINITIONS { all_event(bus) = &&[0 <= i < SIZEOF bus] (G F bus[i]); }
+}
+MAIN {
+  INPUTS { p[n]; q; r; }
+  OUTPUTS { acc; }
+  GUARANTEES { !((all_event(p)) -> G(q -> F r)) <-> G F acc; }
+}

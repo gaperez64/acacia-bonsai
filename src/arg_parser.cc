@@ -66,7 +66,8 @@ void show_help (const char* program_name) {
       << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] "
          "game backend for real arms\n"
       << "  --real-provider VAL      use "
-         "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager|closure-recurrence] automaton "
+         "[frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager|closure-recurrence]"
+         " automaton "
          "provider (default frozen-graph)\n"
       << "  --automaton-provider VAL alias for --real-provider\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal "
@@ -118,6 +119,8 @@ void show_help (const char* program_name) {
       << "                    headroom enforces the equal share only when the solver's\n"
       << "                    memory scope is nearly exhausted; without a readable limit,\n"
       << "                    it behaves like equal\n"
+      << "  --restriction-prepass VAL [on|off] bounded one-sided TLSF restrictions (default on; "
+         "decision only)\n"
       << "  --r-prepass VAL   [on|off] R discovery/candidates in combined native arms (default "
          "on)\n"
       << "  --lift-max-predicate-arity N\n"
@@ -134,13 +137,15 @@ void show_help (const char* program_name) {
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det]\n"
       << "  --translation-effort VAL  native translation effort [high|medium|low]\n"
       << "                    build default: " << ACACIA_DEFAULT_TRANSLATION_EFFORT << '\n'
-      << "                    when given, replaces the build default entirely (implicit level high)\n"
+      << "                    when given, replaces the build default entirely (implicit level "
+         "high)\n"
       << "                    comma-separated LEVEL and ARM=LEVEL entries; one bare level sets\n"
       << "                    the default; arm overrides win, with the last override used\n"
       << "                    overrides apply only to translating arms (frozen-graph, and\n"
       << "                    closure-recurrence with --candidate-mode fallback)\n"
       << "                    ARM must match a selected translation arm exactly; :provider may\n"
-      << "                    be omitted only if unique; if given, it matches the effective provider\n"
+      << "                    be omitted only if unique; if given, it matches the effective "
+         "provider\n"
       << "                    build overrides without an active translating arm are ignored;\n"
       << "                    runtime overrides for inactive or unsupported arms are errors\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
@@ -441,6 +446,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   int opt;
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
+  static constexpr int OPT_RESTRICTION_PREPASS = 1019;
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_OBLIGATION_MEMORY_SHARE = 1015;
   static constexpr int OPT_PARITY_MEMORY_SHARE = 1016;
@@ -483,6 +489,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"weakening-attempt-ms", optional_argument, nullptr, OPT_WEAKENING_ATTEMPT_MS},
       {"weakening-total-ms", optional_argument, nullptr, OPT_WEAKENING_TOTAL_MS},
       {"r-prepass", required_argument, nullptr, OPT_R_PREPASS},
+      {"restriction-prepass", required_argument, nullptr, OPT_RESTRICTION_PREPASS},
       {"lift-max-predicate-arity", required_argument, nullptr, OPT_LIFT_MAX_PREDICATE_ARITY},
       {"equivariance", required_argument, nullptr, OPT_EQUIVARIANCE},
       {"equivariance-budget", required_argument, nullptr, OPT_EQUIVARIANCE_BUDGET},
@@ -667,18 +674,23 @@ arg_parse_result arg_parser (int argc, char** argv) {
         break;
       }
       case OPT_R_PREPASS:
+      case OPT_RESTRICTION_PREPASS:
       case OPT_EQUIVARIANCE: {
         const bool enabled = case_insensitive_equals (optarg, "on");
         if (!enabled && !case_insensitive_equals (optarg, "off"))
           error (EXIT_CODE_ERROR, "Error: --%s expects on or off.\n",
-                 opt == OPT_R_PREPASS ? "r-prepass" : "equivariance");
+                 opt == OPT_R_PREPASS             ? "r-prepass"
+                 : opt == OPT_RESTRICTION_PREPASS ? "restriction-prepass"
+                                                  : "equivariance");
 #if !ACACIA_ENABLE_EQUIVARIANT_SOLVER
         if (opt == OPT_EQUIVARIANCE && enabled)
           error (EXIT_CODE_ERROR,
                  "Error: --equivariance on requires a binary built with "
                  "-Dacacia_enable_equivariant_solver=true.\n");
 #endif
-        (opt == OPT_R_PREPASS ? retval.r_prepass : retval.equivariance) = enabled;
+        (opt == OPT_R_PREPASS             ? retval.r_prepass
+         : opt == OPT_RESTRICTION_PREPASS ? retval.restriction_prepass
+                                          : retval.equivariance) = enabled;
         break;
       }
       case OPT_ORACLE_LAYOUT: {

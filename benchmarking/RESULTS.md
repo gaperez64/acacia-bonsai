@@ -12,6 +12,59 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-22: One-sided restrictions add ten solves at 17 s (#465, #451)
+
+Archive `restrict451-20261122` (release `evidence-2026-11-22-restrict451`). #465 adds
+a bounded prepass inside the existing formula workers, so there is no new arm. It
+has two kinds of attempt:
+
+- **Merged inputs.** Every member of a declared input index family is replaced by its
+  first member, in up to three attempts of 500 ms each and 1 s in total. Only an
+  UNREALIZABLE answer is accepted.
+- **Fixed outputs.** All scalar outputs are set to false, in one attempt of 200 ms.
+  Only a REALIZABLE answer is accepted.
+
+The substitution covers the complete positive objective, under the original
+ownership map, before any unreal-side negation or player exchange. tlsf-tools
+`Restriction.lean` (#149) proves that each kind transfers only its own polarity.
+Each attempt runs in a subprocess capped at 512 MiB, and the prepass is skipped
+under `-s`.
+
+**Local G3** ran under the regime of `g3-local-20261120`: `--scope-mode instance`,
+a 6G cap and 17 s. The base is the #449 head binary `26fccc41`, which is
+solver-identical to the branch's merge base, and there is a base-vs-base control.
+
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| #465 `0071d532` | 164 → 164 / 772.8 → 755.0 s | 167 → 167 / 593.2 → 573.0 s | PASS |
+| control (base vs base) | 164 → 164 / 772.1 → 774.9 s | 167 → 167 / 590.1 → 592.4 s | PASS |
+
+No verdict changed. Both panels are about 18 to 20 s faster, while the control
+moves by 2 to 3 s.
+
+**Full-corpus screen.** All 1,524 SYNTCOMP26 inputs ran at 17 s, serially, under
+the same 6G scope, against the base's screen in `lift437b-20261121`. #465 solves
+1,384 against 1,374, and PAR-2 falls from 6,253.6 to 5,878.1 s. The ten gains are
+exactly the ones #370 predicted:
+
+- collector_v3 n=10–13 and 15, REALIZABLE in 0.14 to 0.17 s;
+- ltl2dba_theta n=25, 50, 100 and 300, UNREALIZABLE in 0.14 to 0.28 s;
+- ltl2dba_C2_unreal n=100, UNREALIZABLE in 0.47 s.
+
+theta n=500 stays unsolved. There are no losses and no verdict conflicts. Three
+inputs both binaries solve are more than 1 s slower, all simple_arbiter_enc, whose
+merged-input attempt runs into its 500 ms cap: n=16 goes from 12.1 to 14.8 s, n=10
+from 6.9 to 8.4 s and n=11 from 6.5 to 7.6 s.
+
+**Attempts.** The phase records hold 1,441 finished attempts on 1,155 inputs.
+The median took 11 ms; 235 reached their deadline, the slowest after 529 ms. 201
+transferred a verdict: 190 UNREALIZABLE from merged inputs and 11 REALIZABLE from
+fixed outputs. None conflicts with the expected status or with the base's verdict.
+
+**Renamed corpus.** The same binary on the tlsfobf rename corpus (seed 145) solves
+the same 1,384 inputs with the same verdicts, with no coverage flips or exclusions.
+PAR-2 is 5,860.1 s against 5,878.1 s on the plain corpus.
+
 ## 2026-11-22: The first synthesis member is the right one, but best-of-four controllers are half the size (#280)
 
 Archive `syn280-20261122` (release `evidence-2026-11-22-syn280`). This is the first

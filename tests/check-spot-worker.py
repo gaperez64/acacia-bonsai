@@ -30,6 +30,7 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ {formula}; }} }}
             env = dict(os.environ, ACACIA_SPOT_CAPTURE_DIR=str(captures))
             backend = "spot-guarded-sparse" if provider.startswith("closure") else "spot-guarded"
             command = [binary, "-T", str(spec),
+                       "--restriction-prepass", "off",
                        "--spot-fast", "off", "-K", "5",
                        "--arms", f"{arm}:{backend}:{provider}"]
             result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=10)
@@ -83,6 +84,7 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G(i <-> X(o)); } }
             env = dict(os.environ, ACACIA_SPOT_CAPTURE_DIR=str(captures))
             env[limit] = cap
             command = [binary, "-T", str(spec),
+                       "--restriction-prepass", "off",
                        "--spot-fast", "off", "-K", "5",
                        "--arms", f"real:small:spot-guarded-sparse:{provider}",
                        "--candidate-mode", "fallback"]
