@@ -87,6 +87,7 @@ namespace acacia {
                              "parity-route");
       parity_route::options config;
       config.synthesis = args.synth_fname.has_value ();
+      config.aiger_mode = args.aiger_mode;
       unsigned tier = 0;
       config.on_classified = [&] (unsigned value, const std::string&) {
         tier = value;

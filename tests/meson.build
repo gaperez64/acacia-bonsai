@@ -726,6 +726,19 @@ controller_check = executable (
   'controller-check', 'controller_check.cc',
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
+aiger_mode_test = executable (
+  'aiger-mode-test', 'aiger_mode_test.cc',
+  objects : ab_exe.extract_objects (
+    'solver/solver_invoker.cc', 'solver/solve_game_vector.cc',
+    'solver/restriction_prepass.cc', 'solver/obligation_helper.cc',
+    'solver/mealy_to_moore.cc'),
+  link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib],
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps)
+test ('aiger-mode', py,
+      args : [files ('check-aiger-mode.py'), ab_exe, controller_check, aiger_mode_test],
+      suite : ['unit', 'cli', 'synthesis'], timeout : 120,
+      depends : [ab_exe, controller_check, aiger_mode_test])
 test ('controller-check', py,
       args : [files ('check-controller.py'), ab_exe, controller_check],
       suite : ['unit', 'synthesis'], timeout : 120,

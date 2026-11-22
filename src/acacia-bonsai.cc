@@ -417,9 +417,9 @@ namespace {
           result = {outcome::inapplicable, "non_obligation"};
         else {
           acacia::worker_stage ("obligation_synthesis");
-          result = acacia::obligation::solve (objective, spec.inputs, spec.outputs,
-                                              acacia::obligation::timing::mealy,
-                                              args.synth_fname.has_value (), conversion);
+          result = acacia::obligation::solve (
+              objective, spec.inputs, spec.outputs, acacia::obligation::timing::mealy,
+              args.synth_fname.has_value (), conversion, args.aiger_mode);
           if (result.value == outcome::real && args.synth_fname) {
             acacia::accounting_phase output ("obligation_output");
             try {
@@ -565,7 +565,7 @@ namespace {
                                                                   : arg_values.synth_fname,
         arg_values.objective.metadata, provider, arg_values.candidate, arg_values.equivariance,
         deadline_mono_ns, arg_values.tlsf_sha256, arg_values.weakening, eligibility_channel,
-        arg_values.arms->size (), restrictions);
+        arg_values.arms->size (), restrictions, arg_values.aiger_mode);
     if (res && g_synthesis)
       acacia::synthesis::await_selection (arm.unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL);
     verb_do (1, vout << "returning " << res << "\n");

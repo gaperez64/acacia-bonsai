@@ -325,9 +325,30 @@ declines/stops and descendant resource usage separately.
 ## Synthesis size
 
 `synthesis-size.py` measures each explicitly labelled member binary with `-s`,
-then checks the emitted controller in a separate invocation. It does not change
-the synthesis portfolio or encoder. Read the shipping members from the registry;
-do not substitute a fixed list. For example, on a memory-constrained host:
+then checks the emitted controller in a separate invocation. Optional
+`--extra-args MEMBER='ARGS'` shell-splits solver arguments for that label only;
+it never runs a shell or forwards these arguments to the checker. A binary may
+appear under several labels, each measured and verified independently:
+
+```bash
+python3 -s benchmarking/synthesis-size.py \
+  --bin baseline=/path/to/acacia-bonsai --bin candidate=/path/to/acacia-bonsai \
+  --extra-args candidate='--aiger-mode both+ud' \
+  --checker /path/to/controller-check --list panel.list \
+  --tlsf-map tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv \
+  --tlsf-corpus /path/to/materialized-corpus --timeout 17 --verify-timeout 60 \
+  --systemd-scope --memory-max 5G --memory-swap-max 0 --output /path/to/new-run
+```
+
+Each label accepts one `--extra-args` entry; unknown or repeated labels and
+malformed shell quoting are errors. Omitted labels get no extra arguments.
+`run.json` records both the supplied entries and their parsed `solver_args`.
+Acacia rejects encoder modes containing `+dc` at parse time because they can
+produce incorrect controllers with its original BDD dictionary; see issue
+#466. Other encoder modes remain available; see the
+[CLI guide](../docs/cli.md#write-a-controller).
+The runner does not change the synthesis portfolio or encoder on its own. Read
+the shipping members from the registry; do not substitute a fixed list. For example, on a memory-constrained host:
 
 ```bash
 # Activate the environment for your installed Spot and C++ toolchain first.

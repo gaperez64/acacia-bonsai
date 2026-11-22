@@ -1,10 +1,11 @@
 #include "arg_parser.hh"
 
 #include "phase_records.hh"
+#include "solver/aiger_mode.hh"
 #include "utils/parse_text.hh"
 
-#include <cmath>
 #include <charconv>
+#include <cmath>
 #include <utility>
 
 /**
@@ -39,6 +40,12 @@ void show_help (const char* program_name) {
       << "Allowed options:\n"
       << "  -h, --help        print this help message\n"
       << "  -s FILE           synthesize controller and store in FILE\n"
+      << "  --aiger-mode MODE  Spot encoding (default isop): ite|isop|both|optim\n"
+      << "                    with +ud, +sub0|+sub1|+sub2 in any order;\n"
+      << "                    comma-separated alternatives keep the smallest circuit\n"
+      << "                    a canonical subset of Spot's syntax: no empty components\n"
+      << "                    +dc is disabled: incorrect controllers; "
+         "see issue #466\n"
       << "  -V, --version     print program version and configuration\n"
       << "  -f STRING         process the formula STRING\n"
       << "  -F VAL            process formula in file VAL\n"
@@ -446,6 +453,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   int opt;
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
+  static constexpr int OPT_AIGER_MODE = 1020;
   static constexpr int OPT_RESTRICTION_PREPASS = 1019;
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
   static constexpr int OPT_OBLIGATION_MEMORY_SHARE = 1015;
@@ -473,6 +481,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"version", no_argument, nullptr, 'V'},
       {"help", no_argument, nullptr, 'h'},
       {"oracle-layout", required_argument, nullptr, OPT_ORACLE_LAYOUT},
+      {"aiger-mode", required_argument, nullptr, OPT_AIGER_MODE},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
       {"translation-effort", required_argument, nullptr, OPT_TRANSLATION_EFFORT},
       {"unreal-translation-pref", required_argument, nullptr, OPT_UNREAL_TRANSLATION_PREF},
@@ -583,6 +592,11 @@ arg_parse_result arg_parser (int argc, char** argv) {
         process_arg_unreal (optarg, retval);
         break;
       case 's': retval.synth_fname = optarg; break;
+      case OPT_AIGER_MODE: {
+        acacia::synthesis::validate_aiger_mode (optarg);
+        retval.aiger_mode = optarg;
+        break;
+      }
       case OPT_REAL_PROVIDER:
         process_arg_provider (optarg, retval.real_provider, "real-provider");
         break;
