@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise one-sided admission, fallback, alpha-renaming and decision-only synthesis."""
 
+import json
 import os
 from pathlib import Path
 import runpy
@@ -21,7 +22,7 @@ def main():
         root = Path(temporary)
         sequence = 0
 
-        def run(source, arm, *, enabled=True, synthesis=False):
+        def run(source, arm, *, enabled=True, synthesis=False, capture=False):
             nonlocal sequence
             sequence += 1
             directory = root / str(sequence)
@@ -30,6 +31,10 @@ def main():
                        ACACIA_PHASE_INVOCATION=f"restriction-{sequence}")
             command = [str(binary), "-T", str(source), "--arms", arm, "-K", "4",
                        "--restriction-prepass", "on" if enabled else "off"]
+            if capture:
+                env["ACACIA_SPOT_CAPTURE_DIR"] = str(directory / "captures")
+                command += ["--spot-fast", "off", "--weakening", "off",
+                            "--candidate-mode", "only"]
             controller = directory / "controller.aag"
             if synthesis:
                 command += ["-s", str(controller)]
@@ -70,9 +75,6 @@ def main():
             ("input-polarity", "p[2];", "o;", "p[0] <-> p[1]",
              "unreal:formula:backward", 1),
             ("output-polarity", "i;", "p;", "p", "real:small:backward", 0),
-            # Negation/ownership exchange without the input shift would wrongly prove UNREAL.
-            ("causal-frame", "p[2];", "o;", "G (o <-> (p[0] || p[1]))",
-             "unreal:formula:backward", 2),
         ):
             source = root / (name + ".tlsf")
             source.write_text('INFO { TITLE: "polarity" SEMANTICS: Mealy TARGET: Mealy }\n'
@@ -81,6 +83,34 @@ def main():
             result, attempts, _ = run(source, arm)
             assert result.returncode == verdict, result
             assert attempts and all(r["outcome"] != "accepted" for r in attempts), attempts
+
+        def causal_frame(objective, *, enabled):
+            source = root / "causal-frame.tlsf"
+            source.write_text('INFO { TITLE: "causal frame" SEMANTICS: Mealy TARGET: Mealy }\n'
+                              'MAIN { INPUTS { p[2]; } OUTPUTS { o; } '
+                              f'GUARANTEES {{ {objective}; }} }}\n')
+            result, attempts, controller = run(
+                source, "unreal:formula:spot-guarded-sparse:closure-buchi",
+                enabled=enabled, capture=True)
+            captures = [json.loads(p.read_text())
+                        for p in (controller.parent / "captures").glob("*.json")]
+            assert len(captures) == 1, (result, attempts, captures)
+            worker = captures[0]
+            assert worker["route"] == "closure-buchi" and worker["transform"] == "formula", worker
+            assert worker["inputs"] == ["o"] and worker["outputs"] == ["p_0", "p_1"], worker
+            assert float(worker["verification_ms"]) >= 0, worker
+            return result, attempts, worker
+
+        # Closure skips the direct-strategy shortcut and reaches the transformed unreal game.
+        result, attempts, worker = causal_frame("X (o <-> (p[0] || p[1]))", enabled=True)
+        assert result.returncode == 2 and worker["status"] == "LOSE_K", (result, worker)
+        assert attempts and all(r["outcome"] != "accepted" for r in attempts), attempts
+        assert worker["worker_formula"] == "X((p_0 | p_1) <-> Xo)", worker
+        # Mutation: shifting o in o <-> X P gives Xo <-> X P, equivalent to the first
+        # objective with its worker shift omitted. That game wrongly proves UNREAL.
+        mutant, _, worker = causal_frame("o <-> X (p[0] || p[1])", enabled=False)
+        assert worker["worker_formula"] == "X(p_0 | p_1) <-> Xo", worker
+        assert mutant.returncode == 1 and worker["status"] == "WIN_K", (mutant, worker)
 
         result, attempts, controller = run(fixtures / "scalar-output.tlsf",
                                             "real:small:backward", synthesis=True)

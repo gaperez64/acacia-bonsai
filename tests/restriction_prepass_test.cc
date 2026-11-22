@@ -3,6 +3,7 @@
 #include "error_msg.hh"
 #include "phase_records.hh"
 #include "solver/formula_input.hh"
+#include "solver/syntactic_bypass.hh"
 #include "tlsf_frontend.hh"
 
 #include <iostream>
@@ -16,6 +17,7 @@ namespace {
 }
 
 int main () {
+  unsetenv ("ACACIA_PHASE_RECORDS");
   using namespace acacia::restriction;
   using acacia::formula_input::parse;
   const auto p = spot::formula::ap ("p"), q = spot::formula::ap ("q");
@@ -114,6 +116,49 @@ int main () {
     sleep (2);
     return EXIT_CODE_UNREAL;
   }));
+#ifdef __linux__
+  check (!acacia::phase_records_enabled ());
+  check (acacia::resource_snapshot (getpid ()).rss_kb > 0);
+  rlimit original_limit {};
+  check (getrlimit (RLIMIT_AS, &original_limit) == 0);
+  acacia::worker_record worker;
+  acacia::active_worker_record () = &worker;
+  const auto objective = parse ("G(o <-> (p | q))");
+  int ready[2];
+  check (pipe (ready) == 0);
+  const auto started = acacia::phase_clock (CLOCK_MONOTONIC);
+  check (!try_prepass (objective, metadata, inputs, outputs, true, 0, [&] (auto) {
+    // Exercise the RSS watchdog even in builds that also enforce RLIMIT_AS.
+    check (setrlimit (RLIMIT_AS, &original_limit) == 0);
+    constexpr size_t bytes = size_t {640} * 1024 * 1024;
+    auto* memory = static_cast<volatile char*> (
+        mmap (nullptr, bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+    check (memory != MAP_FAILED);
+    const auto page_size = sysconf (_SC_PAGESIZE);
+    check (page_size > 0);
+    check (write (ready[1], "r", 1) == 1);
+    for (size_t offset = 0; offset < bytes; offset += size_t (page_size))
+      memory[offset] = 1;
+    usleep (20000);
+    return EXIT_CODE_UNREAL;
+  }));
+  close (ready[1]);
+  char allocated = 0;
+  check (read (ready[0], &allocated, 1) == 1 && allocated == 'r');
+  close (ready[0]);
+  // A deadline or an allocation failure must not masquerade as RSS enforcement.
+  check (acacia::phase_clock (CLOCK_MONOTONIC) - started < 500000000);
+  check (worker.stops == 1 && worker.declines == 0 && !worker.stopped && !worker.verified &&
+         worker.descendant_pid == -1);
+  acacia::active_worker_record () = nullptr;
+  rlimit after_limit {};
+  check (getrlimit (RLIMIT_AS, &after_limit) == 0 &&
+         after_limit.rlim_cur == original_limit.rlim_cur &&
+         after_limit.rlim_max == original_limit.rlim_max);
+  // Resume the ordinary direct solve on the untouched positive objective.
+  check (acacia::syntactic_bypass::try_direct (objective, outputs).value ==
+         acacia::syntactic_bypass::verdict::realizable);
+#endif
   int status;
   check (waitpid (-1, &status, WNOHANG) == -1 && errno == ECHILD);
   std::cout << "simultaneous full-objective substitution, ownership, polarity and bounded "
