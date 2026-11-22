@@ -6,6 +6,7 @@
 #include "native_param_lift_arm.hh"
 #include "native_support.hh"
 #include "parity_arm.hh"
+#include "symcount_arm.hh"
 #include "phase_records.hh"
 #include "solver/controller_writer.hh"
 #include "solver/obligation_helper.hh"
@@ -494,6 +495,8 @@ namespace {
                     arm.kind == portfolio_arm_kind::gr1_real_lift
                 ? acacia::run_native_gr1_lift_arm (arg_values, deadline_mono_ns,
                                                    arm.kind == portfolio_arm_kind::gr1_real_lift)
+            : arm.kind == portfolio_arm_kind::symcount
+                ? acacia::run_symcount_arm (arg_values, deadline_mono_ns)
                 : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns);
         if (result != EXIT_CODE_REAL && result != EXIT_CODE_UNREAL &&
             acacia::active_worker_record () &&
@@ -589,6 +592,7 @@ namespace {
       const char* backend = arm.legacy ? acacia::game_backend_name (arm.legacy->backend)
                             : arm.kind == portfolio_arm_kind::obligation ? "obligation"
                             : arm.kind == portfolio_arm_kind::parity ? "parity"
+                            : arm.kind == portfolio_arm_kind::symcount ? "symcount"
                                                                          : "oxidd";
       acacia::worker_record_text (record.requested_backend, backend);
       acacia::worker_record_text (record.effective_backend, backend);

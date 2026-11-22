@@ -498,6 +498,8 @@ game_backend_integration_sources += [
   '../src/native_gr1_arm.cc',
   '../src/native_gr1_lift_arm.cc',
   '../src/native_param_lift_arm.cc',
+  '../src/symcount_arm.cc',
+  '../src/solver/symmetric_count.cc',
 ]
 game_backend_integration_sources += '../src/tlsf_frontend.cc'
 preparation_fault_link_args = []

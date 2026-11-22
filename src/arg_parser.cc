@@ -106,7 +106,8 @@ void show_help (const char* program_name) {
       << "                    native -T arms: both:gr1:oxidd, both:gr1-lift:oxidd,\n"
       << "                    both:gr1-real-lift:oxidd,\n"
       << "                    real:gr1:oxidd, unreal:gr1:oxidd, and\n"
-      << "                    real:param-lift:oxidd (realizability only);\n"
+      << "                    real:param-lift:oxidd (realizability only), and\n"
+      << "                    both:symcount:spot (count-quotiented symmetric specs);\n"
       << "                    require -T FILE;\n"
       << "                    native arms have no provider and do not support -s\n"
       << "  --obligation-memory-share VAL [equal|alone] (default equal)\n"
@@ -370,6 +371,10 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
     case portfolio_arm_parse_error::parity_spec:
       error (EXIT_CODE_ERROR,
              "Error: parity arms require both:parity:spot or both:parity:oxidd without a provider.\n");
+      break;
+    case portfolio_arm_parse_error::symcount_spec:
+      error (EXIT_CODE_ERROR,
+             "Error: symcount arms require both:symcount:spot without a provider.\n");
       break;
     case portfolio_arm_parse_error::obligation_spec:
       error (EXIT_CODE_ERROR,

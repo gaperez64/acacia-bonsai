@@ -30,6 +30,8 @@ ab_sources += [
   'native_gr1_arm.cc',
   'native_gr1_lift_arm.cc',
   'native_param_lift_arm.cc',
+  'symcount_arm.cc',
+  'solver/symmetric_count.cc',
 ]
 ab_sources += 'tlsf_frontend.cc'
 
