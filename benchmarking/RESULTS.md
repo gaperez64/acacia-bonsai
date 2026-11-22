@@ -12,6 +12,49 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-22: Review fixes retain the 24-target restriction gains (#451)
+
+Source `dfaac38f2cc4` initializes RSS page size and CPU tick conversion independently
+of phase recording. The telemetry-off exhaustion regression restores only the
+test child's address-space allowance, crosses the RSS cap, checks bounded
+fallback/reaping and unchanged parent limits, then resumes the ordinary direct
+solve. It passes in release, checked and an ASan/UBSan restriction harness.
+The causal-frame regression now uses a temporal echo through closure-Buchi,
+asserts captured exchanged ownership and the shifted formula, and checks the
+missing-shift game. A separate executable with the shift removed makes the prepass
+accept erroneous UNREAL and fails this regression. No other telemetry-dependent
+limit or budget was found in the audit.
+
+The full release unit suite passes (99 passes, six expected mutation failures),
+with 1,084 source/attribution/phase pytest passes and one optional corpus skip;
+ruff and changed C++ formatting checks pass. The sanitizer check is limited to
+the restriction harness, using Clang's runtime with the project's GCC ASan guard
+explicitly defined and leak checking off; GCC's local ASan runtime is absent.
+
+Only the original 24 targets were rerun, serially at 17 s, 5G/no swap, using
+one frozen binary (`40a4ef39297c1cd046de7768342eb207b2b864f1e3fdf9764c78e487383fe141`).
+The local-only verified evidence is `restriction451-fix1-20261122`, indexed as
+**partial**. It includes the exact inputs, native attribution, raw rows, per-input
+comparison, phases, executable, build metadata and regression/mutation logs.
+The original 54-input campaign below remains separate historical evidence.
+
+| 24-target treatment | Solved | PAR-2 |
+|---|---:|---:|
+| Previous on | 16 | 286.573 s |
+| Fixed on | 16 | 285.431 s |
+| Previous off | 6 | 641.999 s |
+| Fixed off | 6 | 641.500 s |
+
+There are ten gains, no losses and no verdict conflicts against off and
+historical master; both treatments keep their previous coverage. Joint-solved
+time changes by -1.142 s (on) and -0.498 s (off) versus their previous runs.
+The largest on increase is +1.003 s (simple_arbiter_enc n=15), and the largest
+decrease is -1.139 s (collector_v3 n=10). These single runs do not establish a
+small timing effect beyond the documented 12.1 s noise floor. Theta n=500
+remains unresolved. There are 46 on-run restriction starts, 15 accepts,
+25 fallbacks and six censored starts; no dropped records or off-run attempts.
+No full-corpus or G3 admission is claimed.
+
 ## 2026-11-22: Bounded one-sided restrictions gain ten decisions on the requested local panel (#451)
 
 Local archive `restriction451-local-20261122` is verified and indexed as
