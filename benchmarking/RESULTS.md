@@ -12,116 +12,58 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
-## 2026-11-22: Review fixes retain the 24-target restriction gains (#451)
+## 2026-11-22: One-sided restrictions add ten solves at 17 s (#465, #451)
 
-Source `dfaac38f2cc4` initializes RSS page size and CPU tick conversion independently
-of phase recording. The telemetry-off exhaustion regression restores only the
-test child's address-space allowance, crosses the RSS cap, checks bounded
-fallback/reaping and unchanged parent limits, then resumes the ordinary direct
-solve. It passes in release, checked and an ASan/UBSan restriction harness.
-The causal-frame regression now uses a temporal echo through closure-Buchi,
-asserts captured exchanged ownership and the shifted formula, and checks the
-missing-shift game. A separate executable with the shift removed makes the prepass
-accept erroneous UNREAL and fails this regression. No other telemetry-dependent
-limit or budget was found in the audit.
+Archive `restrict451-20261122` (release `evidence-2026-11-22-restrict451`). #465 adds
+a bounded prepass inside the existing formula workers, so there is no new arm. It
+has two kinds of attempt:
 
-The full release unit suite passes (99 passes, six expected mutation failures),
-with 1,084 source/attribution/phase pytest passes and one optional corpus skip;
-ruff and changed C++ formatting checks pass. The sanitizer check is limited to
-the restriction harness, using Clang's runtime with the project's GCC ASan guard
-explicitly defined and leak checking off; GCC's local ASan runtime is absent.
+- **Merged inputs.** Every member of a declared input index family is replaced by its
+  first member, in up to three attempts of 500 ms each and 1 s in total. Only an
+  UNREALIZABLE answer is accepted.
+- **Fixed outputs.** All scalar outputs are set to false, in one attempt of 200 ms.
+  Only a REALIZABLE answer is accepted.
 
-Only the original 24 targets were rerun, serially at 17 s, 5G/no swap, using
-one frozen binary (`40a4ef39297c1cd046de7768342eb207b2b864f1e3fdf9764c78e487383fe141`).
-The local-only verified evidence is `restriction451-fix1-20261122`, indexed as
-**partial**. It includes the exact inputs, native attribution, raw rows, per-input
-comparison, phases, executable, build metadata and regression/mutation logs.
-The original 54-input campaign below remains separate historical evidence.
+The substitution covers the complete positive objective, under the original
+ownership map, before any unreal-side negation or player exchange. tlsf-tools
+`Restriction.lean` (#149) proves that each kind transfers only its own polarity.
+Each attempt runs in a subprocess capped at 512 MiB, and the prepass is skipped
+under `-s`.
 
-| 24-target treatment | Solved | PAR-2 |
-|---|---:|---:|
-| Previous on | 16 | 286.573 s |
-| Fixed on | 16 | 285.431 s |
-| Previous off | 6 | 641.999 s |
-| Fixed off | 6 | 641.500 s |
+**Local G3** ran under the regime of `g3-local-20261120`: `--scope-mode instance`,
+a 6G cap and 17 s. The base is the #449 head binary `26fccc41`, which is
+solver-identical to the branch's merge base, and there is a base-vs-base control.
 
-There are ten gains, no losses and no verdict conflicts against off and
-historical master; both treatments keep their previous coverage. Joint-solved
-time changes by -1.142 s (on) and -0.498 s (off) versus their previous runs.
-The largest on increase is +1.003 s (simple_arbiter_enc n=15), and the largest
-decrease is -1.139 s (collector_v3 n=10). These single runs do not establish a
-small timing effect beyond the documented 12.1 s noise floor. Theta n=500
-remains unresolved. There are 46 on-run restriction starts, 15 accepts,
-25 fallbacks and six censored starts; no dropped records or off-run attempts.
-No full-corpus or G3 admission is claimed.
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| #465 `0071d532` | 164 → 164 / 772.8 → 755.0 s | 167 → 167 / 593.2 → 573.0 s | PASS |
+| control (base vs base) | 164 → 164 / 772.1 → 774.9 s | 167 → 167 / 590.1 → 592.4 s | PASS |
 
-## 2026-11-22: Bounded one-sided restrictions gain ten decisions on the requested local panel (#451)
+No verdict changed. Both panels are about 18 to 20 s faster, while the control
+moves by 2 to 3 s.
 
-Local archive `restriction451-local-20261122` is verified and indexed as
-**partial, local-only**. This is the requested 24-input target set plus 30 varied
-inputs, not a full-corpus or G3 admission result. The other inputs were selected
-before measurement: six distinct families in each of five historical runtime
-bins, ordered by SHA-256. The archive contains every input, per-input comparison,
-phase records, frozen executables, calibration/corrections and validation logs.
+**Full-corpus screen.** All 1,524 SYNTCOMP26 inputs ran at 17 s, serially, under
+the same 6G scope, against the base's screen in `lift437b-20261121`. #465 solves
+1,384 against 1,374, and PAR-2 falls from 6,253.6 to 5,878.1 s. The ten gains are
+exactly the ones #370 predicted:
 
-The final release is source `c88f90d5`, preset `otf_sparse_formula_parity`, binary
-SHA-256 `1a645b85683ada96415c47c407c8603273596e64292ed3d3c38eab188eff4e24`.
-On and off use that same binary, serial 17 s invocations and 5G/no swap. The
-provided historical master table is source `26fccc41` at 6G; the new off run
-provides the direct control under the requested resource limit.
+- collector_v3 n=10–13 and 15, REALIZABLE in 0.14 to 0.17 s;
+- ltl2dba_theta n=25, 50, 100 and 300, UNREALIZABLE in 0.14 to 0.28 s;
+- ltl2dba_C2_unreal n=100, UNREALIZABLE in 0.47 s.
 
-| Panel | Master solved | Off solved | On solved | Master PAR-2 | Off PAR-2 | On PAR-2 |
-|---|---:|---:|---:|---:|---:|---:|
-| 24 targets | 6 | 6 | 16 | 642.918 s | 641.999 s | 286.573 s |
-| 30 varied | 24 | 24 | 24 | 278.250 s | 279.522 s | 279.627 s |
-| All 54 | 30 | 30 | 40 | 921.168 s | 921.520 s | 566.200 s |
+theta n=500 stays unsolved. There are no losses and no verdict conflicts. Three
+inputs both binaries solve are more than 1 s slower, all simple_arbiter_enc, whose
+merged-input attempt runs into its 500 ms cap: n=16 goes from 12.1 to 14.8 s, n=10
+from 6.9 to 8.4 s and n=11 from 6.5 to 7.6 s.
 
-There are **ten gains, zero losses and zero verdict conflicts**, against both
-master and off. Gains are collector_v3 n=10, 11, 12, 13, 15 (REALIZABLE),
-ltl2dba_C2_unreal n=100 and ltl2dba_theta n=25, 50, 100, 300 (UNREALIZABLE),
-in 0.130 to 1.303 s. Theta n=500 still times out after its restricted attempt
-expires. Already-solved C2 n=25 to 80 improve by 0.093 to 8.545 s against off.
-On the 30 varied inputs, on adds 0.105 s total against off; the joint-solved
-median delta is +0.013 s and the largest increase is +0.423 s
-(round_robin_arbiter_unreal1 n=4,4). Against historical master, that input adds
-0.822 s and the varied panel adds 1.377 s total. These single-run timing
-differences do not establish a small speedup or slowdown beyond noise.
+**Attempts.** The phase records hold 1,441 finished attempts on 1,155 inputs.
+The median took 11 ms; 235 reached their deadline, the slowest after 529 ms. 201
+transferred a verdict: 190 UNREALIZABLE from merged inputs and 11 REALIZABLE from
+fixed outputs. None conflicts with the expected status or with the base's verdict.
 
-The prepass keeps the six-arm preset. One existing formula-unreal arm tries
-at most three declaration-based input identifications, accepting only UNREAL;
-one existing real arm tries all scalar outputs false, accepting only REAL.
-It substitutes the complete positive effective Mealy Spot objective, including
-assumptions/strict guards, before the restricted worker's sign, timing or player
-transformation. AP ownership and declarations stay intact, with no TLSF
-reconversion. The eligibility source publishes normally before trying a
-restriction; other trial arms fork before full-objective simplification.
-`--restriction-prepass off` disables the default-on runtime option. `-s` uses
-the ordinary complete-controller path and skips these decision-only attempts.
-
-Input trials have 500 ms each / 1 s total; the single output trial has 200 ms.
-Each subprocess has a 512 MiB address-space/RSS limit. The first 200 ms
-calibration gained nine decisions but missed both large recurrence probes.
-A controlled fork of the same restricted formula, I/O map, game and search
-measured 164 ms to the first useful query after full-objective preparation
-versus 4 ms when forked earlier. The final placement and allowance gain n=300;
-the n=500 budget miss remains recorded rather than increasing the cap again.
-
-Final telemetry has 84 attempt starts, 70 ends and 14 starts censored by race
-termination. All 16 candidate accepts become parent winners (11 input, five
-output); the other completed attempts record 26 deadlines and 28 applicability
-fallbacks. Completed attempts have median 23 ms / p95 506 ms including cleanup;
-the longest completed prepass phase is 1.008 s. The largest reaped candidate
-process peak is 306.8 MiB including inherited mappings; the largest invocation
-cgroup peak is 3100.0 MiB on and 3100.1 MiB off. No record was dropped and at most
-six portfolio members were recorded.
-
-Validation: final nine affected release tests pass, including all three
-tlsfobf-renamed fixtures, polarity/causal-frame guards and complete `-s` outputs;
-983 source/attribution/phase pytest checks pass with one optional corpus skip.
-Before the final budget/placement changes, the full release unit suite had
-99 passes and six expected failures, with no failures. All 110 standalone
-Posets tests and changed-Python ruff checks pass. Full-corpus screening and G3
-remain pending.
+**Renamed corpus.** The same binary on the tlsfobf rename corpus (seed 145) solves
+the same 1,384 inputs with the same verdicts, with no coverage flips or exclusions.
+PAR-2 is 5,860.1 s against 5,878.1 s on the plain corpus.
 
 ## 2026-11-22: The first synthesis member is the right one, but best-of-four controllers are half the size (#280)
 
