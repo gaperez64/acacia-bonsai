@@ -27,6 +27,7 @@ namespace acacia::parity_route {
       std::string aiger_mode = "isop";
       mealy_reduction reduction = default_mealy_reduction;
       uint64_t deadline_mono_ns = 0;
+      uint64_t worker_rss_share = UINT64_MAX;
       bool use_lar = false;
       bool verify = false;
       // Cooperative checks around opaque Spot calls and before publishing a verdict.

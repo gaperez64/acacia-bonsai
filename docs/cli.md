@@ -82,12 +82,20 @@ the decision solve, winning regions, or exported game certificates.
 The incumbent is encoded before optional work starts. Both attempts share at most
 200 ms and 5% of the time remaining before the invocation deadline. Each runs in a
 forked child with a private address-space/RSS cap of at most 512 MiB; the restriction
-prepass uses the same subprocess supervisor. Before each fork, scope usage must
+prepass uses the same subprocess supervisor. With a finite `memory.max`, scope usage must
 leave room below the portfolio's 7/8 kill threshold for the child plus a full
 resident copy-on-write margin (at least 64 MiB) and result transfer. The child cap
-uses at most half the headroom left after that margin. Insufficient headroom or an
-unbounded/unreadable scope skips reduction and records the cause. A timeout,
-resource limit, child failure, invalid result, or non-improvement retains the
+uses at most half the headroom left after that margin. With `memory.max=max`, an
+absent memory controller/file, or no cgroup support, there is no finite threshold:
+reduction runs within its own time and memory caps without reading `memory.current`.
+In either case the child cap also reserves the worker's resident set and result
+mapping within the supervisor's per-worker RSS share. Skip if the remaining cap
+cannot cover the child's inherited RSS plus 64 MiB, or if worker RSS cannot be read.
+Insufficient finite headroom records `scope_headroom`; an exhausted worker share
+records `rss_share`. A present but unreadable, empty, malformed or overflowing
+`memory.max`, unreadable cgroup membership, or missing/unreadable/malformed
+`memory.current` under a finite limit records `scope_memory` and skips reduction.
+A timeout, resource limit, child failure, invalid result, or non-improvement retains the
 incumbent. Accepted AIGER is capped
 at 1 MiB and checked structurally without rebuilding BDDs in the parent. The
 200 ms cap also applies when no invocation deadline is supplied.

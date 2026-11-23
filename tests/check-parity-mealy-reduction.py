@@ -123,7 +123,8 @@ GUARANTEES {{ {formula}; }} }}''')
                 (str(limit), str(threshold - 1), "scope_headroom"),
                 (str(limit), str(threshold), "scope_headroom"),
                 (str(limit), str(limit), "scope_headroom"),
-                ("max", "0", "scope_memory"),
+                ("invalid", "0", "scope_memory"),
+                ("123junk", "0", "scope_memory"),
                 (str(limit), None, "scope_memory")):
             (scope / "memory.max").write_text(maximum + "\n")
             (scope / "memory.current").unlink(missing_ok=True)
@@ -146,19 +147,37 @@ GUARANTEES {{ {formula}; }} }}''')
                               f'OUTPUTS {{ {"; ".join(outputs)}; }} GUARANTEES {{ G F o0; }} }}')
             checked = run(checker, str(source), str(circuit))
             assert checked.returncode == 0 and checked.stdout.strip() == "verified", checked
-        # With less headroom the private cap shrinks, while useful reductions still succeed.
-        (scope / "memory.max").write_text(str(1024**3) + "\n")
-        (scope / "memory.current").write_text("0\n")
-        phases = root / "scope-budget"
-        phases.mkdir()
-        answer = run(fixture, "--scope-reductions", str(scope),
-                     env=dict(os.environ, ACACIA_PHASE_RECORDS=str(phases)))
-        assert answer.returncode == 0, answer
-        rows = [json.loads(line) for path in phases.glob("*.jsonl")
-                for line in path.read_text().splitlines()]
-        attempts = [row for row in rows if row.get("event") == "parity_reduction_attempt"
-                    and row["child_pid"] > 0]
-        assert attempts and all(0 < row["memory_bytes"] < 512 * 1024**2 for row in attempts), rows
+        # Finite headroom and worker shares shrink caps; max/absent limits still reduce.
+        for name, maximum, share in (
+                ("budget", str(1024**3), None),
+                ("unlimited", "max", None),
+                ("absent", None, None),
+                ("share", "max", 256 * 1024**2)):
+            (scope / "memory.max").unlink(missing_ok=True)
+            if maximum is not None:
+                (scope / "memory.max").write_text(maximum + "\n")
+            # No usage reading is needed without a finite limit.
+            (scope / "memory.current").unlink(missing_ok=True)
+            if maximum not in {None, "max"}:
+                (scope / "memory.current").write_text("0\n")
+            phases = root / f"scope-{name}"
+            phases.mkdir()
+            answer = run(fixture, "--scope-reductions", str(scope),
+                         *([str(share)] if share else []),
+                         env=dict(os.environ, ACACIA_PHASE_RECORDS=str(phases)))
+            assert answer.returncode == 0, answer
+            rows = [json.loads(line) for path in phases.glob("*.jsonl")
+                    for line in path.read_text().splitlines()]
+            attempts = [row for row in rows if row.get("event") == "parity_reduction_attempt"]
+            assert any(row["outcome"] == "accepted" for row in attempts), rows
+            children = [row for row in attempts if row["child_pid"] > 0]
+            assert children, rows
+            cap = share or 512 * 1024**2
+            assert all(0 < row["memory_bytes"] <= cap for row in children), children
+            if name in {"budget", "share"}:
+                assert all(row["memory_bytes"] < cap for row in children), children
+            assert any(row["outcome"] == "skipped" and row["cause"] == "rss_share"
+                       and row["child_pid"] == -1 for row in attempts), rows
     print("Parity reduction grammar, unchanged decision stages, and independent controllers passed")
 
 

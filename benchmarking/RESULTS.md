@@ -44,7 +44,7 @@ sets. Re-solving is necessary: arbitrary substitutions of winning-region edges
 can lose liveness. Original game certificates and decision solving are untouched.
 Fix pass 1 encodes the incumbent first and forks both optional attempts through
 the restriction prepass's shared supervisor. They share at most 200 ms and 5% of
-the remaining invocation time, with private 512 MiB AS/RSS limits. Failures,
+the remaining invocation time, with private AS/RSS limits of at most 512 MiB. Failures,
 timeouts, invalid AIGER and non-improvements keep the best encoded incumbent.
 Bounded structural parsing avoids rebuilding BDDs in the parent; each attempt
 records its option, outcome, cause and wall time.
@@ -107,7 +107,7 @@ cover accepted, invalid and missing values, default bytes, and identical decisio
 stage traces for every option without `-s`. Full corpus and G0–G5 are not run.
 
 
-**Review fix pass 1 (2026-11-23).** The final paired rerun uses exactly the same
+**Review fix pass 1 (2026-11-23).** The then-current paired rerun uses exactly the same
 43 inputs, comparing only `none` and `reselect`, with one frozen binary
 (`1c4ea71eb777fdcf`) and the same independent checker. The measurement
 runner now supplies its absolute invocation deadline to synthesis.
@@ -133,6 +133,47 @@ verify `GF o`. Tests also cover child allocation/exception/signal failures, stri
 improvement, unchanged parent limits/cause state, expired-budget fallback,
 reordered signal names and malformed AIGER. The native arm's earlier construction
 deadline also bounds optional work. No evidence-index row is added.
+
+**Review fix pass 3 (2026-11-23), final code.** Unlimited (`memory.max=max`) and
+absent cgroup limits now allow bounded reduction. Only finite limits use the
+7/8 headroom calculation, including suspended competitors' charges and the
+copy-on-write/transfer reserve. Present malformed or unreadable limits, or
+missing/unreadable/malformed usage under a finite limit, still skip optional work.
+The child's cap also reserves the parent RSS and result mapping within the exact
+worker RSS share computed by the portfolio supervisor. The
+[CLI guide](../docs/cli.md#write-a-controller) lists the skip conditions and causes.
+
+The same 43-input panel and TLSF source hashes were rerun through
+`benchmarking/synthesis-size.py` with one frozen final-code
+`otf_sparse_formula_parity` binary (`6bb2c37e08422c60`), 17 s synthesis and 60 s /
+200,000-state independent verification. All builds, tests and serial measurements
+use 5G/no-swap systemd scopes and `TMPDIR=~/scratch/strat467/tmp`.
+
+| Option | Verified / 43 | Lost vs `none` | Total A+L | Median A+L | Headroom skips | Synthesis s | Check s |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `none` | 43 | 0 | 36,552 | 53 | 0 (disabled) | 8.69 | 14.70 |
+| `reselect` | 43 | 0 | 26,104 | 43 | 0 / 33 records | 8.76 | 14.56 |
+
+There are **zero lost controllers and zero headroom skips under the finite 5G
+limit**. All 86 controllers independently verify, with no synthesis or checker
+failure. Phase records cover 33 reduction attempts on 17 inputs: nine accepted,
+20 non-improvements and four size fallbacks; none skip for any memory cause and
+no record drops are reported. Total A+L falls **28.6%** on all 43 common inputs.
+Paired portfolio races change the winning route on two inputs whose sizes
+increase: MusicAppSimple, 24 (backward) to 57 (Spot fast parity), and ltl2dba26,
+19 (ACD parity) to 26 (backward). Accepted reductions still strictly improve their
+own incumbent. Lights remains 10,765 to 1,475 A+L. These measurements establish
+neither a speedup nor full-corpus admission.
+
+All 11 affected release Meson tests and 30 measurement-runner Python tests pass,
+along with Ruff, clang-format 22 and whitespace checks. Regressions require
+successful, independently checked reductions with unlimited and absent limits,
+retain the finite near-threshold incumbent checks, distinguish malformed files,
+and cover smaller child caps and exhausted worker shares. Raw rows, controllers,
+per-invocation phase records, frozen binaries and logs are retained locally under
+`~/scratch/strat467/fix3-panel-run/`, `fix3-binaries/` and `fix3-*.log`; the paired
+summary is `fix3-summary.json`. Full corpus and G0–G5 were not rerun. No
+evidence-index row is added.
 
 ## 2026-11-22: Select AIGER modes; +dc rejects controllers and large strategies remain the main gap (#280)
 

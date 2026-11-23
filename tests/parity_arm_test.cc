@@ -76,7 +76,7 @@ void check_controller (const spot::aig_ptr& circuit, spot::formula specification
            "exported controller violates the specification");
 }
 
-void check_reductions (const char* scope_directory = nullptr) {
+void check_reductions (const char* scope_directory = nullptr, uint64_t rss_share = UINT64_MAX) {
   for (auto reduction : {route::mealy_reduction::none, route::mealy_reduction::bisim,
                          route::mealy_reduction::bisim_output, route::mealy_reduction::reselect}) {
     auto machine = spot::make_twa_graph (spot::make_bdd_dict ());
@@ -95,6 +95,7 @@ void check_reductions (const char* scope_directory = nullptr) {
     input.outputs = {"o"};
     route::options config;
     config.reduction = reduction;
+    config.worker_rss_share = rss_share;
     route::result incumbent;
     incumbent.controller = machine;
     incumbent.circuit = spot::mealy_machine_to_aig (machine, "isop", input.inputs, input.outputs);
@@ -117,6 +118,14 @@ void check_reductions (const char* scope_directory = nullptr) {
     require (spot::is_split_mealy_specialization (original, spot::split_2step (behavior)),
              "reduction did not specialize the original controller");
     check_controller (circuit, formula ("G(i -> o)"), false);
+    if (reduction == route::mealy_reduction::bisim_output) {
+      const auto accepted = incumbent.reduced_aiger;
+      config.worker_rss_share = 1;
+      reduce ();
+      require (incumbent.reduced_aiger.empty (), "exhausted worker share did not skip reduction");
+      config.worker_rss_share = rss_share;
+      incumbent.reduced_aiger = accepted;
+    }
     if (reduction == route::mealy_reduction::bisim_output) {
       const auto accepted = incumbent.reduced_aiger;
       for (unsigned failure = 0; failure < 4; ++failure) {
@@ -323,9 +332,9 @@ void check_reselection (const std::string& path) {
 
 int main (int argc, char** argv) {
   try {
-    if (argc == 3 && std::string (argv[1]) == "--scope-reductions") {
+    if ((argc == 3 || argc == 4) && std::string (argv[1]) == "--scope-reductions") {
       acacia::phase_records_start_writer ();
-      check_reductions (argv[2]);
+      check_reductions (argv[2], argc == 4 ? std::stoull (argv[3]) : UINT64_MAX);
       acacia::phase_records_close ();
       return 0;
     }

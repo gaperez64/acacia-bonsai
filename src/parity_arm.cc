@@ -48,7 +48,7 @@ namespace acacia {
   }
 
   int run_parity_arm (const arg_parse_result& args, const portfolio_arm& selection,
-                      uint64_t deadline_mono_ns) {
+                      uint64_t deadline_mono_ns, uint64_t rss_share) {
     const bool oxidd = selection.parity_oxidd;
     const char* arm = selection.native_name ();
     worker_route ("original_game", "parity", "unknown");
@@ -90,6 +90,7 @@ namespace acacia {
       config.aiger_mode = args.aiger_mode;
       config.reduction = args.parity_mealy_reduction;
       config.deadline_mono_ns = deadline_mono_ns;
+      config.worker_rss_share = rss_share;
       if (metadata.tlsf_target == "Moore")
         config.adapt_circuit = [undo = metadata.tlsf_semantics.find ("Moore") !=
                                        std::string::npos] (spot::aig_ptr circuit) {
