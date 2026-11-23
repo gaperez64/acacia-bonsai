@@ -107,9 +107,13 @@ void check_reductions (const char* scope_directory = nullptr, uint64_t rss_share
     };
     reduce ();
     require (machine->num_states () == 2, "reduction mutated the incumbent");
+#ifdef __linux__
     require (incumbent.reduced_aiger.empty () == (reduction == route::mealy_reduction::none ||
                                                   reduction == route::mealy_reduction::bisim),
              "output assignment did not improve the controller");
+#else
+    require (incumbent.reduced_aiger.empty (), "reduction ran without RSS sampling");
+#endif
     const auto circuit = incumbent.reduced_aiger.empty ()
                              ? incumbent.circuit
                              : spot::aig::parse_aag (incumbent.reduced_aiger.c_str (), "reduced",
@@ -316,12 +320,25 @@ void check_reselection (const std::string& path) {
                ? value.circuit->num_gates () + value.circuit->num_latches ()
                : route::checked_aiger_size (value.reduced_aiger, input).value ();
   };
+#ifdef __linux__
   require (!improved.reduced_aiger.empty () && size (improved) < size (incumbent),
            "reselection must replace the incumbent");
   require (size (incumbent) > 0 && size (improved) == 0, "unexpected fixture circuit sizes");
+#else
+  require (
+      incumbent.reduced_aiger.empty () && improved.reduced_aiger.empty () && size (incumbent) > 0,
+      "reselection ran without RSS sampling");
+  std::ostringstream preserved;
+  spot::print_aiger (preserved, improved.circuit);
+  require (preserved.str () == expected.str (), "skipped reselection changed the incumbent");
+  check_controller (improved.circuit, formula ("GF o"), false);
+#endif
   if (!path.empty ()) {
     std::ofstream file (path);
-    file << improved.reduced_aiger;
+    if (improved.reduced_aiger.empty ())
+      spot::print_aiger (file, improved.circuit);
+    else
+      file << improved.reduced_aiger;
     std::ofstream original (path + ".incumbent");
     if (incumbent.reduced_aiger.empty ())
       spot::print_aiger (original, incumbent.circuit);

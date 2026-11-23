@@ -91,6 +91,8 @@ reduction runs within its own time and memory caps without reading `memory.curre
 In either case the child cap also reserves the worker's resident set and result
 mapping within the supervisor's per-worker RSS share. Skip if the remaining cap
 cannot cover the child's inherited RSS plus 64 MiB, or if worker RSS cannot be read.
+Reduction requires RSS sampling, which is supported only on Linux today. On other
+platforms it skips reduction and exports the unreduced incumbent controller.
 Insufficient finite headroom records `scope_headroom`; an exhausted worker share
 records `rss_share`. A present but unreadable, empty, malformed or overflowing
 `memory.max`, unreadable cgroup membership, or missing/unreadable/malformed

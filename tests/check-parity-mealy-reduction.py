@@ -10,6 +10,7 @@ import tempfile
 
 
 MODES = ("none", "bisim", "bisim-output", "reselect")
+RSS_SAMPLING_AVAILABLE = sys.platform.startswith("linux")
 
 
 def run(binary, *arguments, env=None):
@@ -96,13 +97,24 @@ GUARANTEES {{ {formula}; }} }}''')
             attempts = [row for row in rows if row.get("event") == "parity_reduction_attempt"]
             assert attempts and all(row["option"] in MODES and row["wall_ns"] > 0
                                     for row in attempts), rows
+            if not RSS_SAMPLING_AVAILABLE:
+                # Reselection also exercises an already-expired optional deadline.
+                assert all((row["outcome"], row["cause"]) in
+                           {("skipped", "resource"), ("fallback", "deadline")}
+                           and row["child_pid"] == -1 and row["memory_bytes"] == 0
+                           for row in attempts), attempts
+                assert any(row["outcome"] == "skipped" for row in attempts), attempts
+                if option == "--reselection":
+                    assert any(row["attempt"] == "reselect" and row["outcome"] == "skipped"
+                               for row in attempts), attempts
             if option == "--budget-fallback":
                 assert len(attempts) == 1, attempts
-                assert attempts[0]["outcome"] == "fallback", attempts
-                assert attempts[0]["cause"] == "deadline", attempts
+                if RSS_SAMPLING_AVAILABLE:
+                    assert attempts[0]["outcome"] == "fallback", attempts
+                    assert attempts[0]["cause"] == "deadline", attempts
                 assert attempts[0]["wall_ns"] < 500_000_000, attempts
-                print(f'Adversarial deadline fallback: {attempts[0]["wall_ns"] / 1e6:.1f} ms')
-            else:
+                print(f'Adversarial fallback: {attempts[0]["wall_ns"] / 1e6:.1f} ms')
+            elif RSS_SAMPLING_AVAILABLE:
                 assert any(row["attempt"] == "reselect" and row["outcome"] == "accepted"
                            for row in attempts), attempts
             source.write_text('INFO { TITLE: "adversarial" SEMANTICS: Mealy TARGET: Mealy }\n'
@@ -169,6 +181,15 @@ GUARANTEES {{ {formula}; }} }}''')
             rows = [json.loads(line) for path in phases.glob("*.jsonl")
                     for line in path.read_text().splitlines()]
             attempts = [row for row in rows if row.get("event") == "parity_reduction_attempt"]
+            if not RSS_SAMPLING_AVAILABLE:
+                cause = "scope_headroom" if name == "budget" else "resource"
+                assert attempts and all(row["outcome"] == "skipped"
+                                        and row["cause"] in {cause, "rss_share"}
+                                        and row["child_pid"] == -1 and row["memory_bytes"] == 0
+                                        for row in attempts), rows
+                assert any(row["cause"] == cause for row in attempts), rows
+                assert any(row["cause"] == "rss_share" for row in attempts), rows
+                continue
             assert any(row["outcome"] == "accepted" for row in attempts), rows
             children = [row for row in attempts if row["child_pid"] > 0]
             assert children, rows
