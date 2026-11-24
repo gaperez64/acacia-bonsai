@@ -1,5 +1,7 @@
 import Init
 
+-- Unqualified C++ line references use da7e5621.
+
 namespace Symmetry.CountTemporal
 
 abbrev Trace := Nat → Prop
@@ -147,33 +149,6 @@ theorem aggregate_encodings (p : Fin n → Trace) (B : Breakpoint p)
 theorem context (C : Trace → Trace) (p q : Trace) (h : ∀ t, p t ↔ q t) : C p = C q := by
   have : p = q := funext (fun t => propext (h t)); exact congrArg C this
 
--- Local Inf marks use all_inf; local Fin marks use any; symmetric_count.cc:364–404.
-theorem local_acceptance (inf : Fin a → Fin n → Trace) (fin : Fin b → Fin n → Trace)
-    (bp : ∀ j, Breakpoint (inf j)) (sink : Fin n → Trace) (t : Nat) :
-    ((∀ i, (∀ j, GF (inf j i) t) ∧ (∀ j, FG (fun u => ¬ fin j i u) t)) ∧
-      FG (fun u => ¬ ∃ i, sink i u) t) ↔
-    ((∀ j, GF (bp j).event t) ∧ (∀ j, FG (fun u => ¬ ∃ i, fin j i u) t) ∧
-      FG (fun u => ¬ ∃ i, sink i u) t) := by
-  classical
-  simp only [breakpoint_gf, not_exists]
-  constructor
-  · rintro ⟨h, hs⟩
-    exact ⟨fun j i => (h i).1 j, fun j => (fg_all _ _).mp (fun i => (h i).2 j), hs⟩
-  · rintro ⟨hi, hf, hs⟩
-    exact ⟨fun i => ⟨fun j => hi j i, fun j => (fg_all _ _).mpr (hf j) i⟩, hs⟩
-
--- Absorbing missing-transition sink: finitely many sink events means no missing transition; symmetric_count.cc:399–404,416–429.
-theorem rejecting_sink (sink : Trace) (absorbs : ∀ t, sink t → sink (t + 1)) (t : Nat) :
-    FG (fun u => ¬ sink u) t ↔ ∀ u, ¬ sink u := by
-  constructor
-  · rintro ⟨a, _, ha⟩ u hu
-    have persistSink : ∀ k, sink (u + k) := by
-      intro k; induction k with
-      | zero => exact hu
-      | succ k ih => exact absorbs (u + k) ih
-    exact ha (u + a) (by omega) (persistSink a)
-  · intro h; exact ⟨t, Nat.le_refl _, fun u _ => h u⟩
-
 -- Monitor bit AFTER the current step, with m(-1)=false; symmetric_count.cc:108,629–633.
 def monitor (gamma lambda : Trace) : Trace
   | 0 => gamma 0 ∧ ¬ lambda 0
@@ -320,40 +295,6 @@ def localAccepts (step : L → A → B → Option (L × (Fin marks → Bool)))
   (∀ t, localRun step initial global letter t ≠ none) ∧
   (∀ j, GF (localMark step initial global letter (inf j)) 0) ∧
   (∀ j, FG (fun t => ¬ localMark step initial global letter (fin j) t) 0)
-
--- A missing transition enters a permanent sink, even if its marks were Fin-only; symmetric_count.cc:399–404,416–429.
-theorem deterministic_local_events (step : L → A → B → Option (L × (Fin marks → Bool)))
-    (initial : L) (global : Nat → A) (letter : Fin n → Nat → B)
-    (inf : Fin a → Fin marks) (fin : Fin b → Fin marks)
-    (bp : ∀ j, Breakpoint (fun i => localMark step initial global (letter i) (inf j))) :
-    (∀ i, localAccepts step initial global (letter i) inf fin) ↔
-    (∀ j, GF (bp j).event 0) ∧
-      (∀ j, FG (fun t => ¬ ∃ i, localMark step initial global (letter i) (fin j) t) 0) ∧
-      FG (fun t => ¬ ∃ i, localRun step initial global (letter i) (t + 1) = none) 0 := by
-  classical
-  let sink : Trace := fun t => ∃ i, localRun step initial global (letter i) (t + 1) = none
-  have absorbs : ∀ t, sink t → sink (t + 1) := by
-    rintro t ⟨i, hi⟩
-    refine ⟨i, ?_⟩
-    change (localRun step initial global (letter i) (t + 1)).bind _ = none
-    rw [hi]; rfl
-  have valid : FG (fun t => ¬ sink t) 0 ↔ ∀ i t, localRun step initial global (letter i) t ≠ none := by
-    rw [rejecting_sink sink absorbs 0]
-    constructor
-    · intro h i t; cases t with
-      | zero => simp [localRun]
-      | succ t => exact fun hi => h t ⟨i, hi⟩
-    · intro h t ⟨i, hi⟩; exact h i (t + 1) hi
-  have he := local_acceptance (fun j i => localMark step initial global (letter i) (inf j))
-    (fun j i => localMark step initial global (letter i) (fin j)) bp
-    (fun i t => localRun step initial global (letter i) (t + 1) = none) 0
-  change (∀ i, localAccepts step initial global (letter i) inf fin) ↔ _
-  rw [← he]
-  change (∀ i, localAccepts step initial global (letter i) inf fin) ↔ _ ∧ FG (fun t => ¬ sink t) 0
-  rw [valid]
-  constructor
-  · intro h; exact ⟨fun i => ⟨(h i).2.1, (h i).2.2⟩, fun i => (h i).1⟩
-  · rintro ⟨h, hv⟩ i; exact ⟨hv i, (h i).1, (h i).2⟩
 
 -- This small syntax records precisely the parser positions that flatten traverses; symmetric_count.cc:67–97.
 inductive Formula where

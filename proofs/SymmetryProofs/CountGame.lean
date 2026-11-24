@@ -2,6 +2,8 @@ import SymmetryProofs.Enumeration
 import SymmetryProofs.Quotient
 import SymmetryProofs.CountTemporal
 
+-- Unqualified C++ line references use da7e5621.
+
 namespace Symmetry.CountGame
 
 open Symmetry.Quotient
