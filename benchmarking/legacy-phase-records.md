@@ -38,6 +38,9 @@ Under `-s`, `parent_verdict` selects a proof and latches its verdict, before
 controller construction. Each worker writes a private file beside the requested
 destination. Only the parent renames a closed, successful REAL controller onto
 that destination, after acceptance checks and competitor cleanup.
+The grace/fallback scheme is Linux-only, like the optional reduction in #467.
+Other platforms retain master's first-proof selection and extraction-failure
+recovery without grace turns or memory admission.
 `parent_extraction` records identify the worker and latched verdict (`exit_code`):
 `grace_expired` means its turn ended (initially 250 ms, doubling on each successive
 turn for that worker); `fallback` identifies the next worker resumed.
@@ -53,21 +56,24 @@ the current worker running when neither class has an admissible alternative;
 `scope_headroom` means a fallback's resumption
 was withheld because scope memory was unreadable or lacked reserve. Stopped
 workers remain charged in `memory.current`. A fallback's RSS budget is its
-admission RSS plus max(64 MiB, admission RSS). Admission requires room for this
-entire ceiling plus `max(0, VmData - RssAnon)` below the scope's last eighth,
-covering COW of shared resident pages, growth and previously mapped anonymous pages
-that can become resident without another mapping. Unreadable RSS or anonymous
+admission RSS plus growth allowance `max(64 MiB, admission RSS)`. Admission requires
+headroom for three separate terms below the scope's last eighth: latent capacity
+`max(0, VmData - RssAnon)`, COW exposure (conservatively admission RSS), and growth
+allowance. The latent and COW terms cover faults in existing mappings separately
+from new mappings. Unreadable RSS or anonymous
 capacity blocks fallback admission. Before resumption,
 `prlimit(RLIMIT_AS)` also caps its soft address-space limit at its current mapped
-size plus that budget, preserving the hard limit and any tighter existing soft
+size plus **only the growth allowance**, preserving the hard limit and any tighter existing soft
 limit. Allocation failure is an unsuccessful worker exit. `address_space_limit_failed`
-refuses admission if the cap cannot be installed. ASan skips the cap with a diagnostic
-because of its shadow mapping. The existing parent RSS supervisor additionally
+refuses admission if the cap cannot be installed. ASan skips both the cap and latent
+term with a diagnostic: writable shadow mappings inflate `VmData`. COW/growth
+admission and the existing parent RSS supervisor remain active. The supervisor
 enforces the budget; `rss_budget` marks termination of a fallback exceeding it.
 Undecided workers undergo the same admission, address-space cap and RSS supervision
 as fallback extractors, including sole-survivor cap restoration.
 The first selected extractor never needs admission and keeps its original resource
-policy. Before returning to it, fallbacks that have run are killed and reaped as
+policy. Before returning to it, fallbacks that have run are killed and reaped one
+at a time, rechecking usage after each reclamation, as
 `parent_terminal:original_headroom` if scope usage exceeds the snapshot at its first
 suspension (or either reading is unavailable). If a fallback is the only surviving
 worker, `sole_extractor` removes its additional RSS budget and restores its soft
@@ -78,12 +84,13 @@ later candidates. `verdict_conflict` rejects an opposite proof. `published` iden
 the worker whose controller was atomically installed. Parent observations copy
 the worker snapshot and do not advance its live sequence. Slow extractors are
 suspended, retained and revisited; contradictory proofs never receive permission
-to export. Stop acknowledgement and discard reaping are polled without blocking
+to export. Stop acknowledgement, discard reaping and tracked descendant reaping are polled without blocking
 deadline or RSS checks; an exit racing suspension is accepted before any handoff.
 After an extractor fails with no admissible replacement from either priority class,
 `parent_terminal` with reason `extraction_irrelevant` identifies killed/reaped
 unusable workers first. Admission is retried after reaping them, before reclaiming
-matching undecided workers if still necessary. Admission waits for pending discards
+matching undecided workers if still necessary. Each discard returns to supervision
+before choosing another victim. Admission waits for pending leaders and descendants
 to be reaped, and sole-survivor checks count them as live. If admission still fails, remaining
 workers receive `extraction_failed` and the invocation finishes UNKNOWN (or ERROR
 if a worker reported ERROR). Decision-only runs do not use this scheduling or file protocol.

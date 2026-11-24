@@ -65,6 +65,9 @@ can leave this directory and partial private files behind; they can be removed
 after the invocation stops. The requested `FILE` is unchanged until publication.
 Publication replaces its directory entry, including a symlink or FIFO.
 
+Extraction turns and their memory admission are Linux-only, like optional parity
+reduction (#467): other platforms keep master's first-proof selection and recovery
+after extraction failure, without grace turns or fallback admission.
 At turn expiry, ready proofs matching the first verdict have priority. Only when
 none is admissible can an undecided worker capable of that verdict take a turn
 to finish its proof. Its export gate stays closed until it publishes a matching
@@ -73,18 +76,21 @@ verdict stay stopped. Turns start at 250 ms and double separately for each worke
 Each priority class retains its own round-robin cursor across turns in the other class.
 This lets unfinished searches progress while the selected extractor stalls.
 The first extractor always resumes under its original resource policy; fallback
-workers are reclaimed if they reduce its saved scope headroom. Before a fallback
-resumes, its soft address-space limit is capped at its current mapping size plus
-its admitted RSS budget, with RSS supervision as an additional check. Admission
-reserves headroom for `max(0, VmData - RssAnon)` as well as the full RSS budget,
-covering anonymous pages the worker can fault in without a new mapping. These same
-admission checks and limits apply to undecided workers. Allocation
-failure discards that worker. A sole surviving fallback regains its hard
-address-space limit and loses the additional RSS ceiling. ASan skips the
-address-space cap with a diagnostic because its shadow mapping is incompatible.
-Discarded workers are killed and reaped without blocking supervision; admission
-waits until pending discards are reaped. After an extractor fails, unusable workers are
-reclaimed and admission retried before matching unfinished searches are reclaimed.
+workers are reclaimed one at a time if they reduce its saved scope headroom,
+rechecking usage after each is reaped. Admission reserves the sum of latent
+anonymous capacity `max(0, VmData - RssAnon)`, COW exposure (conservatively its
+admission RSS), and growth allowance `max(64 MiB, admission RSS)` below the scope's
+last eighth. Its soft address-space limit is capped at its current mapping size
+plus **only the growth allowance**; RSS supervision additionally enforces
+admission RSS plus growth. The same admission checks and limits apply to undecided
+workers. Allocation failure discards that worker. A sole surviving fallback regains its hard
+address-space limit and loses the additional RSS ceiling. ASan skips both the
+address-space cap and latent term with a diagnostic because its shadow mappings
+inflate `VmData`; COW/growth admission and RSS supervision remain active.
+Discarded workers and their tracked descendants are killed and polled without
+blocking supervision; admission waits until their reclamation completes.
+After an extractor fails, unusable workers are reclaimed and admission retried
+before matching unfinished searches are reclaimed.
 
 `--parity-mealy-reduction none|bisim|bisim-output|reselect` selects the parity route's
 post-extraction reduction under `-s` only. `bisim-output` uses Spot's

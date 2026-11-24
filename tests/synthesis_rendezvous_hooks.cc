@@ -70,6 +70,8 @@ namespace acacia::synthesis {
     bool obligation_worker = false, parity_worker = false;
     volatile unsigned char* latent_memory = nullptr;
     size_t latent_size = 0;
+    volatile unsigned char* cow_memory = nullptr;
+    size_t cow_size = 0;
     void allocate (const char* setting) {
       if (const char* bytes = std::getenv (setting)) {
         const auto size = std::strtoull (bytes, nullptr, 10);
@@ -114,6 +116,31 @@ namespace acacia::synthesis {
     gate ("synthesis_starting", "ACACIA_TEST_SYNTHESIS_STARTUP_FD");
   }
   void test_before_verdict (int& verdict) {
+    const char* cow = !parity_worker && !obligation_worker
+                          ? std::getenv ("ACACIA_TEST_SYNTHESIS_LEGACY_COW_BYTES")
+                          : nullptr;
+    if (cow || (parity_worker && std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_DESCENDANT"))) {
+      if (cow) {
+        cow_size = std::strtoull (cow, nullptr, 10);
+        void* mapping =
+            mmap (nullptr, cow_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        if (mapping == MAP_FAILED)
+          throw std::bad_alloc ();
+        cow_memory = static_cast<volatile unsigned char*> (mapping);
+        for (size_t i = 0; i < cow_size; i += 4096)
+          cow_memory[i] = 1;
+      }
+      const pid_t child = fork ();
+      if (child < 0)
+        throw std::runtime_error ("test descendant fork failed");
+      if (child == 0)
+        while (true)
+          pause ();
+      auto* record = active_worker_record ();
+      record->descendant_pid = child;
+      descendant_record (*record, child, nullptr);
+      std::fprintf (stderr, "{\"stage\":\"synthesis_descendant\",\"pid\":%ld}\n", long (child));
+    }
     if (!parity_worker && !obligation_worker)
       allocate ("ACACIA_TEST_SYNTHESIS_LEGACY_RSS_BYTES");
     if (parity_worker) {
@@ -145,6 +172,8 @@ namespace acacia::synthesis {
           parity_worker && std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD")
               ? "ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD"
               : "ACACIA_TEST_SYNTHESIS_EXPORT_FD");
+    for (size_t i = 0; i < cow_size; i += 4096)
+      cow_memory[i] = 2;
     if (!parity_worker && !obligation_worker &&
         std::getenv ("ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES")) {
       allocate ("ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES");

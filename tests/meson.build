@@ -1197,7 +1197,7 @@ endif
 test ('parity-arm-cli', py, args : parity_arm_cli_args,
       suite : ['unit', 'parity', 'portfolio', 'synthesis'], timeout : 120,
       depends : parity_arm_cli_depends)
-if host_machine.system () == 'linux' and (get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release'))
+if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release')
   test ('parity-rendezvous', py,
         args : [files ('check-parity-rendezvous.py'), game_backend_integration,
                 meson.current_build_dir (), controller_check],

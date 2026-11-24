@@ -178,7 +178,8 @@ namespace acacia::obligation {
 #ifdef __SANITIZE_ADDRESS__
     if (budget != UINT64_MAX)
       std::fprintf (stderr,
-                    "Skipping fallback RLIMIT_AS cap: incompatible with ASan shadow memory\n");
+                    "Skipping fallback RLIMIT_AS cap and latent reserve: incompatible with ASan "
+                    "shadow memory\n");
     return true;
 #elif defined(__linux__)
     rlimit address {};
@@ -252,7 +253,10 @@ namespace acacia::obligation {
   }
 
   std::optional<uint64_t> latent_anonymous_bytes (pid_t pid) noexcept {
-#ifdef __linux__
+#ifdef __SANITIZE_ADDRESS__
+    // Match the RLIMIT_AS exemption: VmData includes ASan's enormous writable shadow.
+    return 0;
+#elif defined(__linux__)
     char path[64];
     snprintf (path, sizeof path, "/proc/%ld/status", long (pid));
     if (FILE* file = std::fopen (path, "r")) {
