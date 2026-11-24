@@ -168,8 +168,8 @@ def test_first_shipping_preset_replaces_both_forward_arms_with_both_parity_arms(
         arm + ":closure-recurrence" if arm == "unreal:formula:spot-guarded-sparse" else arm
         for arm in baseline["default_arms"].split(",")
         if arm not in {"real:small:forward", "unreal:automaton:forward"}
-    ] + ["both:parity:spot", "both:parity:oxidd"]
-    assert len(candidate["default_arms"].split(",")) == 6
+    ] + ["both:parity:spot", "both:parity:oxidd", "both:symcount:spot"]
+    assert len(candidate["default_arms"].split(",")) == 7
     for key in baseline:
         if key not in {
             "_preset", "preset", "default_arms", "default_translation_effort",
@@ -181,13 +181,15 @@ def test_first_shipping_preset_replaces_both_forward_arms_with_both_parity_arms(
     assert baseline["vector_downset"] == "rank_bucketed_vector_backed"
 
 
-def test_second_shipping_preset_adds_only_the_two_forward_arms():
+def test_second_shipping_preset_replaces_symcount_with_two_forward_arms():
     module = load_module()
     options, presets = module.load_registry()
     first, second, backward, _previous = presets["groups"]["docker_default"]
     baseline = module.normalize_preset(options, presets, first)
     candidate = module.normalize_preset(options, presets, second)
-    assert candidate["default_arms"].split(",") == baseline["default_arms"].split(",") + [
+    assert candidate["default_arms"].split(",") == [
+        arm for arm in baseline["default_arms"].split(",") if arm != "both:symcount:spot"
+    ] + [
         "real:small:forward", "unreal:automaton:forward",
     ]
     assert len(set(candidate["default_arms"].split(","))) == 8

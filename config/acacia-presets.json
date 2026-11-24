@@ -128,11 +128,11 @@
       "input_picker": "critical"
     },
     "otf_sparse_formula_parity": {
-      "description": "Six-worker portfolio combining antichain search, closure-recurrence sparse formula solving with fallback, a GR(1) realizability pre-pass, exact Spot obligation solving, and Spot and tlsf-tools parity game solving.",
+      "description": "Seven-worker portfolio combining antichain search, closure-recurrence sparse formula solving with fallback, a GR(1) realizability pre-pass, exact Spot obligation solving, Spot and tlsf-tools parity game solving, and count-quotiented games for symmetric specs.",
       "role": "shipping",
       "forced_output_contradiction": true,
       "vector_downset": "lazy_kd",
-      "default_arms": "real:small:backward,unreal:formula:spot-guarded-sparse:closure-recurrence,both:gr1-real-lift:oxidd,both:obligation:spot,both:parity:spot,both:parity:oxidd",
+      "default_arms": "real:small:backward,unreal:formula:spot-guarded-sparse:closure-recurrence,both:gr1-real-lift:oxidd,both:obligation:spot,both:parity:spot,both:parity:oxidd,both:symcount:spot",
       "default_translation_effort": "high,unreal:formula:spot-guarded-sparse=low",
       "default_candidate_mode": "fallback",
       "spot_lazy_provider": true,

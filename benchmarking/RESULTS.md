@@ -12,6 +12,43 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-23: Under parent memory supervision the count arm also solves collector_v2 n=27 (#454, stage 2)
+
+Archive `sym454e-20261122`. The arm now sizes its game from the whole scope and joins the parity
+workers under the parent's headroom check, instead of taking a fixed seven-way share. Candidate
+72ae5954 (binary `a366cd45…`) against master b28b0454 (`5fd7ecc5…`, with #465 and #468); G0, G1,
+G3, G4 and G5 pass. G3 is flat: 166 → 166 and 168 → 168 solved, PAR-2 633.2 → 622.2 s and
+499.0 → 494.7 s, inside the control's spread (168 vs 169, 499.4 vs 482.3 s on SYNTCOMP26). The
+full SYNTCOMP26 screen at 17 s and 6G solves 1,397 instead of 1,390 with no loss, no verdict
+conflict and PAR-2 5,263.9 → 5,007.1 s. Six gains are the arm's: collector_v1 n=11 to 15 (0.12 to
+0.15 s) and collector_v2 n=27 (2.2 s); the seventh, load_balancer_unreal1 6_4 at 16.87 s, sits at
+the cap. The tlsfobf-renamed screen has 0 conflicts and no plain-only solves.
+
+## 2026-11-22: The count-quotient arm solves six more SYNTCOMP26 inputs with no conflict (#454, stage 2)
+
+Archive `sym454d-20261122`. `both:symcount:spot` runs as the seventh worker of
+`otf_sparse_formula_parity` (6c6da84a, frozen binary `3b300d6b…`, against master 7c07d934). G0, G1,
+G3, G4 and G5 pass. G3 gains one solve on each panel, with PAR-2 663.3 → 623.1 s (SYNTCOMP25) and
+508.8 → 476.3 s (SYNTCOMP26); the base-vs-base control moves less than 1 s. The full SYNTCOMP26
+screen at 17 s and 6G solves 1,386 instead of 1,381 with 0 verdict conflicts and PAR-2
+5,613.6 → 5,380.4 s. It gains collector_v1 n=11 to 15 (0.12 to 0.15 s) and ltl2dba_theta n=25
+(0.41 s). The only loss, load_balancer_unreal1 6_4, sits at the cap and flips in the control too.
+The tlsfobf-renamed screen has 0 conflicts and no plain-only solves. collector_v2 n=27 still times
+out: the arm's 512-byte-per-element budget declines its 1.2M edges once the 6G scope is split
+seven ways, though it solves in 1.5 s and 472 MB alone. The base predates #465, whose prepass
+also solves ltl2dba_theta n=25.
+
+## 2026-11-22: acacia-symcount derives the collector quotient games from their formulas (#454, stage 2)
+
+Archive `sym454c-20261122`. `acacia-symcount` (standalone, not yet an arm) splits a spec into
+index-free conjuncts, per-index templates and symmetric aggregates, translates the template and
+the residual formula with Spot, and solves the count game with Spot plus `check_strategy`.
+Over all 1,586 corpus files (30 s) it decides 52 with no conflict against SYNTCOMP statuses or
+`lift437b-20261121`'s screen, including collector_v1 n=11 to 15 (0.02 to 0.05 s) and collector_v2
+n=27 (1.2 s), which master leaves unsolved, and collector_v1 n=27 (0.5 s). With those times as an
+extra arm, that screen's PAR-2 would fall from 6,253.6 to 6,025.2 s. 900 random fragment specs
+at n=2 to 4 gave 631 decided verdicts, all equal to ltlsynt's; tlsfobf-renamed inputs give
+identical verdicts and game sizes. Admission (stage 4) needs the arm integration first.
 ## 2026-11-22: Select AIGER modes; +dc rejects controllers and large strategies remain the main gap (#280)
 
 **Correctness finding: eight of 495 smoke controllers are rejected.** All eight
