@@ -17,7 +17,8 @@ fi
 # Imports must be refreshed before their users; keep the module checks serial.
 for module in Automaton Detector Game Equivariance FixedPoint Transports Reuse \
   Backward Closure Enumeration NextPermutation LayoutBuilder PlanBuilder \
-  Pickers BooleanBoundary ActionTable Mona AdaptiveK BuilderExamples Examples; do
+  Pickers BooleanBoundary ActionTable Mona AdaptiveK BuilderExamples Examples \
+  Quotient CountTemporal CountGame CountEngine; do
   # Always elaborate the source, even on an exact .lake cache hit. The flags
   # match lakefile.toml, with worker/stack settings overridable for this check.
   time timeout 300 lake env lean -j"$LEAN_NUM_THREADS" -s"$LEAN_STACK_SIZE_KB" \
