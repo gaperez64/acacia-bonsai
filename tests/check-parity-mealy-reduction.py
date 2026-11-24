@@ -182,7 +182,9 @@ GUARANTEES {{ {formula}; }} }}''')
                     for line in path.read_text().splitlines()]
             attempts = [row for row in rows if row.get("event") == "parity_reduction_attempt"]
             if not RSS_SAMPLING_AVAILABLE:
-                cause = "scope_headroom" if name == "budget" else "resource"
+                # A worker share below the default cap is recorded before the
+                # unavailable-RSS skip, so that case only ever reports rss_share.
+                cause = {"budget": "scope_headroom", "share": "rss_share"}.get(name, "resource")
                 assert attempts and all(row["outcome"] == "skipped"
                                         and row["cause"] in {cause, "rss_share"}
                                         and row["child_pid"] == -1 and row["memory_bytes"] == 0
