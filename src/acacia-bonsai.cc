@@ -455,6 +455,15 @@ namespace {
   [[noreturn]] void dispatch_child (const portfolio_arm& arm, const arg_parse_result& arg_values,
                                     uint64_t deadline_mono_ns,
                                     acacia::obligation::control* eligibility_channel) {
+#if ACACIA_HAVE_ABC
+    if (arg_values.synth_fname && arg_values.aiger_abc)
+      acacia::synthesis::aiger_abc = {
+          true, deadline_mono_ns,
+          arm.kind == portfolio_arm_kind::obligation ? g_helper_rss_share
+          : arm.kind == portfolio_arm_kind::parity || arm.kind == portfolio_arm_kind::symcount
+              ? g_parity_rss_share
+              : acacia::obligation::rss_share (arg_values.arms->size ())};
+#endif
     if (arm.kind == portfolio_arm_kind::obligation)
       dispatch_helper (arg_values);
     if (arm.kind == portfolio_arm_kind::parity) {

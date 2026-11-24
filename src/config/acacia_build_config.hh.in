@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef ACACIA_HAVE_ABC
+# define ACACIA_HAVE_ABC @ACACIA_HAVE_ABC@
+#endif
+
 #ifndef ACACIA_PRESET
 #mesondefine ACACIA_PRESET
 #endif

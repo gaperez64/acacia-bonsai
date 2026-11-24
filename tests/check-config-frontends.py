@@ -30,11 +30,13 @@ import sys
 # as a past local_certificate default mismatch demonstrated.
 INTENTIONAL_DIVERGENCE = {}
 
-# Build products, benchmark inputs and compiler flags are outside the solver
+# Build products, external dependencies, benchmark inputs and compiler flags are outside the solver
 # registry. Keep this list explicit so a new solver option cannot escape checks.
 NON_SOLVER_OPTIONS = {
     "build_tests",
     "build_python",
+    "abc",
+    "abc_path",
     "acacia_tlsf_corpus_dir",
     "acacia_compiler_profile",
 }

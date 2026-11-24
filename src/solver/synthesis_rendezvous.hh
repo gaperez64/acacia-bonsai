@@ -43,6 +43,7 @@ namespace acacia::synthesis {
   void test_after_selection ();
   void test_before_reap (int worker_pid);
   void test_before_publication ();
+  void test_before_aiger_abc ();
 #endif
 
   // A completed proof may race; controller construction and export may not.

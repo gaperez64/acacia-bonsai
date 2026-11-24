@@ -1,3 +1,11 @@
+controller_writer_dep = declare_dependency ()
+if have_abc
+  controller_writer_lib = static_library ('controller-writer', 'solver/aiger_abc.cc',
+    include_directories : inc, dependencies : [spot_dep, bddx_dep, abc_dep], install : false)
+  controller_writer_dep = declare_dependency (link_with : controller_writer_lib,
+                                             dependencies : abc_dep)
+endif
+
 parity_lib = static_library ('parity', 'solver/parity/game.cc',
   include_directories : inc, dependencies : [spot_dep, bddx_dep], install : false)
 tlsf_dpa_lib = static_library ('tlsf-dpa', 'solver/parity/tlsf_dpa.cc',
@@ -46,7 +54,7 @@ ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
                      include_directories : inc,
                      install: true,
                      install_tag: 'cli',
-                     dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps)
+                     dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps + [controller_writer_dep])
 
 # #454: the count-quotiented game, standalone until it becomes an arm.
 symcount_exe = executable ('acacia-symcount',
@@ -66,5 +74,5 @@ if native_test_hooks
     cpp_args : ['-DACACIA_NATIVE_TEST_HOOKS=1', '-DTLSF_GR1_REDUCTION_TEST_FAULT'],
     install : false,
     dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep,
-                    tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps)
+                    tlsf_native.get_variable ('tlsf_internal_dep')] + tlsf_deps + [controller_writer_dep])
 endif

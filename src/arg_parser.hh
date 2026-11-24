@@ -77,6 +77,7 @@ struct arg_parse_result {
     SPOT_FAST_T spot_fast = SPOT_FAST_DET;
     std::optional<std::string> synth_fname = std::nullopt;
     std::string aiger_mode = "isop";
+    bool aiger_abc = ACACIA_HAVE_ABC;
     acacia::parity_route::mealy_reduction parity_mealy_reduction =
         acacia::parity_route::default_mealy_reduction;
     bool formula_specified = false;

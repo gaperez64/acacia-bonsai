@@ -49,6 +49,8 @@ AIGER controller with:
 `both+ud` tries both encoders and negated conditions. Modes containing `+dc`
 are rejected because they can produce incorrect controllers (#466).
 
+`--aiger-abc on|off` shrinks controllers under `-s` (default `on` with ABC, `off` otherwise).
+
 ## Guides
 
 - [CLI](docs/cli.md): inputs, verdicts, exit codes, controllers and solver arms.

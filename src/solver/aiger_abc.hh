@@ -1,0 +1,19 @@
+#pragma once
+
+#include "configuration.hh"
+#include <cstdint>
+#include <functional>
+#include <string>
+
+namespace acacia::synthesis {
+  struct abc_options {
+      bool enabled = false;
+      uint64_t deadline = 0, worker_rss_share = UINT64_MAX;
+  };
+  inline abc_options aiger_abc;
+#if ACACIA_HAVE_ABC
+  // Failure leaves the encoded Spot circuit intact. The callback runs only in the child.
+  void shrink_aiger (std::string& text, const abc_options& options,
+                     const std::function<void ()>& before = {});
+#endif
+}

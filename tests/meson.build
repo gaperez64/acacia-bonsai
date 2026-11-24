@@ -530,7 +530,7 @@ game_backend_integration = executable (
               '-DACACIA_FORWARD_SAFETY_SOLVER=1',
               '-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1'] + preparation_fault_cpp_args,
   link_args : preparation_fault_link_args,
-  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps + [controller_writer_dep],
   install : false,
 )
 if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release')
@@ -748,6 +748,20 @@ controller_check = executable (
   'controller-check', 'controller_check.cc',
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
+test ('aiger-abc-cli', py,
+      args : [files ('check-aiger-abc.py'), ab_exe, have_abc ? 'true' : 'false'],
+      suite : ['unit', 'cli', 'synthesis'], depends : ab_exe)
+if have_abc
+  abc_test_args = [files ('check-aiger-abc.py'), ab_exe, 'true', controller_check,
+                   files ('fixtures/aiger-abc.tlsf')]
+  abc_test_depends = [ab_exe, controller_check]
+  if preparation_fault_cpp_args.length () > 0
+    abc_test_args += [game_backend_integration]
+    abc_test_depends += [game_backend_integration]
+  endif
+  test ('aiger-abc', py, args : abc_test_args, suite : ['unit', 'cli', 'synthesis'],
+        timeout : 90, depends : abc_test_depends)
+endif
 aiger_mode_test = executable (
   'aiger-mode-test', 'aiger_mode_test.cc',
   objects : ab_exe.extract_objects (
@@ -756,7 +770,7 @@ aiger_mode_test = executable (
     'solver/mealy_to_moore.cc'),
   link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib],
   include_directories : inc,
-  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps)
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps + [controller_writer_dep])
 test ('aiger-mode', py,
       args : [files ('check-aiger-mode.py'), ab_exe, controller_check, aiger_mode_test],
       suite : ['unit', 'cli', 'synthesis'], timeout : 120,

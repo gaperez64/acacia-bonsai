@@ -581,6 +581,17 @@ def test_registry_meson_types_choices_and_bounds_agree():
         assert set(family["choices"]) == set(declared["choices"]), family["meson"]
 
 
+def test_external_abc_is_resolved_by_meson():
+    options, _ = load_module().load_registry()
+    frontends = load_module(ROOT / "tests" / "check-config-frontends.py")
+    declared = frontends.meson_options(ROOT / "meson.options")
+    abc = options["dependencies"]["abc"]
+    assert declared[abc["meson"]] == {"type": "feature", "default": abc["default"]}
+    assert declared[abc["path_meson"]] == {"type": "string", "default": ""}
+    assert {abc["meson"], abc["path_meson"]} <= frontends.NON_SOLVER_OPTIONS
+    assert f'@{abc["macro"]}@' in (ROOT / "src/config/acacia_build_config.hh.in").read_text()
+
+
 
 
 

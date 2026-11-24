@@ -27,6 +27,42 @@ endif
 spot_dep = dependency ('libspot')
 bddx_dep = dependency ('libbddx')  # Spot's copy of BuDDy
 posets_dep = dependency ('posets')
+abc_dep = declare_dependency ()
+have_abc = false
+if not get_option ('abc').disabled ()
+  abc_path = get_option ('abc_path')
+  abc_dirs = []
+  abc_includes = []
+  if abc_path != ''
+    abc_dirs = [abc_path, abc_path / 'lib', abc_path / 'lib64']
+    foreach dir : [abc_path / 'src', abc_path / 'include', abc_path / 'include/abc']
+      if import ('fs').is_dir (dir)
+        abc_includes += dir
+      endif
+    endforeach
+  endif
+  abc_lib = cpp.find_library ('abc', dirs : abc_dirs, static : true, required : false)
+  abc_system = [dependency ('threads')]
+  foreach lib : ['m', 'dl', 'rt']
+    abc_system += cpp.find_library (lib, required : false)
+  endforeach
+  abc_candidate = declare_dependency (dependencies : [abc_lib] + abc_system,
+                                      include_directories : abc_includes)
+  have_abc = abc_lib.found () and cpp.links ('''
+    #include <misc/util/abc_namespaces.h>
+    #include <base/main/abcapis.h>
+    int main() {
+      Abc_Start();
+      Cmd_CommandExecute(Abc_FrameGetGlobalFrame(), "strash; dc2");
+      Abc_Stop();
+    }
+    ''', dependencies : abc_candidate, name : 'external ABC C API')
+  if have_abc
+    abc_dep = abc_candidate
+  elif get_option ('abc').enabled ()
+    error ('ABC library or headers unavailable; set -Dabc_path to an ABC tree or prefix')
+  endif
+endif
 tlsf_native = subproject ('tlsf-tools', default_options : [
   'cpp_std=c++23', 'research_tools=false',
   # The upstream test suite requires its CLI tools. Acacia builds just the
@@ -77,6 +113,7 @@ else
 endif
 
 build_conf = configuration_data ()
+build_conf.set ('ACACIA_HAVE_ABC', have_abc ? 1 : 0)
 build_conf.set ('VECTOR_IMPL_AUTO', 'simd_vector_backed')
 if get_option ('acacia_preset') != ''
   build_conf.set_quoted ('ACACIA_PRESET', get_option ('acacia_preset'))

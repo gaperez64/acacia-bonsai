@@ -1,5 +1,16 @@
 #include "phase_records.hh"
 #include "solver/synthesis_rendezvous.hh"
+#include <cstdio>
+#include <cstdlib>
+
+namespace acacia::synthesis {
+  void test_before_aiger_abc () {
+    if (std::getenv ("ACACIA_TEST_AIGER_ABC_FAILURE")) {
+      std::fputs ("forced ABC failure\n", stderr);
+      throw std::runtime_error ("forced ABC failure");
+    }
+  }
+}
 
 #ifdef ACACIA_TLSF_PREPARATION_TEST_HOOKS
 # include <cstdio>

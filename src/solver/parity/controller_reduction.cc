@@ -1,7 +1,6 @@
 #include "solver/bounded_subprocess.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/parity/route.hh"
-#include "solver/scope_memory.hh"
 #include <spot/twaalgos/mealy_machine.hh>
 
 #include <memory>
@@ -12,7 +11,6 @@
 
 namespace acacia::parity_route {
   namespace {
-    constexpr rlim_t max_memory_bytes = rlim_t {512} * 1024 * 1024;
     constexpr size_t payload_bytes = 1024 * 1024;
     constexpr int unchanged_exit = 8, size_exit = 9;
     struct payload {
@@ -151,38 +149,8 @@ namespace acacia::parity_route {
                          arena->num_sets () > 4))
         cause = "size";
       else {
-        bool no_limit = false;
-        const auto limit = scope_memory ("memory.max", scope_directory, &no_limit);
-        constexpr uint64_t reserve = uint64_t {64} * 1024 * 1024;
-        const auto rss_kb = resource_snapshot (getpid ()).rss_kb;
-        const uint64_t resident = rss_kb > 0 ? uint64_t (rss_kb) * 1024 : 0;
-        cause = "scope_memory";
-        if (no_limit) {
-          memory_bytes = max_memory_bytes;
-          cause = "resource";
-        }
-        else if (const auto used = scope_memory ("memory.current", scope_directory);
-                 limit && used) {
-          const auto threshold = *limit - *limit / 8;
-          const uint64_t headroom = threshold > *used ? threshold - *used : 0;
-          // Cover a full resident copy-on-write plus transfer; leave half the rest unused.
-          const auto margin = std::max (reserve, resident) + sizeof (payload);
-          if (headroom > margin)
-            memory_bytes = std::min<uint64_t> (max_memory_bytes, (headroom - margin) / 2);
-          cause = "scope_headroom";
-        }
-        if (memory_bytes) {
-          // Charge both resident sets and transfer against the supervisor's worker share.
-          const auto parent_bytes = resident + sizeof (payload);
-          const auto share = config.worker_rss_share;
-          const auto available = share > parent_bytes ? share - parent_bytes : 0;
-          if (available < memory_bytes) {
-            memory_bytes = available;
-            cause = "rss_share";
-          }
-          if (!resident || memory_bytes < resident + reserve)
-            memory_bytes = 0;
-        }
+        memory_bytes = subprocess::optional_memory (sizeof (payload), config.worker_rss_share,
+                                                     scope_directory, cause);
         if (!memory_bytes) {
           record (config.reduction, bool (arena), "skipped", cause, start, deadline, 0, -1);
           return;

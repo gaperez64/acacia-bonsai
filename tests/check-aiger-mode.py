@@ -65,7 +65,7 @@ MAIN { INPUTS { a; b; c; d; } OUTPUTS { grant; }
        GUARANTEE { G (grant <-> ((a && b) || (!a && c) || (a && d))); } }
 ''')
         for arm in ("real:small:backward", "both:obligation:spot", "both:parity:spot"):
-            command = ["--arms", arm, "-T", str(source), "-s", str(circuit)]
+            command = ["--arms", arm, "-T", str(source), "-s", str(circuit), "--aiger-abc", "off"]
             default = run(binary, *command)
             assert default.returncode == 0, (arm, default)
             original = circuit.read_bytes()

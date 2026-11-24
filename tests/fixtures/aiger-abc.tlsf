@@ -1,0 +1,9 @@
+INFO { TITLE: "AIG factoring" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { d; b; a; c; }
+  OUTPUTS { copy; grant; }
+  GUARANTEE {
+    G (grant <-> ((a && b) || (!a && c) || (a && d)));
+    G (copy <-> grant);
+  }
+}

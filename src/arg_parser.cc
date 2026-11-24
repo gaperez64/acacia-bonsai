@@ -41,6 +41,7 @@ void show_help (const char* program_name) {
       << "  -h, --help        print this help message\n"
       << "  -s FILE           synthesize controller and store in FILE\n"
       << "  --aiger-mode MODE  Spot encoding (default isop): ite|isop|both|optim\n"
+      << "  --aiger-abc on|off Shrink controllers (-s only; default on with ABC, off otherwise)\n"
       << "                    with +ud, +sub0|+sub1|+sub2 in any order;\n"
       << "                    comma-separated alternatives keep the smallest circuit\n"
       << "                    a canonical subset of Spot's syntax: no empty components\n"
@@ -461,6 +462,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
   static constexpr int OPT_AIGER_MODE = 1020;
+  static constexpr int OPT_AIGER_ABC = 1022;
   static constexpr int OPT_PARITY_MEALY_REDUCTION = 1021;
   static constexpr int OPT_RESTRICTION_PREPASS = 1019;
   static constexpr int OPT_ORACLE_LAYOUT = 1014;
@@ -490,6 +492,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"help", no_argument, nullptr, 'h'},
       {"oracle-layout", required_argument, nullptr, OPT_ORACLE_LAYOUT},
       {"aiger-mode", required_argument, nullptr, OPT_AIGER_MODE},
+      {"aiger-abc", required_argument, nullptr, OPT_AIGER_ABC},
       {"parity-mealy-reduction", required_argument, nullptr, OPT_PARITY_MEALY_REDUCTION},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
       {"translation-effort", required_argument, nullptr, OPT_TRANSLATION_EFFORT},
@@ -604,6 +607,15 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case OPT_AIGER_MODE: {
         acacia::synthesis::validate_aiger_mode (optarg);
         retval.aiger_mode = optarg;
+        break;
+      }
+      case OPT_AIGER_ABC: {
+        const std::string_view value {optarg};
+        if (value != "on" && value != "off")
+          error (EXIT_CODE_ERROR, "Error: invalid --aiger-abc '%s'; expected on|off.\n", optarg);
+        if (value == "on" && !ACACIA_HAVE_ABC)
+          error (EXIT_CODE_ERROR, "Error: --aiger-abc on requires a build with ABC.\n");
+        retval.aiger_abc = value == "on";
         break;
       }
       case OPT_PARITY_MEALY_REDUCTION: {
