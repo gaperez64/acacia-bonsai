@@ -248,7 +248,8 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             env["ACACIA_TEST_SYNTHESIS_STOP_FD"] = str(gates[7][0])
         if mode == "failure-pressure":
             env["ACACIA_TEST_SYNTHESIS_RECLAIM_FD"] = str(gates[7][0])
-        if mode == "conflict":
+        unfinished = mode in {"unfinished", "unfinished-conflict"}
+        if mode in {"conflict", "unfinished-conflict"}:
             env["ACACIA_TEST_SYNTHESIS_CONFLICT"] = "1"
         arms = "real:small:backward"
         if mode != "alone":
@@ -282,8 +283,8 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             release(1 if first_kind == "parity" else 0)
             events.wait("synthesis_proved")
             events.wait("synthesis_selecting")
-            # Publish matching proofs before SIGSTOP; an undecided helper stays gated.
-            if mode != "alone":
+            # Keep unfinished proofs gated until they receive their own turn.
+            if mode != "alone" and not unfinished:
                 release(0 if first_kind == "parity" else 1)
                 events.wait("synthesis_proved", 2)
             if mode in {"scan", "failure-blocked"}:
@@ -314,6 +315,26 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                 os.write(writes[4], b"e")
                 events.wait("synthesis_exit_boundary")
                 release(2)
+            elif unfinished:
+                os.write(writes[4], b"x")
+                turns = events.wait("synthesis_turn", 2)
+                assert turns[-1]["worker_pid"] == pids["parity"], turns
+                wait_stopped(pids["legacy"])
+                soft, hard = resource.prlimit(pids["parity"], resource.RLIMIT_AS)
+                if os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") != "1":
+                    assert soft != resource.RLIM_INFINITY and hard == original_limit[1], (soft, hard)
+                assert not any(row.get("event") == "parent_verdict"
+                               and row["worker_pid"] == pids["parity"] for row in records(root))
+                release(1)
+                events.wait("synthesis_proved", 2)
+                expected = "legacy" if mode == "unfinished-conflict" else "parity"
+                if mode == "unfinished-conflict":
+                    wait_record("verdict_conflict")
+                else:
+                    events.wait("synthesis_selected", 2)
+                turns = events.wait("synthesis_turn", 3)
+                assert turns[-1]["worker_pid"] == pids[expected], turns
+                release(2 if expected == "legacy" else 3)
             else:
                 os.write(writes[4], b"x")
                 if mode == "stop-pending":
@@ -396,6 +417,12 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                         release(3 if expected == "parity" else 2)
             stdout, stderr = process.communicate(timeout=20)
             rows = records(root)
+            if mode == "unfinished-conflict":
+                assert not any(row.get("event") == "parent_verdict"
+                               and row["worker_pid"] == pids["parity"] for row in rows), rows
+                assert not any(row.get("event") == "stage_entry"
+                               and row.get("stage") == "parity_export"
+                               and row["worker_pid"] == pids["parity"] for row in rows), rows
             if mode in {"alone", "headroom", "conflict", "failure-blocked", "stop-pending"}:
                 expected_code = 3 if mode == "failure-blocked" else 2
                 assert process.returncode == expected_code and not stdout, (process.returncode, stdout, stderr)
@@ -448,7 +475,7 @@ def main():
     for mode in ("fallback", "alone", "headroom", "conflict", "scan", "growth",
                  "failure-pressure", "failure-blocked", "boundary", "turns-legacy",
                  "turns-parity", "undecided", "original-return", "original-ceiling",
-                 "sole-fallback", "stop-pending"):
+                 "sole-fallback", "stop-pending", "unfinished", "unfinished-conflict"):
         if mode in {"growth", "sole-fallback"} and os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1":
             print(f"Skipping {mode} RLIMIT_AS case: incompatible with ASan shadow memory")
             continue

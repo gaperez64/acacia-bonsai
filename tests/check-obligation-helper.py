@@ -548,18 +548,14 @@ def main() -> None:
             finish = helper_rows(rows, "completion")
             assert len(finish) == 1, rows
             assert finish[0]["outcome"] == "error" and not finish[0]["independent_checked"], rows
-            if fault.startswith("export-"):
-                # The selected proof failed; the gated alternatives have no ready proof.
-                assert result.returncode == 2 and not controller.exists(), (fault, result)
-                assert not any(row.get("event") == "parent_winner" for row in rows), rows
-            else:
-                assert result.returncode == 0 and controller.exists(), (fault, result)
-                verify_controller()
-                winner = winner_row(rows)
-                assert winner["effective_backend"] != "obligation", rows
-                assert any(row.get("event") == "worker_spawn"
-                           and row["worker_pid"] == winner["worker_pid"]
-                           and row["mono_ns"] < finish[0]["mono_ns"] for row in rows), rows
+            # An unfinished matching worker can recover even after selected export fails.
+            assert result.returncode == 0 and controller.exists(), (fault, result)
+            verify_controller()
+            winner = winner_row(rows)
+            assert winner["effective_backend"] != "obligation", rows
+            assert any(row.get("event") == "worker_spawn"
+                       and row["worker_pid"] == winner["worker_pid"]
+                       and row["mono_ns"] < finish[0]["mono_ns"] for row in rows), rows
         # Synthesis has the ordinary race/invocation bound, with no local allowance.
         result, rows = run(binary, [*synth_source, *alone, "-s", str(controller)],
                            root, library, "slow-decision", gate=True,

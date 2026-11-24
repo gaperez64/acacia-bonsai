@@ -40,10 +40,15 @@ destination. Only the parent renames a closed, successful REAL controller onto
 that destination, after acceptance checks and competitor cleanup.
 `parent_extraction` records identify the worker and latched verdict (`exit_code`):
 `grace_expired` means its turn ended (initially 250 ms, doubling on each successive
-turn for that worker); `fallback` identifies the next ready proof matching the
-latched verdict, resumed for extraction. Undecided and opposite-verdict workers
-stay stopped. `no_alternative` keeps the current worker running when no admissible
-matching proof remains; `scope_headroom` means a fallback's resumption
+turn for that worker); `fallback` identifies the next worker resumed. Ready proofs
+matching the latched verdict have first priority. Only if none is admissible can
+an undecided worker capable of that verdict receive a turn to finish its proof.
+It receives no export permission until publishing a matching verdict, recorded as
+`parent_verdict:selected`; its extraction turn then starts. An opposite verdict
+records `verdict_conflict` and discards the worker without export permission.
+Workers capable only of the opposite verdict stay stopped. `no_alternative` keeps
+the current worker running when neither class has an admissible alternative;
+`scope_headroom` means a fallback's resumption
 was withheld because scope memory was unreadable or lacked reserve. Stopped
 workers remain charged in `memory.current`. A fallback's RSS budget is its
 admission RSS plus max(64 MiB, admission RSS). Admission requires room for this
@@ -55,6 +60,8 @@ limit. Allocation failure is an unsuccessful worker exit. `address_space_limit_f
 refuses admission if the cap cannot be installed. ASan skips the cap with a diagnostic
 because of its shadow mapping. The existing parent RSS supervisor additionally
 enforces the budget; `rss_budget` marks termination of a fallback exceeding it.
+Undecided workers undergo the same admission, address-space cap and RSS supervision
+as fallback extractors, including sole-survivor cap restoration.
 The first selected extractor never needs admission and keeps its original resource
 policy. Before returning to it, fallbacks that have run are killed and reaped as
 `parent_terminal:original_headroom` if scope usage exceeds the snapshot at its first
@@ -69,8 +76,9 @@ the worker snapshot and do not advance its live sequence. Slow extractors are
 suspended, retained and revisited; contradictory proofs never receive permission
 to export. Stop acknowledgement is polled without blocking deadline or RSS checks;
 an exit racing suspension is accepted before any handoff. After an
-extractor fails with no admissible replacement, `parent_terminal` with reason
-`extraction_irrelevant` identifies killed/reaped undecided or unusable workers.
+extractor fails with no admissible replacement from either priority class,
+`parent_terminal` with reason `extraction_irrelevant` identifies killed/reaped
+unadmitted undecided or unusable workers.
 Admission is retried after freeing their memory; if it still fails, remaining
 workers receive `extraction_failed` and the invocation finishes UNKNOWN (or ERROR
 if a worker reported ERROR). Decision-only runs do not use this scheduling or file protocol.

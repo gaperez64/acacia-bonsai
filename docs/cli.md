@@ -64,11 +64,17 @@ can leave this directory and partial private files behind; they can be removed
 after the invocation stops. The requested `FILE` is unchanged until publication.
 Publication replaces its directory entry, including a symlink or FIFO.
 
-Ready proofs matching the first verdict can take turns constructing a controller.
+At turn expiry, ready proofs matching the first verdict have priority. Only when
+none is admissible can an undecided worker capable of that verdict take a turn
+to finish its proof. Its export gate stays closed until it publishes a matching
+verdict; an opposite verdict is rejected. Workers capable only of the opposite
+verdict stay stopped. Turns start at 250 ms and double separately for each worker.
+This lets unfinished searches progress while the selected extractor stalls.
 The first extractor always resumes under its original resource policy; fallback
 workers are reclaimed if they reduce its saved scope headroom. Before a fallback
 resumes, its soft address-space limit is capped at its current mapping size plus
-its admitted RSS budget, with RSS supervision as an additional check. Allocation
+its admitted RSS budget, with RSS supervision as an additional check. These same
+admission checks and limits apply to undecided workers. Allocation
 failure discards that worker. A sole surviving fallback regains its hard
 address-space limit and loses the additional RSS ceiling. ASan skips the
 address-space cap with a diagnostic because its shadow mapping is incompatible.
