@@ -6,6 +6,7 @@
 #include <string>
 
 namespace acacia::synthesis {
+  inline constexpr size_t aiger_abc_payload_bytes = 1024 * 1024;
   struct abc_options {
       bool enabled = false;
       uint64_t deadline = 0, worker_rss_share = UINT64_MAX;

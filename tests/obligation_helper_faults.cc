@@ -10,6 +10,7 @@
 #include <fstream>
 #include <new>
 #include <ostream>
+#include <spanstream>
 #include <poll.h>
 #include <spot/twaalgos/aiger.hh>
 #include <spot/twaalgos/mtdswa.hh>
@@ -123,6 +124,17 @@ namespace spot {
   }
 
   std::ostream& print_aiger (std::ostream& os, const_aig_ptr circuit) {
+    if (const char* failure = std::getenv ("ACACIA_TEST_AIGER_STAGING_FAILURE");
+        failure && dynamic_cast<std::ospanstream*> (&os)) {
+      std::fprintf (stderr, "forced AIGER staging %s\n", failure);
+      if (std::strcmp (failure, "exception") == 0)
+        throw std::bad_alloc ();
+      if (std::strcmp (failure, "oversize") == 0)
+        os << std::string (1024 * 1024 + 1, ' ');
+      else
+        os.setstate (std::ios::badbit);
+      return os;
+    }
     const char* mode = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
     const std::string_view fault = mode ? mode : "";
     if (obligation_entered && fault == "export-stall") {

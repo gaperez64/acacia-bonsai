@@ -752,15 +752,15 @@ test ('aiger-abc-cli', py,
       args : [files ('check-aiger-abc.py'), ab_exe, have_abc ? 'true' : 'false'],
       suite : ['unit', 'cli', 'synthesis'], depends : ab_exe)
 if have_abc
+  abc_budget_test = executable ('aiger-abc-budget-test', 'aiger_abc_budget_test.cc',
+    include_directories : inc, dependencies : [controller_writer_dep, spot_dep, bddx_dep])
   abc_test_args = [files ('check-aiger-abc.py'), ab_exe, 'true', controller_check,
-                   files ('fixtures/aiger-abc.tlsf')]
-  abc_test_depends = [ab_exe, controller_check]
+                   files ('fixtures/aiger-abc.tlsf'), abc_budget_test]
+  abc_test_depends = [ab_exe, controller_check, abc_budget_test, abc_helper]
   if preparation_fault_cpp_args.length () > 0
     abc_test_args += [game_backend_integration]
     abc_test_depends += [game_backend_integration]
   endif
-  test ('aiger-abc', py, args : abc_test_args, suite : ['unit', 'cli', 'synthesis'],
-        timeout : 90, depends : abc_test_depends)
 endif
 aiger_mode_test = executable (
   'aiger-mode-test', 'aiger_mode_test.cc',
@@ -1126,6 +1126,10 @@ if host_machine.system () == 'linux'
   obligation_helper_faults = shared_library (
     'obligation-helper-faults', 'obligation_helper_faults.cc',
     dependencies : [spot_dep, bddx_dep, cpp.find_library ('dl')], install : false)
+  if have_abc
+    abc_test_args += ['--fault-library', obligation_helper_faults]
+    abc_test_depends += [obligation_helper_faults]
+  endif
   obligation_cli_args = [files ('check-obligation-helper.py'), ab_exe,
                          obligation_helper_test, obligation_helper_faults,
                          meson.current_build_dir (),
@@ -1146,6 +1150,11 @@ if host_machine.system () == 'linux'
         env : ['LD_PRELOAD=' + obligation_helper_faults.full_path ()],
         suite : ['unit', 'obligation', 'synthesis'], timeout : 120,
         depends : [ab_exe, obligation_helper_faults])
+endif
+
+if have_abc
+  test ('aiger-abc', py, args : abc_test_args, suite : ['unit', 'cli', 'synthesis'],
+        timeout : 90, depends : abc_test_depends)
 endif
 
 parity_route_test = executable ('parity-route-test',

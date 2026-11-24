@@ -20,7 +20,9 @@ RUN cargo install cbindgen --version 0.29.4 --locked
 
 RUN git clone https://github.com/berkeley-abc/abc.git /opt/abc \
     && cd /opt/abc && git checkout bd23a971519f70b1a8dbb8d0a2c0574eeb69af69 \
-    && make -j2 ABC_USE_NO_READLINE=1 ABC_USE_PIC=1 libabc.a
+    && make -j2 ABC_USE_NO_READLINE=1 ABC_USE_PIC=1 OPTFLAGS=-O2 libabc.a \
+    && find . -type f \( -name '*.o' -o -name '*.d' \) -delete \
+    && rm -rf .git
 ENV ACACIA_DEPENDENCY_ARGS="-Dabc=enabled -Dabc_path=/opt/abc"
 
 # Spot sources — NOT compiled; user compiles with -march=native

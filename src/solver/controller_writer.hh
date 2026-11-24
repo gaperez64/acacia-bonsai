@@ -5,7 +5,7 @@
 
 #include <fstream>
 #include <spot/twaalgos/aiger.hh>
-#include <sstream>
+#include <spanstream>
 #include <string>
 #include <utility>
 
@@ -36,11 +36,17 @@ namespace acacia::synthesis {
       return false;
 #if ACACIA_HAVE_ABC
     if (aiger_abc.enabled) {
-      std::ostringstream encoded;
-      spot::print_aiger (encoded, std::move (controller));
-      if (!encoded)
-        return false;
-      return write_controller (filename, encoded.str ());
+      try {
+        std::string buffer (aiger_abc_payload_bytes, '\0');
+        std::ospanstream encoded (buffer);
+        spot::print_aiger (encoded, controller);
+        if (encoded) {
+          buffer.resize (encoded.span ().size ());
+          return write_controller (filename, std::move (buffer));
+        }
+      } catch (...) {
+        // Staging is optional; retain the controller for the streaming writer below.
+      }
     }
 #endif
     std::ofstream synthesis_file (filename);
