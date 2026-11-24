@@ -50,6 +50,8 @@ namespace acacia::obligation {
 
   // The helper's fixed RSS threshold is supervised by the parent.
   bool limit_address_space () noexcept;
+  // Bound a stopped fallback's additional mappings; UINT64_MAX restores its hard limit.
+  bool limit_extraction_address_space (pid_t pid, uint64_t budget) noexcept;
   uint64_t rss_share (size_t workers, memory_share policy = memory_share::equal);
   uint64_t resident_bytes (pid_t pid) noexcept;
   // Only this process's cgroup, or the supplied directory; no value if unbounded/unreadable.

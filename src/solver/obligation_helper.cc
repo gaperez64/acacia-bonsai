@@ -174,6 +174,38 @@ namespace acacia::obligation {
 #endif
   }
 
+  bool limit_extraction_address_space (pid_t pid, uint64_t budget) noexcept {
+#ifdef __SANITIZE_ADDRESS__
+    if (budget != UINT64_MAX)
+      std::fprintf (stderr,
+                    "Skipping fallback RLIMIT_AS cap: incompatible with ASan shadow memory\n");
+    return true;
+#elif defined(__linux__)
+    rlimit address {};
+    if (prlimit (pid, RLIMIT_AS, nullptr, &address) != 0)
+      return false;
+    if (budget == UINT64_MAX)
+      address.rlim_cur = address.rlim_max;
+    else {
+      char path[64];
+      snprintf (path, sizeof path, "/proc/%ld/statm", long (pid));
+      FILE* file = std::fopen (path, "r");
+      if (!file)
+        return false;
+      unsigned long long pages = 0;
+      const bool read = std::fscanf (file, "%llu", &pages) == 1;
+      std::fclose (file);
+      const long page_size = sysconf (_SC_PAGESIZE);
+      if (!read || page_size <= 0 || pages > (UINT64_MAX - budget) / uint64_t (page_size))
+        return false;
+      address.rlim_cur = std::min (address.rlim_cur, rlim_t (pages * page_size + budget));
+    }
+    return prlimit (pid, RLIMIT_AS, &address, nullptr) == 0;
+#else
+    return false;
+#endif
+  }
+
   uint64_t rss_share (size_t workers, memory_share policy) {
     uint64_t cap = uint64_t {8} * 1024 * 1024 * 1024;
     rlimit address {};

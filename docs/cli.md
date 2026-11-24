@@ -62,6 +62,16 @@ rename, preserving an existing `FILE` on extraction failure. Normal exit, handle
 interruption and timeout remove the directory. Killing the parent with `SIGKILL`
 can leave this directory and partial private files behind; they can be removed
 after the invocation stops. The requested `FILE` is unchanged until publication.
+Publication replaces its directory entry, including a symlink or FIFO.
+
+Ready proofs matching the first verdict can take turns constructing a controller.
+The first extractor always resumes under its original resource policy; fallback
+workers are reclaimed if they reduce its saved scope headroom. Before a fallback
+resumes, its soft address-space limit is capped at its current mapping size plus
+its admitted RSS budget, with RSS supervision as an additional check. Allocation
+failure discards that worker. A sole surviving fallback regains its hard
+address-space limit and loses the additional RSS ceiling. ASan skips the
+address-space cap with a diagnostic because its shadow mapping is incompatible.
 
 `--parity-mealy-reduction none|bisim|bisim-output|reselect` selects the parity route's
 post-extraction reduction under `-s` only. `bisim-output` uses Spot's

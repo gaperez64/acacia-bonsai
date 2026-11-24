@@ -491,8 +491,7 @@ def main() -> None:
                            lambda state, letter: state if letter["o"] else None, moore=False)
             assert oracle.valid, oracle
 
-        # Both workers must serialize through an ofstream opened on the requested
-        # destination. The interposer rejects buffered or parent-side serialization.
+        # Both workers serialize through a private ofstream before parent publication.
         for inputs in (["-i", ""], ["-i", "i"]):
             outputs = []
             for selection, backend in ((alone, "obligation"),
@@ -508,27 +507,27 @@ def main() -> None:
                 outputs.append(controller.read_bytes())
             assert outputs[0] == outputs[1], "arm and ordinary AIGER formats differ"
 
-        # A symlink follows the same ofstream behavior as ordinary synthesis.
+        # Atomic publication replaces the directory entry, preserving a symlink's target.
         target = Path(directory) / "target.aag"
+        target.write_text("previous target\n")
         link = Path(directory) / "linked.aag"
         link.symlink_to(target)
         result, rows = run(binary, [*synth_source, *alone, "-s", str(link)],
                            root, library, gate=True)
-        assert result.returncode == 0 and link.is_symlink(), result
+        assert result.returncode == 0 and not link.is_symlink(), result
+        assert target.read_text() == "previous target\n"
         assert winner_row(rows)["effective_backend"] == "obligation", rows
-        assert check(Aiger.read(target), 0,
+        assert check(Aiger.read(link), 0,
                      lambda state, letter: state if letter["o"] else None, moore=False).valid
 
-        # With no reader, only parent supervision can stop the blocked worker writer.
+        # Publication also replaces a FIFO without blocking on a reader.
         fifo = Path(directory) / "controller.fifo"
         os.mkfifo(fifo)
         result, rows = run(binary, [*synth_source, *alone, "-s", str(fifo)],
-                           root, library, gate=True, release_stalls=False, outer_seconds=.2,
-                           ready_stage="fifo-open", termination_seconds=2)
-        assert result.returncode == 2 and "REALIZABLE" not in result.stdout, result
-        assert helper_row(rows, "completion")["outcome"] == "cancelled", rows
-        cancellation_reason(rows, "deadline")
-        assert not any(row.get("event") == "parent_winner" for row in rows), rows
+                           root, library, gate=True)
+        assert result.returncode == 0 and fifo.is_file(), result
+        assert check(Aiger.read(fifo), 0,
+                     lambda state, letter: state if letter["o"] else None, moore=False).valid
         # There is no runtime product check. Test-only corruptions are accepted as
         # trusted results, and the offline oracle detects their bad controllers.
         for fault in ("wrong-strategy", "corrupt-controller", "check-exception"):
@@ -546,16 +545,21 @@ def main() -> None:
             controller.unlink(missing_ok=True)
             result, rows = run(binary, [*synth_source, *alone, "-s", str(controller)],
                                root, library, fault, gate=True)
-            assert result.returncode == 0 and controller.exists(), (fault, result)
             finish = helper_rows(rows, "completion")
             assert len(finish) == 1, rows
             assert finish[0]["outcome"] == "error" and not finish[0]["independent_checked"], rows
-            verify_controller()
-            winner = winner_row(rows)
-            assert winner["effective_backend"] != "obligation", rows
-            assert any(row.get("event") == "worker_spawn"
-                       and row["worker_pid"] == winner["worker_pid"]
-                       and row["mono_ns"] < finish[0]["mono_ns"] for row in rows), rows
+            if fault.startswith("export-"):
+                # The selected proof failed; the gated alternatives have no ready proof.
+                assert result.returncode == 2 and not controller.exists(), (fault, result)
+                assert not any(row.get("event") == "parent_winner" for row in rows), rows
+            else:
+                assert result.returncode == 0 and controller.exists(), (fault, result)
+                verify_controller()
+                winner = winner_row(rows)
+                assert winner["effective_backend"] != "obligation", rows
+                assert any(row.get("event") == "worker_spawn"
+                           and row["worker_pid"] == winner["worker_pid"]
+                           and row["mono_ns"] < finish[0]["mono_ns"] for row in rows), rows
         # Synthesis has the ordinary race/invocation bound, with no local allowance.
         result, rows = run(binary, [*synth_source, *alone, "-s", str(controller)],
                            root, library, "slow-decision", gate=True,

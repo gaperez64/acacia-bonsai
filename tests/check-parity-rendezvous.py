@@ -43,6 +43,13 @@ def records(directory):
             for line in path.read_text().splitlines()]
 
 
+def wait_stopped(pid):
+    deadline = time.monotonic() + 20
+    while "\nState:\tT" not in Path(f"/proc/{pid}/status").read_text():
+        assert time.monotonic() < deadline, ("worker did not stop", pid)
+        select.select([], [], [], .001)
+
+
 def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
         parent_death=False, unreal=False):
     with tempfile.TemporaryDirectory(dir=scratch) as temporary:
@@ -221,7 +228,8 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                    ACACIA_TEST_SYNTHESIS_SELECTION_FD=str(gates[5][0]),
                    ACACIA_TEST_SYNTHESIS_OBLIGATION_VERDICT_FD=str(gates[6][0]),
                    ACACIA_TEST_SYNTHESIS_FAIL_PID=str(root / "fail-pid"))
-        pressure = mode in {"headroom", "scan", "growth", "failure-pressure", "failure-blocked"}
+        pressure = mode in {"headroom", "scan", "growth", "failure-pressure", "failure-blocked",
+                            "original-return", "turns-legacy", "turns-parity"}
         if pressure:
             (root / "memory.max").write_text(str(512 * 1024 * 1024))
             # Stopped workers' charges are included; 128 MiB of usable headroom otherwise.
@@ -232,6 +240,12 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             env["ACACIA_TEST_SYNTHESIS_PARITY_RSS_BYTES"] = str(160 * 1024 * 1024)
         if mode == "growth":
             env["ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES"] = str(128 * 1024 * 1024)
+        if mode == "original-return":
+            env["ACACIA_TEST_SYNTHESIS_LEGACY_RSS_BYTES"] = str(96 * 1024 * 1024)
+        if mode == "original-ceiling":
+            env["ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES"] = str(128 * 1024 * 1024)
+        if mode == "stop-pending":
+            env["ACACIA_TEST_SYNTHESIS_STOP_FD"] = str(gates[7][0])
         if mode == "failure-pressure":
             env["ACACIA_TEST_SYNTHESIS_RECLAIM_FD"] = str(gates[7][0])
         if mode == "conflict":
@@ -239,7 +253,7 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
         arms = "real:small:backward"
         if mode != "alone":
             arms += ",both:parity:spot"
-        three = mode in {"scan", "failure-pressure", "undecided"}
+        three = mode in {"scan", "failure-pressure", "failure-blocked", "undecided"}
         if three:
             arms += ",both:obligation:spot"
         process = subprocess.Popen([binary, "-T", str(spec), "--arms", arms, "--spot-fast", "off",
@@ -272,13 +286,14 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             if mode != "alone":
                 release(0 if first_kind == "parity" else 1)
                 events.wait("synthesis_proved", 2)
-            if mode == "scan":
+            if mode in {"scan", "failure-blocked"}:
                 release(6)
                 events.wait("synthesis_proved", 3)
             release(5)
             selected, = events.wait("synthesis_selected")
             assert selected["pid"] == pids[first_kind], (selected, ready)
             events.wait("synthesis_turn")
+            original_limit = resource.prlimit(selected["pid"], resource.RLIMIT_AS)
             assert not target.exists()
             if mode == "fallback":
                 private, = root.glob("*.acacia-private-*")
@@ -301,12 +316,15 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                 release(2)
             else:
                 os.write(writes[4], b"x")
-                if mode in {"alone", "headroom", "conflict"}:
+                if mode == "stop-pending":
+                    events.wait("synthesis_stop_pending")
+                    os.write(writes[4], b"t")
+                elif mode in {"alone", "headroom", "conflict"}:
                     reason = {"headroom": "scope_headroom", "conflict": "verdict_conflict",
                               "alone": "no_alternative"}[mode]
                     wait_record(reason)
                     if mode != "alone":
-                        assert "\nState:\tT" in Path(f"/proc/{pids['parity']}/status").read_text()
+                        wait_stopped(pids["parity"])
                         assert not any(row.get("event") == "parent_verdict"
                                        and row["worker_pid"] == pids["parity"] for row in records(root))
                     if mode == "alone":
@@ -319,18 +337,47 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                         "legacy" if first_kind == "parity" else "parity")
                     assert turns[-1]["worker_pid"] == pids[expected], (turns, pids)
                     events.wait("synthesis_selected", 2)
-                    assert "\nState:\tT" in Path(f"/proc/{selected['pid']}/status").read_text()
+                    wait_stopped(selected["pid"])
                     if mode == "scan":
                         wait_record("scope_headroom")
-                        assert "\nState:\tT" in Path(f"/proc/{pids['parity']}/status").read_text()
+                        wait_stopped(pids["parity"])
                     if mode == "undecided":
-                        assert "\nState:\tT" in Path(f"/proc/{pids['obligation']}/status").read_text()
+                        wait_stopped(pids["obligation"])
                     if mode == "growth":
+                        soft, hard = resource.prlimit(pids["legacy"], resource.RLIMIT_AS)
+                        assert soft != resource.RLIM_INFINITY and hard == original_limit[1], (soft, hard)
                         os.write(writes[2], b"x")  # Grow after SIGCONT, then block export again.
+                        failed, = events.wait("synthesis_allocation_failed")
+                        assert failed["pid"] == pids["legacy"], failed
                         turns = events.wait("synthesis_turn", 3)
                         assert turns[-1]["worker_pid"] == pids["parity"], turns
-                        wait_record("rss_budget")
                         assert not Path(f"/proc/{pids['legacy']}").exists()
+                        release(3)
+                    elif mode in {"original-return", "original-ceiling"}:
+                        private, = root.glob("*.acacia-private-*")
+                        partial = private / "1"
+                        partial.write_text("partial fallback controller\n")
+                        if mode == "original-return":
+                            (root / "memory.current").write_text(str(400 * 1024 * 1024))
+                            os.write(writes[4], b"x")
+                        else:
+                            (root / "fail-pid").write_text(str(pids["parity"]))
+                            release(3)
+                        turns = events.wait("synthesis_turn", 3)
+                        assert turns[-1]["worker_pid"] == pids["legacy"], turns
+                        assert resource.prlimit(pids["legacy"], resource.RLIMIT_AS) == original_limit
+                        assert not partial.exists()
+                        if mode == "original-return":
+                            wait_record("original_headroom")
+                            assert not Path(f"/proc/{pids['parity']}").exists()
+                        release(2)
+                        expected = "legacy"
+                    elif mode == "sole-fallback":
+                        soft, hard = resource.prlimit(pids["parity"], resource.RLIMIT_AS)
+                        assert soft != hard, (soft, hard)
+                        os.kill(pids["legacy"], signal.SIGKILL)
+                        wait_record("sole_extractor")
+                        assert resource.prlimit(pids["parity"], resource.RLIMIT_AS) == (hard, hard)
                         release(3)
                     elif mode.startswith("turns-"):
                         total = 7 if mode == "turns-legacy" else 6
@@ -349,11 +396,11 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                         release(3 if expected == "parity" else 2)
             stdout, stderr = process.communicate(timeout=20)
             rows = records(root)
-            if mode in {"alone", "headroom", "conflict", "failure-blocked"}:
+            if mode in {"alone", "headroom", "conflict", "failure-blocked", "stop-pending"}:
                 expected_code = 3 if mode == "failure-blocked" else 2
                 assert process.returncode == expected_code and not stdout, (process.returncode, stdout, stderr)
                 assert not target.exists()
-                if mode == "alone":
+                if mode in {"alone", "stop-pending"}:
                     assert b'"stage":"deadline","status":"expired"' in stderr, stderr
                 if mode == "failure-blocked":
                     assert any(row.get("reason") == "extraction_failed" for row in rows), rows
@@ -367,6 +414,13 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                 winner_kind = ("legacy" if mode == "boundary" else "parity" if mode in {
                     "growth", "failure-pressure"} else expected)
                 assert published["worker_pid"] == pids[winner_kind], rows
+                if mode == "growth":
+                    terminal, = [row for row in rows if row.get("event") == "parent_terminal"
+                                 and row["worker_pid"] == pids["legacy"]]
+                    assert terminal["exit_code"] == 3 and terminal["signal"] == 0, terminal
+                if mode in {"original-return", "original-ceiling"}:
+                    assert not any(row.get("reason") in {"scope_headroom", "rss_budget"}
+                                   and row["worker_pid"] == pids["legacy"] for row in rows), rows
                 if mode == "boundary":
                     assert not any(row.get("reason") == "fallback" for row in rows), rows
                 else:
@@ -393,7 +447,11 @@ def main():
     binary = str(args.binary.resolve())
     for mode in ("fallback", "alone", "headroom", "conflict", "scan", "growth",
                  "failure-pressure", "failure-blocked", "boundary", "turns-legacy",
-                 "turns-parity", "undecided"):
+                 "turns-parity", "undecided", "original-return", "original-ceiling",
+                 "sole-fallback", "stop-pending"):
+        if mode in {"growth", "sole-fallback"} and os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1":
+            print(f"Skipping {mode} RLIMIT_AS case: incompatible with ASan shadow memory")
+            continue
         stalled_extractor(binary, str(args.checker.resolve()), args.scratch, mode)
     for parity_first in (False, True):
         run(binary, args.scratch, parity_first=parity_first)

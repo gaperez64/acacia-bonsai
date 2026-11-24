@@ -261,8 +261,11 @@ namespace {
       return fmemopen (contents, size_t (length), "r");
     }
     const char* destination = std::getenv ("ACACIA_TEST_OBLIGATION_OUTPUT");
-    const bool controller = destination && std::strcmp (path, destination) == 0;
-    // Gate before ofstream opens/truncates the destination, not during printing.
+    const bool controller =
+        destination &&
+        (std::strcmp (path, destination) == 0 ||
+         std::string_view (path).starts_with (std::string (destination) + ".acacia-private-"));
+    // Gate before ofstream opens the controller, not during printing.
     if (controller && !obligation_entered)
       wait_legacy ();
     const char* fault = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
@@ -272,10 +275,6 @@ namespace {
     }
     using function = FILE* (*) (const char*, const char*);
     auto original = reinterpret_cast<function> (dlsym (RTLD_NEXT, symbol));
-    struct stat destination_stat {};
-    if (controller && obligation_entered && stat (path, &destination_stat) == 0 &&
-        S_ISFIFO (destination_stat.st_mode))
-      stage_ready ("fifo-open");
     FILE* file = original (path, mode);
     if (controller && file)
       controller_opened = true;

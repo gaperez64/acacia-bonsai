@@ -43,19 +43,32 @@ that destination, after acceptance checks and competitor cleanup.
 turn for that worker); `fallback` identifies the next ready proof matching the
 latched verdict, resumed for extraction. Undecided and opposite-verdict workers
 stay stopped. `no_alternative` keeps the current worker running when no admissible
-matching proof remains; `scope_headroom` means resumption
+matching proof remains; `scope_headroom` means a fallback's resumption
 was withheld because scope memory was unreadable or lacked reserve. Stopped
-workers remain charged in `memory.current`. The resumed worker's RSS budget is its
+workers remain charged in `memory.current`. A fallback's RSS budget is its
 admission RSS plus max(64 MiB, admission RSS). Admission requires room for this
 entire ceiling below the scope's last eighth, covering COW of shared resident pages
-as well as growth. Unreadable RSS blocks admission. The existing parent RSS supervisor
-enforces the budget for every arm; `rss_budget` marks
-termination of a resumed extractor exceeding it. Refused candidates do not block
+as well as growth. Unreadable RSS blocks fallback admission. Before resumption,
+`prlimit(RLIMIT_AS)` also caps its soft address-space limit at its current mapped
+size plus that budget, preserving the hard limit and any tighter existing soft
+limit. Allocation failure is an unsuccessful worker exit. `address_space_limit_failed`
+refuses admission if the cap cannot be installed. ASan skips the cap with a diagnostic
+because of its shadow mapping. The existing parent RSS supervisor additionally
+enforces the budget; `rss_budget` marks termination of a fallback exceeding it.
+The first selected extractor never needs admission and keeps its original resource
+policy. Before returning to it, fallbacks that have run are killed and reaped as
+`parent_terminal:original_headroom` if scope usage exceeds the snapshot at its first
+suspension (or either reading is unavailable). If a fallback is the only surviving
+worker, `sole_extractor` removes its additional RSS budget and restores its soft
+address-space limit to the hard limit. Exits of suspended workers are reaped by the
+ordinary supervisor too. Failed and reclaimed workers' partial files are removed
+to release their file charges. Refused candidates do not block
 later candidates. `verdict_conflict` rejects an opposite proof. `published` identifies
 the worker whose controller was atomically installed. Parent observations copy
 the worker snapshot and do not advance its live sequence. Slow extractors are
 suspended, retained and revisited; contradictory proofs never receive permission
-to export. An exit racing suspension is accepted before any handoff. After an
+to export. Stop acknowledgement is polled without blocking deadline or RSS checks;
+an exit racing suspension is accepted before any handoff. After an
 extractor fails with no admissible replacement, `parent_terminal` with reason
 `extraction_irrelevant` identifies killed/reaped undecided or unusable workers.
 Admission is retried after freeing their memory; if it still fails, remaining

@@ -70,8 +70,11 @@ namespace acacia::synthesis {
       if (const char* bytes = std::getenv (setting)) {
         const auto size = std::strtoull (bytes, nullptr, 10);
         auto* memory = static_cast<volatile unsigned char*> (std::malloc (size));
-        if (!memory)
+        if (!memory) {
+          std::fprintf (stderr, "{\"stage\":\"synthesis_allocation_failed\",\"pid\":%ld}\n",
+                        long (getpid ()));
           throw std::bad_alloc ();
+        }
         for (size_t i = 0; i < size; i += 4096)
           memory[i] = 1;
       }
@@ -107,6 +110,8 @@ namespace acacia::synthesis {
     gate ("synthesis_starting", "ACACIA_TEST_SYNTHESIS_STARTUP_FD");
   }
   void test_before_verdict (int& verdict) {
+    if (!parity_worker && !obligation_worker)
+      allocate ("ACACIA_TEST_SYNTHESIS_LEGACY_RSS_BYTES");
     if (parity_worker) {
       if (std::getenv ("ACACIA_TEST_SYNTHESIS_CONFLICT"))
         verdict = EXIT_CODE_UNREAL;
@@ -191,4 +196,24 @@ namespace acacia::synthesis {
         throw std::runtime_error ("test wait for interrupted worker failed");
   }
 }
+
+#ifdef __linux__
+extern "C" int __real_waitid (idtype_t, id_t, siginfo_t*, int);
+extern "C" int __wrap_waitid (idtype_t type, id_t pid, siginfo_t* info, int flags) {
+  if ((flags & WSTOPPED) && std::getenv ("ACACIA_TEST_SYNTHESIS_STOP_FD")) {
+    static bool reported = false;
+    if (!reported) {
+      std::fprintf (stderr, "{\"stage\":\"synthesis_stop_pending\"}\n");
+      reported = true;
+    }
+    if (!(flags & WNOHANG)) {
+      char byte;
+      (void) read (std::atoi (std::getenv ("ACACIA_TEST_SYNTHESIS_STOP_FD")), &byte, 1);
+    }
+    *info = {};
+    return 0;
+  }
+  return __real_waitid (type, pid, info, flags);
+}
+#endif
 #endif
