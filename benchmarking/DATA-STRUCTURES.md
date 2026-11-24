@@ -1,324 +1,158 @@
-# Architecture and runtime contracts
+# Solver contracts
 
-This is the living reference for state representations, solver arms and controller
-semantics. [Phase records](legacy-phase-records.md) defines observations;
-[RESULTS](RESULTS.md) holds measurements and gaps; [decisions](decisions.md) records
-admission policy. Exact predecessor documents, including the earlier reviews in
-this file, are in `refactor-closeout20261017`.
+[Configuration](../docs/configuration.md), [phase records](legacy-phase-records.md)
+and the [parity arm](../docs/configuration.md#parity-arms) cover options,
+diagnostics and exact-game routing. Earlier reviews are archived in docs-20261122.
 
-## Configuration and ownership
-
-The JSON [option registry](../config/acacia-options.json), Meson options and
-header fallbacks must agree. The [preset registry](../config/acacia-presets.json)
-selects compile-time variants; inspect the current shipping group with:
-
-```sh
-python3 scripts/acacia-config.py list-group docker_default
-```
-
-K defaults to 2, advances by 3, and stops at 99; CLI K options override these.
-Applicable paths always enable decomposition and realizability simplification.
-Each fixed-K forward search owns its graph, rank interner, losing antichain and
-queues, and discards them before changing K. Long-lived components must own their
-state; builders must not retain references to temporary makers or moved objects.
-
-The REAL worker translates ¬φ directly to a Büchi automaton, called the
-**negated-specification automaton** (`negated_spec_aut`), and reads it universally
-as co-Büchi for φ. Reserve “complement” for an actual complementation of an existing
-automaton: parity tier 4 uses `spot::dualize` to complement a captured REAL worker's
-automaton; original-formula mode reuses its positive translation.
-
-## Ranks, losing sets and graph identities
-
-The ordinary dense state uses the bare Vector, without a zero-length tail wrapper.
-Numeric rank coordinates use signed `-1` for bottom. Boolean-tail coordinates
-have domain `{-1,0}`; packed Boolean encoding maps those to 0 and 1. SIMD padding
-must be initialized consistently or masked, with element-aligned loads unless
-both the base and stride satisfy the required alignment. Byte comparisons must
-preserve signed order.
-
-`acacia_simd_width` selects `native` (the default for all presets), `compatible`
-(128 bits), or `max` (the largest fixed size supported by the library). It maps
-directly to Posets' compile-time width selector and does not dispatch instruction
-sets at runtime; record actual lane counts and compiler target flags for comparisons.
-
-A sparse rank stores sorted `(state, value)` pairs, omits bottom and merges
-repeated states by maximum. `x <= y` requires a matching state with at least the
-value of every stored pair in x; other states in y are unconstrained. A losing
-upset stores minimal generators: reject a rank already above a stored generator,
-otherwise remove generators above it, preserve survivor order and append it.
-For positive K, sparse values lie in [0,K]; safety requires every value below K.
-Accepting increments widen before addition and saturate at K; bottom stays bottom.
-Immutable entries own their cached hash and shifted-support mass. Overflow disables
-the mass prefilter; it never decides dominance. Dense safe envelopes use K−1 for
-numeric coordinates and zero for the Boolean tail. Sparse lazy paths have no global
-Boolean-state threshold. Sparse storage saves space only when enough coordinates are absent. Source:
-[sparse ranks](../src/solver/sparse_forward_rank.hh) and
-[losing antichains](../src/solver/minimal_losing_antichain.hh).
-
-The forward graph has separate environment/controller arrays and numeric IDs.
-Environment ranks are hash-interned with full equality checks for collisions.
-Controller actions advance lazily until a viable successor is found; reverse
-selected-successor dependencies propagate losses. Appends can relocate arrays,
-so references and side indexes must use stable IDs.
-
-Membership in the small losing-generator antichain and reporting all live graph
-nodes dominated by a generator are different operations. A filter may produce
-candidates only; exact pointwise comparison must precede proof/status/dependency
-updates. Clear a node's live membership when it loses, preserve deterministic ID
-order and charge index storage to existing memory limits. No proposed index or
-SIMD replacement is admitted by this reference. The original forward review and
-zero-tail study are retained in `refactor-closeout20261017` and
-`benchmarking-root-legacy`. Sparse-upset example history is in
-`refactor-closeout20261017` and `demand-sparse-20260916`.
-
-## Compact action payloads
-
-One allocation contains a header, sorted nonempty destination/absolute-offset
-records and contiguous endpoints in original order. Construction alone uses a
-count/cursor array. The action handle, list nodes, picker splices, lexicographic
-comparison including empty rows/dimensions, endpoint order and RNG consumption
-retain their dense semantics. Equivariance may derive dense tables without
-changing those semantics. There are no input-specific ordering rules. Source:
-[compact payload](../src/actioners/compact_payload.hh).
-
-The dense oracle in [action_payload_reference.hh](../tests/action_payload_reference.hh)
-checks tables, pickers, RNG state, ranks and strategies. Development measurements
-are in RESULTS; exact action-layout history is in `refactor-closeout20261017`,
-with campaign `legacy20261010-issue-sweep`.
-
-## Sparse guarded oracle
-
-`--oracle-layout grouped|scan` is a runtime selection for search and its independent
-verifier; grouped is the default. Equal destination/level guards are grouped and
-threshold suffixes computed lazily. Thresholds are true below zero, false above K,
-and otherwise OR guards whose unsaturated source value plus increment reaches the
-threshold. Accepting destinations supply the increment; Boolean safety caps are zero.
-Equality uses `!T(q,0)` at bottom and `T(q,K)` at saturation.
-
-Preimage keys refer to immutable ranks owned by the oracle's collision-safe exact
-interner. References span all memo kinds; erase memo entries before releasing their
-ranks. No identities or BDD results cross oracles, managers or K attempts. Threshold
-entries retain coordinates/levels without retaining targets. Empty buckets release
-storage; nonempty interner buckets shrink below one-quarter occupancy. Checked-query
-failure clears prepared predicates before destroying the interner.
-
-The structural memo allowance is rank-node ceiling times node-header size plus
-choice ceiling times choice-header size. `max_oracle_memo_bytes=0` disables retention.
-Account rank/vector capacities, container values, links and buckets; BDD nodes,
-prepared edge groups and allocator metadata are outside this estimate. A completed
-insertion may transiently exceed the allowance, then clears all predicate memos and
-target identities. Prepared groups remain valid, and misses recompute exactly.
-Intern targets after threshold computation so eviction cannot invalidate a query.
-Publish groups, suffixes and preimages only after checked completion.
-
-Release search predicates, prepared ranks, target identities and bucket arrays
-before constructing the independent verifier. Canonical rows and certificate graph
-remain live. The verifier rebuilds its own rows, reader, interner and oracle.
-Search and verifier counters stay separate; payload estimates are not RSS or
-cgroup memory. Original layout history: `refactor-closeout20261017`,
-`legacy20261008-screens`, `legacy20261008-closing`.
-
-## Native GR(1) and lifting arms
+## Native GR(1) and lifting
 
 Every build includes OxiDD and the native frontend. The exact reduction supplies
-`both:gr1:oxidd` and the one-sided `real:gr1:oxidd`/`unreal:gr1:oxidd` arms.
+`both:gr1:oxidd`, `real:gr1:oxidd` and `unreal:gr1:oxidd`.
 `both:gr1-lift:oxidd` tries checked system/environment lifting from shared seeds,
-then the exact direct game. `both:gr1-real-lift:oxidd` tries only system lifting;
-unreal seeds and declined lifts go directly to the exact solve.
-`real:param-lift:oxidd` is the separate parameter-lift arm. These require native
-TLSF input and reject explicit synthesis requests. Build-default native members
-are omitted for LTL and synthesis. A signalled or exhausted worker supplies no verdict.
+then direct solving. `both:gr1-real-lift:oxidd` tries system lifting only;
+`real:param-lift:oxidd` is separate. These arms require native TLSF and reject
+explicit synthesis; default native members are omitted for LTL and synthesis.
+Signals and exhaustion supply no verdict.
 
-The source-bound target context keeps a separate hashed game copy, gives candidate
-generation a const view and rechecks its binding before independent verification.
-Candidate generation alone is never a target proof. Shared seeds/reductions and one
-final check avoid duplicated certification; direct solving remains the fallback.
-The R pre-pass is on by default. `--r-prepass off` disables it inside combined arms,
-leaving direct budgets unchanged; it does not disable the separate parameter arm.
-Direct solving/checking retain 64 MiB artifact caps and OxiDD node/cache caps
-2^22/2^20; the construction budget and invocation deadline do not change with R.
-Native construction limits remain global (4,096 formula nodes, 2,048 APs, 1,024
-conjuncts, 1,024 nodes/conjunct, depth 16, predicted states 2^24, monitor
-10,000 states/150,000 edges); RSS is half the bounded invocation limit divided
-by active arms. Limits/exhaustion remain inconclusive, and the library owns
-structural preparation rather than an extra parent-side BDD precheck.
-`--equivariance on|off` controls the compiled backward pre-pass independently;
-synthesis excludes it. Worker records retain requested switch states even on bypass.
+The source-bound target context owns a separate hashed game copy. Candidate
+generation gets a const view; verification rechecks the binding. Candidates alone
+prove nothing. Shared seeds/reductions and one final check avoid duplicate checks;
+direct solving remains the fallback. R defaults on; `--r-prepass off` disables it
+inside combined arms, preserving direct budgets and the separate parameter arm.
 
-`TlsfGr1BothOptionsV2` / `tlsf_gr1_both_from_target_v2` borrows the legacy lift
-options and observer for the call; it does not take ownership. Null options preserve
-v1 defaults. Existing public struct layouts, entry-point ABI and legacy behavior
-remain unchanged. With both R and U disabled, skip seed discovery, reduction,
-solving, checking and candidate fitting, then use the same prepared target and
-direct solver with unchanged budgets. R-off may coexist with U-on for API callers.
-Routing API history: `refactor-closeout20261017`, `cov20261006-p1ablation`.
+Direct solving/checking use 64 MiB artifact caps and OxiDD node/cache caps
+2^22/2^20. Native construction limits are 4,096 formula nodes, 2,048 APs, 1,024
+conjuncts, 1,024 nodes per conjunct, depth 16, predicted states 2^24 and monitor
+limits 10,000 states/150,000 edges. RSS is half the bounded invocation limit divided
+by active arms. R does not change construction or direct budgets. Limits are
+inconclusive; the library owns preparation.
 
-Before threads start, Acacia and tlsf-tools CLIs default an unset `OXIDD_STACK_SIZE`
-under finite `RLIMIT_AS` to `min(1 GiB, max(8 MiB, RLIMIT_AS / 16))`. Explicit values
-win. Library manager construction and Python imports do not mutate the environment;
-Python hosts can set it before starting threads. Meson owns native preparation and
-packaging. Retired Python/research tools and source-bound proof procedures are in
-`refactor-closeout20261017` and the original `gr1-par2-20260923` (partial),
-`gr1-par2-20260923-selection-N`, `gr1-par2-20260923-stagec-scratch` and
-`opt20260927-p4close` archives.
+`TlsfGr1BothOptionsV2` / `tlsf_gr1_both_from_target_v2` borrows lift options and
+observer for the call. Null options preserve v1 defaults and existing ABI layouts.
+Disabling R and U skips seed discovery, reduction, seed solving/checking and
+candidate fitting, then uses the same prepared target and direct budgets. API
+callers can disable R while keeping U.
+
+Before starting threads, Acacia and tlsf-tools CLIs set an absent
+`OXIDD_STACK_SIZE` under finite `RLIMIT_AS` to
+`min(1 GiB, max(8 MiB, RLIMIT_AS / 16))`. Explicit settings win. Library manager
+construction and Python imports leave the environment alone; Python hosts can set
+it before starting threads.
 
 ## Obligation arm
 
-`both:obligation:spot` is an explicit registry member. It races one original-game
-Spot worker when the positive normalized objective satisfies
-`is_syntactic_obligation()`, after decision-mode realizability simplification and
-before decomposition or UNREAL transformations. Synthesis skips that simplification.
-Names, fingerprints and tuned size thresholds do not select eligibility.
+`both:obligation:spot` runs Spot on the original normalized positive objective when
+`is_syntactic_obligation()` accepts it, after decision-mode realizability
+simplification and before decomposition or UNREAL transformations. Synthesis skips
+that simplification. Names, fingerprints and tuned size thresholds do not select
+eligibility.
 
-An existing legacy child publishes eligibility; native-only portfolios use an
-existing native child. A helper-only invocation uses one supervised preparation
-child and returns UNKNOWN if ineligible. Launch ordinary arms first and omit the
-optional helper from their construction/RSS/thread shares. Ineligible default
-invocations launch no helper. The eligible helper re-normalizes/rechecks inside its
-own supervised process, inherits the cgroup and is killed/reaped on race loss,
-deadline, interruption or parent failure; Linux also uses parent-death SIGKILL.
+A legacy child publishes eligibility, or an existing native child does so for a
+native-only portfolio. Helper-only calls use one supervised preparation child and
+return UNKNOWN if ineligible. Launch ordinary arms first; exclude the optional
+helper from their construction/RSS/thread shares. Ineligible defaults launch no
+helper. The helper rechecks eligibility, inherits the cgroup and is killed/reaped
+on race loss, deadline, interruption or parent failure (parent-death SIGKILL on
+Linux).
 
-Decision mode calls Spot once with `realizability=true` and `debug=-1`, retaining
-no strategy and performing no recheck. Normal REAL/UNREAL returns have matching
-true/false root colors and acceptance. Synthesis calls with `false`, retaining a
-REAL strategy; losing synthesis declines to ordinary workers. Null/empty/malformed
-returns, exceptions, abnormal exits and mismatched published outcomes never decide.
-Allocation failure is exhausted. Typed outcomes are `completed_REAL`,
-`completed_UNREAL`, `inapplicable`, `exhausted`, `cancelled`, `error`.
+Decision mode calls Spot once with `realizability=true`, `debug=-1`, retains no
+strategy and performs no recheck. Completed REAL/UNREAL returns require matching
+root colors and acceptance. Synthesis calls with `false` and retains a REAL
+strategy; a losing synthesis attempt declines to ordinary workers. Malformed
+returns, exceptions, abnormal exits or mismatched outcomes cannot decide;
+allocation failure is exhausted. Outcomes are `completed_REAL`, `completed_UNREAL`,
+`inapplicable`, `exhausted`, `cancelled`, `error`.
 
-Both decisions and exported REAL controllers trust Spot exactly:
-`trust=spot_exact`, `same_library_checked=false`, `independent_checked=false`.
-No general Büchi translation or independent check runs in production. Independent
-controller/strategy, corruption and timing checks remain offline tests. Historical
-same-library/independently-checked policies are preserved in
-`refactor-closeout20261017`; evidence: `postmem20261011-p2`, `postmem20261012-closing`,
-`obligation-trust20261013`, `otd-A-obligation20261015`.
+Production trusts decisions and exported REAL controllers: `trust=spot_exact`,
+`same_library_checked=false`, `independent_checked=false`. Independent strategy,
+controller, corruption and timing checks run in tests.
 
-Registration traverses the formula DAG: inputs first for Mealy, outputs first for
-raw Moore, with the remaining block in traversal order. Retain unused declared
-signals in the interface. Native TLSF already supplies effective-Mealy lowering
-and strict normalization; do not shift or swap again. Decision and synthesis have
-no fixed local wall allowance. The invocation acceptance deadline still applies.
+Registration walks the formula DAG, inputs first for Mealy and outputs first for
+raw Moore, then the remaining block in traversal order. Keep unused declared
+signals. Native TLSF already applies effective-Mealy lowering and strict
+normalization; do not repeat them. Only the invocation deadline limits wall time.
 
-`--obligation-memory-share equal|alone` defaults to equal. The helper allowance is
-half the smaller of the run limit and 8 GiB (at most 4 GiB); equal divides it by
-launched workers, alone gives it all to the helper. The separate 8 GiB address cap
-remains. Parent polling can overshoot soft RSS. The default share is unchanged.
-The exact [parity arm](coverage-first/parity-arm.md) has its own concise route,
-trust, memory and licensing contract.
+`--obligation-memory-share equal|alone` defaults to equal. The helper receives half
+the smaller of run limit and 8 GiB, divided by launched workers for equal or all
+assigned to the helper for alone. A separate 8 GiB address cap remains. Parent
+polling can overshoot soft RSS.
 
-## Equivariance allowance
+## Equivariance
 
-`--equivariance on` requires compiled `acacia_enable_equivariant_solver=true`;
-otherwise explicit `on` is an error and an omitted switch defaults to off.
-Synthesis excludes equivariance even when requested. This compiled-support
-contract is retained from `refactor-closeout20261017`, `cov20261006-p1ablation`.
+Explicit `--equivariance on` requires compiled
+`acacia_enable_equivariant_solver=true`; otherwise it is an error. Without compiled
+support the omitted switch is off. Synthesis excludes this prepass. Records retain
+requested switch states even on bypass.
 
-`--equivariance-budget` defaults to absolute `3s`. It applies only to enabled
-backward decision workers. `unbounded` retains the unrestricted pre-pass; a
-fraction `0 <= F < 1` uses remaining time at first entry or a fixed 5 s reference
-without a deadline. Durations accept finite nonnegative `s`/`ms`. Zero immediately
-falls back to ordinary backward work. The first entry fixes the allowance; charge
-only equivariance calls across decomposed games, including exception cleanup.
-Translation and ordinary backward work do not spend it. Exhaustion is STOPPED,
-not inapplicability or a proof; noninterruptible calls can overrun a slice.
+`--equivariance-budget` defaults to absolute `3s` for enabled backward decision
+workers. `unbounded` removes the allowance. A fraction `0 <= F < 1` uses time
+remaining at first entry, or a fixed 5 s reference without a deadline. Finite
+nonnegative durations accept `s`/`ms`; zero falls back immediately. First entry
+fixes the allowance across decomposed games. Only equivariance calls spend it,
+including exception cleanup. Exhaustion is STOPPED; noninterruptible calls may
+overrun.
 
-Positive values must represent at least one nanosecond before truncation; fraction
-validation always uses the 5 s reference (minimum `2e-10`, stored fraction below 1).
-Reject negative zero, underflow, nonfinite/out-of-range or invalid-unit values with
-exit 3 naming the option. Repetition replaces the earlier value. A shorter actual
-deadline can still force fallback. Runtime CLI state owns the policy; compact
-`equivariance_limit` records disclose mode, absolute and reference nanoseconds.
-Archive history: `refactor-closeout20261017`, `cov20261007-eqfull`,
-`cov20261007-screens-localrest`.
+Positive values must represent at least one nanosecond before truncation. Fraction
+validation uses the 5 s reference (minimum `2e-10`, stored fraction below 1).
+Reject negative zero, underflow, nonfinite/out-of-range values and invalid units
+with exit 3 naming the option. Repetition replaces the value; the invocation
+deadline can shorten it. `equivariance_limit` records mode, absolute and reference
+nanoseconds.
 
-## Weakening and fallback
+## Weakening and contradiction checks
 
-`--weakening basic|off` defaults to basic. Basic retains the original safety-core
-rules: more than 64 immediate children of an immediate G conjunction in a top-level
-AND, at most eight singleton obligations in existing order, and the invocation
-deadline. Each candidate is a logical consequence of the simplified original;
-only a proved UNREAL candidate transfers to original UNREAL. An inconclusive
-pre-pass falls back to the full objective. Synthesis skips weakening.
+`--weakening basic|off` defaults to basic. Basic requires more than 64 immediate
+children of an immediate G conjunction in a top-level AND. It tries at most eight
+singleton obligations in existing order within the invocation deadline. Each
+candidate follows logically from the simplified original; only a proved candidate
+UNREAL transfers to original UNREAL. Otherwise solve the full objective. Synthesis
+skips weakening. Extended weakening and its allowance flags were retired in #403.
 
-The invariant behind extension retirement is that every shipped configuration
-selects basic by default; only explicit extended selection entered its planner,
-supervised attempts and checked-game receipts. Basic retains its candidate order,
-telemetry, threshold and fallback. The independent guarded certificate checker,
-frontend normalization metadata and descendant accounting remain shared contracts.
 `check-weakening-games.py` compares basic/off and implicit defaults with Spot's
-exact parity oracle over generated LTL/TLSF, strict semantics and renamings;
+exact parity oracle on generated LTL/TLSF, strict semantics and renamings.
 `unreal_safety_core_witnesses_test.cc` checks threshold, order and implication.
 
-Extended weakening and its allowance flags were retired by the maintainer in
-#403 (A12), superseding the 2026-10-08 retain-opt-in policy. The CLI explicitly
-rejects `--weakening extended`, `--weakening-attempt-ms` and `--weakening-total-ms`;
-select basic or off instead. This removes a sound experimental capability after
-zero-gain screens, not a claim of equivalence for the removed mode. Historical
-measurements and record readers remain available: `cov20261006-p1ablation`,
-`cov20261007-screens`, `refactor-closeout20261017`.
-
-## Forced-output contradiction proof
-
-The direct checker declines a top-level implication. Consequence collection
-descends only through conjunctions and direct G bodies, splitting immediate
-`G(A & B)` into global conjuncts. It never searches under disjunction, implication,
-negation or temporal binary operators for consequences. Invariants are output-only
-Boolean bodies of these global consequences; Boolean disjunction inside a selected
-body is allowed. Their conjunction `chi_all=false` proves unsatisfiability directly.
-
-Responses require output-only Boolean `beta` after a finite X chain or F, with
-either an unconditional true trigger or a satisfiable bounded input-only trigger.
-Supported triggers use input APs, Boolean conjunction/disjunction, literal negation
-and finite X offsets; unsupported syntax declines. The environment can force such
-a finite trigger. A response proves UNREAL only when `chi_all & beta=false`.
-With no invariants, `chi_all=true`, so only `beta=false` can match; an empty
-invariant set alone proves nothing. Exact proof review: `refactor-closeout20261017`
-(`DATA-STRUCTURES.md`, forced-output checker section).
+The forced-output checker declines top-level implications. It collects consequences
+only through conjunctions and direct G bodies, splitting immediate `G(A & B)`.
+Global output-only Boolean invariants form `chi_all`; `chi_all=false` proves
+unsatisfiability. Responses need output-only Boolean `beta` after finite X or F,
+and a true or satisfiable bounded input-only trigger. Triggers support Boolean
+conjunction/disjunction, literal negation and finite X offsets. Unsupported syntax
+declines. The environment can force the trigger; `chi_all & beta=false` proves
+UNREAL. Without invariants, `chi_all=true`, so only `beta=false` matches.
 
 ## Guarded translation
 
-Count distinct F/U/M promises in the unabbreviated negative-normal-form DAG of the
-actual worker objective. Only above Spot's `max_accsets()` run language-preserving
-`favor_event_univ=true` with the existing syntactic `tls-impl=1` rules. Read the width
-from Spot; do not hardcode the installed 64. Keep original alphabets, timing,
-translator preference, Büchi target, backend and certificate checker. At/below the
-width use the original translator. Diagnostic observation never enables rewriting.
+Count distinct F/U/M promises in the actual worker objective's unabbreviated
+negative-normal-form DAG. Above Spot's `max_accsets()`, apply language-preserving
+`favor_event_univ=true` with existing `tls-impl=1` rules. At or below that width,
+use the original translator. Preserve alphabets, timing, translation preference,
+Büchi target, backend and checker. Observation never enables rewriting.
 
-The guard is structural eligibility, not an exact acceptance-allocation prediction
-or a verdict. Census counts are prospective, not executed routes or solves. Retain
-raw/simplified/component frames and the rule discarding a sole decomposition result.
-Isolated per-input census processes avoid accumulated Spot/BDD state. Normalization
-or HOA replay is not an end-to-end solver replacement. Broader unconditional
-normalization remains unadmitted. Exact census/narrative history:
-`refactor-closeout20261017`, `census20261013-isolated`, `legacy20261010-issue-sweep`,
-`postmem20261011-p1`, `benchmarking-root-legacy`.
+Eligibility predicts neither allocated acceptance sets nor a verdict. Censuses
+keep raw, simplified and component frames, discard a sole decomposition result,
+and isolate inputs in separate processes. HOA replay does not replace an
+end-to-end solve; unconditional normalization is unadmitted.
 
 ## Controller timing and publication
 
-AIGER evaluates output and next-latch functions from current latches and inputs,
-then updates all latches simultaneously. Moore outputs must be independent of the
-current inputs in reachable states. Native TLSF performs source-to-effective-Mealy
-lowering once. Moore-target export reuses `mealy_to_moore()`, advancing source latches
-through the dummy initial round introduced by Moore-source lowering. Logical true
-resets use complemented physical latches so emitted AIGER latches start at zero.
-Retain the declared IO interface, including unused signals; used-signal order may
-follow Spot's strategy. The independent [AIGER oracle](../tests/moore_aiger_oracle.py)
-checks final emitted bytes and Moore independence offline. Investigation and master
-port history: `refactor-closeout20261017`, `binary-S4-2e10b4fe`.
+AIGER computes outputs and next latches from current latches and inputs, then
+updates all latches together. Moore outputs must be independent of current inputs
+in reachable states. TLSF lowering occurs once; Moore-target export uses
+`mealy_to_moore()` and advances source latches through the dummy initial round.
+Complemented physical latches encode logical true resets while AIGER starts at
+zero. Preserve unused declared signals; used-signal order can follow Spot's
+strategy. The independent [AIGER oracle](../tests/moore_aiger_oracle.py) checks
+emitted bytes and Moore independence.
 
-With `-s`, the first conclusive full-objective verdict enters the parent rendezvous.
-Select one worker and suspend competitors before controller construction/export;
-ordinary workers retain solved arenas for all decomposed games. Only the selected
-REAL worker may open/write/close the destination. Accept REAL only after a successful
-close; construction/open/write/close/export failure resumes suspended fallbacks.
-UNREAL never opens the destination. Helper-only synthesis retains ordinary fallback
-workers. The process supervisor and invocation deadline cover blocked exporters too.
+With `-s`, the first conclusive full-objective verdict enters the parent
+rendezvous. Suspend competitors before the selected worker constructs/exports.
+Ordinary workers retain solved arenas for all decomposed games. Only the selected
+REAL worker may open/write/close the destination; accept REAL only after close
+succeeds. Export failure resumes fallbacks. UNREAL never opens the destination;
+helper-only synthesis retains ordinary fallbacks. Supervision and the invocation
+deadline also cover blocked exporters.
 
-This verdict/controller publication does not roll back destination bytes: ordinary
-streams follow symlinks and support FIFOs; failed/interrupted invocations may leave
-partial bytes and accept no REAL answer. Synthesis wall time includes selected export
-work and retained proofs can affect peak memory; those effects are unmeasured here.
-The exact synthesis-owner history is in `refactor-closeout20261017` and
-`obligation-trust20261013`.
+Streams follow symlinks and support FIFOs. Failure or interruption can leave
+partial destination bytes without an accepted REAL result. Synthesis wall time
+includes export; retained proofs can affect peak memory.
