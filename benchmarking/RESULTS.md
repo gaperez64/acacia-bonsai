@@ -12,168 +12,57 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
-## 2026-11-22: Bound parity strategy reduction and reselect small games (#467)
+## 2026-11-24: Bounded parity-route controller reduction cuts controller size by 3.8% (#467)
 
-Initial campaign `strat467-20261122` uses implementation `e018f539`, based on master
-`b28b0454`. The verified archive is retained locally under
-`~/scratch/strat467/` pending publication; no evidence-index row is added.
-Release GCC 15.3.1, private Spot 2.16.3, one compile job/LTO thread/test process,
-5G/no-swap scopes and serial measurements use `g3-440/env.sh`, with TMPDIR set
-to `strat467/tmp`. The frozen binary embeds its pre-commit base/dirty version;
-the archive retains the exact implementation sources, build options and hashes.
+Archive `strat467-20261124` (release `evidence-2026-11-24-strat467`). Under `-s`, the
+parity route used to encode the strategy it extracted, unreduced. The strategy was
+positional and reachable, but it kept the expanded parity arena's memory, and no
+Mealy reduction ran before AIGER encoding. `--parity-mealy-reduction
+none|bisim|bisim-output|reselect` (default `reselect`, `-s` only) adds:
 
-**Diagnosis.** Tier four solves the expanded ACD parity arena globally with
-Spot's Zielonka solver. Its strategy is already positional, but the arena's
-translation/ACD state remains controller memory. `apply_strategy` follows that
-single chosen controller edge and every environment edge from the initial state,
-so extraction already excludes unreachable states. It also performs structural
-merging. `solved_game_to_separated_mealy` does **not** call a minimizer or consult
-`minimize_lvl`. The legacy backward extractor explicitly calls
-`simplify_mealy_here(mealy, 2, false)` on its antichain-based controller.
+- **Bisimulation** over input/output-labelled edges.
+- **Output-assignment reduction** (`bisim-output`).
+- **Reselection** (`reselect`), which also re-solves small arenas to pick a
+  strategy that reduces better.
 
-The runtime option `--parity-mealy-reduction none|bisim|bisim-output|reselect`
-adds explicit post-selection work inside winning synthesis runs only. `none`
-retains the previous pipeline. `bisim` and `bisim-output` use Spot levels 1 and 2:
-bisimulation, and bisimulation with output assignment. Both are exact controller
-specializations. They skip machines above 512 states, 8,192 edges, or 65,536
-label BDD nodes summed over edges. The default, `reselect`, additionally copies
-small tier-4 arenas, stably sorts outgoing edges by destination, re-solves, extracts
-and reduces a second strategy, and keeps it only if encoded A+L is strictly smaller.
-That second solve skips above 2,048 arena states, 8,192 edges or four acceptance
-sets. Re-solving is necessary: arbitrary substitutions of winning-region edges
-can lose liveness. Original game certificates and decision solving are untouched.
-Fix pass 1 encodes the incumbent first and forks both optional attempts through
-the restriction prepass's shared supervisor. They share at most 200 ms and 5% of
-the remaining invocation time, with private AS/RSS limits of at most 512 MiB. Failures,
-timeouts, invalid AIGER and non-improvements keep the best encoded incumbent.
-Bounded structural parsing avoids rebuilding BDDs in the parent; each attempt
-records its option, outcome, cause and wall time.
+All optional work runs in a supervised subprocess. Its budget is 200 ms or 5% of
+the remaining time, whichever is smaller. Its memory cap is sized from the
+scope's headroom under a finite limit, and from the worker's RSS share otherwise.
+The unreduced controller is kept and is used whenever the child times out, fails,
+exceeds a limit or does not produce something strictly smaller. Reduction needs
+RSS sampling, which is Linux-only, so elsewhere it is skipped. Decision runs are
+unchanged.
 
-**Initial 43-input smoke panel, not full-corpus admission.** The fixed panel contains the
-three outliers, the previous encoder sweep's 30 varied realizable cases, and ten
-additional historical first-member size wins. Labelled arguments in
-`benchmarking/synthesis-size.py` compare identical frozen
-`otf_sparse_formula_parity` executable bytes at 17 s, with fresh independent
-`tests/controller_check.cc` runs capped at 60 s / 200,000 states.
+**Panel** (43 inputs chosen to include the #280 outliers, 17 s, 60 s
+verification): both options verify all 43. Total ands+latches fall from 36,552
+to 26,104, with no memory skips. Lights_2c5b09da drops from 10,765 to 1,475.
 
-Every option verifies all 43 inputs. There are **zero checker rejections**, synthesis
-or verification timeouts, resource limits, or other failures. Totals and medians
-use the same 43 commonly verified inputs; times sum wall seconds over all attempts.
+**Full sweep** (all 433 REALIZABLE SYNTCOMP26 inputs, same binary):
 
-| Option | Verified / 43 | Rejected | Total A+L | Median A+L | Synthesis s | Check s |
-|---|---:|---:|---:|---:|---:|---:|
-| `none` | 43 | 0 | 36,347 | 45 | 8.04 | 14.68 |
-| `bisim` | 43 | 0 | 35,302 | 41 | 8.13 | 14.67 |
-| `bisim-output` | 43 | 0 | 34,055 | 41 | 8.17 | 14.71 |
-| `reselect` | 43 | 0 | 26,152 | 41 | 8.13 | 14.52 |
-
-Choose `reselect`: 28.0% lower total with unchanged coverage. No input's size
-increases in this panel. Median synthesis times are 0.168–0.169 s and the largest
-individual synthesis time is 0.626 s. This is no general speedup or full-corpus
-coverage claim; the totals include ordinary portfolio selection differences.
-
-Forced `both:parity:spot` reruns isolate the outliers, with all 12 circuits verified:
-
-| Input | `none` states / edges; A+L | `bisim` | `bisim-output` | `reselect` |
+| Option | Controllers | Verified | Ands+latches on 362 common | Median |
 |---|---:|---:|---:|---:|
-| prioritized_arbiter n=6 | 386 / 6,088; 13,070 | unchanged | unchanged | unchanged |
-| Lights_2c5b09da | 153 / 1,387; 10,765 | 117 / 1,225; 9,941 | 111 / 1,204; 9,265 | 25 / 300; 1,475 |
-| prioritized_arbiter n=5 | 162 / 1,748; 4,715 | unchanged | unchanged | unchanged |
+| `none` | 402 | 363 | 589,722 | 35 |
+| `reselect` | 401 | 362 | 567,456 | 35 |
 
-Lights shrinks by 86.3%; both arbiter gaps remain. The larger arbiter's 68,392
-label BDD nodes exceed the production cap; uncapped diagnostic levels 1 and 2
-also leave it unchanged. The smaller arbiter's alternative strategy has the same
-size and is discarded. Existing parity wins remain: forced parity with either
-`none` or `reselect` yields 2,752 versus forced legacy's 23,698 on ltl2dba_U1 n=7,
-and 203 versus 1,802 on ltl2dba_E n=7; all checks pass. The collector n=7 comparison
-also confirms that a first-member win is not necessarily a parity-route win:
-forced parity is 6,875, while its own legacy arm produces 936.
+`reselect` shrinks 47 controllers and grows 3. The largest cuts are Lights
+(−9,290), load_balancer n=6 (−3,738), load_balancer n=5 (−1,114) and robot_grid
+n=6/1 (−999); the largest increase is KitchenTimerV4 (+863). Corpus-wide the cut
+is 3.8%, against 28.6% on the panel, because the panel was weighted toward the
+outliers. The two prioritized_arbiter outliers stay large.
 
-**Rejected candidates.** Spot's public `minimize_mealy` API uses SAT, with premin
--1/0/1 mapping to simplification levels 3/4/5. It has no cancellation or step
-budget; `max_letter_mult` bounds alphabet processing, not SAT solving. Every raw
-SAT level exceeds a 3 s diagnostic cap on each outlier. Canonical low output
-choices barely help the arbiters and can hinder output-assignment merging.
-Condition-BDD-ID ordering sometimes improves Lights further but is sensitive to
-BDD history; destination order is the structural candidate retained. All 21
-completed fixed-machine diagnostic circuits and all 21 strategy-order trials
-verify. Reloaded-dictionary or post-encoding reductions can have different AIG
-sizes; the table above is the actual original-dictionary production pipeline.
+**The one lost controller is a pre-existing race (#469).** SPIReadManag verified
+with `none` and timed out with `reselect`. Under `-s`, the portfolio commits to
+the first published proof and suspends the others. When that is the legacy route,
+its controller extraction can stall with no fallback. Over 40 shuffled 10 s runs
+each, timeouts were: master 10, `none` 4, `reselect` 8. Fisher's exact test gives
+p = 0.35 for `reselect` against `none` and 0.79 against master. Every timeout
+selected the legacy route and attempted no reduction, so the reduction does not
+cause it.
 
-Initial validation: ruff passes, 127 Python regressions pass, and four focused release
-Meson tests pass. Fixtures cover exact output specialization, all three graph/BDD
-size guards, Mealy/Moore target timing and independent controller checks. CLI tests
-cover accepted, invalid and missing values, default bytes, and identical decision
-stage traces for every option without `-s`. Full corpus and G0–G5 are not run.
-
-
-**Review fix pass 1 (2026-11-23).** The then-current paired rerun uses exactly the same
-43 inputs, comparing only `none` and `reselect`, with one frozen binary
-(`1c4ea71eb777fdcf`) and the same independent checker. The measurement
-runner now supplies its absolute invocation deadline to synthesis.
-
-| Option | Verified / 43 | Rejected | Total A+L | Median A+L | Synthesis s | Check s |
-|---|---:|---:|---:|---:|---:|---:|
-| `none` | 43 | 0 | 36,146 | 41 | 7.99 | 14.71 |
-| `reselect` | 43 | 0 | 26,152 | 41 | 8.62 | 14.60 |
-
-Every input verified by `none` also verifies with `reselect`; there are zero
-synthesis or verification failures. Total A+L falls 27.6%, with no per-input size
-increase in this pair. These remain smoke measurements, including ordinary
-portfolio selection differences; no speedup or full-corpus admission is claimed.
-Raw rows, controllers and verification output are in `~/scratch/strat467/fix1-panel-run/`.
-
-All ten affected release Meson tests pass, along with 30 measurement-runner Python
-tests, Ruff and clang-format 22. A reachable, input-complete 41-state / 81-edge
-nested-output machine below every size cap exhausts its 50 ms child budget and
-returns the incumbent in 51.6 ms; `controller_check` verifies its liveness objective.
-A two-state arena seeded with a valid alternating strategy requires reselection
-to replace it with a zero-A+L constant strategy; both controllers independently
-verify `GF o`. Tests also cover child allocation/exception/signal failures, strict
-improvement, unchanged parent limits/cause state, expired-budget fallback,
-reordered signal names and malformed AIGER. The native arm's earlier construction
-deadline also bounds optional work. No evidence-index row is added.
-
-**Review fix pass 3 (2026-11-23), final code.** Unlimited (`memory.max=max`) and
-absent cgroup limits now allow bounded reduction. Only finite limits use the
-7/8 headroom calculation, including suspended competitors' charges and the
-copy-on-write/transfer reserve. Present malformed or unreadable limits, or
-missing/unreadable/malformed usage under a finite limit, still skip optional work.
-The child's cap also reserves the parent RSS and result mapping within the exact
-worker RSS share computed by the portfolio supervisor. The
-[CLI guide](../docs/cli.md#write-a-controller) lists the skip conditions and causes.
-
-The same 43-input panel and TLSF source hashes were rerun through
-`benchmarking/synthesis-size.py` with one frozen final-code
-`otf_sparse_formula_parity` binary (`6bb2c37e08422c60`), 17 s synthesis and 60 s /
-200,000-state independent verification. All builds, tests and serial measurements
-use 5G/no-swap systemd scopes and `TMPDIR=~/scratch/strat467/tmp`.
-
-| Option | Verified / 43 | Lost vs `none` | Total A+L | Median A+L | Headroom skips | Synthesis s | Check s |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| `none` | 43 | 0 | 36,552 | 53 | 0 (disabled) | 8.69 | 14.70 |
-| `reselect` | 43 | 0 | 26,104 | 43 | 0 / 33 records | 8.76 | 14.56 |
-
-There are **zero lost controllers and zero headroom skips under the finite 5G
-limit**. All 86 controllers independently verify, with no synthesis or checker
-failure. Phase records cover 33 reduction attempts on 17 inputs: nine accepted,
-20 non-improvements and four size fallbacks; none skip for any memory cause and
-no record drops are reported. Total A+L falls **28.6%** on all 43 common inputs.
-Paired portfolio races change the winning route on two inputs whose sizes
-increase: MusicAppSimple, 24 (backward) to 57 (Spot fast parity), and ltl2dba26,
-19 (ACD parity) to 26 (backward). Accepted reductions still strictly improve their
-own incumbent. Lights remains 10,765 to 1,475 A+L. These measurements establish
-neither a speedup nor full-corpus admission.
-
-All 11 affected release Meson tests and 30 measurement-runner Python tests pass,
-along with Ruff, clang-format 22 and whitespace checks. Regressions require
-successful, independently checked reductions with unlimited and absent limits,
-retain the finite near-threshold incumbent checks, distinguish malformed files,
-and cover smaller child caps and exhausted worker shares. Raw rows, controllers,
-per-invocation phase records, frozen binaries and logs are retained locally under
-`~/scratch/strat467/fix3-panel-run/`, `fix3-binaries/` and `fix3-*.log`; the paired
-summary is `fix3-summary.json`. Full corpus and G0–G5 were not rerun. No
-evidence-index row is added.
+**Local G3** (instance scope, 6G cap, 17 s; base #468 head `720e1241`): PASS on
+both panels with no verdict changes. SYNTCOMP25 PAR-2 went from 759.6 to 760.7 s
+and SYNTCOMP26 from 577.4 to 578.0 s, within the control's spread (755.7 → 755.4
+and 578.7 → 575.1 s).
 
 ## 2026-11-22: Select AIGER modes; +dc rejects controllers and large strategies remain the main gap (#280)
 

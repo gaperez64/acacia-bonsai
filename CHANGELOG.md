@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add `--parity-mealy-reduction`, defaulting to `reselect` under `-s` only. Reduction runs in a bounded subprocess with incumbent fallback; the final 43-input panel measured a 28.6% cut in total controller AND gates plus latches (#467).
+- Add `--parity-mealy-reduction`, defaulting to `reselect` under `-s` only. Reduction runs in a bounded subprocess with incumbent fallback; on all 433 realizable SYNTCOMP26 inputs it cuts total AND gates plus latches by 3.8%, shrinking 47 controllers and growing 3. The 43-input outlier panel cut 28.6% (#467, `strat467-20261124`).
 
 - Add `--aiger-mode` to select Spot's AIGER encoding, keeping `isop` as the default and refusing unsafe `+dc` modes pending #466. Add per-label `--extra-args` support to `benchmarking/synthesis-size.py` (#280).
 
