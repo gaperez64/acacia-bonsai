@@ -1,0 +1,6 @@
+INFO { TITLE: "Indexed copy" DESCRIPTION: "Mealy copies each current input" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { r[2]; }
+  OUTPUTS { g[2]; }
+  GUARANTEES { &&[0 <= i < 2] G (g[i] <-> r[i]); }
+}

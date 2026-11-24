@@ -1,130 +1,162 @@
-# Acacia-Bonsai changelog
+# Changelog
 
 ## Unreleased
 
 - Add `--parity-mealy-reduction`, defaulting to `reselect` under `-s` only. Reduction runs in a bounded subprocess with incumbent fallback; on all 433 realizable SYNTCOMP26 inputs it cuts total AND gates plus latches by 3.8%, shrinking 47 controllers and growing 3. The 43-input outlier panel cut 28.6% (#467, `strat467-20261124`).
+- `--aiger-mode` selects Spot's AIGER encoder (default `isop`); unsafe `+dc`
+  modes are rejected pending #466. `benchmarking/synthesis-size.py` accepts
+  per-label `--extra-args` (#280).
 
-- Add `--aiger-mode` to select Spot's AIGER encoding, keeping `isop` as the default and refusing unsafe `+dc` modes pending #466. Add per-label `--extra-args` support to `benchmarking/synthesis-size.py` (#280).
+- Existing formula workers try one-sided TLSF restrictions: input families share
+  their first member (accept only UNREALIZABLE), or scalar outputs become false
+  (accept only REALIZABLE). tlsf-tools `Restriction.lean` proves both transfers.
+  Input attempts have a 1 s total budget; the output attempt has 200 ms, with
+  512 MiB per attempt. Other outcomes resume the original solve. Synthesis skips
+  them; disable with `--restriction-prepass off` (#451). The 17 s SYNTCOMP26
+  screen adds ten solves with no losses (`restrict451-20261122`).
 
-- Add one-sided restriction attempts inside the existing formula workers (#451): replace each declared input family by its first member and accept only UNREALIZABLE, or set scalar outputs to false and accept only REALIZABLE. tlsf-tools `Restriction.lean` proves both transfers. Attempts are bounded (at most 1 s of input attempts, one 200 ms output attempt, 512 MiB each), are skipped under `-s`, and fall back to the normal solve. They add ten solves on SYNTCOMP26 at 17 s with no losses (`restrict451-20261122`). Disable with `--restriction-prepass off`.
+- tlsf-tools 9246712 adds checked parametric-support folds for constant-state bus-wide
+  monitors such as load_balancer, plus the self-checking `tlsfobf` name/order obfuscator
+  (#437, tlsf-tools #145).
 
-- Bump tlsf-tools to 9246712 (v1.12-12-g9246712): the GR(1) lift learns parametric-support folds for games whose global monitors keep constant state counts, such as load_balancer, and accepts them only after target region verification; both fold routes choose axes independently of names (#437). The pin also adds `tlsfobf`, a self-checking TLSF obfuscator for name- and order-independence screens (tlsf-tools #145).
-
-- Bump tlsf-tools to 219270e (v1.12-5-g219270e): the GR(1) lift learns monitor-state folds for binary-encoded index families and accepts them only after target region verification; frontend expansion respects the lift budget, and frontend adaptation allocation failure now reports as a resource limit (#437).
+- tlsf-tools 219270e adds checked monitor-state folds for
+  binary-encoded index families. Both fold routes choose axes independently of names and
+  verify target regions. Frontend expansion respects the lift budget; adaptation
+  allocation failure reports a resource limit (#437).
 
 ## 2.10.0 (2026-11-20)
 
-- Built on [posets 1.5](https://github.com/michaelcadilhac/posets/releases/tag/1.5) (a4387cb7) and [tlsf-tools v1.12](https://github.com/gaperez64/tlsf-tools/releases/tag/v1.12) (da66170e). The tlsf-tools release adds a Lean proof of the GR(1) region-certificate method to the abcca72 pin; the compiled code is the same.
-- Bump Spot to 2.16.3 (#439), which fixes the obligation-synthesis bug behind #375: `both:obligation:spot` no longer answers REALIZABLE for `G i -> G(i <-> XXX false)`. On all 1,524 SYNTCOMP26 inputs at 17 s the shipped portfolio decides 1,379 against 1,376 on Spot 2.16.0, with no input lost and no verdict change.
-- Pin posets to the lazy KD intersection that skips right-hand maxima the left side already contains (#438). CPre's microbenchmark runs 3.7–72× faster; coverage and PAR-2 are unchanged at 17 s, and two memory-outs disappear at 120 s.
-- Fix cap-independence and recycle validation counting durable final phase records as pipe deliveries (#443); keep missing or extra pipe records invalid.
-- Bump tlsf-tools to abcca72 (per-axis lift decline reasons, #437; result ABI changed, so rebuild from scratch). Carry those reasons into phase records and lifting reports; add runtime `--lift-max-predicate-arity` with the library default unchanged.
-- The first two `docker_default` presets (six arms, and the same plus the forward arms) use `closure-recurrence` for their formula-unrealizability arm in `fallback` candidate mode, keeping `low` effort for fallback translation and the existing frozen-graph route for synthesis (#407). Add `acacia_default_candidate_mode` (default `only`); `--candidate-mode` overrides it. Other presets are unchanged.
-- Bump posets to 313fbfcd (documents and checks the lazy KD epoch invariants, #402 I06) and tlsf-tools to 78185dc (a fuzz test's R3 mutant now targets a printer change that reparsing can expose). Behaviour is unchanged; both changes are comments, assertions and tests.
-- Restrict enumerative closure-row expansion to the differential test build; production closure providers continue to use symbolic Boolean folding.
-- Remove experimental `--weakening extended`, `--weakening-attempt-ms` and `--weakening-total-ms` after zero-gain screens; retain default basic weakening and `--weakening off`.
-- Remove the unused benchmark timed-run marker API: `timed_run_marker`, `MarkerTimeout`, `DEFAULT_BLOCKING_MARKERS` and `TIMED_RUN_MARKER`.
-- The default portfolio drops `unreal:automaton:forward`, going from seven arms to six (#384). On all 1,524 SYNTCOMP26 inputs it decides 1,370 / 1,392 / 1,398 at 17 / 60 / 120 s, against 1,367 / 1,388 / 1,394 for seven arms, with PAR-2 87 s, 468 s and 988 s lower and no verdict disagreement. The only loss, `lift_wrong_physics_unreal_pb_10` at 17 s, is solved again at 60 s. The arm stays available through `--arms`.
+- Uses [posets 1.5](https://github.com/michaelcadilhac/posets/releases/tag/1.5)
+  (a4387cb7), [tlsf-tools
+  v1.12](https://github.com/gaperez64/tlsf-tools/releases/tag/v1.12) (da66170e) and Spot
+  2.16.3. Spot fixes the wrong REALIZABLE obligation answer for `G i -> G(i <-> XXX
+  false)` (#375, #439). Posets speeds up lazy KD intersection (#438); tlsf-tools adds
+  the GR(1) region-certificate Lean proof and per-axis lift decline reasons. The lift
+  result ABI changed: rebuild from scratch. Reasons reach phase/lifting reports;
+  `--lift-max-predicate-arity` exposes the library's unchanged default.
+
+- The default
+  portfolio drops `unreal:automaton:forward`, leaving six arms; the arm remains
+  selectable (#384). The first two `docker_default` presets use `closure-recurrence` for
+  formula unrealizability, with `fallback` candidates and `low` effort for fallback
+  translation. Synthesis retains `frozen-graph`. New `acacia_default_candidate_mode`
+  defaults to `only`; runtime `--candidate-mode` overrides it (#407).
+
+- Cap/recycle
+  validation distinguishes durable final records from pipe deliveries (#443). Lazy KD
+  epoch checks, a printer mutant and closure-row differential tests improve validation
+  without changing production behaviour (#402). Enumerative closure expansion is
+  test-only.
+
+- Removes `--weakening extended`, `--weakening-attempt-ms` and
+  `--weakening-total-ms` after zero-gain screens; basic/off remain. Removes the
+  unused `timed_run_marker`, `MarkerTimeout`, `DEFAULT_BLOCKING_MARKERS` and
+  `TIMED_RUN_MARKER` APIs.
 
 ## 2.9.0 (2026-11-15)
 
-- Bump posets to 7e75c1f (posets 1.4) and tlsf-tools to 1e94604 (tlsf-tools v1.11). Posets retires the unused `vector_backed_bin` backend and shares its trie and antichain code; tlsf-tools routes residual reduction through one plan, flattens checker rank storage and shares the symmetry DAG between candidates. Behaviour is unchanged: the shipped preset decides the same 165/180 SYNTCOMP25 and 169/180 SYNTCOMP26 panel inputs with no verdict change, and native TLSF and converted runs on all 1,524 SYNTCOMP26 inputs give no opposite verdicts.
-- Bump posets to 82cd7bf (#51–#56) and tlsf-tools to dce8e00 (#123–#127): signed bin keys and CST arithmetic no longer wrap or miss dominators, lazy KD bounds and TLSF sets allocate less, finite-word preprocessing preserves strong indexed next, and OxiDD options have the same layout in debug and release builds. Normalization statistics count actual pass work, installed Posets headers are complete, release tests retain their checks, and unused APIs are removed. Acacia skips upstream tools, examples and unrelated tests, building only the contract helper and fuzz decoder its own tests use.
-- The formula arm's Oracle keeps only the payload its scan or grouped mode uses, 96 bytes less per grouped prepared rank; verdicts, telemetry and budgets are unchanged.
-- The Python bindings registered inputs and outputs after translating the formula, so an input could be treated as a controller choice and an unrealizable specification came back realizable (#393). They now register inputs, then outputs, before translating, as the CLI does; the CLI was not affected.
-- The Python bindings reject out-of-range bounds, increments, caps and ranks instead of narrowing them to signed char, which could report a losing game as realizable (#383); `successor()` saturates at the cap instead of wrapping at 127 (#389). The solver checks the initial state is in the region before declaring success on picker exhaustion.
-- Bump tlsf-tools to 9a2f748 (exact symmetry census `tlsfsym`, integer-overflow rejection in ranges and literals, and Lean proofs for literal decoding, checked arithmetic and indexed next strength) and posets to 81b0e5b (LLVM 22 lint). The shipped portfolio decides the same 1,368 of 1,524 SYNTCOMP26 inputs at 17 s with no verdict change.
-- The shipped preset stores downsets in lazy KD trees instead of rank buckets. Posets now prunes lazy KD searches with per-subtree and per-block coordinate bounds, which takes 28% fewer cycles than rank buckets on captured antichain updates. The shipped portfolio decides the same 1,368 of 1,524 SYNTCOMP26 inputs at 17 s, PAR-2 5,943 s against 5,947 s, with no verdict change and no memory failure. On a 30-input panel of search-bound inputs it decides three more. The other presets keep rank buckets (#384).
-- The native arms' search does less memory traffic: forward search hashes contiguous states and caches coordinate sums, and the formula arm's BDD helpers stop copying references (27.6% and 10.4% fewer instructions on fixed work). Vector comparisons evaluate only the direction a query needs.
-- Builds use the target's native SIMD width by default instead of a fixed 128 bits (#380); `acacia_simd_width` replaces the two SIMD booleans with `native` (default), `compatible` (128 bits), or `max` (largest fixed size). Release builds on AVX-512 hosts now use 64 lanes.
-- Bump tlsf-tools to 4b69b83 and posets to 383425a, preserving Acacia's preset options and SIMD widths.
-- The shipped portfolio translates the formula-based unrealizability arm with Spot's low effort level; on all 1,524 SYNTCOMP26 inputs it decides 1,368 at 17 s and 1,387 at 60 s, against 1,367 and 1,385, with PAR-2 33 s and 159 s lower and no input lost (#378). A `--translation-effort` option sets the level per arm.
-- The default portfolio drops `real:small:forward`, going from eight arms to seven. On all 1,524 SYNTCOMP26 inputs it decides 1,367 at 17 s and 1,386 at 60 s, against 1,365 and 1,384 for eight arms, with PAR-2 45 s and 214 s lower and no verdict disagreement (#359). The freed worker gains more inputs than the arm alone decided.
+- Python registers I/O before translation, fixing input ownership that could produce
+  wrong realizable answers (#393). It rejects out-of-range bounds/ranks instead of
+  narrowing to signed char (#383), saturates successors instead of wrapping at 127
+  (#389), and checks initial-state membership before picker-exhaustion success. The CLI
+  was unaffected by #393.
+
+- The shipped downset uses lazy KD trees with subtree/block
+  bounds instead of rank buckets (#384). Sparse Oracle payloads split by mode, saving 96
+  bytes per grouped prepared rank; native searches reduce hashing/copy costs. Native
+  SIMD width replaces fixed 128 bits; `acacia_simd_width` accepts `native`, `compatible`
+  and `max` (#380).
+
+- Formula-unreal translation uses low effort; `--translation-effort`
+  sets per-arm levels (#378). The default drops `real:small:forward`, leaving seven arms
+  (#359).
+
+- Dependency updates through posets 1.4 (7e75c1f) and tlsf-tools v1.11
+  (1e94604) fix signed-bin/CST arithmetic, strong indexed next and debug/release OxiDD
+  option layout; reduce allocations; share trie, antichain, reduction, rank and symmetry
+  code; and improve installed headers, statistics and release tests. Earlier pins add
+  `tlsfsym`, checked literal/range arithmetic and Lean proofs (9a2f748, 81b0e5b);
+  4b69b83/383425a preserve preset options and SIMD widths. Acacia builds only the
+  upstream helpers its tests need.
 
 ## 2.8.0 (2026-11-06)
 
-- The TLSF → Acacia pipeline is now fuzzed (#369). tlsf-tools v1.9 generates small TLSF specifications from arbitrary bytes and checks its parser, printer, allocation-failure handling and DPA builder on them; Acacia replays the generated inputs and checks that its native conversion agrees with SyFCo, that the tlsf-tools DPA agrees with Spot's automaton, and that no two default arms give opposite verdicts. Seeds run in the unit suite and a weekly CI job grows and replays the corpora.
-- tlsf-tools v1.9 fixes what the fuzzer found: printed big operators that lost required parentheses, set deduplication that dropped a strong next under finite semantics, and crashes or partial rewrites when memory runs out. Acacia's verdicts on infinite-word specifications were not affected.
-- Faster DPA construction in tlsf-tools: rows visit only reachable formula nodes and the intern tables use tagged probing. On all 1,524 SYNTCOMP26 inputs the default portfolio decides 1,365/1,385/1,390 at 17/60/120 s, three more than before at 17 s with none lost.
-- **Known issue (#375).** Spot's obligation synthesis answers REALIZABLE for some unrealizable obligation specifications, such as `G i -> G(i <-> X X X false)`. The `both:obligation:spot` arm uses it, so Acacia can print a wrong REALIZABLE when that arm finishes first. Reported upstream as spot#666; the arm stays in the default portfolio until Spot ships a fix.
-- Linux phase recording requests a 1 MiB pipe to reduce startup drops, silently keeping the default capacity if refused.
-- Remove unsuccessful DPA route experiments and lazy parity arms; keep eager parity and telemetry fixes.
-- The default portfolio adds `both:parity:oxidd` alongside `both:parity:spot`,
-  bringing it to eight arms. On all 1,524 SYNTCOMP26 inputs it decides 1,351 at
-  17 s and 1,379 at 60 s, against 1,341 and 1,364 for archived master's seven
-  arms, with no verdict disagreement. Arm reduction is tracked in #359.
-- The parity worker now runs past its equal memory share until the solver's memory scope is nearly full and decides more inputs (#341, evidence `sharegate-20261028`). Use `--parity-memory-share equal` for the old behaviour.
+- TLSF pipeline fuzzing checks parser/printer/allocation handling, native conversion
+  against SyFCo, DPA languages against Spot and default-arm verdict agreement (#369).
+  Seeds run in unit tests; weekly CI grows/replays corpora. tlsf-tools v1.9 fixes
+  printed parentheses, finite-semantics strong-next deduplication and memory-failure
+  handling; infinite-word verdicts were unaffected.
+
+- Faster DPA construction visits
+  reachable nodes and uses tagged probing. The default adds `both:parity:oxidd` beside
+  `both:parity:spot`, reaching eight arms. Parity workers can exceed their equal memory
+  share until the scope is nearly full; `--parity-memory-share equal` restores the old
+  policy (#341).
+
+- Known issue (#375, Spot #666): obligation synthesis can wrongly
+  answer REALIZABLE, including for `G i -> G(i <-> X X X false)`. The affected arm
+  remains in this release's default; Spot 2.16.3 fixes it in 2.10.0.
+
+- Phase recording
+  requests a 1 MiB Linux pipe, keeping default capacity if refused. Removes unsuccessful
+  DPA route experiments and lazy parity arms, retaining eager parity and telemetry
+  fixes.
 
 ## 2.7.2 (2026-10-27)
 
-- **Completeness fix: MONA precomputers keep empty responses.** Both `mona` and
-  `semantic_mona` dropped legal output choices that enable no transitions, which
-  could make backward and forward solving return UNKNOWN for realizable
-  specifications such as `F (c <-> i) | G F c` (#335, #336). The shipped Docker
-  configurations use `semantic_mona` and were affected. The bug only removed
-  choices from the player whose win is checked, so it could not produce a wrong
-  REALIZABLE or UNREALIZABLE answer.
-- Shared equivariant solving falls back to the ordinary solver when a K raise
-  would exceed the rank type's range, avoiding overflow with large K schedules
-  (#337). The default schedule was not affected.
-- `proofs/` holds a Lean proof that the guarded symmetry reduction is sound
-  (#331, #334). Both fixes above were found while writing it.
+- MONA and semantic MONA retain empty responses (#335, #336). Dropping these legal
+  choices could return UNKNOWN for realizable specifications such as `F (c <-> i) | G F
+  c`; shipped Docker presets were affected. The bug could not produce a wrong decisive
+  verdict.
+
+- Shared equivariant solving falls back when a K raise would overflow its
+  rank type (#337); the default schedule was unaffected. `proofs/` adds Lean proofs of
+  guarded symmetry soundness (#331, #334); proof work found both fixes.
 
 ## 2.7.1 (2026-10-26)
 
-- **Soundness fix: equivariance could answer REALIZABLE wrongly.** The symmetry
-  detector accepted permutations that swap an input with an output, so a
-  specification could be reduced to one with a different answer. Symmetries
-  now keep inputs and outputs apart (#330). The default configuration was
-  affected; 2.7.0 is confirmed, and earlier releases with equivariance on are
-  likely affected too. `--equivariance off` avoids it on older versions.
-  No disagreement with ltlsynt was seen on the benchmark corpora.
+Fixes a soundness bug: the equivariance detector accepted input/output swaps and could
+wrongly answer REALIZABLE (#330). Permutations now preserve ownership. The default was
+affected in 2.7.0; earlier releases with equivariance enabled may also be affected. Use
+`--equivariance off` on older releases. Benchmark corpora showed no disagreement with
+ltlsynt.
 
 ## 2.7.0 (2026-10-23)
 
-- **Faster MONA preparation.** The semantic MONA precomputer reads transition
-  endpoints straight from BuDDy's minterm assignments (#320) and, with at most 12
-  active APs, builds actions from explicit guard letters (#321); output is
-  byte-identical. Paired with the code before these changes at 17 s on the
-  1,524-input SYNTCOMP26 corpus, five more inputs are decided (1,334 → 1,339) and
-  none are lost (evidence `perf-20261022`).
-- **BuDDy grows its node table by up to 4M nodes** instead of Spot's 512K
-  (`-Dacacia_bdd_max_increase`, 0 keeps Spot's step; #319, #324). Four more
-  inputs are decided in the same paired setting (1,338 → 1,342), none lost; peak
-  memory rises on 205 inputs, at most 5.4 GiB (evidence `bddgrowth-20261023`).
-- Smaller forward-search and symmetry-search costs (#317, #318).
-- OxiDD moves to upstream main: worker stacks fit `RLIMIT_AS`, and a failed
-  manager construction is a clean native failure instead of a panic.
-  tlsf-tools and posets move to their main branches.
-- The bundled yyjson links statically (#291); child-signal records are written
-  atomically (#316).
+- Faster semantic MONA endpoint decoding and explicit guard-letter actions for at most
+  12 active APs preserve output bytes (#320, #321). BuDDy grows by up to 4M nodes
+  instead of 512K; `-Dacacia_bdd_max_increase=0` keeps Spot's step (#319, #324). The
+  gains cost higher memory peaks; see `perf-20261022` and `bddgrowth-20261023`.
+
+- Reduces forward/symmetry search costs (#317, #318). Upstream OxiDD stacks fit
+  `RLIMIT_AS`, and failed manager construction returns failure instead of panicking.
+  tlsf-tools and posets move to main.
+
+- Links yyjson statically (#291) and writes
+  child-signal records atomically (#316).
 
 ## 2.6.1 (2026-10-18)
 
-- Tier 4 of the parity arm solves its ACD parity game directly with Spot; the
-  strpm-simd port is removed (#282, evidence `tier4-spot282-20261018`).
-- Python wheels build again (Bison 3.8.2 on manylinux, no `std::print`), so 2.6
-  reaches PyPI.
+Tier 4 parity uses Spot directly; strpm-simd is removed (#282,
+`tier4-spot282-20261018`). Python wheels build again with Bison 3.8.2 on manylinux and
+no `std::print`, bringing 2.6 to PyPI.
 
 ## 2.6.0 (2026-10-18)
 
-- **New default: the parity portfolio.** The first `docker_default` configuration
-  adds `both:parity:spot` (deterministic Büchi games on tiers 1–3, a parity game
-  solved by strpm-simd with Spot fallback on tier 4) and the obligation arm
-  `both:obligation:spot`. At 17 s on the 1,524-input SYNTCOMP26 corpus it decides
-  1,339 inputs against 1,226 for the previous default (different sessions; see
-  RESULTS).
-- Four shipping configurations, unchanged in order: the default, the no-parity
-  fallback, a lean member and the synthesis member.
-- OxiDD is always built; bounded-stack handling (#258), native dependency
-  preparation and packaging (#259) and cumulative resume summaries (#262) fixed.
-- `ACACIA_PHASE_RECORDS` now also records per-arm CPU, memory and phases.
-- Research and benchmark tools retired; their source and notes are preserved in
-  `refactor-closeout20261017`.
+- The first `docker_default` preset adds parity and obligation arms. At release, parity
+  used Spot on tiers 1-3 and strpm-simd with Spot fallback on tier 4. Four shipping
+  slots retain their order: default, no-parity fallback, lean and synthesis.
 
-Earlier release notes and their original performance tables are preserved in
-`refactor-closeout20261017` (original evidence includes `benchmarking-root-legacy`,
-`plots-three-way-full-20260905` and `plots-spot-otf-threeway-20260909`).
-See [RESULTS](benchmarking/RESULTS.md) for measured outcomes and limitations,
-[decisions](benchmarking/decisions.md) for policy, and the
-[evidence index](benchmarking/evidence-index.tsv) for published archives.
+- OxiDD
+  always builds; fixes bounded stacks (#258), native preparation/packaging (#259) and
+  cumulative resume summaries (#262). `ACACIA_PHASE_RECORDS` adds per-arm CPU, memory
+  and phases.
+
+- Retires research/benchmark tools; source and notes are in
+  `refactor-closeout20261017`, along with earlier release notes. Original evidence
+  includes `benchmarking-root-legacy`, `plots-three-way-full-20260905` and
+  `plots-spot-otf-threeway-20260909`.
+
+[Results](benchmarking/RESULTS.md) records measurements and limitations;
+[decisions](benchmarking/README.md#decisions) records policy. Earlier wording and performance
+tables from this changelog are archived in docs-20261122.

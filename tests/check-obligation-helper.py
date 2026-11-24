@@ -27,6 +27,7 @@ def gone(pid: int) -> bool:
 def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
         fault: str = "", interrupt: bool = False,
         outer_seconds: float = 0, rss_limit: bool = False, rss_sample_bytes: int = 0,
+        rss_backend: str = "obligation",
         gate: bool = False, helper_delay_ms: int = 0,
         release_stalls: bool = True, ready_stage: str = "", termination_seconds: float = 0
         ) -> tuple[subprocess.CompletedProcess, list[dict]]:
@@ -82,8 +83,12 @@ def run(binary: Path, args: list[str], root: Path, fault_lib: Path,
         if "-T" not in args:
             assert_parse_calls(rows, {})
         if rss_sample_bytes:
-            samples = (directory / "rss-samples.txt").read_text().splitlines()
-            expected_pid = helper_row(rows, "completion")["worker_pid"]
+            sample_log = directory / "rss-samples.txt"
+            assert sample_log.exists(), (process.returncode, stdout, stderr, rows)
+            samples = sample_log.read_text().splitlines()
+            expected_pid, = [row["worker_pid"] for row in rows
+                             if row.get("event") == "worker_spawn"
+                             and row.get("effective_backend") == rss_backend]
             assert samples and all(line == f"{expected_pid} {rss_sample_bytes}"
                                    for line in samples), (samples, rows)
         if ready_stage:
@@ -147,6 +152,7 @@ def main() -> None:
     parser.add_argument("--tlsf", action="store_true")
     parser.add_argument("--native", action="store_true")
     parser.add_argument("--default-arms", default="")
+    parser.add_argument("--default-native-arms", default="")
     options = parser.parse_args()
     binary, library = options.binary.resolve(), options.fault_lib.resolve()
     root = options.build_dir.resolve()
@@ -174,11 +180,28 @@ def main() -> None:
     race = ["--arms", ordinary_pair + "," + arm]
     real = ["--arms", "real:small:backward," + arm]
     default_arms = options.default_arms.split(",") if options.default_arms else []
+    native_defaults = options.default_native_arms.split(",")
     default_has_helper = arm in default_arms
     ordinary_defaults = [value for value in default_arms
-                         if value != arm and
-                         (":oxidd" not in value or value == "both:parity:oxidd")]
+                         if value != arm and value not in native_defaults]
     previous = ["--arms", ",".join(ordinary_defaults)] if ordinary_defaults else []
+    if options.tlsf and os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") != "1":
+        indexed = Path(__file__).resolve().parent / "fixtures/symcount/indexed-recurrence.tlsf"
+        # 23,479 vertices / 70,994 edges exceed the old six-way 43,690-edge cap.
+        if "both:symcount:spot" in default_arms:
+            result, rows = run(binary, ["-T", str(indexed)], root, library, rss_limit=True)
+            assert result.returncode == 0 and "REALIZABLE" in result.stdout, result
+            assert winner_row(rows)["effective_backend"] == "symcount", rows
+        # Count-only: 144 MiB RSS exceeds the 128 MiB share under the inherited cap.
+        result, rows = run(binary, ["-T", str(indexed), "--arms", "both:symcount:spot",
+                                   "--parity-memory-share", "equal"], root, library,
+                           rss_limit=True, rss_sample_bytes=144 * 1024 * 1024,
+                           rss_backend="symcount")
+        assert result.returncode == 2 and "UNKNOWN" in result.stderr, result
+        assert not any(row.get("event") == "parent_winner" for row in rows), rows
+        terminal, = [row for row in rows if row.get("event") == "parent_terminal"
+                     and row.get("effective_backend") == "symcount"]
+        assert (terminal["reason"], terminal["signal"]) == ("rss_share", signal.SIGKILL), rows
     for value in ("", "unknown", "Equal", "alone,equal", "4GiB"):
         invalid = subprocess.run([str(binary), *source, "--obligation-memory-share=" + value],
                                  capture_output=True, text=True, timeout=5)

@@ -1,15 +1,14 @@
 # Benchmarking
 
-Start with [RESULTS.md](RESULTS.md) for measured comparisons and their limits.
-The steps below show how to try the runner on a small input set, then describe
-how to collect results for a performance comparison. Run commands from the
-repository root in Bash.
+Run commands from the repository root in Bash. [Results](RESULTS.md) gives
+measurements; [solver contracts](DATA-STRUCTURES.md) and
+[decisions](#decisions) explain the arms and policies. Historical procedures
+and the previous guide are archived in docs-20261122.
 
 ## Try a small run
 
-Use the debug build from the [README](../README.md#build). This example uses
-two checked-in TLSF inputs and needs neither a downloaded corpus nor systemd.
-Set `ACACIA_EXAMPLE_DIR` to choose where it writes its list, map, and results:
+Use the [debug build](../README.md#build). These two checked-in inputs need
+neither a downloaded corpus nor systemd:
 
 ```bash
 build_dir=${ACACIA_BUILD_DIR:-build}
@@ -37,81 +36,44 @@ python3 -s benchmarking/cactus-report.py \
   --markdown "$example_dir/report.md"
 ```
 
-The two verdicts are `REALIZABLE` and `UNREALIZABLE`. Inspect `run.csv` for
-wall times and `report.md` for the summary. This checks the workflow; debug
-timings on two inputs say nothing about full-corpus performance.
-
-For performance work, compare release builds with the same input list,
-frontend, timeout, and resource limits. Record verdict, wall time, exit status,
-binary SHA-256, and build options. See the [gates](#gates) before collecting a
-comparison you intend to use for a change.
-
-[DATA-STRUCTURES.md](DATA-STRUCTURES.md) explains solver components and runtime
-contracts. [decisions.md](decisions.md) records benchmark policies, and
-[evidence-index.tsv](evidence-index.tsv) locates archived inputs and results.
+Expect REALIZABLE and UNREALIZABLE. `run.csv` holds wall times; `report.md`
+holds the summary. Use matched release builds for performance comparisons.
 
 ## Evidence and retention
 
-Start every new campaign in an ignored `_bm-logs*/` directory or outside the
-checkout. That includes raw rows, route records, proofs, thermal samples,
-plots, and generated reports from their first observation. Do not first write
-raw data under `benchmarking/` and later remove it. Keep original rows and
-correction sidecars together; do not normalize old observations in place.
+Write raw rows, logs, route records, proofs, thermal samples and plots to ignored
+`_bm-logs*/` directories or outside the checkout from the start. Preserve original
+observations and correction sidecars together.
 
-When a campaign closes, use `scripts/acacia-evidence.py` to pack and verify its
-original inputs and outputs, publish the archive to an authorized durable
-location, read it back, and commit its URL, SHA-256, status, and provenance to
-[evidence-index.tsv](evidence-index.tsv). **Durable evidence is the verified
-external archive plus its committed index row.** The index does not turn a
-partial or stopped campaign into a completed measurement. Fetch and verify
-archived inputs into a separate directory with:
+Close campaigns with `scripts/acacia-evidence.py`: pack, publish to an authorized
+durable location, read back and verify, then register URL, SHA-256, status and
+provenance in [evidence-index.tsv](evidence-index.tsv). Partial campaigns stay
+partial. Restore evidence with:
 
 ```sh
 python3 -s scripts/acacia-evidence.py fetch --campaign ID --dest DIR
 ```
 
-Restored archives preserve their `benchmarking/` paths under `DIR`. Reporting
-tools in [tools/](tools/) accept that root or explicit input paths. Fetch is
-opt-in; ordinary builds, tests, and solver runs stay offline. Frozen executables
-are pinned by SHA-256 in [baselines.tsv](baselines.tsv) and also archived; G1
-must use the matching old configuration's executable. New archives record each
-member's mode in `MANIFEST.tsv`: `0755` if any execute bit is set when packed,
-`0644` otherwise. Ownership and timestamps remain normalized for deterministic
-archives. Verify checks the recorded modes as well as sizes and SHA-256 hashes,
-and fetch restores those modes, including executable permissions.
+Fetch checks digests and member layout. Paths remain relative to the restore root;
+[reporting tools](tools/) accept that root or explicit paths. Fetch is opt-in.
+New manifests preserve executable modes; binaries in pre-#245 archives need
+`chmod +x DIR/PATH/TO/FROZEN-BINARY` after restoration.
 
-Archives packed before #245 retain their original three-column manifests and
-continue to verify and fetch as before. Their frozen executables need this
-one-line repair after fetching, using the restored binary's path:
-
-```sh
-chmod +x DIR/PATH/TO/FROZEN-BINARY
-```
-
-Changing permissions leaves the binary's SHA-256 unchanged. The read-only/default
-`scripts/prune-artifacts.sh` respects the registries and write-protected local
-artifacts. Do not prune active, unpublished, unadjudicated, or sole-copy local
-evidence before archive verification.
-
-The consolidation audit is archived as `consolidation20261011-audit`; its exact
-former narrative is in `refactor-closeout20261017`. Preserve do-not-publish holds
-in [evidence-do-not-publish.txt](evidence-do-not-publish.txt), including relocated
-mapping data. Source code and prose mentioning mapping fields are not mapping data. The
-`archive` column of `baselines.tsv` identifies each frozen executable; `path` is
-historical provenance and is relative to an explicit restore root after pruning.
-
-CI runs `scripts/check-evidence-growth.py` to reject new generated rows, logs,
-proof bundles, thermal data and compressed archives in Git. Its small fixture
-exceptions are explicit in [evidence-growth-allowlist.tsv](evidence-growth-allowlist.tsv).
+Frozen binaries are pinned in [baselines.tsv](baselines.tsv); its `archive` column
+locates each executable and `path` records its historical location.
+`scripts/prune-artifacts.sh` reports by default, respects both registries and
+write-protected artifacts, and deletes only with `--delete`. Keep active,
+unpublished, unadjudicated and sole-copy evidence until archive verification.
+Preserve [publication holds](evidence-do-not-publish.txt), including relocated
+mapping data. CI's `scripts/check-evidence-growth.py` rejects generated bulk;
+fixture exceptions are in [evidence-growth-allowlist.tsv](evidence-growth-allowlist.tsv).
 
 ## Running and reporting
 
-Build the compile-time presets with `./self-benchmark.sh -R -c PRESET` and use
-the registry in `config/acacia-presets.json` to identify options. Run both
-binaries on exactly the same instance list, one solver at a time, recording
-verdict, wall time, exit code, cap, binary SHA-256 and resource regime. For
-example, after building both the registry-selected baseline and a candidate at
-`CANDIDATE_BUILD`, materialize the TLSF corpus and run:
+Build presets with `./self-benchmark.sh -R -c PRESET`. Compare identical input
+lists, frontend, cap and resource limits, one solver at a time. Record verdict,
+wall time, exit status, binary SHA-256 and build options. With the baseline and
+`CANDIDATE_BUILD` compiled:
 
 ```sh
 preset=$(python3 scripts/acacia-config.py list-group docker_default | head -n1)
@@ -138,16 +100,48 @@ python3 -s benchmarking/cactus-report.py \
   --markdown _bm-logs/comparison.md
 ```
 
-`run-syntcomp26-coverage.py` is the coverage scheduling entry point. Its
-native default CLI retains staged caps and resume. The `subset` command accepts
-native or converted-pair input, including ltlsynt; conversion remains untimed.
-`summarize` and `export-cactus` rebuild reports from saved observations without
-entering a campaign guard or invoking a solver.
+`run-syntcomp26-coverage.py` supports staged caps and resume. `subset` accepts
+native TLSF or converted pairs, including ltlsynt; conversion is untimed.
+`summarize` and `export-cactus` need no solver or campaign guard.
+
+### Summaries and export
+
+The default summary covers the sorted union of observed IDs for the current label
+in raw rows and conflicts, regardless of resume list or limit. Its cap is the
+maximum requested or recorded cap for that label; requested caps persist in
+`<output>-requested-caps.tsv`. The first deciding cap supplies the answer/time.
+Failure fields require an observation at the overall cap.
+
+```sh
+python3 -s benchmarking/run-syntcomp26-coverage.py summarize --runs RUN.tsv
+python3 -s benchmarking/run-syntcomp26-coverage.py summarize --runs RUN.tsv \
+  --solver-label LABEL --list PANEL.list --cap 60
+```
+
+Explicit panels keep their order, reject duplicate IDs and include unobserved IDs
+as unsolved with unknown failures. `--cap` is a floor. Older campaigns without
+saved requests need their original maximum when later stages were never reached.
+Conflicts stay in their sidecar and make summarization/collect-policy resumes
+exit 3, including when omitted by the current list. Stop-policy runs save the
+conflict and summary before exiting. A rebuild never adjudicates a conflict.
+
+```sh
+python3 -s benchmarking/run-syntcomp26-coverage.py export-cactus \
+  --summary SUMMARY --runs RUNS --list LIST --cap 17 --output CSV
+```
+
+Export requires exact list membership, one row per ID, finite nonnegative times,
+summary/run agreement, verdict/exit agreement and provenance. It rejects staged or
+missing observations and unresolved conflicts. The `.raw.tsv` sidecar keeps
+failure subtypes; CSV alone has no cap or source identity.
+`cactus-report.py` separates REAL/UNREAL, TIMEOUT, RESOURCE_LIMIT, UNKNOWN, ERROR
+and SYFCO-FAIL. A virtual best is derived per input and cannot identify the winner
+of a measured race. `classify` and `threeway` report winner attribution and
+comparisons; `landing-bar.py` implements admission.
 
 ### Obfuscated SYNTCOMP26 screens
 
-Prepare one treatment per directory, using the self-checking `tlsfobf` from
-[tlsf-tools #145](https://github.com/gaperez64/tlsf-tools/issues/145):
+Prepare each treatment in its own directory with the self-checking `tlsfobf`:
 
 ```sh
 python3 -s benchmarking/obfuscate-corpus.py \
@@ -173,185 +167,62 @@ python3 -s benchmarking/compare-obfuscated-screen.py \
   --noise-s 0.5 --output /path/to/evidence/comparison.tsv
 ```
 
-Use the same binary, flags, single cap and resource limits for the plain run.
-The comparison requires a complete obfuscated screen; the plain screen may
-cover a larger panel. Solved counts and PAR-2 totals use only accepted inputs,
-and rejected inputs appear separately in the per-instance report. Opposing
-REALIZABLE/UNREALIZABLE answers exit 3; coverage flips do not fail the comparison.
-`--noise-s` is an absolute per-instance threshold (the example is illustrative,
-not a calibrated floor). Deltas use observed wall times; an unsolved observation
-is censored and does not establish a performance change.
+Use the same binary, flags, single cap and resources for plain and obfuscated
+runs. The plain panel may be larger; the obfuscated screen must be complete.
+Totals use accepted inputs; report rejections separately. Opposing decisive
+verdicts exit 3. Coverage flips do not fail the comparison. `--noise-s` is an
+absolute per-input threshold, not a calibrated noise floor; unsolved times are
+censored.
 
-`rename` removes identifier and INFO text cues; `reorder` permutes declarations,
-clauses and commutative operands; `all` combines them. The printer drops comments
-and the `//#!SYNTCOMP` trailer in every mode. Thus `//STATUS`, `//REF_SIZE`,
-commentary and original textual formatting are lost; semantics and target remain.
-The runner normally derives expectations from `//STATUS`, with reviewed
-corrections in `benchmarking/syntcomp26-status-exceptions.tsv`. Preparation applies
-those corrections to the original corpus, then carries decisive expectations
-in the generated exceptions table, bound to absent annotations via
-`annotated_status=<none>`. **Pass that generated table to the obfuscated run**:
-its `expectation_source` becomes `exception` instead of `status`; original sources
-and effective expectations remain in the manifest. Unknown expectations stay
-unknown. No trailer is reinserted. For a different corpus, preparation accepts
-`--status-exceptions` with an appropriate table (an empty table means no corrections).
+`rename` removes identifier/INFO cues; `reorder` permutes declarations, clauses
+and commutative operands; `all` combines them. All modes drop comments and the
+SYNTCOMP trailer, including status/reference-size annotations. Preparation applies
+reviewed status corrections to the originals and writes a generated exception
+table bound to absent annotations. Pass that table to the obfuscated run. Unknown
+expectations stay unknown; the manifest retains original sources and expectations.
 
-Preparation runs serially in the caller's environment, without a systemd scope;
-wrap it externally if needed. `--timeout` defaults to 60 seconds per input.
-Failures, including self-check rejection and timeouts, are recorded and omitted
-from the generated map/list; partial outputs are removed. Repeating the command
-resumes checked outputs and cached failures, verifies output/map hashes, and
-repairs missing or corrupted outputs. Changed source bytes, tool bytes, mode,
-seed or timeout require a new output directory. Neutral filenames follow a seeded
-permutation of list order, never a name sort or hash. Renaming maps stay outside
-`corpus/`, in `maps/`; retain them to translate synthesized controller names back.
-Keep all generated evidence outside the checkout or in ignored `_bm-logs*/`.
-
-The default `<output>-summary.tsv` covers the sorted union of every instance
-observed for the current label in the accumulated raw TSV **and its conflicts
-sidecar**, regardless of the latest execution `--list`, `--limit`, or
-`--start-after`. Its overall cap is the maximum of the requested campaign caps
-and all recorded caps for that label; a shorter resume cannot lower it. Requested
-caps are saved per label in `<output>-requested-caps.tsv` before execution,
-including stages skipped after an early solve. The
-first deciding cap supplies the decisive verdict/time. Failure fields describe
-an actual observation at the overall cap and remain empty if none exists.
-Raw rows, route fields, memory sidecars and derived provenance are preserved.
-
-Rebuild summaries without a solver (all labels by default):
-
-```sh
-python3 -s benchmarking/run-syntcomp26-coverage.py summarize --runs RUN.tsv
-python3 -s benchmarking/run-syntcomp26-coverage.py summarize --runs RUN.tsv \
-  --solver-label LABEL --list PANEL.list --cap 60
-```
-
-An explicit panel keeps its declared order and includes requested but unobserved
-IDs as unsolved with unknown failure fields. Duplicate panel IDs are rejected.
-Without `--cap`, reconstruction uses the largest saved requested or observed cap
-per label. Older campaigns without the requested-caps sidecar use their observed
-maximum; pass their original requested maximum when final stages were never
-reached. `--cap` is a floor and cannot hide longer observations or saved requests.
-Unresolved conflicts remain in their original sidecar and make summarization
-and collect-policy resumes exit 3, even when the current list omits those IDs.
-Stop-policy runs also save their conflict and summary before returning nonzero.
-Conflicting observations across caps are also retained, with
-`expectation_source=observation` in the conflicts sidecar. No summary or
-successful rebuild adjudicates a conflict.
-
-For `run-syntcomp26-coverage.py` observations, export a uniform-cap CSV with
-`benchmarking/run-syntcomp26-coverage.py export-cactus --summary SUMMARY --runs RUNS --list LIST
---cap 17 --output CSV`. Export validates exact list membership, one row per
-ID, finite nonnegative times, summary/run agreement, solved verdict/exit
-agreement, and recorded provenance. It rejects staged or missing observations
-and unresolved conflict sidecars. The accompanying `.raw.tsv` keeps original
-result, exit, wall time and cap for subtype counts. CSVs alone do not carry a
-cap or source identity. `cactus-report.py` reports PAR-2, solved REAL/UNREAL,
-TIMEOUT, RESOURCE_LIMIT, UNKNOWN, ERROR, and SYFCO-FAIL separately. A virtual
-best is a derived per-instance best of named series, never a measured runner.
-
-`landing-bar.py` supplies the retained admission gate. `cactus-report.py` also
-exposes `classify` and `threeway` for winner attribution and closing comparisons.
-Virtual-best results remain explicitly derived; they cannot establish which arm
-won a measured race.
-
-`legacy-phase-table.py` owns phase intervals, native attribution, checkpoint
-classification, and the `completeness` and `weakening` commands. Transport
-completeness and censored durations remain distinct outputs. `make-panel.py`
-retains deterministic panel selection and shared origin metadata readers; exact
-manifest parameter provenance remains distinct from filename heuristics.
-
-The shared thermal readers in `benchlib.py` support `tools/perarm-select.py`.
-`recycle_adjudication.py` remains the shared adjudication reader.
-`convert-tlsf-corpus.py native` keeps the native inspector route separate from
-SyFCo conversion and independent G5 cross-checks. The `convert-tlsf-corpus*.py`
-entry points remain available. See the [Docker guide](../Docker/README.md#write-a-controller) for synthesis wrappers.
-
-Historical tool versions and their dedicated tests are preserved in campaign
-archives listed in [evidence-index.tsv](evidence-index.tsv). Restore those
-snapshots to reproduce historical procedures. Retirement does not change partial
-or stopped campaign status. Native GR(1)/lifting arms, source maps, baseline pins,
-archive indexes, and independent correctness tests remain available.
-
-Route readers and winner attribution remain available through
-`gr1-par2-20260923/campaign/posthoc-generic.py`, `tools/compare-selection.py`,
-`tools/lifting-report.py`, `tools/perarm-select.py`, and `tools/stagec-summarize.py`.
-
-Independent alpha-equivalence fixtures in `tests/pytest/test_acacia_lift_obfuscation.py`
-use `ACACIA_TLSF_TOOLS_BUILD` for optional `tlsfinfo`/`tlsf2ltl` executables
-(default: `build/subprojects/tlsf-tools`). These are ordinary tlsf-tools Meson
-targets; the retired Python oracle/toolchain wrapper is not required.
+Preparation runs serially without a systemd scope, with a default 60 s per input.
+Failures are recorded and omitted from map/list. Resume checks hashes, repairs
+missing/corrupt outputs and reuses cached failures. Changed sources, tool, mode,
+seed or timeout need a new directory. Neutral names follow a seeded permutation
+of list order. Keep `maps/` to translate controller names back; it stays outside
+`corpus/`.
 
 ## Bounded one-sided restrictions
 
 `--restriction-prepass on|off` defaults to on for native TLSF decision runs with
 legacy arms. One existing formula-unreal arm tries input identification; one
-existing real arm tries constant outputs. Other arms start normally, with no
-new portfolio member or serial work before the race. Native-only portfolios
-and `-s` skip these attempts; synthesis retains the ordinary complete controller.
-Arms fork before full-objective BDD preparation, except that the obligation
-eligibility source first publishes its normal eligibility result. This avoids
-inheriting unnecessary BDD preparation without delaying the helper's admission.
+real arm tries constant outputs. Other arms start normally. Native-only portfolios
+and synthesis (`-s`) skip these attempts.
 
-Candidates come only from the frontend's expanded declaration provenance:
-identify every input bus of at least two members with its first member, then
-try the first two such buses separately if there are multiple buses (at most
-three attempts). The real arm tries one assignment: all non-family outputs
-false. This fixed set covers the measured #370 restrictions; other constant
-assignments and output identification are not searched.
+Candidates use expanded declaration provenance. Input buses of at least two
+members share their first member: try all buses together, then the first two
+separately if there are multiple buses (at most three attempts). The output
+candidate sets all non-family outputs false. Substitution covers the complete
+positive effective Mealy objective, including assumptions and strict-semantics
+guards, with the original I/O map. Only UNREAL input-restricted or REAL
+output-restricted results transfer, following tlsf-tools `Restriction.lean`.
 
-Substitution traverses the complete positive effective Mealy Spot formula,
-including all assumptions and strict-semantics guards, with the original I/O
-map. Replacement leaves are inserted simultaneously. No TLSF reconversion,
-clause deletion or parameter reduction occurs. The unchanged worker then
-applies its normal simplification and timing/sign transformations. Only a
-completed UNREAL input-restricted verdict or REAL output-restricted verdict
-transfers, following tlsf-tools `Restriction.lean`; the opposite polarity is
-never accepted.
-
-Each attempt uses a private subprocess and a 512 MiB address-space/RSS cap.
-Input attempts have a 500 ms wall cap and a 1 s total allowance; the single
-output attempt has a 200 ms cap. The invocation deadline further bounds both.
-The largest measured input restriction needed 219 ms of search alone, so a
-200 ms input allowance lost two measured cases. AP-map construction and
-substitution run inside the subprocess. ASan omits the address-space limit for
-its shadow mapping, retaining the RSS check. Timeout, resource/error, wrong-polarity and
-inconclusive results resume the original objective. `restriction_attempt`
-phase records identify the candidate, family ordinal, accepted polarity,
-outcome, cause, wall time and limits; accepted winners use `restriction_input`
-or `restriction_output` routes. The ordinary attribution stream records
-declines/stops and descendant resource usage separately.
+Each attempt runs in a private subprocess capped at 512 MiB address space/RSS.
+Input attempts have 500 ms each and 1 s total; the output attempt has 200 ms.
+The invocation deadline bounds both. ASan omits the address-space cap. Timeout,
+resource/error, opposite and inconclusive results resume the original objective.
+`restriction_attempt` records and the `restriction_input`/`restriction_output`
+winner routes are described in [phase records](legacy-phase-records.md).
 
 ## Synthesis size
 
-`synthesis-size.py` measures each explicitly labelled member binary with `-s`,
-then checks the emitted controller in a separate invocation. Optional
-`--extra-args MEMBER='ARGS'` shell-splits solver arguments for that label only;
-it never runs a shell or forwards these arguments to the checker. A binary may
-appear under several labels, each measured and verified independently:
-
-```bash
-python3 -s benchmarking/synthesis-size.py \
-  --bin baseline=/path/to/acacia-bonsai --bin candidate=/path/to/acacia-bonsai \
-  --extra-args candidate='--aiger-mode both+ud' \
-  --checker /path/to/controller-check --list panel.list \
-  --tlsf-map tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv \
-  --tlsf-corpus /path/to/materialized-corpus --timeout 17 --verify-timeout 60 \
-  --systemd-scope --memory-max 5G --memory-swap-max 0 --output /path/to/new-run
-```
-
-Each label accepts one `--extra-args` entry; unknown or repeated labels and
-malformed shell quoting are errors. Omitted labels get no extra arguments.
-`run.json` records both the supplied entries and their parsed `solver_args`.
-Acacia rejects encoder modes containing `+dc` at parse time because they can
-produce incorrect controllers with its original BDD dictionary; see issue
-#466. Other encoder modes remain available; see the
-[CLI guide](../docs/cli.md#write-a-controller).
-The runner does not change the synthesis portfolio or encoder on its own.
-`--parity-mealy-reduction none|bisim|bisim-output|reselect` selects bounded, synthesis-only
-strategy simplification; use labelled arguments to compare it on the same binary.
-See the [CLI guide](../docs/cli.md#write-a-controller) for limits and defaults.
-Read the shipping members from the registry; do not substitute a fixed list. For example, on a memory-constrained host:
+`synthesis-size.py` invokes each labelled binary with `-s`, then checks its
+controller separately. `--extra-args MEMBER='ARGS'` shell-splits solver arguments
+for one label, for example `--extra-args candidate='--aiger-mode both+ud'`.
+A binary can have several labels, each measured and verified independently.
+Unknown/repeated labels and malformed quoting are errors; omitted labels get no
+extra arguments. The runner never invokes a shell or passes these arguments to
+the checker. `run.json` keeps supplied entries and parsed `solver_args`.
+Acacia rejects unsafe `+dc` modes (#466); see the
+[CLI guide](../docs/cli.md#write-a-controller). Compare `--parity-mealy-reduction`
+(default `reselect`, `-s` only) the same way, through labelled arguments.
+Resolve members through the registry:
 
 ```bash
 # Activate the environment for your installed Spot and C++ toolchain first.
@@ -378,118 +249,53 @@ systemd-run --user --scope -p MemoryMax=5G -p MemorySwapMax=0 \
   --output _bm-logs/synthesis-size
 ```
 
-The list may be a small panel using the same logical IDs. Selection uses the
-TLSF `//STATUS` annotations and the reviewed corrections in
-`syntcomp26-status-exceptions.tsv`, just as the coverage runner does.
-`--expected-status` defaults to `REALIZABLE`; it also accepts `UNREALIZABLE`,
-`UNKNOWN` (no decisive expectation), or `all`. A named `--status-exceptions`
-table replaces the default. Corpus lookup follows the shared CLI, environment,
-build option, and recorded-pointer order. A new output directory is required;
-there is no resume or overwrite. Runs are serial. Keep the directory as evidence:
-it contains the circuits and stdout/stderr from synthesis and verification.
-`run.json` retains the command options, checker digest, and selected source digests.
+A smaller panel can use the same logical IDs. Selection uses TLSF status and
+reviewed corrections. `--expected-status` defaults to `REALIZABLE`, also accepting
+`UNREALIZABLE`, `UNKNOWN` or `all`; `--status-exceptions` replaces the default table.
+Runs are serial, with a fresh directory and no resume/overwrite.
 
-`rows.tsv` has one row per selected input and member:
+Keep circuits, stdout/stderr and `run.json` as evidence. `rows.tsv` records source
+expectation, verdict, bounded synthesis time/exit/failure, AIGER `M/I/L/O/A`, optional
+`REF_SIZE`, and separate verification status/time/exit. A printed answer followed
+by crash/timeout is unsuccessful. Malformed and unsupported circuits cannot count
+as verified. Summary size statistics use verified controllers; comparisons need
+the intersection of verified input IDs across every supplied member.
+`total_ands_latches` and `median_ands_latches` count A + L only on that intersection
+and stay empty when it is empty. Consider controller coverage alongside size.
 
-| Columns | Meaning |
-| --- | --- |
-| `instance`, `member`, `binary_sha256` | Logical input ID, supplied member label, digest of the executable bytes. |
-| `expected`, `expectation_source` | Effective status and `status`, `exception`, or `none`. |
-| `verdict` | Decisive answer with matching exit status, otherwise `UNKNOWN`. |
-| `wall_seconds`, `exit_code`, `failure_kind` | Bounded synthesis invocation time (including launcher/teardown), raw exit status, and failure classification; empty failure means verified success. Verification is excluded from this time. |
-| `M`, `I`, `L`, `O`, `A` | Parsed basic ASCII AIGER header: maximum variable, inputs, latches, outputs, AND gates. Empty if no usable controller was produced. |
-| `REF_SIZE` | TLSF competition reference size, when annotated; it is contextual and does not affect selection or verification. |
-| `verification`, `verify_seconds`, `verify_exit_code` | `verified`, `failed_verification`, `unparsable`, `unverified`, `verify_error`, `verify_resource_limit`, `verify_timeout`, or `verify_unsupported`, with separately measured time and exit status when the checker ran. |
-
-Synthesis failure kinds are `timeout`, `resource_limit`, `error`, `unknown`,
-`unrealizable`, or `invalid_controller`; checker failures use their verification
-name. A printed realizable answer followed by a crash or timeout is not a
-successful answer. Unsupported or malformed circuits never count as verified.
-
-`summary.tsv` gives each member's `attempted`, `realizable` answers,
-`controllers_produced` (parsed controllers from successful synthesis), `verified`,
-and `failed_verification` (only controllers rejected by the checker). Synthesis
-outcomes have separate counters: `synthesis_timeout`, `unrealizable`,
-`synthesis_resource_limit`, `synthesis_error`, `synthesis_unknown`, and
-`invalid_controller`. Inconclusive checks count as `verify_timeout`,
-`verify_resource_limit`, `verify_error`, or `verify_unsupported`.
-`commonly_verified` is the intersection of verified input IDs
-across **every supplied member**. `total_ands_latches` and `median_ands_latches`
-use only that intersection, counting `A + L`; they are empty when it is empty.
-Do not select a member on size without also considering controller coverage.
-
-`tests/controller-check` is a standalone C++ helper linked against Spot and the
-existing TLSF frontend library. It converts the whole objective with the source
-TARGET retained, including strict assumptions and semantics/target adaptation,
-because the emitted circuit has already undone the solver's internal Mealy
-lowering. It requires the circuit's named input/output partition to match the
-declarations. Starting from the all-zero initial latch valuation, the helper
-explores reachable latch valuations using arbitrary-width keys, with no latch
-count limit. BDDs group all environment input choices by their successor and
-constrain each edge with the exact output functions. Moore outputs must be
-independent of current inputs at each reachable latch valuation; unreachable
-states do not cause rejections. Spot's width-limited `as_automaton` is not used.
-A fresh Spot translation of the negated LTL objective must have an empty
-intersection with it. This checks safety and liveness independently of the
-winning strategy and of debug-only solver checks. It trusts Spot's restricted
-AAG parser, BDDs, translator and product algorithms and the shared TLSF
-conversion, but no solver verdict or proof.
-`--verify-max-states` caps the number of reachable latch valuations (default
-200000); the standalone helper accepts `--max-states N` after its two paths.
-Exceeding the budget returns `verify_unsupported` (exit 3), never success.
-Explicit AIGER 1.9 latch reset fields, including zero, one and uninitialised
-self-literals, remain unsupported by the parser and receive the same verdict.
-They are never silently interpreted as all-zero initialization. A verification
-timeout also remains inconclusive. Every inconclusive result excludes the
-circuit from size comparisons.
+The independent `tests/controller-check` keeps TLSF source TARGET and strict
+semantics, requires the declared I/O names, and explores reachable latches from
+zero using BDD edges. It checks Moore independence and empty intersection with a
+fresh negated-objective translation. It trusts Spot's parser/BDDs/translation and
+the shared TLSF conversion, without trusting solver verdicts or proofs.
+`--verify-max-states` defaults to 200000; exceeding it, explicit AIGER 1.9 reset
+fields or parser limitations return unsupported, never verified. Timeouts remain
+inconclusive. See `--help` for output columns and checker limits.
 
 ## Memory collection
 
-`benchlib.run_systemd_scope` remains the shared invocation runner. On Linux it
-creates a fresh delegated systemd scope for each invocation, with an owner and a
-workload in sibling cgroups. The requested memory/swap limits apply to the workload;
-the small owner remains outside that limit, holds the empty workload cgroup after
-normal exit, timeout or OOM, and waits for the external driver's acknowledgement.
-The driver reads `memory.peak` and `memory.events` before deletion and requires an
-empty `cgroup.events` populated state before and after those reads. Any owner error
-invalidates both observations even when the cgroup path and numeric files are present;
-the original error is retained as both missing reasons. A still-populated cgroup or
-unreadable/invalid drain state also withholds peak/events. Valid reaped-process RSS
-remains independently available. Group OOM stays
-disabled by default, preserving the prior child-OOM behavior; its explicit setting
-is recorded. CPU properties still bound the complete scope. This collector changes
-measurement overhead and scope layout: use fresh matched runs, not old timings.
+On Linux, `benchlib.run_systemd_scope` creates one delegated scope per invocation.
+An owner outside the workload's memory limit holds its cgroup until the driver
+reads `memory.peak`/`memory.events` and acknowledges. The workload must be empty
+before and after reads. Owner/drain errors invalidate both observations and retain
+their reason. Group OOM is off by default; CPU properties bound the whole scope.
 
-`scope_memory_peak_bytes` retains its schema name and means the concurrent workload
-cgroup peak, including all solver children. `max_process_rss_bytes` is the Linux
-`wait4.ru_maxrss` maximum for the reaped process tree, recorded by default; descendants
-that the solver did not reap may not contribute to this RSS statistic. RSS is never
-the concurrent scope peak. Native coverage records CPU time by default on Linux
-via `wait4`, without a wrapper; `--no-collect-rusage` disables CPU time only,
-leaving RSS unchanged. Elsewhere collection defaults to off; `--collect-rusage`
-enables the existing GNU time CPU/RSS diagnostics. Resuming output written without
-collection requires `--no-collect-rusage` on Linux to pass the provenance guard. A missing
-peak, zero/sentinel read, unsupported platform or failed collector carries a reason;
-virtual reservations and OOM-only observations cannot replace a peak. Non-Linux
-runs report unsupported cgroup/RSS fields and cannot supply the Linux memory gate.
-Unscoped/campaign-shared runs carry explicit missing reasons; G3's instance mode
-is required for per-invocation memory evidence.
+`scope_memory_peak_bytes` is the concurrent workload peak, including children.
+`max_process_rss_bytes` is Linux `wait4.ru_maxrss`; unreaped descendants may be
+absent. Linux coverage records CPU by default; `--no-collect-rusage` disables CPU
+only. Elsewhere collection defaults off and `--collect-rusage` uses GNU time.
+Resume must match the original collection mode. Missing, unsupported or failed
+collection stays unknown; process RSS and virtual reservations cannot replace a
+scope peak. Use G3 instance mode for per-invocation memory evidence.
 
-Native coverage and `run-subset.py --raw-tsv FILE` keep their existing
-primary columns and write sources, cgroup path, OOM setting and missing reasons to
-`FILE.memory.tsv`. Current readers join this sidecar by observation identity and
-measurements; master readers can still read the primary TSV. `run-subset.py --csv FILE`
-also writes `FILE.memory.tsv` by default. Resuming an expanded primary TSV preserves
-its original bytes in `*-legacy.tsv` before moving provenance into the sidecar.
+Native coverage and `run-subset.py` write `FILE.memory.tsv` sidecars. Joins report
+coverage and missing reasons separately for scope peak and process RSS; numeric
+values with invalid provenance are excluded. Cohort medians require 100% coverage,
+including nonexecuted conversions in the denominator. Maxima cover the observed
+subset only. Disclose outcome-based selection.
 
-Joins and paired reports give numerator/denominator and missing reasons separately
-for scope peak and process RSS. Explicit missing reasons and absent/invalid collection
-provenance exclude even numeric observations. A cohort median requires 100% coverage (a global,
-predeclared rule); otherwise it is suppressed and selection by outcome, including
-MEMOUT, is disclosed. Join denominators include every campaign row, including
-nonexecuted conversions; maxima describe only the observed subset.
-
-Run the real Linux lifecycle panel **outside the sandbox**, from this worktree:
+Validate the collector outside the sandbox on a host with delegated cgroup v2
+memory, `memory.peak`, `cgroup.kill` and a user systemd manager:
 
 ```sh
 set -o pipefail
@@ -498,33 +304,27 @@ python3 -u tests/check-scope-memory.py \
   | tee _bm-logs.p0-memory-validation/lifecycle.jsonl
 ```
 
-It uses the shared runner at 64 MiB/no swap for normal exit, timeout, child OOM and
-explicit group/invocation OOM. It asserts four distinct cgroups, positive authoritative
-peaks, retained OOM events, correct classifications and RSS or an explicit reason.
-The host needs a delegated Linux v2 memory controller, `memory.peak`, `cgroup.kill`
-and a functioning user systemd manager. Failure remains visible; there is no fallback
-memory estimate. The fake panel is `tests/pytest/test_scope_memory.py`.
+This checks normal exit, timeout, child OOM and invocation OOM at 64 MiB/no swap.
+The fake panel is `tests/pytest/test_scope_memory.py`.
 
 ## Corpus and panel selection
 
-For TLSF-backed SYNTCOMP25/26 suites, `syntcomp-corpus.py materialize` creates
-a flat corpus from the `tests/syntcomp-benchmarks` submodule, verifies it and
-records `.acacia-tlsf-corpus-path` unless `--no-record` is set. A corpus can be
-selected by `--tlsf-corpus DIR`, `ACACIA_TLSF_CORPUS=DIR`, or the build's
-`-Dacacia_tlsf_corpus_dir=DIR`, in that order. G1 uses the same lookup without
-a CLI corpus flag. Stale paths are skipped; configure Meson with the corpus
-directory to enumerate corpus suites. The benchmark suite lists and TLSF
-source maps fix logical instance identity; use the same set and frontend for
-both candidates. A stratified panel is a screen, not a full-corpus result.
+`syntcomp-corpus.py materialize` reconstructs and verifies the flat TLSF corpus
+from `tests/syntcomp-benchmarks`, recording `.acacia-tlsf-corpus-path` unless
+`--no-record` is set. Lookup precedence is `--tlsf-corpus DIR`,
+`ACACIA_TLSF_CORPUS=DIR`, build option `-Dacacia_tlsf_corpus_dir=DIR`, then a valid
+recorded pointer with its `.acacia-tlsf-corpus` marker. G1 has no CLI corpus flag.
+Configure Meson with the directory to enumerate suites. Lists/maps fix logical
+identity. A stratified panel is only a screen.
 
 ## Gates
 
-- **G0, correctness:** `meson test -C build --suite=unit` and
+- G0, correctness: `meson test -C build --suite=unit` and
   `meson test -C subprojects/posets/build`; both must report `Fail: 0`.
   First configure and compile the standalone Posets test build:
   `meson setup subprojects/posets/build subprojects/posets`, then
   `CARGO_BUILD_JOBS=2 meson compile -C subprojects/posets/build -j 2`.
-- **G1, frozen verdicts and coverage:**
+- G1, frozen verdicts and coverage:
   `benchmarking/regression-gate.sh --baseline-bin PREVIOUS-BIN build`.
   `--baseline-bin` or `REGRESSION_BASELINE_BIN` is required, with no default.
   Use the same configuration built from the previous revision. All 40
@@ -532,31 +332,31 @@ both candidates. A stratified panel is a screen, not a full-corpus result.
   and coverage losses fail. Its baseline CSV uses frozen verdicts and
   `baseline_seconds` from `tests/suites/benchmarks/regress-expected.tsv`.
   The binary serves near-cap remeasurement only.
-- **G2, Posets proxy:** `benchmarking/posets-microbench.sh` (advisory).
-- **G2s, solver-profile proxy:**
+- G2, Posets proxy: `benchmarking/posets-microbench.sh` (advisory).
+- G2s, solver-profile proxy:
   `benchmarking/solver-profile-gate.sh --rule optimization BASELINE-BIN CANDIDATE-BIN`.
   Select the rule before measuring: `optimization` applies the existing 5% improvement
   proxy (or the existing single-target pass to G3); `membership-default` requires
   no target beyond the same 6% regression ceiling and passes to G3 without a speedup
   requirement. Both record the rule and thresholds in `g2s-rule.txt` and `decision.txt`.
   The SYNTCOMP25 `mixed` target is `evasion0.ltl`.
-- **G3, landing bar:** `benchmarking/landing-campaign.sh` compares paired
+- G3, landing bar: `benchmarking/landing-campaign.sh` compares paired
   binaries, suite lists and a 17 s timeout using `landing-bar.py`; every suite
   must print `GATE PASS`. `--scope-mode instance` keeps the runner outside
   each solver's 8 GiB scope so solver OOM is recorded. The default `campaign`
   mode shares the scope. A mode change needs a fresh output directory and
   matched remeasurement of both binaries.
-- **G4, corpus correctness:**
+- G4, corpus correctness:
   `python3 benchmarking/corpus-correctness-gate.py build` runs Meson's
   realizable/unrealizable suites and reads their JSON records. Timeouts are allowed;
   failed tests, false-verdict markers (including in timed-out tests), missing records
   and unexplained launcher exits fail. Meson's exit status alone is insufficient.
-- **G5, native TLSF parity:** use the complete command below with a materialized
+- G5, native TLSF parity: use the complete command below with a materialized
   TLSF corpus. SyFCo remains the independent converter wherever it succeeds, and only
   its rejections use the existing tlsf-tools inspector's already-Mealy pair without
   further adaptation. `conversion.tsv` and parity rows record each converter and
-  SyFCo error, and the summary names every fallback with its reason as **not
-  independently cross-checked**; these pairs still undergo verdict parity and need
+  SyFCo error, and the summary names every fallback with its reason as not
+  independently cross-checked; these pairs still undergo verdict parity and need
   no manual waiver. Preparation or spot-check failures, missing conversions,
   frontend errors and opposite verdicts still fail the gate; normalization timeouts
   remain UNKNOWN, and available pairs still run after preparation failures.
@@ -576,18 +376,9 @@ python3 benchmarking/tlsf-verdict-parity.py --prepare \
 
 For the 2026 selection, use its `all.list` and `--expect-count 1524`.
 
-The historical frozen G1 shipping-preset twin is
-`best_decomp_rank_bucketed_mona_eq_min_blocks_2`, whose binary SHA-256 is
-`6467869a4411233ec148f7136fe6a6595a43205cc2bbd412f8d8beacb55ec2e9`.
-It is pinned in [baselines.tsv](baselines.tsv). The current parity-portfolio
-previous-revision pin is OTF, archive `binary-OTF-1a846b90`; choose the matching
-configuration from that registry for the change under test. The old
-`build_best_decomp_mona` default was a different configuration; substituting
-it changes the question answered by near-cap remeasurement. Verdict flips and
-row-set mismatches are configuration-independent regressions. A lost solve
-against a different configuration is not evidence of a change regression;
-establish one with a same-configuration previous-revision comparison such as
-G3. G1 still fails on either category.
+Use [baselines.tsv](baselines.tsv) to restore the same configuration from the
+previous revision. Substituting a different configuration invalidates change
+attribution. G1 still rejects verdict flips, row-set mismatches and lost solves.
 
 ## Measurement regime
 
@@ -600,29 +391,41 @@ cap, `landing-bar.py` remeasures both binaries at three times the cap before
 deciding. Native TLSF primary runs and their diagnostics both use
 `--tlsf-only` so an available `.ltl` sibling cannot change the frontend.
 Longer diagnostic answers affect the gate decision, never the primary 17 s
-coverage. Report censored higher-cap rows as **derived**, with their source
+coverage. Report censored higher-cap rows as derived, with their source
 and transformation recorded.
 
 Read PAR-2-only changes against the measured same-configuration noise floor.
-Three baseline runs spanned 2778.691–2799.825 s on SYNTCOMP25 (**21.134 s**)
-and 1702.186–1714.260 s on SYNTCOMP26 (**12.074 s**). A change inside that
+Three baseline runs spanned 2778.691 to 2799.825 s on SYNTCOMP25 (21.134 s)
+and 1702.186 to 1714.260 s on SYNTCOMP26 (12.074 s). A change inside that
 spread alone is not performance evidence; coverage changes and per-instance
 losses remain gate evidence.
 
-## Documentation closeout snapshot
+## Diagnostic tools
 
-`refactor-closeout20261017` preserves exact parent Markdown at `93e4b19e` and all
-173 PR 3 deletions from `62afb5e7`, including executable modes and PR 3's deletion
-inventory. The archive is published and registered in [evidence-index.tsv](evidence-index.tsv).
-Fetch and verify it with:
+[Phase records](legacy-phase-records.md) covers recording, profiling, completeness
+and cap comparison. `legacy-phase-table.py` also exposes `completeness` and
+`weakening`; `make-panel.py` selects deterministic panels.
+Optional Posets capture/replay: `python3 benchmarking/posets-capture.py --help`
+and `python3 benchmarking/posets-matrix.py --help`; the detailed method is in
+docs-20261122 at `benchmarking/posets-matrix.md`.
 
-```sh
-python3 -s scripts/acacia-evidence.py fetch \
-  --campaign refactor-closeout20261017 --dest _bm-logs/refactor-closeout
-```
+Optional `tlsfinfo`/`tlsf2ltl` test helpers use `ACACIA_TLSF_TOOLS_BUILD`
+(default `build/subprojects/tlsf-tools`); they are ordinary Meson targets.
+Retired tools and tests are in campaign archives; restoring them preserves the
+campaign's original partial/stopped status.
 
-Under that destination, originals are restored in
-`build_scratch/pr4-docs/snapshot/markdown/` and
-`build_scratch/pr4-docs/snapshot/pr3-deleted/`, preserving repository-relative paths.
-The snapshot's `sources.tsv` binds every captured source to its commit and digest.
-Original `gr1-par2-20260923` remains partial. This snapshot adds no measurements.
+## Decisions
+
+- Family/name-based dispatch and sequential Python lifting are withdrawn. Use
+  source-bound generic native arms; `gr1-par2-20260923` remains a partial campaign
+  (`param-lift-20260922`, `gr1-par2-20260923`).
+- The earlier obfuscated corpus is not a blind holdout: its mapping was published.
+  Use genericity/renaming checks (`opt20260927-p4close`).
+- Lifting uses fixed work budgets, with invocation deadlines as hard stops.
+  Disclose outcome-informed tuning and holdout limits (`opt20260927-p1b6`).
+- Existing evidence does not justify TLSF normalization, a feature-based arm
+  selector or an isl-backed downset (`route-20261019`, `costmodel-20261020`,
+  `islprobe-20261020`).
+
+The former decision table, including superseded policies, is archived in
+docs-20261122. Current solver policies are in [solver contracts](DATA-STRUCTURES.md).
