@@ -95,6 +95,7 @@ large fixed points by brute-force `decide`.
 | `solver/k_bounded_safety_aut.hh#bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner) {`; `solver/k_schedule.hh#? kmax : std::min (kmax, k + kinc);`; `solver/equivariant_k_bounded_safety_aut.hh#const auto next_k = detail::checked_next_k (k, kinc);`; `solver/equivariant_k_bounded_safety_aut.hh#const auto next_k = detail::checked_next_k (k, kinc);` | Early exits, `bump`, `AdaptiveReach`, shared and ordinary schedules (both equivariant increments) |
 | `solver/solver_invoker.cc#input_aps.swap (output_aps);` | `swapFrame`, `swapped_engine_cpre` |
 | `../tests/equivariant_pre_test.cc#bool run_mixed_io_family_case () {` | `Reproducer331`, mixed I/O regression fixture |
+| `solver/symmetric_count.cc#counts[ls & ~reset] += c;` | `push_counts`, `countTransition`, `count_successor` |
 
 `#` separates each file from an exact source-line anchor. Run
 `python3 tests/check-proof-references.py` from the repository root to check the
@@ -188,3 +189,44 @@ uses NUL-delimited Git paths and checks both sides of renames.
 
 Run `python3 -m pytest tests/pytest/test_lean_ci.py -q` for the lightweight path,
 gate, command-failure and correspondence regressions; CI runs them in `changes`.
+
+## Issue #454 obligations
+
+`Quotient.lean` proves orbit quotients of turn-based games sound for any
+objective on the priority sequence, parity included. `CountGame.lean` and
+`CountTemporal.lean` provide the generic reduction and temporal lemmas.
+`CountEngine.lean` implements the concrete predicates, since/breakpoint bits,
+events and resets at `symmetric_count.cc` revision `6c6da84a`, and connects them
+to the spec's game. Namespaces are `Symmetry.CountGame`, `Symmetry.CountTemporal`
+and `Symmetry.CountEngine`. Counts and transition tables are mathematical;
+the compiled-code, BDD and machine-arithmetic boundary still applies.
+`Translates` assumes only correctness of the global parity translator for the
+**encoded** formula. `Clause.correct` proves the original-to-encoded equivalence,
+including local Inf/Fin/sink acceptance and position-0 since conjuncts.
+`Certified` requires strategy entries only on reachable count keys; the adapter
+completes unvisited entries and chooses raw indexed edge witnesses before
+canonicalization. `engine_spec_verdict` transfers either certified winner from
+the zero-bit initial key and excludes an opposite winner for the original spec.
+
+| Obligation | Definition or theorem |
+| --- | --- |
+| Group acting by owner-, priority- and edge-preserving maps, orbit-invariant representatives with transporters | `Action`, `Action.canon_act` |
+| Quotient game and its plays and strategies | `Action.quotient`, `Action.QWins` |
+| Plays and strategy-following project to the quotient | `Action.project_play`, `Action.project_consistent` |
+| A transported winning quotient strategy wins, for either player | `Action.lift`, `Action.lift_legal`, `Action.lift_wins` |
+| No vertex is won by both players; the certified verdict transfers | `exclusive`, `Action.verdict` |
+| Invariant edge outputs are preserved | `Action.lift_output` |
+| Indexed Mealy game, simultaneous client permutations, exact state/input count orbits | `Machine`, `game`, `counts_orbit`, `key_orbit`, `canonical_vertex`, `action` |
+| Compositions enumerate precisely the input and output stabilizer orbits | `stabilizer_orbit`, `compositions_exact`, `input_edges`, `output_edges` |
+| Occupied-cell events and weighted count successors equal concrete successors | `occupied_events`, `push_counts`, `count_successor`, `count_canonical` |
+| Successor sharing retains incoming colors and lifts winning strategies | `successor_reuse` |
+| Absorbing collapse preserves max-odd parity at every entrance time | `collapse_wins` |
+| Computed input/output compositions, normalized targets and count-key edges | `countMoves`, `countGame_edges`, `count_quotient_edges`, `count_normalized_target` |
+| Reachable count certificates lift through quotient, sharing and collapse | `Certified.wins`, `Action.key_wins`, `count_certificate` |
+| Engine verdict means a winner for the original specification, for either player | `Clause.correct`, `Run.specification`, `spec_wins_iff`, `engine_spec_verdict` |
+| Concrete predicate/ready masks, occupied any/all tests, set/test/reset breakpoint order | `engineMachine`, `event_values`, `Run.local_step`, `Run.breakpoint` |
+| Actual emitted letter events and all four finite temporal aggregates at every suffix | `Run.letter_event`, `Run.any_event`, `Run.all_event`, `Run.all_inf`, `Run.any_inf`, `Run.all_fin`, `Run.any_fin` |
+| Prefix independence and substitution in arbitrary contexts and polarities | `gf_suffix`, `fg_suffix`, `context` |
+| Deterministic local Inf/Fin runs and permanent missing-transition rejection | `Run.local_run`, `Run.mark`, `Run.sink`, `Run.local_encoding` |
+| Initially false since monitors, position-0 rewrite and later-position counterexample | `Run.since_history`, `Run.since_encoding`, `since_later_counterexample` |
+| Flattening exposes positive conjuncts at the original position only | `flatten`, `flatten_correct`, `top_conjunct_replacement` |
