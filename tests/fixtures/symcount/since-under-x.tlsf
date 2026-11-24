@@ -1,0 +1,11 @@
+INFO { TITLE: "Since monitor under next" DESCRIPTION: "Lambda fails only before the obligation starts" SEMANTICS: Mealy TARGET: Mealy }
+GLOBAL { PARAMETERS { n = 2; } }
+MAIN {
+ INPUTS { r[n]; }
+ OUTPUTS { y; b[n]; }
+ GUARANTEE {
+  G y;
+  &&[0 <= i < n] (!b[i] && X G b[i]);
+  X G (G y -> ||[0 <= i < n] (G b[i]));
+ }
+}

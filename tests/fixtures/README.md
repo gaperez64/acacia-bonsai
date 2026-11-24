@@ -3,6 +3,17 @@
 `native_gr1/exhausted-probes.tlsf` reproduces #443: thirteen unused parameters
 exhaust the seed-probe budget before the viable axis, then the direct route solves it.
 
+The three `restrictions/` fixtures adapt the [SYNTCOMP benchmarks repository](https://github.com/SYNTCOMP/benchmarks),
+commit `4105caf1f1e5fd3b76657879bfce8021d130cbde`, under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+([license text](../syntcomp-benchmarks/LICENSE-CC-BY)):
+`recurrence-input.tlsf` derives from `tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf`,
+`pair-input.tlsf` from `tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf`, and
+`scalar-output.tlsf` from `tlsf/collector/parametric/collector_v3.tlsf`.
+Titles are shortened, descriptions/comments/status trailers removed, formatting
+condensed, and each fixture uses `n=3` (upstream defaults are 2, 10 and 3,
+respectively); the objectives are retained.
+
 `encoded-fold.tlsf` is adapted from the [SYNTCOMP benchmarks repository](https://github.com/SYNTCOMP/benchmarks),
 path `tlsf/simple_arbiter_log/parametric/simple_arbiter_enc.tlsf`,
 commit `4105caf1f1e5fd3b76657879bfce8021d130cbde`, under

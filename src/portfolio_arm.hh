@@ -12,7 +12,7 @@
 #include <vector>
 
 enum class portfolio_arm_kind {
-  legacy, gr1, gr1_lift, gr1_real_lift, param_lift, obligation, parity
+  legacy, gr1, gr1_lift, gr1_real_lift, param_lift, obligation, parity, symcount
 };
 
 struct legacy_arm_options {
@@ -55,6 +55,8 @@ struct portfolio_arm {
       }
       if (kind == portfolio_arm_kind::obligation)
         return "both:obligation:spot";
+      if (kind == portfolio_arm_kind::symcount)
+        return "both:symcount:spot";
       if (kind == portfolio_arm_kind::gr1)
         return both ? "both:gr1:oxidd" : unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd";
       if (kind == portfolio_arm_kind::gr1_lift)
@@ -91,6 +93,7 @@ enum class portfolio_arm_parse_error {
   native_backend,
   obligation_spec,
   parity_spec,
+  symcount_spec,
   duplicate,
 };
 

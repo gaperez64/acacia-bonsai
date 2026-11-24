@@ -29,8 +29,11 @@ time timeout 300 lake env lean -j"$LEAN_NUM_THREADS" -s"$LEAN_STACK_SIZE_KB" \
 time timeout 1500 lake --rehash build
 
 # Build exactly the modules we audit, including unimported nested sources.
-shopt -s globstar nullglob
-modules=(SymmetryProofs.lean SymmetryProofs/**/*.lean)
+# find instead of globstar: macOS ships bash 3.2, which has no globstar.
+modules=(SymmetryProofs.lean)
+while IFS= read -r source; do
+  modules+=("$source")
+done < <(find SymmetryProofs -type f -name '*.lean' | LC_ALL=C sort)
 modules=("${modules[@]%.lean}")
 modules=("${modules[@]//\//.}")
 time timeout 1500 lake --rehash build "${modules[@]}"

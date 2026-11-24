@@ -462,6 +462,9 @@ EXACT_WORKER_SPECS = [
     dict(kind="both:parity:oxidd", requested_backend="parity", requested_polarity="both",
          translation="native", transform="exact", provider="native",
          r_prepass=True, equivariance=True),
+    dict(kind="both:symcount:spot", requested_backend="symcount", requested_polarity="both",
+         translation="native", transform="exact", provider="native",
+         r_prepass=True, equivariance=True),
 ]
 
 
@@ -490,14 +493,16 @@ def test_shipped_parity_default_inventories(slot):
     ]
     expected += [dict(kind="both:gr1-real-lift:oxidd", requested_backend="oxidd",
                       requested_polarity="both", translation="native", transform="exact",
-                      provider="native", r_prepass=True, equivariance=True), *EXACT_WORKER_SPECS]
+                      provider="native", r_prepass=True, equivariance=True),
+                 *(spec for spec in EXACT_WORKER_SPECS
+                   if slot == 0 or spec["kind"] != "both:symcount:spot")]
     if slot == 1:
         expected += [dict(kind="legacy", requested_polarity=polarity, translation="small",
                           transform=transform, provider="frozen-graph", requested_backend="forward",
                           r_prepass=True, equivariance=True)
                      for polarity, transform in [("REAL", "real"), ("UNREAL", "automaton")]]
     assert inventory == expected
-    assert len(inventory) == 6 + 2 * slot
+    assert len(inventory) == 7 + slot
     assert context == dict(r_prepass=True, equivariance=True)
 
 

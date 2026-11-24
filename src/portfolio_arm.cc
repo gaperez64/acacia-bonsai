@@ -40,7 +40,10 @@ portfolio_arm_parse_result parse_portfolio_arms (std::string_view arg) {
                                   transform == "gr1-real-lift" || transform == "param-lift";
     const bool obligation_transform = transform == "obligation";
     const bool parity_transform = transform == "parity";
-    portfolio_arm arm = (obligation_transform || parity_transform)
+    const bool symcount_transform = transform == "symcount";
+    portfolio_arm arm = symcount_transform
+        ? portfolio_arm::native (false, portfolio_arm_kind::symcount, true)
+        : (obligation_transform || parity_transform)
         ? portfolio_arm::native (false, parity_transform ? portfolio_arm_kind::parity
                                                         : portfolio_arm_kind::obligation, true)
         : native_transform
@@ -53,7 +56,14 @@ portfolio_arm_parse_result parse_portfolio_arms (std::string_view arg) {
                          acacia::game_backend::backward};
 
     arm.parity_oxidd = parity_transform && backend_name == "oxidd";
-    if (obligation_transform || parity_transform) {
+    if (symcount_transform) {
+      if (polarity != "both" || backend_name != "spot" || third_colon != std::string::npos) {
+        result.error = portfolio_arm_parse_error::symcount_spec;
+        result.spec = spec;
+        return result;
+      }
+    }
+    else if (obligation_transform || parity_transform) {
       if (polarity != "both" || (backend_name != "spot" && !arm.parity_oxidd) ||
           third_colon != std::string::npos) {
         result.error = parity_transform ? portfolio_arm_parse_error::parity_spec

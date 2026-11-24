@@ -53,6 +53,18 @@ child sequence and carry worker/tier/trust/time. Completeness checks validate
 schemas, emitters and ordinary delivery; unknown events still undergo lifecycle
 validation.
 
+`restriction_attempt` records carry `candidate`, `family` (one-based eligible
+input-family ordinal, zero for combined/constant candidates), accepted `polarity`,
+`outcome`, `cause`, `mono_ns`, `wall_ns`, child PID and wall/memory limits.
+Start records precede forking; `outcome=accepted` requires a reaped, in-budget
+accepted exit. `restriction_input` winners prove UNREAL of the positive restricted
+objective; `restriction_output` winners prove REAL. Declines use
+`restriction_opposite`, `restriction_inconclusive` or `restriction_no_candidate`.
+Deadline, resource and operational errors use the corresponding stop cause;
+the original arm then resumes. A killed arm may leave only a start
+record; parent terminals and descendant cleanup retain cancellation/resource
+evidence. These attempts are independent of safety-core weakening.
+
 Read shared terminal snapshots after reaping. `parent_terminal.telemetry` is
 `complete`, `dropped`, `incomplete` or `unavailable`. Delivery needs one writer
 summary, zero failed/incomplete packets, matching packet totals, sequences,

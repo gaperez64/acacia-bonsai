@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- `--aiger-mode` selects Spot's AIGER encoder (default `isop`); unsafe `+dc`
+  modes are rejected pending #466. `benchmarking/synthesis-size.py` accepts
+  per-label `--extra-args` (#280).
+
+- Existing formula workers try one-sided TLSF restrictions: input families share
+  their first member (accept only UNREALIZABLE), or scalar outputs become false
+  (accept only REALIZABLE). tlsf-tools `Restriction.lean` proves both transfers.
+  Input attempts have a 1 s total budget; the output attempt has 200 ms, with
+  512 MiB per attempt. Other outcomes resume the original solve. Synthesis skips
+  them; disable with `--restriction-prepass off` (#451). The 17 s SYNTCOMP26
+  screen adds ten solves with no losses (`restrict451-20261122`).
+
 - tlsf-tools 9246712 adds checked parametric-support folds for constant-state bus-wide
   monitors such as load_balancer, plus the self-checking `tlsfobf` name/order obfuscator
   (#437, tlsf-tools #145).

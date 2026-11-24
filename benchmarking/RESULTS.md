@@ -2,6 +2,248 @@
 
 [Measurement protocol](README.md) and [evidence index](evidence-index.tsv).
 
+## 2026-11-23: Under parent memory supervision the count arm also solves collector_v2 n=27 (#454, stage 2)
+
+Archive `sym454e-20261122`. The arm now sizes its game from the whole scope and joins the parity
+workers under the parent's headroom check, instead of taking a fixed seven-way share. Candidate
+72ae5954 (binary `a366cd45…`) against master b28b0454 (`5fd7ecc5…`, with #465 and #468); G0, G1,
+G3, G4 and G5 pass. G3 is flat: 166 → 166 and 168 → 168 solved, PAR-2 633.2 → 622.2 s and
+499.0 → 494.7 s, inside the control's spread (168 vs 169, 499.4 vs 482.3 s on SYNTCOMP26). The
+full SYNTCOMP26 screen at 17 s and 6G solves 1,397 instead of 1,390 with no loss, no verdict
+conflict and PAR-2 5,263.9 → 5,007.1 s. Six gains are the arm's: collector_v1 n=11 to 15 (0.12 to
+0.15 s) and collector_v2 n=27 (2.2 s); the seventh, load_balancer_unreal1 6_4 at 16.87 s, sits at
+the cap. The tlsfobf-renamed screen has 0 conflicts and no plain-only solves.
+
+## 2026-11-22: The count-quotient arm solves six more SYNTCOMP26 inputs with no conflict (#454, stage 2)
+
+Archive `sym454d-20261122`. `both:symcount:spot` runs as the seventh worker of
+`otf_sparse_formula_parity` (6c6da84a, frozen binary `3b300d6b…`, against master 7c07d934). G0, G1,
+G3, G4 and G5 pass. G3 gains one solve on each panel, with PAR-2 663.3 → 623.1 s (SYNTCOMP25) and
+508.8 → 476.3 s (SYNTCOMP26); the base-vs-base control moves less than 1 s. The full SYNTCOMP26
+screen at 17 s and 6G solves 1,386 instead of 1,381 with 0 verdict conflicts and PAR-2
+5,613.6 → 5,380.4 s. It gains collector_v1 n=11 to 15 (0.12 to 0.15 s) and ltl2dba_theta n=25
+(0.41 s). The only loss, load_balancer_unreal1 6_4, sits at the cap and flips in the control too.
+The tlsfobf-renamed screen has 0 conflicts and no plain-only solves. collector_v2 n=27 still times
+out: the arm's 512-byte-per-element budget declines its 1.2M edges once the 6G scope is split
+seven ways, though it solves in 1.5 s and 472 MB alone. The base predates #465, whose prepass
+also solves ltl2dba_theta n=25.
+
+## 2026-11-22: acacia-symcount derives the collector quotient games from their formulas (#454, stage 2)
+
+Archive `sym454c-20261122`. `acacia-symcount` (standalone, not yet an arm) splits a spec into
+index-free conjuncts, per-index templates and symmetric aggregates, translates the template and
+the residual formula with Spot, and solves the count game with Spot plus `check_strategy`.
+Over all 1,586 corpus files (30 s) it decides 52 with no conflict against SYNTCOMP statuses or
+`lift437b-20261121`'s screen, including collector_v1 n=11 to 15 (0.02 to 0.05 s) and collector_v2
+n=27 (1.2 s), which master leaves unsolved, and collector_v1 n=27 (0.5 s). With those times as an
+extra arm, that screen's PAR-2 would fall from 6,253.6 to 6,025.2 s. 900 random fragment specs
+at n=2 to 4 gave 631 decided verdicts, all equal to ltlsynt's; tlsfobf-renamed inputs give
+identical verdicts and game sizes. Admission (stage 4) needs the arm integration first.
+## 2026-11-22: Select AIGER modes; +dc rejects controllers and large strategies remain the main gap (#280)
+
+**Correctness finding: eight of 495 smoke controllers are rejected.** All eight
+contain `+dc`; baseline `isop` verifies all 33 inputs. The rejected pairs are:
+
+- Cockpitboard_efe2feaf: `isop+dc`, `both+dc`, `both+dc+ud`.
+- Gamelogic: `isop+dc`, `ite+dc`, `ite+dc+ud`, `both+dc`, `both+dc+ud`.
+
+Spot's own `aig::as_automaton(false)` and fresh negated-objective product confirm
+all eight, with accepting counterexample runs retained. Re-encoding the same
+captured legacy component machines reproduces every rejection with both checkers;
+the baseline circuits are byte-identical to the primary baseline. The components
+pass Spot's separated-Mealy and input-determinism checks. Fixed legacy replay also
+rejects Cockpitboard's `ite+dc` and `ite+dc+ud`; the primary portfolio chose its
+single-machine parity route for those two modes and verified them. This is a
+correctness finding about these encoder/pipeline combinations, not a size win.
+These repeats retain the original BDD dictionary. Reloading the HOA into a fresh
+dictionary did not reproduce the fault; a portable upstream reproducer and exact
+root cause remain follow-up work. The smaller invalid circuits never count.
+Keep `isop` as the default. `--aiger-mode` refuses every `+dc` mode, at the CLI and
+at each synthesis entry point, until #466 finds the cause.
+
+Archive `enc280-20261122` (release `evidence-2026-11-22-enc280`) contains the raw rows, circuits,
+checks, counterexamples, phase records, captured Mealy graphs, explicit partitions,
+reproduction code, selected source files and hashes, and the release binary/checker.
+The implementation binary is from `b59f76cb` on `aiger-mode-280`, based on master
+`f3e25c1c`; `14932c52` adds only a direct helper test. GCC 15.3.1 and private
+Spot 2.16.3 are used. Every build/test/run is scoped at 5G/no swap, with one compile
+job, one LTO thread, one test process and serial measurement. The sourced environment
+is `g3-440/env.sh`, with TMPDIR overridden to `enc280/tmp`.
+
+`--aiger-mode MODE` is a runtime option, passed through legacy, obligation and
+parity synthesis. Its default remains `isop`, and no extraction/minimization step
+changes. Validation follows Spot 2.16.3 `aiger.hh` and `aiger.cc`: `ite`, `isop`,
+`both`, source-supported `optim`, arbitrary-order/repeated `+dc`, `+ud`, `+sub0..2`,
+and comma-separated alternatives. The last `subN` wins. Acacia accepts only this
+canonical subset: empty components and unknown tokens fail during argument parsing,
+and `+dc` is refused (#466); the accepted spelling is `+ud`, not the
+header prose's `+dual`. No build option or registry entry is added.
+All 33 primary `isop` circuits are byte-identical to `syn280-20261122`'s first member;
+CLI tests additionally compare omitted mode with explicit `isop`.
+
+**The outliers are primarily strategy-size problems.** An external interposer
+captures the exact machines at Spot's encoder boundary. Both parity-bearing archived
+members have the parity rows below; both remaining archived members have the legacy
+rows. Every row uses `isop`. The current branch's default and forced parity runs
+reproduce the parity rows. Forced legacy runs have the same state/edge counts, with
+sizes 57/63/65 respectively, reflecting the different configuration/strategy choices.
+
+| Input | Parity states / edges, level 0 | Legacy states / edges, level 2 | Parity / archived legacy A+L | Parity after level 2, states / edges; A+L | Same parity machine, both+ud+sub1 A+L |
+|---|---:|---:|---:|---:|---:|
+| prioritized_arbiter n=6 | 386 / 6,088 | 12 / 1,536 | 13,070 / 66 | 386 / 6,088; 13,070 | 12,397 |
+| Lights_2c5b09da | 153 / 1,387 | 2 / 42 | 10,765 / 63 | 111 / 1,204; 8,905 | 9,612 |
+| prioritized_arbiter n=5 | 162 / 1,748 | 10 / 640 | 4,715 / 55 | 162 / 1,748; 4,715 | 4,389 |
+
+All three use the genuine tier-4 parity game, with `synthesis.minimize_lvl=0`.
+The backward extractor calls `simplify_mealy_here(mealy, 2, false)` before encoding;
+its pre/post state counts are 1,441→12, 4→2 and 241→10. Applying that same level-2
+step to copies of the parity machines leaves both arbiters unchanged and helps
+Lights only modestly. Plain ITE makes the arbiter circuits 62,556 and 14,622 A+L;
+Lights becomes 9,612. Even the best smoke mode on fixed parity machines remains
+orders of magnitude above the smaller strategies. #467 follows up on strategy
+extraction and bounded minimization (level 2 is worth measuring for Lights); adding the missing
+level-2 call alone cannot repair the arbiter gap. No pipeline choice changes here.
+The obligation arm retains a racing legacy fallback; route records distinguish that
+fallback from actual helper encoding, and a direct C++ test exercises the helper.
+
+**Smoke panel, not full coverage.** `panel.list` fixes the three outliers plus 30
+historically commonly verified inputs from distinct families spread across baseline
+sizes 0–2,752, with historical solve ≤2 s and check ≤3 s. The panel includes TSL,
+automaton examples, buses, schedulers, arbiters and load balancing. Each labelled
+member reuses one release binary through `--extra-args MEMBER='--aiger-mode MODE'`.
+Every controller gets a fresh independent `tests/controller_check.cc` invocation,
+with a 17 s synthesis cap, 60 s check cap and 200,000-state check budget.
+
+Totals and medians below use the **same 31 inputs verified by every one of the
+15 modes**. Cockpitboard and Gamelogic are excluded from every size column, including
+baseline. Verified counts remain over all 33 attempts. Times sum recorded synthesis
+and checker wall times separately over all attempts. There are no synthesis or
+verification timeouts, resource limits, unsupported checks or other errors.
+
+| Mode | Verified / 33 | Rejected | Total A+L | Median A+L | Synthesis s | Check s |
+|---|---:|---:|---:|---:|---:|---:|
+| `isop` | 33 | 0 | 34,401 | 32 | 6.49 | 10.36 |
+| `isop+dc` | 31 | 2 | 34,387 | 32 | 6.54 | 10.38 |
+| `isop+ud` | 33 | 0 | 34,415 | 22 | 6.96 | 10.40 |
+| `isop+dc+ud` | 33 | 0 | 34,582 | 24 | 7.00 | 10.37 |
+| `ite` | 33 | 0 | 96,463 | 38 | 6.30 | 10.43 |
+| `ite+dc` | 32 | 1 | 96,108 | 31 | 6.30 | 10.39 |
+| `ite+ud` | 33 | 0 | 96,243 | 33 | 6.37 | 10.46 |
+| `ite+dc+ud` | 32 | 1 | 96,075 | 27 | 6.46 | 10.43 |
+| `both` | 33 | 0 | 33,230 | 39 | 6.53 | 10.39 |
+| `both+dc` | 31 | 2 | 33,116 | 39 | 6.59 | 10.34 |
+| `both+ud` | 33 | 0 | 33,090 | 21 | 7.05 | 10.49 |
+| `both+dc+ud` | 31 | 2 | 33,020 | 21 | 7.14 | 10.29 |
+| `both+ud+sub0` | 33 | 0 | 33,028 | 21 | 7.11 | 10.30 |
+| `both+ud+sub1` | 33 | 0 | 31,302 | 22 | 7.07 | 10.42 |
+| `both+ud+sub2` | 33 | 0 | 33,000 | 27 | 7.01 | 10.26 |
+
+Select the core winner by most verified, then lowest common total, median and
+recorded solve time; this chooses `both+ud`. Its three `subN` variants follow in a
+second serial stage. The lowest observed valid total is `both+ud+sub1`, 31,302,
+9.0% below baseline 34,401. These are portfolio observations: 10 inputs change
+winning route across mode runs. In particular, `both+ud` and its equivalent
+`+sub0` variant differ by 62 solely because lilydemo06 switches from parity to
+backward (100→38 A+L). All three outliers retain the same parity route. The
+fixed-machine comparisons above separate encoding effects from these races.
+There is no wall-time speedup or full-corpus selection claim. Campaign elapsed
+wall time is 259.9 s for the core stage and 65.6 s for the subexpression stage.
+
+Validation: ruff passes; focused Python tests plus the benchmark-hardcoding guard
+pass 127 tests. Release Meson checks cover help, mode grammar/propagation and default
+bytes, standalone controller verification, and direct obligation-helper modes.
+All four final selected Meson tests pass. Full corpus runs and G0–G5 are not run.
+
+## 2026-11-22: One-sided restrictions add ten solves at 17 s (#465, #451)
+
+Archive `restrict451-20261122` (release `evidence-2026-11-22-restrict451`). #465 adds
+a bounded prepass inside the existing formula workers, so there is no new arm. It
+has two kinds of attempt:
+
+- **Merged inputs.** Every member of a declared input index family is replaced by its
+  first member, in up to three attempts of 500 ms each and 1 s in total. Only an
+  UNREALIZABLE answer is accepted.
+- **Fixed outputs.** All scalar outputs are set to false, in one attempt of 200 ms.
+  Only a REALIZABLE answer is accepted.
+
+The substitution covers the complete positive objective, under the original
+ownership map, before any unreal-side negation or player exchange. tlsf-tools
+`Restriction.lean` (#149) proves that each kind transfers only its own polarity.
+Each attempt runs in a subprocess capped at 512 MiB, and the prepass is skipped
+under `-s`.
+
+**Local G3** ran under the regime of `g3-local-20261120`: `--scope-mode instance`,
+a 6G cap and 17 s. The base is the #449 head binary `26fccc41`, which is
+solver-identical to the branch's merge base, and there is a base-vs-base control.
+
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| #465 `0071d532` | 164 → 164 / 772.8 → 755.0 s | 167 → 167 / 593.2 → 573.0 s | PASS |
+| control (base vs base) | 164 → 164 / 772.1 → 774.9 s | 167 → 167 / 590.1 → 592.4 s | PASS |
+
+No verdict changed. Both panels are about 18 to 20 s faster, while the control
+moves by 2 to 3 s.
+
+**Full-corpus screen.** All 1,524 SYNTCOMP26 inputs ran at 17 s, serially, under
+the same 6G scope, against the base's screen in `lift437b-20261121`. #465 solves
+1,384 against 1,374, and PAR-2 falls from 6,253.6 to 5,878.1 s. The ten gains are
+exactly the ones #370 predicted:
+
+- collector_v3 n=10–13 and 15, REALIZABLE in 0.14 to 0.17 s;
+- ltl2dba_theta n=25, 50, 100 and 300, UNREALIZABLE in 0.14 to 0.28 s;
+- ltl2dba_C2_unreal n=100, UNREALIZABLE in 0.47 s.
+
+theta n=500 stays unsolved. There are no losses and no verdict conflicts. Three
+inputs both binaries solve are more than 1 s slower, all simple_arbiter_enc, whose
+merged-input attempt runs into its 500 ms cap: n=16 goes from 12.1 to 14.8 s, n=10
+from 6.9 to 8.4 s and n=11 from 6.5 to 7.6 s.
+
+**Attempts.** The phase records hold 1,441 finished attempts on 1,155 inputs.
+The median took 11 ms; 235 reached their deadline, the slowest after 529 ms. 201
+transferred a verdict: 190 UNREALIZABLE from merged inputs and 11 REALIZABLE from
+fixed outputs. None conflicts with the expected status or with the base's verdict.
+
+**Renamed corpus.** The same binary on the tlsfobf rename corpus (seed 145) solves
+the same 1,384 inputs with the same verdicts, with no coverage flips or exclusions.
+PAR-2 is 5,860.1 s against 5,878.1 s on the plain corpus.
+
+## 2026-11-22: The first synthesis member is the right one, but best-of-four controllers are half the size (#280)
+
+Archive `syn280-20261122` (release `evidence-2026-11-22-syn280`). This is the first
+measurement of synthesis output. `benchmarking/synthesis-size.py` (#453) ran `-s` at
+17 s on all 433 SYNTCOMP26 inputs whose expected status is REALIZABLE, for each
+`docker_default` member, serially under a 5G scope. Every controller was checked
+independently by `tests/controller_check.cc`. That check explores the circuit's
+reachable latch states, takes the product with the negated full TLSF objective,
+and has a 60 s cap.
+
+| Member | Controllers | Verified | Checker rejected | Synthesis timeout | Verify timeout | Ands+latches on 330 common | Median |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| otf_sparse_formula_parity | 401 | 362 | 0 | 32 | 37 | 93,498 | 25.5 |
+| otf_sparse_formula_parity_forward | 401 | 362 | 0 | 32 | 37 | 93,481 | 27.0 |
+| best_decomp_rank_bucketed_semantic_mona | 346 | 331 | 0 | 87 | 14 | 211,000 | 25.0 |
+| otf_sparse_formula_gr1_real_prepass | 365 | 338 | 0 | 68 | 26 | 210,722 | 26.5 |
+
+**No controller was rejected.** Unverified controllers are verification timeouts,
+one checker error (amba_decomposed_lock n=30) and the resource limit on
+ltl2dba_C2 n=14.
+
+**The member choice stands.** `scripts/acacia-bonsai.sh --synthesis` uses the first
+member, `otf_sparse_formula_parity`. It produces the most controllers, ties for the
+most verified, and has the smallest total size. Only one input is verified by
+another member and not by it.
+
+**Size is where the room is.** On the 330 inputs every member verifies, the
+first member and the per-input smallest of the four differ by 2.2x: 93,498
+against 42,807 ands and latches. The gap is concentrated on a few inputs.
+prioritized_arbiter n=6 is 13,070 against 66, Lights_2c5b09da 10,765 against 63,
+and prioritized_arbiter n=5 4,715 against 55. On those three the parity route's
+controller is about 200 times larger than the other routes'. Against the
+competition's `REF_SIZE` (237 inputs), the first member's median ratio is 2.7x. It
+is at or below the reference on 40 inputs and more than 10x above it on 27.
+Median synthesis time is 0.16 s. The next steps of #280 (Spot encoder options,
+then an ABC post-pass, both re-verified) target this gap.
+
 ## 2026-11-22: Formula symmetry cannot drive the K-bounded reduction; one-sided restrictions can decide 11 inputs (#370, #451)
 
 Archive `sym370-20261122` (release `evidence-2026-11-22-sym370`). This is a

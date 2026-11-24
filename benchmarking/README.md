@@ -188,10 +188,39 @@ seed or timeout need a new directory. Neutral names follow a seeded permutation
 of list order. Keep `maps/` to translate controller names back; it stays outside
 `corpus/`.
 
+## Bounded one-sided restrictions
+
+`--restriction-prepass on|off` defaults to on for native TLSF decision runs with
+legacy arms. One existing formula-unreal arm tries input identification; one
+real arm tries constant outputs. Other arms start normally. Native-only portfolios
+and synthesis (`-s`) skip these attempts.
+
+Candidates use expanded declaration provenance. Input buses of at least two
+members share their first member: try all buses together, then the first two
+separately if there are multiple buses (at most three attempts). The output
+candidate sets all non-family outputs false. Substitution covers the complete
+positive effective Mealy objective, including assumptions and strict-semantics
+guards, with the original I/O map. Only UNREAL input-restricted or REAL
+output-restricted results transfer, following tlsf-tools `Restriction.lean`.
+
+Each attempt runs in a private subprocess capped at 512 MiB address space/RSS.
+Input attempts have 500 ms each and 1 s total; the output attempt has 200 ms.
+The invocation deadline bounds both. ASan omits the address-space cap. Timeout,
+resource/error, opposite and inconclusive results resume the original objective.
+`restriction_attempt` records and the `restriction_input`/`restriction_output`
+winner routes are described in [phase records](legacy-phase-records.md).
+
 ## Synthesis size
 
 `synthesis-size.py` invokes each labelled binary with `-s`, then checks its
-controller separately. Resolve members through the registry:
+controller separately. `--extra-args MEMBER='ARGS'` shell-splits solver arguments
+for one label, for example `--extra-args candidate='--aiger-mode both+ud'`.
+A binary can have several labels, each measured and verified independently.
+Unknown/repeated labels and malformed quoting are errors; omitted labels get no
+extra arguments. The runner never invokes a shell or passes these arguments to
+the checker. `run.json` keeps supplied entries and parsed `solver_args`.
+Acacia rejects unsafe `+dc` modes (#466); see the
+[CLI guide](../docs/cli.md#write-a-controller). Resolve members through the registry:
 
 ```bash
 # Activate the environment for your installed Spot and C++ toolchain first.
