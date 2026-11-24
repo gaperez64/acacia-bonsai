@@ -593,6 +593,7 @@ def platform_selection(binary, scratch, unfinished=False):
                     "EXPORT", "PARITY_EXPORT")
         env = dict(os.environ, ACACIA_PHASE_RECORDS=str(root),
                    ACACIA_TEST_SYNTHESIS_FAIL_PID=str(root / "fail-pid"),
+                   ACACIA_TEST_SYNTHESIS_GRACE_FD=str(gates[4][0]),
                    **{f"ACACIA_TEST_SYNTHESIS_{name}_FD": str(gates[i][0])
                       for i, name in enumerate(settings)})
         target = root / "controller.aag"
