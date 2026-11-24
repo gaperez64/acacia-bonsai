@@ -12,6 +12,18 @@ write-time state: their original campaign archives are now indexed. New manifest
 preserve executable modes; only pre-#245 restores need chmod repair. Historical
 baseline identities remain provenance, not current build instructions.
 
+## 2026-11-23: Under parent memory supervision the count arm also solves collector_v2 n=27 (#454, stage 2)
+
+Archive `sym454e-20261122`. The arm now sizes its game from the whole scope and joins the parity
+workers under the parent's headroom check, instead of taking a fixed seven-way share. Candidate
+72ae5954 (binary `a366cd45…`) against master b28b0454 (`5fd7ecc5…`, with #465 and #468); G0, G1,
+G3, G4 and G5 pass. G3 is flat: 166 → 166 and 168 → 168 solved, PAR-2 633.2 → 622.2 s and
+499.0 → 494.7 s, inside the control's spread (168 vs 169, 499.4 vs 482.3 s on SYNTCOMP26). The
+full SYNTCOMP26 screen at 17 s and 6G solves 1,397 instead of 1,390 with no loss, no verdict
+conflict and PAR-2 5,263.9 → 5,007.1 s. Six gains are the arm's: collector_v1 n=11 to 15 (0.12 to
+0.15 s) and collector_v2 n=27 (2.2 s); the seventh, load_balancer_unreal1 6_4 at 16.87 s, sits at
+the cap. The tlsfobf-renamed screen has 0 conflicts and no plain-only solves.
+
 ## 2026-11-22: The count-quotient arm solves six more SYNTCOMP26 inputs with no conflict (#454, stage 2)
 
 Archive `sym454d-20261122`. `both:symcount:spot` runs as the seventh worker of
