@@ -42,8 +42,14 @@ The grace/fallback scheme is Linux-only, like the optional reduction in #467.
 Other platforms retain master's first-proof selection and extraction-failure
 recovery without grace turns or memory admission.
 `parent_extraction` records identify the worker and latched verdict (`exit_code`):
-`grace_expired` means its turn ended (initially 250 ms, doubling on each successive
-turn for that worker); `fallback` identifies the next worker resumed.
+`grace_expired` means its turn ended. Each worker's first turn gets one quarter of
+the time remaining before the invocation deadline supplied by
+`ACACIA_OUTER_DEADLINE_MONOTONIC`, or 2 s without a known deadline. Later turns
+double separately for each worker and are capped at the remaining time on entry.
+The 433-input SYNTCOMP26 sweep found 375/401 successful master syntheses within
+2 s, versus 315 within 250 ms; whole-run times upper-bound extraction. A quarter
+of roughly 17 s covers the Core probe's 2.37 s extraction and reserves three
+quarters for recovery. `fallback` identifies the next worker resumed.
 Ready proofs matching the latched verdict have first priority. Only if
 none is admissible can an undecided worker capable of that verdict receive a turn
 to finish its proof.

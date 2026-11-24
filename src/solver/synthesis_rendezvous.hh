@@ -45,7 +45,8 @@ namespace acacia::synthesis {
   void test_before_selection ();
   void test_verdict_published ();
   void test_after_extraction_cleanup ();
-  void test_extraction_turn (int worker_pid, uint64_t quantum);
+  void test_extraction_turn (int worker_pid, uint64_t quantum, uint64_t started_ns,
+                             uint64_t deadline_ns);
   void test_before_reap (int worker_pid);
   void test_before_publication ();
   bool test_extraction_grace (bool expired, uint64_t& deadline_mono_ns, int worker_pid);

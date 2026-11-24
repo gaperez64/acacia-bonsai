@@ -843,7 +843,7 @@ namespace {
     std::optional<uint64_t> original_scope_usage;
     uint64_t extraction_started = 0;
     const size_t slots = arg_values.arms->size () + size_t (g_obligation != nullptr);
-    std::vector<uint64_t> extraction_turn (g_synthesis ? slots : 0, 250000000);
+    std::vector<uint64_t> extraction_turn (g_synthesis ? slots : 0, 0);
     std::vector<uint64_t> extraction_budget (g_synthesis ? slots : 0, UINT64_MAX);
     std::vector<const char*> pending_discard (g_synthesis ? slots : 0, nullptr);
     const auto extraction_event = [&] (sig_atomic_t i, const char* reason) {
@@ -851,6 +851,16 @@ namespace {
         auto record = g_worker_records[i];
         acacia::worker_event (record, "parent_extraction", reason, synthesis_verdict);
       }
+    };
+    const auto start_extraction_turn = [&] (sig_atomic_t i) {
+      extraction_started = monotonic_ns ();
+      const auto remaining =
+          deadline_mono_ns
+              ? (deadline_mono_ns > extraction_started ? deadline_mono_ns - extraction_started : 0)
+              : UINT64_MAX;
+      if (!extraction_turn[i])
+        extraction_turn[i] = deadline_mono_ns ? remaining / 4 : 2000000000ULL;
+      extraction_turn[i] = std::min (extraction_turn[i], remaining);
     };
     const auto ready = [&] (sig_atomic_t i) {
       return g_child_pids[i] > 0 && !pending_discard[i] &&
@@ -951,7 +961,7 @@ namespace {
         extraction_event (i, "fallback");
       synthesis_winner = last_extractor = i;
       suspension_pending = false;
-      extraction_started = monotonic_ns ();
+      start_extraction_turn (i);
       auto& slot = g_synthesis[i];
       const bool decided = ready (i);
       (decided ? ready_cursor : undecided_cursor) = i;
@@ -965,7 +975,8 @@ namespace {
         slot.proceed.store (true, std::memory_order_release);
       kill (-g_child_pids[i], SIGCONT);
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
-      acacia::synthesis::test_extraction_turn (g_child_pids[i], extraction_turn[i]);
+      acacia::synthesis::test_extraction_turn (g_child_pids[i], extraction_turn[i],
+                                               extraction_started, deadline_mono_ns);
 #endif
     };
     const auto resume_after_failure = [&] {
@@ -1139,7 +1150,7 @@ namespace {
             kill (-g_child_pids[i], SIGSTOP);
             suspension_pending = true;
           }
-          extraction_started = monotonic_ns ();
+          start_extraction_turn (i);
         }
         if (suspension_pending) {
           const int observed =

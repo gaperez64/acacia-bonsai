@@ -200,11 +200,14 @@ namespace acacia::synthesis {
   void test_after_extraction_cleanup () {
     gate ("synthesis_reclaimed", "ACACIA_TEST_SYNTHESIS_RECLAIM_FD");
   }
-  void test_extraction_turn (int worker_pid, uint64_t quantum) {
+  void test_extraction_turn (int worker_pid, uint64_t quantum, uint64_t started_ns,
+                             uint64_t deadline_ns) {
     if (std::getenv ("ACACIA_TEST_SYNTHESIS_GRACE_FD"))
       std::fprintf (stderr,
-                    "{\"stage\":\"synthesis_turn\",\"worker_pid\":%d,\"quantum_ns\":%llu}\n",
-                    worker_pid, (unsigned long long) quantum);
+                    "{\"stage\":\"synthesis_turn\",\"worker_pid\":%d,\"quantum_ns\":%llu,"
+                    "\"started_ns\":%llu,\"deadline_ns\":%llu}\n",
+                    worker_pid, (unsigned long long) quantum, (unsigned long long) started_ns,
+                    (unsigned long long) deadline_ns);
   }
   bool test_extraction_grace (bool expired, uint64_t& deadline_mono_ns, int worker_pid) {
     const char* descriptor = std::getenv ("ACACIA_TEST_SYNTHESIS_GRACE_FD");

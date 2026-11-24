@@ -212,7 +212,7 @@ def memory_limit(binary, scratch, updated_limit=None):
                 process.wait(timeout=20)
 
 
-def stalled_extractor(binary, checker, scratch, mode):
+def stalled_extractor(binary, checker, scratch, mode, *, deadline_seconds=None):
     """Pipe gates fix proof order, turns and exits without timing margins."""
     with tempfile.TemporaryDirectory(dir=scratch) as temporary:
         root = Path(temporary)
@@ -231,6 +231,9 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                    ACACIA_TEST_SYNTHESIS_SELECTION_FD=str(gates[5][0]),
                    ACACIA_TEST_SYNTHESIS_OBLIGATION_VERDICT_FD=str(gates[6][0]),
                    ACACIA_TEST_SYNTHESIS_FAIL_PID=str(root / "fail-pid"))
+        env.pop("ACACIA_OUTER_DEADLINE_MONOTONIC", None)
+        if deadline_seconds is not None:
+            env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = repr(time.monotonic() + deadline_seconds)
         # ASan increases resident memory too; retain the simulated pressure ratios.
         scope_mib = 1024**2 * (2 if os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1" else 1)
         pressure = mode in {"headroom", "scan", "growth", "failure-pressure", "failure-blocked",
@@ -528,8 +531,16 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                             turns = events.wait("synthesis_turn", count)
                         assert [row["worker_pid"] for row in turns] == [
                             pids["legacy" if i % 2 == 0 else "parity"] for i in range(total)]
-                        assert [row["quantum_ns"] for row in turns] == [
-                            250_000_000 * 2 ** (i // 2) for i in range(total)], turns
+                        previous = {}
+                        for row in turns:
+                            remaining = row["deadline_ns"] - row["started_ns"]
+                            initial = remaining // 4 if deadline_seconds else 2_000_000_000
+                            quantum = (previous[row["worker_pid"]] * 2
+                                       if row["worker_pid"] in previous else initial)
+                            if deadline_seconds:
+                                quantum = min(quantum, remaining)
+                            assert row["quantum_ns"] == quantum, turns
+                            previous[row["worker_pid"]] = quantum
                         # Both extractors can now finish; the active worker must win immediately.
                         release(2)
                         release(3)
@@ -670,6 +681,8 @@ def main():
             continue
         print(f"Checking extractor case: {mode}", flush=True)
         stalled_extractor(binary, str(args.checker.resolve()), args.scratch, mode)
+    stalled_extractor(binary, str(args.checker.resolve()), args.scratch, "turns-legacy",
+                      deadline_seconds=60)
     for parity_first in (False, True):
         run(binary, args.scratch, parity_first=parity_first)
         run(binary, args.scratch, parity_first=parity_first, failure=True)
