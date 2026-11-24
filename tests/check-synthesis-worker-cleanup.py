@@ -75,6 +75,7 @@ def run(binary, root, *, parent_death, helper_first):
         env.update(ACACIA_TEST_SYNTHESIS_VERDICT_FD=str(gates[0][0]),
                    ACACIA_TEST_SYNTHESIS_OBLIGATION_VERDICT_FD=str(gates[1][0]),
                    ACACIA_TEST_SYNTHESIS_EXPORT_FD=str(gates[2][0]),
+                   ACACIA_TEST_SYNTHESIS_GRACE_FD=str(gates[2][0]),
                    ACACIA_TEST_SYNTHESIS_PUBLICATION_FD=str(gates[3][0]))
         process = subprocess.Popen(
             [binary, "-f", "G(o <-> i)", "-i", "i", "-o", "o",

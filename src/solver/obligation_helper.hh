@@ -53,8 +53,8 @@ namespace acacia::obligation {
   uint64_t rss_share (size_t workers, memory_share policy = memory_share::equal);
   uint64_t resident_bytes (pid_t pid) noexcept;
   // Only this process's cgroup, or the supplied directory; no value if unbounded/unreadable.
-  std::optional<uint64_t> scope_memory (const char* file,
-                                        const char* directory = nullptr) noexcept;
+  std::optional<uint64_t> scope_memory (const char* file, const char* directory = nullptr,
+                                        bool* no_limit = nullptr) noexcept;
   // A zero scope limit selects equal sharing; otherwise allow headroom up to the last eighth.
   bool rss_share_exceeded (uint64_t resident, uint64_t share, uint64_t scope_limit = 0,
                            const char* directory = nullptr) noexcept;

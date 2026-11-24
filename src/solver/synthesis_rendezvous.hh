@@ -1,13 +1,14 @@
 #pragma once
 
 #include "error_msg.hh"
+
 #include <atomic>
 #include <cstdint>
 #include <functional>
 #include <spot/twa/fwd.hh>
-#include <utility>
 #include <stdexcept>
 #include <time.h>
+#include <utility>
 
 namespace acacia::synthesis {
   struct rendezvous_slot {
@@ -39,19 +40,20 @@ namespace acacia::synthesis {
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
   void test_worker_started (bool obligation, bool parity = false);
   void test_before_worker_protection ();
-  void test_before_verdict ();
+  void test_before_verdict (int& verdict);
   void test_after_selection ();
   void test_before_reap (int worker_pid);
   void test_before_publication ();
+  bool test_extraction_grace (bool expired, uint64_t& deadline_mono_ns);
 #endif
 
-  // A completed proof may race; controller construction and export may not.
+  // A completed proof may race; only the selected extractor may run.
   // Internal library callers have no portfolio rendezvous.
   inline void await_selection (int verdict) {
     if (!current_slot || current_slot->proceed.load (std::memory_order_acquire))
       return;
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
-    test_before_verdict ();
+    test_before_verdict (verdict);
 #endif
     current_slot->verdict.store (verdict, std::memory_order_relaxed);
     current_slot->order.store (verdict_sequence->fetch_add (1, std::memory_order_relaxed) + 1,

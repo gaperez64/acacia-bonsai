@@ -34,6 +34,23 @@ Exit codes are 0 REAL, 1 UNREAL, 2 UNKNOWN, 3 ERROR; signals use exit_code -1.
 `route_start:equivariance` precedes recognition; `route_start:backward` starts
 ordinary solving after decline or with equivariance off.
 
+Under `-s`, `parent_verdict` selects a proof and latches its verdict, before
+controller construction. Each worker writes a private file beside the requested
+destination. Only the parent renames a closed, successful REAL controller onto
+that destination, after acceptance checks and competitor cleanup.
+`parent_extraction` records identify the worker and latched verdict (`exit_code`):
+`grace_expired` means its 250 ms turn ended; `fallback` identifies the next worker
+resumed for extraction or unfinished proof search; `no_alternative` keeps the
+current worker running when no eligible competitor remains; `scope_headroom` means resumption
+was withheld because scope memory was unreadable or lacked reserve. Stopped
+workers remain charged in `memory.current`; resumption preserves the last eighth
+of the scope plus at least 64 MiB or the resumed worker's resident set, whichever
+is larger. `verdict_conflict` rejects an opposite proof. `published` identifies
+the worker whose controller was atomically installed. Parent observations copy
+the worker snapshot and do not advance its live sequence. Slow extractors are
+suspended, retained and revisited; contradictory proofs never receive permission
+to export. Decision-only runs do not use this scheduling or file protocol.
+
 DECLINE means inapplicability/unsupported input or completed logical certificate
 rejection. Resource, deadline, cancellation, invalid input, integrity, internal
 and operational failures are STOPPED with typed causes. Finite K exhaustion is

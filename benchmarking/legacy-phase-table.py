@@ -693,7 +693,7 @@ completeness_ROOT = Path(__file__).resolve().parents[1]
 completeness_CONFIG = completeness_load_module("attribution_config", completeness_ROOT / "scripts/acacia-config.py")
 
 
-completeness_PARENT_EVENTS = {"worker_spawn", "worker_spec", "parent_verdict", "parent_terminal",
+completeness_PARENT_EVENTS = {"worker_spawn", "worker_spec", "parent_verdict", "parent_extraction", "parent_terminal",
                  "parent_winner", "stage_censored"}
 
 

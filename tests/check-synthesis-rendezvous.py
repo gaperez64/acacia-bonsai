@@ -94,6 +94,7 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
         phases.mkdir()
         env = dict(os.environ, ACACIA_TEST_SYNTHESIS_VERDICT_FD=str(ready_read),
                    ACACIA_TEST_SYNTHESIS_EXPORT_FD=str(export_read),
+                   ACACIA_TEST_SYNTHESIS_GRACE_FD=str(export_read),
                    ACACIA_TEST_SYNTHESIS_OBLIGATION_VERDICT_FD=str(helper_read),
                    ACACIA_TEST_SYNTHESIS_FAIL_PID=str(fail_pid),
                    ACACIA_PHASE_RECORDS=str(phases), ACACIA_TEST_RECORD_ACK="1",

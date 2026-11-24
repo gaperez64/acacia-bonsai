@@ -184,12 +184,13 @@ namespace acacia::obligation {
     return rss_share_for_limit (cap, workers, policy);
   }
 
-  std::optional<uint64_t> scope_memory (const char* file, const char* directory) noexcept {
+  std::optional<uint64_t> scope_memory (const char* file, const char* directory,
+                                        bool* no_limit) noexcept {
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
     if (!directory)
       directory = std::getenv ("ACACIA_TEST_CGROUP_DIRECTORY");
 #endif
-    return acacia::scope_memory (file, directory);
+    return acacia::scope_memory (file, directory, no_limit);
   }
 
   bool rss_share_exceeded (uint64_t resident, uint64_t share, uint64_t scope_limit,

@@ -1199,9 +1199,9 @@ test ('parity-arm-cli', py, args : parity_arm_cli_args,
 if host_machine.system () == 'linux' and (get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release'))
   test ('parity-rendezvous', py,
         args : [files ('check-parity-rendezvous.py'), game_backend_integration,
-                meson.current_build_dir ()],
+                meson.current_build_dir (), controller_check],
         suite : ['unit', 'parity', 'portfolio', 'synthesis'], timeout : 120,
-        depends : [game_backend_integration])
+        depends : [game_backend_integration, controller_check])
 endif
 
 first_shipping_preset = run_command (

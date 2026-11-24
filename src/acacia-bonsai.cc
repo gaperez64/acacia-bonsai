@@ -6,12 +6,12 @@
 #include "native_param_lift_arm.hh"
 #include "native_support.hh"
 #include "parity_arm.hh"
-#include "symcount_arm.hh"
 #include "phase_records.hh"
 #include "solver/controller_writer.hh"
 #include "solver/obligation_helper.hh"
 #include "solver/realizability_simplify.hh"
 #include "solver/solver_invoker.hh"
+#include "symcount_arm.hh"
 
 #include <spot/tl/parse.hh>
 #ifdef __linux__
@@ -57,6 +57,8 @@ namespace {
   acacia::worker_record* g_worker_records = nullptr;
   acacia::obligation::control* g_obligation = nullptr;
   acacia::synthesis::rendezvous_slot* g_synthesis = nullptr;
+  std::string g_controller_directory;
+  std::vector<std::string> g_controller_paths;
   sig_atomic_t g_eligibility_source = -1, g_helper_index = -1;
   bool g_eligibility_observed = false;
   uint64_t g_helper_rss_share = 0, g_parity_rss_share = 0;
@@ -64,6 +66,15 @@ namespace {
   std::vector<sig_atomic_t> g_parity_exhausted;
   acacia::obligation::outcome g_helper_forced = acacia::obligation::outcome::pending;
   const char* g_helper_stop_reason = "none";
+
+  void cleanup_controllers () {
+    if (getpid () != g_main_pid)
+      return;
+    for (const auto& path : g_controller_paths)
+      unlink (path.c_str ());
+    if (!g_controller_directory.empty ())
+      rmdir (g_controller_directory.c_str ());
+  }
 
   void reap_worker_descendant (acacia::worker_record& record);
 
@@ -658,6 +669,11 @@ namespace {
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
       test_child_behavior (g_child_count, deadline_mono_ns);
 #endif
+      if (g_synthesis) {
+        auto private_args = arg_values;
+        private_args.synth_fname = g_controller_paths[g_child_count];
+        dispatch_child (arm, private_args, deadline_mono_ns, eligibility_channel);
+      }
       dispatch_child (arm, arg_values, deadline_mono_ns, eligibility_channel);
     }
     else {
@@ -727,6 +743,14 @@ namespace {
 
   int run_portfolio (const arg_parse_result& arg_values, uint64_t deadline_mono_ns,
                      const sigset_t& block_set) {
+    if (g_synthesis) {
+      g_controller_directory = *arg_values.synth_fname + ".acacia-XXXXXX";
+      if (!mkdtemp (g_controller_directory.data ()))
+        throw std::runtime_error ("unable to create private controller directory");
+      atexit (cleanup_controllers);
+      for (size_t i = 0; i < arg_values.arms->size () + size_t (g_obligation != nullptr); ++i)
+        g_controller_paths.push_back (g_controller_directory + "/" + std::to_string (i));
+    }
     // We fork process for each (UN)REAL check now and then wait for them to
     // return to process their exit codes
     setpgid (0, 0);
@@ -794,11 +818,17 @@ namespace {
       }
     };
     sig_atomic_t synthesis_winner = -1;
-    const auto resume_competitors = [&] {
-      synthesis_winner = -1;
-      for (sig_atomic_t i = 0; i < g_child_count; ++i)
-        if (g_child_pids[i] > 0)
-          kill (-g_child_pids[i], SIGCONT);
+    int synthesis_verdict = -1;
+    uint64_t extraction_started = 0;
+    const auto can_resume = [&] (sig_atomic_t index) {
+      bool no_limit = false;
+      const auto limit = acacia::obligation::scope_memory ("memory.max", nullptr, &no_limit);
+      const auto used = acacia::obligation::scope_memory ("memory.current");
+      const auto reserve = std::max<uint64_t> (
+          64 * 1024 * 1024, acacia::obligation::resident_bytes (g_child_pids[index]));
+      // memory.current includes stopped workers; keep the last eighth and a COW reserve.
+      return no_limit || (limit && used && *used < *limit - *limit / 8 &&
+                          reserve < *limit - *limit / 8 - *used);
     };
     int status;
     bool child_reported_error = false;
@@ -864,21 +894,52 @@ namespace {
         uint64_t first = UINT64_MAX;
         for (sig_atomic_t i = 0; i < g_child_count; ++i) {
           const auto order = g_synthesis[i].order.load (std::memory_order_acquire);
+          if (g_child_pids[i] > 0 && order && synthesis_verdict >= 0 &&
+              g_synthesis[i].verdict.load (std::memory_order_acquire) != synthesis_verdict) {
+            if (g_worker_records) {
+              auto rejected = g_worker_records[i];
+              acacia::worker_event (rejected, "parent_extraction", "verdict_conflict",
+                                    synthesis_verdict);
+            }
+            kill (-g_child_pids[i], SIGKILL);
+            continue;
+          }
           if (g_child_pids[i] > 0 && order && order < first &&
+              (synthesis_verdict < 0 ||
+               g_synthesis[i].verdict.load (std::memory_order_acquire) == synthesis_verdict) &&
               std::ranges::find (g_parity_exhausted, i) == g_parity_exhausted.end ()) {
             nominee = i;
             first = order;
           }
         }
+        if (nominee < 0 && synthesis_verdict >= 0)
+          for (sig_atomic_t i = 0; i < g_child_count; ++i)
+            if (g_child_pids[i] > 0 && !g_synthesis[i].order.load (std::memory_order_acquire)) {
+              nominee = i;
+              break;
+            }
+        if (nominee >= 0 && synthesis_verdict >= 0 && !can_resume (nominee)) {
+          if (g_worker_records && monotonic_ns () - extraction_started >= 250000000) {
+            auto refused = g_worker_records[nominee];
+            acacia::worker_event (refused, "parent_extraction", "scope_headroom",
+                                  synthesis_verdict);
+            extraction_started = monotonic_ns ();
+          }
+          nominee = -1;
+        }
         if (nominee >= 0) {
           const sig_atomic_t i = nominee;
           synthesis_winner = i;
+          const bool decided = g_synthesis[i].order.load (std::memory_order_acquire) != 0;
+          if (synthesis_verdict < 0)
+            synthesis_verdict = g_synthesis[i].verdict.load (std::memory_order_acquire);
+          extraction_started = monotonic_ns ();
           // Suspend the existing fallback, preserving its work if export fails.
-          // Every exporter waits here, so no competitor can open the destination.
+          // Every exporter waits here; the parent alone publishes the destination.
           for (sig_atomic_t other = 0; other < g_child_count; ++other)
             if (other != i && g_child_pids[other] > 0)
               kill (-g_child_pids[other], SIGSTOP);
-          if (g_worker_records) {
+          if (decided && g_worker_records) {
             // The worker resumes this sequence after selection. Parent observations
             // must not consume entries in the child's live record stream.
             auto selected = g_worker_records[i];
@@ -886,7 +947,82 @@ namespace {
                                   g_synthesis[i].verdict.load (std::memory_order_acquire));
           }
           check_acceptance ();
-          g_synthesis[i].proceed.store (true, std::memory_order_release);
+          if (decided)
+            g_synthesis[i].proceed.store (true, std::memory_order_release);
+          kill (-g_child_pids[i], SIGCONT);
+        }
+      }
+      if (g_synthesis && synthesis_winner >= 0) {
+        auto& active = g_synthesis[synthesis_winner];
+        const bool decided = active.order.load (std::memory_order_acquire) != 0;
+        const bool conflict =
+            decided && active.verdict.load (std::memory_order_acquire) != synthesis_verdict;
+        if (conflict) {
+          if (g_worker_records) {
+            auto rejected = g_worker_records[synthesis_winner];
+            acacia::worker_event (rejected, "parent_extraction", "verdict_conflict",
+                                  synthesis_verdict);
+          }
+          kill (-g_child_pids[synthesis_winner], SIGKILL);
+        }
+        if (decided && !conflict && !active.proceed.load (std::memory_order_acquire)) {
+          if (g_worker_records) {
+            auto selected = g_worker_records[synthesis_winner];
+            acacia::worker_event (selected, "parent_verdict", "selected", synthesis_verdict);
+          }
+          check_acceptance ();
+          active.proceed.store (true, std::memory_order_release);
+          extraction_started = monotonic_ns ();
+        }
+        bool expired = monotonic_ns () - extraction_started >= 250000000;
+#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
+        expired = acacia::synthesis::test_extraction_grace (expired, deadline_mono_ns);
+#endif
+        if (expired && !conflict) {
+          if (g_worker_records) {
+            auto previous = g_worker_records[synthesis_winner];
+            acacia::worker_event (previous, "parent_extraction", "grace_expired",
+                                  synthesis_verdict);
+          }
+          sig_atomic_t next = -1;
+          // One runnable worker: preserve slow extractors and give unfinished proofs a turn.
+          for (sig_atomic_t step = 1; step < g_child_count; ++step) {
+            const sig_atomic_t i = (synthesis_winner + step) % g_child_count;
+            if (g_child_pids[i] > 0 &&
+                (!g_synthesis[i].order.load (std::memory_order_acquire) ||
+                 g_synthesis[i].verdict.load (std::memory_order_acquire) == synthesis_verdict) &&
+                std::ranges::find (g_parity_exhausted, i) == g_parity_exhausted.end ()) {
+              next = i;
+              break;
+            }
+          }
+          if (next < 0 && g_worker_records) {
+            auto previous = g_worker_records[synthesis_winner];
+            acacia::worker_event (previous, "parent_extraction", "no_alternative",
+                                  synthesis_verdict);
+          }
+          if (next >= 0) {
+            const bool headroom = can_resume (next);
+            if (g_worker_records) {
+              auto resumed = g_worker_records[next];
+              acacia::worker_event (resumed, "parent_extraction",
+                                    headroom ? "fallback" : "scope_headroom", synthesis_verdict);
+            }
+            if (headroom) {
+              check_acceptance ();
+              kill (-g_child_pids[synthesis_winner], SIGSTOP);
+              siginfo_t stopped {};
+              while (waitid (P_PID, g_child_pids[synthesis_winner], &stopped,
+                             WSTOPPED | WEXITED | WNOWAIT) < 0) {
+                if (errno != EINTR)
+                  throw std::runtime_error ("unable to suspend controller extractor");
+                check_acceptance ();
+              }
+              synthesis_winner = next;
+              kill (-g_child_pids[next], SIGCONT);
+            }
+          }
+          extraction_started = monotonic_ns ();
         }
       }
       bool live_arm = false;
@@ -1007,7 +1143,7 @@ namespace {
       // through to UNKNOWN below.
       if (not WIFEXITED (status)) {
         if (g_synthesis && reaped_index == synthesis_winner)
-          resume_competitors ();
+          synthesis_winner = -1;
         if (WIFSIGNALED (status)) {
           // One write per record: a child's own stderr line must not land inside this one.
           char line[64];
@@ -1027,14 +1163,14 @@ namespace {
                g_obligation->result.load (std::memory_order_acquire)) != ret))
         ret = EXIT_CODE_UNKNOWN;
       if (g_synthesis && (ret == EXIT_CODE_REAL || ret == EXIT_CODE_UNREAL) &&
-          (reaped_index < 0 || reaped_index != synthesis_winner ||
+          (reaped_index < 0 || reaped_index != synthesis_winner || ret != synthesis_verdict ||
            g_synthesis[reaped_index].verdict.load (std::memory_order_acquire) != ret ||
            (ret == EXIT_CODE_REAL &&
             !g_synthesis[reaped_index].controller_complete.load (std::memory_order_acquire))))
         ret = EXIT_CODE_UNKNOWN;
       if (g_synthesis && reaped_index == synthesis_winner &&
           ret != EXIT_CODE_REAL && ret != EXIT_CODE_UNREAL)
-        resume_competitors ();
+        synthesis_winner = -1;
       if (ret == EXIT_CODE_ERROR) {
         child_reported_error = true;
         continue;
@@ -1050,6 +1186,14 @@ namespace {
         if (g_synthesis) {
           stop_children ("winner_cancelled");
           check_acceptance ();
+          if (ret == EXIT_CODE_REAL && rename (g_controller_paths[reaped_index].c_str (),
+                                               arg_values.synth_fname->c_str ()) != 0)
+            throw std::runtime_error ("unable to publish controller");
+          if (g_worker_records && ret == EXIT_CODE_REAL) {
+            auto extracted = g_worker_records[reaped_index];
+            acacia::worker_event (extracted, "parent_extraction", "published", ret);
+          }
+          cleanup_controllers ();
         }
         if (g_worker_records && reaped_index >= 0) {
           auto& winner = g_worker_records[reaped_index];

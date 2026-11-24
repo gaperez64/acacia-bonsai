@@ -59,6 +59,7 @@ extern "C" int __wrap_bdd_ite (int f, int g, int h) {
 # include <cstdio>
 # include <cstdlib>
 # include <fstream>
+# include <poll.h>
 # include <sys/wait.h>
 # include <unistd.h>
 
@@ -95,8 +96,10 @@ namespace acacia::synthesis {
   void test_before_worker_protection () {
     gate ("synthesis_starting", "ACACIA_TEST_SYNTHESIS_STARTUP_FD");
   }
-  void test_before_verdict () {
+  void test_before_verdict (int& verdict) {
     if (parity_worker) {
+      if (std::getenv ("ACACIA_TEST_SYNTHESIS_CONFLICT"))
+        verdict = EXIT_CODE_UNREAL;
       if (const char* bytes = std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_RSS_BYTES")) {
         const auto size = std::strtoull (bytes, nullptr, 10);
         auto* memory = static_cast<volatile unsigned char*> (std::malloc (size));
@@ -116,7 +119,10 @@ namespace acacia::synthesis {
                                     : "ACACIA_TEST_SYNTHESIS_VERDICT_FD");
   }
   void test_after_selection () {
-    gate ("synthesis_selected", "ACACIA_TEST_SYNTHESIS_EXPORT_FD");
+    gate ("synthesis_selected",
+          parity_worker && std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD")
+              ? "ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD"
+              : "ACACIA_TEST_SYNTHESIS_EXPORT_FD");
     if (const char* path = std::getenv ("ACACIA_TEST_SYNTHESIS_FAIL_PID")) {
       std::ifstream failure (path);
       pid_t pid = -1;
@@ -127,6 +133,20 @@ namespace acacia::synthesis {
   }
   void test_before_publication () {
     gate ("synthesis_publishing", "ACACIA_TEST_SYNTHESIS_PUBLICATION_FD");
+  }
+  bool test_extraction_grace (bool expired, uint64_t& deadline_mono_ns) {
+    const char* descriptor = std::getenv ("ACACIA_TEST_SYNTHESIS_GRACE_FD");
+    if (!descriptor)
+      return expired;
+    pollfd fd {std::atoi (descriptor), POLLIN, 0};
+    char release;
+    if (poll (&fd, 1, 0) != 1 || !(fd.revents & POLLIN) || read (fd.fd, &release, 1) != 1)
+      return false;
+    if (release == 't') {
+      deadline_mono_ns = 1;
+      return false;
+    }
+    return true;
   }
   void test_before_reap (int worker_pid) {
     if (!std::getenv ("ACACIA_TEST_SYNTHESIS_REAP_FD"))
