@@ -253,6 +253,33 @@ competition's `REF_SIZE` (237 inputs), the first member's median ratio is 2.7x. 
 is at or below the reference on 40 inputs and more than 10x above it on 27.
 Median synthesis time is 0.16 s. The next steps of #280 (Spot encoder options,
 then an ABC post-pass, both re-verified) target this gap.
+## 2026-11-22: A count-quotiented game decides seven unsolved collector inputs in milliseconds (#454, stage 1)
+
+Archives `sym454-20261122` (prototype and checks) and `sym454b-20261122` (sibling-repo
+census, master runs). Scratch prototype; no solver code changed. collector_v1 and v2 are
+played on exact deterministic monitors of their specs (TLSF v1.1 standard Mealy semantics),
+quotiented by S_n; letter orbits count arrivals per cell, keeping seen and unseen apart.
+
+| Input | master `7c07d934`, 17 s / 120 s | Quotient states / joint orbits | Solve |
+|---|---|---:|---:|
+| collector_v1 n=11 | TIMEOUT / 19.1 s | 24 / 728 | < 1 ms |
+| collector_v1 n=12 to 15 | TIMEOUT / TIMEOUT | 26 to 32 / 910 to 1,632 | ≤ 1 ms |
+| collector_v1 n=27 (selection-2025, not in the 1,524) | TIMEOUT / TIMEOUT | 56 / 8,120 | 4 ms |
+| collector_v2 n=27 | TIMEOUT / TIMEOUT | 810 / 402,696 | 0.10 s |
+
+Unquotiented, collector_v1 n=12 already needs 33.6M joint pairs and the 4G cap. The quotient
+matches the concrete game transition by transition (v1 n≤10, v2 n≤6), a solver-independent
+verifier accepts every strategy, and lifted controllers pass Spot against the TLSF LTL (v1
+n≤6, v2 n≤5); never-fire and always-fire controls are rejected. The native-20261107 `tlsfsym`
+over the 217 sibling-repo specs not among the 1,524 adds no other candidate: of its 7 full
+groups with n≥3, narylatch n=8 and ltl2dba_C2_unreal n=10 are solved, the collector templates
+are n=3, and collector_v3 n=27 is decided by a constant output (#451). The gain is 7 inputs
+at 17 s (6 in SYNTCOMP26) and 6 at 120 s (5). PAR-2 moves more than coverage: replacing the 19
+collector_v1/v2 results of `lift437b-20261121`'s 17 s screen with 0.15 s (master's start-up
+floor) cuts PAR-2 by up to 224 s of 6,253.6, 21 s of it on inputs master already solves
+(collector_v2 n=15 takes 16.6 s). The same bound over every symmetric input with n≥3 is 687 s
+(101 inputs, 18 unsolved), the ceiling for a generic stage 2. Open: deriving the monitors from
+formulas (stage 2), a new arm (#359) and the Lean proof (stage 3).
 
 ## 2026-11-22: Formula symmetry cannot drive the K-bounded reduction; one-sided restrictions can decide 11 inputs (#370, #451)
 
