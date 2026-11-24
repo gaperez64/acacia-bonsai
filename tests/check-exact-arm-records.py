@@ -22,12 +22,17 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G (i -> o); } }
 ''')
         for family in ("obligation:spot", "parity:spot", "parity:oxidd"):
             arm = "both:" + family
-            for case in ("real-on", "real-off", "unknown"):
+            cases = ("real-on", "real-off", "unknown")
+            if family == "parity:spot":
+                cases += ("synthesis-on", "synthesis-off")
+            for case in cases:
                 directory = root / (family + "-" + case)
                 directory.mkdir()
-                options = ["--arms", arm, "--r-prepass", "off" if case == "real-off" else "on",
-                           "--equivariance", "off" if case == "real-off" else "on"]
+                options = ["--arms", arm, "--r-prepass", "off" if case.endswith("-off") else "on",
+                           "--equivariance", "off" if case.endswith("-off") else "on"]
                 args = ["-T", str(source), *options]
+                if case.startswith("synthesis-"):
+                    args += ["-s", str(root / (case + ".aag"))]
                 if case == "unknown":
                     if family == "obligation:spot":
                         args = ["-f", "G F (i <-> o)", "-i", "i", "-o", "o", *options]
@@ -41,6 +46,10 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G (i -> o); } }
                 assert run.returncode == (2 if unknown else 0), run
                 records = support["rows"](directory)
                 support["complete_records"](records, expected_winners=0 if unknown else 1)
+                if family == "parity:spot":
+                    attempts = [r for r in records if r.get("event") == "parity_reduction_attempt"]
+                    assert bool(attempts) == (unknown or case.startswith("synthesis-")), records
+                    assert all(r["worker_pid"] == r["emitter_pid"] for r in attempts), attempts
                 terminal, = [r for r in records if r.get("event") == "parent_terminal"]
                 summary, = [r for r in records if r.get("phase") == "record_summary"
                             and r["emitter_pid"] == terminal["worker_pid"]]

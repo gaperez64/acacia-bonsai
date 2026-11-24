@@ -1,15 +1,17 @@
 #include "solver/obligation_helper.hh"
+
 #include "solver/controller_check.hh"
+#include "solver/scope_memory.hh"
 
 #include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <sstream>
-#include <tuple>
 #include <spot/tl/parse.hh>
 #include <spot/twaalgos/translate.hh>
+#include <sstream>
+#include <tuple>
 
 namespace {
   bool check_controller (spot::formula objective, const spot::aig_ptr& controller,
@@ -65,8 +67,13 @@ namespace {
     };
     write ("memory.max", "800\n");
     require (scope_memory ("memory.max", directory) == 800, "finite scope limit not read");
-    for (const auto& [used, enforce] : std::vector<std::pair<uint64_t, bool>> {
-             {0, false}, {699, false}, {700, true}, {701, true}, {800, true}, {UINT64_MAX, true}}) {
+    for (const auto& [used, enforce] :
+         std::vector<std::pair<uint64_t, bool>> {{0, false},
+                                                 {699, false},
+                                                 {700, true},
+                                                 {701, true},
+                                                 {800, true},
+                                                 {UINT64_MAX, true}}) {
       write ("memory.current", std::to_string (used) + "\n");
       require (scope_memory ("memory.current", directory) == used, "scope usage not read");
       require (exceeded (share + 1) == enforce, "headroom enforcement boundary changed");
@@ -74,25 +81,37 @@ namespace {
       require (rss_share_exceeded (share + 1, share, 0, directory), "equal share not enforced");
     }
     write ("memory.current", "0\n");
-    for (const char* limit : {"max\n", "", "invalid\n"}) {
+    for (const char* limit : {"max\n", "", "invalid\n", "-1\n", "800junk\n", "800 1\n",
+                              "max junk\n", "18446744073709551616\n"}) {
       write ("memory.max", limit);
-      require (!scope_memory ("memory.max", directory), "unbounded/invalid limit accepted");
+      bool no_limit = false;
+      require (!acacia::scope_memory ("memory.max", directory, &no_limit),
+               "unbounded/invalid limit accepted");
+      require (no_limit == (std::strcmp (limit, "max\n") == 0),
+               "malformed limit confused with no limit");
       require (exceeded (share + 1) && !exceeded (share), "unbounded limit differs from equal");
     }
     for (const char* file : {"memory.max", "memory.current"}) {
       write ("memory.max", "800\n");
       write ("memory.current", "0\n");
       fs::remove (scope / file);
+      bool no_limit = false;
+      acacia::scope_memory (file, directory, &no_limit);
+      require (no_limit, "absent scope file confused with unreadable state");
       require (!scope_memory (file, directory), "missing scope file accepted");
       require (exceeded (share + 1) && !exceeded (share), "missing scope file differs from equal");
       // A directory gives a real read error even when tests run as root.
       fs::create_directory (scope / file);
+      acacia::scope_memory (file, directory, &no_limit);
+      require (!no_limit, "unreadable scope file confused with no limit");
       require (!scope_memory (file, directory), "unreadable scope file accepted");
       require (exceeded (share + 1), "unreadable scope file differs from equal");
       fs::remove (scope / file);
       if (geteuid () != 0) {
         write (file, "800\n");
         fs::permissions (scope / file, fs::perms::none);
+        acacia::scope_memory (file, directory, &no_limit);
+        require (!no_limit, "inaccessible scope file confused with no limit");
         require (!scope_memory (file, directory), "scope file permissions ignored");
         require (exceeded (share + 1), "inaccessible scope file differs from equal");
         fs::permissions (scope / file, fs::perms::owner_all);
@@ -118,7 +137,9 @@ int main () {
            {8 * gib, 0, 4 * gib, 4 * gib},
            {3 * gib, 6, gib / 4, 3 * gib / 2},
            {UINT64_MAX, 6, 8 * gib / 6 / 2, 4 * gib},
-           {0, 6, 0, 0}, {101, 3, 16, 50}, {1, 1, 0, 0}}) {
+           {0, 6, 0, 0},
+           {101, 3, 16, 50},
+           {1, 1, 0, 0}}) {
     require (rss_share_for_limit (limit, workers, memory_share::equal) == equal,
              "equal RSS computation changed");
     require (rss_share_for_limit (limit, workers, memory_share::alone) == alone,
@@ -173,8 +194,7 @@ int main () {
       const auto f = parse (text);
       const auto value = solve (f, {"i", "unused_input"}, {"o", "unused_output"}, semantics);
       require (value.value == expected, "timed obligation verdict mismatch");
-      require (!value.controller,
-               "decision retained or checked a strategy");
+      require (!value.controller, "decision retained or checked a strategy");
       std::cout << (semantics == timing::mealy ? "mealy" : "moore") << '\t' << text << '\t'
                 << name (value.value) << '\n';
     }
@@ -299,8 +319,7 @@ int main () {
   require (!check_controller (equality, mutation, true),
            "offline check missed Moore registered as Mealy");
   const auto wrong_moore = solve (equality, {"i"}, {"o"}, timing::moore, true);
-  require (wrong_moore.value == outcome::inapplicable,
-           "test missed Mealy registered as Moore");
+  require (wrong_moore.value == outcome::inapplicable, "test missed Mealy registered as Moore");
   const auto current_input = std::make_shared<spot::aig> (std::vector<std::string> {"i"},
                                                           std::vector<std::string> {"o"}, 0);
   current_input->set_output (0, current_input->input_var (0));

@@ -240,6 +240,12 @@ unique ranks or retained memory. Time metrics are excluded from cap equality;
 counts/rank values stay compared. Only explicit completions count. Whole-scope
 20 ms samples bracket verifier entry only within a maximum 100 ms gap.
 
+`parity_reduction_attempt` carries the full worker lifecycle context, `seq` and
+`dropped_records`, plus the reduction option, attempt, outcome, cause, child PID,
+timing and memory cap. The parity worker emits it after the bounded child is
+reaped, or when an attempt is skipped. The reduction child has recording disabled;
+attempt outcomes describe controller optimization and establish no verdict.
+
 ## CPU and resource accounting
 
 This section replaces `prof/README.md`, archived in docs-20261122.

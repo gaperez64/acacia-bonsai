@@ -2,6 +2,58 @@
 
 [Measurement protocol](README.md) and [evidence index](evidence-index.tsv).
 
+## 2026-11-24: Bounded parity-route controller reduction cuts controller size by 3.8% (#467)
+
+Archive `strat467-20261124` (release `evidence-2026-11-24-strat467`). Under `-s`, the
+parity route used to encode the strategy it extracted, unreduced. The strategy was
+positional and reachable, but it kept the expanded parity arena's memory, and no
+Mealy reduction ran before AIGER encoding. `--parity-mealy-reduction
+none|bisim|bisim-output|reselect` (default `reselect`, `-s` only) adds:
+
+- **Bisimulation** over input/output-labelled edges.
+- **Output-assignment reduction** (`bisim-output`).
+- **Reselection** (`reselect`), which also re-solves small arenas to pick a
+  strategy that reduces better.
+
+All optional work runs in a supervised subprocess. Its budget is 200 ms or 5% of
+the remaining time, whichever is smaller. Its memory cap is sized from the
+scope's headroom under a finite limit, and from the worker's RSS share otherwise.
+The unreduced controller is kept and is used whenever the child times out, fails,
+exceeds a limit or does not produce something strictly smaller. Reduction needs
+RSS sampling, which is Linux-only, so elsewhere it is skipped. Decision runs are
+unchanged.
+
+**Panel** (43 inputs chosen to include the #280 outliers, 17 s, 60 s
+verification): both options verify all 43. Total ands+latches fall from 36,552
+to 26,104, with no memory skips. Lights_2c5b09da drops from 10,765 to 1,475.
+
+**Full sweep** (all 433 REALIZABLE SYNTCOMP26 inputs, same binary):
+
+| Option | Controllers | Verified | Ands+latches on 362 common | Median |
+|---|---:|---:|---:|---:|
+| `none` | 402 | 363 | 589,722 | 35 |
+| `reselect` | 401 | 362 | 567,456 | 35 |
+
+`reselect` shrinks 47 controllers and grows 3. The largest cuts are Lights
+(−9,290), load_balancer n=6 (−3,738), load_balancer n=5 (−1,114) and robot_grid
+n=6/1 (−999); the largest increase is KitchenTimerV4 (+863). Corpus-wide the cut
+is 3.8%, against 28.6% on the panel, because the panel was weighted toward the
+outliers. The two prioritized_arbiter outliers stay large.
+
+**The one lost controller is a pre-existing race (#469).** SPIReadManag verified
+with `none` and timed out with `reselect`. Under `-s`, the portfolio commits to
+the first published proof and suspends the others. When that is the legacy route,
+its controller extraction can stall with no fallback. Over 40 shuffled 10 s runs
+each, timeouts were: master 10, `none` 4, `reselect` 8. Fisher's exact test gives
+p = 0.35 for `reselect` against `none` and 0.79 against master. Every timeout
+selected the legacy route and attempted no reduction, so the reduction does not
+cause it.
+
+**Local G3** (instance scope, 6G cap, 17 s; base #468 head `720e1241`): PASS on
+both panels with no verdict changes. SYNTCOMP25 PAR-2 went from 759.6 to 760.7 s
+and SYNTCOMP26 from 577.4 to 578.0 s, within the control's spread (755.7 → 755.4
+and 578.7 → 575.1 s).
+
 ## 2026-11-23: Under parent memory supervision the count arm also solves collector_v2 n=27 (#454, stage 2)
 
 Archive `sym454e-20261122`. The arm now sizes its game from the whole scope and joins the parity

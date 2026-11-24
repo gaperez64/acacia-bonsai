@@ -2,12 +2,26 @@
 
 #include "error_msg.hh"
 #include "phase_records.hh"
+#include "solver/bounded_subprocess.hh"
 #include "solver/formula_input.hh"
 #include "solver/syntactic_bypass.hh"
 #include "tlsf_frontend.hh"
 
 #include <iostream>
 #include <stdexcept>
+
+#ifdef __linux__
+namespace {
+  bool inject_peak_rss = false;
+}
+extern "C" pid_t __real_wait4 (pid_t, int*, int, rusage*);
+extern "C" pid_t __wrap_wait4 (pid_t child, int* status, int flags, rusage* usage) {
+  const auto got = __real_wait4 (child, status, flags, usage);
+  if (inject_peak_rss && got > 0 && usage)
+    usage->ru_maxrss = 640 * 1024;
+  return got;
+}
+#endif
 
 namespace {
   void check (bool condition) {
@@ -117,6 +131,15 @@ int main () {
     return EXIT_CODE_UNREAL;
   }));
 #ifdef __linux__
+  // Model a completed child's transient peak escaping every live RSS sample.
+  inject_peak_rss = true;
+  check (
+      try_prepass (p, metadata, inputs, outputs, true, 0, [] (auto) { return EXIT_CODE_UNREAL; }));
+  const auto reduction =
+      acacia::subprocess::run<true> (acacia::phase_clock (CLOCK_MONOTONIC) + 500000000,
+                                     rlim_t {512} * 1024 * 1024, [] { return 0; });
+  check (reduction.code == 0 && std::strcmp (reduction.cause, "resource") == 0);
+  inject_peak_rss = false;
   check (!acacia::phase_records_enabled ());
   check (acacia::resource_snapshot (getpid ()).rss_kb > 0);
   rlimit original_limit {};

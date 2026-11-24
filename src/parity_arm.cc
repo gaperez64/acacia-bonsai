@@ -48,7 +48,7 @@ namespace acacia {
   }
 
   int run_parity_arm (const arg_parse_result& args, const portfolio_arm& selection,
-                      uint64_t deadline_mono_ns) {
+                      uint64_t deadline_mono_ns, uint64_t rss_share) {
     const bool oxidd = selection.parity_oxidd;
     const char* arm = selection.native_name ();
     worker_route ("original_game", "parity", "unknown");
@@ -88,6 +88,14 @@ namespace acacia {
       parity_route::options config;
       config.synthesis = args.synth_fname.has_value ();
       config.aiger_mode = args.aiger_mode;
+      config.reduction = args.parity_mealy_reduction;
+      config.deadline_mono_ns = deadline_mono_ns;
+      config.worker_rss_share = rss_share;
+      if (metadata.tlsf_target == "Moore")
+        config.adapt_circuit = [undo = metadata.tlsf_semantics.find ("Moore") !=
+                                       std::string::npos] (spot::aig_ptr circuit) {
+          return synthesis::mealy_to_moore (circuit, undo);
+        };
       unsigned tier = 0;
       config.on_classified = [&] (unsigned value, const std::string&) {
         tier = value;
@@ -115,6 +123,7 @@ namespace acacia {
         const auto deadline = phase_clock (CLOCK_MONOTONIC) + construction_ns;
         budget.construction.deadline_mono_ns =
             deadline_mono_ns ? std::min (deadline, deadline_mono_ns) : deadline;
+        config.deadline_mono_ns = budget.construction.deadline_mono_ns;
         const auto share = obligation::rss_share (args.arms ? args.arms->size () : 1);
         // Reserve 1/8 for solving; the worker RSS cap covers overlapping C/BDD/import storage.
         budget.construction.max_host_bytes = budget.import_bytes =
@@ -154,11 +163,11 @@ namespace acacia {
           std::function<void (const char*, double)> observe;
           if (phase_records_enabled ())
             observe = [&] (const char* name, double seconds) {
-                if (seconds < 0)
-                  import_phase.emplace (name);
-                else
-                  import_phase.reset ();
-              };
+              if (seconds < 0)
+                import_phase.emplace (name);
+              else
+                import_phase.reset ();
+            };
           imported = tlsf_dpa::import (*context, budget, spot::make_bdd_dict (), observe);
         }
         if (phase_records_enabled ()) {
@@ -200,10 +209,9 @@ namespace acacia {
       const bool real = answer.verdict == "REALIZABLE";
       if (real && args.synth_fname) {
         legacy_phase export_phase ("parity_export");
-        if (metadata.tlsf_target == "Moore")
-          answer.circuit = synthesis::mealy_to_moore (
-              answer.circuit, metadata.tlsf_semantics.find ("Moore") != std::string::npos);
-        if (!synthesis::write_controller (*args.synth_fname, answer.circuit)) {
+        if (!(answer.reduced_aiger.empty ()
+                  ? synthesis::write_controller (*args.synth_fname, answer.circuit)
+                  : synthesis::write_controller (*args.synth_fname, answer.reduced_aiger))) {
           worker_stopped ("controller_export_failed");
           return EXIT_CODE_UNKNOWN;
         }

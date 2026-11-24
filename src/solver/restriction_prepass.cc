@@ -2,6 +2,7 @@
 
 #include "error_msg.hh"
 #include "phase_records.hh"
+#include "solver/bounded_subprocess.hh"
 #include <unordered_set>
 
 namespace acacia::restriction {
@@ -9,7 +10,7 @@ namespace acacia::restriction {
     constexpr uint64_t input_attempt_ns = 500000000, input_total_ns = 1000000000;
     constexpr uint64_t output_attempt_ns = 200000000;
     constexpr rlim_t memory_bytes = rlim_t {512} * 1024 * 1024;
-    constexpr int resource_exit = 4, error_exit = 5, deadline_exit = 6, cancelled_exit = 7;
+    using subprocess::error_exit;
 
     void record (const candidate& item, bool inputs, const char* outcome, const char* cause,
                  uint64_t start, pid_t child = -1) noexcept {
@@ -35,19 +36,6 @@ namespace acacia::restriction {
         phase_records_send (line, size_t (size));
       else
         phase_records_drop ();
-    }
-
-    bool limit_memory () {
-#ifndef __SANITIZE_ADDRESS__
-      // ASan reserves a large shadow mapping; the supervisor still checks RSS.
-      rlimit limit {};
-      if (getrlimit (RLIMIT_AS, &limit) != 0)
-        return false;
-      limit.rlim_cur = std::min (limit.rlim_cur, memory_bytes);
-      if (setrlimit (RLIMIT_AS, &limit) != 0)
-        return false;
-#endif
-      return true;
     }
   }  // namespace
 
@@ -174,103 +162,32 @@ namespace acacia::restriction {
       const auto attempt_deadline =
           std::min (deadline, entered + (restrict_inputs ? input_attempt_ns : output_attempt_ns));
       record (item, restrict_inputs, "start", "none", entered);
-      const auto parent = getpid ();
-      const auto child = fork ();
-      if (child == 0) {
-#ifdef __linux__
-        if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != parent)
-          _exit (error_exit);
-#endif
-        // Keep candidate telemetry/cause state private; only a reaped exit can transfer a verdict.
-        worker_record local;
-        active_worker_record () = &local;
-        phase_record_process_state ().enabled = false;
-        unsetenv ("ACACIA_SPOT_CAPTURE_DIR");
-        try {
-          if (!limit_memory ())
-            _exit (error_exit);
-          const auto generated = candidates (metadata, outputs, restrict_inputs);
-          if (index >= generated.size ())
-            _exit (EXIT_CODE_UNKNOWN);
-          const auto formula =
-              substitute (positive, generated[index].values, inputs, outputs, restrict_inputs);
-          if (!formula)
-            _exit (error_exit);
-          const int verdict = solve (*formula);
-          if (local.stopped)
-            _exit (std::strcmp (local.reason, "resource") == 0    ? resource_exit
-                   : std::strcmp (local.reason, "deadline") == 0  ? deadline_exit
-                   : std::strcmp (local.reason, "cancelled") == 0 ? cancelled_exit
-                                                                  : error_exit);
-          _exit (verdict);
-        } catch (const std::bad_alloc&) {
-          _exit (resource_exit);
-        } catch (...) {
-          _exit (error_exit);
-        }
-      }
+      const auto attempt = subprocess::run (attempt_deadline, memory_bytes, [&] () -> int {
+        const auto generated = candidates (metadata, outputs, restrict_inputs);
+        if (index >= generated.size ())
+          return EXIT_CODE_UNKNOWN;
+        const auto formula =
+            substitute (positive, generated[index].values, inputs, outputs, restrict_inputs);
+        return formula ? solve (*formula) : error_exit;
+      });
+      auto* worker = active_worker_record ();
+      const auto child = attempt.child;
       if (child < 0) {
         worker_stopped ("error");
         record (item, restrict_inputs, "stopped", "error", entered);
         break;
       }
-      auto* worker = active_worker_record ();
-      if (worker)
-        worker->descendant_pid = child;
-      const char* cause = "none";
-      int status = 0;
-      rusage usage {};
-      bool reaped = false;
-      while (true) {
-        const auto got = wait4 (child, &status, WNOHANG, &usage);
-        if (got == child) {
-          reaped = true;
-          break;
-        }
-        if (got < 0 && errno != EINTR)
-          cause = "error";
-        else if (phase_clock (CLOCK_MONOTONIC) >= attempt_deadline)
-          cause = "deadline";
-        else if (resource_snapshot (child).rss_kb > long (memory_bytes / 1024))
-          cause = "resource";
-        if (std::strcmp (cause, "none") != 0) {
-          kill (child, SIGKILL);
-          pid_t got;
-          do {
-            got = wait4 (child, &status, 0, &usage);
-          } while (got < 0 && errno == EINTR);
-          reaped = got == child;
-          break;
-        }
-        timespec pause {0, 1000000};
-        nanosleep (&pause, nullptr);
-      }
-      if (worker) {
-        descendant_record (*worker, child, reaped ? &usage : nullptr, status, !reaped);
-        worker->descendant_pid = -1;
-      }
-      const int verdict = WIFEXITED (status) ? WEXITSTATUS (status) : error_exit;
-      // Enforce the deadline even if a completed result raced the final poll.
-      if (phase_clock (CLOCK_MONOTONIC) >= attempt_deadline)
-        cause = "deadline";
-      if (reaped && WIFEXITED (status) && std::strcmp (cause, "none") == 0 &&
-          accepts (restrict_inputs, verdict)) {
+      const auto verdict = attempt.code;
+      const char* cause = attempt.cause;
+      if (std::strcmp (cause, "none") == 0 && accepts (restrict_inputs, verdict)) {
         record (item, restrict_inputs, "accepted", "none", entered, child);
         worker_route (restrict_inputs ? "restriction_input" : "restriction_output", nullptr,
                       restrict_inputs ? "UNREAL" : "REAL");
         worker_verified (restrict_inputs ? "UNREAL" : "REAL", restrict_inputs ? "UNREAL" : "REAL");
         return true;
       }
-      if (std::strcmp (cause, "none") == 0) {
-        if (verdict == resource_exit)
-          cause = "resource";
-        else if (verdict == deadline_exit)
-          cause = "deadline";
-        else if (verdict == cancelled_exit)
-          cause = "cancelled";
-        else if (verdict == error_exit || verdict == EXIT_CODE_ERROR || !WIFEXITED (status))
-          cause = "error";
-      }
+      if (std::strcmp (cause, "none") == 0 && verdict == EXIT_CODE_ERROR)
+        cause = "error";
       if (std::strcmp (cause, "none") != 0)
         worker_stopped (cause);
       else if (verdict == EXIT_CODE_REAL || verdict == EXIT_CODE_UNREAL) {

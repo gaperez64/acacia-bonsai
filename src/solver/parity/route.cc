@@ -6,6 +6,7 @@
 #include "solver/spot_nba_fastpath.hh"
 #include "solver/synthesis_rendezvous.hh"
 #include "solver/translator_options.hh"
+#include <spot/twaalgos/mealy_machine.hh>
 
 #include <algorithm>
 #include <chrono>
@@ -276,9 +277,26 @@ namespace acacia::parity_route {
                                                      input.inputs, input.outputs);
         if (input.moore and input.frame == timing_frame::effective_mealy)
           output.circuit = acacia::synthesis::mealy_to_moore (output.circuit, true);
+        if (config.adapt_circuit)
+          output.circuit = config.adapt_circuit (std::move (output.circuit));
       });
+      if (config.reduction != mealy_reduction::none) {
+        const auto start = phase_clock (CLOCK_MONOTONIC);
+        // Reserve 95% of the remaining invocation time; both attempts share this cap.
+        const uint64_t remaining =
+            config.deadline_mono_ns
+                ? (config.deadline_mono_ns > start ? config.deadline_mono_ns - start : 0)
+                : UINT64_MAX;
+        const auto deadline = start + std::min<uint64_t> (200000000, remaining / 20);
+        stage ("reduce-controller", [&] { reduce_controller (output, input, config, deadline); });
+        if (config.reduction == mealy_reduction::reselect && output.tier == 4)
+          stage ("reselect-controller",
+                 [&] { reduce_controller (output, input, config, deadline, arena); });
+      }
       if (config.verify) {
         stage ("verify-controller", [&] {
+          if (!output.reduced_aiger.empty ())
+            output.circuit = spot::aig::parse_aag (output.reduced_aiger.c_str (), "reduced");
           if (not spot::is_input_deterministic_mealy (output.controller))
             throw std::runtime_error ("controller is not input deterministic");
           if (input.moore) {

@@ -1,9 +1,11 @@
 #pragma once
 
 #include "solver/parity/game.hh"
+#include "solver/parity/mealy_reduction.hh"
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <spot/twaalgos/aiger.hh>
 #include <string>
 #include <vector>
@@ -23,12 +25,16 @@ namespace acacia::parity_route {
   struct options {
       bool synthesis = true;
       std::string aiger_mode = "isop";
+      mealy_reduction reduction = default_mealy_reduction;
+      uint64_t deadline_mono_ns = 0;
+      uint64_t worker_rss_share = UINT64_MAX;
       bool use_lar = false;
       bool verify = false;
       // Cooperative checks around opaque Spot calls and before publishing a verdict.
       std::function<void ()> check;
       std::function<void (bool)> on_verdict;
       std::function<void ()> on_solved;
+      std::function<spot::aig_ptr (spot::aig_ptr)> adapt_circuit;
       std::function<void (unsigned, const std::string&)> on_classified;
       std::function<void (const parity::arena_game&)> on_game;
       std::function<void (const parity::arena_game&, const parity::solution&)> on_solution;
@@ -50,7 +56,15 @@ namespace acacia::parity_route {
       std::unique_ptr<parity::arena_game> game;
       spot::twa_graph_ptr controller;
       spot::aig_ptr circuit;
+      // The incumbent stays intact; an improvement is exported without rebuilding BDDs.
+      std::string reduced_aiger;
   };
+  std::optional<unsigned> checked_aiger_size (const std::string& text, const request& input,
+                                              uint64_t deadline = 0);
+  // A supplied arena requests reselection. All opaque work stays inside the child.
+  void reduce_controller (result& incumbent, const request& input, const options& config,
+                          uint64_t deadline, const spot::twa_graph_ptr& arena = nullptr,
+                          const char* scope_directory = nullptr);
   result run (request input, options config = {}, observer observe = {});
   // Complete max-odd DPA for the positive objective; bypass translation and classification.
   result run_positive_dpa (request input, options config = {}, observer observe = {});

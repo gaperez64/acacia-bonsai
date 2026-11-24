@@ -722,6 +722,7 @@ test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
 restriction_prepass_test = executable (
   'restriction-prepass-test', 'restriction_prepass_test.cc',
   '../src/solver/restriction_prepass.cc', '../src/tlsf_frontend.cc',
+  link_args : host_machine.system () == 'linux' ? ['-Wl,--wrap=wait4'] : [],
   include_directories : inc, dependencies : tlsf_deps + [spot_dep, bddx_dep])
 test ('restriction-prepass', restriction_prepass_test, suite : ['unit', 'tlsf'])
 # Keep the causal-frame check active even when the configured CLI omits guarded backends.
@@ -1180,6 +1181,10 @@ parity_arm_test = executable ('parity-arm-test',
   link_with : [parity_route_lib, parity_lib], include_directories : inc,
   dependencies : [spot_dep, bddx_dep])
 test ('parity-arm', parity_arm_test, suite : ['unit', 'parity'], timeout : 120)
+test ('parity-mealy-reduction', py,
+      args : [files ('check-parity-mealy-reduction.py'), ab_exe, controller_check, parity_arm_test],
+      suite : ['unit', 'cli', 'parity', 'synthesis'], timeout : 120,
+      depends : [ab_exe, controller_check, parity_arm_test])
 parity_arm_cli_depends = [ab_exe, parity_arm_test]
 parity_arm_cli_args = [files ('check-parity-arm.py'), ab_exe, parity_arm_test,
                        meson.current_build_dir ()]

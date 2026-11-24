@@ -220,7 +220,9 @@ Unknown/repeated labels and malformed quoting are errors; omitted labels get no
 extra arguments. The runner never invokes a shell or passes these arguments to
 the checker. `run.json` keeps supplied entries and parsed `solver_args`.
 Acacia rejects unsafe `+dc` modes (#466); see the
-[CLI guide](../docs/cli.md#write-a-controller). Resolve members through the registry:
+[CLI guide](../docs/cli.md#write-a-controller). Compare `--parity-mealy-reduction`
+(default `reselect`, `-s` only) the same way, through labelled arguments.
+Resolve members through the registry:
 
 ```bash
 # Activate the environment for your installed Spot and C++ toolchain first.
