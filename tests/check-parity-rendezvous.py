@@ -51,12 +51,13 @@ def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
         target.write_text("previous controller\n")
         phases = root / "phases"
         phases.mkdir()
-        gates = [os.pipe() for _ in range(3)]
+        gates = [os.pipe() for _ in range(4)]
         env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases),
                    ACACIA_TEST_SYNTHESIS_VERDICT_FD=str(gates[0][0]),
                    ACACIA_TEST_SYNTHESIS_PARITY_VERDICT_FD=str(gates[1][0]),
                    ACACIA_TEST_SYNTHESIS_EXPORT_FD=str(gates[2][0]),
                    ACACIA_TEST_SYNTHESIS_GRACE_FD=str(gates[2][0]),
+                   ACACIA_TEST_SYNTHESIS_SELECTION_FD=str(gates[3][0]),
                    ACACIA_TEST_SYNTHESIS_FAIL_PID=str(root / "fail-pid"))
         formula = "G (o <-> X i)" if unreal else "G (o <-> i)"
         arms = "both:parity:spot" if unreal else "real:small:backward,both:parity:spot"
@@ -76,6 +77,14 @@ def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
             first = 1 if parity_first or unreal else 0
             os.close(writes[first])
             writes[first] = -1
+            events.wait("synthesis_proved")
+            if not unreal:
+                other = 1 - first
+                os.close(writes[other])
+                writes[other] = -1
+                events.wait("synthesis_proved", 2)
+            os.close(writes[3])
+            writes[3] = -1
             selected, = events.wait("synthesis_selected")
             if not unreal:
                 expected, = [row["pid"] for row in ready
@@ -84,10 +93,10 @@ def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
             assert target.read_text() == "previous controller\n"
             if failure:
                 (root / "fail-pid").write_text(str(selected["pid"]))
-                other = 1 - first
-                os.close(writes[other])
-                writes[other] = -1
             if parent_death:
+                private, = root.glob("*.acacia-private-*")
+                partial = private / ("1" if parity_first else "0")
+                partial.write_text("partial controller\n")
                 process.kill()
             elif interrupt:
                 process.send_signal(signal.SIGTERM)
@@ -102,6 +111,7 @@ def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
                     pid, status = os.waitpid(worker, 0)
                     assert pid == worker and os.WIFSIGNALED(status), status
                     assert os.WTERMSIG(status) == signal.SIGKILL, status
+                assert private.is_dir() and partial.read_text() == "partial controller\n"
             elif interrupt:
                 assert process.returncode == 2 and not stdout, (stdout, stderr)
                 assert target.read_text() == "previous controller\n"
@@ -193,7 +203,7 @@ def memory_limit(binary, scratch, updated_limit=None):
 
 
 def stalled_extractor(binary, checker, scratch, mode):
-    """Pipe gates choose the first extractor and trigger grace expiry without sleeps."""
+    """Pipe gates fix proof order, turns and exits without timing margins."""
     with tempfile.TemporaryDirectory(dir=scratch) as temporary:
         root = Path(temporary)
         target = root / "controller.aag"
@@ -201,24 +211,39 @@ def stalled_extractor(binary, checker, scratch, mode):
         spec.write_text('''INFO { TITLE: "selection race" SEMANTICS: Mealy TARGET: Mealy }
 MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
 ''')
-        gates = [os.pipe() for _ in range(5)]
+        gates = [os.pipe() for _ in range(8)]
         env = dict(os.environ, ACACIA_PHASE_RECORDS=str(root),
                    ACACIA_TEST_SYNTHESIS_VERDICT_FD=str(gates[0][0]),
                    ACACIA_TEST_SYNTHESIS_PARITY_VERDICT_FD=str(gates[1][0]),
                    ACACIA_TEST_SYNTHESIS_EXPORT_FD=str(gates[2][0]),
                    ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD=str(gates[3][0]),
-                   ACACIA_TEST_SYNTHESIS_GRACE_FD=str(gates[4][0]))
-        if mode == "headroom":
-            (root / "memory.max").write_text(str(1024 * 1024 * 1024))
-            # Include the stopped extractor's charge, as a real scope does.
-            (root / "memory.current").write_text(str(900 * 1024 * 1024))
+                   ACACIA_TEST_SYNTHESIS_GRACE_FD=str(gates[4][0]),
+                   ACACIA_TEST_SYNTHESIS_SELECTION_FD=str(gates[5][0]),
+                   ACACIA_TEST_SYNTHESIS_OBLIGATION_VERDICT_FD=str(gates[6][0]),
+                   ACACIA_TEST_SYNTHESIS_FAIL_PID=str(root / "fail-pid"))
+        pressure = mode in {"headroom", "scan", "growth", "failure-pressure", "failure-blocked"}
+        if pressure:
+            (root / "memory.max").write_text(str(512 * 1024 * 1024))
+            # Stopped workers' charges are included; 128 MiB of usable headroom otherwise.
+            used = 460 if mode in {"headroom", "failure-pressure", "failure-blocked"} else 320
+            (root / "memory.current").write_text(str(used * 1024 * 1024))
             env["ACACIA_TEST_CGROUP_DIRECTORY"] = str(root)
+        if mode == "scan":
+            env["ACACIA_TEST_SYNTHESIS_PARITY_RSS_BYTES"] = str(160 * 1024 * 1024)
+        if mode == "growth":
+            env["ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES"] = str(128 * 1024 * 1024)
+        if mode == "failure-pressure":
+            env["ACACIA_TEST_SYNTHESIS_RECLAIM_FD"] = str(gates[7][0])
         if mode == "conflict":
             env["ACACIA_TEST_SYNTHESIS_CONFLICT"] = "1"
         arms = "real:small:backward"
         if mode != "alone":
             arms += ",both:parity:spot"
-        process = subprocess.Popen([binary, "-T", str(spec), "--arms", arms, "-s", str(target)],
+        three = mode in {"scan", "failure-pressure", "undecided"}
+        if three:
+            arms += ",both:obligation:spot"
+        process = subprocess.Popen([binary, "-T", str(spec), "--arms", arms, "--spot-fast", "off",
+                                    "-s", str(target)],
                                    env=env, pass_fds=tuple(read for read, _ in gates),
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         for read, _ in gates:
@@ -229,60 +254,123 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             os.close(writes[index])
             writes[index] = -1
 
+        def wait_record(reason):
+            end = time.monotonic() + 20
+            while not any(row.get("reason") == reason for row in records(root)):
+                assert process.poll() is None and time.monotonic() < end, records(root)
+                select.select([], [], [], .001)
+
         try:
             events = Events(process)
-            ready = events.wait("synthesis_ready", 1 if mode == "alone" else 2)
-            release(0)
+            ready = events.wait("synthesis_ready", 3 if three else 1 if mode == "alone" else 2)
+            pids = {row["worker_kind"]: row["pid"] for row in ready}
+            first_kind = "parity" if mode in {"growth", "undecided"} else "legacy"
+            release(1 if first_kind == "parity" else 0)
+            events.wait("synthesis_proved")
+            events.wait("synthesis_selecting")
+            # Publish matching proofs before SIGSTOP; an undecided helper stays gated.
+            if mode != "alone":
+                release(0 if first_kind == "parity" else 1)
+                events.wait("synthesis_proved", 2)
+            if mode == "scan":
+                release(6)
+                events.wait("synthesis_proved", 3)
+            release(5)
             selected, = events.wait("synthesis_selected")
-            assert selected["worker_kind"] == "legacy", selected
+            assert selected["pid"] == pids[first_kind], (selected, ready)
+            events.wait("synthesis_turn")
             assert not target.exists()
             if mode == "fallback":
-                private, = root.glob("*.acacia-*")
+                private, = root.glob("*.acacia-private-*")
                 (private / "0").write_text("partial controller\n")
-            if mode != "alone":
-                release(1)
-            os.write(writes[4], b"x")
-            if mode in {"alone", "headroom", "conflict"}:
-                reason = {"headroom": "scope_headroom", "conflict": "verdict_conflict",
-                          "alone": "no_alternative"}[mode]
-                end = time.monotonic() + 20
-                while not any(row.get("reason") == reason for row in records(root)):
-                    assert process.poll() is None and time.monotonic() < end
-                    select.select([], [], [], .001)
-                if mode != "alone":
-                    parity, = [row["pid"] for row in ready if row["worker_kind"] == "parity"]
-                    if mode == "headroom":
-                        assert "\nState:\tT" in Path(f"/proc/{parity}/status").read_text()
-                    else:
+            if mode.startswith("failure-"):
+                (root / "fail-pid").write_text(str(selected["pid"]))
+                release(2)
+                if mode == "failure-pressure":
+                    events.wait("synthesis_reclaimed")
+                    assert not Path(f"/proc/{pids['obligation']}").exists()
+                    assert any(row.get("reason") == "extraction_irrelevant"
+                               and row["worker_pid"] == pids["obligation"] for row in records(root))
+                    (root / "memory.current").write_text(str(320 * 1024 * 1024))
+                    release(7)
+                    events.wait("synthesis_selected", 2)
+                    release(3)
+            elif mode == "boundary":
+                os.write(writes[4], b"e")
+                events.wait("synthesis_exit_boundary")
+                release(2)
+            else:
+                os.write(writes[4], b"x")
+                if mode in {"alone", "headroom", "conflict"}:
+                    reason = {"headroom": "scope_headroom", "conflict": "verdict_conflict",
+                              "alone": "no_alternative"}[mode]
+                    wait_record(reason)
+                    if mode != "alone":
+                        assert "\nState:\tT" in Path(f"/proc/{pids['parity']}/status").read_text()
                         assert not any(row.get("event") == "parent_verdict"
-                                       and row["worker_pid"] == parity for row in records(root))
-                if mode == "alone":
-                    os.write(writes[4], b"t")  # Expire the real supervisor deadline path.
+                                       and row["worker_pid"] == pids["parity"] for row in records(root))
+                    if mode == "alone":
+                        os.write(writes[4], b"t")
+                    else:
+                        process.send_signal(signal.SIGTERM)
                 else:
-                    process.send_signal(signal.SIGTERM)
-                stdout, stderr = process.communicate(timeout=20)
-                assert process.returncode == 2 and not stdout, (stdout, stderr)
+                    turns = events.wait("synthesis_turn", 2)
+                    expected = "obligation" if mode == "scan" else (
+                        "legacy" if first_kind == "parity" else "parity")
+                    assert turns[-1]["worker_pid"] == pids[expected], (turns, pids)
+                    events.wait("synthesis_selected", 2)
+                    assert "\nState:\tT" in Path(f"/proc/{selected['pid']}/status").read_text()
+                    if mode == "scan":
+                        wait_record("scope_headroom")
+                        assert "\nState:\tT" in Path(f"/proc/{pids['parity']}/status").read_text()
+                    if mode == "undecided":
+                        assert "\nState:\tT" in Path(f"/proc/{pids['obligation']}/status").read_text()
+                    if mode == "growth":
+                        os.write(writes[2], b"x")  # Grow after SIGCONT, then block export again.
+                        turns = events.wait("synthesis_turn", 3)
+                        assert turns[-1]["worker_pid"] == pids["parity"], turns
+                        wait_record("rss_budget")
+                        assert not Path(f"/proc/{pids['legacy']}").exists()
+                        release(3)
+                    elif mode.startswith("turns-"):
+                        total = 7 if mode == "turns-legacy" else 6
+                        for count in range(3, total + 1):
+                            os.write(writes[4], b"x")
+                            turns = events.wait("synthesis_turn", count)
+                        assert [row["worker_pid"] for row in turns] == [
+                            pids["legacy" if i % 2 == 0 else "parity"] for i in range(total)]
+                        assert [row["quantum_ns"] for row in turns] == [
+                            250_000_000 * 2 ** (i // 2) for i in range(total)], turns
+                        # Both extractors can now finish; the active worker must win immediately.
+                        release(2)
+                        release(3)
+                        expected = mode.removeprefix("turns-")
+                    else:
+                        release(3 if expected == "parity" else 2)
+            stdout, stderr = process.communicate(timeout=20)
+            rows = records(root)
+            if mode in {"alone", "headroom", "conflict", "failure-blocked"}:
+                expected_code = 3 if mode == "failure-blocked" else 2
+                assert process.returncode == expected_code and not stdout, (process.returncode, stdout, stderr)
                 assert not target.exists()
                 if mode == "alone":
                     assert b'"stage":"deadline","status":"expired"' in stderr, stderr
+                if mode == "failure-blocked":
+                    assert any(row.get("reason") == "extraction_failed" for row in rows), rows
             else:
-                first, fallback = events.wait("synthesis_selected", 2)
-                assert first == selected and fallback["worker_kind"] == "parity"
-                # The selected legacy extractor remains blocked; only parity can finish.
-                assert "\nState:\tT" in Path(f"/proc/{first['pid']}/status").read_text()
-                assert not target.exists()
-                release(3)
-                stdout, stderr = process.communicate(timeout=20)
                 assert process.returncode == 0 and stdout.endswith(b"REALIZABLE\n"), (stdout, stderr)
                 checked = subprocess.run([checker, str(spec), str(target)],
                                          capture_output=True, timeout=20)
                 assert checked.returncode == 0 and checked.stdout == b"verified\n", checked
-                rows = records(root)
                 published, = [row for row in rows if row.get("event") == "parent_extraction"
                               and row["reason"] == "published"]
-                assert published["worker_pid"] == fallback["pid"], rows
-                assert any(row.get("reason") == "grace_expired" for row in rows), rows
-                assert any(row.get("reason") == "fallback" for row in rows), rows
+                winner_kind = ("legacy" if mode == "boundary" else "parity" if mode in {
+                    "growth", "failure-pressure"} else expected)
+                assert published["worker_pid"] == pids[winner_kind], rows
+                if mode == "boundary":
+                    assert not any(row.get("reason") == "fallback" for row in rows), rows
+                else:
+                    assert any(row.get("reason") == "fallback" for row in rows), rows
             assert not list(root.glob("*.acacia-*")), list(root.iterdir())
             assert all(not Path(f"/proc/{row['pid']}").exists() for row in ready)
         finally:
@@ -303,7 +391,9 @@ def main():
     libc = ctypes.CDLL(None, use_errno=True)
     assert libc.prctl(36, 1, 0, 0, 0) == 0  # Adopt children when their parent is killed.
     binary = str(args.binary.resolve())
-    for mode in ("fallback", "alone", "headroom", "conflict"):
+    for mode in ("fallback", "alone", "headroom", "conflict", "scan", "growth",
+                 "failure-pressure", "failure-blocked", "boundary", "turns-legacy",
+                 "turns-parity", "undecided"):
         stalled_extractor(binary, str(args.checker.resolve()), args.scratch, mode)
     for parity_first in (False, True):
         run(binary, args.scratch, parity_first=parity_first)

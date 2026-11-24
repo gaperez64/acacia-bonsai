@@ -63,7 +63,7 @@ namespace {
   bool g_eligibility_observed = false;
   uint64_t g_helper_rss_share = 0, g_parity_rss_share = 0;
   std::vector<sig_atomic_t> g_parity_workers;
-  std::vector<sig_atomic_t> g_parity_exhausted;
+  std::vector<sig_atomic_t> g_rss_exhausted;
   acacia::obligation::outcome g_helper_forced = acacia::obligation::outcome::pending;
   const char* g_helper_stop_reason = "none";
 
@@ -112,9 +112,10 @@ namespace {
     if (!g_worker_records)
       return;
     auto& record = g_worker_records[index];
-    if (std::ranges::find (g_parity_exhausted, index) != g_parity_exhausted.end ()) {
+    if (std::ranges::find (g_rss_exhausted, index) != g_rss_exhausted.end ()) {
       reason = "rss_share";
-      acacia::parity_arm_exhausted (record);
+      if (std::ranges::find (g_parity_workers, index) != g_parity_workers.end ())
+        acacia::parity_arm_exhausted (record);
     }
     record.pid = pid;
     const char* telemetry = record.dropped    ? "dropped"
@@ -744,7 +745,7 @@ namespace {
   int run_portfolio (const arg_parse_result& arg_values, uint64_t deadline_mono_ns,
                      const sigset_t& block_set) {
     if (g_synthesis) {
-      g_controller_directory = *arg_values.synth_fname + ".acacia-XXXXXX";
+      g_controller_directory = *arg_values.synth_fname + ".acacia-private-XXXXXX";
       if (!mkdtemp (g_controller_directory.data ()))
         throw std::runtime_error ("unable to create private controller directory");
       atexit (cleanup_controllers);
@@ -819,21 +820,69 @@ namespace {
     };
     sig_atomic_t synthesis_winner = -1;
     int synthesis_verdict = -1;
+    sig_atomic_t last_extractor = -1;
     uint64_t extraction_started = 0;
-    const auto can_resume = [&] (sig_atomic_t index) {
+    const size_t slots = arg_values.arms->size () + size_t (g_obligation != nullptr);
+    std::vector<uint64_t> extraction_turn (g_synthesis ? slots : 0, 250000000);
+    std::vector<uint64_t> extraction_budget (g_synthesis ? slots : 0, UINT64_MAX);
+    const auto extraction_event = [&] (sig_atomic_t i, const char* reason) {
+      if (g_worker_records) {
+        auto record = g_worker_records[i];
+        acacia::worker_event (record, "parent_extraction", reason, synthesis_verdict);
+      }
+    };
+    const auto ready = [&] (sig_atomic_t i) {
+      return g_child_pids[i] > 0 && g_synthesis[i].order.load (std::memory_order_acquire) &&
+             (synthesis_verdict < 0 ||
+              g_synthesis[i].verdict.load (std::memory_order_acquire) == synthesis_verdict) &&
+             std::ranges::find (g_rss_exhausted, i) == g_rss_exhausted.end ();
+    };
+    const auto admit = [&] (sig_atomic_t index) {
       bool no_limit = false;
       const auto limit = acacia::obligation::scope_memory ("memory.max", nullptr, &no_limit);
       const auto used = acacia::obligation::scope_memory ("memory.current");
-      const auto reserve = std::max<uint64_t> (
-          64 * 1024 * 1024, acacia::obligation::resident_bytes (g_child_pids[index]));
-      // memory.current includes stopped workers; keep the last eighth and a COW reserve.
-      return no_limit || (limit && used && *used < *limit - *limit / 8 &&
-                          reserve < *limit - *limit / 8 - *used);
+      const auto resident = acacia::obligation::resident_bytes (g_child_pids[index]);
+      const auto budget = resident + std::max<uint64_t> (64 * 1024 * 1024, resident);
+      // Reserve the full RSS ceiling: existing shared pages can become private through COW.
+      if (!resident || (!no_limit && !(limit && used && *used < *limit - *limit / 8 &&
+                                       budget < *limit - *limit / 8 - *used))) {
+        extraction_event (index, "scope_headroom");
+        return false;
+      }
+      extraction_budget[index] = budget;
+      return true;
+    };
+    const auto next_extractor = [&] (sig_atomic_t after) {
+      for (sig_atomic_t step = 1; step <= g_child_count; ++step) {
+        const sig_atomic_t i = (after + step) % g_child_count;
+        if (g_child_pids[i] > 0 && g_synthesis[i].order.load (std::memory_order_acquire) &&
+            g_synthesis[i].verdict.load (std::memory_order_acquire) != synthesis_verdict)
+          extraction_event (i, "verdict_conflict");
+        if (i != after && ready (i) && admit (i))
+          return i;
+      }
+      return sig_atomic_t {-1};
+    };
+    const auto select_extractor = [&] (sig_atomic_t i) {
+      synthesis_winner = last_extractor = i;
+      extraction_started = monotonic_ns ();
+      auto& slot = g_synthesis[i];
+      if (!slot.proceed.load (std::memory_order_acquire) && g_worker_records) {
+        // Parent observations do not consume the child's live record sequence.
+        auto selected = g_worker_records[i];
+        acacia::worker_event (selected, "parent_verdict", "selected", synthesis_verdict);
+      }
+      check_acceptance ();
+      slot.proceed.store (true, std::memory_order_release);
+      kill (-g_child_pids[i], SIGCONT);
+#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
+      acacia::synthesis::test_extraction_turn (g_child_pids[i], extraction_turn[i]);
+#endif
     };
     int status;
     bool child_reported_error = false;
     while (true) {  // wait only for solver arms; the record writer is separate
-      if (g_obligation && !g_eligibility_observed && synthesis_winner < 0) {
+      if (g_obligation && !g_eligibility_observed && synthesis_verdict < 0) {
         using acacia::obligation::eligibility;
         const auto eligible = g_obligation->eligible.load (std::memory_order_acquire);
         if (eligible != eligibility::pending) {
@@ -841,11 +890,10 @@ namespace {
           if (eligible != eligibility::inapplicable || arg_values.obligation_explicit)
             acacia::obligation::record (
                 "eligibility",
-                eligible == eligibility::eligible ? acacia::obligation::outcome::pending
-                               : eligible == eligibility::inapplicable
-                                   ? acacia::obligation::outcome::inapplicable
-                                   : acacia::obligation::outcome::error,
-                eligible == eligibility::eligible ? "eligible"
+                eligible == eligibility::eligible       ? acacia::obligation::outcome::pending
+                : eligible == eligibility::inapplicable ? acacia::obligation::outcome::inapplicable
+                                                        : acacia::obligation::outcome::error,
+                eligible == eligibility::eligible       ? "eligible"
                 : eligible == eligibility::inapplicable ? "non_obligation"
                                                         : "preprocessing_failed");
           if (eligible == eligibility::eligible && g_helper_index < 0 && !g_interrupted &&
@@ -853,32 +901,32 @@ namespace {
             launch_helper (false);
         }
       }
-      if (g_helper_index >= 0 && g_child_pids[g_helper_index] > 0 &&
-          g_helper_forced == acacia::obligation::outcome::pending) {
-        const pid_t helper = g_child_pids[g_helper_index];
-        const bool memory = acacia::obligation::resident_bytes (helper) > g_helper_rss_share;
-        if (memory) {
-          g_helper_forced = acacia::obligation::outcome::exhausted;
-          g_helper_stop_reason = "rss_share";
-          if (g_worker_records) {
-            auto r = g_worker_records[g_helper_index];
-            r.pid = helper;
-            acacia::resource_event (r, "rss_share", true);
-          }
-          kill (-helper, SIGKILL);
-          kill (helper, SIGKILL);
-        }
-      }
-      for (const auto index : g_parity_workers) {
+      // One RSS sampler supervises native arms and every resumed extractor, including legacy.
+      for (sig_atomic_t index = 0; index < g_child_count; ++index) {
         const pid_t worker = g_child_pids[index];
+        if (worker <= 0 || std::ranges::find (g_rss_exhausted, index) != g_rss_exhausted.end ())
+          continue;
+        const bool helper =
+            index == g_helper_index && g_helper_forced == acacia::obligation::outcome::pending;
+        const bool parity = std::ranges::find (g_parity_workers, index) != g_parity_workers.end ();
+        const auto budget = g_synthesis ? extraction_budget[index] : UINT64_MAX;
+        if (!helper && !parity && budget == UINT64_MAX)
+          continue;
+        const auto resident = acacia::obligation::resident_bytes (worker);
         const auto scope_limit =
-            arg_values.parity_memory_share == acacia::obligation::memory_share::headroom
-                ? acacia::obligation::scope_memory ("memory.max").value_or (0) : 0;
-        if (worker > 0 &&
-            std::ranges::find (g_parity_exhausted, index) == g_parity_exhausted.end () &&
-            acacia::obligation::rss_share_exceeded (acacia::obligation::resident_bytes (worker),
-                                                    g_parity_rss_share, scope_limit)) {
-          g_parity_exhausted.push_back (index);
+            parity && arg_values.parity_memory_share == acacia::obligation::memory_share::headroom
+                ? acacia::obligation::scope_memory ("memory.max").value_or (0)
+                : 0;
+        if (resident > budget || (helper && resident > g_helper_rss_share) ||
+            (parity &&
+             acacia::obligation::rss_share_exceeded (resident, g_parity_rss_share, scope_limit))) {
+          g_rss_exhausted.push_back (index);
+          if (helper) {
+            g_helper_forced = acacia::obligation::outcome::exhausted;
+            g_helper_stop_reason = "rss_share";
+          }
+          if (resident > budget)
+            extraction_event (index, "rss_budget");
           if (g_worker_records) {
             auto r = g_worker_records[index];
             r.pid = worker;
@@ -888,138 +936,89 @@ namespace {
           kill (worker, SIGKILL);
         }
       }
+      siginfo_t finished {};
       if (g_synthesis && synthesis_winner < 0) {
         check_acceptance ();
         sig_atomic_t nominee = -1;
-        uint64_t first = UINT64_MAX;
-        for (sig_atomic_t i = 0; i < g_child_count; ++i) {
-          const auto order = g_synthesis[i].order.load (std::memory_order_acquire);
-          if (g_child_pids[i] > 0 && order && synthesis_verdict >= 0 &&
-              g_synthesis[i].verdict.load (std::memory_order_acquire) != synthesis_verdict) {
-            if (g_worker_records) {
-              auto rejected = g_worker_records[i];
-              acacia::worker_event (rejected, "parent_extraction", "verdict_conflict",
-                                    synthesis_verdict);
+        if (synthesis_verdict < 0) {
+          uint64_t first = UINT64_MAX;
+          for (sig_atomic_t i = 0; i < g_child_count; ++i)
+            if (ready (i) && g_synthesis[i].order.load (std::memory_order_acquire) < first) {
+              nominee = i;
+              first = g_synthesis[i].order.load (std::memory_order_acquire);
             }
-            kill (-g_child_pids[i], SIGKILL);
-            continue;
-          }
-          if (g_child_pids[i] > 0 && order && order < first &&
-              (synthesis_verdict < 0 ||
-               g_synthesis[i].verdict.load (std::memory_order_acquire) == synthesis_verdict) &&
-              std::ranges::find (g_parity_exhausted, i) == g_parity_exhausted.end ()) {
-            nominee = i;
-            first = order;
+          if (nominee >= 0) {
+#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
+            acacia::synthesis::test_before_selection ();
+#endif
+            synthesis_verdict = g_synthesis[nominee].verdict.load (std::memory_order_acquire);
+            for (sig_atomic_t other = 0; other < g_child_count; ++other)
+              if (other != nominee && g_child_pids[other] > 0)
+                kill (-g_child_pids[other], SIGSTOP);
           }
         }
-        if (nominee < 0 && synthesis_verdict >= 0)
-          for (sig_atomic_t i = 0; i < g_child_count; ++i)
-            if (g_child_pids[i] > 0 && !g_synthesis[i].order.load (std::memory_order_acquire)) {
-              nominee = i;
+        else {
+          nominee = next_extractor (last_extractor);
+          if (nominee < 0) {
+            // After an export failure, discard searches/conflicting proofs before retrying
+            // admission.
+            for (sig_atomic_t i = 0; i < g_child_count; ++i)
+              if (g_child_pids[i] > 0 && !ready (i)) {
+                const pid_t pid = g_child_pids[i];
+                kill (-pid, SIGKILL);
+                kill (pid, SIGKILL);
+                int discarded_status = 0;
+                rusage usage {};
+                pid_t got;
+                do {
+                  got = wait4 (pid, &discarded_status, 0, &usage);
+                } while (got < 0 && errno == EINTR);
+                if (got == pid)
+                  record_parent_terminal (
+                      i, discarded_status, "extraction_irrelevant", pid, &usage,
+                      g_worker_records ? acacia::phase_clock (CLOCK_MONOTONIC) : 0);
+                g_child_pids[i] = 0;
+              }
+#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
+            acacia::synthesis::test_after_extraction_cleanup ();
+#endif
+            nominee = next_extractor (last_extractor);
+            if (nominee < 0) {
+              stop_children ("extraction_failed");
               break;
             }
-        if (nominee >= 0 && synthesis_verdict >= 0 && !can_resume (nominee)) {
-          if (g_worker_records && monotonic_ns () - extraction_started >= 250000000) {
-            auto refused = g_worker_records[nominee];
-            acacia::worker_event (refused, "parent_extraction", "scope_headroom",
-                                  synthesis_verdict);
-            extraction_started = monotonic_ns ();
           }
-          nominee = -1;
+          extraction_event (nominee, "fallback");
         }
-        if (nominee >= 0) {
-          const sig_atomic_t i = nominee;
-          synthesis_winner = i;
-          const bool decided = g_synthesis[i].order.load (std::memory_order_acquire) != 0;
-          if (synthesis_verdict < 0)
-            synthesis_verdict = g_synthesis[i].verdict.load (std::memory_order_acquire);
-          extraction_started = monotonic_ns ();
-          // Suspend the existing fallback, preserving its work if export fails.
-          // Every exporter waits here; the parent alone publishes the destination.
-          for (sig_atomic_t other = 0; other < g_child_count; ++other)
-            if (other != i && g_child_pids[other] > 0)
-              kill (-g_child_pids[other], SIGSTOP);
-          if (decided && g_worker_records) {
-            // The worker resumes this sequence after selection. Parent observations
-            // must not consume entries in the child's live record stream.
-            auto selected = g_worker_records[i];
-            acacia::worker_event (selected, "parent_verdict", "selected",
-                                  g_synthesis[i].verdict.load (std::memory_order_acquire));
-          }
-          check_acceptance ();
-          if (decided)
-            g_synthesis[i].proceed.store (true, std::memory_order_release);
-          kill (-g_child_pids[i], SIGCONT);
-        }
+        if (nominee >= 0)
+          select_extractor (nominee);
       }
       if (g_synthesis && synthesis_winner >= 0) {
-        auto& active = g_synthesis[synthesis_winner];
-        const bool decided = active.order.load (std::memory_order_acquire) != 0;
-        const bool conflict =
-            decided && active.verdict.load (std::memory_order_acquire) != synthesis_verdict;
-        if (conflict) {
-          if (g_worker_records) {
-            auto rejected = g_worker_records[synthesis_winner];
-            acacia::worker_event (rejected, "parent_extraction", "verdict_conflict",
-                                  synthesis_verdict);
-          }
-          kill (-g_child_pids[synthesis_winner], SIGKILL);
-        }
-        if (decided && !conflict && !active.proceed.load (std::memory_order_acquire)) {
-          if (g_worker_records) {
-            auto selected = g_worker_records[synthesis_winner];
-            acacia::worker_event (selected, "parent_verdict", "selected", synthesis_verdict);
-          }
-          check_acceptance ();
-          active.proceed.store (true, std::memory_order_release);
-          extraction_started = monotonic_ns ();
-        }
-        bool expired = monotonic_ns () - extraction_started >= 250000000;
+        const auto i = synthesis_winner;
+        bool expired = monotonic_ns () - extraction_started >= extraction_turn[i];
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
-        expired = acacia::synthesis::test_extraction_grace (expired, deadline_mono_ns);
+        expired =
+            acacia::synthesis::test_extraction_grace (expired, deadline_mono_ns, g_child_pids[i]);
 #endif
-        if (expired && !conflict) {
-          if (g_worker_records) {
-            auto previous = g_worker_records[synthesis_winner];
-            acacia::worker_event (previous, "parent_extraction", "grace_expired",
-                                  synthesis_verdict);
-          }
-          sig_atomic_t next = -1;
-          // One runnable worker: preserve slow extractors and give unfinished proofs a turn.
-          for (sig_atomic_t step = 1; step < g_child_count; ++step) {
-            const sig_atomic_t i = (synthesis_winner + step) % g_child_count;
-            if (g_child_pids[i] > 0 &&
-                (!g_synthesis[i].order.load (std::memory_order_acquire) ||
-                 g_synthesis[i].verdict.load (std::memory_order_acquire) == synthesis_verdict) &&
-                std::ranges::find (g_parity_exhausted, i) == g_parity_exhausted.end ()) {
-              next = i;
-              break;
-            }
-          }
-          if (next < 0 && g_worker_records) {
-            auto previous = g_worker_records[synthesis_winner];
-            acacia::worker_event (previous, "parent_extraction", "no_alternative",
-                                  synthesis_verdict);
-          }
-          if (next >= 0) {
-            const bool headroom = can_resume (next);
-            if (g_worker_records) {
-              auto resumed = g_worker_records[next];
-              acacia::worker_event (resumed, "parent_extraction",
-                                    headroom ? "fallback" : "scope_headroom", synthesis_verdict);
-            }
-            if (headroom) {
+        if (expired) {
+          extraction_event (i, "grace_expired");
+          extraction_turn[i] = std::min (extraction_turn[i], UINT64_MAX / 2) * 2;
+          const auto next = next_extractor (i);
+          if (next < 0)
+            extraction_event (i, "no_alternative");
+          else {
+            check_acceptance ();
+            kill (-g_child_pids[i], SIGSTOP);
+            while (waitid (P_PID, g_child_pids[i], &finished, WSTOPPED | WEXITED | WNOWAIT) < 0) {
+              if (errno != EINTR)
+                throw std::runtime_error ("unable to suspend controller extractor");
               check_acceptance ();
-              kill (-g_child_pids[synthesis_winner], SIGSTOP);
-              siginfo_t stopped {};
-              while (waitid (P_PID, g_child_pids[synthesis_winner], &stopped,
-                             WSTOPPED | WEXITED | WNOWAIT) < 0) {
-                if (errno != EINTR)
-                  throw std::runtime_error ("unable to suspend controller extractor");
-                check_acceptance ();
-              }
-              synthesis_winner = next;
-              kill (-g_child_pids[next], SIGCONT);
+            }
+            // An exit racing SIGSTOP must go through normal acceptance before switching.
+            if (finished.si_code == CLD_STOPPED) {
+              finished = {};
+              extraction_event (next, "fallback");
+              select_extractor (next);
             }
           }
           extraction_started = monotonic_ns ();
@@ -1037,10 +1036,11 @@ namespace {
       if (g_synthesis && synthesis_winner >= 0)
         acacia::synthesis::test_before_reap (g_child_pids[synthesis_winner]);
 #endif
-      siginfo_t finished {};
-      const int observed = waitid (synthesis_winner >= 0 ? P_PID : P_ALL,
-                                   synthesis_winner >= 0 ? g_child_pids[synthesis_winner] : 0,
-                                   &finished, WEXITED | WNOHANG | WNOWAIT);
+      const int observed =
+          finished.si_pid > 0 ? 0
+                              : waitid (synthesis_winner >= 0 ? P_PID : P_ALL,
+                                        synthesis_winner >= 0 ? g_child_pids[synthesis_winner] : 0,
+                                        &finished, WEXITED | WNOHANG | WNOWAIT);
       rusage reaped_usage {};
       uint64_t reaped_mono_ns = 0;
       const pid_t finished_group =
@@ -1155,7 +1155,7 @@ namespace {
         continue;
       }
       int ret = WEXITSTATUS (status);
-      if (std::ranges::find (g_parity_exhausted, reaped_index) != g_parity_exhausted.end ())
+      if (std::ranges::find (g_rss_exhausted, reaped_index) != g_rss_exhausted.end ())
         ret = EXIT_CODE_UNKNOWN;
       if (g_obligation && reaped_index == g_helper_index &&
           (g_helper_forced != acacia::obligation::outcome::pending ||

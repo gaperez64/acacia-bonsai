@@ -56,6 +56,13 @@ also go to stderr.
 including Moore. See the [quick start](../README.md#quick-start).
 The [Docker wrapper](../Docker/README.md#write-a-controller) can write to stdout.
 
+Portfolio workers stage controllers in a private sibling directory named
+`FILE.acacia-private-XXXXXX`. The parent publishes one closed controller by atomic
+rename, preserving an existing `FILE` on extraction failure. Normal exit, handled
+interruption and timeout remove the directory. Killing the parent with `SIGKILL`
+can leave this directory and partial private files behind; they can be removed
+after the invocation stops. The requested `FILE` is unchanged until publication.
+
 `--parity-mealy-reduction none|bisim|bisim-output|reselect` selects the parity route's
 post-extraction reduction under `-s` only. `bisim-output` uses Spot's
 bisimulation with output assignment (simplification level 2); `bisim` uses level 1.

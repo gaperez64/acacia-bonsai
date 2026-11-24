@@ -42,9 +42,13 @@ namespace acacia::synthesis {
   void test_before_worker_protection ();
   void test_before_verdict (int& verdict);
   void test_after_selection ();
+  void test_before_selection ();
+  void test_verdict_published ();
+  void test_after_extraction_cleanup ();
+  void test_extraction_turn (int worker_pid, uint64_t quantum);
   void test_before_reap (int worker_pid);
   void test_before_publication ();
-  bool test_extraction_grace (bool expired, uint64_t& deadline_mono_ns);
+  bool test_extraction_grace (bool expired, uint64_t& deadline_mono_ns, int worker_pid);
 #endif
 
   // A completed proof may race; only the selected extractor may run.
@@ -58,6 +62,9 @@ namespace acacia::synthesis {
     current_slot->verdict.store (verdict, std::memory_order_relaxed);
     current_slot->order.store (verdict_sequence->fetch_add (1, std::memory_order_relaxed) + 1,
                                std::memory_order_release);
+#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
+    test_verdict_published ();
+#endif
     while (!current_slot->proceed.load (std::memory_order_acquire)) {
       timespec pause {0, 1000000};
       nanosleep (&pause, nullptr);

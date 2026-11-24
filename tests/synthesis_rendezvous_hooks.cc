@@ -66,6 +66,16 @@ extern "C" int __wrap_bdd_ite (int f, int g, int h) {
 namespace acacia::synthesis {
   namespace {
     bool obligation_worker = false, parity_worker = false;
+    void allocate (const char* setting) {
+      if (const char* bytes = std::getenv (setting)) {
+        const auto size = std::strtoull (bytes, nullptr, 10);
+        auto* memory = static_cast<volatile unsigned char*> (std::malloc (size));
+        if (!memory)
+          throw std::bad_alloc ();
+        for (size_t i = 0; i < size; i += 4096)
+          memory[i] = 1;
+      }
+    }
     void gate (const char* stage, const char* descriptor) {
       const char* value = std::getenv (descriptor);
       if (!value)
@@ -100,14 +110,7 @@ namespace acacia::synthesis {
     if (parity_worker) {
       if (std::getenv ("ACACIA_TEST_SYNTHESIS_CONFLICT"))
         verdict = EXIT_CODE_UNREAL;
-      if (const char* bytes = std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_RSS_BYTES")) {
-        const auto size = std::strtoull (bytes, nullptr, 10);
-        auto* memory = static_cast<volatile unsigned char*> (std::malloc (size));
-        if (!memory)
-          throw std::bad_alloc ();
-        for (size_t i = 0; i < size; i += 4096)
-          memory[i] = 1;
-      }
+      allocate ("ACACIA_TEST_SYNTHESIS_PARITY_RSS_BYTES");
       if (std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_VERDICT_FD")) {
         gate ("synthesis_ready", "ACACIA_TEST_SYNTHESIS_PARITY_VERDICT_FD");
         return;
@@ -123,6 +126,11 @@ namespace acacia::synthesis {
           parity_worker && std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD")
               ? "ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD"
               : "ACACIA_TEST_SYNTHESIS_EXPORT_FD");
+    if (!parity_worker && !obligation_worker &&
+        std::getenv ("ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES")) {
+      allocate ("ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES");
+      gate ("synthesis_grown", "ACACIA_TEST_SYNTHESIS_EXPORT_FD");
+    }
     if (const char* path = std::getenv ("ACACIA_TEST_SYNTHESIS_FAIL_PID")) {
       std::ifstream failure (path);
       pid_t pid = -1;
@@ -134,7 +142,23 @@ namespace acacia::synthesis {
   void test_before_publication () {
     gate ("synthesis_publishing", "ACACIA_TEST_SYNTHESIS_PUBLICATION_FD");
   }
-  bool test_extraction_grace (bool expired, uint64_t& deadline_mono_ns) {
+  void test_before_selection () {
+    gate ("synthesis_selecting", "ACACIA_TEST_SYNTHESIS_SELECTION_FD");
+  }
+  void test_verdict_published () {
+    if (std::getenv ("ACACIA_TEST_SYNTHESIS_SELECTION_FD"))
+      std::fprintf (stderr, "{\"stage\":\"synthesis_proved\",\"pid\":%ld}\n", long (getpid ()));
+  }
+  void test_after_extraction_cleanup () {
+    gate ("synthesis_reclaimed", "ACACIA_TEST_SYNTHESIS_RECLAIM_FD");
+  }
+  void test_extraction_turn (int worker_pid, uint64_t quantum) {
+    if (std::getenv ("ACACIA_TEST_SYNTHESIS_GRACE_FD"))
+      std::fprintf (stderr,
+                    "{\"stage\":\"synthesis_turn\",\"worker_pid\":%d,\"quantum_ns\":%llu}\n",
+                    worker_pid, (unsigned long long) quantum);
+  }
+  bool test_extraction_grace (bool expired, uint64_t& deadline_mono_ns, int worker_pid) {
     const char* descriptor = std::getenv ("ACACIA_TEST_SYNTHESIS_GRACE_FD");
     if (!descriptor)
       return expired;
@@ -145,6 +169,13 @@ namespace acacia::synthesis {
     if (release == 't') {
       deadline_mono_ns = 1;
       return false;
+    }
+    if (release == 'e') {
+      std::fprintf (stderr, "{\"stage\":\"synthesis_exit_boundary\"}\n");
+      siginfo_t finished {};
+      while (waitid (P_PID, worker_pid, &finished, WEXITED | WNOWAIT) < 0)
+        if (errno != EINTR)
+          throw std::runtime_error ("test wait at grace boundary failed");
     }
     return true;
   }

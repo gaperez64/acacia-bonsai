@@ -39,17 +39,28 @@ controller construction. Each worker writes a private file beside the requested
 destination. Only the parent renames a closed, successful REAL controller onto
 that destination, after acceptance checks and competitor cleanup.
 `parent_extraction` records identify the worker and latched verdict (`exit_code`):
-`grace_expired` means its 250 ms turn ended; `fallback` identifies the next worker
-resumed for extraction or unfinished proof search; `no_alternative` keeps the
-current worker running when no eligible competitor remains; `scope_headroom` means resumption
+`grace_expired` means its turn ended (initially 250 ms, doubling on each successive
+turn for that worker); `fallback` identifies the next ready proof matching the
+latched verdict, resumed for extraction. Undecided and opposite-verdict workers
+stay stopped. `no_alternative` keeps the current worker running when no admissible
+matching proof remains; `scope_headroom` means resumption
 was withheld because scope memory was unreadable or lacked reserve. Stopped
-workers remain charged in `memory.current`; resumption preserves the last eighth
-of the scope plus at least 64 MiB or the resumed worker's resident set, whichever
-is larger. `verdict_conflict` rejects an opposite proof. `published` identifies
+workers remain charged in `memory.current`. The resumed worker's RSS budget is its
+admission RSS plus max(64 MiB, admission RSS). Admission requires room for this
+entire ceiling below the scope's last eighth, covering COW of shared resident pages
+as well as growth. Unreadable RSS blocks admission. The existing parent RSS supervisor
+enforces the budget for every arm; `rss_budget` marks
+termination of a resumed extractor exceeding it. Refused candidates do not block
+later candidates. `verdict_conflict` rejects an opposite proof. `published` identifies
 the worker whose controller was atomically installed. Parent observations copy
 the worker snapshot and do not advance its live sequence. Slow extractors are
 suspended, retained and revisited; contradictory proofs never receive permission
-to export. Decision-only runs do not use this scheduling or file protocol.
+to export. An exit racing suspension is accepted before any handoff. After an
+extractor fails with no admissible replacement, `parent_terminal` with reason
+`extraction_irrelevant` identifies killed/reaped undecided or unusable workers.
+Admission is retried after freeing their memory; if it still fails, remaining
+workers receive `extraction_failed` and the invocation finishes UNKNOWN (or ERROR
+if a worker reported ERROR). Decision-only runs do not use this scheduling or file protocol.
 
 DECLINE means inapplicability/unsupported input or completed logical certificate
 rejection. Resource, deadline, cancellation, invalid input, integrity, internal
