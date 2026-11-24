@@ -447,6 +447,12 @@ The completeness auditor validates these schemas and emitter identities while
 retaining writer totals, drops and sequence checks. Unrecognized events still
 undergo lifecycle validation.
 
+`parity_reduction_attempt` carries the full worker lifecycle context, `seq` and
+`dropped_records`, plus the reduction option, attempt, outcome, cause, child PID,
+timing and memory cap. The parity worker emits it after the bounded child is
+reaped, or when an attempt is skipped. The reduction child has recording disabled;
+attempt outcomes describe controller optimization and establish no verdict.
+
 DECLINE means genuine inapplicability/unsupported input or a completed logical
 certificate rejection. Resource, deadline, cancellation, invalid input, integrity,
 internal and operational failures are STOPPED with their typed cause. Finite K

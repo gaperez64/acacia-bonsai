@@ -26,18 +26,28 @@ namespace acacia::parity_route {
         return;
       const char* names[] = {"none", "bisim", "bisim-output", "reselect"};
       const auto now = phase_clock (CLOCK_MONOTONIC);
-      const auto* worker = active_worker_record ();
-      char line[768];
-      const int size =
-          snprintf (line, sizeof line,
-                    "{\"event\":\"parity_reduction_attempt\",\"worker\":%u,\"worker_pid\":%ld,"
-                    "\"child_pid\":%ld,\"option\":\"%s\",\"attempt\":\"%s\",\"outcome\":\"%s\","
-                    "\"cause\":\"%s\",\"mono_ns\":%llu,\"wall_ns\":%llu,\"deadline_ns\":%llu,"
-                    "\"memory_bytes\":%llu}\n",
-                    worker ? worker->index : 0, long (getpid ()), long (child),
-                    names[unsigned (option)], reselect ? "reselect" : "reduce", outcome, cause,
-                    (unsigned long long) now, (unsigned long long) (now - start),
-                    (unsigned long long) deadline, (unsigned long long) memory_bytes);
+      worker_record local;
+      auto* worker = active_worker_record ();
+      if (!worker)
+        worker = &local;
+      char line[1024];
+      const int size = snprintf (
+          line, sizeof line,
+          "{\"event\":\"parity_reduction_attempt\",\"worker\":%u,\"worker_pid\":%ld,"
+          "\"seq\":%llu,\"requested_backend\":\"%s\",\"effective_backend\":\"%s\","
+          "\"original_polarity\":\"%s\",\"proof_polarity\":\"%s\","
+          "\"route\":\"%s\",\"stage\":\"%s\",\"reason\":\"%s\","
+          "\"r_prepass\":%s,\"equivariance\":%s,\"dropped_records\":%llu,"
+          "\"child_pid\":%ld,\"option\":\"%s\",\"attempt\":\"%s\",\"outcome\":\"%s\","
+          "\"cause\":\"%s\",\"mono_ns\":%llu,\"wall_ns\":%llu,\"deadline_ns\":%llu,"
+          "\"memory_bytes\":%llu}\n",
+          worker->index, long (getpid ()), ++worker->sequence, worker->requested_backend,
+          worker->effective_backend, worker->original_polarity, worker->proof_polarity,
+          worker->route, worker->stage, worker->reason, worker->r_prepass ? "true" : "false",
+          worker->equivariance ? "true" : "false", worker->dropped, long (child),
+          names[unsigned (option)], reselect ? "reselect" : "reduce", outcome, cause,
+          (unsigned long long) now, (unsigned long long) (now - start),
+          (unsigned long long) deadline, (unsigned long long) memory_bytes);
       if (size > 0 && size_t (size) < sizeof line)
         phase_records_send (line, size_t (size));
       else
