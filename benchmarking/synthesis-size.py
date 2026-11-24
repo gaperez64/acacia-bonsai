@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shlex
 import statistics
 import sys
 
@@ -60,10 +61,11 @@ def ref_size(path):
 
 
 def measure(instance, source, member, binary, digest, checker, directory, timeout,
-            verify_timeout, launch, expected, expectation_source, verify_max_states=200000):
+            verify_timeout, launch, expected, expectation_source, verify_max_states=200000,
+            extra_args=()):
     directory.mkdir(parents=True)
     controller = directory / "controller.aag"
-    run = launch([str(binary), "-T", str(source), "-s", str(controller)], timeout)
+    run = launch([str(binary), "-T", str(source), "-s", str(controller), *extra_args], timeout)
     (directory / "synthesis.stdout").write_text(run.stdout)
     (directory / "synthesis.stderr").write_text(run.stderr)
     result = classify_run(run)
@@ -130,6 +132,8 @@ def summarize(rows, members):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bin", action="append", required=True, metavar="MEMBER=PATH")
+    parser.add_argument("--extra-args", action="append", default=[], metavar="MEMBER=ARGS",
+                        help="shell-split extra solver arguments for a labelled --bin (once per member)")
     parser.add_argument("--checker", type=Path, required=True)
     parser.add_argument("--list", type=Path, required=True)
     parser.add_argument("--tlsf-map", type=Path, required=True)
@@ -159,6 +163,15 @@ def main(argv=None):
         if not binary.is_file() or not os.access(binary, os.X_OK):
             parser.error(f"binary is not executable: {binary}")
         binaries[member] = binary, coverage.sha256_file(binary)
+    extra_args = {}
+    for entry in args.extra_args:
+        member, separator, arguments = entry.partition("=")
+        if not separator or member not in binaries or member in extra_args:
+            parser.error("--extra-args requires a known, unique MEMBER=ARGS")
+        try:
+            extra_args[member] = shlex.split(arguments)
+        except ValueError as error:
+            parser.error(f"invalid --extra-args for {member}: {error}")
     checker = args.checker.resolve(strict=True)
     if not checker.is_file() or not os.access(checker, os.X_OK):
         parser.error(f"checker is not executable: {checker}")
@@ -185,7 +198,7 @@ def main(argv=None):
     if not selected:
         parser.error("no inputs match --expected-status")
     args.output.mkdir(parents=True)
-    metadata = dict(vars(args), checker_sha256=coverage.sha256_file(checker),
+    metadata = dict(vars(args), solver_args=extra_args, checker_sha256=coverage.sha256_file(checker),
                     sources={instance: dict(path=str(source),
                                             sha256=coverage.sha256_file(source))
                              for instance, source, _, _ in selected})
@@ -201,7 +214,8 @@ def main(argv=None):
             for member_index, (member, (binary, digest)) in enumerate(binaries.items()):
                 row = measure(instance, source, member, binary, digest, checker,
                               args.output.resolve() / f"{index:05d}-{member_index}", args.timeout,
-                              args.verify_timeout, launch, expected, origin, args.verify_max_states)
+                              args.verify_timeout, launch, expected, origin, args.verify_max_states,
+                              extra_args.get(member, ()))
                 rows.append(row)
                 writer.writerow(row)
                 stream.flush()

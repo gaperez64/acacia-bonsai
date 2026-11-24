@@ -49,17 +49,17 @@ namespace acacia::tlsf_frontend {
     value.metadata.tlsf_target = result.original_target;
     value.metadata.tlsf_effective_target = result.effective_target;
     value.metadata.tlsf_gr_level = result.gr_level;
-    if (result.has_indexed_conjunction) {
-      value.metadata.tlsf_indexed_families.reserve (result.indexed_families.size ());
-      for (auto& family : result.indexed_families) {
-        symmetry::indexed_family_hint hint;
-        hint.is_input = not family.is_output;
-        hint.lo = family.lo;
-        hint.hi = family.hi;
-        hint.members = std::move (family.members);
-        value.metadata.tlsf_indexed_families.push_back (std::move (hint));
-      }
+    value.metadata.tlsf_declared_families.reserve (result.indexed_families.size ());
+    for (auto& family : result.indexed_families) {
+      symmetry::indexed_family_hint hint;
+      hint.is_input = not family.is_output;
+      hint.lo = family.lo;
+      hint.hi = family.hi;
+      hint.members = std::move (family.members);
+      value.metadata.tlsf_declared_families.push_back (std::move (hint));
     }
+    if (result.has_indexed_conjunction)
+      value.metadata.tlsf_indexed_families = value.metadata.tlsf_declared_families;
 
     value.ast = std::move (result.ast);
     value.formula = std::move (result.preprocessed_ltl);

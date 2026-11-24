@@ -64,6 +64,7 @@ struct arg_parse_result {
     acacia::obligation::memory_share parity_memory_share =
         acacia::obligation::memory_share::headroom;
     bool r_prepass = true;
+    bool restriction_prepass = true;
     // Zero leaves the native library's default in force.
     uint32_t lift_max_predicate_arity = 0;
     bool equivariance = ACACIA_ENABLE_EQUIVARIANT_SOLVER;
@@ -74,6 +75,7 @@ struct arg_parse_result {
     acacia::OracleLayout oracle_layout = acacia::OracleLayout::grouped;
     SPOT_FAST_T spot_fast = SPOT_FAST_DET;
     std::optional<std::string> synth_fname = std::nullopt;
+    std::string aiger_mode = "isop";
     bool formula_specified = false;
     bool inputs_specified = false;
     bool outputs_specified = false;

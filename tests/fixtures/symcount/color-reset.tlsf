@@ -1,0 +1,9 @@
+INFO { TITLE: "Since reset" DESCRIPTION: "All outputs become true after the first letter" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  OUTPUTS { a; b[2]; }
+  GUARANTEES {
+    !a && X G a;
+    &&[0 <= i < 2] (!b[i] && X G b[i]);
+    G (G a -> ||[0 <= i < 2] G b[i]);
+  }
+}
