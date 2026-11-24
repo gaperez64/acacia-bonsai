@@ -22,6 +22,7 @@ namespace acacia::parity_route {
   };
   struct options {
       bool synthesis = true;
+      std::string aiger_mode = "isop";
       bool use_lar = false;
       bool verify = false;
       // Cooperative checks around opaque Spot calls and before publishing a verdict.

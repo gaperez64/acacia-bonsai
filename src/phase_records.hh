@@ -132,7 +132,8 @@ namespace acacia {
       int write_fd = -1;
       unsigned long long dropped = 0;
       bool enabled = false;
-      long clock_ticks = 0, page_size = 0;
+      // Resource limits also sample processes when recording is disabled.
+      long clock_ticks = sysconf (_SC_CLK_TCK), page_size = sysconf (_SC_PAGESIZE);
       size_t packet_bytes = sizeof (phase_packet);
   };
   inline phase_record_state& phase_record_process_state () noexcept {
@@ -197,7 +198,7 @@ namespace acacia {
   // In particular, child CPU (cutime/cstime) is deliberately excluded.
   // This routine is also used by the parent's signal handler. It uses only
   // async-signal-safe syscalls and scalar parsing; conversion factors are
-  // cached at recorder startup, before any worker can be published.
+  // cached on first process-state access, before any worker can be published.
   inline resource_stamp resource_snapshot (pid_t pid) noexcept {
     resource_stamp stamp;
     stamp.mono_ns = phase_clock (CLOCK_MONOTONIC);
@@ -884,8 +885,6 @@ namespace acacia {
     state.pid = state.owner = getpid ();
     state.write_fd = fds[1];
     state.packet_bytes = packet_bytes;
-    state.clock_ticks = sysconf (_SC_CLK_TCK);
-    state.page_size = sysconf (_SC_PAGESIZE);
     struct sigaction ignore {}, old_pipe {}, old_size {};
     ignore.sa_handler = SIG_IGN;
     sigemptyset (&ignore.sa_mask);

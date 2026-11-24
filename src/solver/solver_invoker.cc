@@ -3,13 +3,14 @@
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
 #include "solver/accounting_identity.hh"
+#include "solver/aiger_mode.hh"
 #include "solver/ap_partition.hh"
 #include "solver/bdd_config.hh"
+#include "solver/closure_recurrence_provider.hh"
 #include "solver/configured_components.hh"
 #include "solver/controller_check.hh"
 #include "solver/controller_writer.hh"
 #include "solver/create_automaton.hh"
-#include "solver/closure_recurrence_provider.hh"
 #include "solver/degenerate_io.hh"
 #include "solver/diagnostics.hh"
 #include "solver/forced_output_contradiction.hh"
@@ -17,6 +18,7 @@
 #include "solver/mealy_to_moore.hh"
 #include "solver/obligation_helper.hh"
 #include "solver/realizability_simplify.hh"
+#include "solver/restriction_prepass.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
 #include "solver/spot_worker_record.hh"
@@ -318,6 +320,7 @@ namespace {
       const bool equivariance;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
+      const std::string& aiger_mode;
       const controller_conversion conversion;
       const std::string target_semantics;
       const std::vector<symmetry::indexed_family_hint>& indexed_family_hints;
@@ -338,8 +341,8 @@ namespace {
                    spot::postprocessor::optimization_level translation_effort,
                    SPOT_FAST_T spot_fast, acacia::game_backend backend,
                    acacia::automaton_provider provider, acacia::candidate_mode candidate,
-                   std::size_t worker_count,
-                   bool equivariance, const std::optional<std::string>& synth_fname,
+                   std::size_t worker_count, bool equivariance,
+                   const std::optional<std::string>& synth_fname, const std::string& aiger_mode,
                    controller_conversion conversion,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints,
                    std::string target_semantics,
@@ -360,6 +363,7 @@ namespace {
           worker_count {worker_count},
           equivariance {equivariance},
           synth_fname {synth_fname},
+          aiger_mode {aiger_mode},
           conversion {conversion},
           target_semantics {std::move (target_semantics)},
           indexed_family_hints {indexed_family_hints},
@@ -414,12 +418,9 @@ namespace {
           return;
         }
 
-        // Encode with irredundant sum of products.
-        spot::aig_ptr mealy_aig = mealy_machines_to_aig (nonempty_strats, "isop",
-                                                         // make sure all
-                                                         // inputs and outputs
-                                                         // are in the AIG
-                                                         input_aps, nonempty_out_part);
+        // Keep all interface propositions in the AIG.
+        spot::aig_ptr mealy_aig = mealy_machines_to_aig (
+            nonempty_strats, aiger_mode.c_str (), input_aps, nonempty_out_part);
         spot::aig_ptr output_aig = convert_controller (mealy_aig, conversion);
         if (!acacia::synthesis::write_controller (*synth_fname, output_aig))
           throw std::runtime_error ("failed to write controller");
@@ -1110,7 +1111,9 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               const specification_metadata& metadata, acacia::automaton_provider provider,
               acacia::candidate_mode candidate, bool equivariance, uint64_t diagnostic_deadline_ns,
               const std::string& diagnostic_source_sha256, weakening_mode weakening,
-              acacia::obligation::control* obligation_eligibility, std::size_t worker_count) {
+              acacia::obligation::control* obligation_eligibility, std::size_t worker_count,
+              bool restriction_prepass, const std::string& aiger_mode) {
+  acacia::synthesis::validate_aiger_mode (aiger_mode);
   // Protect internal callers as well as the CLI synthesis route.
   if (synth_fname.has_value ()) {
     backend = acacia::synthesis_backend (backend, true);
@@ -1166,11 +1169,38 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
   validate_ltl_partition (input_aps, output_aps);
   spot::formula spot_formula = parse_ltl_string (formula);
+  const bool restrictions = restriction_prepass && !synth_fname &&
+                            metadata.source_format == "tlsf" &&
+                            metadata.tlsf_effective_target == "Mealy" &&
+                            metadata.tlsf_semantics.find ("Finite") == std::string::npos &&
+                            (!check_unreal || *check_unreal == UNREAL_X_FORMULA);
+  spot::formula restriction_objective = restrictions ? spot_formula : nullptr;
   acacia::unreal_witnesses::records weakening_records;
   weakening_records.bind_source (formula, input_aps, output_aps);
-  weakening_records.event ("weakening_requested_mode",
-                           weakening == weakening_mode::off ? "\"mode\":\"off\""
-                                                            : "\"mode\":\"basic\"");
+  weakening_records.event ("weakening_requested_mode", weakening == weakening_mode::off
+                                                           ? "\"mode\":\"off\""
+                                                           : "\"mode\":\"basic\"");
+  const auto try_restrictions = [&] {
+    const auto solve = [&] (spot::formula restricted) {
+      const bool proof =
+          run_ltl (input_aps, output_aps, opt_k, opt_kmin, opt_kinc, spot::str_psl (restricted),
+                   check_unreal, translation_pref, translation_effort, spot_fast, backend,
+                   std::nullopt, metadata, provider, candidate, false, diagnostic_deadline_ns,
+                   diagnostic_source_sha256, weakening_mode::off, nullptr, 1);
+      return proof ? (check_unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL) : EXIT_CODE_UNKNOWN;
+    };
+    const bool proof = acacia::restriction::try_prepass (
+        restriction_objective, metadata, input_aps, output_aps, check_unreal.has_value (),
+        diagnostic_deadline_ns, solve);
+    restriction_objective = nullptr;
+    if (!proof)
+      acacia::worker_route (check_unreal ? "unreal_formula" : "real",
+                            acacia::game_backend_name (backend), "REAL");
+    return proof;
+  };
+  // Fork before inheriting full-objective BDD preparation, except for the eligibility source.
+  if (restrictions && !obligation_eligibility && try_restrictions ())
+    return acacia::diagnostics::finish (true, "one-sided-restriction");
   const size_t original_inputs = input_aps.size (), original_outputs = output_aps.size ();
   bool rsimp_changed = false;
 
@@ -1204,6 +1234,10 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // parent has already started its other arms; it does no serial preprocessing.
   if (obligation_eligibility)
     acacia::obligation::publish_eligibility (obligation_eligibility, spot_formula);
+
+  // Keep the helper's ordinary eligibility notification ahead of this arm's optional work.
+  if (restrictions && obligation_eligibility && try_restrictions ())
+    return acacia::diagnostics::finish (true, "one-sided-restriction");
 
   // closure-recurrence in fallback mode may use Spot anyway, so it keeps the
   // cheap Spot checks that decide many inputs before any construction.
@@ -1260,8 +1294,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (
       dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal, translation_pref,
-      translation_effort, spot_fast, backend, provider, candidate, worker_count, equivariance, synth_fname,
-      conversion, indexed_family_hints,
+      translation_effort, spot_fast, backend, provider, candidate, worker_count, equivariance,
+      synth_fname, aiger_mode, conversion, indexed_family_hints,
       metadata.source_format + ";semantics=" + metadata.tlsf_semantics +
           ";target=" + metadata.tlsf_target + ";effective=" +
           ((metadata.tlsf_effective_target.empty () || metadata.tlsf_effective_target == "-")

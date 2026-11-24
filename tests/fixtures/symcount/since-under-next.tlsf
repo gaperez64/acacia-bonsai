@@ -1,0 +1,10 @@
+INFO { TITLE: "Since monitor under X" DESCRIPTION: "The obligation starts after the first letter" SEMANTICS: Mealy TARGET: Mealy }
+GLOBAL { PARAMETERS { n = 2; } }
+MAIN {
+  OUTPUTS { x; b[n]; }
+  GUARANTEES {
+    G x;
+    &&[0 <= i < n] !b[i];
+    X (G ((G x) -> (||[0 <= i < n] G b[i])));
+  }
+}

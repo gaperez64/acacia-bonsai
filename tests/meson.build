@@ -73,6 +73,22 @@ test ('help-output',
       suite : ['unit', 'cli'],
       depends : [ab_exe])
 
+test ('symcount-verdicts', py,
+      args : [files ('check-symcount.py'), symcount_exe],
+      suite : ['unit', 'symcount'], depends : [symcount_exe], timeout : 120)
+
+if get_option ('acacia_tlsf_corpus_dir') != ''
+  test ('symcount-corpus-verdicts', py,
+        args : [files ('check-symcount.py'), symcount_exe,
+                get_option ('acacia_tlsf_corpus_dir')],
+        suite : ['corpus', 'symcount'], depends : [symcount_exe], timeout : 120)
+endif
+
+symcount_limits_test = executable (
+  'symcount-limits-test', ['symcount_limits_test.cc', '../src/solver/symmetric_count.cc'],
+  include_directories : inc, link_with : parity_lib, dependencies : [spot_dep, bddx_dep])
+test ('symcount-limits', symcount_limits_test, suite : ['unit', 'symcount'])
+
 test ('weakening-cli', py,
       args : [files ('check-weakening-cli.py'), ab_exe],
       suite : ['unit', 'cli'], depends : [ab_exe])
@@ -483,6 +499,7 @@ game_backend_integration_sources = [
   '../src/version.cc',
   '../src/solver/mealy_to_moore.cc',
   '../src/solver/solver_invoker.cc',
+  '../src/solver/restriction_prepass.cc',
   '../src/solver/obligation_helper.cc',
   '../src/parity_arm.cc',
   '../src/solver/solve_game_vector.cc',
@@ -493,6 +510,8 @@ game_backend_integration_sources += [
   '../src/native_gr1_arm.cc',
   '../src/native_gr1_lift_arm.cc',
   '../src/native_param_lift_arm.cc',
+  '../src/symcount_arm.cc',
+  '../src/solver/symmetric_count.cc',
 ]
 game_backend_integration_sources += '../src/tlsf_frontend.cc'
 preparation_fault_link_args = []
@@ -612,6 +631,8 @@ endif
 # cases that pass -r or -u explicitly, and those bypass the shipped portfolio
 # and still take the compile-time backend.
 default_arms_opt = get_option ('acacia_default_arms').strip ()
+native_arm_kinds = ['gr1', 'gr1-lift', 'gr1-real-lift', 'param-lift', 'symcount']
+default_native_arms = []
 if default_arms_opt != ''
   default_check_children = 0
   needs_real = false
@@ -624,7 +645,10 @@ if default_arms_opt != ''
     unreal_arm = spec.startswith ('unreal:') or spec.startswith ('both:')
     needs_real = needs_real or real_arm
     needs_unreal = needs_unreal or unreal_arm
-    native_arm = spec.contains (':gr1:oxidd') or spec.contains (':gr1-lift:oxidd') or spec.contains (':gr1-real-lift:oxidd') or spec.contains (':param-lift:oxidd')
+    native_arm = spec.split (':')[1] in native_arm_kinds
+    if native_arm
+      default_native_arms += [spec]
+    endif
     if not native_arm and spec != 'both:obligation:spot'
       default_check_children += 1
       has_legacy_real = has_legacy_real or real_arm
@@ -638,15 +662,13 @@ if default_arms_opt != ''
     default_check_children += default_unreal_children
   endif
 endif
-if (default_arms_opt.contains (':gr1:oxidd') or
-    default_arms_opt.contains (':gr1-lift:oxidd') or
-    default_arms_opt.contains (':gr1-real-lift:oxidd') or
-    default_arms_opt.contains (':param-lift:oxidd'))
+if default_native_arms.length () > 0
   test ('default-native-arms', py,
         args : [files ('check-default-native-arms.py'), ab_exe,
                 meson.project_build_root (), default_arms_opt,
                 default_check_children.to_string (),
-                (compiler_profile == 'debug').to_string ()],
+                (compiler_profile == 'debug').to_string (),
+                ','.join (default_native_arms)],
         suite : ['unit', 'cli', 'native-gr1', 'native-param-lift'],
         timeout : 60, depends : [ab_exe])
 endif
@@ -697,6 +719,16 @@ tlsf_frontend_test = executable (
 )
 test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
 
+restriction_prepass_test = executable (
+  'restriction-prepass-test', 'restriction_prepass_test.cc',
+  '../src/solver/restriction_prepass.cc', '../src/tlsf_frontend.cc',
+  include_directories : inc, dependencies : tlsf_deps + [spot_dep, bddx_dep])
+test ('restriction-prepass', restriction_prepass_test, suite : ['unit', 'tlsf'])
+# Keep the causal-frame check active even when the configured CLI omits guarded backends.
+test ('restriction-prepass-cli', py,
+      args : [files ('check-restriction-prepass.py'), ab_exe, game_backend_integration],
+      suite : ['unit', 'cli', 'tlsf'], depends : [ab_exe, game_backend_integration], timeout : 60)
+
 test ('moore-synthesis-semantics',
       py,
       args : [files ('check-moore-synthesis.py'), ab_exe],
@@ -715,6 +747,19 @@ controller_check = executable (
   'controller-check', 'controller_check.cc',
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
+aiger_mode_test = executable (
+  'aiger-mode-test', 'aiger_mode_test.cc',
+  objects : ab_exe.extract_objects (
+    'solver/solver_invoker.cc', 'solver/solve_game_vector.cc',
+    'solver/restriction_prepass.cc', 'solver/obligation_helper.cc',
+    'solver/mealy_to_moore.cc'),
+  link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib],
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps)
+test ('aiger-mode', py,
+      args : [files ('check-aiger-mode.py'), ab_exe, controller_check, aiger_mode_test],
+      suite : ['unit', 'cli', 'synthesis'], timeout : 120,
+      depends : [ab_exe, controller_check, aiger_mode_test])
 test ('controller-check', py,
       args : [files ('check-controller.py'), ab_exe, controller_check],
       suite : ['unit', 'synthesis'], timeout : 120,
@@ -1069,7 +1114,8 @@ if host_machine.system () == 'linux'
   obligation_cli_args = [files ('check-obligation-helper.py'), ab_exe,
                          obligation_helper_test, obligation_helper_faults,
                          meson.current_build_dir (),
-                         '--default-arms', get_option ('acacia_default_arms')]
+                         '--default-arms', get_option ('acacia_default_arms'),
+                         '--default-native-arms', ','.join (default_native_arms)]
   if ltlsynt_exe.found ()
     obligation_cli_args += ['--ltlsynt', ltlsynt_exe.full_path ()]
   endif

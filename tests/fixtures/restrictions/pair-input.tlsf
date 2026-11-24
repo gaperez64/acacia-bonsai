@@ -1,0 +1,11 @@
+// Adapted from SYNTCOMP; attribution and changes in ../README.md.
+INFO { TITLE: "Pair monitor" SEMANTICS: Mealy TARGET: Mealy }
+GLOBAL { PARAMETERS { n = 3; } }
+MAIN {
+  INPUTS { r[n]; }
+  OUTPUTS { g; }
+  GUARANTEES {
+    &&[0 <= i < n] G F r[i] <-> G F g;
+    G (&&[0 <= i < n] (&&[i < j < n] ((r[i] && r[j]) -> G !g)));
+  }
+}

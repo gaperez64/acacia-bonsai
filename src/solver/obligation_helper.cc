@@ -1,6 +1,7 @@
 #include "solver/obligation_helper.hh"
 
 #include "solver/accounting_identity.hh"
+#include "solver/aiger_mode.hh"
 #include "solver/bdd_config.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/synthesis_rendezvous.hh"
@@ -84,7 +85,8 @@ namespace acacia::obligation {
 
   result solve (spot::formula objective, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs, timing semantics, bool synthesis,
-                conversion convert) {
+                conversion convert, const std::string& aiger_mode) {
+    acacia::synthesis::validate_aiger_mode (aiger_mode);
     if (!eligible (objective))
       return {outcome::inapplicable, "non_obligation"};
     try {
@@ -139,8 +141,8 @@ namespace acacia::obligation {
       const auto mealy = spot::mtdswa_strategy_to_mealy (answer, false, false);
       if (!mealy || !mealy->num_states ())
         return {outcome::error, "strategy_export_failed"};
-      auto circuit = spot::mealy_machines_to_aig (std::vector<spot::twa_graph_ptr> {mealy}, "isop",
-                                                  inputs, {outputs});
+      auto circuit = spot::mealy_machines_to_aig (std::vector<spot::twa_graph_ptr> {mealy},
+                                                  aiger_mode.c_str (), inputs, {outputs});
       if (convert != conversion::none)
         circuit =
             acacia::synthesis::mealy_to_moore (circuit, convert == conversion::undo_input_shift);

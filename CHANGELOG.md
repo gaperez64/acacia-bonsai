@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add `--aiger-mode` to select Spot's AIGER encoding, keeping `isop` as the default and refusing unsafe `+dc` modes pending #466. Add per-label `--extra-args` support to `benchmarking/synthesis-size.py` (#280).
+
+- Add one-sided restriction attempts inside the existing formula workers (#451): replace each declared input family by its first member and accept only UNREALIZABLE, or set scalar outputs to false and accept only REALIZABLE. tlsf-tools `Restriction.lean` proves both transfers. Attempts are bounded (at most 1 s of input attempts, one 200 ms output attempt, 512 MiB each), are skipped under `-s`, and fall back to the normal solve. They add ten solves on SYNTCOMP26 at 17 s with no losses (`restrict451-20261122`). Disable with `--restriction-prepass off`.
+
 - Bump tlsf-tools to 9246712 (v1.12-12-g9246712): the GR(1) lift learns parametric-support folds for games whose global monitors keep constant state counts, such as load_balancer, and accepts them only after target region verification; both fold routes choose axes independently of names (#437). The pin also adds `tlsfobf`, a self-checking TLSF obfuscator for name- and order-independence screens (tlsf-tools #145).
 
 - Bump tlsf-tools to 219270e (v1.12-5-g219270e): the GR(1) lift learns monitor-state folds for binary-encoded index families and accepts them only after target region verification; frontend expansion respects the lift budget, and frontend adaptation allocation failure now reports as a resource limit (#437).

@@ -3,7 +3,9 @@
 This standalone development uses Lean 4.35.0 and core only. The default target
 checks every module and both example files, treating warnings as errors. The
 proofs use no admitted steps, custom axioms, native decision procedures or partial
-functions. C++ references are relative to `src/` at master `bbf12523` (including PR #336).
+functions. Historical line references in the Lean comments are relative to
+`src/` at master `bbf12523` (including PR #336). The correspondence table below
+uses checked source anchors in the current tree, also relative to `src/`.
 
 What is proved:
 
@@ -77,21 +79,32 @@ large fixed points by brute-force `decide`.
 
 | C++ source | Lean port |
 | --- | --- |
-| `solver/symmetry.hh:108–277,310–335` | `Automaton`, `Candidate`, checks, `Verified`, finite edge converse |
-| `solver/symmetry.hh:552–589`; `solver/symmetry_blocks.hh:274–302` | `SourceStars`, `GeneratedBy`, `phiFromSigma_generated`, `alignGroup` |
-| `solver/symmetry_blocks.hh:52–187` | `orbitRoots`, `buckets`, `recognizeBlocks`, `layoutOfRows`, `computeBlockLayout` |
-| `solver/equivariant_k_bounded_safety_aut.hh:81–334,358–383,731–744` | Family/count/shared-bit builders, stable matching, next-permutation traversal, `builtPlan` |
-| `solver/equivariant_k_bounded_safety_aut.hh:800–869` | `buildReduction`, source stars, alignment and plan caps |
-| `actioners/standard.hh:149–195`; `solver/k_bounded_safety_aut.hh:101–110,244–308` | `succ`, `safe`, `initial`, `backward`, `computeT`, `cpre` |
-| `solver/k_bounded_safety_aut.hh:129–165` | `stage`, `final`, `winner`, fixed-point termination |
-| `solver/equivariant_k_bounded_safety_aut.hh:388–466,558–581,721–774,923–955` | Downset transport, snapshot sweep, closure, representative updates and completion |
-| `ios_precomputers/mona.hh:142–190,384–437`; `ios_precomputers/standard.hh:28–100,159` | `Diagram`, `tabulate`, `monaRows`, `explicitTable`, input/output traversal and endpoint interpretation |
-| `solver/equivariant_k_bounded_safety_aut.hh:331–353`; `actioners/standard.hh:36–39,75–118` | Cube restriction, whole-row `dedup`, `precomputer_refinement` |
-| `input_pickers/critical.hh:24–89`; `critical_pq.hh:19–89` | Nested scans, response splices, signed priorities and exhaustion |
-| `boolean_states/forward_saturation.hh:29–87` | Rank saturation, acceptance clearing, state reordering, `preprocessBoolean_closed` |
-| `solver/solve_game_vector.cc:19`; `../subprojects/posets/include/posets/vectors/X_and_boolvec.hh:21–30,69–71` | Scalar `applyAction` versus presence-compressed `storedSucc` |
-| `solver/k_bounded_safety_aut.hh:157–238`; `solver/k_schedule.hh:8–14`; equivariant `:746–760,951–976` | Early exits, `bump`, `AdaptiveReach`, shared and ordinary schedules |
-| `solver/solver_invoker.cc:1159–1165` | `swapFrame`, `swapped_engine_cpre` |
+| `solver/symmetry.hh#inline std::optional<std::vector<unsigned>> verify_transposition (`; `solver/symmetry.hh#return (bdd_exist (all_inputs, v) != all_inputs) != f.is_input or` | `Automaton`, `Candidate`, checks, `Verified`, finite edge converse |
+| `solver/symmetry.hh#candidate.gen_pairs.push_back ({root, other});`; `solver/symmetry_blocks.hh#inline bool generators_match_layout (const group& G, const block_layout& L) {` | `SourceStars`, `GeneratedBy`, `phiFromSigma_generated`, `alignGroup` |
+| `solver/symmetry_blocks.hh#inline std::optional<block_layout> compute_block_layout (const group& G, unsigned num_states) {` | `orbitRoots`, `buckets`, `recognizeBlocks`, `layoutOfRows`, `computeBlockLayout` |
+| `solver/equivariant_k_bounded_safety_aut.hh#inline orbit_build_result build_orbits (const spot::twa_graph_ptr& aut, bdd all_inputs,`; `solver/equivariant_k_bounded_safety_aut.hh#} while (std::next_permutation (sequence.begin (), sequence.end ()));` | Family/count/shared-bit builders, stable matching, next-permutation traversal, `builtPlan` |
+| `solver/equivariant_k_bounded_safety_aut.hh#if ((q < posets::vectors::bool_threshold) != (g[q] < posets::vectors::bool_threshold))` | `buildReduction`, source stars, alignment and plan caps |
+| `actioners/standard.hh#State apply (const State& m, const Payload& avec,`; `solver/k_bounded_safety_aut.hh#void cpre_inplace (SetOfStates& f, const Action& io_action, Actioner& actioner,` | `succ`, `safe`, `initial`, `backward`, `computeT`, `cpre` |
+| `solver/k_bounded_safety_aut.hh#std::make_pair (k, std::move (f)));` | `stage`, `final`, `winner`, fixed-point termination |
+| `solver/equivariant_k_bounded_safety_aut.hh#bool close_under_generators (SetOfStates& f, const symmetry::group& G,`; `solver/equivariant_k_bounded_safety_aut.hh#result<SetOfStates> solve_orbit_sweep (const spot::twa_graph_ptr& aut, VECTOR_ELT_T kmax,` | Downset transport, snapshot sweep, closure, representative updates and completion |
+| `ios_precomputers/mona.hh#auto recurse_outputs = [&] (this const auto& self, auto& tss, bdd bdd_opq) -> void {`; `ios_precomputers/mona.hh#if (bdd_opq == bddfalse or bdd_opq == bddtrue or bdd_var (bdd_opq) >= first_src_var) {`; `ios_precomputers/mona.hh#auto [it, added] = ids_by_row.emplace (endpoints_for_letter, bddfalse);`; `ios_precomputers/standard.hh#void restrict_inputs (bdd allowed_inputs) { input_letters &= allowed_inputs; }` | `Diagram`, `tabulate`, `monaRows`, `explicitTable`, input/output traversal and endpoint interpretation |
+| `solver/equivariant_k_bounded_safety_aut.hh#void filter_to_representative_inputs (InputsToIOs& inputs_to_ios,`; `actioners/standard.hh#return (x.second < y.second);` | Cube restriction, whole-row `dedup`, `precomputer_refinement` |
+| `input_pickers/critical.hh#actions.splice (actions.begin (), actions, it_act);`; `input_pickers/critical_pq.hh#critical_input = fwd_actions_pq.emplace (priority - 1, ref);` | Nested scans, response splices, signed priorities and exhaustion |
+| `boolean_states/forward_saturation.hh#c[e.dst] = c_src_mod;`; `boolean_states/forward_saturation.hh#e.acc = spot::acc_cond::mark_t {};`; `boolean_states/forward_saturation.hh#g.rename_states_ (rename);` | Rank saturation, acceptance clearing, state reordering, `preprocessBoolean_closed` |
+| `solver/solve_game_vector.cc#using Vector = posets::vectors::VECTOR_IMPL_AUTO<VECTOR_ELT_T>;`; `../subprojects/posets/include/posets/vectors/X_and_boolvec.hh#bools.push_back (v[i] + 1);` | Scalar `applyAction` versus presence-compressed `storedSucc` |
+| `solver/k_bounded_safety_aut.hh#bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner) {`; `solver/k_schedule.hh#? kmax : std::min (kmax, k + kinc);`; `solver/equivariant_k_bounded_safety_aut.hh#const auto next_k = detail::checked_next_k (k, kinc);`; `solver/equivariant_k_bounded_safety_aut.hh#const auto next_k = detail::checked_next_k (k, kinc);` | Early exits, `bump`, `AdaptiveReach`, shared and ordinary schedules (both equivariant increments) |
+| `solver/solver_invoker.cc#input_aps.swap (output_aps);` | `swapFrame`, `swapped_engine_cpre` |
+| `../tests/equivariant_pre_test.cc#bool run_mixed_io_family_case () {` | `Reproducer331`, mixed I/O regression fixture |
+
+`#` separates each file from an exact source-line anchor. Run
+`python3 tests/check-proof-references.py` from the repository root to check the
+anchors and ensure every C++ file referenced by a proof has a documented anchor.
+Each anchor must occur exactly as many times in the source as in the table;
+the repeated `checked_next_k` anchor covers both shared-loop increments.
+This check also runs in pytest and the always-running Lean CI job, alongside
+tlsf-tools' existing checker. Moving code between lines is harmless; changing an
+anchor requires reviewing its correspondence with the proof. This is a drift
+check, not a verification of C++ semantics.
 
 ## Trusted gap
 
@@ -126,21 +139,55 @@ The schedule mutant wins at 3 and loses at the configured maximum 2.
 
 ## Build
 
-Run from `proofs/` with exactly one Lean process on the shared 7.6 GiB machine.
-Do not set `ulimit -v`. Check and cache the modules sequentially before the final
-build. The library disables asynchronous elaboration and uses one worker.
+From the repository root, run the same script used by CI:
 
 ```sh
-export LEAN_NUM_THREADS=1 LEAN_STACK_SIZE_KB=2048 LEAN_MAIN_USE_THREAD=0
-for module in Automaton Detector Game Equivariance FixedPoint Transports Reuse \
-  Backward Closure Enumeration NextPermutation LayoutBuilder PlanBuilder \
-  Pickers BooleanBoundary ActionTable Mona AdaptiveK BuilderExamples Examples \
-  Quotient CountTemporal CountGame CountEngine; do
-  timeout 300 lake env lean "SymmetryProofs/$module.lean" || exit $?
-  timeout 300 lake build "SymmetryProofs.$module" || exit $?
-done
-timeout 1500 lake build
+proofs/check.sh
 ```
+
+The script defaults to exactly one Lean process on the shared 7.6 GiB machine,
+with `LEAN_NUM_THREADS=1`, `LEAN_STACK_SIZE_KB=2048` and `LEAN_MAIN_USE_THREAD=0`.
+Do not set `ulimit -v`. These environment variables may be overridden; direct
+source checks pass the worker and stack values to Lean explicitly. The library
+keeps its one-worker, synchronous elaboration settings from `lakefile.toml`.
+Module checks remain sequential everywhere so imports are refreshed before
+their users. CI keeps these defaults; cold-cache full runs measured 1–1.5 minutes.
+
+The script rejects `sorry`, `admit`, custom `axiom`, `native_decide` and `partial`
+tokens, then elaborates and caches each module before the final build, with
+warnings as errors and timing for each step. Source elaboration always runs,
+including after an exact Lake cache hit. Before auditing, the script explicitly
+builds every discovered module target with `--rehash`, including unimported nested
+sources, so a stale cache cannot hide a source error. This project has no
+`lean_exe` targets or external Lean/golden/data inputs; tlsf-tools' executables are a separate Lake
+project and are not part of this build.
+
+After the full build, `AuditAxioms.lean` imports each library module in a separate
+Lean process, allowing executable roots to define their own global `main`, and uses
+`Lean.collectAxioms` on every declaration defined there, including private and
+generated constants. Only `propext`, `Classical.choice` and `Quot.sound` are
+allowed; `sorryAx` and generated native-decision axioms fail the check.
+CI also runs `python3 proofs/test-axiom-audit.py`: tiny compiled fixtures verify
+the allowlist and reject `native_decide`, `sorry` and custom axioms without
+building the library. Fixtures explicitly select `proofs/lean-toolchain`, and
+also cover duplicate `main` definitions, missing imports and stale unimported
+sources. On the shared machine, run these fixtures only with:
+
+```sh
+TMPDIR=/home/gaperez/scratch/leanci/tmp LEAN_NUM_THREADS=1 \
+  systemd-run --user --scope -p MemoryMax=2G -p MemorySwapMax=0 \
+  python3 proofs/test-axiom-audit.py
+```
+
+Mark **Lean required** as the required branch-protection check. It always runs
+after both `changes` and `lean`, and fails on detector/correspondence failures
+or any unsuccessful required Lean run. It accepts a skipped Lean run only when
+the successful detector explicitly returned `false`. The workflow runs both
+correspondence checkers on every PR, regardless of target branch. The detector
+uses NUL-delimited Git paths and checks both sides of renames.
+
+Run `python3 -m pytest tests/pytest/test_lean_ci.py -q` for the lightweight path,
+gate, command-failure and correspondence regressions; CI runs them in `changes`.
 
 ## Issue #454 obligations
 

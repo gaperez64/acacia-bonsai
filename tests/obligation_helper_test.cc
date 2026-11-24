@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <tuple>
 #include <spot/tl/parse.hh>
 #include <spot/twaalgos/translate.hh>
@@ -272,6 +273,22 @@ int main () {
     require (losing.value == outcome::inapplicable && !losing.controller,
              "synthesis emitted a decision without a strategy");
   }
+  // Call the helper directly: the CLI's obligation arm also retains a racing legacy fallback.
+  const auto encoding_objective = parse ("G (grant <-> ((a & b) | (!a & c) | (a & d)))");
+  std::vector<std::string> encodings;
+  for (const char* mode : {"isop", "ite", "both+ud+sub1", "both+ud+sub2"}) {
+    const auto encoded = solve (encoding_objective, {"a", "b", "c", "d"}, {"grant"}, timing::mealy,
+                                true, conversion::none, mode);
+    require (encoded.value == outcome::real && bool (encoded.controller),
+             "encoder mode failed in obligation helper");
+    require (check_controller (encoding_objective, encoded.controller),
+             "obligation encoder mode failed offline verification");
+    std::ostringstream aag;
+    spot::print_aiger (aag, encoded.controller);
+    encodings.push_back (aag.str ());
+  }
+  require (encodings[0] != encodings[1], "obligation helper ignored encoder mode");
+
   // This Moore objective becomes a false positive when registered as Mealy.
   // The offline controller checker must catch that timing mutation.
   const auto equality = parse ("G (i <-> o)");

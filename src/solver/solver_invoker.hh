@@ -28,6 +28,8 @@ struct specification_metadata {
     // Exact linked-frontend normalization, before any realizability simplification.
     std::string tlsf_normalized_objective;
     std::vector<symmetry::indexed_family_hint> tlsf_indexed_families;
+    // Declaration provenance, independent of the symmetry detector's syntax gate.
+    std::vector<symmetry::indexed_family_hint> tlsf_declared_families;
 };
 
 inline const char* translation_pref_name (TRANSLATION_PREF_T preference) {
@@ -64,4 +66,5 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               const std::string& diagnostic_source_sha256 = {},
               weakening_mode weakening = weakening_mode::basic,
               acacia::obligation::control* obligation_eligibility = nullptr,
-              std::size_t worker_count = 1);
+              std::size_t worker_count = 1, bool restriction_prepass = false,
+              const std::string& aiger_mode = "isop");
