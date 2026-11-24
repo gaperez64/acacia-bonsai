@@ -261,10 +261,13 @@ namespace {
       return fmemopen (contents, size_t (length), "r");
     }
     const char* destination = std::getenv ("ACACIA_TEST_OBLIGATION_OUTPUT");
+    const std::string output = destination ? destination : "";
+    const auto slash = output.find_last_of ('/');
     const bool controller =
         destination &&
         (std::strcmp (path, destination) == 0 ||
-         std::string_view (path).starts_with (std::string (destination) + ".acacia-private-"));
+         std::string_view (path).starts_with (
+             output.substr (0, slash == std::string::npos ? 0 : slash + 1) + ".acacia-private-"));
     // Gate before ofstream opens the controller, not during printing.
     if (controller && !obligation_entered)
       wait_legacy ();

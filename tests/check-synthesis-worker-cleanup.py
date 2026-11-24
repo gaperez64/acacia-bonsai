@@ -48,7 +48,7 @@ def registration_race(binary, root):
                     break
                 assert time.monotonic() < deadline, "worker missed parent death during registration"
                 select.select([], [], [], .001)
-            private, = Path(temporary).glob("*.acacia-private-*")
+            private, = Path(temporary).glob(".acacia-private-*")
             assert not list(private.iterdir())
             assert not (Path(temporary) / "controller.aag").exists()
         finally:
@@ -125,7 +125,7 @@ def run(binary, root, *, parent_death, helper_first):
             # No timing margin: the selected exporter is blocked and the other
             # worker has actually entered SIGSTOP before triggering either exit.
             if parent_death:
-                private, = Path(temporary).glob("*.acacia-private-*")
+                private, = Path(temporary).glob(".acacia-private-*")
                 partial = private / "0"
                 partial.write_text("partial controller\n")
                 process.kill()

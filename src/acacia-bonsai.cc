@@ -745,7 +745,10 @@ namespace {
   int run_portfolio (const arg_parse_result& arg_values, uint64_t deadline_mono_ns,
                      const sigset_t& block_set) {
     if (g_synthesis) {
-      g_controller_directory = *arg_values.synth_fname + ".acacia-private-XXXXXX";
+      const auto slash = arg_values.synth_fname->find_last_of ('/');
+      g_controller_directory =
+          arg_values.synth_fname->substr (0, slash == std::string::npos ? 0 : slash + 1) +
+          ".acacia-private-XXXXXX";
       if (!mkdtemp (g_controller_directory.data ()))
         throw std::runtime_error ("unable to create private controller directory");
       atexit (cleanup_controllers);
@@ -827,12 +830,14 @@ namespace {
     int synthesis_verdict = -1;
     sig_atomic_t last_extractor = -1;
     sig_atomic_t original_extractor = -1;
+    sig_atomic_t ready_cursor = -1, undecided_cursor = -1;
     bool suspension_pending = false, original_suspended = false;
     std::optional<uint64_t> original_scope_usage;
     uint64_t extraction_started = 0;
     const size_t slots = arg_values.arms->size () + size_t (g_obligation != nullptr);
     std::vector<uint64_t> extraction_turn (g_synthesis ? slots : 0, 250000000);
     std::vector<uint64_t> extraction_budget (g_synthesis ? slots : 0, UINT64_MAX);
+    std::vector<const char*> pending_discard (g_synthesis ? slots : 0, nullptr);
     const auto extraction_event = [&] (sig_atomic_t i, const char* reason) {
       if (g_worker_records) {
         auto record = g_worker_records[i];
@@ -840,31 +845,28 @@ namespace {
       }
     };
     const auto ready = [&] (sig_atomic_t i) {
-      return g_child_pids[i] > 0 && g_synthesis[i].order.load (std::memory_order_acquire) &&
+      return g_child_pids[i] > 0 && !pending_discard[i] &&
+             g_synthesis[i].order.load (std::memory_order_acquire) &&
              (synthesis_verdict < 0 ||
               g_synthesis[i].verdict.load (std::memory_order_acquire) == synthesis_verdict) &&
              std::ranges::find (g_rss_exhausted, i) == g_rss_exhausted.end ();
     };
     const auto undecided = [&] (sig_atomic_t i) {
-      return g_child_pids[i] > 0 && !g_synthesis[i].order.load (std::memory_order_acquire) &&
+      return g_child_pids[i] > 0 && !pending_discard[i] &&
+             !g_synthesis[i].order.load (std::memory_order_acquire) &&
              (worker_verdict[i] < 0 || worker_verdict[i] == synthesis_verdict) &&
              std::ranges::find (g_rss_exhausted, i) == g_rss_exhausted.end ();
     };
     const auto discard_extractor = [&] (sig_atomic_t i, const char* reason) {
+      if (pending_discard[i])
+        return;
+      pending_discard[i] = reason;
       const pid_t pid = g_child_pids[i];
       kill (-pid, SIGKILL);
       kill (pid, SIGKILL);
-      int discarded_status = 0;
-      rusage usage {};
-      pid_t got;
-      do {
-        got = wait4 (pid, &discarded_status, 0, &usage);
-      } while (got < 0 && errno == EINTR);
-      if (got == pid)
-        record_parent_terminal (i, discarded_status, reason, pid, &usage,
-                                g_worker_records ? acacia::phase_clock (CLOCK_MONOTONIC) : 0);
-      g_child_pids[i] = 0;
-      unlink (g_controller_paths[i].c_str ());
+    };
+    const auto discarding = [&] {
+      return std::ranges::any_of (pending_discard, [] (const char* reason) { return reason; });
     };
     const auto sole_extractor = [&] (sig_atomic_t index) {
       for (sig_atomic_t i = 0; i < g_child_count; ++i)
@@ -873,16 +875,21 @@ namespace {
       return true;
     };
     const auto admit = [&] (sig_atomic_t index) {
+      if (discarding ())
+        return false;
       if (index == original_extractor || sole_extractor (index))
         return true;
       bool no_limit = false;
       const auto limit = acacia::obligation::scope_memory ("memory.max", nullptr, &no_limit);
       const auto used = acacia::obligation::scope_memory ("memory.current");
       const auto resident = acacia::obligation::resident_bytes (g_child_pids[index]);
+      const auto latent = acacia::obligation::latent_anonymous_bytes (g_child_pids[index]);
       const auto budget = resident + std::max<uint64_t> (64 * 1024 * 1024, resident);
       // Reserve the full RSS ceiling: existing shared pages can become private through COW.
-      if (!resident || (!no_limit && !(limit && used && *used < *limit - *limit / 8 &&
-                                       budget < *limit - *limit / 8 - *used))) {
+      if (!resident || !latent ||
+          (!no_limit && !(limit && used && *used < *limit - *limit / 8 &&
+                          *latent <= *limit - *limit / 8 - *used &&
+                          budget <= *limit - *limit / 8 - *used - *latent))) {
         extraction_event (index, "scope_headroom");
         return false;
       }
@@ -895,7 +902,7 @@ namespace {
     };
     const auto next_extractor = [&] (sig_atomic_t after) {
       for (sig_atomic_t step = 1; step <= g_child_count; ++step) {
-        const sig_atomic_t i = (after + step) % g_child_count;
+        const sig_atomic_t i = (ready_cursor + step) % g_child_count;
         if (g_child_pids[i] > 0 && g_synthesis[i].order.load (std::memory_order_acquire) &&
             g_synthesis[i].verdict.load (std::memory_order_acquire) != synthesis_verdict)
           extraction_event (i, "verdict_conflict");
@@ -904,7 +911,7 @@ namespace {
       }
       // Unfinished searches get a turn only after all ready matching proofs are refused.
       for (sig_atomic_t step = 1; step <= g_child_count; ++step) {
-        const sig_atomic_t i = (after + step) % g_child_count;
+        const sig_atomic_t i = (undecided_cursor + step) % g_child_count;
         if (i != after && undecided (i) && admit (i))
           return i;
       }
@@ -920,12 +927,18 @@ namespace {
           if (other != i && g_child_pids[other] > 0 && extraction_budget[other] != UINT64_MAX)
             discard_extractor (other, "original_headroom");
         }
+        // SIGKILL may be pending in kernel I/O; retain its charges until normal reaping.
+        if (discarding ())
+          return;
       }
+      if (last_extractor >= 0 && last_extractor != i)
+        extraction_event (i, "fallback");
       synthesis_winner = last_extractor = i;
       suspension_pending = false;
       extraction_started = monotonic_ns ();
       auto& slot = g_synthesis[i];
       const bool decided = ready (i);
+      (decided ? ready_cursor : undecided_cursor) = i;
       if (decided && !slot.proceed.load (std::memory_order_acquire) && g_worker_records) {
         // Parent observations do not consume the child's live record sequence.
         auto selected = g_worker_records[i];
@@ -963,7 +976,8 @@ namespace {
       }
       if (g_synthesis)
         for (sig_atomic_t i = 0; i < g_child_count; ++i)
-          if (g_child_pids[i] > 0 && extraction_budget[i] != UINT64_MAX && sole_extractor (i)) {
+          if (g_child_pids[i] > 0 && !pending_discard[i] && extraction_budget[i] != UINT64_MAX &&
+              sole_extractor (i)) {
             if (!acacia::obligation::limit_extraction_address_space (g_child_pids[i], UINT64_MAX))
               throw std::runtime_error ("unable to restore sole extractor address space");
             extraction_budget[i] = UINT64_MAX;
@@ -1032,21 +1046,19 @@ namespace {
         else {
           nominee = next_extractor (last_extractor);
           if (nominee < 0) {
-            // After an export failure, discard searches/conflicting proofs before retrying
-            // admission.
+            // Reclaim unusable workers first; retry admission after they are reaped.
             for (sig_atomic_t i = 0; i < g_child_count; ++i)
-              if (g_child_pids[i] > 0 && !ready (i))
+              if (g_child_pids[i] > 0 && !ready (i) && !undecided (i))
                 discard_extractor (i, "extraction_irrelevant");
-#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
-            acacia::synthesis::test_after_extraction_cleanup ();
-#endif
-            nominee = next_extractor (last_extractor);
-            if (nominee < 0) {
+            if (!discarding ())
+              for (sig_atomic_t i = 0; i < g_child_count; ++i)
+                if (undecided (i))
+                  discard_extractor (i, "extraction_irrelevant");
+            if (!discarding ()) {
               stop_children ("extraction_failed");
               break;
             }
           }
-          extraction_event (nominee, "fallback");
         }
         if (nominee >= 0)
           select_extractor (nominee);
@@ -1095,7 +1107,10 @@ namespace {
           if (finished.si_pid && finished.si_code == CLD_STOPPED) {
             finished = {};
             const auto next = next_extractor (i);
-            extraction_event (next < 0 ? i : next, next < 0 ? "no_alternative" : "fallback");
+            if (next < 0)
+              extraction_event (i, "no_alternative");
+            synthesis_winner = -1;
+            suspension_pending = false;
             select_extractor (next < 0 ? i : next);
           }
         }
@@ -1194,8 +1209,20 @@ namespace {
         error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
       }
       if (reaped_index >= 0)
-        record_parent_terminal (reaped_index, status, WIFSIGNALED (status) ? "signal" : "exit",
+        record_parent_terminal (reaped_index, status,
+                                g_synthesis && pending_discard[reaped_index]
+                                    ? pending_discard[reaped_index]
+                                : WIFSIGNALED (status) ? "signal"
+                                                       : "exit",
                                 reaped, &reaped_usage, reaped_mono_ns);
+      if (reaped_index >= 0 && g_synthesis && pending_discard[reaped_index]) {
+        pending_discard[reaped_index] = nullptr;
+        unlink (g_controller_paths[reaped_index].c_str ());
+#if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
+        acacia::synthesis::test_after_extraction_cleanup ();
+#endif
+        continue;
+      }
       if (reaped == 0) {
         const uint64_t pause_ns =
             deadline_mono_ns ? std::min<uint64_t> (10000000, deadline_mono_ns - now_ns) : 10000000;
@@ -1222,9 +1249,9 @@ namespace {
         if (WIFSIGNALED (status)) {
           // One write per record: a child's own stderr line must not land inside this one.
           char line[64];
-          const int length = snprintf (line, sizeof line,
-                                       "{\"stage\":\"child_signal\",\"status\":%d}\n",
-                                       WTERMSIG (status));
+          const int length =
+              snprintf (line, sizeof line, "{\"stage\":\"child_signal\",\"status\":%d}\n",
+                        WTERMSIG (status));
           (void) ::write (STDERR_FILENO, line, size_t (length));
         }
         continue;
@@ -1297,7 +1324,6 @@ namespace {
     error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
     return EXIT_CODE_UNKNOWN;
   }
-
 }
 
 int main (int argc, char** argv) {

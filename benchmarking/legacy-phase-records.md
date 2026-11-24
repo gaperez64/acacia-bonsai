@@ -40,9 +40,11 @@ destination. Only the parent renames a closed, successful REAL controller onto
 that destination, after acceptance checks and competitor cleanup.
 `parent_extraction` records identify the worker and latched verdict (`exit_code`):
 `grace_expired` means its turn ended (initially 250 ms, doubling on each successive
-turn for that worker); `fallback` identifies the next worker resumed. Ready proofs
-matching the latched verdict have first priority. Only if none is admissible can
-an undecided worker capable of that verdict receive a turn to finish its proof.
+turn for that worker); `fallback` identifies the next worker resumed.
+Ready proofs matching the latched verdict have first priority. Only if
+none is admissible can an undecided worker capable of that verdict receive a turn
+to finish its proof.
+Each class retains a separate round-robin cursor when the other class runs.
 It receives no export permission until publishing a matching verdict, recorded as
 `parent_verdict:selected`; its extraction turn then starts. An opposite verdict
 records `verdict_conflict` and discards the worker without export permission.
@@ -52,8 +54,10 @@ the current worker running when neither class has an admissible alternative;
 was withheld because scope memory was unreadable or lacked reserve. Stopped
 workers remain charged in `memory.current`. A fallback's RSS budget is its
 admission RSS plus max(64 MiB, admission RSS). Admission requires room for this
-entire ceiling below the scope's last eighth, covering COW of shared resident pages
-as well as growth. Unreadable RSS blocks fallback admission. Before resumption,
+entire ceiling plus `max(0, VmData - RssAnon)` below the scope's last eighth,
+covering COW of shared resident pages, growth and previously mapped anonymous pages
+that can become resident without another mapping. Unreadable RSS or anonymous
+capacity blocks fallback admission. Before resumption,
 `prlimit(RLIMIT_AS)` also caps its soft address-space limit at its current mapped
 size plus that budget, preserving the hard limit and any tighter existing soft
 limit. Allocation failure is an unsuccessful worker exit. `address_space_limit_failed`
@@ -74,12 +78,13 @@ later candidates. `verdict_conflict` rejects an opposite proof. `published` iden
 the worker whose controller was atomically installed. Parent observations copy
 the worker snapshot and do not advance its live sequence. Slow extractors are
 suspended, retained and revisited; contradictory proofs never receive permission
-to export. Stop acknowledgement is polled without blocking deadline or RSS checks;
-an exit racing suspension is accepted before any handoff. After an
-extractor fails with no admissible replacement from either priority class,
+to export. Stop acknowledgement and discard reaping are polled without blocking
+deadline or RSS checks; an exit racing suspension is accepted before any handoff.
+After an extractor fails with no admissible replacement from either priority class,
 `parent_terminal` with reason `extraction_irrelevant` identifies killed/reaped
-unadmitted undecided or unusable workers.
-Admission is retried after freeing their memory; if it still fails, remaining
+unusable workers first. Admission is retried after reaping them, before reclaiming
+matching undecided workers if still necessary. Admission waits for pending discards
+to be reaped, and sole-survivor checks count them as live. If admission still fails, remaining
 workers receive `extraction_failed` and the invocation finishes UNKNOWN (or ERROR
 if a worker reported ERROR). Decision-only runs do not use this scheduling or file protocol.
 

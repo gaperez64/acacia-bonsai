@@ -54,6 +54,7 @@ namespace acacia::obligation {
   bool limit_extraction_address_space (pid_t pid, uint64_t budget) noexcept;
   uint64_t rss_share (size_t workers, memory_share policy = memory_share::equal);
   uint64_t resident_bytes (pid_t pid) noexcept;
+  std::optional<uint64_t> latent_anonymous_bytes (pid_t pid) noexcept;
   // Only this process's cgroup, or the supplied directory; no value if unbounded/unreadable.
   std::optional<uint64_t> scope_memory (const char* file, const char* directory = nullptr,
                                         bool* no_limit = nullptr) noexcept;

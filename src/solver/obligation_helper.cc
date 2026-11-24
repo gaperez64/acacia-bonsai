@@ -250,4 +250,27 @@ namespace acacia::obligation {
 #endif
     return 0;
   }
+
+  std::optional<uint64_t> latent_anonymous_bytes (pid_t pid) noexcept {
+#ifdef __linux__
+    char path[64];
+    snprintf (path, sizeof path, "/proc/%ld/status", long (pid));
+    if (FILE* file = std::fopen (path, "r")) {
+      std::optional<uint64_t> data, anonymous;
+      char line[256];
+      unsigned long long kib;
+      while (std::fgets (line, sizeof line, file)) {
+        if (std::sscanf (line, "VmData: %llu kB", &kib) == 1 && kib <= UINT64_MAX / 1024)
+          data = kib * 1024;
+        if (std::sscanf (line, "RssAnon: %llu kB", &kib) == 1 && kib <= UINT64_MAX / 1024)
+          anonymous = kib * 1024;
+      }
+      std::fclose (file);
+      // VmData includes unfaulted private writable mappings; RLIMIT_AS cannot bound their faults.
+      if (data && anonymous)
+        return *data > *anonymous ? *data - *anonymous : 0;
+    }
+#endif
+    return std::nullopt;
+  }
 }

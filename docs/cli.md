@@ -56,9 +56,10 @@ also go to stderr.
 including Moore. See the [quick start](../README.md#quick-start).
 The [Docker wrapper](../Docker/README.md#write-a-controller) can write to stdout.
 
-Portfolio workers stage controllers in a private sibling directory named
-`FILE.acacia-private-XXXXXX`. The parent publishes one closed controller by atomic
-rename, preserving an existing `FILE` on extraction failure. Normal exit, handled
+Portfolio workers stage controllers in a private directory named
+`.acacia-private-XXXXXX` in `FILE`'s parent, independent of its basename length.
+The parent publishes one closed controller by atomic rename, preserving an existing
+`FILE` on extraction failure. Normal exit, handled
 interruption and timeout remove the directory. Killing the parent with `SIGKILL`
 can leave this directory and partial private files behind; they can be removed
 after the invocation stops. The requested `FILE` is unchanged until publication.
@@ -69,15 +70,21 @@ none is admissible can an undecided worker capable of that verdict take a turn
 to finish its proof. Its export gate stays closed until it publishes a matching
 verdict; an opposite verdict is rejected. Workers capable only of the opposite
 verdict stay stopped. Turns start at 250 ms and double separately for each worker.
+Each priority class retains its own round-robin cursor across turns in the other class.
 This lets unfinished searches progress while the selected extractor stalls.
 The first extractor always resumes under its original resource policy; fallback
 workers are reclaimed if they reduce its saved scope headroom. Before a fallback
 resumes, its soft address-space limit is capped at its current mapping size plus
-its admitted RSS budget, with RSS supervision as an additional check. These same
+its admitted RSS budget, with RSS supervision as an additional check. Admission
+reserves headroom for `max(0, VmData - RssAnon)` as well as the full RSS budget,
+covering anonymous pages the worker can fault in without a new mapping. These same
 admission checks and limits apply to undecided workers. Allocation
 failure discards that worker. A sole surviving fallback regains its hard
 address-space limit and loses the additional RSS ceiling. ASan skips the
 address-space cap with a diagnostic because its shadow mapping is incompatible.
+Discarded workers are killed and reaped without blocking supervision; admission
+waits until pending discards are reaped. After an extractor fails, unusable workers are
+reclaimed and admission retried before matching unfinished searches are reclaimed.
 
 `--parity-mealy-reduction none|bisim|bisim-output|reselect` selects the parity route's
 post-extraction reduction under `-s` only. `bisim-output` uses Spot's

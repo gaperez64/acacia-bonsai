@@ -60,12 +60,16 @@ extern "C" int __wrap_bdd_ite (int f, int g, int h) {
 # include <cstdlib>
 # include <fstream>
 # include <poll.h>
+# include <sys/mman.h>
+# include <sys/resource.h>
 # include <sys/wait.h>
 # include <unistd.h>
 
 namespace acacia::synthesis {
   namespace {
     bool obligation_worker = false, parity_worker = false;
+    volatile unsigned char* latent_memory = nullptr;
+    size_t latent_size = 0;
     void allocate (const char* setting) {
       if (const char* bytes = std::getenv (setting)) {
         const auto size = std::strtoull (bytes, nullptr, 10);
@@ -116,8 +120,18 @@ namespace acacia::synthesis {
       if (std::getenv ("ACACIA_TEST_SYNTHESIS_CONFLICT"))
         verdict = EXIT_CODE_UNREAL;
       allocate ("ACACIA_TEST_SYNTHESIS_PARITY_RSS_BYTES");
+      if (const char* bytes = std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_LATENT_BYTES")) {
+        latent_size = std::strtoull (bytes, nullptr, 10);
+        void* mapping = mmap (nullptr, latent_size, PROT_READ | PROT_WRITE,
+                              MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        if (mapping == MAP_FAILED)
+          throw std::bad_alloc ();
+        latent_memory = static_cast<volatile unsigned char*> (mapping);
+      }
       if (std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_VERDICT_FD")) {
         gate ("synthesis_ready", "ACACIA_TEST_SYNTHESIS_PARITY_VERDICT_FD");
+        for (size_t i = 0; i < latent_size; i += 4096)
+          latent_memory[i] = 1;
         return;
       }
     }
@@ -199,6 +213,30 @@ namespace acacia::synthesis {
 
 #ifdef __linux__
 extern "C" int __real_waitid (idtype_t, id_t, siginfo_t*, int);
+extern "C" pid_t __real_wait4 (pid_t, int*, int, rusage*);
+extern "C" pid_t __wrap_wait4 (pid_t pid, int* status, int flags, rusage* usage) {
+  if (const char* path = std::getenv ("ACACIA_TEST_SYNTHESIS_DISCARD_PID")) {
+    std::ifstream pending (path);
+    pid_t discarded = -1;
+    pending >> discarded;
+    if (pid == discarded) {
+      static bool reported = false;
+      if (!reported) {
+        std::fprintf (stderr, "{\"stage\":\"synthesis_discard_pending\"}\n");
+        reported = true;
+      }
+      pollfd fd {std::atoi (std::getenv ("ACACIA_TEST_SYNTHESIS_DISCARD_FD")), POLLIN, 0};
+      if (!(flags & WNOHANG)) {
+        char byte;
+        while (read (fd.fd, &byte, 1) < 0 && errno == EINTR) {
+        }
+      }
+      else if (poll (&fd, 1, 0) == 0)
+        return 0;
+    }
+  }
+  return __real_wait4 (pid, status, flags, usage);
+}
 extern "C" int __wrap_waitid (idtype_t type, id_t pid, siginfo_t* info, int flags) {
   if ((flags & WSTOPPED) && std::getenv ("ACACIA_TEST_SYNTHESIS_STOP_FD")) {
     static bool reported = false;
@@ -215,5 +253,5 @@ extern "C" int __wrap_waitid (idtype_t type, id_t pid, siginfo_t* info, int flag
   }
   return __real_waitid (type, pid, info, flags);
 }
-#endif
+# endif
 #endif

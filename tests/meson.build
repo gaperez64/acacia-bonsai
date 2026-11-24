@@ -519,7 +519,7 @@ preparation_fault_cpp_args = []
 if host_machine.system () == 'linux' and (get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release'))
   preparation_fault_link_args = ['-Wl,--wrap=tlsf_convert',
                                  '-Wl,--wrap=tlsf_dpa_create', '-Wl,--wrap=bdd_ite',
-                                 '-Wl,--wrap=waitid']
+                                 '-Wl,--wrap=waitid', '-Wl,--wrap=wait4']
   preparation_fault_cpp_args = ['-DACACIA_TLSF_PREPARATION_TEST_HOOKS=1']
 endif
 game_backend_integration = executable (
