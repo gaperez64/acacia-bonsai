@@ -5,7 +5,6 @@ if have_abc
     include_directories : inc, dependencies : abc_dep, install : true, install_tag : 'cli')
   controller_writer_lib = static_library ('controller-writer', 'solver/aiger_abc.cc',
     include_directories : inc, dependencies : [spot_dep, bddx_dep],
-    cpp_args : ['-DACACIA_ABC_HELPER_PATH="' + abc_helper.full_path () + '"'],
     link_depends : abc_helper,
     install : false)
   controller_writer_dep = declare_dependency (link_with : controller_writer_lib)

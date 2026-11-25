@@ -4,6 +4,7 @@
 import argparse
 import os
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import sys
@@ -143,6 +144,73 @@ def main():
                 if not history.is_symlink():
                     assert not history.exists(), history.read_text() if history.exists() else ""
                     history.symlink_to(sentinel)
+            if backend == "backward" and RSS_SAMPLING_AVAILABLE:
+                # Exercise production discovery in a copied installation, while
+                # the real build helper still exists. No implicit build fallback.
+                with tempfile.TemporaryDirectory(dir=root) as installed:
+                    installed = Path(installed)
+                    executable = installed / "acacia-bonsai"
+                    helper = installed / "acacia-aiger-abc"
+                    shutil.copy2(binary, executable)
+
+                    def installed_synth():
+                        return synth(str(executable), "--aiger-abc", "on", ACACIA_ABC_HELPER="")
+
+                    missing = installed_synth()
+                    assert circuit.read_bytes() == original, missing
+                    verify()
+                    shutil.copy2(Path(binary).with_name(helper.name), helper)
+                    matched = installed_synth()
+                    if REQUIRE_REWRITE:
+                        assert size(circuit) < original_size, matched
+                    verify()
+                    helper.chmod(0o644)
+                    unexecutable = installed_synth()
+                    assert circuit.read_bytes() == original, unexecutable
+                    verify()
+
+                    rows = original.decode().splitlines()
+                    _, _, inputs, latches, outputs, _ = rows[0].split()
+                    inputs, latches, outputs = map(int, (inputs, latches, outputs))
+                    assert not latches and inputs > 1 and outputs > 1
+                    # Valid and smaller, with the same names, but false outputs.
+                    different = "\n".join([
+                        f"aag {inputs} {inputs} 0 {outputs} 0",
+                        *rows[1:1 + inputs], *["0"] * outputs,
+                        *[line.decode() for line in symbols(original)], ""])
+
+                    def frame(payload, version=1):
+                        return f"acacia-aiger-abc {version} {len(payload.encode())}\n{payload}"
+
+                    responses = {
+                        "valid-but-wrong-helper": different,
+                        "wrong-version": frame(different, 0),
+                        "truncated-frame": frame(different)[:-5],
+                        "extra-frame-output": frame(different) + "extra\n",
+                        "truncated-aiger": frame("aag 1 1 0 1 0\n2\n"),
+                        "extra-aiger-output": frame(different + "extra\n"),
+                        "extra-latch-symbol": frame(different + "lgarbage\n"),
+                        "extra-comment-output": frame(different + "c\nextra\n"),
+                        "wrong-format": frame(different.replace("aag ", "aig ", 1)),
+                        "unchanged-size": frame(original.decode()),
+                    }
+                    for kind in ("i", "o"):
+                        first, second = [line.decode() for line in symbols(original)
+                                         if line.startswith(kind.encode())][:2]
+                        swapped = different.replace(first, "placeholder").replace(
+                            second, first[:2] + second[2:]).replace(
+                                "placeholder", second[:2] + first[2:])
+                        responses[f"reordered-{kind}-names"] = frame(swapped)
+                    for label, response in responses.items():
+                        helper.write_text("#!/bin/sh\nprintf invoked > \"$0.ran\"\n"
+                                          f"printf %s {shlex.quote(response)} > \"$2\"\n")
+                        helper.chmod(0o755)
+                        marker = helper.with_name(helper.name + ".ran")
+                        failed = installed_synth()
+                        assert marker.read_text() == "invoked", (label, failed)
+                        marker.unlink()
+                        assert circuit.read_bytes() == original, (label, failed)
+                        verify()
             # Deliberate memory/deadline declines must retain verified bytes.
             circuit.write_bytes(original)
             declined = run(options.budget, str(circuit), str(circuit))

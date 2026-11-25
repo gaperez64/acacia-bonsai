@@ -1,98 +1,20 @@
-#include "solver/aiger_abc.hh"
+#include "solver/aiger_abc_codec.hh"
 #include <misc/util/abc_namespaces.h>
 
 #include <base/main/abcapis.h>
 #include <cstdio>
 #include <fstream>
-#include <map>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 
 namespace {
   constexpr size_t payload_bytes = acacia::synthesis::aiger_abc_payload_bytes;
-  // ABC reads binary AIGER; Spot exports ASCII. No BDD reconstruction is needed.
-  struct aiger {
-      unsigned m, i, l, o, a;
-      std::map<std::string, std::string> symbols;
-
-      aiger (std::istream& in, const char* kind) {
-        std::string line, magic, extra;
-        std::getline (in, line);
-        std::istringstream header (line);
-        if (!(header >> magic >> m >> i >> l >> o >> a) || magic != kind || header >> extra ||
-            m > payload_bytes || o > payload_bytes || uint64_t (i) + l + a != m)
-          throw std::runtime_error ("invalid AIGER header");
-      }
-
-      void header (std::ostream& out, const char* kind) const {
-        out << kind << ' ' << m << ' ' << i << ' ' << l << ' ' << o << ' ' << a << '\n';
-      }
-
-      void names (std::istream& in, std::ostream& out) {
-        std::string line;
-        while (std::getline (in, line) && line != "c") {
-          if (line.starts_with ('l'))
-            continue;
-          const auto space = line.find (' ');
-          if (space == std::string::npos || line.empty () || (line[0] != 'i' && line[0] != 'o') ||
-              !symbols.emplace (line.substr (0, space), line.substr (space + 1)).second)
-            throw std::runtime_error ("invalid AIGER symbols");
-        }
-        if (symbols.size () != size_t (i) + o)
-          throw std::runtime_error ("missing AIGER symbols");
-        for (char type : {'i', 'o'})
-          for (unsigned n = 0; n < (type == 'i' ? i : o); ++n) {
-            const auto key = type + std::to_string (n);
-            out << key << ' ' << symbols.at (key) << '\n';
-          }
-      }
-  };
-
-  unsigned literal (std::istream& in, unsigned max) {
-    unsigned value;
-    if (!(in >> value) || value > max)
-      throw std::runtime_error ("invalid AIGER literal");
-    return value;
-  }
-
-  aiger pack (const std::string& text, std::ostream& out) {
-    std::istringstream in (text);
-    aiger aig (in, "aag");
-    aig.header (out, "aig");
-    const auto read = [&] { return literal (in, 2 * aig.m + 1); };
-    for (unsigned n = 0; n < aig.i; ++n)
-      if (read () != 2 * (n + 1))
-        throw std::runtime_error ("unordered AIGER inputs");
-    for (unsigned n = 0; n < aig.l; ++n) {
-      if (read () != 2 * (aig.i + n + 1))
-        throw std::runtime_error ("unordered AIGER latches");
-      out << read () << '\n';
-    }
-    for (unsigned n = 0; n < aig.o; ++n)
-      out << read () << '\n';
-    const auto delta = [&] (unsigned value) {
-      while (value >= 128) {
-        out.put (char ((value & 127) | 128));
-        value >>= 7;
-      }
-      out.put (char (value));
-    };
-    for (unsigned n = 0; n < aig.a; ++n) {
-      const auto current = read (), left = read (), right = read ();
-      if (current != 2 * (aig.i + aig.l + n + 1) || left >= current || right >= current)
-        throw std::runtime_error ("unordered AIGER gates");
-      delta (current - std::max (left, right));
-      delta (std::max (left, right) - std::min (left, right));
-    }
-    in.ignore (1, '\n');
-    aig.names (in, out);
-    return aig;
-  }
+  using namespace acacia::synthesis::aiger_codec;
 
   std::string unpack (std::istream& in, const aiger& original) {
     aiger aig (in, "aig");
-    if (aig.i != original.i || aig.o != original.o ||
+    if (aig.i != original.i || aig.o != original.o || aig.l != original.l ||
         uint64_t (aig.a) + aig.l >= uint64_t (original.a) + original.l)
       return {};
     std::ostringstream out;
@@ -178,7 +100,7 @@ int main (int argc, char** argv) {
     if (candidate.empty () || candidate.size () > payload_bytes)
       return 5;
     std::ofstream destination (argv[2], std::ios::binary);
-    destination << candidate;
+    destination << response_prefix << candidate.size () << '\n' << candidate;
     destination.close ();
     return destination ? 0 : 5;
   } catch (const std::bad_alloc&) {

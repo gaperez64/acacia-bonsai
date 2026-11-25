@@ -1154,6 +1154,7 @@ endif
 
 if have_abc
   test ('aiger-abc', py, args : abc_test_args, suite : ['unit', 'cli', 'synthesis'],
+        env : ['ACACIA_ABC_HELPER=' + abc_helper.full_path ()],
         timeout : 90, depends : abc_test_depends)
 endif
 
