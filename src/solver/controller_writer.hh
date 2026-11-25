@@ -3,30 +3,55 @@
 #include "solver/aiger_abc.hh"
 #include "solver/synthesis_rendezvous.hh"
 
+#include <cstdio>
 #include <fstream>
 #include <spot/twaalgos/aiger.hh>
 #include <spanstream>
 #include <string>
 #include <utility>
+#include <unistd.h>
 
 namespace acacia::synthesis {
-  inline bool write_controller (const std::string& filename, std::string aiger) {
-    await_selection (EXIT_CODE_REAL);
 #if ACACIA_HAVE_ABC
-    if (aiger_abc.enabled) {
+  inline void shrink_controller (const std::string& filename, std::string aiger) {
+    try {
+      const auto original = aiger;
 # if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
       shrink_aiger (aiger, aiger_abc, test_before_aiger_abc);
 # else
       shrink_aiger (aiger, aiger_abc);
 # endif
+      if (aiger == original)
+        return;
+      auto temporary = filename + ".abc-XXXXXX";
+      const int fd = mkstemp (temporary.data ());
+      if (fd < 0)
+        return;
+      if (FILE* output = fdopen (fd, "w")) {
+        const bool written = std::fwrite (aiger.data (), 1, aiger.size (), output) == aiger.size ();
+        if (std::fclose (output) == 0 && written)
+          std::rename (temporary.c_str (), filename.c_str ());
+      } else
+        close (fd);
+      std::remove (temporary.c_str ());
+    } catch (...) {
+      // The closed Spot controller remains valid even if optional work fails or is killed.
     }
+  }
 #endif
+
+  inline bool write_controller (const std::string& filename, std::string aiger) {
+    await_selection (EXIT_CODE_REAL);
     std::ofstream synthesis_file (filename);
     synthesis_file << aiger;
     synthesis_file.close ();
     const bool success = bool (synthesis_file);
     if (success && current_slot)
       current_slot->controller_complete.store (true, std::memory_order_release);
+#if ACACIA_HAVE_ABC
+    if (success && aiger_abc.enabled)
+      shrink_controller (filename, std::move (aiger));
+#endif
     return success;
   }
 
@@ -34,8 +59,16 @@ namespace acacia::synthesis {
     await_selection (EXIT_CODE_REAL);
     if (!controller)
       return false;
+    std::ofstream synthesis_file (filename);
+    if (!synthesis_file)
+      return false;
+    spot::print_aiger (synthesis_file, controller);
+    synthesis_file.close ();
+    const bool success = bool (synthesis_file);
+    if (success && current_slot)
+      current_slot->controller_complete.store (true, std::memory_order_release);
 #if ACACIA_HAVE_ABC
-    if (aiger_abc.enabled) {
+    if (success && aiger_abc.enabled) {
       try {
         const auto payload_bytes = aiger_abc_payload_limit (aiger_abc_memory (aiger_abc));
         std::string buffer (payload_bytes, '\0');
@@ -43,21 +76,13 @@ namespace acacia::synthesis {
         spot::print_aiger (encoded, controller);
         if (encoded) {
           buffer.resize (encoded.span ().size ());
-          return write_controller (filename, std::move (buffer));
+          shrink_controller (filename, std::move (buffer));
         }
       } catch (...) {
-        // Staging is optional; retain the controller for the streaming writer below.
+        // Staging is optional; the Spot controller is already on disk.
       }
     }
 #endif
-    std::ofstream synthesis_file (filename);
-    if (!synthesis_file)
-      return false;
-    spot::print_aiger (synthesis_file, std::move (controller));
-    synthesis_file.close ();
-    const bool success = bool (synthesis_file);
-    if (success && current_slot)
-      current_slot->controller_complete.store (true, std::memory_order_release);
     return success;
   }
 }

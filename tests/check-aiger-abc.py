@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 from obligation_test_support import LegacyGate, records
 
@@ -230,6 +231,29 @@ def main():
                                    ACACIA_TEST_AIGER_STAGING_FAILURE=failure)
                     assert f"forced AIGER staging {failure}" in failed.stderr, failed
                     assert circuit.read_bytes() == original, (arm, failure, failed)
+                    verify()
+            if backend in {"backward", "parity"} and options.fault_library:
+                # Expire the real invocation deadline inside optional work,
+                # before helper supervision (staging), or with the writer stopped.
+                with tempfile.TemporaryDirectory(dir=root) as directory:
+                    helper = Path(directory) / "helper"
+                    helper.write_text('#!/bin/sh\nprintf invoked > "$0.ran"\n'
+                                      'kill -STOP "$PPID"\n')
+                    helper.chmod(0o755)
+                    env = dict(os.environ, LD_PRELOAD=options.fault_library,
+                               ACACIA_OUTER_DEADLINE_MONOTONIC=str(time.monotonic() + 1))
+                    if backend == "parity":
+                        env["ACACIA_ABC_HELPER"] = str(helper)
+                    else:
+                        env["ACACIA_TEST_AIGER_STAGING_FAILURE"] = "stall"
+                    circuit.unlink()
+                    expired = run(binary, *command, "--aiger-abc", "on", env=env)
+                    assert expired.returncode == 2 and '"stage":"deadline"' in expired.stderr, expired
+                    if backend == "parity":
+                        assert helper.with_name("helper.ran").read_text() == "invoked", expired
+                    else:
+                        assert "forced AIGER staging stall" in expired.stderr, expired
+                    assert circuit.read_bytes() == original, (arm, expired)
                     verify()
             assert sentinel.read_text() == "keep this file unchanged\n"
         assert set(root.iterdir()) == {circuit, sentinel, root / "abc.history"}

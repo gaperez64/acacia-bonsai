@@ -127,6 +127,9 @@ namespace spot {
     if (const char* failure = std::getenv ("ACACIA_TEST_AIGER_STAGING_FAILURE");
         failure && dynamic_cast<std::ospanstream*> (&os)) {
       std::fprintf (stderr, "forced AIGER staging %s\n", failure);
+      if (std::strcmp (failure, "stall") == 0)
+        while (true)
+          pause ();
       if (std::strcmp (failure, "exception") == 0)
         throw std::bad_alloc ();
       if (std::strcmp (failure, "oversize") == 0)
