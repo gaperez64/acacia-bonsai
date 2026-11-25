@@ -55,7 +55,7 @@ namespace acacia::symcount {
 
   result solve (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs,
-                const std::vector<symmetry::indexed_family_hint>& families,
+                std::span<const symmetry::declared_family> families,
                 const limits& bound = {});
 
 }  // namespace acacia::symcount

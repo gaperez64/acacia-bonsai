@@ -1146,7 +1146,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
                      ? controller_conversion::undo_input_shift
                      : controller_conversion::delay_outputs;
   }
-  auto indexed_family_hints = metadata.tlsf_indexed_families;
+  const auto families = metadata.tlsf_indexed_families ();
+  std::vector<symmetry::indexed_family_hint> indexed_family_hints (families.begin (), families.end ());
   if (check_unreal.has_value ())
     for (auto& hint : indexed_family_hints)
       hint.is_input = not hint.is_input;
