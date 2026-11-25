@@ -144,7 +144,7 @@ def main():
                 if not history.is_symlink():
                     assert not history.exists(), history.read_text() if history.exists() else ""
                     history.symlink_to(sentinel)
-            if backend == "backward" and RSS_SAMPLING_AVAILABLE:
+            if backend == "backward" and REQUIRE_REWRITE:
                 # Exercise production discovery in a copied installation, while
                 # the real build helper still exists. No implicit build fallback.
                 with tempfile.TemporaryDirectory(dir=root) as installed:
