@@ -64,6 +64,10 @@ interruption and timeout remove the directory. Killing the parent with `SIGKILL`
 can leave this directory and partial private files behind; they can be removed
 after the invocation stops. The requested `FILE` is unchanged until publication.
 Publication replaces its directory entry, including a symlink or FIFO.
+If the private directory cannot be created, workers retain master's first-proof
+selection and write directly to the requested destination, including overwriting
+an existing writable file. Failed parity writes still report UNKNOWN with complete
+worker records and no winner.
 
 Extraction turns and their memory admission are Linux-only, like optional parity
 reduction (#467): other platforms keep master's first-proof selection and recovery
@@ -108,6 +112,8 @@ Without a readable finite scope limit (`memory.max=max` included), concurrent
 fallback requires the existing parity/helper RSS-share budget to cover its
 reservation and the original's sampled growth. Otherwise the original continues
 with master's first-proof behavior and extraction-failure recovery.
+On Linux, `parent_extraction:no_budget` identifies this selection without changing
+its execution.
 The fallback's soft address-space limit is capped at its current mapping size
 plus **only the growth allowance**; RSS supervision additionally enforces
 admission RSS plus growth. The same admission checks and limits apply to undecided

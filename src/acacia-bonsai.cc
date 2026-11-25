@@ -672,7 +672,7 @@ namespace {
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
       test_child_behavior (g_child_count, deadline_mono_ns);
 #endif
-      if (g_synthesis) {
+      if (!g_controller_paths.empty ()) {
         auto private_args = arg_values;
         private_args.synth_fname = g_controller_paths[g_child_count];
         dispatch_child (arm, private_args, deadline_mono_ns, eligibility_channel);
@@ -751,11 +751,14 @@ namespace {
       g_controller_directory =
           arg_values.synth_fname->substr (0, slash == std::string::npos ? 0 : slash + 1) +
           ".acacia-private-XXXXXX";
-      if (!mkdtemp (g_controller_directory.data ()))
-        throw std::runtime_error ("unable to create private controller directory");
-      atexit (cleanup_controllers);
-      for (size_t i = 0; i < arg_values.arms->size () + size_t (g_obligation != nullptr); ++i)
-        g_controller_paths.push_back (g_controller_directory + "/" + std::to_string (i));
+      if (mkdtemp (g_controller_directory.data ())) {
+        atexit (cleanup_controllers);
+        for (size_t i = 0; i < arg_values.arms->size () + size_t (g_obligation != nullptr); ++i)
+          g_controller_paths.push_back (g_controller_directory + "/" + std::to_string (i));
+      }
+      else
+        // Retain master's selection and controller-write failure reporting without staging.
+        g_controller_directory.clear ();
     }
     // We fork process for each (UN)REAL check now and then wait for them to
     // return to process their exit codes
@@ -831,8 +834,9 @@ namespace {
     sig_atomic_t synthesis_winner = -1;
 #ifdef __linux__
     const bool extraction_fallback =
-        g_synthesis && (acacia::obligation::scope_memory ("memory.max").has_value () ||
-                        g_parity_rss_share || g_helper_rss_share);
+        !g_controller_paths.empty () &&
+        (acacia::obligation::scope_memory ("memory.max").has_value () || g_parity_rss_share ||
+         g_helper_rss_share);
 #else
     // Admission needs Linux RSS/anonymous readings; retain master's scheduling elsewhere.
     constexpr bool extraction_fallback = false;
@@ -980,6 +984,10 @@ namespace {
         acacia::worker_event (selected, "parent_verdict", "selected", synthesis_verdict);
       }
       check_acceptance ();
+#ifdef __linux__
+      if (!extraction_fallback && !g_controller_paths.empty ())
+        extraction_event (i, "no_budget");
+#endif
       if (decided)
         slot.proceed.store (true, std::memory_order_release);
       kill (-g_child_pids[i], SIGCONT);
@@ -1334,7 +1342,7 @@ namespace {
       // so we either hear from a sibling that finished cleanly, or fall
       // through to UNKNOWN below.
       if (not WIFEXITED (status)) {
-        if (g_synthesis)
+        if (!g_controller_paths.empty ())
           unlink (g_controller_paths[reaped_index].c_str ());
         if (g_synthesis && reaped_index == synthesis_winner)
           resume_after_failure ();
@@ -1367,7 +1375,7 @@ namespace {
       if (g_synthesis && reaped_index == synthesis_winner && ret != EXIT_CODE_REAL &&
           ret != EXIT_CODE_UNREAL)
         resume_after_failure ();
-      if (g_synthesis && ret != EXIT_CODE_REAL && ret != EXIT_CODE_UNREAL)
+      if (!g_controller_paths.empty () && ret != EXIT_CODE_REAL && ret != EXIT_CODE_UNREAL)
         unlink (g_controller_paths[reaped_index].c_str ());
       if (ret == EXIT_CODE_ERROR) {
         child_reported_error = true;
@@ -1384,8 +1392,9 @@ namespace {
         if (g_synthesis) {
           stop_children ("winner_cancelled");
           check_acceptance ();
-          if (ret == EXIT_CODE_REAL && rename (g_controller_paths[reaped_index].c_str (),
-                                               arg_values.synth_fname->c_str ()) != 0)
+          if (ret == EXIT_CODE_REAL && !g_controller_paths.empty () &&
+              rename (g_controller_paths[reaped_index].c_str (),
+                      arg_values.synth_fname->c_str ()) != 0)
             throw std::runtime_error ("unable to publish controller");
           if (g_worker_records && ret == EXIT_CODE_REAL) {
             auto extracted = g_worker_records[reaped_index];

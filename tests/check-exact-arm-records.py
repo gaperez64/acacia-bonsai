@@ -2,6 +2,7 @@
 """Require complete delivery evidence on solved and UNKNOWN exact-arm exits."""
 
 from pathlib import Path
+import os
 import runpy
 import sys
 import tempfile
@@ -24,7 +25,9 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G (i -> o); } }
             arm = "both:" + family
             cases = ("real-on", "real-off", "unknown")
             if family == "parity:spot":
-                cases += ("synthesis-on", "synthesis-off")
+                cases += ("synthesis-on", "synthesis-off", "unknown-not-directory")
+                if os.geteuid() != 0:
+                    cases += ("unknown-read-only", "synthesis-no-staging")
             for case in cases:
                 directory = root / (family + "-" + case)
                 directory.mkdir()
@@ -33,17 +36,40 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G (i -> o); } }
                 args = ["-T", str(source), *options]
                 if case.startswith("synthesis-"):
                     args += ["-s", str(root / (case + ".aag"))]
-                if case == "unknown":
+                if case.startswith("unknown"):
                     if family == "obligation:spot":
                         args = ["-f", "G F (i <-> o)", "-i", "i", "-o", "o", *options]
                     elif family == "parity:spot":
-                        args += ["-s", str(root / "missing" / "controller.aag")]
+                        parent = root / ("not-directory" if case.endswith("not-directory")
+                                         else "read-only" if case.endswith("read-only") else "missing")
+                        if case.endswith("not-directory"):
+                            parent.write_text("not a directory\n")
+                        elif case.endswith("read-only"):
+                            parent.mkdir()
+                            parent.chmod(0o500)
+                        args += ["-s", str(parent / "controller.aag")]
                     else:
                         args = ["-f", "1", "-i", "i", "-o", "o", *options]
-                run = support["execute"](binary, args, directory, {
-                    "LD_PRELOAD": str(acknowledgement), "ACACIA_TEST_RECORD_ACK": "1"})
-                unknown = case == "unknown"
+                if case == "synthesis-no-staging":
+                    parent = root / "existing-read-only"
+                    parent.mkdir()
+                    target = parent / "controller.aag"
+                    target.write_text("previous controller\n")
+                    parent.chmod(0o500)
+                    args[-1] = str(target)
+                try:
+                    run = support["execute"](binary, args, directory, {
+                        "LD_PRELOAD": str(acknowledgement), "ACACIA_TEST_RECORD_ACK": "1"})
+                finally:
+                    if case in {"unknown-read-only", "synthesis-no-staging"}:
+                        parent.chmod(0o700)
+                unknown = case.startswith("unknown")
                 assert run.returncode == (2 if unknown else 0), run
+                if unknown:
+                    assert not run.stdout, run
+                if case == "synthesis-no-staging":
+                    assert target.read_text().startswith("aag "), target.read_text()
+                assert not list(root.glob("**/.acacia-private-*")), list(root.iterdir())
                 records = support["rows"](directory)
                 support["complete_records"](records, expected_winners=0 if unknown else 1)
                 if family == "parity:spot":

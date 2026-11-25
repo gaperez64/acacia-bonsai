@@ -242,6 +242,10 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = repr(time.monotonic() + deadline_seconds)
         # ASan increases resident memory too; retain the simulated pressure ratios.
         scope_mib = 1024**2 * (2 if os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1" else 1)
+        # Every extraction case owns its scope budget, independent of the caller's cgroup.
+        env["ACACIA_TEST_CGROUP_DIRECTORY"] = str(root)
+        (root / "memory.max").write_text(str(5 * 1024**3))
+        (root / "memory.current").write_text(str(320 * scope_mib))
         pressure = mode in {"headroom", "scan", "growth", "failure-pressure", "failure-blocked",
                             "original-running", "turns-legacy", "turns-parity", "round-robin",
                             "latent", "failure-reclaim", "discard-pending", "descendant-pending",
@@ -253,7 +257,6 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             used = 460 if mode in {"headroom", "failure-pressure", "failure-blocked",
                                    "failure-reclaim"} else 240 if mode == "original-growing" else 320
             (root / "memory.current").write_text(str(used * scope_mib))
-            env["ACACIA_TEST_CGROUP_DIRECTORY"] = str(root)
         if mode == "scan":
             env["ACACIA_TEST_SYNTHESIS_PARITY_RSS_BYTES"] = str(160 * 1024 * 1024)
         if mode in {"growth", "cow-growth"}:
@@ -276,11 +279,11 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             env["ACACIA_TEST_SYNTHESIS_OBLIGATION_EXPORT_RSS_BYTES"] = str(32 * scope_mib)
         if mode in {"no-limit", "unreadable-limit", "no-limit-share", "unreadable-share",
                     "master-no-limit", "master-unreadable"}:
-            env["ACACIA_TEST_CGROUP_DIRECTORY"] = str(root)
             if mode.startswith("no-limit") or mode == "master-no-limit":
                 (root / "memory.max").write_text("max")
             else:
-                (root / "memory.max").write_text("unreadable")
+                (root / "memory.max").unlink()
+                (root / "memory.max").mkdir()  # A real read error, including when run as root.
         if mode == "stop-pending":
             env["ACACIA_TEST_SYNTHESIS_STOP_FD"] = str(gates[7][0])
         if mode in {"failure-pressure", "failure-reclaim", "watermark"} or rotated_watermark:
@@ -677,8 +680,11 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                     assert not any(row.get("reason") in {"scope_headroom", "rss_budget"}
                                    and row["worker_pid"] == pids["legacy"] for row in rows), rows
                 if mode in {"master-no-limit", "master-unreadable"}:
+                    budget, = [row for row in rows if row.get("event") == "parent_extraction"
+                               and row["reason"] == "no_budget"]
+                    assert budget["worker_pid"] == pids["legacy"], rows
                     assert not any(row.get("event") == "parent_extraction" and
-                                   row["reason"] != "published" for row in rows), rows
+                                   row["reason"] not in {"no_budget", "published"} for row in rows), rows
                 elif mode in {"latent", "headroom", "conflict", "no-limit", "unreadable-limit"}:
                     assert not any(row.get("reason") == "fallback" for row in rows), rows
                 else:

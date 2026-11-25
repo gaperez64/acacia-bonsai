@@ -38,6 +38,9 @@ Under `-s`, `parent_verdict` selects a proof and latches its verdict, before
 controller construction. Each worker writes a private file beside the requested
 destination. Only the parent renames a closed, successful REAL controller onto
 that destination, after acceptance checks and competitor cleanup.
+If private staging cannot be created, workers instead write to the requested
+destination under master's first-proof selection and failure recovery; failed
+parity writes still deliver `controller_export_failed` and UNKNOWN with no winner.
 The grace/fallback scheme is Linux-only, like the optional reduction in #467.
 Other platforms retain master's first-proof selection and extraction-failure
 recovery without grace turns or memory admission.
@@ -86,6 +89,8 @@ With `memory.max=max` or an unreadable scope limit, only a fallback with an exis
 finite parity/helper RSS-share budget covering its reservation and the original's
 sampled growth may run concurrently.
 Otherwise first-proof execution and failure recovery retain master's behavior.
+On Linux, `parent_extraction:no_budget` records each selection on that path, so it
+can be distinguished from an extractor with a grace period and no alternative.
 Unreadable RSS or anonymous
 capacity blocks fallback admission. Before resumption,
 `prlimit(RLIMIT_AS)` also caps its soft address-space limit at its current mapped
