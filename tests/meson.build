@@ -527,7 +527,8 @@ game_backend_integration = executable (
   'synthesis_rendezvous_hooks.cc', version_h,
   link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib, tlsf_dpa_lib],
   include_directories : inc,
-  cpp_args : ['-DACACIA_PORTFOLIO_TEST_HOOKS=1',
+  # The encoder regression also needs the verdict gates in release test builds.
+  cpp_args : ['-UNDEBUG', '-DACACIA_PORTFOLIO_TEST_HOOKS=1',
               '-DACACIA_FORWARD_SAFETY_SOLVER=1',
               '-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1'] + preparation_fault_cpp_args,
   link_args : preparation_fault_link_args,
@@ -787,9 +788,10 @@ aiger_mode_test = executable (
   include_directories : inc,
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps + [controller_writer_dep])
 test ('aiger-mode', py,
-      args : [files ('check-aiger-mode.py'), ab_exe, controller_check, aiger_mode_test],
+      args : [files ('check-aiger-mode.py'), ab_exe, controller_check, aiger_mode_test,
+              game_backend_integration],
       suite : ['unit', 'cli', 'synthesis'], timeout : 120,
-      depends : [ab_exe, controller_check, aiger_mode_test])
+      depends : [ab_exe, controller_check, aiger_mode_test, game_backend_integration])
 test ('controller-check', py,
       args : [files ('check-controller.py'), ab_exe, controller_check],
       suite : ['unit', 'synthesis'], timeout : 120,
