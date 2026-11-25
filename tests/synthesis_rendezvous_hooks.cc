@@ -166,18 +166,21 @@ namespace acacia::synthesis {
                                     : "ACACIA_TEST_SYNTHESIS_VERDICT_FD");
   }
   void test_after_selection () {
-    gate ("synthesis_selected",
-          parity_worker && std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD")
-              ? "ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD"
-          : obligation_worker && std::getenv ("ACACIA_TEST_SYNTHESIS_OBLIGATION_EXPORT_FD")
-              ? "ACACIA_TEST_SYNTHESIS_OBLIGATION_EXPORT_FD"
-              : "ACACIA_TEST_SYNTHESIS_EXPORT_FD");
+    const char* descriptor =
+        parity_worker && std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD")
+            ? "ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD"
+        : obligation_worker && std::getenv ("ACACIA_TEST_SYNTHESIS_OBLIGATION_EXPORT_FD")
+            ? "ACACIA_TEST_SYNTHESIS_OBLIGATION_EXPORT_FD"
+            : "ACACIA_TEST_SYNTHESIS_EXPORT_FD";
+    gate ("synthesis_selected", descriptor);
     for (size_t i = 0; i < cow_size; i += 4096)
       cow_memory[i] = 2;
-    if (!parity_worker && !obligation_worker &&
-        std::getenv ("ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES")) {
-      allocate ("ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES");
-      gate ("synthesis_grown", "ACACIA_TEST_SYNTHESIS_EXPORT_FD");
+    const char* growth = parity_worker       ? "ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_RSS_BYTES"
+                         : obligation_worker ? "ACACIA_TEST_SYNTHESIS_OBLIGATION_EXPORT_RSS_BYTES"
+                                             : "ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES";
+    if (std::getenv (growth)) {
+      allocate (growth);
+      gate ("synthesis_grown", descriptor);
     }
     if (const char* path = std::getenv ("ACACIA_TEST_SYNTHESIS_FAIL_PID")) {
       std::ifstream failure (path);

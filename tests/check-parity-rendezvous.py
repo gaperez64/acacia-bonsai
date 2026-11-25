@@ -218,6 +218,7 @@ def memory_limit(binary, scratch, updated_limit=None):
 
 def stalled_extractor(binary, checker, scratch, mode, *, deadline_seconds=None):
     """Pipe gates fix proof order, turns and exits without timing margins."""
+    rotated_watermark = mode in {"watermark-rotation", "watermark-recovered"}
     with tempfile.TemporaryDirectory(dir=scratch) as temporary:
         root = Path(temporary)
         target = root / ("c" * 250 if mode == "long-name" else "controller.aag")
@@ -244,7 +245,7 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
         pressure = mode in {"headroom", "scan", "growth", "failure-pressure", "failure-blocked",
                             "original-running", "turns-legacy", "turns-parity", "round-robin",
                             "latent", "failure-reclaim", "discard-pending", "descendant-pending",
-                            "cow-growth", "watermark", "original-growing"}
+                            "cow-growth", "watermark", "original-growing"} or rotated_watermark
         if pressure:
             maximum = 1024 if mode == "cow-growth" else 512
             (root / "memory.max").write_text(str(maximum * scope_mib))
@@ -268,8 +269,11 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             env["ACACIA_TEST_SYNTHESIS_PARITY_DESCENDANT"] = "1"
         if mode == "original-ceiling":
             env["ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES"] = str(128 * 1024 * 1024)
-        if mode in {"watermark", "original-growing"}:
+        if mode in {"watermark", "original-growing"} or rotated_watermark:
             env["ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES"] = str(80 * scope_mib)
+        if rotated_watermark:
+            env["ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_RSS_BYTES"] = str(8 * scope_mib)
+            env["ACACIA_TEST_SYNTHESIS_OBLIGATION_EXPORT_RSS_BYTES"] = str(32 * scope_mib)
         if mode in {"no-limit", "unreadable-limit", "no-limit-share", "unreadable-share",
                     "master-no-limit", "master-unreadable"}:
             env["ACACIA_TEST_CGROUP_DIRECTORY"] = str(root)
@@ -279,7 +283,7 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                 (root / "memory.max").write_text("unreadable")
         if mode == "stop-pending":
             env["ACACIA_TEST_SYNTHESIS_STOP_FD"] = str(gates[7][0])
-        if mode in {"failure-pressure", "failure-reclaim", "watermark"}:
+        if mode in {"failure-pressure", "failure-reclaim", "watermark"} or rotated_watermark:
             env["ACACIA_TEST_SYNTHESIS_RECLAIM_FD"] = str(gates[7][0])
         unfinished = mode in {"unfinished", "unfinished-conflict", "round-robin", "latent",
                               "failure-reclaim", "discard-pending", "descendant-pending"}
@@ -289,7 +293,7 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
         if mode not in {"alone", "master-no-limit", "master-unreadable"}:
             arms += ",both:parity:spot"
         three = mode in {"scan", "failure-pressure", "failure-blocked", "undecided", "round-robin",
-                         "turns-legacy", "turns-parity", "stop-pending", "watermark"}
+                         "turns-legacy", "turns-parity", "stop-pending", "watermark"} or rotated_watermark
         if mode == "failure-reclaim":
             arms += ",unreal:formula:backward"
             env["ACACIA_TEST_CHILD_MODES"] = f"normal,normal,wait:{gates[6][0]}"
@@ -327,13 +331,13 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             events.wait("synthesis_proved")
             events.wait("synthesis_selecting")
             # Keep unfinished proofs gated until they receive their own turn.
-            if mode not in {"alone", "master-no-limit", "master-unreadable"} and not unfinished:
+            if mode not in {"alone", "master-no-limit", "master-unreadable"} and not unfinished and not rotated_watermark:
                 release(0 if first_kind == "parity" else 1)
                 events.wait("synthesis_proved", 2)
             if mode in {"scan", "failure-blocked", "turns-legacy", "turns-parity", "stop-pending",
-                        "watermark"}:
+                        "watermark"} or rotated_watermark:
                 release(6)
-                events.wait("synthesis_proved", 3)
+                events.wait("synthesis_proved", 2 if rotated_watermark else 3)
             release(5)
             selected, = events.wait("synthesis_selected")
             assert selected["pid"] == pids[first_kind], (selected, ready)
@@ -487,7 +491,7 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                         expected = "legacy"
                 else:
                     turns = events.wait("synthesis_turn", 2)
-                    expected = "obligation" if mode == "scan" else (
+                    expected = "obligation" if mode == "scan" or rotated_watermark else (
                         "legacy" if first_kind == "parity" else "parity")
                     assert turns[-1]["worker_pid"] == pids[expected], (turns, pids)
                     events.wait("synthesis_selected", 2)
@@ -529,6 +533,55 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                             os.write(writes[4], b"x")
                             wait_record("no_alternative")
                             assert_running(pids["parity"])
+                        assert_running(pids["legacy"])
+                        assert resource.prlimit(pids["legacy"], resource.RLIMIT_AS) == original_limit
+                        release(2)
+                        expected = "legacy"
+                    elif rotated_watermark:
+                        os.write(writes[8], b"x")
+                        grown, = events.wait("synthesis_grown")
+                        assert grown["pid"] == pids["obligation"], grown
+                        release(1)
+                        os.write(writes[4], b"x")
+                        turns = events.wait("synthesis_turn", 3)
+                        assert turns[-1]["worker_pid"] == pids["parity"], turns
+                        events.wait("synthesis_proved", 3)
+                        events.wait("synthesis_selected", 3)
+                        events.wait("synthesis_turn", 4)  # B publishes its proof after resumption.
+                        wait_stopped(pids["obligation"])
+                        os.write(writes[3], b"x")
+                        grown = events.wait("synthesis_grown", 2)
+                        assert grown[-1]["pid"] == pids["parity"], grown
+                        os.write(writes[2], b"x")
+                        grown = events.wait("synthesis_grown", 3)
+                        assert grown[-1]["pid"] == pids["legacy"], grown
+                        (root / "memory.current").write_text(str(432 * scope_mib))
+                        events.wait("synthesis_reclaimed")
+                        assert not Path(f"/proc/{pids['parity']}").exists()
+                        wait_stopped(pids["obligation"])
+                        assert_running(pids["legacy"])
+                        # B's reap either restores headroom or still requires stopped A's charge.
+                        used = 240 if mode == "watermark-recovered" else 424
+                        (root / "memory.current").write_text(str(used * scope_mib))
+                        os.write(writes[7], b"x")
+                        if mode == "watermark-rotation":
+                            events.wait("synthesis_reclaimed", 2)
+                            assert not Path(f"/proc/{pids['obligation']}").exists()
+                            (root / "memory.current").write_text(str(392 * scope_mib))
+                            release(7)
+                            os.write(writes[4], b"x")
+                            wait_record("no_alternative")
+                        else:
+                            # Recovered headroom must retain A and permit another turn.
+                            os.write(writes[4], b"x")
+                            turns = events.wait("synthesis_turn", 5)
+                            assert turns[-1]["worker_pid"] == pids["obligation"], turns
+                            assert_running(pids["obligation"])
+                        victims = [row["worker_pid"] for row in records(root)
+                                   if row.get("event") == "parent_terminal"
+                                   and row.get("reason") == "scope_reserve"]
+                        assert victims == [pids[kind] for kind in (
+                            ("parity", "obligation") if mode == "watermark-rotation" else ("parity",))], victims
                         assert_running(pids["legacy"])
                         assert resource.prlimit(pids["legacy"], resource.RLIMIT_AS) == original_limit
                         release(2)
@@ -721,7 +774,8 @@ def main():
                  "turns-parity", "undecided", "original-running", "original-ceiling",
                  "sole-fallback", "stop-pending", "unfinished", "unfinished-conflict",
                  "round-robin", "latent", "discard-pending", "failure-reclaim", "long-name",
-                 "cow-growth", "descendant-pending", "watermark", "original-growing",
+                 "cow-growth", "descendant-pending", "watermark", "watermark-rotation",
+                 "watermark-recovered", "original-growing",
                  "no-limit", "unreadable-limit", "no-limit-share", "unreadable-share",
                  "master-no-limit", "master-unreadable"):
         if mode in {"growth", "cow-growth", "sole-fallback", "latent"} and os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1":

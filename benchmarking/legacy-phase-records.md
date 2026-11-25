@@ -70,10 +70,14 @@ headroom for three separate terms below the scope's last eighth: latent capacity
 allowance. The latent and COW terms cover faults in existing mappings separately
 from new mappings. Admission additionally reserves the original's nonnegative RSS
 increase since the current grace or turn began. Every 10 ms poll during concurrent
-extraction reads `memory.current`. `scope_reserve` records immediate SIGKILL and
-pending nonblocking reaping when headroom reaches the last eighth plus the active
-fallback's latent/COW/growth reservation, or a required scope reading becomes
-unavailable. New admission waits for reclamation and headroom above the last eighth
+extraction reads `memory.current` for every previously admitted fallback, whether
+running or stopped. `scope_reserve` records immediate SIGKILL and pending nonblocking
+reaping when headroom reaches the last eighth plus that fallback's latent/COW/growth
+reservation, or a required scope reading becomes unavailable. Only one victim is
+chosen before returning to supervision. After its leader and tracked descendants
+are reaped, headroom is checked again; reclamation continues until the remaining
+reservations fit or no fallback remains. The original is never a victim. New
+admission waits for reclamation and headroom above the last eighth
 plus the next candidate's reservation and the original's sampled growth. The last
 eighth cushions allocation between polls: the original would need to allocate more
 than `memory.max/8` in one poll to cross it, implausible for these extractors;
@@ -114,7 +118,8 @@ matching undecided workers if still necessary. Each discard returns to supervisi
 before choosing another victim. Admission waits for pending leaders and descendants
 to be reaped, and sole-survivor checks count them as live. If admission still fails, remaining
 workers receive `extraction_failed` and the invocation finishes UNKNOWN (or ERROR
-if a worker reported ERROR). Decision-only runs do not use this scheduling or file protocol.
+if a worker reported ERROR). Decision-only runs do not use this scheduling, its
+cgroup-memory probes or the file protocol.
 
 DECLINE means inapplicability/unsupported input or completed logical certificate
 rejection. Resource, deadline, cancellation, invalid input, integrity, internal

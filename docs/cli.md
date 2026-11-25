@@ -92,10 +92,15 @@ COW exposure (conservatively its
 admission RSS), and growth allowance `max(64 MiB, admission RSS)` below the scope's
 last eighth. Admission also reserves the original's nonnegative RSS increase since
 the current grace or turn began. During concurrent extraction, every 10 ms poll
-reads `memory.current`; headroom at or below the last eighth plus the fallback's
-latent/COW/growth reservation immediately kills that fallback, with nonblocking
-reaping. Another fallback needs headroom above the last eighth plus its own
-reservation and the original's sampled growth. The last eighth cushions growth
+reads `memory.current` for every previously admitted fallback, including stopped
+ones; headroom at or below the last eighth plus its latent/COW/growth reservation
+immediately kills one fallback, with nonblocking reaping. After its leader and
+tracked descendants are reaped, headroom is checked again; reclamation continues
+one victim at a time until the remaining reservations fit or no fallback remains.
+The original is never a reclamation victim. Rotation keeps stopped fallbacks
+available for later turns while headroom permits. Another fallback needs headroom
+above the last eighth plus its own reservation and the original's sampled growth.
+The last eighth cushions growth
 between polls; crossing it would require the original to allocate more than
 `memory.max/8` in one poll, implausible for these extractors. The fallback's own
 growth stays capped by `RLIMIT_AS`.
@@ -114,6 +119,7 @@ Discarded workers and their tracked descendants are killed and polled without
 blocking supervision; admission waits until their reclamation completes.
 If the original fails, unusable workers are reclaimed one at a time and admission
 retried before matching unfinished searches are reclaimed.
+Decision-only runs skip this scheduling and its cgroup-memory probes.
 
 `--parity-mealy-reduction none|bisim|bisim-output|reselect` selects the parity route's
 post-extraction reduction under `-s` only. `bisim-output` uses Spot's

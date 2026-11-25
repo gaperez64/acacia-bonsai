@@ -830,8 +830,9 @@ namespace {
     };
     sig_atomic_t synthesis_winner = -1;
 #ifdef __linux__
-    const bool extraction_fallback = acacia::obligation::scope_memory ("memory.max").has_value () ||
-                                     g_parity_rss_share || g_helper_rss_share;
+    const bool extraction_fallback =
+        g_synthesis && (acacia::obligation::scope_memory ("memory.max").has_value () ||
+                        g_parity_rss_share || g_helper_rss_share);
 #else
     // Admission needs Linux RSS/anonymous readings; retain master's scheduling elsewhere.
     constexpr bool extraction_fallback = false;
@@ -1042,24 +1043,29 @@ namespace {
             extraction_budget[i] = UINT64_MAX;
             extraction_event (i, "sole_extractor");
           }
-      if (g_synthesis && extraction_fallback && synthesis_winner >= 0 &&
-          synthesis_winner != original_extractor && g_child_pids[original_extractor] > 0 &&
-          !pending_discard[synthesis_winner]) {
-        const auto i = synthesis_winner;
-        const auto limit = acacia::obligation::scope_memory ("memory.max");
-        const auto used = acacia::obligation::scope_memory ("memory.current");
-        // The last eighth covers the 10 ms poll: crossing it would require the original to
-        // allocate > memory.max/8 in one poll, implausible here; fallback growth has RLIMIT_AS.
-        if (limit ? !(used && *used < *limit - *limit / 8 &&
-                      extraction_reservation[i] < *limit - *limit / 8 - *used)
-                  : !worker_rss_share (i)) {
-          extraction_event (i, "scope_reserve");
-          discard_extractor (i, "scope_reserve");
-          synthesis_winner = original_extractor;
-          suspension_pending = false;
-          start_extraction_turn (original_extractor);
+      if (g_synthesis && extraction_fallback && original_extractor >= 0 &&
+          g_child_pids[original_extractor] > 0 && !discarding ())
+        for (sig_atomic_t i = 0; i < g_child_count; ++i) {
+          // Stopped fallbacks retain their admission charges until reaped too.
+          if (i == original_extractor || g_child_pids[i] <= 0 || !extraction_reservation[i])
+            continue;
+          const auto limit = acacia::obligation::scope_memory ("memory.max");
+          const auto used = acacia::obligation::scope_memory ("memory.current");
+          // The last eighth covers the 10 ms poll: crossing it would require the original to
+          // allocate > memory.max/8 in one poll, implausible here; fallback growth has RLIMIT_AS.
+          if (limit ? !(used && *used < *limit - *limit / 8 &&
+                        extraction_reservation[i] < *limit - *limit / 8 - *used)
+                    : !worker_rss_share (i)) {
+            extraction_event (i, "scope_reserve");
+            discard_extractor (i, "scope_reserve");
+            if (synthesis_winner == i) {
+              synthesis_winner = original_extractor;
+              suspension_pending = false;
+              start_extraction_turn (original_extractor);
+            }
+            break;  // Recheck headroom after this victim and its descendants are reaped.
+          }
         }
-      }
       // Preserve master's helper-before-parity supervision order, also without -s.
       for (sig_atomic_t turn = -1; turn < g_child_count; ++turn) {
         const auto index = turn < 0 ? g_helper_index : turn;
