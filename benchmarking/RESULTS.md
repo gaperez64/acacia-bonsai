@@ -2,6 +2,19 @@
 
 [Measurement protocol](README.md) and [evidence index](evidence-index.tsv).
 
+## 2026-11-25: The GR(1) lift's axis order no longer depends on parameter names (tlsf-tools #146)
+
+Archive `lift146-20261125`. tlsf-tools #146 orders the legacy seed discovery and U window by
+the folds' structural key, keeps axes whose width provenance is incomplete, tries tied axes
+within the per-run probe cap and stops at the first target-verified proof. Candidate 72bb0b5f
+(tlsf-tools aba5ad84, binary `991de4be…`) against master 614eedb9 (`fbac6b52…`): G1, G3, G4 and
+G5 pass. The full SYNTCOMP26 screen at 17 s and 6G solves 1,395 against 1,396 with 0 verdict
+conflicts and PAR-2 5,028.8 → 5,041.0 s. The only loss, 08.ltl, and G3's one flip,
+load_balancer_unreal1 6_4, sit at the cap: five alternating runs of each binary put 08.ltl at
+15.9 vs 16.4 s and 6_4 at 16.80 vs 16.94 s, with overlapping ranges, and the candidate solves
+08.ltl on the renamed corpus. The tlsfobf-renamed screen has 0 conflicts and no plain-only
+solves.
+
 ## 2026-11-24: Bounded parity-route controller reduction cuts controller size by 3.8% (#467)
 
 Archive `strat467-20261124` (release `evidence-2026-11-24-strat467`). Under `-s`, the

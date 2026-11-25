@@ -117,6 +117,8 @@ int main () {
     const std::vector<TlsfGr1BothEventKind> expected {
         TLSF_GR1_BOTH_EVENT_SELECTED,
         TLSF_GR1_BOTH_EVENT_START,
+        TLSF_GR1_BOTH_EVENT_SELECTED,
+        TLSF_GR1_BOTH_EVENT_START,
         TLSF_GR1_BOTH_EVENT_DECLINE,
         TLSF_GR1_BOTH_EVENT_SELECTED,
         TLSF_GR1_BOTH_EVENT_START,

@@ -75,8 +75,11 @@ def main() -> None:
         rejected = root / "rejected-axis.tlsf"
         rejected.write_text(REAL.replace("extent = 5;", "aaa = 2; extent = 5;"))
         exhausted = root / "exhausted-probes.tlsf"
+        # Incomplete width provenance retains the unused axes, whose failed
+        # probes exhaust the aggregate cap before extent is tried.
         exhausted.write_text(REAL.replace("extent = 5;", "".join(
-            f"aaa{i:02d} = 3; " for i in range(13)) + "extent = 5;"))
+            f"aaa{i:02d} = 3; " for i in range(13)) + "extent = 5;").replace(
+                "response[extent];", "response[SIZEOF demand];"))
         for index, arm in enumerate(("both:gr1-lift:oxidd", "both:gr1-real-lift:oxidd",
                                      "real:param-lift:oxidd")):
             records = root / f"axis-decline-{index}"
@@ -91,7 +94,7 @@ def main() -> None:
             check_complete(records, arm, code)
 
             for label, source, expected_code, reason in (
-                ("success", rejected, 0, "aaa[1]=parameter_not_indexed"),
+                ("success", rejected, 0, "aaa=parameter_not_indexed"),
                 ("resource", exhausted, 2 if arm.startswith("real:") else 0,
                  "aaa00[1]=parameter_not_indexed"),
             ):
