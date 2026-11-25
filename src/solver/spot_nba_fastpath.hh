@@ -3,22 +3,22 @@
 #include "configuration.hh"
 #include "phase_records.hh"
 #include "solver/spot_fast_mode.hh"
+#include "solver/synthesis_outputs.hh"
+#include "solver/synthesis_rendezvous.hh"
 #include "utils/verbose.hh"
+#include <spot/twaalgos/mealy_machine.hh>
+#include <string_view>
 
+#include <bddx.h>
 #include <cassert>
 #include <chrono>
 #include <optional>
-#include <string_view>
-#include <utility>
-#include <vector>
-
-#include <bddx.h>
 #include <spot/twa/acc.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/game.hh>
-#include <spot/twaalgos/mealy_machine.hh>
 #include <spot/twaalgos/synthesis.hh>
-#include "solver/synthesis_rendezvous.hh"
+#include <utility>
+#include <vector>
 
 namespace acacia::spot_fastpath {
 
@@ -163,7 +163,7 @@ namespace acacia::spot_fastpath {
 
     auto good = complete_copy_with_rejecting_sink (negated_spec_aut);
     good->set_acceptance (1, spot::acc_cond::acc_code::cobuchi ());
-    spot::set_synthesis_outputs (good, all_outputs);
+    acacia::synthesis::set_projected_outputs (good, all_outputs);
 
     spot::synthesis_info gi;
     gi.sp = spot::synthesis_info::splittype::AUTO;

@@ -3,9 +3,11 @@
 ## Unreleased
 
 - Add `--parity-mealy-reduction`, defaulting to `reselect` under `-s` only. Reduction runs in a bounded subprocess with incumbent fallback; on all 433 realizable SYNTCOMP26 inputs it cuts total AND gates plus latches by 3.8%, shrinking 47 controllers and growing 3. The 43-input outlier panel cut 28.6% (#467, `strat467-20261124`).
-- `--aiger-mode` selects Spot's AIGER encoder (default `isop`); unsafe `+dc`
-  modes are rejected pending #466. `benchmarking/synthesis-size.py` accepts
-  per-label `--extra-args` (#280).
+- Fix overlapping component output metadata in decomposed Spot fast-path synthesis
+  and check output partitions before AIGER encoding on every route (#466).
+  Re-enable `--aiger-mode`'s `+dc` modifier; the default remains `isop`.
+- `--aiger-mode` selects Spot's AIGER encoder (default `isop`);
+  `benchmarking/synthesis-size.py` accepts per-label `--extra-args` (#280).
 
 - Existing formula workers try one-sided TLSF restrictions: input families share
   their first member (accept only UNREALIZABLE), or scalar outputs become false

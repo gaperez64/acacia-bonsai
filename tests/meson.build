@@ -749,6 +749,18 @@ controller_check = executable (
   'controller-check', 'controller_check.cc',
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
+synthesis_outputs_test = executable (
+  'synthesis-outputs-test', 'synthesis_outputs_test.cc',
+  include_directories : inc, dependencies : [spot_dep, bddx_dep])
+test ('synthesis-outputs', synthesis_outputs_test, suite : ['unit', 'synthesis'])
+foreach mode : ['isop+dc', 'ite+dc', 'ite+dc+ud', 'both+dc', 'both+dc+ud']
+  foreach input : ['two-components', 'Cockpitboard_efe2feaf', 'Gamelogic']
+    test ('dc-outputs/' + input + '/' + mode, py,
+          args : [files ('check-dc-outputs.py'), ab_exe, controller_check, mode, input],
+          suite : ['unit', 'synthesis', 'dc-outputs'], timeout : 30,
+          depends : [ab_exe, controller_check])
+  endforeach
+endforeach
 aiger_mode_test = executable (
   'aiger-mode-test', 'aiger_mode_test.cc',
   objects : ab_exe.extract_objects (

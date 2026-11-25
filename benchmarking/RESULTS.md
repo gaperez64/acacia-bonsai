@@ -2,6 +2,105 @@
 
 [Measurement protocol](README.md) and [evidence index](evidence-index.tsv).
 
+## 2026-11-25: Component output ownership restores AIGER +dc (#466)
+
+The decomposed deterministic Spot fast path attached the global output cube to
+every component. Spot's `+dc` encoder consequently granted don't-cares for other
+components' outputs. Projecting the cube onto each machine's APs repairs that
+ownership error; the original BDD dictionary can be retained. The fresh-dictionary
+replay reported under #280 also repaired the output properties, so it did not
+isolate dictionary layout as the cause.
+
+All encoding boundaries now check local output declarations, disjoint component
+output supports, and agreement with explicit output groups restricted to each
+machine's APs. These checks throw an internal error in every build before encoding.
+Unused interface outputs remain in the explicit groups and receive encoder defaults.
+The CLI accepts `+dc` again; its default remains `isop`.
+
+**Decision-path impact: yes; G3 is required before landing.** Spot 2.16.3 reads
+`synthesis-outputs` in `split_2step(aut, synthesis_info&)`. Its AUTO dispatcher
+computes unsigned `ap().size() - bdd_nodecount(output_bdd)` to choose EXPL or
+SEMISYM. The global cube can underflow that count. Projection preserves ownership
+of APs actually present, but can change game construction, solve timing, strategy
+choices and the selected portfolio arm. Formula realizability simplification runs
+earlier and does not read this property. The game solver consumes the resulting
+arena; extraction and Mealy simplification also read the property after the decision.
+The projection can affect decision performance. G3 was not run here.
+
+**Repeated #280 smoke panel.** The original 33 inputs in
+`~/scratch/enc280/panel.list` were rerun at 17 s using
+`benchmarking/synthesis-size.py`, the original TLSF map/corpus, fresh
+`tests/controller-check` invocations with 60 s / 200,000-state check budgets,
+and the original 15 modes plus `optim`. All 528 mode controllers verified.
+Two further members (omitted mode on candidate and master) also verified all 33,
+for **594/594 verified**, with no synthesis/verification failures, timeouts,
+resource limits or unsupported checks. Totals below use all the same 33 inputs.
+
+| Mode | Verified / 33 | Total ANDs+latches | vs isop |
+|---|---:|---:|---:|
+| `isop` | 33 | 24,390 | +0.00% |
+| `isop+dc` | 33 | 24,466 | +0.31% |
+| `isop+ud` | 33 | 33,908 | +39.02% |
+| `isop+dc+ud` | 33 | 33,888 | +38.94% |
+| `ite` | 33 | 86,860 | +256.13% |
+| `ite+dc` | 33 | 86,801 | +255.89% |
+| `ite+ud` | 33 | 86,879 | +256.21% |
+| `ite+dc+ud` | 33 | 86,664 | +255.33% |
+| `both` | 33 | 24,099 | -1.19% |
+| `both+dc` | 33 | 24,156 | -0.96% |
+| `both+ud` | 33 | 29,974 | +22.89% |
+| `both+dc+ud` | 33 | 32,477 | +33.16% |
+| `both+ud+sub0` | 33 | 30,013 | +23.05% |
+| `both+ud+sub1` | 33 | 28,282 | +15.96% |
+| `both+ud+sub2` | 33 | 30,015 | +23.06% |
+| `optim` | 33 | 4,485 | -81.61% |
+
+These are portfolio observations, with the current default bounded parity
+reduction; arm selection and reduction outcomes vary between runs. They are not
+same-strategy encoder comparisons or a performance gate.
+
+With omitted mode (default `isop`), **30/33 controllers are byte-identical to
+master**. The other three selected different arms:
+
+| Input | Master arm, A+L | Candidate arm, A+L |
+|---|---|---|
+| Shades2_235467da | backward, 2 | parity, 60 |
+| Cockpitboard_efe2feaf | parity Buchi fast path, 11 | decomposed fast path, 11 |
+| ltl2dba26 | backward, 26 | parity, 19 |
+
+For each of these inputs, forcing the legacy and parity arms on both versions
+produced byte-identical master/candidate controllers in all six pairs; all twelve
+controllers verified. The recorded default differences are therefore explained by
+portfolio selection. Omitted mode and explicit `isop` also differed on three
+inputs (Shades2, ltl2dba26 and ltl2dba05), again with different selected arms.
+The omitted-mode totals were 24,522 candidate and 24,471 master; the table's
+explicit-isop baseline was 24,390.
+
+Validation used master `7343ca0c` and an isolated copy of the working fix with the
+same recorded submodules (`tlsf-tools a715666d`, Posets `a4387cb7`, OxiDD
+`288a6efc`), GCC 15.3.1 and Spot 2.16.3. The validation workspace's existing
+`tlsf-tools 92467127` checkout was preserved; an initial run exposed its mismatch
+with master's native API/CLI tests, and both tests passed with the recorded pin.
+All builds and runs used `systemd-run --user --scope -p MemoryMax=5G
+-p MemorySwapMax=0`, one compile/test job and one heavy invocation at a time,
+`g3-440/env.sh`, and `TMPDIR=~/scratch/dc466/tmp`.
+
+Whole Meson unit suites passed: release **120 OK / 6 expected failures / 0 failures**
+(126 tests), diagnostic **126 OK / 6 expected failures / 0 failures** (132 tests).
+Both include fifteen new independently checked controllers: the nonliteral
+`x = a & b, y = true` example (with an unused output), Cockpitboard and Gamelogic
+under `isop+dc`, `ite+dc`, `ite+dc+ud`, `both+dc` and `both+dc+ud`.
+The new tests took 0.13-0.31 s each in release and 0.13-0.18 s in diagnostics.
+The helper test also covers immediate/deferred extraction and malformed output
+partitions. All 874 telemetry-inventory checks, Ruff and changed-line clang-format
+checks passed, as did `git diff --check`.
+
+Local evidence is under `~/scratch/dc466/`: `smoke/{rows,summary}.tsv`, per-run
+circuits/checks/phases, `fixed-arms/`, and `implementation/` build/unit logs,
+`sweep-arguments.json`, `default-comparison.json`, `fixed-arm-comparison.json`,
+source snapshot inventory and binary hashes. The diagnosis and its causal controls
+remain in `diagnosis.md`. No full corpus or G3 performance claim is made.
+
 ## 2026-11-25: The GR(1) lift's axis order no longer depends on parameter names (tlsf-tools #146)
 
 Archive `lift146-20261125`. tlsf-tools #146 orders the legacy seed discovery and U window by

@@ -5,6 +5,7 @@
 #include "solver/bdd_config.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/scope_memory.hh"
+#include "solver/synthesis_outputs.hh"
 #include "solver/synthesis_rendezvous.hh"
 #include <unordered_set>
 
@@ -142,6 +143,8 @@ namespace acacia::obligation {
       const auto mealy = spot::mtdswa_strategy_to_mealy (answer, false, false);
       if (!mealy || !mealy->num_states ())
         return {outcome::error, "strategy_export_failed"};
+      acacia::synthesis::set_projected_outputs (mealy, spot::get_synthesis_outputs (mealy));
+      acacia::synthesis::validate_output_partition ({mealy}, {outputs});
       auto circuit = spot::mealy_machines_to_aig (std::vector<spot::twa_graph_ptr> {mealy},
                                                   aiger_mode.c_str (), inputs, {outputs});
       if (convert != conversion::none)
