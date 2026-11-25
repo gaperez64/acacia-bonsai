@@ -1,6 +1,7 @@
 #include "tlsf_frontend.hh"
 #include "arg_parser.hh"
 
+#include "solver/restriction_prepass.hh"
 #include "solver/symmetry.hh"
 
 #include <algorithm>
@@ -21,9 +22,41 @@ namespace {
     return false;
   }
 
+  bool expect_family_views (const acacia::tlsf_frontend::specification& spec, bool indexed) {
+    const auto& declared = spec.metadata.tlsf_declared_families;
+    const auto hints = spec.metadata.tlsf_indexed_families ();
+    bool ok = expect ("syntax-gated count/equivariant view",
+                      spec.metadata.tlsf_has_indexed_conjunction == indexed &&
+                          hints.size () == (indexed ? declared.size () : 0) &&
+                          (!indexed || hints.data () == declared.data ()));
+    ok &= expect ("both physical declarations retained", declared.size () == 2);
+    if (declared.size () != 2)
+      return false;
+    for (size_t i = 0; i < declared.size (); ++i) {
+      const auto& family = declared[i];
+      ok &= expect ("physical element family",
+                    family.is_input == (i == 0) && family.lo == 0 && family.hi == 2 &&
+                        family.members == (i == 0 ? spec.inputs : spec.outputs) &&
+                        family.encoding == symmetry::declared_family::kind::element);
+    }
+    const auto restrictions = acacia::restriction::candidates (spec.metadata, spec.outputs, true);
+    ok &= expect ("prepass receives all declared input members",
+                  restrictions.size () == 1 && restrictions[0].values.size () == 3);
+    if (restrictions.size () == 1)
+      for (const auto& member : spec.inputs) {
+        const auto found = restrictions[0].values.find (member);
+        ok &= expect ("prepass preserves physical representative",
+                      found != restrictions[0].values.end () &&
+                          found->second == spot::formula::ap (spec.inputs.front ()));
+      }
+    ok &= expect ("prepass excludes declared output members from scalar restriction",
+                  acacia::restriction::candidates (spec.metadata, spec.outputs, false).empty ());
+    return ok;
+  }
+
 }  // namespace
 
-int main () {
+int main (int, char** argv) {
   const auto trivial = acacia::tlsf_frontend::parse (R"TLSF(
 INFO { TITLE: "no precheck" SEMANTICS: Mealy TARGET: Mealy }
 MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G o; } }
@@ -129,24 +162,11 @@ MAIN {
       expect ("indexed input/output expansion",
               indexed.inputs == std::vector<std::string> ({"req_0", "req_1", "req_2"}) and
                   indexed.outputs == std::vector<std::string> ({"grant_0", "grant_1", "grant_2"}));
-  ok &= expect ("indexed conjunction provenance hints",
-                indexed.metadata.tlsf_indexed_families.size () == 2);
-  if (indexed.metadata.tlsf_indexed_families.size () == 2) {
-    const auto& input_family = indexed.metadata.tlsf_indexed_families[0];
-    const auto& output_family = indexed.metadata.tlsf_indexed_families[1];
-    ok &= expect (
-        "indexed input hint",
-        input_family.is_input and input_family.lo == 0 and input_family.hi == 2 and
-            input_family.members == std::vector<std::string> ({"req_0", "req_1", "req_2"}));
-    ok &= expect (
-        "indexed output hint",
-        not output_family.is_input and output_family.lo == 0 and output_family.hi == 2 and
-            output_family.members == std::vector<std::string> ({"grant_0", "grant_1", "grant_2"}));
-  }
+  ok &= expect_family_views (indexed, true);
 
   bool malformed_hint_rejected = false;
   try {
-    auto malformed_hints = indexed.metadata.tlsf_indexed_families;
+    auto malformed_hints = indexed.metadata.tlsf_declared_families;
     malformed_hints.front ().members[1] = "req_9";
     auto aut = spot::make_twa_graph (spot::make_bdd_dict ());
     aut->new_states (1);
@@ -169,8 +189,12 @@ MAIN {
   GUARANTEE { G (Req[0] -> Grant[0]); }
 }
 )TLSF");
-  ok &= expect ("bus declarations alone do not create symmetry hints",
-                asymmetric_bus.metadata.tlsf_indexed_families.empty ());
+  ok &= expect_family_views (asymmetric_bus, false);
+  const auto encoded = acacia::tlsf_frontend::load (argv[1]);
+  ok &= expect ("encoded declaration stays three physical bits for five clients",
+                encoded.inputs == std::vector<std::string> ({"request_0", "request_1", "request_2"}) &&
+                    encoded.outputs == std::vector<std::string> ({"grant_0", "grant_1", "grant_2"}));
+  ok &= expect_family_views (encoded, true);
 
   const auto mixed = acacia::tlsf_frontend::parse (R"TLSF(
 INFO {

@@ -19,7 +19,7 @@ machine's APs. These checks throw an internal error in every build before encodi
 Unused interface outputs remain in the explicit groups and receive encoder defaults.
 The CLI accepts `+dc` again; its default remains `isop`.
 
-**Decision-path impact: yes; G3 is required before landing.** Spot 2.16.3 reads
+**Decision-path impact: yes; local G3 passed (below).** Spot 2.16.3 reads
 `synthesis-outputs` in `split_2step(aut, synthesis_info&)`. Its AUTO dispatcher
 computes unsigned `ap().size() - bdd_nodecount(output_bdd)` to choose EXPL or
 SEMISYM. The global cube can underflow that count. Projection preserves ownership
@@ -144,6 +144,29 @@ diagnosis with its measurement tables, replay matrix and standalone Spot
 demonstration, plus the local G3 regime patch, candidate/control landing files
 and full synthesis sweep. Inherited process environments were removed from the
 archived unit-test JSONL records before the private-data check.
+
+## 2026-11-25: Decoded client values make the encoded arbiters' count games tiny (#471, stage 1)
+
+Archive `enc471-20261125`. This is a scratch prototype; no solver code changed. simple_arbiter_enc
+and prioritized_arbiter_enc carry a client number on a binary bus, so the count arm (#458)
+declines them. Read per client value instead, with at most one requesting and one granted value
+per step, the unused codes kept distinct and client 0 fixed in the prioritized variant, their
+count-quotient games stay small:
+
+| Input | n | States | Edges | Build + solve + verify | ltlsynt / master |
+|---|---:|---:|---:|---:|---|
+| simple_arbiter_enc | 16 | 785 | 20,361 | 0.005 s | timeout 300 s / agree |
+| simple_arbiter_enc | 32 | 3,105 | 85,953 | 0.032 s | timeout 300 s / timeout 60 s |
+| prioritized_arbiter_enc | 12 | 1,182 | 31,999 | 0.009 s | agree / agree |
+| prioritized_arbiter_enc | 15 | 1,878 | 51,057 | 0.015 s | killed / timeout 60 s |
+
+All verdicts are REALIZABLE, and every decided cross-check agrees, including n=8 for both
+families. The stability guarantee compares only the low `nbits(n)` grant bits, so "decoded grant
+unchanged" is not exact at powers of two; the decoding must model such raw-bit constraints. The
+five inputs master leaves unsolved at 17 s (prioritized_arbiter_enc n=12–15, simple_arbiter_enc
+n=32) are in reach. A production version needs certified value predicates and widths from the
+frontend (#472's shared families), one-value-per-bus letter orbits in the count engine, lifting
+back to encoded outputs with a controller check, and a Lean lemma for the decoding.
 
 ## 2026-11-25: The GR(1) lift's axis order no longer depends on parameter names (tlsf-tools #146)
 

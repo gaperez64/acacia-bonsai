@@ -24,7 +24,7 @@ int main (int argc, char** argv) {
   try {
     const auto spec = acacia::tlsf_frontend::load (argv[1]);
     // Check before Spot parses a conjunction too large for its uint16_t arity.
-    for (const auto& f : spec.metadata.tlsf_indexed_families)
+    for (const auto& f : spec.metadata.tlsf_indexed_families ())
       if (f.members.size () > UINT16_MAX) {
         std::puts ("DECLINED reason=index count exceeds uint16_t");
         return EXIT_CODE_UNKNOWN;
@@ -33,7 +33,7 @@ int main (int argc, char** argv) {
     if (parsed.format_errors (std::cerr))
       return EXIT_CODE_ERROR;
     const auto r = acacia::symcount::solve (parsed.f, spec.inputs, spec.outputs,
-                                            spec.metadata.tlsf_indexed_families, bound);
+                                            spec.metadata.tlsf_indexed_families (), bound);
     const char* verdict = r.outcome == acacia::symcount::verdict::realizable     ? "REALIZABLE"
                           : r.outcome == acacia::symcount::verdict::unrealizable ? "UNREALIZABLE"
                                                                                  : "DECLINED";

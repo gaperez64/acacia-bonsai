@@ -106,15 +106,16 @@ namespace legacy {
     value.metadata.tlsf_target = source_target;
     value.metadata.tlsf_effective_target = result.target;
     value.metadata.tlsf_gr_level = result.gr_level;
-    if (has_indexed_conjunction (text)) {
-      value.metadata.tlsf_indexed_families.reserve (result.indexed_families.size ());
+    value.metadata.tlsf_has_indexed_conjunction = has_indexed_conjunction (text);
+    if (value.metadata.tlsf_has_indexed_conjunction) {
+      value.metadata.tlsf_declared_families.reserve (result.indexed_families.size ());
       for (auto& family : result.indexed_families) {
         symmetry::indexed_family_hint hint;
         hint.is_input = not family.is_output;
         hint.lo = family.lo;
         hint.hi = family.hi;
         hint.members = std::move (family.members);
-        value.metadata.tlsf_indexed_families.push_back (std::move (hint));
+        value.metadata.tlsf_declared_families.push_back (std::move (hint));
       }
     }
 
@@ -149,11 +150,11 @@ namespace {
         x.tlsf_target != y.tlsf_target || x.tlsf_effective_target != y.tlsf_effective_target ||
         x.tlsf_gr_level != y.tlsf_gr_level ||
         x.tlsf_normalized_objective != y.tlsf_normalized_objective ||
-        x.tlsf_indexed_families.size () != y.tlsf_indexed_families.size ())
+        x.tlsf_indexed_families ().size () != y.tlsf_indexed_families ().size ())
       return false;
-    for (size_t i = 0; i < x.tlsf_indexed_families.size (); ++i) {
-      const auto& f = x.tlsf_indexed_families[i];
-      const auto& g = y.tlsf_indexed_families[i];
+    for (size_t i = 0; i < x.tlsf_indexed_families ().size (); ++i) {
+      const auto& f = x.tlsf_indexed_families ()[i];
+      const auto& g = y.tlsf_indexed_families ()[i];
       if (f.is_input != g.is_input || f.lo != g.lo || f.hi != g.hi || f.members != g.members)
         return false;
     }

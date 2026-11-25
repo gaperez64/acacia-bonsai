@@ -54,7 +54,7 @@ int main () {
                         " INITIALLY { a[0]; } PRESET { b[0]; } REQUIRE { a[1]; }"
                         " ASSUME { a[2]; } ASSERT { b[1]; } GUARANTEE { b[2]; } }";
     const auto spec = acacia::tlsf_frontend::parse (source);
-    check (spec.metadata.tlsf_indexed_families.empty ());
+    check (spec.metadata.tlsf_indexed_families ().empty ());
     check (spec.metadata.tlsf_declared_families.size () == 2);
     const auto items = candidates (spec.metadata, spec.outputs, true);
     check (items.size () == 1 && items[0].values.size () == 3);
