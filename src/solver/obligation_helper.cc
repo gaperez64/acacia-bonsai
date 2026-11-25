@@ -174,6 +174,48 @@ namespace acacia::obligation {
 #endif
   }
 
+  bool limit_extraction_address_space (pid_t pid, uint64_t budget,
+                                       std::optional<rlim_t>& original_soft_limit) noexcept {
+#ifdef __SANITIZE_ADDRESS__
+    if (budget != UINT64_MAX)
+      std::fprintf (stderr,
+                    "Skipping fallback RLIMIT_AS cap and latent reserve: incompatible with ASan "
+                    "shadow memory\n");
+    return true;
+#elif defined(__linux__)
+    rlimit address {};
+    if (prlimit (pid, RLIMIT_AS, nullptr, &address) != 0)
+      return false;
+    const auto previous_soft_limit = address.rlim_cur;
+    if (budget == UINT64_MAX) {
+      if (!original_soft_limit)
+        return false;
+      address.rlim_cur = *original_soft_limit;
+    }
+    else {
+      char path[64];
+      snprintf (path, sizeof path, "/proc/%ld/statm", long (pid));
+      FILE* file = std::fopen (path, "r");
+      if (!file)
+        return false;
+      unsigned long long pages = 0;
+      const bool read = std::fscanf (file, "%llu", &pages) == 1;
+      std::fclose (file);
+      const long page_size = sysconf (_SC_PAGESIZE);
+      if (!read || page_size <= 0 || pages > (UINT64_MAX - budget) / uint64_t (page_size))
+        return false;
+      address.rlim_cur = std::min (address.rlim_cur, rlim_t (pages * page_size + budget));
+    }
+    if (prlimit (pid, RLIMIT_AS, &address, nullptr) != 0)
+      return false;
+    if (!original_soft_limit)
+      original_soft_limit = previous_soft_limit;
+    return true;
+#else
+    return false;
+#endif
+  }
+
   uint64_t rss_share (size_t workers, memory_share policy) {
     uint64_t cap = uint64_t {8} * 1024 * 1024 * 1024;
     rlimit address {};
@@ -184,12 +226,13 @@ namespace acacia::obligation {
     return rss_share_for_limit (cap, workers, policy);
   }
 
-  std::optional<uint64_t> scope_memory (const char* file, const char* directory) noexcept {
+  std::optional<uint64_t> scope_memory (const char* file, const char* directory,
+                                        bool* no_limit) noexcept {
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
     if (!directory)
       directory = std::getenv ("ACACIA_TEST_CGROUP_DIRECTORY");
 #endif
-    return acacia::scope_memory (file, directory);
+    return acacia::scope_memory (file, directory, no_limit);
   }
 
   bool rss_share_exceeded (uint64_t resident, uint64_t share, uint64_t scope_limit,
@@ -216,5 +259,31 @@ namespace acacia::obligation {
     }
 #endif
     return 0;
+  }
+
+  std::optional<uint64_t> latent_anonymous_bytes (pid_t pid) noexcept {
+#ifdef __SANITIZE_ADDRESS__
+    // Match the RLIMIT_AS exemption: VmData includes ASan's enormous writable shadow.
+    return 0;
+#elif defined(__linux__)
+    char path[64];
+    snprintf (path, sizeof path, "/proc/%ld/status", long (pid));
+    if (FILE* file = std::fopen (path, "r")) {
+      std::optional<uint64_t> data, anonymous;
+      char line[256];
+      unsigned long long kib;
+      while (std::fgets (line, sizeof line, file)) {
+        if (std::sscanf (line, "VmData: %llu kB", &kib) == 1 && kib <= UINT64_MAX / 1024)
+          data = kib * 1024;
+        if (std::sscanf (line, "RssAnon: %llu kB", &kib) == 1 && kib <= UINT64_MAX / 1024)
+          anonymous = kib * 1024;
+      }
+      std::fclose (file);
+      // VmData includes unfaulted private writable mappings; RLIMIT_AS cannot bound their faults.
+      if (data && anonymous)
+        return *data > *anonymous ? *data - *anonymous : 0;
+    }
+#endif
+    return std::nullopt;
   }
 }

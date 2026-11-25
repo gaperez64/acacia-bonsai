@@ -2,6 +2,29 @@
 
 [Measurement protocol](README.md) and [evidence index](evidence-index.tsv).
 
+## 2026-11-25: Decoded client values make the encoded arbiters' count games tiny (#471, stage 1)
+
+Archive `enc471-20261125`. This is a scratch prototype; no solver code changed. simple_arbiter_enc
+and prioritized_arbiter_enc carry a client number on a binary bus, so the count arm (#458)
+declines them. Read per client value instead, with at most one requesting and one granted value
+per step, the unused codes kept distinct and client 0 fixed in the prioritized variant, their
+count-quotient games stay small:
+
+| Input | n | States | Edges | Build + solve + verify | ltlsynt / master |
+|---|---:|---:|---:|---:|---|
+| simple_arbiter_enc | 16 | 785 | 20,361 | 0.005 s | timeout 300 s / agree |
+| simple_arbiter_enc | 32 | 3,105 | 85,953 | 0.032 s | timeout 300 s / timeout 60 s |
+| prioritized_arbiter_enc | 12 | 1,182 | 31,999 | 0.009 s | agree / agree |
+| prioritized_arbiter_enc | 15 | 1,878 | 51,057 | 0.015 s | killed / timeout 60 s |
+
+All verdicts are REALIZABLE, and every decided cross-check agrees, including n=8 for both
+families. The stability guarantee compares only the low `nbits(n)` grant bits, so "decoded grant
+unchanged" is not exact at powers of two; the decoding must model such raw-bit constraints. The
+five inputs master leaves unsolved at 17 s (prioritized_arbiter_enc n=12–15, simple_arbiter_enc
+n=32) are in reach. A production version needs certified value predicates and widths from the
+frontend (#472's shared families), one-value-per-bus letter orbits in the count engine, lifting
+back to encoded outputs with a controller check, and a Lean lemma for the decoding.
+
 ## 2026-11-25: The GR(1) lift's axis order no longer depends on parameter names (tlsf-tools #146)
 
 Archive `lift146-20261125`. tlsf-tools #146 orders the legacy seed discovery and U window by

@@ -10,6 +10,7 @@
 #include <spot/twaalgos/aiger.hh>
 #include <spot/twaalgos/mtdswa.hh>
 #include <string>
+#include <sys/resource.h>
 #include <vector>
 
 namespace acacia::obligation {
@@ -50,11 +51,15 @@ namespace acacia::obligation {
 
   // The helper's fixed RSS threshold is supervised by the parent.
   bool limit_address_space () noexcept;
+  // Save the pre-admission soft limit; UINT64_MAX restores it after capping growth.
+  bool limit_extraction_address_space (pid_t pid, uint64_t budget,
+                                       std::optional<rlim_t>& original_soft_limit) noexcept;
   uint64_t rss_share (size_t workers, memory_share policy = memory_share::equal);
   uint64_t resident_bytes (pid_t pid) noexcept;
+  std::optional<uint64_t> latent_anonymous_bytes (pid_t pid) noexcept;
   // Only this process's cgroup, or the supplied directory; no value if unbounded/unreadable.
-  std::optional<uint64_t> scope_memory (const char* file,
-                                        const char* directory = nullptr) noexcept;
+  std::optional<uint64_t> scope_memory (const char* file, const char* directory = nullptr,
+                                        bool* no_limit = nullptr) noexcept;
   // A zero scope limit selects equal sharing; otherwise allow headroom up to the last eighth.
   bool rss_share_exceeded (uint64_t resident, uint64_t share, uint64_t scope_limit = 0,
                            const char* directory = nullptr) noexcept;
