@@ -2,6 +2,62 @@
 
 [Measurement protocol](README.md) and [evidence index](evidence-index.tsv).
 
+## 2026-11-25: Deadline-aware extraction fallback repairs the selection race (#469, #475)
+
+Archive `race469-20261125`; merged as #475 (`7343ca0c`). Under `-s`, the
+supervisor could select a legacy verdict and suspend a ready parity proof while
+legacy controller extraction stalled, causing a timeout on SPIReadManag.
+The first verdict is now latched. After a grace period of a quarter of the
+remaining deadline (2 s without one, doubling on later turns), one matching
+fallback can extract concurrently with the original. Admission accounts for
+latent memory, COW exposure and growth; pressure reclaims running or stopped
+fallbacks, never the original. Private staging and a supervised publisher defer
+REALIZABLE until controller delivery succeeds. Without a finite memory budget,
+the run retains master's scheduling.
+
+**Local G3: all three rounds passed on both 180-input panels**, with zero verdict
+changes and zero coverage losses after the gate's remeasurement. The approved
+local regime used `--scope-mode instance`, a local 6G cap patch, no swap and 17 s.
+Candidate and baseline-vs-baseline control shared one master baseline (`614eedb9`).
+
+| Round / candidate | Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 |
+|---|---|---|---|
+| 1 / `4796411f` | candidate vs master | 161 → 165 / 882.278 → 733.496 s | 167 → 167 / 575.131 → 571.589 s |
+| 1 | control | 165 → 164 / 736.175 → 755.372 s | 167 → 167 / 577.017 → 572.674 s |
+| 2 / `a27a6b44` | candidate vs master | 165 → 165 / 731.120 → 732.047 s | 167 → 167 / 572.609 → 570.520 s |
+| 2 | control | 165 → 165 / 730.584 → 733.078 s | 167 → 167 / 569.492 → 568.234 s |
+| 3 / `a45ab4e5` | candidate vs master | 165 → 165 / 731.600 → 728.559 s | 167 → 167 / 575.740 → 568.860 s |
+| 3 | control | 165 → 165 / 729.241 → 731.262 s | 167 → 167 / 570.389 → 570.205 s |
+
+These are the original 17 s measurements. Round 1's control lost
+prioritized_arbiter_enc_pb_10_pe_ at the cap; the gate's 51 s remeasurement solved
+it on both sides (16.155 / 15.443 s). G3 measures decision runs; these results
+do not establish an extraction speedup.
+
+**Round-3 synthesis sweep:** all 433 REALIZABLE SYNTCOMP26 inputs were attempted
+at 17 s, with every produced controller checked by `controller-check`. Master
+and candidate each verified **363**, with **362 common** and zero failed
+verifications. Common ANDs+latches fell **480,525 → 479,519 (−0.2%)**.
+MorningMin_d6c5ac79 was gained (master timeout, candidate 5.3 s);
+prioritized_arbiter_pb_8_pe_ was lost (master 16.8 s, candidate 17.09 s).
+Round-3 G3 and this sweep ran on `a45ab4e5`; later commits only changed
+memory-pressure reclamation, publication and failure paths. The final head was
+covered by the following probes, rather than another full G3/sweep.
+
+**Final-head probes (fix14, `2fdbad42`):** three runs on each of five inputs at
+17 s verified **15/15 candidate vs 12/15 master**. MorningMin was 3/3 vs 0/3
+(candidate median 5.19 s); Core_solved and Window2 retained 13 and 18 ANDs.
+Shuffled SPIReadManag runs at 10 s verified **80/80 candidate vs 38/40 master**,
+including 40 extra candidate runs. All **145 produced controllers verified**.
+The supervised publisher's extra fork raised SPIReadManag's median from
+**54.7 → 65.3 ms**.
+
+**Known limitation:** prioritized_arbiter_pb_8_pe_ remains deadline-tight at
+17 s. Concurrent fallback can slow its original extractor enough to miss the
+cap; fix14's three candidate successes took 16.94–16.98 s. Memory supervision
+assumes the original cannot allocate more than `memory.max`/8 within one
+10 ms poll.
+
 ## 2026-11-25: An optional ABC pass cuts synthesized controllers by 21% (#280)
 
 Archives `abc280-20261124` and `abcgate-20261125`. Offline, ABC (bd23a971) ran six scripts on
