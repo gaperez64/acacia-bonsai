@@ -21,7 +21,12 @@ gave ABC #467's 200 ms budget and a 1 MiB staging cap, cut only 5.4%, because ev
 above about 10,000 ands+latches fell back. ABC now gets the smaller of 5 s and a quarter of the
 remaining deadline. simple_arbiter_enc n=10 (150,473) and prioritized_arbiter n=8 (85,633)
 still fall back. G1 and G3 pass. G3's one flip, load_balancer_unreal1 6_4, is a decision run
-that never reaches the pass and sits at the cap.
+that never reaches the pass and sits at the cap. After merging #475, which moved controller
+publication under parent supervision, a re-run against master 7343ca0c (archive
+`abcgate2-20261125`) produced 406 controllers either way and verified 372, again with no failed
+verification. On those 372 the total fell from 680,644 to 514,868 (24.4%) and the median from
+37 to 23; median synthesis time rose from 0.138 to 0.165 s and p95 from 2.16 to 2.23 s. G1 and
+G3 pass with no solve-count change.
 
 **Rejected: Spot's SAT-based Mealy minimisation** (archive `sat280-20261125`, branch
 `sat-mealy-280`). As `--parity-mealy-reduction sat|bisim-sat` with a budget of the smaller of 5 s
