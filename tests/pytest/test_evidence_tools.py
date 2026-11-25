@@ -514,6 +514,48 @@ class EvidenceToolTests(unittest.TestCase):
                 lines[row_index] = "\t".join(row)
                 index.write_text("\n".join(lines) + "\n")
 
+    def test_fetch_accepts_containing_provenance_and_rejects_mismatches(self):
+        revision = "26fccc41a9d57755ca1273b7cffe05d2f1c77c41"
+        binary = "a" * 64
+        source = self.work / "report.txt"
+        source.write_text("report\n")
+        member = source.relative_to(ROOT).as_posix()
+        cases = (
+            ("abbreviated-row", revision, revision[:8], binary, True),
+            ("abbreviated-archive", revision[:8], revision, binary, True),
+            ("seven-character-prefix", revision, revision[:7], binary, True),
+            ("extra-base", revision, f"{'b' * 40},{revision[:8]}", f"{'b' * 64},{binary}", True),
+            ("mismatched-revision", revision, "b" * 40, binary, False),
+            ("missing-binary", revision, revision, "b" * 64, False),
+            ("short-prefix", revision, revision[:6], binary, False),
+            ("short-archive-prefix", revision[:6], revision, binary, False),
+            ("nonhex-prefix", "revision-full", "revision", binary, False),
+        )
+        for campaign, archived, indexed, binaries, accepted in cases:
+            with self.subTest(campaign=campaign):
+                out = self.work / campaign
+                run("python3", "-s", str(EVIDENCE), "pack", "--campaign", campaign,
+                    "--status", "closed", "--members", member, "--out", str(out),
+                    "--source-revision", archived, "--binary-sha256", binary)
+                archive = out / f"{campaign}.tar.gz"
+                index = out / "index.tsv"
+                index.write_text((ROOT / "benchmarking/evidence-index.tsv").read_text())
+                run("python3", "-s", str(EVIDENCE), "index-add", "--index", str(index),
+                    "--campaign", campaign, "--status", "closed", "--asset-name", archive.name,
+                    "--url", archive.as_uri(), "--sha256",
+                    hashlib.sha256(archive.read_bytes()).hexdigest(), "--bytes",
+                    str(archive.stat().st_size), "--supports", "test", "--source-revisions",
+                    indexed, "--binary-sha256s", binaries)
+                dest = out / "restore"
+                result = run("python3", "-s", str(EVIDENCE), "fetch", "--index", str(index),
+                             "--campaign", campaign, "--dest", str(dest), ok=False)
+                self.assertEqual(result.returncode == 0, accepted, result.stderr)
+                if accepted:
+                    self.assertEqual((dest / member).read_bytes(), source.read_bytes())
+                else:
+                    self.assertIn("archive provenance differs from index", result.stderr)
+                    self.assertFalse(any(dest.iterdir()))
+
     def test_index_add_waits_for_lock_file(self):
         index = self.work / "locked-index.tsv"
         index.write_text((ROOT / "benchmarking/evidence-index.tsv").read_text())
