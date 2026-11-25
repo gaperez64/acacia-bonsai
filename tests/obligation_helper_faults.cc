@@ -16,6 +16,7 @@
 #include <spot/twaalgos/synthesis.hh>
 #include <spot/twaalgos/translate.hh>
 #include <stdexcept>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -261,10 +262,22 @@ namespace {
       return fmemopen (contents, size_t (length), "r");
     }
     const char* destination = std::getenv ("ACACIA_TEST_OBLIGATION_OUTPUT");
-    const bool controller = destination && std::strcmp (path, destination) == 0;
-    // Gate before ofstream opens/truncates the destination, not during printing.
-    if (controller && !obligation_entered)
+    const std::string output = destination ? destination : "";
+    const auto slash = output.find_last_of ('/');
+    const bool controller =
+        destination &&
+        (std::strcmp (path, destination) == 0 ||
+         std::string_view (path).starts_with (
+             output.substr (0, slash == std::string::npos ? 0 : slash + 1) + ".acacia-private-"));
+    // Gate private worker writes, not the publisher's destination or staging read.
+    if (controller && !obligation_entered && getpid () != supervisor_pid && mode[0] != 'r' &&
+        std::strcmp (path, destination) != 0)
       wait_legacy ();
+    struct stat destination_stat {};
+    const bool fifo = destination && std::strcmp (path, destination) == 0 && mode[0] != 'r' &&
+                      stat (path, &destination_stat) == 0 && S_ISFIFO (destination_stat.st_mode);
+    if (fifo)
+      stage_ready ("fifo-open");
     const char* fault = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
     if (controller && obligation_entered && fault && std::strcmp (fault, "export-open") == 0) {
       errno = EIO;
@@ -272,11 +285,15 @@ namespace {
     }
     using function = FILE* (*) (const char*, const char*);
     auto original = reinterpret_cast<function> (dlsym (RTLD_NEXT, symbol));
-    struct stat destination_stat {};
-    if (controller && obligation_entered && stat (path, &destination_stat) == 0 &&
-        S_ISFIFO (destination_stat.st_mode))
-      stage_ready ("fifo-open");
     FILE* file = original (path, mode);
+    if (fifo && file) {
+      stage_ready ("fifo-connected");
+      if (const char* value = std::getenv ("ACACIA_TEST_OBLIGATION_FIFO_RELEASE_FD")) {
+        char byte;
+        while (read (int (std::strtol (value, nullptr, 10)), &byte, 1) < 0 && errno == EINTR) {
+        }
+      }
+    }
     if (controller && file)
       controller_opened = true;
     return file;

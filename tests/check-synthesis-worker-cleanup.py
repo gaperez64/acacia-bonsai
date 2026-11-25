@@ -48,6 +48,10 @@ def registration_race(binary, root):
                     break
                 assert time.monotonic() < deadline, "worker missed parent death during registration"
                 select.select([], [], [], .001)
+            private, = Path(temporary).glob(".acacia-private-*")
+            private_file, = private.iterdir()
+            assert private_file.name == "0" and private_file.read_bytes() == b""
+            assert not (Path(temporary) / "controller.aag").exists()
         finally:
             if process.poll() is None:
                 process.kill()
@@ -75,6 +79,7 @@ def run(binary, root, *, parent_death, helper_first):
         env.update(ACACIA_TEST_SYNTHESIS_VERDICT_FD=str(gates[0][0]),
                    ACACIA_TEST_SYNTHESIS_OBLIGATION_VERDICT_FD=str(gates[1][0]),
                    ACACIA_TEST_SYNTHESIS_EXPORT_FD=str(gates[2][0]),
+                   ACACIA_TEST_SYNTHESIS_GRACE_FD=str(gates[2][0]),
                    ACACIA_TEST_SYNTHESIS_PUBLICATION_FD=str(gates[3][0]))
         process = subprocess.Popen(
             [binary, "-f", "G(o <-> i)", "-i", "i", "-o", "o",
@@ -121,6 +126,9 @@ def run(binary, root, *, parent_death, helper_first):
             # No timing margin: the selected exporter is blocked and the other
             # worker has actually entered SIGSTOP before triggering either exit.
             if parent_death:
+                private, = Path(temporary).glob(".acacia-private-*")
+                partial = private / "0"
+                partial.write_text("partial controller\n")
                 process.kill()
                 assert process.wait(timeout=15) == -signal.SIGKILL
                 for pid in workers:
@@ -132,6 +140,8 @@ def run(binary, root, *, parent_death, helper_first):
                             break
                         assert time.monotonic() < deadline, ("orphan survived parent death", pid)
                         select.select([], [], [], .001)
+                assert private.is_dir() and partial.read_text() == "partial controller\n"
+                assert not (Path(temporary) / "controller.aag").exists()
             else:
                 release(2)
                 publishing, = stage("synthesis_publishing", 1)

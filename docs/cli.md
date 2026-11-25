@@ -56,6 +56,82 @@ also go to stderr.
 including Moore. See the [quick start](../README.md#quick-start).
 The [Docker wrapper](../Docker/README.md#write-a-controller) can write to stdout.
 
+Portfolio workers stage controllers in a private directory named
+`.acacia-private-XXXXXX` in `FILE`'s parent, independent of its basename length.
+After cancelling and reaping competitors, the parent forks one publisher to copy
+the selected closed controller through the ordinary controller writer,
+following symlinks and truncating existing files in place. Existing inode, mode,
+ownership and hard links are preserved; new files use the caller's umask.
+The parent supervises publication under the invocation deadline and cancellation
+signals; REALIZABLE requires a successful publisher exit and a final acceptance
+check. An output-write failure, including a publisher killed by a signal, reports
+UNKNOWN with no winner. Normal exit, handled
+interruption and timeout remove the directory. Killing the parent with `SIGKILL`
+can leave this directory and partial private files behind; they can be removed
+after the invocation stops. The requested `FILE` is unchanged until publication.
+If the private directory cannot be created, workers retain master's first-proof
+selection and write directly to the requested destination, including overwriting
+an existing writable file. Failed parity writes still report UNKNOWN with complete
+worker records and no winner.
+
+Extraction turns and their memory admission are Linux-only, like optional parity
+reduction (#467): other platforms keep master's first-proof selection and recovery
+after extraction failure, without grace turns or fallback admission.
+The first selected extractor keeps running throughout, under its original resource
+policy. After its grace expires, at most one fallback runs concurrently with it.
+If admission fails, the original continues alone. The first complete, valid
+controller matching the latched verdict is published; the other workers are
+cancelled and reaped. At grace or fallback turn expiry, ready proofs matching the
+first verdict have priority. Only when none is admissible can an undecided worker
+capable of that verdict take a turn
+to finish its proof. Its export gate stays closed until it publishes a matching
+verdict; an opposite verdict is rejected. Workers capable only of the opposite
+verdict stay stopped. Each worker's first turn gets one quarter of the remaining
+invocation time from `ACACIA_OUTER_DEADLINE_MONOTONIC` (absolute monotonic seconds),
+or 2 s without a known deadline. Fallbacks rotate among themselves; later turns
+double separately for each worker, capped at the time remaining when each turn
+starts. The grace lets ordinary extraction finish before fallback starts: in the 433-input
+SYNTCOMP26 sweep, 375/401 successful master syntheses finished within 2 s
+(315 within 250 ms). These whole-run times upper-bound extraction; the Core probe's
+2.37 s extraction fits a quarter of its roughly 17 s remaining budget.
+Each priority class retains its own round-robin cursor across turns in the other class.
+This lets unfinished searches progress while the selected extractor stalls.
+Admission reserves the sum of latent anonymous capacity `max(0, VmData - RssAnon)`,
+COW exposure (conservatively its
+admission RSS), and growth allowance `max(64 MiB, admission RSS)` below the scope's
+last eighth. Admission also reserves the original's nonnegative RSS increase since
+the current grace or turn began. During concurrent extraction, every 10 ms poll
+reads `memory.current` for every previously admitted fallback, including stopped
+ones; headroom at or below the last eighth plus its latent/COW/growth reservation
+immediately kills one fallback, with nonblocking reaping. After its leader and
+tracked descendants are reaped, headroom is checked again; reclamation continues
+one victim at a time until the remaining reservations fit or no fallback remains.
+The original is never a reclamation victim. Rotation keeps stopped fallbacks
+available for later turns while headroom permits. Another fallback needs headroom
+above the last eighth plus its own reservation and the original's sampled growth.
+The last eighth cushions growth
+between polls; crossing it would require the original to allocate more than
+`memory.max/8` in one poll, implausible for these extractors. The fallback's own
+growth stays capped by `RLIMIT_AS`.
+Without a readable finite scope limit (`memory.max=max` included), concurrent
+fallback requires the existing parity/helper RSS-share budget to cover its
+reservation and the original's sampled growth. Otherwise the original continues
+with master's first-proof behavior and extraction-failure recovery.
+On Linux, `parent_extraction:no_budget` identifies this selection without changing
+its execution.
+The fallback's soft address-space limit is capped at its current mapping size
+plus **only the growth allowance**; RSS supervision additionally enforces
+admission RSS plus growth. The same admission checks and limits apply to undecided
+workers. Allocation failure discards that worker. A sole surviving fallback regains
+its pre-admission soft address-space limit and loses the additional RSS ceiling. ASan skips both the
+address-space cap and latent term with a diagnostic because its shadow mappings
+inflate `VmData`; COW/growth admission and RSS supervision remain active.
+Discarded workers and their tracked descendants are killed and polled without
+blocking supervision; admission waits until their reclamation completes.
+If the original fails, unusable workers are reclaimed one at a time and admission
+retried before matching unfinished searches are reclaimed.
+Decision-only runs skip this scheduling and its cgroup-memory probes.
+
 `--parity-mealy-reduction none|bisim|bisim-output|reselect` selects the parity route's
 post-extraction reduction under `-s` only. `bisim-output` uses Spot's
 bisimulation with output assignment (simplification level 2); `bisim` uses level 1.

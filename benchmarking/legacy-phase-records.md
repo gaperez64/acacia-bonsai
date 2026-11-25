@@ -34,6 +34,106 @@ Exit codes are 0 REAL, 1 UNREAL, 2 UNKNOWN, 3 ERROR; signals use exit_code -1.
 `route_start:equivariance` precedes recognition; `route_start:backward` starts
 ordinary solving after decline or with equivariance off.
 
+Under `-s`, `parent_verdict` selects a proof and latches its verdict, before
+controller construction. Each worker writes a private file beside the requested
+destination. After acceptance checks and competitor cleanup, the parent forks one
+publisher to copy the selected closed, successful REAL controller through the
+ordinary controller writer. The parent supervises the publisher under the invocation
+deadline and cancellation signals, kills and reaps it on cancellation, and checks
+acceptance again after its successful exit before recording a winner.
+Publication follows symlinks and truncates existing files in place, preserving
+inode, mode, ownership and hard links; new files respect the caller's umask.
+`parent_extraction:controller_export_failed` reports a failed publisher fork or write,
+nonzero exit or death by signal:
+UNKNOWN/2, empty stdout, complete records and no winner.
+If private staging cannot be created, workers instead write to the requested
+destination under master's first-proof selection and failure recovery; failed
+parity writes still deliver `controller_export_failed` and UNKNOWN with no winner.
+The grace/fallback scheme is Linux-only, like the optional reduction in #467.
+Other platforms retain master's first-proof selection and extraction-failure
+recovery without grace turns or memory admission.
+The original extractor is never suspended after selection. Its grace expiry permits
+at most one concurrent fallback; fallbacks rotate among themselves.
+`parent_extraction` records identify the worker and latched verdict (`exit_code`):
+`grace_expired` means the original's grace or a fallback's turn ended. Each worker's
+first turn gets one quarter of the time remaining before the invocation deadline supplied by
+`ACACIA_OUTER_DEADLINE_MONOTONIC`, or 2 s without a known deadline. Later turns
+double separately for each worker and are capped at the remaining time on entry.
+The 433-input SYNTCOMP26 sweep found 375/401 successful master syntheses within
+2 s, versus 315 within 250 ms; whole-run times upper-bound extraction. A quarter
+of roughly 17 s covers the Core probe's 2.37 s extraction and reserves three
+quarters for recovery. `fallback` identifies the next fallback worker resumed.
+Ready proofs matching the latched verdict have first priority. Only if
+none is admissible can an undecided worker capable of that verdict receive a turn
+to finish its proof.
+Each class retains a separate round-robin cursor when the other class runs.
+It receives no export permission until publishing a matching verdict, recorded as
+`parent_verdict:selected`; its extraction turn then starts. An opposite verdict
+records `verdict_conflict` and discards the worker without export permission.
+Workers capable only of the opposite verdict stay stopped. `no_alternative` keeps
+the current worker running when neither class has an admissible alternative;
+`scope_headroom` means a fallback's resumption
+was withheld because scope memory was unreadable or lacked reserve. Stopped
+workers remain charged in `memory.current`. A fallback's RSS budget is its
+admission RSS plus growth allowance `max(64 MiB, admission RSS)`. Admission requires
+headroom for three separate terms below the scope's last eighth: latent capacity
+`max(0, VmData - RssAnon)`, COW exposure (conservatively admission RSS), and growth
+allowance. The latent and COW terms cover faults in existing mappings separately
+from new mappings. Admission additionally reserves the original's nonnegative RSS
+increase since the current grace or turn began. Every 10 ms poll during concurrent
+extraction reads `memory.current` for every previously admitted fallback, whether
+running or stopped. `scope_reserve` records immediate SIGKILL and pending nonblocking
+reaping when headroom reaches the last eighth plus that fallback's latent/COW/growth
+reservation, or a required scope reading becomes unavailable. Only one victim is
+chosen before returning to supervision. After its leader and tracked descendants
+are reaped, headroom is checked again; reclamation continues until the remaining
+reservations fit or no fallback remains. The original is never a victim. New
+admission waits for reclamation and headroom above the last eighth
+plus the next candidate's reservation and the original's sampled growth. The last
+eighth cushions allocation between polls: the original would need to allocate more
+than `memory.max/8` in one poll to cross it, implausible for these extractors;
+fallback growth remains capped by `RLIMIT_AS`.
+With `memory.max=max` or an unreadable scope limit, only a fallback with an existing
+finite parity/helper RSS-share budget covering its reservation and the original's
+sampled growth may run concurrently.
+Otherwise first-proof execution and failure recovery retain master's behavior.
+On Linux, `parent_extraction:no_budget` records each selection on that path, so it
+can be distinguished from an extractor with a grace period and no alternative.
+Unreadable RSS or anonymous
+capacity blocks fallback admission. Before resumption,
+`prlimit(RLIMIT_AS)` also caps its soft address-space limit at its current mapped
+size plus **only the growth allowance**, preserving the hard limit and any tighter existing soft
+limit. Allocation failure is an unsuccessful worker exit. `address_space_limit_failed`
+refuses admission if the cap cannot be installed. ASan skips both the cap and latent
+term with a diagnostic: writable shadow mappings inflate `VmData`. COW/growth
+admission and the existing parent RSS supervisor remain active. The supervisor
+enforces the budget; `rss_budget` marks termination of a fallback exceeding it.
+Undecided workers undergo the same admission, address-space cap and RSS supervision
+as fallback extractors, including sole-survivor cap restoration.
+The first selected extractor never needs admission and keeps running under its
+original resource policy, including when fallback admission fails. If a fallback
+is the only surviving worker, `sole_extractor` removes its additional RSS budget
+and restores its saved pre-admission soft address-space limit. Exits of suspended
+workers are reaped by the ordinary supervisor too. Failed and reclaimed workers' partial files are removed
+to release their file charges. Refused candidates do not block
+later candidates. `verdict_conflict` rejects an opposite proof. `published` identifies
+the worker whose controller was successfully written to the destination. Parent
+observations copy the worker snapshot and do not advance its live sequence. Slow fallbacks are
+suspended, retained and revisited; contradictory proofs never receive permission
+to export. Stop acknowledgement, discard reaping and tracked descendant reaping are polled without blocking
+deadline or RSS checks; an exit racing suspension is accepted before any handoff.
+Either running extractor can publish the first complete, valid controller of the
+latched verdict; the rest are cancelled and reaped.
+After the original fails with no admissible replacement from either priority class,
+`parent_terminal` with reason `extraction_irrelevant` identifies killed/reaped
+unusable workers first. Admission is retried after reaping them, before reclaiming
+matching undecided workers if still necessary. Each discard returns to supervision
+before choosing another victim. Admission waits for pending leaders and descendants
+to be reaped, and sole-survivor checks count them as live. If admission still fails, remaining
+workers receive `extraction_failed` and the invocation finishes UNKNOWN (or ERROR
+if a worker reported ERROR). Decision-only runs do not use this scheduling, its
+cgroup-memory probes or the file protocol.
+
 DECLINE means inapplicability/unsupported input or completed logical certificate
 rejection. Resource, deadline, cancellation, invalid input, integrity, internal
 and operational failures are STOPPED with typed causes. Finite K exhaustion is
