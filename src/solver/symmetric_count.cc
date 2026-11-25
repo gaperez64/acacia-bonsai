@@ -777,7 +777,7 @@ namespace acacia::symcount {
 
   result solve (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs,
-                const std::vector<symmetry::indexed_family_hint>& families, const limits& bound) {
+                std::span<const symmetry::declared_family> families, const limits& bound) {
     if (deadline_expired (bound))
       return {verdict::declined, "deadline"};
     // Try each family size, largest first; families of that size are indexed together.

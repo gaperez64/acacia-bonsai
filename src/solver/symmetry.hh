@@ -304,7 +304,7 @@ namespace symmetry {
 
   inline indexed_ap_analysis analyze_indexed_aps (const spot::twa_graph_ptr& aut,
                                                   bdd all_inputs, bdd all_outputs,
-                                                  const std::vector<indexed_family_hint>& hints = {}) {
+                                                  std::span<const declared_family> hints = {}) {
     indexed_ap_analysis analysis;
     auto dict = aut->get_dict ();
 
