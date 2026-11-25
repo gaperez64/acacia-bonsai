@@ -4,10 +4,12 @@
 #include "solver/synthesis_rendezvous.hh"
 
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <spot/twaalgos/aiger.hh>
 #include <spanstream>
 #include <string>
+#include <sys/stat.h>
 #include <utility>
 #include <unistd.h>
 
@@ -23,14 +25,19 @@ namespace acacia::synthesis {
 # endif
       if (aiger == original)
         return;
-      auto temporary = filename + ".abc-XXXXXX";
+      const auto target = std::filesystem::canonical (filename).string ();
+      struct stat metadata;
+      if (stat (target.c_str (), &metadata) != 0)
+        return;
+      auto temporary = target + ".abc-XXXXXX";
       const int fd = mkstemp (temporary.data ());
       if (fd < 0)
         return;
       if (FILE* output = fdopen (fd, "w")) {
-        const bool written = std::fwrite (aiger.data (), 1, aiger.size (), output) == aiger.size ();
+        const bool written = std::fwrite (aiger.data (), 1, aiger.size (), output) == aiger.size ()
+          && fchmod (fd, metadata.st_mode & 0777) == 0;
         if (std::fclose (output) == 0 && written)
-          std::rename (temporary.c_str (), filename.c_str ());
+          std::rename (temporary.c_str (), target.c_str ());
       } else
         close (fd);
       std::remove (temporary.c_str ());

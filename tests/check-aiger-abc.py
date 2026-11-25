@@ -129,8 +129,10 @@ def main():
             synth(binary, "--aiger-abc", "off")
             original, original_size = circuit.read_bytes(), size(circuit)
             verify()
+            circuit.chmod(0o640)
             for mode in (("--aiger-abc", "on"), ()):
                 on = synth(binary, *mode)
+                assert circuit.stat().st_mode & 0o777 == 0o640, arm
                 assert size(circuit) <= original_size, (arm, on, circuit.read_text())
                 assert symbols(circuit.read_bytes()) == symbols(original), arm
                 if size(circuit) == original_size:
@@ -145,6 +147,20 @@ def main():
                 if not history.is_symlink():
                     assert not history.exists(), history.read_text() if history.exists() else ""
                     history.symlink_to(sentinel)
+            with tempfile.TemporaryDirectory(dir=root) as directory:
+                target = Path(directory) / "target.aag"
+                circuit.rename(target)
+                link = target.relative_to(root)
+                circuit.symlink_to(link)
+                on = synth(binary, "--aiger-abc", "on")
+                assert circuit.is_symlink() and circuit.readlink() == link, (arm, on)
+                assert circuit.read_bytes() == target.read_bytes(), arm
+                assert target.stat().st_mode & 0o777 == 0o640, arm
+                if REQUIRE_REWRITE:
+                    assert size(target) < original_size, (arm, on)
+                verify()
+                circuit.unlink()
+                target.rename(circuit)
             if backend == "backward" and REQUIRE_REWRITE:
                 # Exercise production discovery in a copied installation, while
                 # the real build helper still exists. No implicit build fallback.
