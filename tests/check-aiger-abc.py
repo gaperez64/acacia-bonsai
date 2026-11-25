@@ -2,6 +2,7 @@
 """Check ABC grammar, circuit reduction, independent verification and fallback."""
 
 import argparse
+from contextlib import contextmanager
 import os
 from pathlib import Path
 import shlex
@@ -32,13 +33,25 @@ def symbols(text):
     return [line for line in text.splitlines() if line.startswith((b"i", b"o"))]
 
 
-def synthesize(binary, command, root, backend, library, **overrides):
+@contextmanager
+def private_staging(root, enabled=True):
+    mode = root.stat().st_mode & 0o777
+    if not enabled:
+        root.chmod(0o500)
+    try:
+        yield
+    finally:
+        root.chmod(mode)
+
+
+def synthesize(binary, command, root, backend, library, *, staging=True, **overrides):
     with tempfile.TemporaryDirectory(dir=root) as directory:
         phases = Path(directory)
         env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases), **overrides)
         if library:
             env["LD_PRELOAD"] = library
-        with LegacyGate(env, backend == "obligation" and bool(library)) as gate:
+        with private_staging(root, staging), \
+                LegacyGate(env, backend == "obligation" and bool(library)) as gate:
             with subprocess.Popen([binary, *command], cwd=root, env=env,
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                                   pass_fds=gate.descriptors) as process:
@@ -161,6 +174,54 @@ def main():
                 verify()
                 circuit.unlink()
                 target.rename(circuit)
+            if RSS_SAMPLING_AVAILABLE:
+                with tempfile.TemporaryDirectory(dir=root) as directory:
+                    directory = Path(directory)
+                    snapshot = directory / "spot.aag"
+                    snapshot.write_bytes(original)
+                    helper = directory / "helper"
+                    marker = directory / "invoked"
+                    real_helper = Path(binary).with_name("acacia-aiger-abc")
+                    helper.write_text(f'''#!{sys.executable}
+import json, os, sys
+from pathlib import Path
+assert Path({str(circuit)!r}).read_bytes() == Path({str(snapshot)!r}).read_bytes()
+rows = [json.loads(line) for path in Path(os.environ["ACACIA_PHASE_RECORDS"]).glob("*.jsonl")
+        for line in path.read_text().splitlines() if line.endswith("}}")]
+workers = [row["worker_pid"] for row in rows if row.get("event") == "worker_spawn"]
+assert workers and os.getppid() not in workers
+assert all(not Path(f"/proc/{{pid}}").exists() for pid in workers)
+Path({str(marker)!r}).write_text("publisher after worker cleanup")
+os.execv({str(real_helper)!r}, [{str(real_helper)!r}, *sys.argv[1:]])
+''')
+                    helper.chmod(0o755)
+                    circuit.unlink()
+                    published = synth(binary, "--aiger-abc", "on", ACACIA_ABC_HELPER=str(helper))
+                    assert marker.exists() or not REQUIRE_REWRITE, published
+                    verify()
+            if backend == "backward":
+                # Atomic ABC replacement must not detach hard links or replace a FIFO.
+                alias = root / "alias.aag"
+                alias.hardlink_to(circuit)
+                inode = circuit.stat().st_ino
+                synth(binary, "--aiger-abc", "on")
+                assert circuit.stat().st_ino == alias.stat().st_ino == inode
+                assert circuit.read_bytes() == alias.read_bytes() == original
+                alias.unlink()
+                fifo = root / "controller.fifo"
+                os.mkfifo(fifo)
+                with subprocess.Popen(["cat", str(fifo)], stdout=subprocess.PIPE) as reader:
+                    try:
+                        fifo_command = [str(fifo) if arg == str(circuit) else arg for arg in command]
+                        synthesize(binary, [*fifo_command, "--aiger-abc", "on"], root,
+                                   backend, options.fault_library)
+                        received, _ = reader.communicate(timeout=15)
+                        assert reader.returncode == 0 and received == original and fifo.is_fifo()
+                    finally:
+                        if reader.poll() is None:
+                            reader.kill()
+                            reader.communicate()
+                fifo.unlink()
             if backend == "backward" and REQUIRE_REWRITE:
                 # Exercise production discovery in a copied installation, while
                 # the real build helper still exists. No implicit build fallback.
@@ -242,8 +303,11 @@ def main():
                 assert circuit.read_bytes() == original, (arm, failed)
                 verify()
             if backend in {"backward", "obligation"} and options.fault_library:
+                # Without private staging the selected worker still serializes
+                # Spot's AIG for ABC; preserve coverage of that fallback writer.
                 for failure in ("exception", "stream", "oversize"):
                     failed = synth(binary, "--aiger-abc", "on",
+                                   staging=False,
                                    ACACIA_TEST_AIGER_STAGING_FAILURE=failure)
                     assert f"forced AIGER staging {failure}" in failed.stderr, failed
                     assert circuit.read_bytes() == original, (arm, failure, failed)
@@ -254,6 +318,7 @@ def main():
                 with tempfile.TemporaryDirectory(dir=root) as directory:
                     helper = Path(directory) / "helper"
                     helper.write_text('#!/bin/sh\nprintf invoked > "$0.ran"\n'
+                                      'printf "%s %s" "$$" "$PPID" > "$0.pids"\n'
                                       'kill -STOP "$PPID"\n')
                     helper.chmod(0o755)
                     env = dict(os.environ, LD_PRELOAD=options.fault_library,
@@ -262,11 +327,18 @@ def main():
                         env["ACACIA_ABC_HELPER"] = str(helper)
                     else:
                         env["ACACIA_TEST_AIGER_STAGING_FAILURE"] = "stall"
-                    circuit.unlink()
-                    expired = run(binary, *command, "--aiger-abc", "on", env=env)
+                    # The fallback needs an existing writable destination when
+                    # its parent directory cannot create private staging files.
+                    circuit.write_text("previous controller\n")
+                    with private_staging(root, backend != "backward"):
+                        expired = run(binary, *command, "--aiger-abc", "on", env=env)
                     assert expired.returncode == 2 and '"stage":"deadline"' in expired.stderr, expired
                     if backend == "parity":
                         assert helper.with_name("helper.ran").read_text() == "invoked", expired
+                        # The stopped writer is #475's publisher, after the
+                        # selected worker exited; its helper must be reaped too.
+                        for pid in helper.with_name("helper.pids").read_text().split():
+                            assert not Path(f"/proc/{pid}").exists(), (pid, expired)
                     else:
                         assert "forced AIGER staging stall" in expired.stderr, expired
                     assert circuit.read_bytes() == original, (arm, expired)

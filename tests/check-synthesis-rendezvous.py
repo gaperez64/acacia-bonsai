@@ -23,7 +23,7 @@ phase_completeness = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(phase_completeness)
 
 
-def check_records(directory, result, workers, *, cancelled=()):
+def check_records(directory, result, workers, *, cancelled=(), waiting=()):
     records = [dict(json.loads(line), emitter_pid=int(path.stem.removesuffix("-final")), durable=path.stem.endswith("-final"))
                for path in directory.glob("*.jsonl")
                for line in path.read_text().splitlines()]
@@ -53,10 +53,13 @@ def check_records(directory, result, workers, *, cancelled=()):
         if pid in cancelled:
             assert terminal["telemetry"] == "incomplete" and terminal["signal"] == signal.SIGKILL
             assert terminal["reason"] in {"winner_cancelled", "interrupted"}, terminal
-            # The gate holds an active phase, exercising the existing cancellation snapshot.
-            censored, = snapshots
-            assert censored["signal"] == signal.SIGKILL, censored
-            assert censored["seq"] == len(child) + 1 and censored["emitter_pid"] != pid
+            if pid in waiting:
+                # A published proof has left the readiness phase and waits for permission.
+                assert not snapshots, snapshots
+            else:
+                censored, = snapshots
+                assert censored["signal"] == signal.SIGKILL, censored
+                assert censored["seq"] == len(child) + 1 and censored["emitter_pid"] != pid
             assert not any(row["event"] == "terminal_result" for row in child), child
         else:
             assert terminal["telemetry"] == "complete" and terminal["signal"] == 0, terminal
@@ -90,12 +93,15 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
         export_read, export_write = os.pipe()
         helper_read, helper_write = os.pipe()
         reap_read, reap_write = os.pipe()
+        selection_read, selection_write = os.pipe()
         phases = directory / "phases"
         phases.mkdir()
         env = dict(os.environ, ACACIA_TEST_SYNTHESIS_VERDICT_FD=str(ready_read),
                    ACACIA_TEST_SYNTHESIS_EXPORT_FD=str(export_read),
+                   ACACIA_TEST_SYNTHESIS_GRACE_FD=str(export_read),
                    ACACIA_TEST_SYNTHESIS_OBLIGATION_VERDICT_FD=str(helper_read),
                    ACACIA_TEST_SYNTHESIS_FAIL_PID=str(fail_pid),
+                   ACACIA_TEST_SYNTHESIS_SELECTION_FD=str(selection_read),
                    ACACIA_PHASE_RECORDS=str(phases), ACACIA_TEST_RECORD_ACK="1",
                    LD_PRELOAD=ack_library)
         if interrupt_before_reap:
@@ -107,13 +113,14 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
         formula = 'F G o & G (i -> X !o)' if unreal else 'G (o <-> i)'
         process = subprocess.Popen([binary, '-f', formula, '-i', 'i', '-o', 'o',
                                     '--arms', arms, '--spot-fast', fast, '-s', str(controller)], env=env,
-                                   pass_fds=(ready_read, export_read, helper_read, reap_read),
+                                   pass_fds=(ready_read, export_read, helper_read, reap_read, selection_read),
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         os.close(ready_read)
         os.close(export_read)
         os.close(helper_read)
         os.close(reap_read)
+        os.close(selection_read)
         rows = []
         pending = b''
         stderr_seen = bytearray()
@@ -153,6 +160,17 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
             else:
                 os.close(ready_write)
                 ready_write = None
+            stage('synthesis_proved', 1)
+            if not unreal:
+                if helper_first:
+                    os.close(ready_write)
+                    ready_write = None
+                else:
+                    os.close(helper_write)
+                    helper_write = None
+                stage('synthesis_proved', 2)
+            os.close(selection_write)
+            selection_write = None
             selected, = stage('synthesis_selected', 1)
             winner = selected['pid']
             starts = [json.loads(line) for path in phases.glob("*.jsonl")
@@ -175,13 +193,6 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
             assert controller.read_text() == 'previous controller\n'
             if failure:
                 fail_pid.write_text(str(winner))
-                # Let the suspended proof publish its verdict when fallback resumes it.
-                if helper_write is not None:
-                    os.close(helper_write)
-                    helper_write = None
-                if ready_write is not None:
-                    os.close(ready_write)
-                    ready_write = None
             if interrupt:
                 if interrupt_before_reap:
                     stage('synthesis_reaping', 1)
@@ -210,7 +221,8 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
                                if line.startswith(b'{') and b'synthesis_selected' in line]
                     assert any(row['pid'] == loser for row in resumed), resumed
             cancelled = ([winner, *losers] if interrupt else [] if failure else losers)
-            records = check_records(phases, process.returncode, len(ready), cancelled=cancelled)
+            records = check_records(phases, process.returncode, len(ready), cancelled=cancelled,
+                                    waiting=losers)
             if interrupt:
                 assert all(row["reason"] == "interrupted" for row in records
                            if row.get("event") == "parent_terminal"), records
@@ -222,6 +234,8 @@ def run(binary, root, ack_library, failure=False, interrupt=False, unreal=False,
                 else:
                     raise AssertionError(('worker survived', row))
         finally:
+            if selection_write is not None:
+                os.close(selection_write)
             if process.poll() is None:
                 process.terminate()
                 process.communicate(timeout=5)

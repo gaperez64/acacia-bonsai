@@ -518,7 +518,8 @@ preparation_fault_link_args = []
 preparation_fault_cpp_args = []
 if host_machine.system () == 'linux' and (get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release'))
   preparation_fault_link_args = ['-Wl,--wrap=tlsf_convert',
-                                 '-Wl,--wrap=tlsf_dpa_create', '-Wl,--wrap=bdd_ite']
+                                 '-Wl,--wrap=tlsf_dpa_create', '-Wl,--wrap=bdd_ite',
+                                 '-Wl,--wrap=waitid', '-Wl,--wrap=wait4']
   preparation_fault_cpp_args = ['-DACACIA_TLSF_PREPARATION_TEST_HOOKS=1']
 endif
 game_backend_integration = executable (
@@ -1220,12 +1221,12 @@ endif
 test ('parity-arm-cli', py, args : parity_arm_cli_args,
       suite : ['unit', 'parity', 'portfolio', 'synthesis'], timeout : 120,
       depends : parity_arm_cli_depends)
-if host_machine.system () == 'linux' and (get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release'))
+if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release')
   test ('parity-rendezvous', py,
         args : [files ('check-parity-rendezvous.py'), game_backend_integration,
-                meson.current_build_dir ()],
+                meson.current_build_dir (), controller_check],
         suite : ['unit', 'parity', 'portfolio', 'synthesis'], timeout : 120,
-        depends : [game_backend_integration])
+        depends : [game_backend_integration, controller_check])
 endif
 
 first_shipping_preset = run_command (
@@ -1253,9 +1254,9 @@ test ('accounting-analyzers', py, args : [files ('test_accounting_analyzers.py')
 if host_machine.system () == 'linux'
   test ('exact-arm-records', py,
         args : [files ('check-exact-arm-records.py'), ab_exe,
-                meson.project_build_root (), record_transport_ack],
+                meson.project_build_root (), record_transport_ack, controller_check],
         suite : ['unit', 'attribution', 'obligation', 'parity'],
-        depends : [ab_exe, record_transport_ack], timeout : 90)
+        depends : [ab_exe, record_transport_ack, controller_check], timeout : 90)
   test ('obligation-recorded', py,
         args : [files ('check-obligation-recorded.py'), obligation_helper_test,
                 meson.project_build_root (), record_transport_ack],

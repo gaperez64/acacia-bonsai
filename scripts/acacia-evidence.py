@@ -420,10 +420,16 @@ def fetch(args):
                 any(not isinstance(value, str) for value in metadata["source_revisions"] +
                     metadata["binary_sha256s"])):
             fail("invalid archive provenance lists")
-        if (canonical_list(metadata["source_revisions"], required=True) !=
-                canonical_list([row["source_revisions"]], required=True) or
-                canonical_list(metadata["binary_sha256s"], binary=True) !=
-                canonical_list([row["binary_sha256s"]], binary=True)):
+        revisions = canonical_list(metadata["source_revisions"], required=True).split(",")
+        indexed_revisions = canonical_list([row["source_revisions"]], required=True).split(",")
+        binaries = set(filter(None, canonical_list(metadata["binary_sha256s"], binary=True).split(",")))
+        indexed_binaries = set(canonical_list([row["binary_sha256s"]], binary=True).split(","))
+        if (any(not any(revision == indexed or (
+                re.fullmatch(r"[0-9a-f]{7,}", revision) and
+                re.fullmatch(r"[0-9a-f]{7,}", indexed) and
+                (revision.startswith(indexed) or indexed.startswith(revision)))
+                for indexed in indexed_revisions) for revision in revisions) or
+                not binaries <= indexed_binaries):
             fail("archive provenance differs from index")
         verify_archive(archive, row["sha256"], bound, extract_to=dest)
     finally:

@@ -17,6 +17,11 @@ namespace acacia::synthesis {
 #if ACACIA_HAVE_ABC
   inline void shrink_controller (const std::string& filename, std::string aiger) {
     try {
+      const auto target = std::filesystem::canonical (filename).string ();
+      struct stat metadata;
+      if (stat (target.c_str (), &metadata) != 0 || !S_ISREG (metadata.st_mode) ||
+          metadata.st_nlink != 1)
+        return;
       const auto original = aiger;
 # if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
       shrink_aiger (aiger, aiger_abc, test_before_aiger_abc);
@@ -24,10 +29,6 @@ namespace acacia::synthesis {
       shrink_aiger (aiger, aiger_abc);
 # endif
       if (aiger == original)
-        return;
-      const auto target = std::filesystem::canonical (filename).string ();
-      struct stat metadata;
-      if (stat (target.c_str (), &metadata) != 0)
         return;
       auto temporary = target + ".abc-XXXXXX";
       const int fd = mkstemp (temporary.data ());

@@ -142,6 +142,70 @@ def cancellation_reason(rows: list[dict], reason: str) -> None:
     assert len(terminal) == 1 and terminal[0]["reason"] == finish["reason"], rows
 
 
+def fifo_publication(binary: Path, root: Path, library: Path, mode: str) -> dict:
+    """Gate destination I/O independently of proof/extraction and scheduler timing."""
+    with tempfile.TemporaryDirectory(dir=root) as location:
+        directory = Path(location)
+        fifo = directory / "controller.fifo"
+        os.mkfifo(fifo)
+        env = os.environ.copy()
+        env.pop("ACACIA_PHASE_RECORDS", None)
+        env.pop("ACACIA_OUTER_DEADLINE_MONOTONIC", None)
+        env.update(LD_PRELOAD=str(library), ACACIA_TEST_OBLIGATION_OUTPUT=str(fifo))
+        closing_reader = mode == "sigpipe"
+        if not closing_reader:
+            env["ACACIA_PHASE_RECORDS"] = str(directory)
+        release_read, release_write = os.pipe()
+        reader = os.open(fifo, os.O_RDONLY | os.O_NONBLOCK) if closing_reader else None
+        env["ACACIA_TEST_OBLIGATION_FIFO_RELEASE_FD"] = str(release_read)
+        try:
+            with StageGate(env, "fifo-connected" if closing_reader else "fifo-open",
+                           .2 if mode == "deadline" else 0) as stage:
+                process = subprocess.Popen(
+                    [str(binary), "-f", "G o", "-i", "i", "-o", "o", "--arms",
+                     "both:parity:spot", "-s", str(fifo)],
+                    env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    pass_fds=(*stage.descriptors, release_read))
+                try:
+                    stage.wait_ready(process, directory)
+                    stage.trigger()
+                    if closing_reader:
+                        os.close(reader)
+                        reader = None
+                        os.write(release_write, b"x")
+                    elif mode != "deadline":
+                        process.send_signal(getattr(signal, mode))
+                    stdout, stderr = process.communicate(timeout=2)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    stdout, stderr = process.communicate(timeout=3)
+                except AssertionError:
+                    process.kill()
+                    process.communicate(timeout=3)
+                    raise
+                elapsed = time.monotonic() - stage.triggered_at
+                rows = records(directory)
+                result = dict(mode=mode, code=process.returncode, elapsed_s=elapsed,
+                              stdout=stdout.decode(), stderr=stderr.decode(),
+                              staging=[p.name for p in directory.glob(".acacia-private-*")])
+                assert process.returncode == 2 and stdout == b"" and b"UNKNOWN\n" in stderr, result
+                assert elapsed < 2 and not result["staging"] and fifo.is_fifo(), result
+                assert not any(row.get("event") == "parent_winner" for row in rows), rows
+                if mode == "deadline":
+                    assert b'"stage":"deadline","status":"expired"' in stderr, result
+                if stage.ready_pid != process.pid:
+                    assert gone(stage.ready_pid), ("surviving publisher", result)
+                for row in rows:
+                    if row.get("event") == "worker_spawn":
+                        assert gone(row["worker_pid"]), row
+                return result
+        finally:
+            if reader is not None:
+                os.close(reader)
+            os.close(release_read)
+            os.close(release_write)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("binary", type=Path)
@@ -156,6 +220,11 @@ def main() -> None:
     options = parser.parse_args()
     binary, library = options.binary.resolve(), options.fault_lib.resolve()
     root = options.build_dir.resolve()
+
+    # A blocked writer stays under the parent's deadline/cancellation supervision.
+    # With records disabled, an early-closing reader must only kill the writer.
+    for mode in ("deadline", "sigpipe", "SIGINT", "SIGTERM"):
+        fifo_publication(binary, root, library, mode)
 
     unit = subprocess.run([str(options.unit.resolve())], capture_output=True, text=True,
                           check=True)
@@ -491,8 +560,7 @@ def main() -> None:
                            lambda state, letter: state if letter["o"] else None, moore=False)
             assert oracle.valid, oracle
 
-        # Both workers must serialize through an ofstream opened on the requested
-        # destination. The interposer rejects buffered or parent-side serialization.
+        # Both workers serialize through a private ofstream before parent publication.
         for inputs in (["-i", ""], ["-i", "i"]):
             outputs = []
             for selection, backend in ((alone, "obligation"),
@@ -508,27 +576,38 @@ def main() -> None:
                 outputs.append(controller.read_bytes())
             assert outputs[0] == outputs[1], "arm and ordinary AIGER formats differ"
 
-        # A symlink follows the same ofstream behavior as ordinary synthesis.
+        # Parent publication follows symlinks, like the ordinary controller writer.
         target = Path(directory) / "target.aag"
+        target.write_text("previous target\n")
         link = Path(directory) / "linked.aag"
         link.symlink_to(target)
         result, rows = run(binary, [*synth_source, *alone, "-s", str(link)],
                            root, library, gate=True)
         assert result.returncode == 0 and link.is_symlink(), result
+        assert target.read_bytes() == link.read_bytes() != b"previous target\n"
         assert winner_row(rows)["effective_backend"] == "obligation", rows
-        assert check(Aiger.read(target), 0,
+        assert check(Aiger.read(link), 0,
                      lambda state, letter: state if letter["o"] else None, moore=False).valid
 
-        # With no reader, only parent supervision can stop the blocked worker writer.
+        # A FIFO remains a FIFO and its reader receives the controller.
         fifo = Path(directory) / "controller.fifo"
         os.mkfifo(fifo)
-        result, rows = run(binary, [*synth_source, *alone, "-s", str(fifo)],
-                           root, library, gate=True, release_stalls=False, outer_seconds=.2,
-                           ready_stage="fifo-open", termination_seconds=2)
-        assert result.returncode == 2 and "REALIZABLE" not in result.stdout, result
-        assert helper_row(rows, "completion")["outcome"] == "cancelled", rows
-        cancellation_reason(rows, "deadline")
-        assert not any(row.get("event") == "parent_winner" for row in rows), rows
+        reader = subprocess.Popen(["cat", str(fifo)], stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
+        try:
+            result, rows = run(binary, [*synth_source, *alone, "-s", str(fifo)],
+                               root, library, gate=True)
+            received, errors = reader.communicate(timeout=12)
+            assert result.returncode == reader.returncode == 0 and not errors, (result, errors)
+            assert fifo.is_fifo()
+        finally:
+            if reader.poll() is None:
+                reader.kill()
+                reader.communicate(timeout=3)
+        captured = Path(directory) / "fifo.aag"
+        captured.write_bytes(received)
+        assert check(Aiger.read(captured), 0,
+                     lambda state, letter: state if letter["o"] else None, moore=False).valid
         # There is no runtime product check. Test-only corruptions are accepted as
         # trusted results, and the offline oracle detects their bad controllers.
         for fault in ("wrong-strategy", "corrupt-controller", "check-exception"):
@@ -546,10 +625,11 @@ def main() -> None:
             controller.unlink(missing_ok=True)
             result, rows = run(binary, [*synth_source, *alone, "-s", str(controller)],
                                root, library, fault, gate=True)
-            assert result.returncode == 0 and controller.exists(), (fault, result)
             finish = helper_rows(rows, "completion")
             assert len(finish) == 1, rows
             assert finish[0]["outcome"] == "error" and not finish[0]["independent_checked"], rows
+            # An unfinished matching worker can recover even after selected export fails.
+            assert result.returncode == 0 and controller.exists(), (fault, result)
             verify_controller()
             winner = winner_row(rows)
             assert winner["effective_backend"] != "obligation", rows
