@@ -36,8 +36,12 @@ ordinary solving after decline or with equivariance off.
 
 Under `-s`, `parent_verdict` selects a proof and latches its verdict, before
 controller construction. Each worker writes a private file beside the requested
-destination. Only the parent renames a closed, successful REAL controller onto
-that destination, after acceptance checks and competitor cleanup.
+destination. Only the parent copies a closed, successful REAL controller through
+the ordinary controller writer, after acceptance checks and competitor cleanup.
+Publication follows symlinks and truncates existing files in place, preserving
+inode, mode, ownership and hard links; new files respect the caller's umask.
+`parent_extraction:controller_export_failed` reports a failed parent write:
+UNKNOWN/2, empty stdout, complete records and no winner.
 If private staging cannot be created, workers instead write to the requested
 destination under master's first-proof selection and failure recovery; failed
 parity writes still deliver `controller_export_failed` and UNKNOWN with no winner.
@@ -104,13 +108,13 @@ Undecided workers undergo the same admission, address-space cap and RSS supervis
 as fallback extractors, including sole-survivor cap restoration.
 The first selected extractor never needs admission and keeps running under its
 original resource policy, including when fallback admission fails. If a fallback
-is the only surviving worker, `sole_extractor` removes its additional RSS budget and restores its soft
-address-space limit to the hard limit. Exits of suspended workers are reaped by the
-ordinary supervisor too. Failed and reclaimed workers' partial files are removed
+is the only surviving worker, `sole_extractor` removes its additional RSS budget
+and restores its saved pre-admission soft address-space limit. Exits of suspended
+workers are reaped by the ordinary supervisor too. Failed and reclaimed workers' partial files are removed
 to release their file charges. Refused candidates do not block
 later candidates. `verdict_conflict` rejects an opposite proof. `published` identifies
-the worker whose controller was atomically installed. Parent observations copy
-the worker snapshot and do not advance its live sequence. Slow fallbacks are
+the worker whose controller was successfully written to the destination. Parent
+observations copy the worker snapshot and do not advance its live sequence. Slow fallbacks are
 suspended, retained and revisited; contradictory proofs never receive permission
 to export. Stop acknowledgement, discard reaping and tracked descendant reaping are polled without blocking
 deadline or RSS checks; an exit racing suspension is accepted before any handoff.

@@ -507,26 +507,37 @@ def main() -> None:
                 outputs.append(controller.read_bytes())
             assert outputs[0] == outputs[1], "arm and ordinary AIGER formats differ"
 
-        # Atomic publication replaces the directory entry, preserving a symlink's target.
+        # Parent publication follows symlinks, like the ordinary controller writer.
         target = Path(directory) / "target.aag"
         target.write_text("previous target\n")
         link = Path(directory) / "linked.aag"
         link.symlink_to(target)
         result, rows = run(binary, [*synth_source, *alone, "-s", str(link)],
                            root, library, gate=True)
-        assert result.returncode == 0 and not link.is_symlink(), result
-        assert target.read_text() == "previous target\n"
+        assert result.returncode == 0 and link.is_symlink(), result
+        assert target.read_bytes() == link.read_bytes() != b"previous target\n"
         assert winner_row(rows)["effective_backend"] == "obligation", rows
         assert check(Aiger.read(link), 0,
                      lambda state, letter: state if letter["o"] else None, moore=False).valid
 
-        # Publication also replaces a FIFO without blocking on a reader.
+        # A FIFO remains a FIFO and its reader receives the controller.
         fifo = Path(directory) / "controller.fifo"
         os.mkfifo(fifo)
-        result, rows = run(binary, [*synth_source, *alone, "-s", str(fifo)],
-                           root, library, gate=True)
-        assert result.returncode == 0 and fifo.is_file(), result
-        assert check(Aiger.read(fifo), 0,
+        reader = subprocess.Popen(["cat", str(fifo)], stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
+        try:
+            result, rows = run(binary, [*synth_source, *alone, "-s", str(fifo)],
+                               root, library, gate=True)
+            received, errors = reader.communicate(timeout=12)
+            assert result.returncode == reader.returncode == 0 and not errors, (result, errors)
+            assert fifo.is_fifo()
+        finally:
+            if reader.poll() is None:
+                reader.kill()
+                reader.communicate(timeout=3)
+        captured = Path(directory) / "fifo.aag"
+        captured.write_bytes(received)
+        assert check(Aiger.read(captured), 0,
                      lambda state, letter: state if letter["o"] else None, moore=False).valid
         # There is no runtime product check. Test-only corruptions are accepted as
         # trusted results, and the offline oracle detects their bad controllers.

@@ -269,7 +269,7 @@ namespace {
          std::string_view (path).starts_with (
              output.substr (0, slash == std::string::npos ? 0 : slash + 1) + ".acacia-private-"));
     // Gate before ofstream opens the controller, not during printing.
-    if (controller && !obligation_entered)
+    if (controller && !obligation_entered && getpid () != supervisor_pid)
       wait_legacy ();
     const char* fault = std::getenv ("ACACIA_TEST_OBLIGATION_FAULT");
     if (controller && obligation_entered && fault && std::strcmp (fault, "export-open") == 0) {

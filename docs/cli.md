@@ -58,12 +58,13 @@ The [Docker wrapper](../Docker/README.md#write-a-controller) can write to stdout
 
 Portfolio workers stage controllers in a private directory named
 `.acacia-private-XXXXXX` in `FILE`'s parent, independent of its basename length.
-The parent publishes one closed controller by atomic rename, preserving an existing
-`FILE` on extraction failure. Normal exit, handled
+The parent copies one closed controller through the ordinary controller writer,
+following symlinks and truncating existing files in place. Existing inode, mode,
+ownership and hard links are preserved; new files use the caller's umask.
+An output-write failure reports UNKNOWN with no winner. Normal exit, handled
 interruption and timeout remove the directory. Killing the parent with `SIGKILL`
 can leave this directory and partial private files behind; they can be removed
 after the invocation stops. The requested `FILE` is unchanged until publication.
-Publication replaces its directory entry, including a symlink or FIFO.
 If the private directory cannot be created, workers retain master's first-proof
 selection and write directly to the requested destination, including overwriting
 an existing writable file. Failed parity writes still report UNKNOWN with complete
@@ -117,8 +118,8 @@ its execution.
 The fallback's soft address-space limit is capped at its current mapping size
 plus **only the growth allowance**; RSS supervision additionally enforces
 admission RSS plus growth. The same admission checks and limits apply to undecided
-workers. Allocation failure discards that worker. A sole surviving fallback regains its hard
-address-space limit and loses the additional RSS ceiling. ASan skips both the
+workers. Allocation failure discards that worker. A sole surviving fallback regains
+its pre-admission soft address-space limit and loses the additional RSS ceiling. ASan skips both the
 address-space cap and latent term with a diagnostic because its shadow mappings
 inflate `VmData`; COW/growth admission and RSS supervision remain active.
 Discarded workers and their tracked descendants are killed and polled without

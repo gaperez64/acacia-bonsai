@@ -10,6 +10,7 @@
 #include <spot/twaalgos/aiger.hh>
 #include <spot/twaalgos/mtdswa.hh>
 #include <string>
+#include <sys/resource.h>
 #include <vector>
 
 namespace acacia::obligation {
@@ -50,8 +51,9 @@ namespace acacia::obligation {
 
   // The helper's fixed RSS threshold is supervised by the parent.
   bool limit_address_space () noexcept;
-  // Bound a stopped fallback's additional mappings; UINT64_MAX restores its hard limit.
-  bool limit_extraction_address_space (pid_t pid, uint64_t budget) noexcept;
+  // Save the pre-admission soft limit; UINT64_MAX restores it after capping growth.
+  bool limit_extraction_address_space (pid_t pid, uint64_t budget,
+                                       std::optional<rlim_t>& original_soft_limit) noexcept;
   uint64_t rss_share (size_t workers, memory_share policy = memory_share::equal);
   uint64_t resident_bytes (pid_t pid) noexcept;
   std::optional<uint64_t> latent_anonymous_bytes (pid_t pid) noexcept;

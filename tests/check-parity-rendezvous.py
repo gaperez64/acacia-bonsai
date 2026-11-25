@@ -302,9 +302,13 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             env["ACACIA_TEST_CHILD_MODES"] = f"normal,normal,wait:{gates[6][0]}"
         elif three:
             arms += ",both:obligation:spot"
+        def inherit_soft_limit():
+            resource.setrlimit(resource.RLIMIT_AS, (256 * 1024**2, resource.RLIM_INFINITY))
+
         process = subprocess.Popen([binary, "-T", str(spec), "--arms", arms, "--spot-fast", "off",
                                     "-s", str(target)],
                                    env=env, pass_fds=tuple(read for read, _ in gates),
+                                   preexec_fn=inherit_soft_limit if mode == "sole-fallback-soft" else None,
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         for read, _ in gates:
             os.close(read)
@@ -346,6 +350,11 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             assert selected["pid"] == pids[first_kind], (selected, ready)
             events.wait("synthesis_turn")
             original_limit = resource.prlimit(selected["pid"], resource.RLIMIT_AS)
+            if mode in {"sole-fallback", "sole-fallback-soft"}:
+                fallback_limit = resource.prlimit(pids["parity"], resource.RLIMIT_AS)
+            if mode == "sole-fallback-soft":
+                assert original_limit == (256 * 1024**2, resource.RLIM_INFINITY), original_limit
+                assert fallback_limit == original_limit, fallback_limit
             assert not target.exists()
             if mode == "fallback":
                 private, = root.glob(".acacia-private-*")
@@ -614,12 +623,15 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                         events.wait("synthesis_selected", 3)
                         release(2)
                         expected = "legacy"
-                    elif mode == "sole-fallback":
+                    elif mode in {"sole-fallback", "sole-fallback-soft"}:
                         soft, hard = resource.prlimit(pids["parity"], resource.RLIMIT_AS)
                         assert soft != hard, (soft, hard)
+                        if mode == "sole-fallback-soft":
+                            assert soft < 256 * 1024**2 and hard == resource.RLIM_INFINITY
                         os.kill(pids["legacy"], signal.SIGKILL)
                         wait_record("sole_extractor")
-                        assert resource.prlimit(pids["parity"], resource.RLIMIT_AS) == (hard, hard)
+                        restored = resource.prlimit(pids["parity"], resource.RLIMIT_AS)
+                        assert restored == fallback_limit, (fallback_limit, restored)
                         release(3)
                     elif mode.startswith("turns-"):
                         total = 7 if mode == "turns-legacy" else 6
@@ -778,13 +790,13 @@ def main():
     for mode in ("fallback", "alone", "headroom", "conflict", "scan", "growth",
                  "failure-pressure", "failure-blocked", "boundary", "turns-legacy",
                  "turns-parity", "undecided", "original-running", "original-ceiling",
-                 "sole-fallback", "stop-pending", "unfinished", "unfinished-conflict",
+                 "sole-fallback", "sole-fallback-soft", "stop-pending", "unfinished", "unfinished-conflict",
                  "round-robin", "latent", "discard-pending", "failure-reclaim", "long-name",
                  "cow-growth", "descendant-pending", "watermark", "watermark-rotation",
                  "watermark-recovered", "original-growing",
                  "no-limit", "unreadable-limit", "no-limit-share", "unreadable-share",
                  "master-no-limit", "master-unreadable"):
-        if mode in {"growth", "cow-growth", "sole-fallback", "latent"} and os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1":
+        if mode in {"growth", "cow-growth", "sole-fallback", "sole-fallback-soft", "latent"} and os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1":
             print(f"Skipping {mode} RLIMIT_AS case: incompatible with ASan shadow memory")
             continue
         print(f"Checking extractor case: {mode}", flush=True)

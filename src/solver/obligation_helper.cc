@@ -174,7 +174,8 @@ namespace acacia::obligation {
 #endif
   }
 
-  bool limit_extraction_address_space (pid_t pid, uint64_t budget) noexcept {
+  bool limit_extraction_address_space (pid_t pid, uint64_t budget,
+                                       std::optional<rlim_t>& original_soft_limit) noexcept {
 #ifdef __SANITIZE_ADDRESS__
     if (budget != UINT64_MAX)
       std::fprintf (stderr,
@@ -185,8 +186,12 @@ namespace acacia::obligation {
     rlimit address {};
     if (prlimit (pid, RLIMIT_AS, nullptr, &address) != 0)
       return false;
-    if (budget == UINT64_MAX)
-      address.rlim_cur = address.rlim_max;
+    const auto previous_soft_limit = address.rlim_cur;
+    if (budget == UINT64_MAX) {
+      if (!original_soft_limit)
+        return false;
+      address.rlim_cur = *original_soft_limit;
+    }
     else {
       char path[64];
       snprintf (path, sizeof path, "/proc/%ld/statm", long (pid));
@@ -201,7 +206,11 @@ namespace acacia::obligation {
         return false;
       address.rlim_cur = std::min (address.rlim_cur, rlim_t (pages * page_size + budget));
     }
-    return prlimit (pid, RLIMIT_AS, &address, nullptr) == 0;
+    if (prlimit (pid, RLIMIT_AS, &address, nullptr) != 0)
+      return false;
+    if (!original_soft_limit)
+      original_soft_limit = previous_soft_limit;
+    return true;
 #else
     return false;
 #endif

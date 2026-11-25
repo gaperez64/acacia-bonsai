@@ -4,6 +4,7 @@
 from pathlib import Path
 import os
 import runpy
+import stat
 import subprocess
 import sys
 import tempfile
@@ -12,6 +13,60 @@ import tempfile
 support = runpy.run_path(str(Path(__file__).with_name("check-attribution.py")))
 audit = runpy.run_path(str(Path(__file__).resolve().parents[1]
                              / "benchmarking/attribution-completeness.py"))["audit_row"]
+
+
+def publication(binary, checker, source, root, case):
+    parent = root / ("publication-" + case)
+    parent.mkdir()
+    records = parent / "records"
+    records.mkdir()
+    target = parent / "controller.aag"
+    actual = target
+    if case == "symlink":
+        actual = parent / "actual.aag"
+        target.symlink_to(actual.name)
+    if case in {"existing", "symlink", "read-only"}:
+        actual.write_text("previous controller\n")
+        actual.chmod(0o440 if case == "read-only" else 0o640)
+        before = actual.stat()
+        alias = parent / "alias.aag"
+        alias.hardlink_to(actual)
+    elif case == "directory":
+        target.mkdir()
+    elif case == "full":
+        target.symlink_to("/dev/full")
+    env = dict(os.environ, ACACIA_PHASE_RECORDS=str(records))
+    run = subprocess.run([str(binary), "-T", str(source), "--arms", "both:parity:spot",
+                          "-s", str(target)], env=env, umask=0o22,
+                         capture_output=True, text=True, timeout=20)
+    failed = case in {"directory", "full", "read-only"}
+    assert run.returncode == (2 if failed else 0), (case, run)
+    assert run.stdout == ("" if failed else "REALIZABLE\n"), (case, run)
+    rows = support["rows"](records)
+    support["complete_records"](rows, expected_winners=0 if failed else 1)
+    assert audit({"result": "UNKNOWN" if failed else "REALIZABLE",
+                  "flags": "--arms both:parity:spot"}, records)["complete"], rows
+    assert not list(parent.glob(".acacia-private-*")), list(parent.iterdir())
+    if failed:
+        assert not any(row.get("reason") == "published" for row in rows), rows
+        if case == "read-only":
+            assert actual.read_text() == "previous controller\n"
+        print(f"Publication {case}: UNKNOWN/2, empty stdout, complete records, no winner")
+        return
+    checked = subprocess.run([str(checker), str(source), str(target)],
+                             capture_output=True, text=True, timeout=20)
+    assert checked.returncode == 0 and checked.stdout == "verified\n", checked
+    after = actual.stat()
+    # Master's ofstream follows symlinks and truncates existing inodes in place.
+    if case == "new":
+        assert stat.S_IMODE(after.st_mode) == 0o644, oct(after.st_mode)
+    else:
+        assert (after.st_ino, after.st_mode, after.st_uid, after.st_gid) == (
+            before.st_ino, before.st_mode, before.st_uid, before.st_gid), (before, after)
+        assert alias.read_bytes() == target.read_bytes() != b"previous controller\n"
+        if case == "symlink":
+            assert target.is_symlink() and target.readlink() == Path(actual.name)
+    print(f"Publication {case}: master's mode/inode/link semantics; controller verified")
 
 
 def restrictive_umask(binary, checker, source, root):
@@ -52,6 +107,10 @@ def main():
         source.write_text('''INFO { TITLE: "records" SEMANTICS: Mealy TARGET: Mealy }
 MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G (i -> o); } }
 ''')
+        for case in ("new", "existing", "symlink", "directory", "full", "read-only"):
+            if case == "read-only" and os.geteuid() == 0:
+                continue
+            publication(binary, checker, source, root, case)
         restrictive_umask(binary, checker, source, root)
         for family in ("obligation:spot", "parity:spot", "parity:oxidd"):
             arm = "both:" + family

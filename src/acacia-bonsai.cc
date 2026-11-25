@@ -29,6 +29,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <fstream>
+#include <iterator>
 #include <memory>
 #include <new>
 #include <optional>
@@ -866,6 +867,7 @@ namespace {
     const size_t slots = arg_values.arms->size () + size_t (g_obligation != nullptr);
     std::vector<uint64_t> extraction_turn (g_synthesis ? slots : 0, 0);
     std::vector<uint64_t> extraction_budget (g_synthesis ? slots : 0, UINT64_MAX);
+    std::vector<std::optional<rlim_t>> extraction_soft_limit (g_synthesis ? slots : 0);
     std::vector<uint64_t> extraction_reservation (g_synthesis ? slots : 0, 0);
     std::vector<const char*> pending_discard (g_synthesis ? slots : 0, nullptr);
     const auto extraction_event = [&] (sig_atomic_t i, const char* reason) {
@@ -957,7 +959,8 @@ namespace {
         extraction_event (index, "scope_headroom");
         return false;
       }
-      if (!acacia::obligation::limit_extraction_address_space (g_child_pids[index], growth)) {
+      if (!acacia::obligation::limit_extraction_address_space (g_child_pids[index], growth,
+                                                               extraction_soft_limit[index])) {
         extraction_event (index, "address_space_limit_failed");
         return false;
       }
@@ -1061,7 +1064,8 @@ namespace {
         for (sig_atomic_t i = 0; i < g_child_count; ++i)
           if (g_child_pids[i] > 0 && !pending_discard[i] && extraction_budget[i] != UINT64_MAX &&
               sole_extractor (i)) {
-            if (!acacia::obligation::limit_extraction_address_space (g_child_pids[i], UINT64_MAX))
+            if (!acacia::obligation::limit_extraction_address_space (g_child_pids[i], UINT64_MAX,
+                                                                     extraction_soft_limit[i]))
               throw std::runtime_error ("unable to restore sole extractor address space");
             extraction_budget[i] = UINT64_MAX;
             extraction_event (i, "sole_extractor");
@@ -1407,10 +1411,24 @@ namespace {
         if (g_synthesis) {
           stop_children ("winner_cancelled");
           check_acceptance ();
-          if (ret == EXIT_CODE_REAL && !g_controller_paths.empty () &&
-              rename (g_controller_paths[reaped_index].c_str (),
-                      arg_values.synth_fname->c_str ()) != 0)
-            throw std::runtime_error ("unable to publish controller");
+          if (ret == EXIT_CODE_REAL && !g_controller_paths.empty ()) {
+            bool published = false;
+            try {
+              std::ifstream controller (g_controller_paths[reaped_index]);
+              if (controller) {
+                const std::string aiger {std::istreambuf_iterator<char> (controller), {}};
+                // Reuse master's open/truncate semantics, including links and existing modes.
+                published = !controller.bad () &&
+                            acacia::synthesis::write_controller (*arg_values.synth_fname, aiger);
+              }
+            } catch (...) {
+            }
+            if (!published) {
+              extraction_event (reaped_index, "controller_export_failed");
+              cleanup_controllers ();
+              error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
+            }
+          }
           if (g_worker_records && ret == EXIT_CODE_REAL) {
             auto extracted = g_worker_records[reaped_index];
             acacia::worker_event (extracted, "parent_extraction", "published", ret);
