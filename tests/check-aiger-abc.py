@@ -103,7 +103,7 @@ def main():
     assert on.returncode == 0 and on.stdout == off.stdout, on
     # ABC's pre-main constructors belong exclusively to the optional helper.
     if nm := shutil.which("nm"):
-        linked = run(nm, binary)
+        linked = run(nm, "--defined-only", "--no-sort", binary)
         assert linked.returncode == 0, linked
         assert "Abc_Start" not in linked.stdout and "Ufar_StopIfRequested" not in linked.stdout
     if not options.checker:
