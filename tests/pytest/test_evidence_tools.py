@@ -500,17 +500,21 @@ class EvidenceToolTests(unittest.TestCase):
         row = lines[row_index].split("\t")
         self.assertEqual(row[7], "a-rev,z-rev")
         self.assertEqual(row[8], f"{'a' * 64},{'b' * 64}")
-        for column, wrong in ((7, "different-rev"), (8, "c" * 64)):
-            with self.subTest(column=column):
+        for column, wrong in ((7, "different-rev"), (8, "c" * 64),
+                              (7, "a-rev"), (8, "a" * 64), (8, "")):
+            with self.subTest(column=column, wrong=wrong):
                 lines = index.read_text().splitlines()
                 cells = lines[row_index].split("\t")
                 cells[column] = wrong
                 lines[row_index] = "\t".join(cells)
                 index.write_text("\n".join(lines) + "\n")
+                dest = self.work / f"wrong-{column}"
                 result = run("python3", "-s", str(EVIDENCE), "fetch", "--index", str(index),
                              "--campaign", "provenance", "--dest",
-                             str(self.work / f"wrong-{column}"), "--from-file", str(archive), ok=False)
+                             str(dest), "--from-file", str(archive), ok=False)
+                self.assertNotEqual(result.returncode, 0)
                 self.assertIn("provenance", result.stderr)
+                self.assertFalse(any(dest.iterdir()))
                 lines[row_index] = "\t".join(row)
                 index.write_text("\n".join(lines) + "\n")
 
@@ -524,6 +528,7 @@ class EvidenceToolTests(unittest.TestCase):
             ("abbreviated-row", revision, revision[:8], binary, True),
             ("abbreviated-archive", revision[:8], revision, binary, True),
             ("seven-character-prefix", revision, revision[:7], binary, True),
+            ("ambiguous-prefix", revision[:8], f"{revision},{revision[:-1]}0", binary, True),
             ("extra-base", revision, f"{'b' * 40},{revision[:8]}", f"{'b' * 64},{binary}", True),
             ("mismatched-revision", revision, "b" * 40, binary, False),
             ("missing-binary", revision, revision, "b" * 64, False),
