@@ -41,15 +41,17 @@ that destination, after acceptance checks and competitor cleanup.
 The grace/fallback scheme is Linux-only, like the optional reduction in #467.
 Other platforms retain master's first-proof selection and extraction-failure
 recovery without grace turns or memory admission.
+The original extractor is never suspended after selection. Its grace expiry permits
+at most one concurrent fallback; fallbacks rotate among themselves.
 `parent_extraction` records identify the worker and latched verdict (`exit_code`):
-`grace_expired` means its turn ended. Each worker's first turn gets one quarter of
-the time remaining before the invocation deadline supplied by
+`grace_expired` means the original's grace or a fallback's turn ended. Each worker's
+first turn gets one quarter of the time remaining before the invocation deadline supplied by
 `ACACIA_OUTER_DEADLINE_MONOTONIC`, or 2 s without a known deadline. Later turns
 double separately for each worker and are capped at the remaining time on entry.
 The 433-input SYNTCOMP26 sweep found 375/401 successful master syntheses within
 2 s, versus 315 within 250 ms; whole-run times upper-bound extraction. A quarter
 of roughly 17 s covers the Core probe's 2.37 s extraction and reserves three
-quarters for recovery. `fallback` identifies the next worker resumed.
+quarters for recovery. `fallback` identifies the next fallback worker resumed.
 Ready proofs matching the latched verdict have first priority. Only if
 none is admissible can an undecided worker capable of that verdict receive a turn
 to finish its proof.
@@ -77,22 +79,21 @@ admission and the existing parent RSS supervisor remain active. The supervisor
 enforces the budget; `rss_budget` marks termination of a fallback exceeding it.
 Undecided workers undergo the same admission, address-space cap and RSS supervision
 as fallback extractors, including sole-survivor cap restoration.
-The first selected extractor never needs admission and keeps its original resource
-policy. Before returning to it, fallbacks that have run are killed and reaped one
-at a time, rechecking usage after each reclamation, as
-`parent_terminal:original_headroom` if scope usage exceeds the snapshot at its first
-suspension (or either reading is unavailable). If a fallback is the only surviving
-worker, `sole_extractor` removes its additional RSS budget and restores its soft
+The first selected extractor never needs admission and keeps running under its
+original resource policy, including when fallback admission fails. If a fallback
+is the only surviving worker, `sole_extractor` removes its additional RSS budget and restores its soft
 address-space limit to the hard limit. Exits of suspended workers are reaped by the
 ordinary supervisor too. Failed and reclaimed workers' partial files are removed
 to release their file charges. Refused candidates do not block
 later candidates. `verdict_conflict` rejects an opposite proof. `published` identifies
 the worker whose controller was atomically installed. Parent observations copy
-the worker snapshot and do not advance its live sequence. Slow extractors are
+the worker snapshot and do not advance its live sequence. Slow fallbacks are
 suspended, retained and revisited; contradictory proofs never receive permission
 to export. Stop acknowledgement, discard reaping and tracked descendant reaping are polled without blocking
 deadline or RSS checks; an exit racing suspension is accepted before any handoff.
-After an extractor fails with no admissible replacement from either priority class,
+Either running extractor can publish the first complete, valid controller of the
+latched verdict; the rest are cancelled and reaped.
+After the original fails with no admissible replacement from either priority class,
 `parent_terminal` with reason `extraction_irrelevant` identifies killed/reaped
 unusable workers first. Admission is retried after reaping them, before reclaiming
 matching undecided workers if still necessary. Each discard returns to supervision

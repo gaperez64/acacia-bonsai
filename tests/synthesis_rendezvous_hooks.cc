@@ -141,8 +141,6 @@ namespace acacia::synthesis {
       descendant_record (*record, child, nullptr);
       std::fprintf (stderr, "{\"stage\":\"synthesis_descendant\",\"pid\":%ld}\n", long (child));
     }
-    if (!parity_worker && !obligation_worker)
-      allocate ("ACACIA_TEST_SYNTHESIS_LEGACY_RSS_BYTES");
     if (parity_worker) {
       if (std::getenv ("ACACIA_TEST_SYNTHESIS_CONFLICT"))
         verdict = EXIT_CODE_UNREAL;
@@ -171,6 +169,8 @@ namespace acacia::synthesis {
     gate ("synthesis_selected",
           parity_worker && std::getenv ("ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD")
               ? "ACACIA_TEST_SYNTHESIS_PARITY_EXPORT_FD"
+          : obligation_worker && std::getenv ("ACACIA_TEST_SYNTHESIS_OBLIGATION_EXPORT_FD")
+              ? "ACACIA_TEST_SYNTHESIS_OBLIGATION_EXPORT_FD"
               : "ACACIA_TEST_SYNTHESIS_EXPORT_FD");
     for (size_t i = 0; i < cow_size; i += 4096)
       cow_memory[i] = 2;

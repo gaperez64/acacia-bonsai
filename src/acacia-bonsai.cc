@@ -839,8 +839,7 @@ namespace {
     sig_atomic_t last_extractor = -1;
     sig_atomic_t original_extractor = -1;
     sig_atomic_t ready_cursor = -1, undecided_cursor = -1;
-    bool suspension_pending = false, original_suspended = false;
-    std::optional<uint64_t> original_scope_usage;
+    bool suspension_pending = false;
     uint64_t extraction_started = 0;
     const size_t slots = arg_values.arms->size () + size_t (g_obligation != nullptr);
     std::vector<uint64_t> extraction_turn (g_synthesis ? slots : 0, 0);
@@ -901,7 +900,7 @@ namespace {
     const auto admit = [&] (sig_atomic_t index) {
       if (discarding ())
         return false;
-      if (index == original_extractor || sole_extractor (index))
+      if (sole_extractor (index))
         return true;
       bool no_limit = false;
       const auto limit = acacia::obligation::scope_memory ("memory.max", nullptr, &no_limit);
@@ -931,13 +930,13 @@ namespace {
         if (g_child_pids[i] > 0 && g_synthesis[i].order.load (std::memory_order_acquire) &&
             g_synthesis[i].verdict.load (std::memory_order_acquire) != synthesis_verdict)
           extraction_event (i, "verdict_conflict");
-        if (i != after && ready (i) && admit (i))
+        if (i != original_extractor && i != after && ready (i) && admit (i))
           return i;
       }
       // Unfinished searches get a turn only after all ready matching proofs are refused.
       for (sig_atomic_t step = 1; step <= g_child_count; ++step) {
         const sig_atomic_t i = (undecided_cursor + step) % g_child_count;
-        if (i != after && undecided (i) && admit (i))
+        if (i != original_extractor && i != after && undecided (i) && admit (i))
           return i;
       }
       return sig_atomic_t {-1};
@@ -945,18 +944,6 @@ namespace {
     const auto select_extractor = [&] (sig_atomic_t i) {
       if (discarding ())
         return;
-      if (i == original_extractor && original_suspended) {
-        // Reclaim fallback charges before restoring master's original resource policy.
-        for (sig_atomic_t other = 0; other < g_child_count; ++other) {
-          const auto used = acacia::obligation::scope_memory ("memory.current");
-          if (original_scope_usage && used && *used <= *original_scope_usage)
-            break;
-          if (other != i && g_child_pids[other] > 0 && extraction_budget[other] != UINT64_MAX) {
-            discard_extractor (other, "original_headroom");
-            return;  // Recheck headroom only after this victim's charges have been reclaimed.
-          }
-        }
-      }
       if (extraction_fallback && last_extractor >= 0 && last_extractor != i)
         extraction_event (i, "fallback");
       synthesis_winner = last_extractor = i;
@@ -981,6 +968,7 @@ namespace {
     };
     const auto resume_after_failure = [&] {
       synthesis_winner = -1;
+      suspension_pending = false;
       if (!extraction_fallback) {
         synthesis_verdict = -1;
         for (sig_atomic_t i = 0; i < g_child_count; ++i)
@@ -1095,7 +1083,11 @@ namespace {
         }
         else {
           nominee = next_extractor (last_extractor);
-          if (nominee < 0 && !discarding ()) {
+          if (nominee < 0 && g_child_pids[original_extractor] > 0) {
+            synthesis_winner = original_extractor;
+            start_extraction_turn (original_extractor);
+          }
+          if (nominee < 0 && synthesis_winner < 0 && !discarding ()) {
             // Reclaim unusable workers first; retry admission after they are reaped.
             for (sig_atomic_t i = 0; i < g_child_count; ++i)
               if (g_child_pids[i] > 0 && !ready (i) && !undecided (i)) {
@@ -1125,7 +1117,7 @@ namespace {
           if (slot.verdict.load (std::memory_order_acquire) != synthesis_verdict) {
             extraction_event (i, "verdict_conflict");
             discard_extractor (i, "verdict_conflict");
-            synthesis_winner = -1;
+            resume_after_failure ();
             continue;
           }
           select_extractor (i);
@@ -1141,16 +1133,17 @@ namespace {
           const auto next = next_extractor (i);
           if (next < 0)
             extraction_event (i, "no_alternative");
+          else if (i == original_extractor) {
+            check_acceptance ();
+            select_extractor (next);
+          }
           else {
             check_acceptance ();
-            if (i == original_extractor && !original_suspended) {
-              original_scope_usage = acacia::obligation::scope_memory ("memory.current");
-              original_suspended = true;
-            }
             kill (-g_child_pids[i], SIGSTOP);
             suspension_pending = true;
           }
-          start_extraction_turn (i);
+          if (synthesis_winner == i)
+            start_extraction_turn (i);
         }
         if (suspension_pending) {
           const int observed =
@@ -1315,17 +1308,19 @@ namespace {
         ret = EXIT_CODE_UNKNOWN;
       if (g_obligation && reaped_index == g_helper_index &&
           (g_helper_forced != acacia::obligation::outcome::pending ||
-           acacia::obligation::exit_code (
-               g_obligation->result.load (std::memory_order_acquire)) != ret))
+           acacia::obligation::exit_code (g_obligation->result.load (std::memory_order_acquire)) !=
+               ret))
         ret = EXIT_CODE_UNKNOWN;
       if (g_synthesis && (ret == EXIT_CODE_REAL || ret == EXIT_CODE_UNREAL) &&
-          (reaped_index < 0 || reaped_index != synthesis_winner || ret != synthesis_verdict ||
+          (reaped_index < 0 ||
+           !g_synthesis[reaped_index].proceed.load (std::memory_order_acquire) ||
+           ret != synthesis_verdict ||
            g_synthesis[reaped_index].verdict.load (std::memory_order_acquire) != ret ||
            (ret == EXIT_CODE_REAL &&
             !g_synthesis[reaped_index].controller_complete.load (std::memory_order_acquire))))
         ret = EXIT_CODE_UNKNOWN;
-      if (g_synthesis && reaped_index == synthesis_winner &&
-          ret != EXIT_CODE_REAL && ret != EXIT_CODE_UNREAL)
+      if (g_synthesis && reaped_index == synthesis_winner && ret != EXIT_CODE_REAL &&
+          ret != EXIT_CODE_UNREAL)
         resume_after_failure ();
       if (g_synthesis && ret != EXIT_CODE_REAL && ret != EXIT_CODE_UNREAL)
         unlink (g_controller_paths[reaped_index].c_str ());

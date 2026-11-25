@@ -68,24 +68,27 @@ Publication replaces its directory entry, including a symlink or FIFO.
 Extraction turns and their memory admission are Linux-only, like optional parity
 reduction (#467): other platforms keep master's first-proof selection and recovery
 after extraction failure, without grace turns or fallback admission.
-At turn expiry, ready proofs matching the first verdict have priority. Only when
-none is admissible can an undecided worker capable of that verdict take a turn
+The first selected extractor keeps running throughout, under its original resource
+policy. After its grace expires, at most one fallback runs concurrently with it.
+If admission fails, the original continues alone. The first complete, valid
+controller matching the latched verdict is published; the other workers are
+cancelled and reaped. At grace or fallback turn expiry, ready proofs matching the
+first verdict have priority. Only when none is admissible can an undecided worker
+capable of that verdict take a turn
 to finish its proof. Its export gate stays closed until it publishes a matching
 verdict; an opposite verdict is rejected. Workers capable only of the opposite
 verdict stay stopped. Each worker's first turn gets one quarter of the remaining
 invocation time from `ACACIA_OUTER_DEADLINE_MONOTONIC` (absolute monotonic seconds),
-or 2 s without a known deadline. Later turns double separately for each worker,
-capped at the time remaining when each turn starts. This leaves recovery time
-without interrupting ordinary extraction after just 250 ms: in the 433-input
+or 2 s without a known deadline. Fallbacks rotate among themselves; later turns
+double separately for each worker, capped at the time remaining when each turn
+starts. The grace lets ordinary extraction finish before fallback starts: in the 433-input
 SYNTCOMP26 sweep, 375/401 successful master syntheses finished within 2 s
 (315 within 250 ms). These whole-run times upper-bound extraction; the Core probe's
 2.37 s extraction fits a quarter of its roughly 17 s remaining budget.
 Each priority class retains its own round-robin cursor across turns in the other class.
 This lets unfinished searches progress while the selected extractor stalls.
-The first extractor always resumes under its original resource policy; fallback
-workers are reclaimed one at a time if they reduce its saved scope headroom,
-rechecking usage after each is reaped. Admission reserves the sum of latent
-anonymous capacity `max(0, VmData - RssAnon)`, COW exposure (conservatively its
+Admission reserves the sum of latent anonymous capacity `max(0, VmData - RssAnon)`,
+COW exposure (conservatively its
 admission RSS), and growth allowance `max(64 MiB, admission RSS)` below the scope's
 last eighth. Its soft address-space limit is capped at its current mapping size
 plus **only the growth allowance**; RSS supervision additionally enforces
@@ -96,8 +99,8 @@ address-space cap and latent term with a diagnostic because its shadow mappings
 inflate `VmData`; COW/growth admission and RSS supervision remain active.
 Discarded workers and their tracked descendants are killed and polled without
 blocking supervision; admission waits until their reclamation completes.
-After an extractor fails, unusable workers are reclaimed and admission retried
-before matching unfinished searches are reclaimed.
+If the original fails, unusable workers are reclaimed one at a time and admission
+retried before matching unfinished searches are reclaimed.
 
 `--parity-mealy-reduction none|bisim|bisim-output|reselect` selects the parity route's
 post-extraction reduction under `-s` only. `bisim-output` uses Spot's

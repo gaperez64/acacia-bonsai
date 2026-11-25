@@ -53,6 +53,10 @@ def wait_stopped(pid):
         select.select([], [], [], .001)
 
 
+def assert_running(pid):
+    assert "\nState:\tT" not in Path(f"/proc/{pid}/status").read_text(), pid
+
+
 def run(binary, scratch, *, parity_first=True, failure=False, interrupt=False,
         parent_death=False, unreal=False):
     with tempfile.TemporaryDirectory(dir=scratch) as temporary:
@@ -221,7 +225,7 @@ def stalled_extractor(binary, checker, scratch, mode, *, deadline_seconds=None):
         spec.write_text('''INFO { TITLE: "selection race" SEMANTICS: Mealy TARGET: Mealy }
 MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
 ''')
-        gates = [os.pipe() for _ in range(8)]
+        gates = [os.pipe() for _ in range(9)]
         env = dict(os.environ, ACACIA_PHASE_RECORDS=str(root),
                    ACACIA_TEST_SYNTHESIS_VERDICT_FD=str(gates[0][0]),
                    ACACIA_TEST_SYNTHESIS_PARITY_VERDICT_FD=str(gates[1][0]),
@@ -230,6 +234,7 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                    ACACIA_TEST_SYNTHESIS_GRACE_FD=str(gates[4][0]),
                    ACACIA_TEST_SYNTHESIS_SELECTION_FD=str(gates[5][0]),
                    ACACIA_TEST_SYNTHESIS_OBLIGATION_VERDICT_FD=str(gates[6][0]),
+                   ACACIA_TEST_SYNTHESIS_OBLIGATION_EXPORT_FD=str(gates[8][0]),
                    ACACIA_TEST_SYNTHESIS_FAIL_PID=str(root / "fail-pid"))
         env.pop("ACACIA_OUTER_DEADLINE_MONOTONIC", None)
         if deadline_seconds is not None:
@@ -237,9 +242,9 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
         # ASan increases resident memory too; retain the simulated pressure ratios.
         scope_mib = 1024**2 * (2 if os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1" else 1)
         pressure = mode in {"headroom", "scan", "growth", "failure-pressure", "failure-blocked",
-                            "original-return", "turns-legacy", "turns-parity", "round-robin",
+                            "original-running", "turns-legacy", "turns-parity", "round-robin",
                             "latent", "failure-reclaim", "discard-pending", "descendant-pending",
-                            "discard-one", "cow-growth"}
+                            "cow-growth"}
         if pressure:
             maximum = 1024 if mode == "cow-growth" else 512
             (root / "memory.max").write_text(str(maximum * scope_mib))
@@ -254,8 +259,6 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             env["ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES"] = str(144 * 1024 * 1024)
         if mode == "cow-growth":
             env["ACACIA_TEST_SYNTHESIS_LEGACY_COW_BYTES"] = str(80 * 1024 * 1024)
-        if mode == "original-return":
-            env["ACACIA_TEST_SYNTHESIS_LEGACY_RSS_BYTES"] = str(96 * 1024 * 1024)
         if mode == "latent":
             env["ACACIA_TEST_SYNTHESIS_PARITY_LATENT_BYTES"] = str(192 * 1024 * 1024)
         if mode in {"discard-pending", "descendant-pending"}:
@@ -267,17 +270,17 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             env["ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES"] = str(128 * 1024 * 1024)
         if mode == "stop-pending":
             env["ACACIA_TEST_SYNTHESIS_STOP_FD"] = str(gates[7][0])
-        if mode in {"failure-pressure", "failure-reclaim", "discard-one"}:
+        if mode in {"failure-pressure", "failure-reclaim"}:
             env["ACACIA_TEST_SYNTHESIS_RECLAIM_FD"] = str(gates[7][0])
         unfinished = mode in {"unfinished", "unfinished-conflict", "round-robin", "latent",
-                              "failure-reclaim"}
-        if mode in {"conflict", "unfinished-conflict"}:
+                              "failure-reclaim", "discard-pending", "descendant-pending"}
+        if mode in {"conflict", "unfinished-conflict", "discard-pending", "descendant-pending"}:
             env["ACACIA_TEST_SYNTHESIS_CONFLICT"] = "1"
         arms = "real:small:backward"
         if mode != "alone":
             arms += ",both:parity:spot"
         three = mode in {"scan", "failure-pressure", "failure-blocked", "undecided", "round-robin",
-                         "discard-one"}
+                         "turns-legacy", "turns-parity", "stop-pending"}
         if mode == "failure-reclaim":
             arms += ",unreal:formula:backward"
             env["ACACIA_TEST_CHILD_MODES"] = f"normal,normal,wait:{gates[6][0]}"
@@ -317,7 +320,7 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             if mode != "alone" and not unfinished:
                 release(0 if first_kind == "parity" else 1)
                 events.wait("synthesis_proved", 2)
-            if mode in {"scan", "failure-blocked", "discard-one"}:
+            if mode in {"scan", "failure-blocked", "turns-legacy", "turns-parity", "stop-pending"}:
                 release(6)
                 events.wait("synthesis_proved", 3)
             release(5)
@@ -371,62 +374,64 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                 release(2)
                 expected = "legacy"
             elif mode == "round-robin":
-                for count, kind in enumerate(("parity", "legacy", "obligation"), 2):
+                for count, kind in enumerate(("parity", "obligation", "parity", "obligation"), 2):
                     os.write(writes[4], b"x")
                     turns = events.wait("synthesis_turn", count)
                     assert turns[-1]["worker_pid"] == pids[kind], turns
+                    assert_running(pids["legacy"])
+                    wait_stopped(pids["obligation" if kind == "parity" else "parity"])
                 assert [row["worker_pid"] for row in turns] == [
-                    pids[kind] for kind in ("legacy", "parity", "legacy", "obligation")]
+                    pids[kind] for kind in ("legacy", "parity", "obligation", "parity", "obligation")]
                 release(6)
                 events.wait("synthesis_selected", 2)
-                release(2)
-                expected = "obligation"
-            elif mode == "discard-one":
-                for count, kind in enumerate(("parity", "obligation"), 2):
-                    os.write(writes[4], b"x")
-                    turns = events.wait("synthesis_turn", count)
-                    assert turns[-1]["worker_pid"] == pids[kind], turns
-                events.wait("synthesis_selected", 3)
-                (root / "memory.current").write_text(str(400 * scope_mib))
-                os.write(writes[4], b"x")
-                events.wait("synthesis_reclaimed")
-                assert not Path(f"/proc/{pids['parity']}").exists()
-                wait_stopped(pids["obligation"])
-                # B's reclamation suffices; C must survive to finish on its next turn.
-                (root / "memory.current").write_text(str(320 * scope_mib))
-                release(7)
-                turns = events.wait("synthesis_turn", 4)
-                assert turns[-1]["worker_pid"] == pids["legacy"], turns
-                os.write(writes[4], b"x")
-                turns = events.wait("synthesis_turn", 5)
-                assert [row["worker_pid"] for row in turns] == [pids[kind] for kind in (
-                    "legacy", "parity", "obligation", "legacy", "obligation")], turns
-                release(2)
+                release(8)
                 expected = "obligation"
             elif unfinished:
                 os.write(writes[4], b"x")
                 turns = events.wait("synthesis_turn", 2)
                 assert turns[-1]["worker_pid"] == pids["parity"], turns
-                wait_stopped(pids["legacy"])
+                assert_running(pids["legacy"])
                 soft, hard = resource.prlimit(pids["parity"], resource.RLIMIT_AS)
                 if os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") != "1":
                     assert soft != resource.RLIM_INFINITY and hard == original_limit[1], (soft, hard)
                 assert not any(row.get("event") == "parent_verdict"
                                and row["worker_pid"] == pids["parity"] for row in records(root))
+                if mode in {"discard-pending", "descendant-pending"}:
+                    discarded = (events.wait("synthesis_descendant")[0]["pid"]
+                                 if mode == "descendant-pending" else pids["parity"])
+                    (root / "discard-pid").write_text(str(discarded))
                 release(1)
                 events.wait("synthesis_proved", 2)
+                if mode in {"discard-pending", "descendant-pending"}:
+                    events.wait("synthesis_discard_pending")
+                    assert_running(pids["legacy"])
+                    assert len([row for row in events.rows
+                                if row.get("stage") == "synthesis_turn"]) == 2
+                    process.send_signal(signal.SIGTERM)
+                    wait_record("interrupted")
+                    release(7)
+                    stdout, stderr = process.communicate(timeout=20)
+                    assert process.returncode == 2 and not stdout, (stdout, stderr)
+                    assert not target.exists() and not list(root.glob(".acacia-*"))
+                    assert all(not Path(f"/proc/{pid}").exists() for pid in pids.values())
+                    assert not Path(f"/proc/{discarded}").exists()
+                    return
                 expected = "legacy" if mode == "unfinished-conflict" else "parity"
                 if mode == "unfinished-conflict":
                     wait_record("verdict_conflict")
                 else:
                     events.wait("synthesis_selected", 2)
-                turns = events.wait("synthesis_turn", 3)
-                assert turns[-1]["worker_pid"] == pids[expected], turns
+                    turns = events.wait("synthesis_turn", 3)
+                    assert turns[-1]["worker_pid"] == pids[expected], turns
                 release(2 if expected == "legacy" else 3)
             else:
                 os.write(writes[4], b"x")
                 if mode == "stop-pending":
+                    events.wait("synthesis_selected", 2)
+                    assert_running(pids["legacy"])
+                    os.write(writes[4], b"x")
                     events.wait("synthesis_stop_pending")
+                    assert_running(pids["legacy"])
                     os.write(writes[4], b"t")
                 elif mode in {"alone", "headroom", "conflict"}:
                     reason = {"headroom": "scope_headroom", "conflict": "verdict_conflict",
@@ -439,14 +444,16 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                     if mode == "alone":
                         os.write(writes[4], b"t")
                     else:
-                        process.send_signal(signal.SIGTERM)
+                        assert_running(pids["legacy"])
+                        release(2)
+                        expected = "legacy"
                 else:
                     turns = events.wait("synthesis_turn", 2)
                     expected = "obligation" if mode == "scan" else (
                         "legacy" if first_kind == "parity" else "parity")
                     assert turns[-1]["worker_pid"] == pids[expected], (turns, pids)
                     events.wait("synthesis_selected", 2)
-                    wait_stopped(selected["pid"])
+                    assert_running(selected["pid"])
                     if mode == "scan":
                         wait_record("scope_headroom")
                         wait_stopped(pids["parity"])
@@ -470,51 +477,22 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                         os.write(writes[2], b"x")  # Grow after SIGCONT, then block export again.
                         failed, = events.wait("synthesis_allocation_failed")
                         assert failed["pid"] == pids["legacy"], failed
-                        turns = events.wait("synthesis_turn", 3)
-                        assert turns[-1]["worker_pid"] == pids["parity"], turns
+                        wait_record("exit")
                         assert not Path(f"/proc/{pids['legacy']}").exists()
                         release(3)
-                    elif mode in {"original-return", "original-ceiling", "discard-pending",
-                                  "descendant-pending"}:
-                        private, = root.glob(".acacia-private-*")
-                        partial = private / "1"
-                        partial.write_text("partial fallback controller\n")
-                        if mode in {"original-return", "discard-pending", "descendant-pending"}:
-                            (root / "memory.current").write_text(str(400 * scope_mib))
-                            if mode in {"discard-pending", "descendant-pending"}:
-                                discarded = (events.wait("synthesis_descendant")[0]["pid"]
-                                             if mode == "descendant-pending" else pids["parity"])
-                                (root / "discard-pid").write_text(str(discarded))
-                            os.write(writes[4], b"x")
-                        else:
+                    elif mode in {"original-running", "original-ceiling"}:
+                        if mode == "original-ceiling":
                             (root / "fail-pid").write_text(str(pids["parity"]))
                             release(3)
-                        if mode in {"discard-pending", "descendant-pending"}:
-                            events.wait("synthesis_discard_pending")
-                            if mode == "descendant-pending":
-                                wait_record("original_headroom")
-                                assert not Path(f"/proc/{pids['parity']}").exists()
-                            wait_stopped(pids["legacy"])
-                            assert len([row for row in events.rows
-                                        if row.get("stage") == "synthesis_turn"]) == 2
-                            # Interrupt must reach acceptance while discard reaping is withheld.
-                            process.send_signal(signal.SIGTERM)
-                            wait_record("interrupted")
-                            release(7)
-                            stdout, stderr = process.communicate(timeout=20)
-                            assert process.returncode == 2 and not stdout, (stdout, stderr)
-                            assert not target.exists()
-                            assert not list(root.glob(".acacia-*"))
-                            assert all(not Path(f"/proc/{pid}").exists() for pid in pids.values())
-                            assert not Path(f"/proc/{discarded}").exists()
-                            return
-                        turns = events.wait("synthesis_turn", 3)
-                        assert turns[-1]["worker_pid"] == pids["legacy"], turns
-                        assert resource.prlimit(pids["legacy"], resource.RLIMIT_AS) == original_limit
-                        assert not partial.exists()
-                        if mode == "original-return":
-                            wait_record("original_headroom")
+                            wait_record("exit")
                             assert not Path(f"/proc/{pids['parity']}").exists()
+                        else:
+                            (root / "memory.current").write_text(str(440 * scope_mib))
+                            os.write(writes[4], b"x")
+                            wait_record("no_alternative")
+                            assert_running(pids["parity"])
+                        assert_running(pids["legacy"])
+                        assert resource.prlimit(pids["legacy"], resource.RLIMIT_AS) == original_limit
                         release(2)
                         expected = "legacy"
                     elif mode == "sole-fallback":
@@ -529,8 +507,11 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                         for count in range(3, total + 1):
                             os.write(writes[4], b"x")
                             turns = events.wait("synthesis_turn", count)
+                            assert_running(pids["legacy"])
+                            wait_stopped(pids["parity" if count % 2 else "obligation"])
                         assert [row["worker_pid"] for row in turns] == [
-                            pids["legacy" if i % 2 == 0 else "parity"] for i in range(total)]
+                            pids[kind] for kind in ("legacy", "parity", "obligation", "parity",
+                                                   "obligation", "parity", "obligation")][:total]
                         previous = {}
                         for row in turns:
                             remaining = row["deadline_ns"] - row["started_ns"]
@@ -541,12 +522,11 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                                 quantum = min(quantum, remaining)
                             assert row["quantum_ns"] == quantum, turns
                             previous[row["worker_pid"]] = quantum
-                        # Both extractors can now finish; the active worker must win immediately.
-                        release(2)
-                        release(3)
                         expected = mode.removeprefix("turns-")
+                        # Either running extractor can publish first.
+                        release(2 if expected == "legacy" else 3)
                     else:
-                        release(3 if expected == "parity" else 2)
+                        release({"parity": 3, "legacy": 2, "obligation": 8}[expected])
             stdout, stderr = process.communicate(timeout=20)
             rows = records(root)
             if mode == "unfinished-conflict":
@@ -555,7 +535,7 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                 assert not any(row.get("event") == "stage_entry"
                                and row.get("stage") == "parity_export"
                                and row["worker_pid"] == pids["parity"] for row in rows), rows
-            if mode in {"alone", "headroom", "conflict", "failure-blocked", "stop-pending"}:
+            if mode in {"alone", "failure-blocked", "stop-pending"}:
                 expected_code = 3 if mode == "failure-blocked" else 2
                 assert process.returncode == expected_code and not stdout, (process.returncode, stdout, stderr)
                 assert not target.exists()
@@ -577,10 +557,10 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                     terminal, = [row for row in rows if row.get("event") == "parent_terminal"
                                  and row["worker_pid"] == pids["legacy"]]
                     assert terminal["exit_code"] == 3 and terminal["signal"] == 0, terminal
-                if mode in {"original-return", "original-ceiling"}:
+                if mode in {"original-running", "original-ceiling"}:
                     assert not any(row.get("reason") in {"scope_headroom", "rss_budget"}
                                    and row["worker_pid"] == pids["legacy"] for row in rows), rows
-                if mode in {"boundary", "latent"}:
+                if mode in {"latent", "headroom", "conflict"}:
                     assert not any(row.get("reason") == "fallback" for row in rows), rows
                 else:
                     assert any(row.get("reason") == "fallback" for row in rows), rows
@@ -672,10 +652,10 @@ def main():
     assert libc.prctl(36, 1, 0, 0, 0) == 0  # Adopt children when their parent is killed.
     for mode in ("fallback", "alone", "headroom", "conflict", "scan", "growth",
                  "failure-pressure", "failure-blocked", "boundary", "turns-legacy",
-                 "turns-parity", "undecided", "original-return", "original-ceiling",
+                 "turns-parity", "undecided", "original-running", "original-ceiling",
                  "sole-fallback", "stop-pending", "unfinished", "unfinished-conflict",
                  "round-robin", "latent", "discard-pending", "failure-reclaim", "long-name",
-                 "cow-growth", "descendant-pending", "discard-one"):
+                 "cow-growth", "descendant-pending"):
         if mode in {"growth", "cow-growth", "sole-fallback", "latent"} and os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1":
             print(f"Skipping {mode} RLIMIT_AS case: incompatible with ASan shadow memory")
             continue

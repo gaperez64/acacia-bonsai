@@ -52,7 +52,7 @@ namespace acacia::synthesis {
   bool test_extraction_grace (bool expired, uint64_t& deadline_mono_ns, int worker_pid);
 #endif
 
-  // A completed proof may race; only the selected extractor may run.
+  // A completed proof may race; the parent grants export permission.
   // Internal library callers have no portfolio rendezvous.
   inline void await_selection (int verdict) {
     if (!current_slot || current_slot->proceed.load (std::memory_order_acquire))
