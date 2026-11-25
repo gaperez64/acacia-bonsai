@@ -595,6 +595,10 @@
     "cause": "worker_stopped",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
   },
+  "src/solver/solver_invoker.cc | throw std::logic_error | UNKNOWN | provider | \"internal error: missing component strategies\" | 0": {
+    "cause": "std::logic_error",
+    "telemetry": "STOPPED/error"
+  },
   "src/solver/solver_invoker.cc | throw std::runtime_error | UNKNOWN | provider | \"failed to write controller\" | 0": {
     "cause": "std::runtime_error",
     "telemetry": "STOPPED/error"

@@ -46,8 +46,8 @@ AIGER controller with:
 ```
 
 `--aiger-mode MODE` selects the controller encoding (default `isop`);
-`both+ud` tries both encoders and negated conditions. Modes containing `+dc`
-are rejected because they can produce incorrect controllers (#466).
+`both+ud` tries both encoders and negated conditions, and `+dc` uses output
+don't-cares (see [CLI](docs/cli.md)).
 
 `--aiger-abc on|off` shrinks controllers under `-s` (default `on` with ABC, `off` otherwise).
 It gets at most 5 s and 25% of the remaining invocation time (5 s without a

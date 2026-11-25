@@ -31,11 +31,13 @@
 #include "solver/symmetry.hh"
 #include "solver/symmetry_blocks.hh"
 #include "solver/syntactic_bypass.hh"
+#include "solver/synthesis_outputs.hh"
 #include "solver/translator_options.hh"
 #include "solver/unreal_safety_core_witnesses.hh"
 #include "utils/push_aps.hh"
 #include "utils/verbose.hh"
 #include <string_view>
+#include <unordered_set>
 
 #include <algorithm>
 #include <cassert>
@@ -398,8 +400,15 @@ namespace {
       void synthesis (spot::formula spot_formula, std::vector<std::vector<std::string>> out_part) {
         assert (synth_fname.has_value ());
         acacia::synthesis::await_selection (EXIT_CODE_REAL);
-        assert (strats.size () > 0);
-        assert (strats.size () == out_part.size ());
+        if (strats.empty () || strats.size () != out_part.size ())
+          throw std::logic_error ("internal error: missing component strategies");
+        // Spot's decomposition omits interface outputs absent from the formula.
+        std::unordered_set<std::string> assigned;
+        for (const auto& group : out_part)
+          assigned.insert (group.begin (), group.end ());
+        for (const auto& output : output_aps)
+          if (!assigned.contains (output))
+            out_part.front ().push_back (output);
         std::vector<spot::const_twa_graph_ptr> nonempty_strats;
         std::vector<std::vector<std::string>> nonempty_out_part;
         for (size_t i = 0; i < out_part.size (); ++i) {
@@ -419,6 +428,7 @@ namespace {
         }
 
         // Keep all interface propositions in the AIG.
+        acacia::synthesis::validate_output_partition (nonempty_strats, nonempty_out_part);
         spot::aig_ptr mealy_aig = mealy_machines_to_aig (
             nonempty_strats, aiger_mode.c_str (), input_aps, nonempty_out_part);
         spot::aig_ptr output_aig = convert_controller (mealy_aig, conversion);

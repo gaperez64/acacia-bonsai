@@ -344,6 +344,11 @@ os.execv({str(real_helper)!r}, [{str(real_helper)!r}, *sys.argv[1:]])
                     assert circuit.read_bytes() == original, (arm, expired)
                     verify()
             assert sentinel.read_text() == "keep this file unchanged\n"
+        dc = run(binary, "-T", spec, "--arms", "real:small:backward", "--spot-fast", "off",
+                 "-s", str(circuit), "--aiger-mode", "both+dc+ud", "--aiger-abc", "on")
+        assert dc.returncode == 0, dc
+        verify()
+        print("both+dc+ud with ABC: verified")
         assert set(root.iterdir()) == {circuit, sentinel, root / "abc.history"}
 
 

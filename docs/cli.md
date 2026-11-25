@@ -187,7 +187,7 @@ worker performs the same optional pass after closing Spot's output.
 `--aiger-mode MODE` selects Spot's runtime encoder for every synthesis route.
 The default encoder remains `isop`. Use `ite` (if-then-else),
 `isop` (irredundant sum of products), or `both` (try both and keep the smaller encoding).
-Append `+ud` to try negated conditions too, and
+Append `+dc` to use output don't-cares, `+ud` to try negated conditions too, and
 `+sub0`, `+sub1`, or `+sub2` for no splitting, input/latch/gate splitting (ISOP),
 or common-subexpression search. Modifiers may appear in any order; repeated
 modifiers follow Spot's behavior (the last `subN` wins). For example:
@@ -205,12 +205,11 @@ rejected before solving, both by the CLI parser and direct C++ entry points.
 The flag is case-sensitive; the dual modifier is spelled `+ud`, not `+dual`.
 This option changes encoding only; strategy extraction and the selected reduction
 are independent. Compare sizes only after independent verification.
-The `+dc` output don't-care modifier is rejected before solving, including in
-comma-separated alternatives. The smoke sweep found incorrect controllers with
-Acacia's original BDD dictionary; fresh-dictionary HOA replay did not reproduce
-them. The cause may involve Acacia's machine/BDD-variable handling as well as
-Spot; see issue #466 and the
-[measured rejections](../benchmarking/RESULTS.md). The default remains `isop`.
+Component output metadata is restricted to each machine's atomic propositions
+and checked against the explicit output partition before encoding. This fixes
+the overlapping output declarations that caused incorrect `+dc` controllers
+in decomposed synthesis (#466). Unused interface outputs are retained in the
+explicit partition so the encoder still emits their default values.
 
 ## Choose solver workers
 

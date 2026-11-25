@@ -1,10 +1,11 @@
 #include "solver/spot_nba_fastpath.hh"
+
 #include "utils/verbose.hh"
 
 #include <bddx.h>
-#include <spot/twa/twagraph.hh>
-
 #include <iostream>
+#include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/aiger.hh>
 #include <string>
 #include <vector>
 
@@ -128,6 +129,52 @@ namespace {
     return ok;
   }
 
+  bool decomposed_outputs_are_local () {
+    auto dict = spot::make_bdd_dict ();
+    auto first = spot::make_twa_graph (dict), second = spot::make_twa_graph (dict);
+    const auto a = bdd_ithvar (first->register_ap ("a"));
+    const auto b = bdd_ithvar (first->register_ap ("b"));
+    const auto x = bdd_ithvar (first->register_ap ("x"));
+    const auto y = bdd_ithvar (second->register_ap ("y"));
+    const auto x_spec = bdd_biimp (x, a & b);
+    for (auto machine : {first, second}) {
+      const auto valid = machine == first ? x_spec : y;
+      machine->set_buchi ();
+      machine->new_states (2);
+      machine->set_init_state (0);
+      machine->new_edge (0, 0, valid);
+      machine->new_edge (0, 1, !valid);
+      machine->new_edge (1, 1, bddtrue, {0});
+    }
+    for (bool deferred : {false, true}) {
+      std::vector<spot::const_twa_graph_ptr> strategies;
+      for (auto machine : {first, second}) {
+        acacia::synthesis::controller_builder builder;
+        acacia::synthesis::controller_capture capture (deferred ? &builder : nullptr);
+        auto result =
+            acacia::spot_fastpath::try_spot_nba_fast_path (machine, x & y, true, SPOT_FAST_DET);
+        if (!result.conclusive || !result.current_output_player_wins || !result.strategy)
+          return false;
+        auto strategy = deferred ? builder () : *result.strategy;
+        if (spot::get_synthesis_outputs (strategy) != (machine == first ? x : y))
+          return false;
+        strategies.push_back (strategy);
+      }
+      const std::vector<std::vector<std::string>> groups {{"x", "unused"}, {"y"}};
+      acacia::synthesis::validate_output_partition (strategies, groups);
+      for (const auto* mode : {"isop+dc", "ite+dc", "ite+dc+ud", "both+dc", "both+dc+ud"}) {
+        auto circuit = spot::mealy_machines_to_aig (strategies, mode, {"a", "b"}, groups);
+        if (circuit->num_outputs () != 3)
+          return false;
+        auto actual = circuit->as_automaton (false);
+        for (const auto& edge : actual->edges ())
+          if ((edge.cond & !(x_spec & y)) != bddfalse)
+            return false;
+      }
+    }
+    return true;
+  }
+
 }  // namespace
 
 int main () {
@@ -150,6 +197,7 @@ int main () {
   ok &= deterministic_winning_region_covers_all_original_states ();
   ok &= spot_fast_modes_gate_the_deterministic_path ();
   ok &= nondeterministic_is_never_conclusive ();
+  ok &= decomposed_outputs_are_local ();
 
   return ok ? 0 : 1;
 }

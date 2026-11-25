@@ -5,6 +5,7 @@
 #include "solver/bdd_config.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/spot_nba_fastpath.hh"
+#include "solver/synthesis_outputs.hh"
 #include "solver/synthesis_rendezvous.hh"
 #include "solver/translator_options.hh"
 #include <spot/twaalgos/mealy_machine.hh>
@@ -233,8 +234,9 @@ namespace acacia::parity_route {
           }
         });
       stage ("split", [&] {
-        arena = spot::split_2step (aut, outputs, true, synthesis.sp, native_moore);
-        spot::set_synthesis_outputs (arena, outputs);
+        const auto local_outputs = bdd_existcomp (outputs, aut->ap_vars ());
+        arena = spot::split_2step (aut, local_outputs, true, synthesis.sp, native_moore);
+        acacia::synthesis::set_projected_outputs (arena, local_outputs);
         aut = arena;
       });
       stage ("solve", [&] { winning = spot::solve_parity_game (arena, true); });
@@ -274,6 +276,7 @@ namespace acacia::parity_route {
       stage ("encode-controller", [&] {
         if (not output.controller)
           throw std::runtime_error ("missing controller strategy");
+        acacia::synthesis::validate_output_partition ({output.controller}, {input.outputs});
         output.circuit = spot::mealy_machine_to_aig (output.controller, config.aiger_mode.c_str (),
                                                      input.inputs, input.outputs);
         if (input.moore and input.frame == timing_frame::effective_mealy)

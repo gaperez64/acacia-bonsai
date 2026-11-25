@@ -35,6 +35,149 @@ prioritized_arbiter n=5 and on Lights_2c5b09da. On Lights it keeps the unreduced
 10,528 ands against `reselect`'s 1,537. One `bisim-sat` run of the arbiter produced 61 ands
 because the legacy route won the race, not because of SAT. Picking the smallest of the routes
 that finish, rather than the first proof, is where the outliers' size is.
+## 2026-11-25: Component output ownership restores AIGER +dc (#466)
+
+Archive `dc466-20261125`.
+
+The decomposed deterministic Spot fast path attached the global output cube to
+every component. Spot's `+dc` encoder consequently granted don't-cares for other
+components' outputs. Projecting the cube onto each machine's APs repairs that
+ownership error; the original BDD dictionary can be retained. The fresh-dictionary
+replay reported under #280 also repaired the output properties, so it did not
+isolate dictionary layout as the cause.
+
+All encoding boundaries now check local output declarations, disjoint component
+output supports, and agreement with explicit output groups restricted to each
+machine's APs. These checks throw an internal error in every build before encoding.
+Unused interface outputs remain in the explicit groups and receive encoder defaults.
+The CLI accepts `+dc` again; its default remains `isop`.
+
+**Decision-path impact: yes; local G3 passed (below).** Spot 2.16.3 reads
+`synthesis-outputs` in `split_2step(aut, synthesis_info&)`. Its AUTO dispatcher
+computes unsigned `ap().size() - bdd_nodecount(output_bdd)` to choose EXPL or
+SEMISYM. The global cube can underflow that count. Projection preserves ownership
+of APs actually present, but can change game construction, solve timing, strategy
+choices and the selected portfolio arm. Formula realizability simplification runs
+earlier and does not read this property. The game solver consumes the resulting
+arena; extraction and Mealy simplification also read the property after the decision.
+The projection can affect decision performance.
+
+**Local G3: GATE PASS.** Candidate `5e98f175` against master `7343ca0c` ran on
+this machine under the approved local regime: `--scope-mode instance`, the local
+6G cap patch, no swap, 17 s, and both 180-input panels. Candidate and
+baseline-vs-baseline control shared one master baseline binary.
+
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| candidate vs master | 165 → 165 / 732.136 → 730.264 s | 167 → 167 / 572.893 → 572.689 s | PASS |
+| control (master vs master) | 165 → 165 / 729.362 → 731.309 s | 167 → 167 / 573.829 → 568.088 s | PASS |
+
+Both campaigns had **0 verdict changes and 0 coverage losses**. The candidate's
+PAR-2 changes fall within the control variation; no speedup claim is made.
+
+**Repeated #280 smoke panel.** The original 33 inputs (panel list included in
+`dc466-20261125`) were rerun at 17 s using
+`benchmarking/synthesis-size.py`, the original TLSF map/corpus, fresh
+`tests/controller-check` invocations with 60 s / 200,000-state check budgets,
+and the original 15 modes plus `optim`. All 528 mode controllers verified.
+Two further members (omitted mode on candidate and master) also verified all 33,
+for **594/594 verified**, with no synthesis/verification failures, timeouts,
+resource limits or unsupported checks. Totals below use all the same 33 inputs.
+
+| Mode | Verified / 33 | Total ANDs+latches | vs isop |
+|---|---:|---:|---:|
+| `isop` | 33 | 24,390 | +0.00% |
+| `isop+dc` | 33 | 24,466 | +0.31% |
+| `isop+ud` | 33 | 33,908 | +39.02% |
+| `isop+dc+ud` | 33 | 33,888 | +38.94% |
+| `ite` | 33 | 86,860 | +256.13% |
+| `ite+dc` | 33 | 86,801 | +255.89% |
+| `ite+ud` | 33 | 86,879 | +256.21% |
+| `ite+dc+ud` | 33 | 86,664 | +255.33% |
+| `both` | 33 | 24,099 | -1.19% |
+| `both+dc` | 33 | 24,156 | -0.96% |
+| `both+ud` | 33 | 29,974 | +22.89% |
+| `both+dc+ud` | 33 | 32,477 | +33.16% |
+| `both+ud+sub0` | 33 | 30,013 | +23.05% |
+| `both+ud+sub1` | 33 | 28,282 | +15.96% |
+| `both+ud+sub2` | 33 | 30,015 | +23.06% |
+| `optim` | 33 | 4,485 | -81.61% |
+
+These are portfolio observations, with the current default bounded parity
+reduction; arm selection and reduction outcomes vary between runs. They are not
+same-strategy encoder comparisons or a performance gate.
+
+With omitted mode (default `isop`), **30/33 controllers are byte-identical to
+master**. The other three selected different arms:
+
+| Input | Master arm, A+L | Candidate arm, A+L |
+|---|---|---|
+| Shades2_235467da | backward, 2 | parity, 60 |
+| Cockpitboard_efe2feaf | parity Buchi fast path, 11 | decomposed fast path, 11 |
+| ltl2dba26 | backward, 26 | parity, 19 |
+
+For each of these inputs, forcing the legacy and parity arms on both versions
+produced byte-identical master/candidate controllers in all six pairs; all twelve
+controllers verified. The recorded default differences are therefore explained by
+portfolio selection. Omitted mode and explicit `isop` also differed on three
+inputs (Shades2, ltl2dba26 and ltl2dba05), again with different selected arms.
+The omitted-mode totals were 24,522 candidate and 24,471 master; the table's
+explicit-isop baseline was 24,390.
+
+**Full synthesis sweep.** All 433 REALIZABLE SYNTCOMP26 inputs were attempted
+on master `7343ca0c` and candidate `5e98f175` at 17 s with default `isop`.
+Every produced controller was checked by `controller-check` with 60 s /
+200,000-state budgets. Both revisions produced 403 controllers and verified
+**363**, with **363 common and 0 failed verifications**. Each had 30 synthesis
+timeouts, 38 verification timeouts, one verification resource limit and one
+verification error. On the common verified set, total ANDs+latches changed from
+**492,459 → 493,363 (+0.18%)**.
+
+Six common inputs changed size:
+
+| Input | Master A+L | Candidate A+L |
+|---|---:|---:|
+| EscalatorCountingInit | 26 | 24 |
+| KitchenTimerV3 | 134 | 908 |
+| TwoCounters4 | 59 | 88 |
+| amba_decomposed_encode_pb_14_pe_ | 1,277 | 1,276 |
+| ltl2dba_C2_pb_6_pe_ | 39 | 84 |
+| ltl2dba_beta_pb_2_pe_ | 112 | 171 |
+
+EscalatorCounting and narylatch_pb_8_pe_ changed bytes at unchanged sizes;
+the other 355 common controllers were byte-identical. The sweep did not record
+selected-arm telemetry, so its route changes cannot be established. These size
+observations do not establish a fixed-strategy encoding effect. The archive
+includes the comparison for every input and the per-run controllers/checks.
+
+Validation used master `7343ca0c` and an isolated copy of the working fix with the
+same recorded submodules (`tlsf-tools a715666d`, Posets `a4387cb7`, OxiDD
+`288a6efc`), GCC 15.3.1 and Spot 2.16.3. The validation workspace's existing
+`tlsf-tools 92467127` checkout was preserved; an initial run exposed its mismatch
+with master's native API/CLI tests, and both tests passed with the recorded pin.
+Smoke, unit validation and the full synthesis sweep used
+`systemd-run --user --scope -p MemoryMax=5G -p MemorySwapMax=0`, one compile/test
+job and one heavy invocation at a time, the local Spot environment and a scratch
+temporary directory. G3 used the approved 6G regime described above.
+
+Whole Meson unit suites passed: release **120 OK / 6 expected failures / 0 failures**
+(126 tests), diagnostic **126 OK / 6 expected failures / 0 failures** (132 tests).
+Both include fifteen new independently checked controllers: the nonliteral
+`x = a & b, y = true` example (with an unused output), Cockpitboard and Gamelogic
+under `isop+dc`, `ite+dc`, `ite+dc+ud`, `both+dc` and `both+dc+ud`.
+The new tests took 0.13-0.31 s each in release and 0.13-0.18 s in diagnostics.
+The helper test also covers immediate/deferred extraction and malformed output
+partitions. All 874 telemetry-inventory checks, Ruff and changed-line clang-format
+checks passed, as did `git diff --check`.
+
+Archive `dc466-20261125` contains the smoke rows, summaries and panel list,
+per-run circuits/checks/phases, fixed-arm comparisons, build/unit logs, exact
+arguments, source snapshot inventory and binary hashes. It also contains the
+diagnosis with its measurement tables, replay matrix and standalone Spot
+demonstration, plus the local G3 regime patch, candidate/control landing files
+and full synthesis sweep. Inherited process environments were removed from the
+archived unit-test JSONL records before the private-data check.
+
 ## 2026-11-25: Decoded client values make the encoded arbiters' count games tiny (#471, stage 1)
 
 Archive `enc471-20261125`. This is a scratch prototype; no solver code changed. simple_arbiter_enc
