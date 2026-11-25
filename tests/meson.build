@@ -531,7 +531,7 @@ game_backend_integration = executable (
               '-DACACIA_FORWARD_SAFETY_SOLVER=1',
               '-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1'] + preparation_fault_cpp_args,
   link_args : preparation_fault_link_args,
-  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps + [controller_writer_dep],
   install : false,
 )
 if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release')
@@ -751,6 +751,20 @@ controller_check = executable (
   'controller-check', 'controller_check.cc',
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
+test ('aiger-abc-cli', py,
+      args : [files ('check-aiger-abc.py'), ab_exe, have_abc ? 'true' : 'false'],
+      suite : ['unit', 'cli', 'synthesis'], depends : ab_exe)
+if have_abc
+  abc_budget_test = executable ('aiger-abc-budget-test', 'aiger_abc_budget_test.cc',
+    include_directories : inc, dependencies : [controller_writer_dep, spot_dep, bddx_dep])
+  abc_test_args = [files ('check-aiger-abc.py'), ab_exe, 'true', controller_check,
+                   files ('fixtures/aiger-abc.tlsf'), abc_budget_test]
+  abc_test_depends = [ab_exe, controller_check, abc_budget_test, abc_helper]
+  if preparation_fault_cpp_args.length () > 0
+    abc_test_args += [game_backend_integration]
+    abc_test_depends += [game_backend_integration]
+  endif
+endif
 synthesis_outputs_test = executable (
   'synthesis-outputs-test', 'synthesis_outputs_test.cc',
   include_directories : inc, dependencies : [spot_dep, bddx_dep])
@@ -771,7 +785,7 @@ aiger_mode_test = executable (
     'solver/mealy_to_moore.cc'),
   link_with : [closure_buchi_provider_lib, parity_route_lib, parity_lib],
   include_directories : inc,
-  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps)
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps + [controller_writer_dep])
 test ('aiger-mode', py,
       args : [files ('check-aiger-mode.py'), ab_exe, controller_check, aiger_mode_test],
       suite : ['unit', 'cli', 'synthesis'], timeout : 120,
@@ -1127,6 +1141,10 @@ if host_machine.system () == 'linux'
   obligation_helper_faults = shared_library (
     'obligation-helper-faults', 'obligation_helper_faults.cc',
     dependencies : [spot_dep, bddx_dep, cpp.find_library ('dl')], install : false)
+  if have_abc
+    abc_test_args += ['--fault-library', obligation_helper_faults]
+    abc_test_depends += [obligation_helper_faults]
+  endif
   obligation_cli_args = [files ('check-obligation-helper.py'), ab_exe,
                          obligation_helper_test, obligation_helper_faults,
                          meson.current_build_dir (),
@@ -1147,6 +1165,12 @@ if host_machine.system () == 'linux'
         env : ['LD_PRELOAD=' + obligation_helper_faults.full_path ()],
         suite : ['unit', 'obligation', 'synthesis'], timeout : 120,
         depends : [ab_exe, obligation_helper_faults])
+endif
+
+if have_abc
+  test ('aiger-abc', py, args : abc_test_args, suite : ['unit', 'cli', 'synthesis'],
+        env : ['ACACIA_ABC_HELPER=' + abc_helper.full_path ()],
+        timeout : 90, depends : abc_test_depends)
 endif
 
 parity_route_test = executable ('parity-route-test',

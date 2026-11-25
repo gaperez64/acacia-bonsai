@@ -171,6 +171,19 @@ at 1 MiB and checked structurally without rebuilding BDDs in the parent. The
 `parity_reduction_attempt` phase records report the option, attempt, outcome,
 cause, wall time, deadline, and memory cap.
 
+`--aiger-abc on|off` shrinks the encoded controller under `-s` (default `on` with
+ABC, `off` otherwise). Its separate budget is the smaller of 5 s and 25% of the
+remaining invocation time, or 5 s without a deadline; an expired deadline skips
+ABC. Staging and payloads are limited to 1/16 of the child's memory cap, at most
+32 MiB. It uses the same memory supervision and retains the incumbent on every
+failure or non-improvement. The Mealy reduction limits above are unchanged.
+With private staging, ABC runs from the supervised publisher after competitors
+are reaped and Spot's controller is closed at the requested destination. Its
+child-only helper can replace that file atomically only after interface validation
+and a strict size improvement. Symlinks keep pointing to their targets; FIFOs and
+multiply linked files retain Spot's output. Without private staging, the selected
+worker performs the same optional pass after closing Spot's output.
+
 `--aiger-mode MODE` selects Spot's runtime encoder for every synthesis route.
 The default encoder remains `isop`. Use `ite` (if-then-else),
 `isop` (irredundant sum of products), or `both` (try both and keep the smaller encoding).

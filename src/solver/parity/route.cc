@@ -1,6 +1,7 @@
 #include "solver/parity/route.hh"
 
 #include "solver/aiger_mode.hh"
+#include "solver/bounded_subprocess.hh"
 #include "solver/bdd_config.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/spot_nba_fastpath.hh"
@@ -284,13 +285,7 @@ namespace acacia::parity_route {
           output.circuit = config.adapt_circuit (std::move (output.circuit));
       });
       if (config.reduction != mealy_reduction::none) {
-        const auto start = phase_clock (CLOCK_MONOTONIC);
-        // Reserve 95% of the remaining invocation time; both attempts share this cap.
-        const uint64_t remaining =
-            config.deadline_mono_ns
-                ? (config.deadline_mono_ns > start ? config.deadline_mono_ns - start : 0)
-                : UINT64_MAX;
-        const auto deadline = start + std::min<uint64_t> (200000000, remaining / 20);
+        const auto deadline = subprocess::optional_deadline (config.deadline_mono_ns);
         stage ("reduce-controller", [&] { reduce_controller (output, input, config, deadline); });
         if (config.reduction == mealy_reduction::reselect && output.tier == 4)
           stage ("reselect-controller",

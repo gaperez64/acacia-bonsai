@@ -566,7 +566,7 @@ def main() -> None:
             for selection, backend in ((alone, "obligation"),
                                        (["--arms", "real:small:backward", "--spot-fast", "off"], "backward")):
                 result, rows = run(binary, ["-f", "G o", *inputs, "-o", "o", *selection,
-                                           "-s", str(controller)],
+                                           "-s", str(controller), "--aiger-abc", "off"],
                                    root, library, "writer-contract",
                                    gate=backend == "obligation")
                 assert result.returncode == 0, result

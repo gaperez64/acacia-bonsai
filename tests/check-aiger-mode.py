@@ -57,7 +57,8 @@ MAIN { INPUTS { a; b; c; d; unused_input; } OUTPUTS { grant; unused_output; }
         for arm, options in (("real:small:backward", []),
                              ("real:small:backward", ["--spot-fast", "off"]),
                              ("both:obligation:spot", []), ("both:parity:spot", [])):
-            command = ["--arms", arm, *options, "-T", str(source), "-s", str(circuit)]
+            command = ["--arms", arm, *options, "-T", str(source), "-s", str(circuit),
+                       "--aiger-abc", "off"]
             default = run(binary, *command)
             assert default.returncode == 0, (arm, default)
             original = circuit.read_bytes()

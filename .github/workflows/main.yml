@@ -127,13 +127,34 @@ jobs:
       - uses: ./.github/actions/setup-spot
       - uses: hendrikmuhs/ccache-action@v1
         with: {key: ci-diagnostics, max-size: 500M}
+      - name: Cache pinned ABC
+        id: abc-cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ runner.temp }}/abc
+          key: abc-bd23a971519f70b1a8dbb8d0a2c0574eeb69af69-${{ runner.os }}-${{ runner.arch }}-gcc14-O2-pic-v1
+      - name: Build pinned ABC
+        if: steps.abc-cache.outputs.cache-hit != 'true'
+        run: |
+          wget -qO abc.tar.gz https://github.com/berkeley-abc/abc/archive/bd23a971519f70b1a8dbb8d0a2c0574eeb69af69.tar.gz
+          mkdir -p "$RUNNER_TEMP/abc"
+          tar -xzf abc.tar.gz --strip-components=1 -C "$RUNNER_TEMP/abc"
+          make -C "$RUNNER_TEMP/abc" -j2 CC=gcc-14 CXX=g++-14 \
+            ABC_USE_NO_READLINE=1 ABC_USE_PIC=1 OPTFLAGS=-O2 libabc.a
+          find "$RUNNER_TEMP/abc" -type f \( -name '*.o' -o -name '*.d' \) -delete
       - name: Compile all targets and run units with diagnostics
         run: |
           meson setup build_diagnostics_ci --buildtype=debug \
-            -Dacacia_enable_diagnostics=true
+            -Dacacia_enable_diagnostics=true -Dabc=enabled -Dabc_path="$RUNNER_TEMP/abc"
           meson compile -C build_diagnostics_ci -j 3
           meson test -C build_diagnostics_ci --suite unit \
             --num-processes 3 --print-errorlogs
+      - name: Require ABC rewrites with the runner's resources to itself
+        env:
+          ACACIA_TEST_REQUIRE_ABC: '1'
+        run: |
+          meson test -C build_diagnostics_ci aiger-abc-cli aiger-abc aiger-mode controller-check \
+            --num-processes 1 --print-errorlogs
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -204,7 +225,7 @@ jobs:
         with: {key: ci-tlsf, max-size: 500M}
       - name: Compile and test the native TLSF frontend
         run: |
-          meson setup build_tlsf_ci --buildtype debug
+          meson setup build_tlsf_ci --buildtype debug -Dabc=disabled
           meson compile -C build_tlsf_ci
           meson test -C build_tlsf_ci --suite tlsf \
             --num-processes 1 --print-errorlogs

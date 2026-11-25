@@ -49,6 +49,11 @@ AIGER controller with:
 `both+ud` tries both encoders and negated conditions, and `+dc` uses output
 don't-cares (see [CLI](docs/cli.md)).
 
+`--aiger-abc on|off` shrinks controllers under `-s` (default `on` with ABC, `off` otherwise).
+It gets at most 5 s and 25% of the remaining invocation time (5 s without a
+deadline). Staging and payloads use at most 1/16 of the child's memory cap,
+bounded above by 32 MiB; any failure retains Spot's controller.
+
 ## Guides
 
 - [CLI](docs/cli.md): inputs, verdicts, exit codes, controllers and solver arms.

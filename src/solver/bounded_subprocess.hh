@@ -1,6 +1,7 @@
 #pragma once
 
 #include "phase_records.hh"
+#include "solver/scope_memory.hh"
 
 #include <new>
 
@@ -18,6 +19,54 @@ namespace acacia::subprocess {
       return false;
 #endif
     return true;
+  }
+
+  inline constexpr rlim_t max_optional_memory = rlim_t {512} * 1024 * 1024;
+
+  inline uint64_t optional_deadline (uint64_t invocation_deadline) {
+    const auto start = phase_clock (CLOCK_MONOTONIC);
+    const auto remaining = invocation_deadline
+                               ? (invocation_deadline > start ? invocation_deadline - start : 0)
+                               : UINT64_MAX;
+    return start + std::min<uint64_t> (200000000, remaining / 20);
+  }
+
+  inline rlim_t optional_memory (size_t payload_size, uint64_t worker_rss_share,
+                                 const char* scope_directory, const char*& cause) {
+    rlim_t memory_bytes = 0;
+    bool no_limit = false;
+    const auto limit = scope_memory ("memory.max", scope_directory, &no_limit);
+    constexpr uint64_t reserve = uint64_t {64} * 1024 * 1024;
+    const auto rss_kb = resource_snapshot (getpid ()).rss_kb;
+    const uint64_t resident = rss_kb > 0 ? uint64_t (rss_kb) * 1024 : 0;
+    cause = "scope_memory";
+    if (no_limit) {
+      memory_bytes = max_optional_memory;
+      cause = "resource";
+    }
+    else if (const auto used = scope_memory ("memory.current", scope_directory);
+             limit && used) {
+      const auto threshold = *limit - *limit / 8;
+      const uint64_t headroom = threshold > *used ? threshold - *used : 0;
+      // Cover a full resident copy-on-write plus transfer; leave half the rest unused.
+      const auto margin = std::max (reserve, resident) + payload_size;
+      if (headroom > margin)
+        memory_bytes = std::min<uint64_t> (max_optional_memory, (headroom - margin) / 2);
+      cause = "scope_headroom";
+    }
+    if (memory_bytes) {
+      // Charge both resident sets and transfer against the supervisor's worker share.
+      const auto parent_bytes = resident + payload_size;
+      const auto share = worker_rss_share;
+      const auto available = share > parent_bytes ? share - parent_bytes : 0;
+      if (available < memory_bytes) {
+        memory_bytes = available;
+        cause = "rss_share";
+      }
+      if (!resident || memory_bytes < resident + reserve)
+        memory_bytes = 0;
+    }
+    return memory_bytes;
   }
 
   struct result {

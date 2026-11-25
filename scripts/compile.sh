@@ -30,6 +30,8 @@ meson_args_for_config() {
 
 profile_args=$(python3 scripts/acacia-build.py profile-args normal)
 read -r -a setup_args <<< "$profile_args"
+read -r -a dependency_args <<< "${ACACIA_DEPENDENCY_ARGS:-}"
+setup_args+=("${dependency_args[@]}")
 
 build_identity_for() {
     python3 scripts/acacia-build.py identity "$1" --profile normal --build-dir "$2"

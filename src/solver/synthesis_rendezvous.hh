@@ -49,6 +49,7 @@ namespace acacia::synthesis {
                              uint64_t deadline_ns);
   void test_before_reap (int worker_pid);
   void test_before_publication ();
+  void test_before_aiger_abc ();
   bool test_extraction_grace (bool expired, uint64_t& deadline_mono_ns, int worker_pid);
 #endif
 

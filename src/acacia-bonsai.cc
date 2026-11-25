@@ -484,6 +484,16 @@ namespace {
   [[noreturn]] void dispatch_child (const portfolio_arm& arm, const arg_parse_result& arg_values,
                                     uint64_t deadline_mono_ns,
                                     acacia::obligation::control* eligibility_channel) {
+#if ACACIA_HAVE_ABC
+    // Private extraction must finish before optional work can consume its budget.
+    if (arg_values.synth_fname && arg_values.aiger_abc && g_controller_paths.empty ())
+      acacia::synthesis::aiger_abc = {
+          true, deadline_mono_ns,
+          arm.kind == portfolio_arm_kind::obligation ? g_helper_rss_share
+          : arm.kind == portfolio_arm_kind::parity || arm.kind == portfolio_arm_kind::symcount
+              ? g_parity_rss_share
+              : acacia::obligation::rss_share (arg_values.arms->size ())};
+#endif
     if (arm.kind == portfolio_arm_kind::obligation)
       dispatch_helper (arg_values);
     if (arm.kind == portfolio_arm_kind::parity) {
@@ -1433,6 +1443,10 @@ namespace {
                 _exit (EXIT_CODE_UNKNOWN);
 #endif
               sigprocmask (SIG_SETMASK, &old_mask, nullptr);
+#if ACACIA_HAVE_ABC
+              // Reuse publication supervision, after competitors have been reaped.
+              acacia::synthesis::aiger_abc = {arg_values.aiger_abc, deadline_mono_ns, UINT64_MAX};
+#endif
               try {
                 std::ifstream controller (g_controller_paths[reaped_index]);
                 if (controller) {

@@ -1,4 +1,13 @@
 {
+  "dependencies": {
+    "abc": {
+      "meson": "abc",
+      "path_meson": "abc_path",
+      "default": "auto",
+      "macro": "ACACIA_HAVE_ABC",
+      "description": "External library availability is resolved by Meson, not solver presets."
+    }
+  },
   "families": {
     "aut_preprocessor": {
       "meson": "acacia_aut_preprocessor",
