@@ -4,6 +4,8 @@
 
 ## 2026-11-25: Component output ownership restores AIGER +dc (#466)
 
+Archive `dc466-20261125`.
+
 The decomposed deterministic Spot fast path attached the global output cube to
 every component. Spot's `+dc` encoder consequently granted don't-cares for other
 components' outputs. Projecting the cube onto each machine's APs repairs that
@@ -25,10 +27,23 @@ of APs actually present, but can change game construction, solve timing, strateg
 choices and the selected portfolio arm. Formula realizability simplification runs
 earlier and does not read this property. The game solver consumes the resulting
 arena; extraction and Mealy simplification also read the property after the decision.
-The projection can affect decision performance. G3 was not run here.
+The projection can affect decision performance.
 
-**Repeated #280 smoke panel.** The original 33 inputs in
-`~/scratch/enc280/panel.list` were rerun at 17 s using
+**Local G3: GATE PASS.** Candidate `5e98f175` against master `7343ca0c` ran on
+this machine under the approved local regime: `--scope-mode instance`, the local
+6G cap patch, no swap, 17 s, and both 180-input panels. Candidate and
+baseline-vs-baseline control shared one master baseline binary.
+
+| Campaign | SYNTCOMP25 solved / PAR-2 | SYNTCOMP26 solved / PAR-2 | Gate |
+|---|---|---|---|
+| candidate vs master | 165 → 165 / 732.136 → 730.264 s | 167 → 167 / 572.893 → 572.689 s | PASS |
+| control (master vs master) | 165 → 165 / 729.362 → 731.309 s | 167 → 167 / 573.829 → 568.088 s | PASS |
+
+Both campaigns had **0 verdict changes and 0 coverage losses**. The candidate's
+PAR-2 changes fall within the control variation; no speedup claim is made.
+
+**Repeated #280 smoke panel.** The original 33 inputs (panel list included in
+`dc466-20261125`) were rerun at 17 s using
 `benchmarking/synthesis-size.py`, the original TLSF map/corpus, fresh
 `tests/controller-check` invocations with 60 s / 200,000-state check budgets,
 and the original 15 modes plus `optim`. All 528 mode controllers verified.
@@ -76,14 +91,41 @@ inputs (Shades2, ltl2dba26 and ltl2dba05), again with different selected arms.
 The omitted-mode totals were 24,522 candidate and 24,471 master; the table's
 explicit-isop baseline was 24,390.
 
+**Full synthesis sweep.** All 433 REALIZABLE SYNTCOMP26 inputs were attempted
+on master `7343ca0c` and candidate `5e98f175` at 17 s with default `isop`.
+Every produced controller was checked by `controller-check` with 60 s /
+200,000-state budgets. Both revisions produced 403 controllers and verified
+**363**, with **363 common and 0 failed verifications**. Each had 30 synthesis
+timeouts, 38 verification timeouts, one verification resource limit and one
+verification error. On the common verified set, total ANDs+latches changed from
+**492,459 → 493,363 (+0.18%)**.
+
+Six common inputs changed size:
+
+| Input | Master A+L | Candidate A+L |
+|---|---:|---:|
+| EscalatorCountingInit | 26 | 24 |
+| KitchenTimerV3 | 134 | 908 |
+| TwoCounters4 | 59 | 88 |
+| amba_decomposed_encode_pb_14_pe_ | 1,277 | 1,276 |
+| ltl2dba_C2_pb_6_pe_ | 39 | 84 |
+| ltl2dba_beta_pb_2_pe_ | 112 | 171 |
+
+EscalatorCounting and narylatch_pb_8_pe_ changed bytes at unchanged sizes;
+the other 355 common controllers were byte-identical. The sweep did not record
+selected-arm telemetry, so its route changes cannot be established. These size
+observations do not establish a fixed-strategy encoding effect. The archive
+includes the comparison for every input and the per-run controllers/checks.
+
 Validation used master `7343ca0c` and an isolated copy of the working fix with the
 same recorded submodules (`tlsf-tools a715666d`, Posets `a4387cb7`, OxiDD
 `288a6efc`), GCC 15.3.1 and Spot 2.16.3. The validation workspace's existing
 `tlsf-tools 92467127` checkout was preserved; an initial run exposed its mismatch
 with master's native API/CLI tests, and both tests passed with the recorded pin.
-All builds and runs used `systemd-run --user --scope -p MemoryMax=5G
--p MemorySwapMax=0`, one compile/test job and one heavy invocation at a time,
-`g3-440/env.sh`, and `TMPDIR=~/scratch/dc466/tmp`.
+Smoke, unit validation and the full synthesis sweep used
+`systemd-run --user --scope -p MemoryMax=5G -p MemorySwapMax=0`, one compile/test
+job and one heavy invocation at a time, the local Spot environment and a scratch
+temporary directory. G3 used the approved 6G regime described above.
 
 Whole Meson unit suites passed: release **120 OK / 6 expected failures / 0 failures**
 (126 tests), diagnostic **126 OK / 6 expected failures / 0 failures** (132 tests).
@@ -95,11 +137,13 @@ The helper test also covers immediate/deferred extraction and malformed output
 partitions. All 874 telemetry-inventory checks, Ruff and changed-line clang-format
 checks passed, as did `git diff --check`.
 
-Local evidence is under `~/scratch/dc466/`: `smoke/{rows,summary}.tsv`, per-run
-circuits/checks/phases, `fixed-arms/`, and `implementation/` build/unit logs,
-`sweep-arguments.json`, `default-comparison.json`, `fixed-arm-comparison.json`,
-source snapshot inventory and binary hashes. The diagnosis and its causal controls
-remain in `diagnosis.md`. No full corpus or G3 performance claim is made.
+Archive `dc466-20261125` contains the smoke rows, summaries and panel list,
+per-run circuits/checks/phases, fixed-arm comparisons, build/unit logs, exact
+arguments, source snapshot inventory and binary hashes. It also contains the
+diagnosis with its measurement tables, replay matrix and standalone Spot
+demonstration, plus the local G3 regime patch, candidate/control landing files
+and full synthesis sweep. Inherited process environments were removed from the
+archived unit-test JSONL records before the private-data check.
 
 ## 2026-11-25: The GR(1) lift's axis order no longer depends on parameter names (tlsf-tools #146)
 
