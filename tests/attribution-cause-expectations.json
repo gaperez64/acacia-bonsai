@@ -1091,11 +1091,11 @@
     "cause": "FailureCause::applicability",
     "telemetry": "DECLINE/applicability"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_window\" | \"probe_budget_exhausted: fixed seed probe budget exhausted\" | 0": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_window\" | \"probe_budget_exhausted: fixed seed probe budget \" \"exhausted\" | 0": {
     "cause": "FailureCause::resource",
     "telemetry": "STOPPED/resource"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_window\" | \"probe_budget_exhausted: fixed seed probe budget exhausted\" | 1": {
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_LIMIT | \"seed_window\" | \"probe_budget_exhausted: fixed seed probe budget \" \"exhausted\" | 1": {
     "cause": "FailureCause::resource",
     "telemetry": "STOPPED/resource"
   },
@@ -1379,10 +1379,6 @@
     "cause": "e.cause",
     "telemetry": "STOPPED/error/resource/deadline/cancelled"
   },
-  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | decline | DECLINED | \"parameters\" | \"absent\" | 2": {
-    "cause": "FailureCause::applicability",
-    "telemetry": "DECLINE/applicability"
-  },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_ERROR | \"candidate\" | \"fault hook could not mutate the game\" | 0": {
     "cause": "FailureCause::error",
     "telemetry": "STOPPED/error"
@@ -1468,6 +1464,10 @@
     "telemetry": "STOPPED/error"
   },
   "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | e.stage | \"worker deadline exceeded\" | 0": {
+    "cause": "FailureCause::deadline",
+    "telemetry": "STOPPED/deadline"
+  },
+  "subprojects/tlsf-tools/src/lib/gr1_lift.cc | Failure | TLSF_GR1_LIFT_DEADLINE | e.stage | \"worker deadline exceeded\" | 1": {
     "cause": "FailureCause::deadline",
     "telemetry": "STOPPED/deadline"
   },
