@@ -24,7 +24,7 @@ namespace acacia::parity_route {
                  uint64_t start, uint64_t deadline, rlim_t memory_bytes, pid_t child) noexcept {
       if (!phase_records_enabled ())
         return;
-      const char* names[] = {"none", "bisim", "bisim-output", "reselect"};
+      const char* names[] = {"none", "bisim", "bisim-output", "reselect", "sat", "bisim-sat"};
       const auto now = phase_clock (CLOCK_MONOTONIC);
       worker_record local;
       auto* worker = active_worker_record ();
@@ -67,7 +67,11 @@ namespace acacia::parity_route {
     }
 
     void simplify (spot::twa_graph_ptr& machine, mealy_reduction reduction) {
-      spot::simplify_mealy_here (machine, reduction == mealy_reduction::bisim ? 1 : 2, false);
+      const int level = reduction == mealy_reduction::sat         ? 3
+                        : reduction == mealy_reduction::bisim_sat ? 4
+                        : reduction == mealy_reduction::bisim     ? 1
+                                                                 : 2;
+      spot::simplify_mealy_here (machine, level, false);
     }
   }
 

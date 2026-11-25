@@ -56,14 +56,15 @@ also go to stderr.
 including Moore. See the [quick start](../README.md#quick-start).
 The [Docker wrapper](../Docker/README.md#write-a-controller) can write to stdout.
 
-`--parity-mealy-reduction none|bisim|bisim-output|reselect` selects the parity route's
+`--parity-mealy-reduction none|bisim|bisim-output|reselect|sat|bisim-sat` selects the parity route's
 post-extraction reduction under `-s` only. `bisim-output` uses Spot's
 bisimulation with output assignment (simplification level 2); `bisim` uses level 1.
 Both preserve realization by specializing the selected controller's allowed output
 traces. `none` restores the previous extraction and encoding pipeline. Decision
 runs do not execute any reduction. Machines above 512 states, 8,192 edges, or
-65,536 label BDD nodes (summed over edges) skip the optional work. SAT minimization
-is deliberately excluded because Spot's API offers no cancellation budget.
+65,536 label BDD nodes (summed over edges) skip the optional work. The experimental
+`sat` uses Spot's SAT minimization on the extracted controller; `bisim-sat` first
+applies bisimulation, then SAT (simplification levels 3 and 4).
 The default, `reselect`, additionally re-solves a copy of small tier-4 arenas after sorting
 outgoing edges by destination, then applies level 2. It retains the alternative
 only if its encoded circuit has fewer AND gates plus latches. The second solve is
@@ -71,7 +72,8 @@ skipped above 2,048 arena states, 8,192 arena edges, or four acceptance sets. It
 the decision solve, winning regions, or exported game certificates.
 
 The incumbent is encoded before optional work starts. Both attempts share at most
-200 ms and 5% of the time remaining before the invocation deadline. Each runs in a
+200 ms and 5% of the time remaining before the invocation deadline. The experimental
+SAT modes instead get the smaller of 5 s and 25% of the remaining time. Each runs in a
 forked child with a private address-space/RSS cap of at most 512 MiB; the restriction
 prepass uses the same subprocess supervisor. With a finite `memory.max`, scope usage must
 leave room below the portfolio's 7/8 kill threshold for the child plus a full

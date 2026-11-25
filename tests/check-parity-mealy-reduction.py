@@ -20,7 +20,10 @@ def run(binary, *arguments, env=None):
 
 def main():
     binary, checker, fixture = sys.argv[1:]
-    assert "--parity-mealy-reduction MODE" in run(binary, "--help").stdout
+    help_text = run(binary, "--help").stdout
+    assert "--parity-mealy-reduction MODE" in help_text
+    assert "sat: SAT minimization" in help_text
+    assert "bisim-sat: bisimulation then SAT" in help_text
     for mode in ("", "BISIM", "output", "2", "bisim-output,none"):
         answer = run(binary, "--parity-mealy-reduction", mode)
         assert answer.returncode == 3, answer
@@ -31,6 +34,14 @@ def main():
     with tempfile.TemporaryDirectory() as temporary:
         root = Path(temporary)
         source, circuit = root / "spec.tlsf", root / "controller.aag"
+        spec = Path(__file__).parent / "fixtures/symcount/indexed-copy.tlsf"
+        for mode in ("sat", "bisim-sat"):
+            circuit.unlink(missing_ok=True)
+            answer = run(binary, "--arms", "both:parity:spot", "-T", str(spec),
+                         "--parity-mealy-reduction", mode, "-s", str(circuit))
+            assert answer.returncode == 0, answer
+            checked = run(checker, str(spec), str(circuit))
+            assert checked.returncode == 0 and checked.stdout.strip() == "verified", checked
         # Safety, liveness, tier four, and native target adaptation, with unused APs.
         for semantics, target, formula in (
                 ("Mealy", "Mealy", "G (i -> X o)"),

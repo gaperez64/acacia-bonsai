@@ -46,7 +46,8 @@ void show_help (const char* program_name) {
       << "                    a canonical subset of Spot's syntax: no empty components\n"
       << "                    +dc is disabled: incorrect controllers; "
          "see issue #466\n"
-      << "  --parity-mealy-reduction MODE  with -s only: none|bisim|bisim-output|reselect (default)\n"
+      << "  --parity-mealy-reduction MODE  with -s only: none|bisim|bisim-output|reselect|sat|bisim-sat\n"
+      << "                    default reselect; sat: SAT minimization; bisim-sat: bisimulation then SAT\n"
       << "                    skip above 512 states, 8192 edges or 65536 label BDD nodes\n"
       << "  -V, --version     print program version and configuration\n"
       << "  -f STRING         process the formula STRING\n"
@@ -617,11 +618,15 @@ arg_parse_result arg_parser (int argc, char** argv) {
           retval.parity_mealy_reduction = reduction::bisim_output;
         else if (value == "reselect")
           retval.parity_mealy_reduction = reduction::reselect;
+        else if (value == "sat")
+          retval.parity_mealy_reduction = reduction::sat;
+        else if (value == "bisim-sat")
+          retval.parity_mealy_reduction = reduction::bisim_sat;
         else
           error (
               EXIT_CODE_ERROR,
               "Error: invalid --parity-mealy-reduction '%s'; expected "
-              "none|bisim|bisim-output|reselect.\n",
+              "none|bisim|bisim-output|reselect|sat|bisim-sat.\n",
               optarg);
         break;
       }

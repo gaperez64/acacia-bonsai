@@ -282,12 +282,15 @@ namespace acacia::parity_route {
       });
       if (config.reduction != mealy_reduction::none) {
         const auto start = phase_clock (CLOCK_MONOTONIC);
-        // Reserve 95% of the remaining invocation time; both attempts share this cap.
+        // Optional work shares a cap; SAT gets more time than the cheaper reductions.
+        const bool sat = config.reduction == mealy_reduction::sat ||
+                         config.reduction == mealy_reduction::bisim_sat;
         const uint64_t remaining =
             config.deadline_mono_ns
                 ? (config.deadline_mono_ns > start ? config.deadline_mono_ns - start : 0)
                 : UINT64_MAX;
-        const auto deadline = start + std::min<uint64_t> (200000000, remaining / 20);
+        const auto deadline =
+            start + std::min<uint64_t> (sat ? 5000000000 : 200000000, remaining / (sat ? 4 : 20));
         stage ("reduce-controller", [&] { reduce_controller (output, input, config, deadline); });
         if (config.reduction == mealy_reduction::reselect && output.tier == 4)
           stage ("reselect-controller",
