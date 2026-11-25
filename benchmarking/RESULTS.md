@@ -23,6 +23,14 @@ remaining deadline. simple_arbiter_enc n=10 (150,473) and prioritized_arbiter n=
 still fall back. G1 and G3 pass. G3's one flip, load_balancer_unreal1 6_4, is a decision run
 that never reaches the pass and sits at the cap.
 
+**Rejected: Spot's SAT-based Mealy minimisation** (archive `sat280-20261125`, branch
+`sat-mealy-280`). As `--parity-mealy-reduction sat|bisim-sat` with a budget of the smaller of 5 s
+and a quarter of the remaining time, a release build exhausts the budget on
+prioritized_arbiter n=5 and on Lights_2c5b09da. On Lights it keeps the unreduced machine,
+10,528 ands against `reselect`'s 1,537. One `bisim-sat` run of the arbiter produced 61 ands
+because the legacy route won the race, not because of SAT. Picking the smallest of the routes
+that finish, rather than the first proof, is where the outliers' size is.
+
 ## 2026-11-25: The GR(1) lift's axis order no longer depends on parameter names (tlsf-tools #146)
 
 Archive `lift146-20261125`. tlsf-tools #146 orders the legacy seed discovery and U window by
