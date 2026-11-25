@@ -2,6 +2,27 @@
 
 [Measurement protocol](README.md) and [evidence index](evidence-index.tsv).
 
+## 2026-11-25: An optional ABC pass cuts synthesized controllers by 21% (#280)
+
+Archives `abc280-20261124` and `abcgate-20261125`. Offline, ABC (bd23a971) ran six scripts on
+the 362 controllers master verifies (`strat467-20261124`); every output was re-verified.
+`strash; dc2` alone cut ands+latches by 30.0% on the 359 common inputs (258,468 to 180,889),
+median 0.035 s and at most 3.5 s per controller; the best of six reached 30.5%. Spot's own
+encoder has no such post-pass.
+
+The candidate links ABC as an optional library and runs `strash; dc2` after encoding, for
+every route, in a supervised helper. It keeps Spot's circuit unless the parent parses ABC's
+result as a complete AIGER file with the same interface and names and strictly fewer
+ands+latches. On all 433 REALIZABLE SYNTCOMP26 inputs at 17 s, `--aiger-abc on` and `off`
+each produce 403 controllers and verify 370, with no failed verification. Total ands+latches
+on the 370 fall from 668,655 to 530,196 (20.7%) and the median from 36.5 to 23. Synthesis time
+rises from 0.125 to 0.162 s at the median and from 1.64 to 2.16 s at p95. A first run, which
+gave ABC #467's 200 ms budget and a 1 MiB staging cap, cut only 5.4%, because every controller
+above about 10,000 ands+latches fell back. ABC now gets the smaller of 5 s and a quarter of the
+remaining deadline. simple_arbiter_enc n=10 (150,473) and prioritized_arbiter n=8 (85,633)
+still fall back. G1 and G3 pass. G3's one flip, load_balancer_unreal1 6_4, is a decision run
+that never reaches the pass and sits at the cap.
+
 ## 2026-11-25: The GR(1) lift's axis order no longer depends on parameter names (tlsf-tools #146)
 
 Archive `lift146-20261125`. tlsf-tools #146 orders the legacy seed discovery and U window by
