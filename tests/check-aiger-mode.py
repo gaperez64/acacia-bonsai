@@ -25,27 +25,17 @@ def main():
     assert "--aiger-mode MODE" in help_text
     assert "a canonical subset of Spot's syntax: no empty components" in help_text
     methods = ("ite", "isop", "both", "optim")
-    modifiers = ("", "+ud")
+    modifiers = ("", "+ud", "+dc", "+dc+ud", "+ud+dc")
     splits = ("", "+sub0", "+sub1", "+sub2")
     modes = [a + b + c for a, b, c in product(methods, modifiers, splits)]
-    modes += ["both+sub2+ud", "isop+ud+ud+sub0+sub1", "ite,isop+ud"]
+    modes += ["both+sub2+ud+dc", "isop+dc+dc+sub0+sub1", "ite,isop+dc",
+              "both+dc,optim", "isop,optim+sub1+dc,ite", "isop+ud+ud+sub0+sub1"]
     for mode in modes:
         result = run(binary, "--aiger-mode", mode, "-f", "true", "-i", "", "-o", "",
                      "-r", "small")
         assert result.returncode == 0, (mode, result)
         encoded = run(direct, "spot", mode, "synthesis")
         assert encoded.returncode == 0 and encoded.stdout.startswith("aag "), (mode, encoded)
-    dc_modes = [a + b + c for a, b, c in
-                product(methods, ("+dc", "+dc+ud", "+ud+dc"), splits)]
-    dc_modes += ["both+sub2+ud+dc", "isop+dc+dc+sub0+sub1", "ite,isop+dc",
-                 "both+dc,optim", "isop,optim+sub1+dc,ite"]
-    for mode in dc_modes:
-        for result in rejected_calls(binary, direct, mode):
-            assert result.returncode == 3, (mode, result)
-            assert "+dc is disabled" in result.stderr, result
-            assert "incorrect controllers" in result.stderr, result
-            assert "see issue #466" in result.stderr, result
-            assert not result.stdout, result
     # Empty components are intentionally refused, even where Spot ignores trailing ones.
     for mode in ("", "ISOP", "unknown", "both+dual", "isop+sub3", "ite+sub",
                  "isop+sub00", "both+", "+dc", "ite++dc", "ite,", ",ite", "ite,,isop",
@@ -61,17 +51,20 @@ def main():
         source, circuit = directory / "spec.tlsf", directory / "controller.aag"
         source.write_text('''
 INFO { TITLE: "encoding" SEMANTICS: Mealy TARGET: Mealy }
-MAIN { INPUTS { a; b; c; d; } OUTPUTS { grant; }
+MAIN { INPUTS { a; b; c; d; unused_input; } OUTPUTS { grant; unused_output; }
        GUARANTEE { G (grant <-> ((a && b) || (!a && c) || (a && d))); } }
 ''')
-        for arm in ("real:small:backward", "both:obligation:spot", "both:parity:spot"):
-            command = ["--arms", arm, "-T", str(source), "-s", str(circuit)]
+        for arm, options in (("real:small:backward", []),
+                             ("real:small:backward", ["--spot-fast", "off"]),
+                             ("both:obligation:spot", []), ("both:parity:spot", [])):
+            command = ["--arms", arm, *options, "-T", str(source), "-s", str(circuit)]
             default = run(binary, *command)
             assert default.returncode == 0, (arm, default)
             original = circuit.read_bytes()
             encodings = set()
             for mode in ("isop", "ite", "both", "both+ud+sub0", "isop+ud+sub1",
-                         "both+sub2+ud", "optim", "ite,isop+ud"):
+                         "both+sub2+ud", "optim", "ite,isop+ud", "isop+dc", "ite+dc",
+                         "ite+dc+ud", "both+dc", "both+dc+ud"):
                 result = run(binary, *command, "--aiger-mode", mode)
                 assert result.returncode == 0, (arm, mode, result)
                 if mode == "isop":

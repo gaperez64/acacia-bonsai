@@ -14,12 +14,7 @@ namespace acacia::synthesis {
     if (!std::regex_match (value, mode))
       error (EXIT_CODE_ERROR,
              "Error: invalid --aiger-mode '%s'; expected ite|isop|both|optim followed by "
-             "+ud or +sub0|+sub1|+sub2, or comma-separated alternatives.\n",
-             value.c_str ());
-    if (value.find ("+dc") != std::string::npos)
-      error (EXIT_CODE_ERROR,
-             "Error: --aiger-mode '%s': +dc is disabled because it can produce incorrect "
-             "controllers with Acacia's original BDD dictionary; see issue #466.\n",
+             "+dc, +ud or +sub0|+sub1|+sub2, or comma-separated alternatives.\n",
              value.c_str ());
   }
 }

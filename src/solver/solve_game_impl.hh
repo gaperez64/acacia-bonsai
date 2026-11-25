@@ -9,8 +9,9 @@
 #include "posets/vectors/traits.hh"
 #include "solver/configured_components.hh"
 #include "solver/game_backend.hh"
-#include "solver/synthesis_rendezvous.hh"
 #include "solver/spot_worker_record.hh"
+#include "solver/synthesis_outputs.hh"
+#include "solver/synthesis_rendezvous.hh"
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
 # include "solver/equivariant_k_bounded_safety_aut.hh"
 #endif
@@ -118,9 +119,7 @@ namespace acacia::solver_detail {
     spot::twa_graph_ptr mealy = spot::make_twa_graph (aut->get_dict ());
     mealy->copy_ap_of (aut);
     mealy->set_acceptance (spot::acc_cond::acc_code::t ());
-    bdd* output_cube = new bdd ();
-    *output_cube = all_outputs;
-    mealy->set_named_prop<bdd> ("synthesis-outputs", output_cube);
+    acacia::synthesis::set_projected_outputs (mealy, all_outputs);
     mealy->new_states (winning_region.size ());
     mealy->set_init_state (init_idx);
 

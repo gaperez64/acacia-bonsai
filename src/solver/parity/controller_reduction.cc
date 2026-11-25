@@ -2,6 +2,7 @@
 #include "solver/mealy_to_moore.hh"
 #include "solver/parity/route.hh"
 #include "solver/scope_memory.hh"
+#include "solver/synthesis_outputs.hh"
 #include <spot/twaalgos/mealy_machine.hh>
 
 #include <memory>
@@ -226,6 +227,7 @@ namespace acacia::parity_route {
             if (covered != bddtrue)
               return subprocess::error_exit;
           }
+          synthesis::validate_output_partition ({candidate}, {input.outputs});
           auto circuit = spot::mealy_machine_to_aig (candidate, config.aiger_mode.c_str (),
                                                      input.inputs, input.outputs);
           if (input.moore && input.frame == timing_frame::effective_mealy)
