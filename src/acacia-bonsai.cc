@@ -27,12 +27,14 @@
 #include <csignal>
 #include <cstdio>
 #include <cstring>
+#include <fcntl.h>
 #include <fstream>
 #include <memory>
 #include <new>
 #include <optional>
 #include <sstream>
 #include <string>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -753,10 +755,23 @@ namespace {
           ".acacia-private-XXXXXX";
       if (mkdtemp (g_controller_directory.data ())) {
         atexit (cleanup_controllers);
-        for (size_t i = 0; i < arg_values.arms->size () + size_t (g_obligation != nullptr); ++i)
+        bool usable = chmod (g_controller_directory.c_str (), 0700) == 0;
+        for (size_t i = 0;
+             usable && i < arg_values.arms->size () + size_t (g_obligation != nullptr); ++i) {
           g_controller_paths.push_back (g_controller_directory + "/" + std::to_string (i));
+          // Probe staging and preserve worker writes/parent reads regardless of umask.
+          const int file =
+              open (g_controller_paths.back ().c_str (), O_CREAT | O_EXCL | O_WRONLY, 0600);
+          usable = file >= 0 && fchmod (file, 0600) == 0;
+          if (file >= 0 && close (file) != 0)
+            usable = false;
+        }
+        if (!usable) {
+          cleanup_controllers ();
+          g_controller_paths.clear ();
+        }
       }
-      else
+      if (g_controller_paths.empty ())
         // Retain master's selection and controller-write failure reporting without staging.
         g_controller_directory.clear ();
     }

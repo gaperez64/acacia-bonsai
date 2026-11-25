@@ -4,6 +4,7 @@
 from pathlib import Path
 import os
 import runpy
+import subprocess
 import sys
 import tempfile
 
@@ -13,14 +14,45 @@ audit = runpy.run_path(str(Path(__file__).resolve().parents[1]
                              / "benchmarking/attribution-completeness.py"))["audit_row"]
 
 
+def restrictive_umask(binary, checker, source, root):
+    if os.geteuid() == 0:
+        print("Skipping restrictive umask regression as root")
+        return
+    for mask in (0o100, 0o222, 0o600):
+        results = []
+        for staging in (False, True):
+            parent = root / f"umask-{mask:o}-{staging}"
+            parent.mkdir()
+            target = parent / "controller.aag"
+            target.write_text("previous controller\n")
+            if not staging:
+                # Force master's direct-write path with an existing writable destination.
+                parent.chmod(0o500)
+            try:
+                run = subprocess.run(
+                    [str(binary), "-T", str(source), "--arms", "both:parity:spot",
+                     "-s", str(target)], umask=mask, capture_output=True, text=True, timeout=20)
+            finally:
+                parent.chmod(0o700)
+            assert run.returncode == 0 and run.stdout.strip() == "REALIZABLE", (mask, staging, run)
+            checked = subprocess.run([str(checker), str(source), str(target)],
+                                     capture_output=True, text=True, timeout=20)
+            assert checked.returncode == 0 and checked.stdout.strip() == "verified", checked
+            results.append((run.returncode, run.stdout, target.read_bytes()))
+            assert not list(parent.glob(".acacia-private-*")), list(parent.iterdir())
+        assert results[0] == results[1], (mask, results)
+        print(f"Umask {mask:04o}: staged and direct writes match; both controllers verified")
+
+
 def main():
-    binary, scratch, acknowledgement = (Path(value).resolve() for value in sys.argv[1:4])
+    binary, scratch, acknowledgement, checker = (Path(value).resolve() for value in sys.argv[1:5])
     with tempfile.TemporaryDirectory(dir=scratch) as temporary:
         root = Path(temporary)
         source = root / "source.tlsf"
         source.write_text('''INFO { TITLE: "records" SEMANTICS: Mealy TARGET: Mealy }
 MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEES { G (i -> o); } }
 ''')
+        restrictive_umask(binary, checker, source, root)
         for family in ("obligation:spot", "parity:spot", "parity:oxidd"):
             arm = "both:" + family
             cases = ("real-on", "real-off", "unknown")

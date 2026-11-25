@@ -49,7 +49,8 @@ def registration_race(binary, root):
                 assert time.monotonic() < deadline, "worker missed parent death during registration"
                 select.select([], [], [], .001)
             private, = Path(temporary).glob(".acacia-private-*")
-            assert not list(private.iterdir())
+            private_file, = private.iterdir()
+            assert private_file.name == "0" and private_file.read_bytes() == b""
             assert not (Path(temporary) / "controller.aag").exists()
         finally:
             if process.poll() is None:

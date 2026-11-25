@@ -1230,9 +1230,9 @@ test ('accounting-analyzers', py, args : [files ('test_accounting_analyzers.py')
 if host_machine.system () == 'linux'
   test ('exact-arm-records', py,
         args : [files ('check-exact-arm-records.py'), ab_exe,
-                meson.project_build_root (), record_transport_ack],
+                meson.project_build_root (), record_transport_ack, controller_check],
         suite : ['unit', 'attribution', 'obligation', 'parity'],
-        depends : [ab_exe, record_transport_ack], timeout : 90)
+        depends : [ab_exe, record_transport_ack, controller_check], timeout : 90)
   test ('obligation-recorded', py,
         args : [files ('check-obligation-recorded.py'), obligation_helper_test,
                 meson.project_build_root (), record_transport_ack],
