@@ -58,10 +58,14 @@ The [Docker wrapper](../Docker/README.md#write-a-controller) can write to stdout
 
 Portfolio workers stage controllers in a private directory named
 `.acacia-private-XXXXXX` in `FILE`'s parent, independent of its basename length.
-The parent copies one closed controller through the ordinary controller writer,
+After cancelling and reaping competitors, the parent forks one publisher to copy
+the selected closed controller through the ordinary controller writer,
 following symlinks and truncating existing files in place. Existing inode, mode,
 ownership and hard links are preserved; new files use the caller's umask.
-An output-write failure reports UNKNOWN with no winner. Normal exit, handled
+The parent supervises publication under the invocation deadline and cancellation
+signals; REALIZABLE requires a successful publisher exit and a final acceptance
+check. An output-write failure, including a publisher killed by a signal, reports
+UNKNOWN with no winner. Normal exit, handled
 interruption and timeout remove the directory. Killing the parent with `SIGKILL`
 can leave this directory and partial private files behind; they can be removed
 after the invocation stops. The requested `FILE` is unchanged until publication.

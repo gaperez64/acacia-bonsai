@@ -142,6 +142,70 @@ def cancellation_reason(rows: list[dict], reason: str) -> None:
     assert len(terminal) == 1 and terminal[0]["reason"] == finish["reason"], rows
 
 
+def fifo_publication(binary: Path, root: Path, library: Path, mode: str) -> dict:
+    """Gate destination I/O independently of proof/extraction and scheduler timing."""
+    with tempfile.TemporaryDirectory(dir=root) as location:
+        directory = Path(location)
+        fifo = directory / "controller.fifo"
+        os.mkfifo(fifo)
+        env = os.environ.copy()
+        env.pop("ACACIA_PHASE_RECORDS", None)
+        env.pop("ACACIA_OUTER_DEADLINE_MONOTONIC", None)
+        env.update(LD_PRELOAD=str(library), ACACIA_TEST_OBLIGATION_OUTPUT=str(fifo))
+        closing_reader = mode == "sigpipe"
+        if not closing_reader:
+            env["ACACIA_PHASE_RECORDS"] = str(directory)
+        release_read, release_write = os.pipe()
+        reader = os.open(fifo, os.O_RDONLY | os.O_NONBLOCK) if closing_reader else None
+        env["ACACIA_TEST_OBLIGATION_FIFO_RELEASE_FD"] = str(release_read)
+        try:
+            with StageGate(env, "fifo-connected" if closing_reader else "fifo-open",
+                           .2 if mode == "deadline" else 0) as stage:
+                process = subprocess.Popen(
+                    [str(binary), "-f", "G o", "-i", "i", "-o", "o", "--arms",
+                     "both:parity:spot", "-s", str(fifo)],
+                    env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    pass_fds=(*stage.descriptors, release_read))
+                try:
+                    stage.wait_ready(process, directory)
+                    stage.trigger()
+                    if closing_reader:
+                        os.close(reader)
+                        reader = None
+                        os.write(release_write, b"x")
+                    elif mode != "deadline":
+                        process.send_signal(getattr(signal, mode))
+                    stdout, stderr = process.communicate(timeout=2)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    stdout, stderr = process.communicate(timeout=3)
+                except AssertionError:
+                    process.kill()
+                    process.communicate(timeout=3)
+                    raise
+                elapsed = time.monotonic() - stage.triggered_at
+                rows = records(directory)
+                result = dict(mode=mode, code=process.returncode, elapsed_s=elapsed,
+                              stdout=stdout.decode(), stderr=stderr.decode(),
+                              staging=[p.name for p in directory.glob(".acacia-private-*")])
+                assert process.returncode == 2 and stdout == b"" and b"UNKNOWN\n" in stderr, result
+                assert elapsed < 2 and not result["staging"] and fifo.is_fifo(), result
+                assert not any(row.get("event") == "parent_winner" for row in rows), rows
+                if mode == "deadline":
+                    assert b'"stage":"deadline","status":"expired"' in stderr, result
+                if stage.ready_pid != process.pid:
+                    assert gone(stage.ready_pid), ("surviving publisher", result)
+                for row in rows:
+                    if row.get("event") == "worker_spawn":
+                        assert gone(row["worker_pid"]), row
+                return result
+        finally:
+            if reader is not None:
+                os.close(reader)
+            os.close(release_read)
+            os.close(release_write)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("binary", type=Path)
@@ -156,6 +220,11 @@ def main() -> None:
     options = parser.parse_args()
     binary, library = options.binary.resolve(), options.fault_lib.resolve()
     root = options.build_dir.resolve()
+
+    # A blocked writer stays under the parent's deadline/cancellation supervision.
+    # With records disabled, an early-closing reader must only kill the writer.
+    for mode in ("deadline", "sigpipe", "SIGINT", "SIGTERM"):
+        fifo_publication(binary, root, library, mode)
 
     unit = subprocess.run([str(options.unit.resolve())], capture_output=True, text=True,
                           check=True)

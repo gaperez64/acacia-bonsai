@@ -36,11 +36,15 @@ ordinary solving after decline or with equivariance off.
 
 Under `-s`, `parent_verdict` selects a proof and latches its verdict, before
 controller construction. Each worker writes a private file beside the requested
-destination. Only the parent copies a closed, successful REAL controller through
-the ordinary controller writer, after acceptance checks and competitor cleanup.
+destination. After acceptance checks and competitor cleanup, the parent forks one
+publisher to copy the selected closed, successful REAL controller through the
+ordinary controller writer. The parent supervises the publisher under the invocation
+deadline and cancellation signals, kills and reaps it on cancellation, and checks
+acceptance again after its successful exit before recording a winner.
 Publication follows symlinks and truncates existing files in place, preserving
 inode, mode, ownership and hard links; new files respect the caller's umask.
-`parent_extraction:controller_export_failed` reports a failed parent write:
+`parent_extraction:controller_export_failed` reports a failed publisher fork or write,
+nonzero exit or death by signal:
 UNKNOWN/2, empty stdout, complete records and no winner.
 If private staging cannot be created, workers instead write to the requested
 destination under master's first-proof selection and failure recovery; failed

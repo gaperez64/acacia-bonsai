@@ -56,6 +56,7 @@ namespace {
   volatile sig_atomic_t* g_child_interrupted = nullptr;
   volatile sig_atomic_t g_child_count = 0;
   volatile sig_atomic_t g_interrupted = 0;
+  volatile pid_t g_publisher_pid = 0;
   pid_t g_main_pid = 0;
   acacia::worker_record* g_worker_records = nullptr;
   acacia::obligation::control* g_obligation = nullptr;
@@ -142,6 +143,8 @@ namespace {
     // run on the ordinary parent path after the interruption flag is seen.
     if (getpid () == g_main_pid) {  // Main process
       g_interrupted = 1;
+      if (g_publisher_pid > 0)
+        kill (g_publisher_pid, SIGKILL);
       for (sig_atomic_t i = 0; i < g_child_count; ++i)
         if (g_child_pids[i] > 0) {
           g_child_interrupted[i] = 1;
@@ -157,6 +160,8 @@ namespace {
   }
 
   void kill_child_groups (const char* reason) {
+    if (g_publisher_pid > 0)
+      kill (g_publisher_pid, SIGKILL);
     for (sig_atomic_t i = 0; i < g_child_count; ++i)
       if (g_child_pids[i] > 0) {
         if (g_worker_records) {
@@ -256,6 +261,13 @@ namespace {
                                   g_worker_records ? acacia::phase_clock (CLOCK_MONOTONIC) : 0);
           g_child_pids[i] = 0;
         }
+        else
+          remaining = true;
+      }
+      if (g_publisher_pid > 0) {
+        const pid_t reaped = waitpid (g_publisher_pid, nullptr, WNOHANG);
+        if (reaped > 0 || (reaped == -1 && errno == ECHILD))
+          g_publisher_pid = 0;
         else
           remaining = true;
       }
@@ -1412,17 +1424,51 @@ namespace {
           stop_children ("winner_cancelled");
           check_acceptance ();
           if (ret == EXIT_CODE_REAL && !g_controller_paths.empty ()) {
-            bool published = false;
-            try {
-              std::ifstream controller (g_controller_paths[reaped_index]);
-              if (controller) {
-                const std::string aiger {std::istreambuf_iterator<char> (controller), {}};
-                // Reuse master's open/truncate semantics, including links and existing modes.
-                published = !controller.bad () &&
-                            acacia::synthesis::write_controller (*arg_values.synth_fname, aiger);
+            sigset_t old_mask;
+            sigprocmask (SIG_BLOCK, &block_set, &old_mask);
+            const pid_t publisher = fork ();
+            if (publisher == 0) {
+#ifdef __linux__
+              if (prctl (PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid () != g_main_pid)
+                _exit (EXIT_CODE_UNKNOWN);
+#endif
+              sigprocmask (SIG_SETMASK, &old_mask, nullptr);
+              try {
+                std::ifstream controller (g_controller_paths[reaped_index]);
+                if (controller) {
+                  const std::string aiger {std::istreambuf_iterator<char> (controller), {}};
+                  // Preserve master's writer semantics without blocking the supervisor.
+                  if (!controller.bad () &&
+                      acacia::synthesis::write_controller (*arg_values.synth_fname, aiger))
+                    _exit (0);
+                }
+              } catch (...) {
               }
-            } catch (...) {
+              _exit (EXIT_CODE_UNKNOWN);
             }
+            g_publisher_pid = publisher > 0 ? publisher : 0;
+            sigprocmask (SIG_SETMASK, &old_mask, nullptr);
+            bool published = false;
+            while (g_publisher_pid > 0) {
+              int publication_status = 0;
+              const pid_t reaped = waitpid (g_publisher_pid, &publication_status, WNOHANG);
+              const int publication_error = errno;
+              if (reaped > 0 || (reaped < 0 && publication_error == ECHILD))
+                g_publisher_pid = 0;
+              check_acceptance ();
+              if (reaped > 0) {
+                published =
+                    WIFEXITED (publication_status) && WEXITSTATUS (publication_status) == 0;
+                break;
+              }
+              if (reaped < 0 && publication_error != EINTR) {
+                stop_children ("controller_export_failed");
+                break;
+              }
+              timespec pause {0, 10000000};
+              nanosleep (&pause, nullptr);
+            }
+            check_acceptance ();
             if (!published) {
               extraction_event (reaped_index, "controller_export_failed");
               cleanup_controllers ();
