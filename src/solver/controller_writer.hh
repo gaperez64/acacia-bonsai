@@ -37,7 +37,8 @@ namespace acacia::synthesis {
 #if ACACIA_HAVE_ABC
     if (aiger_abc.enabled) {
       try {
-        std::string buffer (aiger_abc_payload_bytes, '\0');
+        const auto payload_bytes = aiger_abc_payload_limit (aiger_abc_memory (aiger_abc));
+        std::string buffer (payload_bytes, '\0');
         std::ospanstream encoded (buffer);
         spot::print_aiger (encoded, controller);
         if (encoded) {

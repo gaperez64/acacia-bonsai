@@ -50,6 +50,9 @@ AIGER controller with:
 are rejected because they can produce incorrect controllers (#466).
 
 `--aiger-abc on|off` shrinks controllers under `-s` (default `on` with ABC, `off` otherwise).
+It gets at most 5 s and 25% of the remaining invocation time (5 s without a
+deadline). Staging and payloads use at most 1/16 of the child's memory cap,
+bounded above by 32 MiB; any failure retains Spot's controller.
 
 ## Guides
 

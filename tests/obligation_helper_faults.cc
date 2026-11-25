@@ -130,7 +130,7 @@ namespace spot {
       if (std::strcmp (failure, "exception") == 0)
         throw std::bad_alloc ();
       if (std::strcmp (failure, "oversize") == 0)
-        os << std::string (1024 * 1024 + 1, ' ');
+        os << std::string (32 * 1024 * 1024 + 1, ' ');
       else
         os.setstate (std::ios::badbit);
       return os;

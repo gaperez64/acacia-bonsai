@@ -11,19 +11,24 @@
 #include <memory>
 
 namespace acacia::synthesis {
+  uint64_t aiger_abc_memory (const abc_options& options) {
+    const char* cause = "none";
+    return subprocess::optional_memory (aiger_abc_payload_bytes, options.worker_rss_share,
+                                        nullptr, cause);
+  }
+
   void shrink_aiger (std::string& text, const abc_options& options,
                      const std::function<void ()>& before) {
     if (!options.enabled || text.size () > aiger_abc_payload_bytes)
       return;
-    const auto deadline = subprocess::optional_deadline (options.deadline);
+    const auto deadline = aiger_abc_deadline (options.deadline, phase_clock (CLOCK_MONOTONIC));
     const auto now = phase_clock (CLOCK_MONOTONIC);
     if (now >= deadline || deadline - now < 2000000)
       return;
     try {
-      const char* cause = "none";
-      const auto memory = subprocess::optional_memory (aiger_abc_payload_bytes,
-                                                       options.worker_rss_share, nullptr, cause);
-      if (!memory)
+      const auto memory = aiger_abc_memory (options);
+      const auto payload_bytes = aiger_abc_payload_limit (memory);
+      if (!memory || text.size () > payload_bytes)
         return;
       // Unlinked immediately; a killed helper leaves no files behind.
       const auto close = [] (FILE* file) {
@@ -59,14 +64,14 @@ namespace acacia::synthesis {
           phase_clock (CLOCK_MONOTONIC) >= deadline ||
           std::fseek (output.get (), 0, SEEK_END) != 0 || std::ftell (output.get ()) <= 0 ||
           std::ftell (output.get ()) >
-              long (aiger_abc_payload_bytes + aiger_codec::response_header_bytes))
+              long (payload_bytes + aiger_codec::response_header_bytes))
         return;
       std::ifstream result ("/dev/fd/" + std::to_string (fileno (output.get ())),
                             std::ios::binary);
       std::string frame;
       std::getline (result, frame);
       std::string candidate {std::istreambuf_iterator<char> (result), {}};
-      if (result.bad () || candidate.empty () || candidate.size () > aiger_abc_payload_bytes ||
+      if (result.bad () || candidate.empty () || candidate.size () > payload_bytes ||
           frame != aiger_codec::response_prefix + std::to_string (candidate.size ()))
         return;
       // Validate in the parent too: the executable we found may be incompatible.

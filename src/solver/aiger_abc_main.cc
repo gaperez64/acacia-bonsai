@@ -7,9 +7,9 @@
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <sys/resource.h>
 
 namespace {
-  constexpr size_t payload_bytes = acacia::synthesis::aiger_abc_payload_bytes;
   using namespace acacia::synthesis::aiger_codec;
 
   std::string unpack (std::istream& in, const aiger& original) {
@@ -66,6 +66,10 @@ int main (int argc, char** argv) {
   if (argc != 3)
     return 5;
   try {
+    rlimit memory {};
+    if (getrlimit (RLIMIT_AS, &memory) != 0)
+      return 5;
+    const auto payload_bytes = acacia::synthesis::aiger_abc_payload_limit (memory.rlim_cur);
     std::ifstream source (argv[1], std::ios::binary);
     std::string text (payload_bytes + 1, '\0');
     source.read (text.data (), text.size ());

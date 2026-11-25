@@ -4,6 +4,17 @@
 #include <fstream>
 #include <iterator>
 
+using namespace acacia::synthesis;
+static_assert (aiger_abc_deadline (0, 10000000000) == 15000000000);
+static_assert (aiger_abc_deadline (40000000000, 10000000000) == 15000000000);
+static_assert (aiger_abc_deadline (14000000000, 10000000000) == 11000000000);
+static_assert (aiger_abc_deadline (10000000000, 10000000000) == 10000000000);
+static_assert (aiger_abc_deadline (1, 10000000000) == 10000000000);
+static_assert (aiger_abc_payload_limit (0) == 0);
+static_assert (aiger_abc_payload_limit (256 * 1024 * 1024) == 16 * 1024 * 1024);
+static_assert (aiger_abc_payload_limit (512 * 1024 * 1024) == 32 * 1024 * 1024);
+static_assert (aiger_abc_payload_limit (UINT64_MAX) == 32 * 1024 * 1024);
+
 int main (int argc, char** argv) {
   if (argc != 3)
     return 1;
