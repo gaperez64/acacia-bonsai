@@ -68,7 +68,21 @@ admission RSS plus growth allowance `max(64 MiB, admission RSS)`. Admission requ
 headroom for three separate terms below the scope's last eighth: latent capacity
 `max(0, VmData - RssAnon)`, COW exposure (conservatively admission RSS), and growth
 allowance. The latent and COW terms cover faults in existing mappings separately
-from new mappings. Unreadable RSS or anonymous
+from new mappings. Admission additionally reserves the original's nonnegative RSS
+increase since the current grace or turn began. Every 10 ms poll during concurrent
+extraction reads `memory.current`. `scope_reserve` records immediate SIGKILL and
+pending nonblocking reaping when headroom reaches the last eighth plus the active
+fallback's latent/COW/growth reservation, or a required scope reading becomes
+unavailable. New admission waits for reclamation and headroom above the last eighth
+plus the next candidate's reservation and the original's sampled growth. The last
+eighth cushions allocation between polls: the original would need to allocate more
+than `memory.max/8` in one poll to cross it, implausible for these extractors;
+fallback growth remains capped by `RLIMIT_AS`.
+With `memory.max=max` or an unreadable scope limit, only a fallback with an existing
+finite parity/helper RSS-share budget covering its reservation and the original's
+sampled growth may run concurrently.
+Otherwise first-proof execution and failure recovery retain master's behavior.
+Unreadable RSS or anonymous
 capacity blocks fallback admission. Before resumption,
 `prlimit(RLIMIT_AS)` also caps its soft address-space limit at its current mapped
 size plus **only the growth allowance**, preserving the hard limit and any tighter existing soft

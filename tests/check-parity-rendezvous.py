@@ -244,13 +244,13 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
         pressure = mode in {"headroom", "scan", "growth", "failure-pressure", "failure-blocked",
                             "original-running", "turns-legacy", "turns-parity", "round-robin",
                             "latent", "failure-reclaim", "discard-pending", "descendant-pending",
-                            "cow-growth"}
+                            "cow-growth", "watermark", "original-growing"}
         if pressure:
             maximum = 1024 if mode == "cow-growth" else 512
             (root / "memory.max").write_text(str(maximum * scope_mib))
             # Stopped workers' charges are included; 128 MiB of usable headroom otherwise.
             used = 460 if mode in {"headroom", "failure-pressure", "failure-blocked",
-                                   "failure-reclaim"} else 320
+                                   "failure-reclaim"} else 240 if mode == "original-growing" else 320
             (root / "memory.current").write_text(str(used * scope_mib))
             env["ACACIA_TEST_CGROUP_DIRECTORY"] = str(root)
         if mode == "scan":
@@ -268,19 +268,28 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
             env["ACACIA_TEST_SYNTHESIS_PARITY_DESCENDANT"] = "1"
         if mode == "original-ceiling":
             env["ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES"] = str(128 * 1024 * 1024)
+        if mode in {"watermark", "original-growing"}:
+            env["ACACIA_TEST_SYNTHESIS_LEGACY_EXPORT_RSS_BYTES"] = str(80 * scope_mib)
+        if mode in {"no-limit", "unreadable-limit", "no-limit-share", "unreadable-share",
+                    "master-no-limit", "master-unreadable"}:
+            env["ACACIA_TEST_CGROUP_DIRECTORY"] = str(root)
+            if mode.startswith("no-limit") or mode == "master-no-limit":
+                (root / "memory.max").write_text("max")
+            else:
+                (root / "memory.max").write_text("unreadable")
         if mode == "stop-pending":
             env["ACACIA_TEST_SYNTHESIS_STOP_FD"] = str(gates[7][0])
-        if mode in {"failure-pressure", "failure-reclaim"}:
+        if mode in {"failure-pressure", "failure-reclaim", "watermark"}:
             env["ACACIA_TEST_SYNTHESIS_RECLAIM_FD"] = str(gates[7][0])
         unfinished = mode in {"unfinished", "unfinished-conflict", "round-robin", "latent",
                               "failure-reclaim", "discard-pending", "descendant-pending"}
         if mode in {"conflict", "unfinished-conflict", "discard-pending", "descendant-pending"}:
             env["ACACIA_TEST_SYNTHESIS_CONFLICT"] = "1"
         arms = "real:small:backward"
-        if mode != "alone":
+        if mode not in {"alone", "master-no-limit", "master-unreadable"}:
             arms += ",both:parity:spot"
         three = mode in {"scan", "failure-pressure", "failure-blocked", "undecided", "round-robin",
-                         "turns-legacy", "turns-parity", "stop-pending"}
+                         "turns-legacy", "turns-parity", "stop-pending", "watermark"}
         if mode == "failure-reclaim":
             arms += ",unreal:formula:backward"
             env["ACACIA_TEST_CHILD_MODES"] = f"normal,normal,wait:{gates[6][0]}"
@@ -306,21 +315,23 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
 
         try:
             events = Events(process)
-            ready = events.wait("synthesis_ready", 3 if three else 1 if mode == "alone" else 2)
+            ready = events.wait("synthesis_ready", 3 if three else 1 if mode in {"alone", "master-no-limit", "master-unreadable"} else 2)
             pids = {row["worker_kind"]: row["pid"] for row in ready}
             if mode == "failure-reclaim":
                 opposite, = [row["pid"] for row in events.wait("child_group", 3)
                              if row["pid"] not in pids.values()]
                 pids["opposite"] = opposite
-            first_kind = "parity" if mode in {"growth", "cow-growth", "undecided"} else "legacy"
+            first_kind = "parity" if mode in {"growth", "cow-growth", "undecided",
+                                              "no-limit", "unreadable-limit"} else "legacy"
             release(1 if first_kind == "parity" else 0)
             events.wait("synthesis_proved")
             events.wait("synthesis_selecting")
             # Keep unfinished proofs gated until they receive their own turn.
-            if mode != "alone" and not unfinished:
+            if mode not in {"alone", "master-no-limit", "master-unreadable"} and not unfinished:
                 release(0 if first_kind == "parity" else 1)
                 events.wait("synthesis_proved", 2)
-            if mode in {"scan", "failure-blocked", "turns-legacy", "turns-parity", "stop-pending"}:
+            if mode in {"scan", "failure-blocked", "turns-legacy", "turns-parity", "stop-pending",
+                        "watermark"}:
                 release(6)
                 events.wait("synthesis_proved", 3)
             release(5)
@@ -371,6 +382,33 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                 wait_record("no_alternative")
                 wait_stopped(pids["parity"])
                 assert not any(row.get("reason") == "fallback" for row in records(root))
+                release(2)
+                expected = "legacy"
+            elif mode in {"master-no-limit", "master-unreadable"}:
+                os.write(writes[4], b"x")
+                release(2)
+                expected = "legacy"
+            elif mode in {"no-limit", "unreadable-limit"}:
+                os.write(writes[4], b"x")
+                wait_record("scope_headroom")
+                wait_record("no_alternative")
+                wait_stopped(pids["legacy"])
+                assert not any(row.get("reason") == "fallback" for row in records(root))
+                release(3)
+                expected = "parity"
+            elif mode == "original-growing":
+                os.write(writes[2], b"x")
+                events.wait("synthesis_grown")
+                (root / "memory.current").write_text(str(320 * scope_mib))
+                os.write(writes[4], b"x")
+                wait_record("scope_headroom")
+                wait_record("no_alternative")
+                wait_stopped(pids["parity"])
+                assert not any(row.get("reason") == "fallback" for row in records(root))
+                # Same headroom admits the same candidate once the original stops climbing.
+                os.write(writes[4], b"x")
+                events.wait("synthesis_selected", 2)
+                assert_running(pids["legacy"])
                 release(2)
                 expected = "legacy"
             elif mode == "round-robin":
@@ -487,12 +525,37 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                             wait_record("exit")
                             assert not Path(f"/proc/{pids['parity']}").exists()
                         else:
-                            (root / "memory.current").write_text(str(440 * scope_mib))
+                            (root / "memory.current").write_text(str(320 * scope_mib))
                             os.write(writes[4], b"x")
                             wait_record("no_alternative")
                             assert_running(pids["parity"])
                         assert_running(pids["legacy"])
                         assert resource.prlimit(pids["legacy"], resource.RLIMIT_AS) == original_limit
+                        release(2)
+                        expected = "legacy"
+                    elif mode == "watermark":
+                        os.write(writes[2], b"x")
+                        events.wait("synthesis_grown")
+                        used = 400 * scope_mib
+                        (root / "memory.current").write_text(str(used))
+                        events.wait("synthesis_reclaimed")
+                        wait_record("scope_reserve")
+                        assert not Path(f"/proc/{pids['parity']}").exists()
+                        # Reclaim while more than the final eighth still remains.
+                        assert 512 * scope_mib - used > 512 * scope_mib // 8
+                        assert_running(pids["legacy"])
+                        assert resource.prlimit(pids["legacy"], resource.RLIMIT_AS) == original_limit
+                        release(7)
+                        os.write(writes[4], b"x")
+                        wait_record("no_alternative")
+                        wait_stopped(pids["obligation"])
+                        assert not any(row.get("reason") == "fallback" and
+                                       row["worker_pid"] == pids["obligation"] for row in records(root))
+                        (root / "memory.current").write_text(str(280 * scope_mib))
+                        os.write(writes[4], b"x")
+                        turns = events.wait("synthesis_turn", 3)
+                        assert turns[-1]["worker_pid"] == pids["obligation"], turns
+                        events.wait("synthesis_selected", 3)
                         release(2)
                         expected = "legacy"
                     elif mode == "sole-fallback":
@@ -560,7 +623,10 @@ MAIN { INPUTS { i; } OUTPUTS { o; } GUARANTEE { G (o <-> i); } }
                 if mode in {"original-running", "original-ceiling"}:
                     assert not any(row.get("reason") in {"scope_headroom", "rss_budget"}
                                    and row["worker_pid"] == pids["legacy"] for row in rows), rows
-                if mode in {"latent", "headroom", "conflict"}:
+                if mode in {"master-no-limit", "master-unreadable"}:
+                    assert not any(row.get("event") == "parent_extraction" and
+                                   row["reason"] != "published" for row in rows), rows
+                elif mode in {"latent", "headroom", "conflict", "no-limit", "unreadable-limit"}:
                     assert not any(row.get("reason") == "fallback" for row in rows), rows
                 else:
                     assert any(row.get("reason") == "fallback" for row in rows), rows
@@ -655,7 +721,9 @@ def main():
                  "turns-parity", "undecided", "original-running", "original-ceiling",
                  "sole-fallback", "stop-pending", "unfinished", "unfinished-conflict",
                  "round-robin", "latent", "discard-pending", "failure-reclaim", "long-name",
-                 "cow-growth", "descendant-pending"):
+                 "cow-growth", "descendant-pending", "watermark", "original-growing",
+                 "no-limit", "unreadable-limit", "no-limit-share", "unreadable-share",
+                 "master-no-limit", "master-unreadable"):
         if mode in {"growth", "cow-growth", "sole-fallback", "latent"} and os.environ.get("ACACIA_TEST_SKIP_RLIMIT_AS") == "1":
             print(f"Skipping {mode} RLIMIT_AS case: incompatible with ASan shadow memory")
             continue

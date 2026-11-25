@@ -830,7 +830,8 @@ namespace {
     };
     sig_atomic_t synthesis_winner = -1;
 #ifdef __linux__
-    constexpr bool extraction_fallback = true;
+    const bool extraction_fallback = acacia::obligation::scope_memory ("memory.max").has_value () ||
+                                     g_parity_rss_share || g_helper_rss_share;
 #else
     // Admission needs Linux RSS/anonymous readings; retain master's scheduling elsewhere.
     constexpr bool extraction_fallback = false;
@@ -841,9 +842,11 @@ namespace {
     sig_atomic_t ready_cursor = -1, undecided_cursor = -1;
     bool suspension_pending = false;
     uint64_t extraction_started = 0;
+    uint64_t original_rss = 0;
     const size_t slots = arg_values.arms->size () + size_t (g_obligation != nullptr);
     std::vector<uint64_t> extraction_turn (g_synthesis ? slots : 0, 0);
     std::vector<uint64_t> extraction_budget (g_synthesis ? slots : 0, UINT64_MAX);
+    std::vector<uint64_t> extraction_reservation (g_synthesis ? slots : 0, 0);
     std::vector<const char*> pending_discard (g_synthesis ? slots : 0, nullptr);
     const auto extraction_event = [&] (sig_atomic_t i, const char* reason) {
       if (g_worker_records) {
@@ -853,6 +856,9 @@ namespace {
     };
     const auto start_extraction_turn = [&] (sig_atomic_t i) {
       extraction_started = monotonic_ns ();
+      original_rss = original_extractor >= 0 && g_child_pids[original_extractor] > 0
+                         ? acacia::obligation::resident_bytes (g_child_pids[original_extractor])
+                         : 0;
       const auto remaining =
           deadline_mono_ns
               ? (deadline_mono_ns > extraction_started ? deadline_mono_ns - extraction_started : 0)
@@ -897,23 +903,37 @@ namespace {
           return false;
       return true;
     };
+    const auto worker_rss_share = [&] (sig_atomic_t index) {
+      return index == g_helper_index ? g_helper_rss_share
+             : std::ranges::find (g_parity_workers, index) != g_parity_workers.end ()
+                 ? g_parity_rss_share
+                 : 0;
+    };
     const auto admit = [&] (sig_atomic_t index) {
       if (discarding ())
         return false;
       if (sole_extractor (index))
         return true;
-      bool no_limit = false;
-      const auto limit = acacia::obligation::scope_memory ("memory.max", nullptr, &no_limit);
+      const auto limit = acacia::obligation::scope_memory ("memory.max");
       const auto used = acacia::obligation::scope_memory ("memory.current");
       const auto resident = acacia::obligation::resident_bytes (g_child_pids[index]);
       const auto latent = acacia::obligation::latent_anonymous_bytes (g_child_pids[index]);
       const auto cow = resident;  // RSS conservatively bounds fork-shared anonymous pages.
       const auto growth = std::max<uint64_t> (64 * 1024 * 1024, resident);
       const auto reserve = cow + growth;
+      const auto reservation = latent.value_or (0) + reserve;
+      const auto current_original =
+          original_extractor >= 0 && g_child_pids[original_extractor] > 0
+              ? acacia::obligation::resident_bytes (g_child_pids[original_extractor])
+              : 0;
+      const auto original_growth =
+          current_original > original_rss ? current_original - original_rss : 0;
+      const auto share = worker_rss_share (index);
       if (!resident || !latent ||
-          (!no_limit && !(limit && used && *used < *limit - *limit / 8 &&
-                          *latent <= *limit - *limit / 8 - *used &&
-                          reserve <= *limit - *limit / 8 - *used - *latent))) {
+          (limit ? !(used && *used < *limit - *limit / 8 &&
+                     reservation < *limit - *limit / 8 - *used &&
+                     original_growth < *limit - *limit / 8 - *used - reservation)
+                 : !(share && reservation < share && original_growth < share - reservation))) {
         extraction_event (index, "scope_headroom");
         return false;
       }
@@ -922,6 +942,7 @@ namespace {
         return false;
       }
       extraction_budget[index] = resident + growth;
+      extraction_reservation[index] = reservation;
       return true;
     };
     const auto next_extractor = [&] (sig_atomic_t after) {
@@ -1021,6 +1042,24 @@ namespace {
             extraction_budget[i] = UINT64_MAX;
             extraction_event (i, "sole_extractor");
           }
+      if (g_synthesis && extraction_fallback && synthesis_winner >= 0 &&
+          synthesis_winner != original_extractor && g_child_pids[original_extractor] > 0 &&
+          !pending_discard[synthesis_winner]) {
+        const auto i = synthesis_winner;
+        const auto limit = acacia::obligation::scope_memory ("memory.max");
+        const auto used = acacia::obligation::scope_memory ("memory.current");
+        // The last eighth covers the 10 ms poll: crossing it would require the original to
+        // allocate > memory.max/8 in one poll, implausible here; fallback growth has RLIMIT_AS.
+        if (limit ? !(used && *used < *limit - *limit / 8 &&
+                      extraction_reservation[i] < *limit - *limit / 8 - *used)
+                  : !worker_rss_share (i)) {
+          extraction_event (i, "scope_reserve");
+          discard_extractor (i, "scope_reserve");
+          synthesis_winner = original_extractor;
+          suspension_pending = false;
+          start_extraction_turn (original_extractor);
+        }
+      }
       // Preserve master's helper-before-parity supervision order, also without -s.
       for (sig_atomic_t turn = -1; turn < g_child_count; ++turn) {
         const auto index = turn < 0 ? g_helper_index : turn;

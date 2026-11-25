@@ -90,7 +90,20 @@ This lets unfinished searches progress while the selected extractor stalls.
 Admission reserves the sum of latent anonymous capacity `max(0, VmData - RssAnon)`,
 COW exposure (conservatively its
 admission RSS), and growth allowance `max(64 MiB, admission RSS)` below the scope's
-last eighth. Its soft address-space limit is capped at its current mapping size
+last eighth. Admission also reserves the original's nonnegative RSS increase since
+the current grace or turn began. During concurrent extraction, every 10 ms poll
+reads `memory.current`; headroom at or below the last eighth plus the fallback's
+latent/COW/growth reservation immediately kills that fallback, with nonblocking
+reaping. Another fallback needs headroom above the last eighth plus its own
+reservation and the original's sampled growth. The last eighth cushions growth
+between polls; crossing it would require the original to allocate more than
+`memory.max/8` in one poll, implausible for these extractors. The fallback's own
+growth stays capped by `RLIMIT_AS`.
+Without a readable finite scope limit (`memory.max=max` included), concurrent
+fallback requires the existing parity/helper RSS-share budget to cover its
+reservation and the original's sampled growth. Otherwise the original continues
+with master's first-proof behavior and extraction-failure recovery.
+The fallback's soft address-space limit is capped at its current mapping size
 plus **only the growth allowance**; RSS supervision additionally enforces
 admission RSS plus growth. The same admission checks and limits apply to undecided
 workers. Allocation failure discards that worker. A sole surviving fallback regains its hard
