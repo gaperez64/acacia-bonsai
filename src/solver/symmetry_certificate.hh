@@ -1,19 +1,21 @@
 #pragma once
 
+#include <span>
 #include <string>
 #include <vector>
 
 namespace symmetry {
 
-  // Declaration provenance supplied by the native TLSF frontend when indexed
-  // reduction syntax is present.  TLSF syntax does not prove symmetry: this
-  // hint only selects otherwise-capped hypotheses, and structural automorphism
-  // checking remains the final soundness gate.
-  struct indexed_family_hint {
+  // Physical declarations supplied by the native TLSF frontend.  Syntax-gated
+  // hints do not prove symmetry; structural automorphism checking still does.
+  struct declared_family {
       bool is_input = false;
       long lo = 0;
       long hi = -1;
       std::vector<std::string> members;
+      enum class kind { element, opaque } encoding = kind::opaque;
   };
+
+  using indexed_family_hint = declared_family;
 
 }  // namespace symmetry

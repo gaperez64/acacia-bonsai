@@ -35,6 +35,15 @@ namespace acacia::tlsf_frontend {
         phase_records_drop ();
     }
 
+    std::vector<symmetry::declared_family> declared_families (tlsf::Conversion& result) {
+      std::vector<symmetry::declared_family> families;
+      families.reserve (result.indexed_families.size ());
+      for (auto& family : result.indexed_families)
+        families.push_back ({not family.is_output, family.lo, family.hi,
+                             std::move (family.members), symmetry::declared_family::kind::element});
+      return families;
+    }
+
   }  // namespace
 
   specification parse (std::string_view text) {
@@ -49,17 +58,8 @@ namespace acacia::tlsf_frontend {
     value.metadata.tlsf_target = result.original_target;
     value.metadata.tlsf_effective_target = result.effective_target;
     value.metadata.tlsf_gr_level = result.gr_level;
-    value.metadata.tlsf_declared_families.reserve (result.indexed_families.size ());
-    for (auto& family : result.indexed_families) {
-      symmetry::indexed_family_hint hint;
-      hint.is_input = not family.is_output;
-      hint.lo = family.lo;
-      hint.hi = family.hi;
-      hint.members = std::move (family.members);
-      value.metadata.tlsf_declared_families.push_back (std::move (hint));
-    }
-    if (result.has_indexed_conjunction)
-      value.metadata.tlsf_indexed_families = value.metadata.tlsf_declared_families;
+    value.metadata.tlsf_declared_families = declared_families (result);
+    value.metadata.tlsf_has_indexed_conjunction = result.has_indexed_conjunction;
 
     value.ast = std::move (result.ast);
     value.formula = std::move (result.preprocessed_ltl);

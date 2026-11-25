@@ -27,9 +27,14 @@ struct specification_metadata {
     int tlsf_gr_level = -1;
     // Exact linked-frontend normalization, before any realizability simplification.
     std::string tlsf_normalized_objective;
-    std::vector<symmetry::indexed_family_hint> tlsf_indexed_families;
     // Declaration provenance, independent of the symmetry detector's syntax gate.
-    std::vector<symmetry::indexed_family_hint> tlsf_declared_families;
+    std::vector<symmetry::declared_family> tlsf_declared_families;
+    bool tlsf_has_indexed_conjunction = false;
+
+    std::span<const symmetry::declared_family> tlsf_indexed_families () const {
+      return tlsf_has_indexed_conjunction ? std::span {tlsf_declared_families}
+                                          : std::span<const symmetry::declared_family> {};
+    }
 };
 
 inline const char* translation_pref_name (TRANSLATION_PREF_T preference) {

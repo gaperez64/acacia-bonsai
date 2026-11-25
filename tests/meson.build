@@ -712,12 +712,14 @@ endif
 tlsf_frontend_test = executable (
   'tlsf-frontend-test',
   '../src/tlsf_frontend.cc',
+  '../src/solver/restriction_prepass.cc',
   'tlsf_frontend_test.cc', tlsf_conversion_guard_sources,
   link_args : tlsf_conversion_guard_args,
   include_directories : inc,
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
-test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
+test ('tlsf-frontend', tlsf_frontend_test, args : files ('fixtures/encoded-fold.tlsf'),
+      suite : ['unit', 'tlsf'])
 
 restriction_prepass_test = executable (
   'restriction-prepass-test', 'restriction_prepass_test.cc',
