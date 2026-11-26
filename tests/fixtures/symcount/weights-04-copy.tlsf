@@ -1,0 +1,2 @@
+INFO { TITLE: "review weights-04-copy" SEMANTICS: Mealy TARGET: Mealy }
+MAIN { INPUTS { r[3]; } OUTPUTS { g[3]; } GUARANTEES { G ((!g[0] && g[1] && g[2]) || (g[0] && !g[1] && g[2]) || (g[0] && g[1] && !g[2])); &&[0 <= i < 3] G (g[i] <-> r[i]); } }

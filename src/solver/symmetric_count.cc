@@ -60,6 +60,15 @@ namespace acacia::symcount {
       return found;
     }
 
+    void require_aps (const formula& f, const std::set<std::string>& allowed,
+                      const char* reason) {
+      spot::atomic_prop_set aps;
+      spot::atomic_prop_collect (f, &aps);
+      for (const auto& a : aps)
+        if (not allowed.count (a.ap_name ()))
+          throw declined (reason);
+    }
+
     // Rename index k's family members to index 0's: the template of a local formula.
     formula to_template (const formula& f, unsigned k, const family_map& fm) {
       if (f.is (op::ap)) {
@@ -242,6 +251,8 @@ namespace acacia::symcount {
 
         // An aggregate over every index of template t.
         formula atom (bool conj, const formula& t) {
+          // Local predicates are evaluated before generated events exist.
+          require_aps (t, ap_names, "generated event in a local template");
           if (t.is_boolean ())
             return new_event (conj ? event_kind::all_now : event_kind::any, letter_pred (t));
           if (t.is (op::G) and t[0].is (op::F) and t[0][0].is_boolean ()) {
@@ -355,7 +366,16 @@ namespace acacia::symcount {
 
     // Compositions of `total` into `parts` ordered parts.
     void compositions (unsigned total, unsigned parts, std::vector<std::vector<uint16_t>>& out,
-                       const limits& bound) {
+                       size_t& choices, size_t limit, const limits& bound) {
+      if (choices > limit)
+        throw declined ("split limit");
+      uint64_t count = 1;
+      for (unsigned k = 1; k < parts; ++k) {
+        count = count * (total + k) / k;
+        if (count > limit / choices)
+          throw declined ("split limit");
+      }
+      choices *= size_t (count);
       std::vector<uint16_t> cur (parts, 0);
       auto rec = [&] (auto&& self, unsigned i, unsigned left) -> void {
         if (i + 1 == parts) {
@@ -410,6 +430,8 @@ namespace acacia::symcount {
         (in_set.count (names[0]) ? li : lo).push_back (names[0]);
       const unsigned ng = unsigned (gi.size () + go.size ()),
                      nl = unsigned (li.size () + lo.size ());
+      std::set<std::string> global_aps (gi.begin (), gi.end ());
+      global_aps.insert (go.begin (), go.end ());
       if (ng + nl > 16)
         throw declined ("too many letters for explicit local tables");
       if ((1u << nl) > bound.max_local_letters)
@@ -453,6 +475,7 @@ namespace acacia::symcount {
         if (ix.empty ())
           global.push_back (c);
         else if (ix.size () == 1) {
+          require_aps (c, b.ap_names, "generated event in a local template");
           if (not local[to_template (c, *ix.begin (), fm)].insert (*ix.begin ()).second)
             continue;  // a repeated conjunct
         }
@@ -464,6 +487,8 @@ namespace acacia::symcount {
               c[0][0][0].is_boolean () and indices (c[0][0], fm).empty () and
               b.always_orbit (c[0][1], lambda)) {
             const formula gamma = c[0][0][0];
+            require_aps (gamma, global_aps, "since antecedent is not over global APs");
+            require_aps (lambda, b.ap_names, "generated event in a local template");
             b.since.push_back ({spot::formula_to_bdd (gamma, b.dict, &b.owner_token),
                                 spot::formula_to_bdd (lambda, b.dict, &b.owner_token), b.bits++});
             b.preds.push_back ({pred_kind::since, unsigned (b.since.size () - 1), bddfalse});
@@ -726,8 +751,10 @@ namespace acacia::symcount {
         }
         // Environment: a global input and, per occupied local state, a split by local input.
         std::vector<std::vector<std::vector<uint16_t>>> in_splits (occupied.size ());
+        size_t input_choices = ngi;
         for (unsigned k = 0; k < occupied.size (); ++k)
-          compositions (state[1 + occupied[k]], nli, in_splits[k], bound);
+          compositions (state[1 + occupied[k]], nli, in_splits[k], input_choices,
+                        std::min (max_vertices - owner.size (), max_edges - edges), bound);
         std::vector<unsigned> sys_vertices;
         std::vector<unsigned> pick (occupied.size (), 0);
         for (unsigned g_in = 0; g_in < ngi; ++g_in) {
@@ -750,8 +777,12 @@ namespace acacia::symcount {
                 if (unsigned c = in_splits[k][pick[k]][x])
                   cls.emplace_back (occupied[k], x, c);
             std::vector<std::vector<uint16_t>> output (cls.size (), std::vector<uint16_t> (nlo));
+            std::set<unsigned> successors;
+            size_t candidates = 0;
             auto emit = [&] (unsigned g_out) {
               poll ();
+              if (++candidates > std::min (max_vertices, max_edges))
+                throw declined ("split limit");
               const unsigned g = g_in | (g_out << gi.size ());
               std::vector<uint32_t> counts (nls, 0);
               uint64_t any = 0, all = ~uint64_t (0);
@@ -815,12 +846,17 @@ namespace acacia::symcount {
               std::vector<uint32_t> key {s2, col};
               key.insert (key.end (), counts.begin (), counts.end ());
               const unsigned w = env_vertex (std::move (key));
-              succ[u].push_back (w);
+              if (not successors.count (w)) {
+                count_edges (1);
+                successors.insert (w);
+              }
             };
             if (output_safety.empty ()) {
               std::vector<std::vector<std::vector<uint16_t>>> out_splits (cls.size ());
+              size_t output_choices = ngo;
               for (unsigned k = 0; k < cls.size (); ++k)
-                compositions (std::get<2> (cls[k]), nlo, out_splits[k], bound);
+                compositions (std::get<2> (cls[k]), nlo, out_splits[k], output_choices,
+                              std::min (max_vertices - owner.size (), max_edges - edges), bound);
               std::vector<unsigned> opick (cls.size (), 0);
               for (unsigned g_out = 0; g_out < ngo; ++g_out) {
                 std::fill (opick.begin (), opick.end (), 0);
@@ -881,13 +917,17 @@ namespace acacia::symcount {
               for (unsigned g_out = 0; g_out < ngo; ++g_out)
                 rec (rec, 0, 0, std::get<2> (cls[0]), fm.n, g_out);
             }
-            // Empty legal action set is an immediate system loss; keep the arena total.
-            if (succ[u].empty ())
-              succ[u].push_back (u);  // colour 0, even
-            std::sort (succ[u].begin (), succ[u].end ());
-            succ[u].erase (std::unique (succ[u].begin (), succ[u].end ()), succ[u].end ());
-            // Charge only distinct successors against the unchanged edge budget.
-            count_edges (succ[u].size ());
+            // Keep one original move when no safe output survives. The retained
+            // unconditional G monitor rejects it; every stored edge stays original.
+            if (successors.empty ()) {
+              for (unsigned k = 0; k < cls.size (); ++k) {
+                std::fill (output[k].begin (), output[k].end (), 0);
+                output[k][0] = uint16_t (std::get<2> (cls[k]));
+              }
+              emit (0);
+            }
+            // Store only distinct successors, with no duplicate candidate capacity.
+            succ[u].assign (successors.begin (), successors.end ());
             // Next input split.
             unsigned k = 0;
             while (k < occupied.size () and ++pick[k] == in_splits[k].size ())

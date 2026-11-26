@@ -88,12 +88,46 @@ theorem restrict_safety (outcomes objective safe : Ω → Prop)
     · intro h; exact ⟨fun r hr => topG r (h r hr), fun r hr _ => h r hr⟩
     · rintro ⟨hs, h⟩ r hr; exact h r hr (hs r hr)
 
--- The arena's even self-loop for an empty safe output set is a system loss.
-theorem empty_outputs_loss : ¬ maxOdd (fun _ => 0) := by
-  rintro ⟨c, odd, recurrent, _⟩
-  obtain ⟨_, _, hc⟩ := recurrent 0 (Nat.zero_le _)
-  change 0 = c at hc
-  omega
+-- Keep safe system moves, or one ORIGINAL output when none is safe. The G
+-- monitor still sees that output. This models C++ completion without new edges.
+def safetyCompletion (G : Game V) (safe : V → V → Prop) (fallback : V → V) : Game V where
+  owner := G.owner
+  prio := G.prio
+  edge v w := G.edge v w ∧ (G.owner v = false ∨ safe v w ∨
+    (¬ ∃ z, G.edge v z ∧ safe v z) ∧ w = fallback v)
+
+theorem safetyCompletion_empty (G : Game V) (safe : V → V → Prop) (fallback : V → V)
+    (legal : ∀ v, G.edge v (fallback v)) (v : V) (system : G.owner v = true)
+    (empty : ¬ ∃ z, G.edge v z ∧ safe v z) (w : V) :
+    (safetyCompletion G safe fallback).edge v w ↔ w = fallback v := by
+  constructor
+  · rintro ⟨edge, env | good | ⟨_, same⟩⟩
+    · rw [system] at env; cases env
+    · exact False.elim (empty ⟨w, edge, good⟩)
+    · exact same
+  · rintro rfl
+    exact ⟨legal v, Or.inr (Or.inr ⟨empty, rfl⟩)⟩
+
+theorem safetyCompletion_total (G : Game V) (safe : V → V → Prop) (fallback : V → V)
+    (legal : ∀ v, G.edge v (fallback v)) (v : V) :
+    ∃ w, (safetyCompletion G safe fallback).edge v w := by
+  classical
+  by_cases h : ∃ w, G.edge v w ∧ safe v w
+  · obtain ⟨w, edge, good⟩ := h
+    exact ⟨w, edge, Or.inr (Or.inl good)⟩
+  · exact ⟨fallback v, legal v, Or.inr (Or.inr ⟨h, rfl⟩)⟩
+
+-- A retained unconditional G monitor implies edge safety on every winning play.
+-- Thus exclusion is DERIVED from the monitor, also for an empty safe action set.
+theorem safetyCompletion_excluded (G : Game V) (safe : V → V → Prop) (fallback : V → V)
+    (start : V) (W : (Nat → Nat) → Prop)
+    (topG : ∀ π, IsPlay G π → π 0 = start → W (fun k => G.prio (π k)) →
+      ∀ k, safe (π k) (π (k + 1)))
+    (π : Nat → V) (play : IsPlay G π) (initial : π 0 = start)
+    (excluded : ¬ IsPlay (safetyCompletion G safe fallback) π) :
+    ¬ W (fun k => G.prio (π k)) := by
+  intro win
+  exact excluded (fun k => ⟨play k, Or.inr (Or.inl (topG π play initial win k))⟩)
 
 -- Arena-level transfer: deleted system edges lose immediately under the retained G monitor.
 -- H may have dead ends. Its system certificate must still provide a move on every
@@ -156,6 +190,19 @@ variable {Q L GI GO LI LO : Type} {marks monitors events n : Nat}
 variable {E : Engine (Q := Q) (L := L) (GI := GI) (GO := GO) (LI := LI) (LO := LO)
   (marks := marks) (monitors := monitors) (events := events)}
 
+-- Translation and membership of the selected G clause force its accepted weight
+-- on every winning original run; this is the safety obligation used by pruning.
+theorem translated_cardinality_G (spec : List (Clause E)) (q0 : Q)
+    (translated : Translates E q0 spec) (k : Fin events) (kind : E.kind k = .cardinality)
+    (selected : Clause.temporal (fun _ atoms => CountTemporal.G (atoms ⟨k, .cardinality, kind⟩) 0) ∈ spec)
+    (R : Run E n) (hq : R.q 0 = q0) (hc : R.color 0 = 0)
+    (win : maxOdd (fun t => (game (engineMachine E)).prio (R.vertices t))) :
+    ∀ t, E.accepted k (counts (fun i => current E (R.states t i) (R.global t) (R.letter i t) k) true) = true := by
+  have source := (R.specification spec q0 translated hq hc).mpr win _ selected
+  have encoded := (Clause.correct _ R).mp source
+  intro t
+  exact (R.cardinality_event k kind t).mp (encoded t (Nat.zero_le _))
+
 -- The top-level G guard is a property of the original objective, never of an assumption,
 -- F, X or a disjunct. Outputs-only ensures that deleting its violations restricts system moves.
 theorem engine_safety_restriction (spec : List (Clause E)) (q0 : Q)
@@ -180,17 +227,19 @@ theorem engine_pruned_verdict
     (a : GI) (b : GO) (u : Fin ki) (v : Fin ko) :
     let G := countGame (engineMachine E) absorbing (CountEngine.initial E) (n := n)
     let start := countKey (collapse absorbing (CountEngine.initial E) (.env q0 0 (fun _ => CountEngine.initial E)))
-    ∀ H : Game (CountKey n Q (Local L monitors events) GI (Fin ki)),
-      H.owner = G.owner → H.prio = G.prio →
-      (∀ x y, H.edge x y → G.edge x y) →
-      (∀ x y, G.owner x = false → G.edge x y → H.edge x y) →
-      (∀ π, IsPlay G π → π 0 = start → ¬ IsPlay H π → ¬ maxOdd (fun k => G.prio (π k))) →
-      ∀ (p : Bool) (σ), Certified H maxOdd p σ start →
+    ∀ (safe : CountKey n Q (Local L monitors events) GI (Fin ki) →
+          CountKey n Q (Local L monitors events) GI (Fin ki) → Prop) (fallback),
+      (∀ x, G.edge x (fallback x)) →
+      (∀ π, IsPlay G π → π 0 = start → maxOdd (fun k => G.prio (π k)) →
+        ∀ k, safe (π k) (π (k + 1))) →
+      ∀ (p : Bool) (σ), Certified (safetyCompletion G safe fallback) maxOdd p σ start →
         (∃ strategy, SpecWins (n := n) spec q0 p strategy) ∧
           ∀ other, ¬ SpecWins (n := n) spec q0 (!p) other := by
-  intro G start H owner prio subset environment excluded p σ certificate
-  obtain ⟨τ, win⟩ := pruned_certificate G H maxOdd start owner prio subset environment
-    (countGame_total (engineMachine E) absorbing (CountEngine.initial E) a b u v) excluded certificate
+  intro G start safe fallback legal topG p σ certificate
+  obtain ⟨τ, win⟩ := pruned_certificate G (safetyCompletion G safe fallback) maxOdd start
+    rfl rfl (fun _ _ edge => edge.1) (fun _ _ env edge => ⟨edge, Or.inl env⟩)
+    (countGame_total (engineMachine E) absorbing (CountEngine.initial E) a b u v)
+    (safetyCompletion_excluded G safe fallback start maxOdd topG) certificate
   exact engine_spec_verdict E spec q0 translated absorbing valid a b u v
     (σ := τ) ⟨fun x _ hx => win.1 x hx, win.2⟩
 

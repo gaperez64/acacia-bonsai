@@ -1,0 +1,2 @@
+INFO { TITLE: "output split budget" SEMANTICS: Mealy TARGET: Mealy }
+MAIN { OUTPUTS { g[60]; h[60]; j[60]; } GUARANTEES { &&[0 <= i < 60] F g[i]; } }

@@ -75,7 +75,7 @@ test ('help-output',
 
 test ('symcount-verdicts', py,
       args : [files ('check-symcount.py'), symcount_exe],
-      suite : ['unit', 'symcount'], depends : [symcount_exe], timeout : 120)
+      suite : ['unit', 'symcount'], depends : [symcount_exe, ab_exe], timeout : 120)
 
 if get_option ('acacia_tlsf_corpus_dir') != ''
   test ('symcount-corpus-verdicts', py,

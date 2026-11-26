@@ -133,22 +133,33 @@ temporal contexts.
 when system choices violating an unconditional G conjunct are removed. System
 strategies must keep every outcome safe; environment strategies need only check
 the remaining safe outcomes, since every removed outcome already loses for the
-system. An empty safe action set remains a system loss. The source objective
+system. The source objective
 implying the safety conjunct is an explicit premise; it is unavailable for F, X,
 assumptions or disjunctions. `engine_safety_restriction` applies this equivalence
-to specification strategies. `pruned_certificate` transfers either winner's certificate from the filtered
-arena to the full arena, assuming unchanged environment edges and that every
-excluded play loses under the retained safety monitor. `engine_pruned_verdict`
-feeds that certificate into `engine_spec_verdict`. `empty_outputs_loss` verifies
-the even self-loop used when no safe output exists.
-The C++ positive-conjunct and output-ownership guards establish that premise;
-BDD identity, accepted-weight reconstruction and enumeration remain within the
-compiled-code correspondence boundary above. Duplicate successor removal changes
-no edge relation; budgets still bound the stored arena.
+to specification strategies. `safetyCompletion` constructs the filtered graph:
+keep safe system edges, or one original output edge when none is safe.
+`safetyCompletion_empty` covers that empty-output case and
+`safetyCompletion_total` proves totality. C++ chooses the all-zero output letter;
+the original G monitor still rejects it. No new self-loop is added.
+`translated_cardinality_G` derives accepted weights on winning original runs
+from membership of the selected unconditional G clause and translation correctness.
+`safetyCompletion_excluded` derives excluded-play loss from the retained G
+monitor's implication to edge safety. `pruned_certificate` transfers either
+winner's certificate, and `engine_pruned_verdict` instantiates the constructed
+completion and feeds its certificate into `engine_spec_verdict`.
+The implication from the translated monitor to the selected safe edges remains
+an explicit correspondence obligation, not a winner-preservation assumption or
+a consequence of anchor checking. Selecting a positive unconditional G clause,
+output ownership, BDD identity, accepted-weight reconstruction and exact
+enumeration remain within the compiled-code boundary above. Local templates
+exclude generated events; since antecedents use only actual global APs.
+Split prechecks bound materialized compositions before allocation. Distinct
+successors are charged on insertion and copied into a fresh adjacency vector;
+duplicate candidates never accumulate in its storage or retained capacity.
 
 | C++ source | Lean port |
 | --- | --- |
 | `solver/symmetric_count.cc#const bool equal = bdd_replace (original, pair) == original;`; `solver/symmetric_count.cc#if (reconstructed != original)` | `invariant`, `count_factor`, `accepted_weights`, `quotient_constraint` |
 | `solver/symmetric_count.cc#cardinalities[j] += c;`; `solver/symmetric_count.cc#fired = b.cardinalities[e.pred].truth[cardinalities[e.pred]];` | `weighted_constraint`, `event_values`, `Run.cardinality_event`, `Atom.correct` |
-| `solver/symmetric_count.cc#if (under_top_g (under_top_g, lowered, false)) {`; `solver/symmetric_count.cc#feasible = feasible and reachable;`; `solver/symmetric_count.cc#succ[u].push_back (u);  // colour 0, even` | `restrict_safety`, `engine_safety_restriction`, `engine_pruned_verdict` |
-| `solver/symmetric_count.cc#count_edges (succ[u].size ());` | Set-valued `Game.edge`, `countGame_edges`; resource accounting after duplicate removal |
+| `solver/symmetric_count.cc#if (under_top_g (under_top_g, lowered, false)) {`; `solver/symmetric_count.cc#feasible = feasible and reachable;`; `solver/symmetric_count.cc#if (successors.empty ()) {`; `solver/symmetric_count.cc#emit (0);` | `restrict_safety`, `translated_cardinality_G`, `engine_safety_restriction`, `safetyCompletion_empty`, `safetyCompletion_excluded`, `engine_pruned_verdict` |
+| `solver/symmetric_count.cc#if (not successors.count (w)) {`; `solver/symmetric_count.cc#succ[u].assign (successors.begin (), successors.end ());` | Set-valued `Game.edge`, `countGame_edges`; bounded workspace and distinct-edge accounting |

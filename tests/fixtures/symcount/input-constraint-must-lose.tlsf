@@ -1,0 +1,2 @@
+INFO { TITLE: "review input-constraint-must-lose" SEMANTICS: Mealy TARGET: Mealy }
+MAIN { INPUTS { r[3]; } OUTPUTS { g[3]; } GUARANTEES { G ((!r[0] && !r[1] && r[2]) || (!r[0] && r[1] && !r[2]) || (r[0] && !r[1] && !r[2])); &&[0 <= i < 3] G F g[i]; } }

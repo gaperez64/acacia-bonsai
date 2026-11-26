@@ -1,0 +1,8 @@
+INFO { TITLE: "empty-safe-intersection" DESCRIPTION: "review boundary probe" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+ INPUTS {  }
+ OUTPUTS { g[2]; }
+ GUARANTEES {
+ &&[0 <= i < 2] (g[i] || !g[i]); G ((g[0] && !g[1]) || (!g[0] && g[1])); G (g[0] && g[1]);
+ }
+}

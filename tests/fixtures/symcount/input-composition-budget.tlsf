@@ -1,0 +1,2 @@
+INFO { TITLE: "review input-composition-budget" SEMANTICS: Mealy TARGET: Mealy }
+MAIN { INPUTS { a[60]; b[60]; c[60]; } OUTPUTS { g[60]; } GUARANTEES { &&[0 <= i < 60] G F g[i]; } }

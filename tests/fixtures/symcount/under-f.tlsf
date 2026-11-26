@@ -1,0 +1,2 @@
+INFO { TITLE: "review under-f" SEMANTICS: Mealy TARGET: Mealy }
+MAIN { INPUTS {  } OUTPUTS { g[3]; enable; } GUARANTEES { F G ((!g[0] && !g[1] && g[2]) || (!g[0] && g[1] && !g[2]) || (g[0] && !g[1] && !g[2])); &&[0 <= i < 3] g[i]; } }

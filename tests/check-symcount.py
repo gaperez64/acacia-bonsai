@@ -21,12 +21,56 @@ cases = {
     "recursive-exclusion.tlsf": "REALIZABLE",
     "asymmetric-constraint.tlsf": "DECLINED",
     "eventual-constraint.tlsf": "REALIZABLE",  # initial weight 4 must remain available
+    "local-event-a.tlsf": "DECLINED",
+    "local-event-b.tlsf": "DECLINED",
+    "local-event-c.tlsf": "DECLINED",
+    "local-event-d.tlsf": "DECLINED",
+    "since-one-family.tlsf": "DECLINED",
+    "since-cardinality.tlsf": "DECLINED",
+    "empty-safe-intersection.tlsf": "UNREALIZABLE",
+    "empty-safe-set.tlsf": "UNREALIZABLE",
+    "weights-04-copy.tlsf": "UNREALIZABLE",
+    "input-constraint-must-lose.tlsf": "UNREALIZABLE",
+    "under-x.tlsf": "REALIZABLE",
+    "under-f.tlsf": "REALIZABLE",
+    "under-implication.tlsf": "DECLINED",
+    "under-disjunction.tlsf": "REALIZABLE",
+    "under-assumption.tlsf": "DECLINED",
+    "strict-under-assumption.tlsf": "DECLINED",
+    "strict-moore-under-assumption.tlsf": "DECLINED",
+    "moore-under-x.tlsf": "REALIZABLE",
+    "strict-moore-under-x.tlsf": "REALIZABLE",
+    "input-composition-budget.tlsf": "DECLINED",
+    "output-composition-budget.tlsf": "DECLINED",
+    "eager-compositions.tlsf": "DECLINED",
+    "duplicate-storage.tlsf": "DECLINED",
+    "pruned-duplicate-storage.tlsf": "DECLINED",
     "partial-family.tlsf": "DECLINED",
     "no-family.tlsf": "DECLINED",
     # Nested since monitors are outside the fragment; reference verdicts below.
     "since-under-x.tlsf": "DECLINED",  # REALIZABLE
     "since-under-next.tlsf": "DECLINED",  # REALIZABLE
     "since-negated-next.tlsf": "DECLINED",  # UNREALIZABLE
+}
+# Independent parity verdicts for the generated-event counterexamples.
+references = {
+    "local-event-a.tlsf": "UNREALIZABLE",
+    "local-event-b.tlsf": "UNREALIZABLE",
+    "local-event-c.tlsf": "UNREALIZABLE",
+    "local-event-d.tlsf": "UNREALIZABLE",
+    "since-one-family.tlsf": "REALIZABLE",
+    "since-cardinality.tlsf": "REALIZABLE",
+    "under-assumption.tlsf": "REALIZABLE",
+    "strict-under-assumption.tlsf": "REALIZABLE",
+    "strict-moore-under-assumption.tlsf": "REALIZABLE",
+    "under-implication.tlsf": "REALIZABLE",
+}
+vertex_limits = {
+    "input-composition-budget.tlsf": 1,
+    "output-composition-budget.tlsf": 2,
+    "eager-compositions.tlsf": 2,
+    "duplicate-storage.tlsf": 3,
+    "pruned-duplicate-storage.tlsf": 3,
 }
 if len(sys.argv) > 2:
     root = Path(sys.argv[2])
@@ -49,10 +93,24 @@ codes = {"REALIZABLE": 0, "UNREALIZABLE": 1, "DECLINED": 2}
 failed = False
 for name, expected in cases.items():
     path = root / name
-    done = subprocess.run([binary, path], capture_output=True, text=True, timeout=120)
+    args = [binary, path]
+    if name in vertex_limits:
+        args += ["--max-vertices", str(vertex_limits[name])]
+    done = subprocess.run(args, capture_output=True, text=True, timeout=120)
     word = (done.stdout.split() or ["?"])[0]
     if (word != expected or done.returncode != codes[expected]
             or (name in reasons and f"reason={reasons[name]}" not in done.stdout)):
         print(f"{path.name}: expected {expected}, got {done.returncode} {done.stdout}{done.stderr}")
         failed = True
+    if name in vertex_limits and "reason=split limit" not in done.stdout:
+        print(f"{name}: expected a pre-allocation split decline, got {done.stdout}")
+        failed = True
+    if name in references:
+        reference = subprocess.run(
+            [binary.with_name("acacia-bonsai"), "--arms", "both:parity:spot", "-T", path],
+            capture_output=True, text=True, timeout=120)
+        if (reference.stdout.strip() != references[name]
+                or reference.returncode != codes[references[name]]):
+            print(f"{name}: parity expected {references[name]}, got {reference.stdout}{reference.stderr}")
+            failed = True
 sys.exit(1 if failed else 0)

@@ -1,0 +1,9 @@
+INFO { TITLE: "Cardinality in since antecedent" DESCRIPTION: "All outputs turn true after the initial letter" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+ OUTPUTS { r[2]; b[2]; }
+ GUARANTEES {
+  &&[0 <= i < 2] (!r[i] && X G r[i]);
+  &&[0 <= i < 2] (!b[i] && X G b[i]);
+  G (G (r[0] || r[1]) -> (G b[0] || G b[1]));
+ }
+}
