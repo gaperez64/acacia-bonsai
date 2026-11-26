@@ -2,6 +2,24 @@
 
 [Measurement protocol](README.md) and [evidence index](evidence-index.tsv).
 
+## 2026-11-26: Symmetric mutual-exclusion constraints would let the count arm decide five more arbiters (#482, stage 1)
+
+Archives `guard471-20261125` and `card482-20261125`. A census of the count arm over all 1,586
+corpus files (master 7343ca0c) found 57 of the 129 SYNTCOMP26 inputs master leaves unsolved at
+17 s declining with "an aggregate covers part of the index range". Classified from the
+formulas: 5 fix one client and are otherwise symmetric, 21 relate neighbouring or ordered
+indices, 20 use binary-encoded indices (13 of which also order them), and 11 are fully
+symmetric but state mutual exclusion through a recursive split of the range. A scratch
+prototype of the count arm then accepted a current-letter Boolean constraint when a BDD check
+shows it invariant under every index transposition, and replaced it by the cardinality
+predicate it denotes. All eleven passed the check. Enumerating only output compositions that
+satisfy such a top-level G constraint, and charging the split budget after merging duplicate
+successors, solved 7 of the 11 with independently checked strategies, five of which master
+does not solve at 17 s: arbiter n=10 (0.05 s), arbiter_with_cancel n=8, 9 and 10 (1.7, 4.4 and
+10.4 s) and arbiter_on_inpchange n=6 (10.1 s). Their quotients stay small (112 to 49k count
+states), but explicit input letters give up to 13M edges; abcg_arbiter n=4 to 6 ran out of
+memory at 4G and arbiter_on_inpchange n=7 hit the edge limit.
+
 ## 2026-11-25: Deadline-aware extraction fallback repairs the selection race (#469, #475)
 
 Archive `race469-20261125`; merged as #475 (`7343ca0c`). Under `-s`, the
