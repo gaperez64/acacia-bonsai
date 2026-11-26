@@ -2,14 +2,46 @@
 """Check encoder grammar, all synthesis paths, and the unchanged default bytes."""
 
 from itertools import product
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 
+from obligation_test_support import records
 
-def run(binary, *arguments):
-    return subprocess.run([binary, *arguments], capture_output=True, text=True, timeout=15)
+
+def run(binary, *arguments, **kwargs):
+    return subprocess.run([binary, *arguments], capture_output=True, text=True, timeout=15,
+                          **kwargs)
+
+
+def synthesize(binary, controlled, arm, command):
+    with tempfile.TemporaryDirectory() as temporary:
+        phases = Path(temporary)
+        env = dict(os.environ, ACACIA_PHASE_RECORDS=str(phases))
+        if arm == "both:obligation:spot" and controlled:
+            # -s adds backward fallbacks. Hold their verdicts so this tests obligation bytes.
+            reader, writer = os.pipe()
+            try:
+                with open(os.devnull) as ready:
+                    env.update(ACACIA_TEST_SYNTHESIS_VERDICT_FD=str(reader),
+                               ACACIA_TEST_SYNTHESIS_OBLIGATION_VERDICT_FD=str(ready.fileno()))
+                    result = run(controlled, *command, env=env,
+                                 pass_fds=(reader, ready.fileno()))
+            finally:
+                os.close(reader)
+                os.close(writer)
+        else:
+            result = run(binary, *command, env=env)
+        assert result.returncode == 0, (arm, result)
+        winner, = [row for row in records(phases) if row.get("event") == "parent_winner"]
+        backend = arm.split(":")[1 if arm.startswith("both:") else 2]
+        backends = {backend, "backward"} if arm == "both:obligation:spot" and not controlled else {backend}
+        assert winner["requested_backend"] in backends, winner
+        if arm == "both:obligation:spot" and controlled:
+            assert winner["effective_backend"] == "obligation", winner
+        return tuple(winner.get(key) for key in ("requested_backend", "effective_backend", "route"))
 
 
 def rejected_calls(binary, direct, mode):
@@ -20,7 +52,9 @@ def rejected_calls(binary, direct, mode):
 
 
 def main():
-    binary, checker, direct = sys.argv[1:]
+    binary, checker, direct, controlled = sys.argv[1:]
+    if not controlled:
+        print("SKIP obligation-route byte comparison: synthesis verdict hooks unavailable")
     help_text = run(binary, "--help").stdout
     assert "--aiger-mode MODE" in help_text
     assert "a canonical subset of Spot's syntax: no empty components" in help_text
@@ -59,16 +93,17 @@ MAIN { INPUTS { a; b; c; d; unused_input; } OUTPUTS { grant; unused_output; }
                              ("both:obligation:spot", []), ("both:parity:spot", [])):
             command = ["--arms", arm, *options, "-T", str(source), "-s", str(circuit),
                        "--aiger-abc", "off"]
-            default = run(binary, *command)
-            assert default.returncode == 0, (arm, default)
+            route = synthesize(binary, controlled, arm, command)
+            pinned = arm != "both:obligation:spot" or bool(controlled)
             original = circuit.read_bytes()
             encodings = set()
             for mode in ("isop", "ite", "both", "both+ud+sub0", "isop+ud+sub1",
                          "both+sub2+ud", "optim", "ite,isop+ud", "isop+dc", "ite+dc",
                          "ite+dc+ud", "both+dc", "both+dc+ud"):
-                result = run(binary, *command, "--aiger-mode", mode)
-                assert result.returncode == 0, (arm, mode, result)
-                if mode == "isop":
+                actual = synthesize(binary, controlled, arm, [*command, "--aiger-mode", mode])
+                if pinned:
+                    assert actual == route, (arm, mode, route, actual)
+                if mode == "isop" and pinned:
                     assert circuit.read_bytes() == original, arm
                 encodings.add(circuit.read_bytes())
                 checked = run(checker, str(source), str(circuit))
