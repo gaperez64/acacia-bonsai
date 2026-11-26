@@ -2,6 +2,20 @@
 
 [Measurement protocol](README.md) and [evidence index](evidence-index.tsv).
 
+## 2026-11-26: The count arm now decides five more arbiters, with mutual exclusion as a count (#482)
+
+Archive `card482-gate-20261126`. The count arm accepts a Boolean constraint over one family's
+current letter when a BDD check shows it invariant under every index transposition, as the
+cardinality predicate it denotes; under top-level G it enumerates only output compositions that
+satisfy it, and it charges the split budget as duplicate successors merge. Constraints that
+reach a local template or a since antecedent as generated events decline. Against master
+01beb469, G0, G1, G4 and G5 pass, and G3 gains two solves on each panel (SYNTCOMP25 165 → 167,
+PAR-2 639.6 → 586.8 s; SYNTCOMP26 168 → 170, 494.4 → 444.7 s) against a flat control. The full
+SYNTCOMP26 screen at 17 s and 6G solves 1,402 instead of 1,397 with no loss, no verdict conflict
+and PAR-2 5,003.0 → 4,832.7 s: arbiter n=9 and 10 and arbiter_with_cancel n=7 to 9. Stage 1's
+arbiter_with_cancel n=10 and arbiter_on_inpchange n=6 (12–13M edges) still time out at 17 s. The
+tlsfobf-renamed screen also solves 1,402 with no conflict; its two flips sit at the cap.
+
 ## 2026-11-26: Symmetric mutual-exclusion constraints would let the count arm decide five more arbiters (#482, stage 1)
 
 Archives `guard471-20261125` and `card482-20261125`. A census of the count arm over all 1,586

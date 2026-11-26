@@ -1,0 +1,8 @@
+INFO { TITLE: "Duplicate successor storage" DESCRIPTION: "Many output compositions share two successors" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+ OUTPUTS { g[20]; h[20]; j[20]; }
+ GUARANTEES {
+  &&[0 <= i < 20] (g[i] || !g[i]);
+  F (||[0 <= i < 20] (g[i] && h[i] && j[i]));
+ }
+}

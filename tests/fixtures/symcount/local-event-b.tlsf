@@ -1,0 +1,8 @@
+INFO { TITLE: "local-event-b" DESCRIPTION: "review probe" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+ INPUTS { r[2]; }
+ OUTPUTS { g[2]; }
+ GUARANTEES {
+ &&[0 <= i < 2] G (r[i] -> X !(g[0] && g[1])); &&[0 <= i < 2] G g[i];
+ }
+}

@@ -1,0 +1,8 @@
+INFO { TITLE: "eager-compositions" DESCRIPTION: "review probe" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+ INPUTS {  }
+ OUTPUTS { g[20]; h[20]; j[20]; }
+ GUARANTEES {
+ &&[0 <= i < 20] G F (g[i] && h[i] && j[i]);
+ }
+}

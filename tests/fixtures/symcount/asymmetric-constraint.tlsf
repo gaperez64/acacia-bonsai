@@ -1,0 +1,5 @@
+INFO { TITLE: "Asymmetric constraint" DESCRIPTION: "Partial exclusion still declines" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  OUTPUTS { g[4]; }
+  GUARANTEES { G (g[0] || g[1]); &&[0 <= i < 4] G F g[i]; }
+}

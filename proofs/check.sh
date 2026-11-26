@@ -18,7 +18,7 @@ fi
 for module in Automaton Detector Game Equivariance FixedPoint Transports Reuse \
   Backward Closure Enumeration NextPermutation LayoutBuilder PlanBuilder \
   Pickers BooleanBoundary ActionTable Mona AdaptiveK BuilderExamples Examples \
-  Quotient CountTemporal CountGame CountEngine; do
+  Quotient CountTemporal CountGame CountEngine CountCardinality; do
   # Always elaborate the source, even on an exact .lake cache hit. The flags
   # match lakefile.toml, with worker/stack settings overridable for this check.
   time timeout 300 lake env lean -j"$LEAN_NUM_THREADS" -s"$LEAN_STACK_SIZE_KB" \

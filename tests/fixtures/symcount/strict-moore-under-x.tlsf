@@ -1,0 +1,2 @@
+INFO { TITLE: "review strict-moore-under-x" SEMANTICS: Strict,Moore TARGET: Moore }
+MAIN { INPUTS {  } OUTPUTS { g[3]; enable; } GUARANTEES { X G ((!g[0] && !g[1] && g[2]) || (!g[0] && g[1] && !g[2]) || (g[0] && !g[1] && !g[2])); &&[0 <= i < 3] g[i]; } }

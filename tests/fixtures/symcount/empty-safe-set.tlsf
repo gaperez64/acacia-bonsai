@@ -1,0 +1,2 @@
+INFO { TITLE: "empty legal outputs" SEMANTICS: Mealy TARGET: Mealy }
+MAIN { OUTPUTS { g[3]; } GUARANTEES { G ((!g[0] && !g[1] && g[2]) || (!g[0] && g[1] && !g[2]) || (g[0] && !g[1] && !g[2])); G ((!g[0] && g[1] && g[2]) || (g[0] && !g[1] && g[2]) || (g[0] && g[1] && !g[2])); &&[0 <= i < 3] G F g[i]; } }

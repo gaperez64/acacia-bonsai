@@ -1,0 +1,13 @@
+INFO { TITLE: "Eventual constraint" DESCRIPTION: "Initially violate an eventual output constraint" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  OUTPUTS { g[4]; }
+  GUARANTEES {
+    &&[0 <= i < 4] g[i];
+    F ((g[0] && g[1] && !g[2] && !g[3]) ||
+       (g[0] && !g[1] && g[2] && !g[3]) ||
+       (g[0] && !g[1] && !g[2] && g[3]) ||
+       (!g[0] && g[1] && g[2] && !g[3]) ||
+       (!g[0] && g[1] && !g[2] && g[3]) ||
+       (!g[0] && !g[1] && g[2] && g[3]));
+  }
+}

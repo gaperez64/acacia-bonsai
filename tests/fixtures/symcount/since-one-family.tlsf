@@ -1,0 +1,8 @@
+INFO { TITLE: "since-one-family" DESCRIPTION: "review probe" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+ INPUTS {  }
+ OUTPUTS { g[2]; }
+ GUARANTEES {
+ &&[0 <= i < 2] (!g[i] && X G g[i]); G (G (g[0] || g[1]) -> (G g[0] || G g[1]));
+ }
+}

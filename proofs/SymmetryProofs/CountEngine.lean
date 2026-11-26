@@ -5,7 +5,7 @@ namespace Symmetry.CountEngine
 open CountGame CountTemporal Symmetry.Quotient
 
 inductive Kind where
-  | any | allNow | allInf
+  | any | allNow | allInf | cardinality
   deriving DecidableEq
 
 inductive Predicate (marks monitors : Nat) (G X : Type) where
@@ -28,6 +28,7 @@ structure Tables (Q L G X : Type) (marks monitors events : Nat) where
   pred : Fin events → Predicate marks monitors G X
   kind : Fin events → Kind
   globalStep : Q → G → (Fin events → Bool) → Q × Nat
+  accepted : Fin events → Nat → Bool := fun _ _ => false
 
 variable {Q L GI GO LI LO : Type} {marks monitors events n : Nat}
 abbrev Engine := Tables Q L (GI × GO) (LI × LO) marks monitors events
@@ -64,6 +65,25 @@ def mask (s : Local L monitors events) (g : GI × GO) (x : LI × LO) (j : Nat) :
   if h : j < events then current E s g x ⟨j, h⟩
   else if h : j - events < events then ready E s g x ⟨j - events, h⟩ else false
 
+-- Finite support for the joint current/ready masks used by the generic count machine.
+def maskWord (v : Fin (events + events) → Bool) : Nat → Bool :=
+  fun j => if h : j < events + events then v ⟨j, h⟩ else false
+
+noncomputable def maskDomain (events : Nat) : List (Nat → Bool) := by
+  classical exact unique ((vectors [false, true] (events + events)).map maskWord)
+
+theorem mask_mem (s : Local L monitors events) (g : GI × GO) (x : LI × LO) :
+    mask E s g x ∈ maskDomain events := by
+  classical
+  have he : maskWord (fun j : Fin (events + events) => mask E s g x j) = mask E s g x := by
+    funext j
+    by_cases h : j < events + events
+    · simp [maskWord, h]
+    · simp [maskWord, h, mask, show ¬ j < events by omega,
+        show ¬ j - events < events by omega]
+  simp only [maskDomain, mem_unique, List.mem_map]
+  exact ⟨_, mem_vectors _ (by intro b; cases b <;> simp) _, he⟩
+
 noncomputable def event (h : (Nat → Bool) → Nat) (j : Nat) : Bool := by
   classical
   exact if hj : j < events then
@@ -71,6 +91,7 @@ noncomputable def event (h : (Nat → Bool) → Nat) (j : Nat) : Bool := by
     | .any => decide (∃ m, 0 < h m ∧ m j = true)
     | .allNow => decide (∀ m, 0 < h m → m j = true)
     | .allInf => decide (∀ m, 0 < h m → m (events + j) = true)
+    | .cardinality => E.accepted ⟨j, hj⟩ (pushCounts (maskDomain events) h (fun m => m j) true)
   else false
 
 noncomputable def engineMachine : Machine Q (Local L monitors events) GI GO LI LO where
@@ -94,7 +115,8 @@ theorem event_values (s : Fin n → Local L monitors events) (g : GI × GO) (x :
       match E.kind k with
       | .any => ∃ i, current E (s i) g (x i) k = true
       | .allNow => ∀ i, current E (s i) g (x i) k = true
-      | .allInf => ∀ i, (s i).bit k = true ∨ current E (s i) g (x i) k = true := by
+      | .allInf => ∀ i, (s i).bit k = true ∨ current E (s i) g (x i) k = true
+      | .cardinality => E.accepted k (counts (fun i => current E (s i) g (x i) k) true) = true := by
   classical
   have now := occupied_events (fun i => mask E (s i) g (x i)) (fun m => m k = true)
   have later := occupied_events (fun i => mask E (s i) g (x i)) (fun m => m (events + k) = true)
@@ -104,6 +126,10 @@ theorem event_values (s : Fin n → Local L monitors events) (g : GI × GO) (x :
   | any => simpa [event, k.isLt, hk] using now.1
   | allNow => simpa [event, k.isLt, hk] using now.2
   | allInf => simpa [event, k.isLt, hk] using later.2
+  | cardinality =>
+    have hw := push_counts (maskDomain events) (fun i => mask E (s i) g (x i))
+      (unique_nodup _) (fun i => mask_mem E (s i) g (x i)) (fun m => m k)
+    simp [event, k.isLt, hk, hw]
 
 
 -- A round is exactly one environment input followed by one system output.
@@ -197,6 +223,11 @@ theorem any_event (k : Fin events) (hk : E.kind k = .any) (t : Nat) :
 theorem all_event (k : Fin events) (hk : E.kind k = .allNow) (t : Nat) :
     R.emitted t k = true ↔ ∀ i, R.predicate k i t := by
   simpa only [hk, emitted, predicate] using event_values (E := E) (R.states t) (R.global t) (R.letter · t) k
+
+theorem cardinality_event (k : Fin events) (hk : E.kind k = .cardinality) (t : Nat) :
+    R.emitted t k = true ↔
+      E.accepted k (counts (fun i => current E (R.states t i) (R.global t) (R.letter i t) k) true) = true := by
+  simpa only [hk, emitted] using event_values (E := E) (R.states t) (R.global t) (R.letter · t) k
 
 -- These are the actual emitted events, rather than free traces supplied to the temporal lemmas.
 theorem all_inf (k : Fin events) (hk : E.kind k = .allInf) (t : Nat) :
@@ -358,35 +389,40 @@ theorem play_run (π : Nat → Vertex n Q (Local L monitors events) GI LI) (q0 :
 
 -- Each mode records the event kind emitted by atom(); Fin modes use the negated predicate.
 inductive Mode where
-  | anyNow | allNow | anyInf | allInf | allFin | anyFin
+  | anyNow | allNow | anyInf | allInf | allFin | anyFin | cardinality
 
 def Mode.kind : Mode → Kind
   | .anyNow | .anyInf | .allFin => .any
   | .allNow => .allNow
   | .allInf | .anyFin => .allInf
+  | .cardinality => .cardinality
 
 structure Atom {GlobalLetter LocalLetter : Type} (E : Tables Q L GlobalLetter LocalLetter marks monitors events) where
   index : Fin events
   mode : Mode
   valid : E.kind index = mode.kind
 
-def Atom.source (A : Atom E) (R : Run E n) : Trace :=
-  match A.mode with
+noncomputable def Atom.source (A : Atom E) (R : Run E n) : Trace := by
+  classical
+  exact match A.mode with
   | .anyNow => fun t => ∃ i, R.source A.index i t
   | .allNow => fun t => ∀ i, R.source A.index i t
   | .anyInf => fun t => ∃ i, GF (R.source A.index i) t
   | .allInf => fun t => ∀ i, GF (R.source A.index i) t
   | .allFin => fun t => ∀ i, FG (fun u => ¬ R.source A.index i u) t
   | .anyFin => fun t => ∃ i, FG (fun u => ¬ R.source A.index i u) t
+  | .cardinality => fun t => E.accepted A.index
+      (counts (fun i => decide (R.source A.index i t)) true) = true
 
 def Atom.encoded (A : Atom E) (ev : Nat → Nat → Bool) : Trace :=
   match A.mode with
-  | .anyNow | .allNow => fun t => ev t A.index = true
+  | .anyNow | .allNow | .cardinality => fun t => ev t A.index = true
   | .anyInf | .allInf => GF (fun t => ev t A.index = true)
   | .allFin | .anyFin => FG (fun t => ev t A.index ≠ true)
 
 theorem Atom.correct (A : Atom E) (R : Run E n) (t : Nat) :
     A.source R t ↔ A.encoded R.emitted t := by
+  classical
   have he : R.source A.index = R.predicate A.index :=
     funext fun i => funext fun u => propext (R.predicate_source A.index i u).symm
   simp only [Atom.source, he, Atom.encoded]
@@ -398,6 +434,16 @@ theorem Atom.correct (A : Atom E) (R : Run E n) (t : Nat) :
   | allInf => exact (R.all_inf k h t).symm
   | allFin => exact (R.all_fin k h t).symm
   | anyFin => exact (R.any_fin k h t).symm
+  | cardinality =>
+    have hs : (fun i => decide (R.predicate k i t)) =
+        fun i => current E (R.states t i) (R.global t) (R.letter i t) k := by
+      funext i
+      cases hb : current E (R.states t i) (R.global t) (R.letter i t) k <;>
+        simp [Run.predicate, hb]
+    change E.accepted k (counts (fun i => decide (R.predicate k i t)) true) = true ↔
+      R.emitted t k = true
+    rw [hs]
+    exact (R.cardinality_event k h t).symm
 
 -- The parser's positive top conjuncts. Arbitrary temporal contexts are allowed for
 -- pointwise-correct atoms; since and local acceptance are rewritten only at position 0.
@@ -416,7 +462,7 @@ inductive Clause {GlobalLetter LocalLetter : Type} (E : Tables Q L GlobalLetter 
       (hf : ∀ j, E.kind (fe j) = .any ∧ E.pred (fe j) = .mark (fin j))
       (total : ∀ q g x, ∃ z, E.step q g x = some z)
 
-def Clause.source (C : Clause E) (R : Run E n) : Prop :=
+noncomputable def Clause.source (C : Clause E) (R : Run E n) : Prop :=
   match C with
   | .temporal context => context R.global (fun A => A.source R)
   | .since j _ _ _ => sinceSpec (fun t => E.gamma j (R.global t) = true)

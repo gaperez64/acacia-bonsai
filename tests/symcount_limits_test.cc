@@ -41,5 +41,20 @@ int main () {
   ok &= check (expired.outcome == verdict::declined and expired.reason == "deadline" and
                    expired.vertices == 0,
                "an expired deadline should decline on entry");
+
+  // Split workspace stays bounded even when candidate weights merge.
+  family.members = {"g_0", "g_1", "g_2", "g_3"};
+  std::vector<formula> grants;
+  for (const auto& name : family.members)
+    grants.push_back (formula::ap (name));
+  const auto eventual = formula::F (formula::And (grants));
+  edge_bound.max_edges = 5;
+  const auto merged = solve (eventual, {}, family.members, {&family, 1}, edge_bound);
+  ok &= check (merged.outcome == verdict::realizable and merged.edges == 4,
+               "bounded duplicate successors should merge");
+  edge_bound.max_edges = 3;
+  const auto too_small = solve (eventual, {}, family.members, {&family, 1}, edge_bound);
+  ok &= check (too_small.outcome == verdict::declined and too_small.reason == "split limit",
+               "split workspace must be bounded before allocation");
   return ok ? 0 : 1;
 }

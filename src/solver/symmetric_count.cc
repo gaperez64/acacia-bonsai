@@ -60,6 +60,15 @@ namespace acacia::symcount {
       return found;
     }
 
+    void require_aps (const formula& f, const std::set<std::string>& allowed,
+                      const char* reason) {
+      spot::atomic_prop_set aps;
+      spot::atomic_prop_collect (f, &aps);
+      for (const auto& a : aps)
+        if (not allowed.count (a.ap_name ()))
+          throw declined (reason);
+    }
+
     // Rename index k's family members to index 0's: the template of a local formula.
     formula to_template (const formula& f, unsigned k, const family_map& fm) {
       if (f.is (op::ap)) {
@@ -119,9 +128,9 @@ namespace acacia::symcount {
         bdd gamma, lambda;
         unsigned bit;
     };
-    // An event over all clients: some now, every one now, or every one since
-    // the last breakpoint (which then resets).
-    enum class event_kind { any, all_now, all_inf };
+    // An event over all clients: some now, every one now, an accepted count,
+    // or every one since the last breakpoint (which then resets).
+    enum class event_kind { any, all_now, all_inf, cardinality };
     struct event {
         event_kind kind;
         unsigned pred;
@@ -131,12 +140,87 @@ namespace acacia::symcount {
 
     struct builder {
         const family_map& fm;
+        const limits& bound;
         std::set<std::string> ap_names;
         unsigned next_event = 0;
         spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
         int owner_token = 0;
         std::vector<predicate> preds;
         std::vector<event> events;
+        struct cardinality_constraint {
+            unsigned pred;
+            std::vector<uint8_t> truth;
+            unsigned family;
+        };
+        std::vector<cardinality_constraint> cardinalities;
+
+        // Recognize a Boolean constraint over one indexed family.
+        // Every transposition is checked, then the count predicate is BDD-equated
+        // with the original formula before it can enter the game.
+        formula boolean_orbit (const formula& f) {
+          std::set<unsigned> families;
+          bool has_global = false;
+          formula walk = f;
+          walk.traverse ([&] (const formula& a) {
+            if (a.is (op::ap)) {
+              auto it = fm.member.find (a.ap_name ());
+              if (it == fm.member.end ())
+                has_global = true;
+              else
+                families.insert (it->second.first);
+            }
+            return false;
+          });
+          if (has_global or families.size () != 1)
+            return {};  // Preserve the existing recognizer for other aggregates.
+          const unsigned family = *families.begin ();
+          const bdd original = spot::formula_to_bdd (f, dict, &owner_token);
+          std::vector<int> vars;
+          for (const auto& a : fm.names[family])
+            vars.push_back (dict->register_proposition (formula::ap (a), &owner_token));
+          for (unsigned i = 0; i < fm.n; ++i)
+            for (unsigned j = i + 1; j < fm.n; ++j) {
+              check_deadline (bound);
+              bddPair* pair = bdd_newpair ();
+              bdd_setpair (pair, vars[i], vars[j]);
+              bdd_setpair (pair, vars[j], vars[i]);
+              const bool equal = bdd_replace (original, pair) == original;
+              bdd_freepair (pair);
+              if (not equal)
+                return {};  // Let the existing recognizer supply its decline reason.
+            }
+          std::vector<uint8_t> truth (fm.n + 1);
+          for (unsigned k = 0; k <= fm.n; ++k) {
+            check_deadline (bound);
+            bdd assignment = bddtrue;
+            for (unsigned i = 0; i < fm.n; ++i)
+              assignment &= i < k ? bdd_ithvar (vars[i]) : bdd_nithvar (vars[i]);
+            truth[k] = (original & assignment) != bddfalse;
+          }
+          // Independent cardinality encoding: dynamic programming for exactly k.
+          std::vector<bdd> exact (fm.n + 1, bddfalse);
+          exact[0] = bddtrue;
+          for (unsigned i = 0; i < fm.n; ++i) {
+            check_deadline (bound);
+            for (int k = int (i + 1); k >= 0; --k)
+              exact[k] = (exact[k] & bdd_nithvar (vars[i])) |
+                         (k ? exact[k - 1] & bdd_ithvar (vars[i]) : bdd (bddfalse));
+          }
+          bdd reconstructed = bddfalse;
+          for (unsigned k = 0; k <= fm.n; ++k)
+            if (truth[k])
+              reconstructed |= exact[k];
+          if (reconstructed != original)
+            throw declined ("cardinality predicate BDD equivalence failed");
+          const unsigned p = letter_pred (formula::ap (fm.names[family][0]));
+          for (unsigned c = 0; c < cardinalities.size (); ++c)
+            if (cardinalities[c].pred == p and cardinalities[c].truth == truth)
+              return new_event (event_kind::cardinality, c);
+          const unsigned c = cardinalities.size ();
+          cardinalities.push_back ({p, truth, family});
+          return new_event (event_kind::cardinality, c);
+        }
+
         std::vector<since_monitor> since;
         unsigned bits = 0;
 
@@ -167,6 +251,8 @@ namespace acacia::symcount {
 
         // An aggregate over every index of template t.
         formula atom (bool conj, const formula& t) {
+          // Local predicates are evaluated before generated events exist.
+          require_aps (t, ap_names, "generated event in a local template");
           if (t.is_boolean ())
             return new_event (conj ? event_kind::all_now : event_kind::any, letter_pred (t));
           if (t.is (op::G) and t[0].is (op::F) and t[0][0].is_boolean ()) {
@@ -203,11 +289,29 @@ namespace acacia::symcount {
           return true;
         }
 
+        // Preserve maximal Boolean constraints before flatten distributes G over And.
+        formula boolean_constraints (const formula& f) {
+          if (f.is_boolean ()) {
+            if (indices (f, fm).size () > 1)
+              if (auto replacement = boolean_orbit (f))
+                return replacement;
+            return f;
+          }
+          formula walk = f;
+          return walk.map ([&] (const formula& c) { return boolean_constraints (c); });
+        }
+
         // Letter aggregates are pointwise; GF/FG aggregates are prefix-independent: valid
         // anywhere.
-        formula aggregates (const formula& f) {
+        formula aggregates (const formula& f, bool cardinality = true) {
           if (indices (f, fm).empty ())
             return f;
+          if (f.is_boolean ()) {
+            if (cardinality and indices (f, fm).size () > 1)
+              if (auto replacement = boolean_orbit (f))
+                return replacement;
+            cardinality = false;  // Keep the old behavior for the whole rejected constraint.
+          }
           if (f.is (op::And) or f.is (op::Or)) {
             const bool conj = f.is (op::And);
             std::map<formula, std::set<unsigned>> groups;
@@ -219,7 +323,7 @@ namespace acacia::symcount {
                   throw declined ("an aggregate repeats an index");
               }
               else
-                parts.push_back (aggregates (c));
+                parts.push_back (aggregates (c, cardinality));
             }
             for (const auto& [t, members] : groups) {
               if (members.size () != fm.n)
@@ -231,7 +335,7 @@ namespace acacia::symcount {
           if (f.is (op::ap))
             throw declined ("an indexed atom outside an aggregate");
           formula walk = f;  // map is not const
-          return walk.map ([&] (const formula& c) { return aggregates (c); });
+          return walk.map ([&] (const formula& c) { return aggregates (c, cardinality); });
         }
     };
 
@@ -267,7 +371,7 @@ namespace acacia::symcount {
         throw declined ("split limit");
       uint64_t count = 1;
       for (unsigned k = 1; k < parts; ++k) {
-        count = count * (total + k) / k;  // C(total + parts - 1, parts - 1), capped below
+        count = count * (total + k) / k;
         if (count > limit / choices)
           throw declined ("split limit");
       }
@@ -298,7 +402,7 @@ namespace acacia::symcount {
       if (fm.n > UINT16_MAX)
         throw declined ("index count exceeds uint16_t");
       const auto t0 = std::chrono::steady_clock::now ();
-      builder b {fm};
+      builder b {fm, bound};
       b.ap_names.insert (inputs.begin (), inputs.end ());
       b.ap_names.insert (outputs.begin (), outputs.end ());
       uint64_t polls = 0;
@@ -326,20 +430,52 @@ namespace acacia::symcount {
         (in_set.count (names[0]) ? li : lo).push_back (names[0]);
       const unsigned ng = unsigned (gi.size () + go.size ()),
                      nl = unsigned (li.size () + lo.size ());
+      std::set<std::string> global_aps (gi.begin (), gi.end ());
+      global_aps.insert (go.begin (), go.end ());
       if (ng + nl > 16)
         throw declined ("too many letters for explicit local tables");
       if ((1u << nl) > bound.max_local_letters)
         throw declined ("too many local letters");
 
-      // Classify conjuncts.
+      // Only positive top-level G conjuncts over declared outputs can prune moves.
+      // Stop at every other operator: F/X/implication/disjunction are not safety.
+      const formula lowered = b.boolean_constraints (spec);
+      std::vector<std::pair<unsigned, unsigned>> output_safety;  // (constraint, output bit)
+      for (const auto& e : b.events) {
+        if (e.kind != event_kind::cardinality)
+          continue;
+        const auto& c = b.cardinalities[e.pred];
+        const auto& names = fm.names[c.family];
+        if (not std::all_of (names.begin (), names.end (), [&] (const auto& a) {
+              return std::find (outputs.begin (), outputs.end (), a) != outputs.end ();
+            }))
+          continue;
+        auto under_top_g = [&] (auto&& self, const formula& f, bool under_g) -> bool {
+          if (f.is (op::And)) {
+            for (const auto& child : f)
+              if (self (self, child, under_g))
+                return true;
+            return false;
+          }
+          if (f.is (op::G))
+            return self (self, f[0], true);
+          return under_g and f == e.ap;
+        };
+        if (under_top_g (under_top_g, lowered, false)) {
+          const auto bit = std::find (lo.begin (), lo.end (), names[0]) - lo.begin ();
+          output_safety.emplace_back (e.pred, unsigned (bit));
+        }
+      }
+      // Classify conjuncts, retaining the original objective and its safety monitor.
       std::vector<formula> conjuncts, global;
-      flatten (spec, conjuncts);
+      flatten (lowered, conjuncts);
       std::map<formula, std::set<unsigned>> local;
       for (const auto& c : conjuncts) {
         const auto ix = indices (c, fm);
         if (ix.empty ())
           global.push_back (c);
         else if (ix.size () == 1) {
+          require_aps (c, b.ap_names, "generated event in a local template");
           if (not local[to_template (c, *ix.begin (), fm)].insert (*ix.begin ()).second)
             continue;  // a repeated conjunct
         }
@@ -351,6 +487,8 @@ namespace acacia::symcount {
               c[0][0][0].is_boolean () and indices (c[0][0], fm).empty () and
               b.always_orbit (c[0][1], lambda)) {
             const formula gamma = c[0][0][0];
+            require_aps (gamma, global_aps, "since antecedent is not over global APs");
+            require_aps (lambda, b.ap_names, "generated event in a local template");
             b.since.push_back ({spot::formula_to_bdd (gamma, b.dict, &b.owner_token),
                                 spot::formula_to_bdd (lambda, b.dict, &b.owner_token), b.bits++});
             b.preds.push_back ({pred_kind::since, unsigned (b.since.size () - 1), bddfalse});
@@ -638,85 +776,158 @@ namespace acacia::symcount {
               for (unsigned x = 0; x < nli; ++x)
                 if (unsigned c = in_splits[k][pick[k]][x])
                   cls.emplace_back (occupied[k], x, c);
-            std::vector<std::vector<std::vector<uint16_t>>> out_splits (cls.size ());
-            size_t output_choices = ngo;
-            for (unsigned k = 0; k < cls.size (); ++k)
-              compositions (std::get<2> (cls[k]), nlo, out_splits[k], output_choices,
-                            std::min (max_vertices - owner.size (), max_edges - edges), bound);
-            std::vector<unsigned> opick (cls.size (), 0);
-            for (unsigned g_out = 0; g_out < ngo; ++g_out) {
-              std::fill (opick.begin (), opick.end (), 0);
-              for (;;) {
+            std::vector<std::vector<uint16_t>> output (cls.size (), std::vector<uint16_t> (nlo));
+            std::set<unsigned> successors;
+            size_t candidates = 0;
+            auto emit = [&] (unsigned g_out) {
+              poll ();
+              if (++candidates > std::min (max_vertices, max_edges))
+                throw declined ("split limit");
+              const unsigned g = g_in | (g_out << gi.size ());
+              std::vector<uint32_t> counts (nls, 0);
+              uint64_t any = 0, all = ~uint64_t (0);
+              std::vector<unsigned> cardinalities (b.cardinalities.size (), 0);
+              std::vector<std::pair<unsigned, unsigned>> moved;  // (new local state, count)
+              for (unsigned k = 0; k < cls.size (); ++k) {
                 poll ();
-                const unsigned g = g_in | (g_out << gi.size ());
-                std::vector<uint32_t> counts (nls, 0);
-                uint64_t any = 0, all = ~uint64_t (0);
-                std::vector<std::pair<unsigned, unsigned>> moved;  // (new local state, count)
-                for (unsigned k = 0; k < cls.size (); ++k) {
-                  poll ();
-                  const auto [ls, x_in, total] = cls[k];
-                  (void) total;
-                  const unsigned q = ls >> b.bits, bits = ls & bitmask;
-                  for (unsigned y = 0; y < nlo; ++y) {
-                    const unsigned c = out_splits[k][opick[k]][y];
-                    if (not c)
-                      continue;
-                    const unsigned x = x_in | (y << li.size ());
-                    const size_t i = (size_t (q) * gl + g) * ll + x;
-                    uint64_t h = la.holds[i];
-                    unsigned nb = bits;
-                    for (unsigned j = 0; j < b.since.size (); ++j) {
-                      const unsigned bit = b.since[j].bit;
-                      const bool m2 =
-                          since_gamma[j][g] and
-                          ((bits >> bit & 1) or not since_lambda[j][size_t (g) * ll + x]);
-                      nb = m2 ? nb | 1u << bit : nb & ~(1u << bit);
-                      if (m2)
-                        h |= uint64_t (1) << since_pred[j];
-                    }
-                    any |= h;
-                    all &= h;
-                    for (const auto& e : b.events)
-                      if (e.kind == event_kind::all_inf and (h >> e.pred & 1))
-                        nb |= 1u << e.bit;
-                    moved.emplace_back ((la.next[i] << b.bits) | nb, c);
+                const auto [ls, x_in, total] = cls[k];
+                (void) total;
+                const unsigned q = ls >> b.bits, bits = ls & bitmask;
+                for (unsigned y = 0; y < nlo; ++y) {
+                  const unsigned c = output[k][y];
+                  if (not c)
+                    continue;
+                  const unsigned x = x_in | (y << li.size ());
+                  const size_t i = (size_t (q) * gl + g) * ll + x;
+                  uint64_t h = la.holds[i];
+                  unsigned nb = bits;
+                  for (unsigned j = 0; j < b.since.size (); ++j) {
+                    const unsigned bit = b.since[j].bit;
+                    const bool m2 =
+                        since_gamma[j][g] and
+                        ((bits >> bit & 1) or not since_lambda[j][size_t (g) * ll + x]);
+                    nb = m2 ? nb | 1u << bit : nb & ~(1u << bit);
+                    if (m2)
+                      h |= uint64_t (1) << since_pred[j];
                   }
+                  for (unsigned j = 0; j < b.cardinalities.size (); ++j)
+                    if (h >> b.cardinalities[j].pred & 1)
+                      cardinalities[j] += c;
+                  any |= h;
+                  all &= h;
+                  for (const auto& e : b.events)
+                    if (e.kind == event_kind::all_inf and (h >> e.pred & 1))
+                      nb |= 1u << e.bit;
+                  moved.emplace_back ((la.next[i] << b.bits) | nb, c);
                 }
-                unsigned ev = 0, reset = 0;
-                for (unsigned k = 0; k < b.events.size (); ++k) {
-                  const auto& e = b.events[k];
-                  bool fired = false;
-                  if (e.kind == event_kind::any)
-                    fired = any >> e.pred & 1;
-                  else if (e.kind == event_kind::all_now)
-                    fired = all >> e.pred & 1;
-                  else {
-                    fired = std::all_of (moved.begin (), moved.end (),
-                                         [&] (const auto& m) { return m.first >> e.bit & 1; });
-                    if (fired)
-                      reset |= 1u << e.bit;
-                  }
+              }
+              unsigned ev = 0, reset = 0;
+              for (unsigned k = 0; k < b.events.size (); ++k) {
+                const auto& e = b.events[k];
+                bool fired = false;
+                if (e.kind == event_kind::any)
+                  fired = any >> e.pred & 1;
+                else if (e.kind == event_kind::all_now)
+                  fired = all >> e.pred & 1;
+                else if (e.kind == event_kind::cardinality)
+                  fired = b.cardinalities[e.pred].truth[cardinalities[e.pred]];
+                else {
+                  fired = std::all_of (moved.begin (), moved.end (),
+                                       [&] (const auto& m) { return m.first >> e.bit & 1; });
                   if (fired)
-                    ev |= 1u << k;
+                    reset |= 1u << e.bit;
                 }
-                for (const auto& [ls, c] : moved)
-                  counts[ls & ~reset] += c;
-                const auto [s2, col] = gstep[(size_t (s) * gl + g) * el + ev];
-                std::vector<uint32_t> key {s2, col};
-                key.insert (key.end (), counts.begin (), counts.end ());
-                const unsigned w = env_vertex (std::move (key));
+                if (fired)
+                  ev |= 1u << k;
+              }
+              for (const auto& [ls, c] : moved)
+                counts[ls & ~reset] += c;
+              const auto [s2, col] = gstep[(size_t (s) * gl + g) * el + ev];
+              std::vector<uint32_t> key {s2, col};
+              key.insert (key.end (), counts.begin (), counts.end ());
+              const unsigned w = env_vertex (std::move (key));
+              if (not successors.count (w)) {
                 count_edges (1);
-                succ[u].push_back (w);
-                // Next output split.
-                unsigned k = 0;
-                while (k < cls.size () and ++opick[k] == out_splits[k].size ())
-                  opick[k++] = 0;
-                if (k == cls.size ())
-                  break;
+                successors.insert (w);
+              }
+            };
+            if (output_safety.empty ()) {
+              std::vector<std::vector<std::vector<uint16_t>>> out_splits (cls.size ());
+              size_t output_choices = ngo;
+              for (unsigned k = 0; k < cls.size (); ++k)
+                compositions (std::get<2> (cls[k]), nlo, out_splits[k], output_choices,
+                              std::min (max_vertices - owner.size (), max_edges - edges), bound);
+              std::vector<unsigned> opick (cls.size (), 0);
+              for (unsigned g_out = 0; g_out < ngo; ++g_out) {
+                std::fill (opick.begin (), opick.end (), 0);
+                for (;;) {
+                  for (unsigned k = 0; k < cls.size (); ++k)
+                    output[k] = out_splits[k][opick[k]];
+                  emit (g_out);
+                  unsigned k = 0;
+                  while (k < cls.size () and ++opick[k] == out_splits[k].size ())
+                    opick[k++] = 0;
+                  if (k == cls.size ())
+                    break;
+                }
               }
             }
-            std::sort (succ[u].begin (), succ[u].end ());
-            succ[u].erase (std::unique (succ[u].begin (), succ[u].end ()), succ[u].end ());
+            else {
+              // Enumerate compositions directly. A partial assignment is extended
+              // only if each accepted-weight set intersects its reachable interval.
+              // Complete callbacks therefore always satisfy every output G predicate.
+              std::vector<unsigned> weight (output_safety.size (), 0);
+              auto rec = [&] (auto&& self, unsigned k, unsigned y, unsigned left,
+                              unsigned remaining, unsigned g_out) -> void {
+                poll ();
+                if (k == cls.size ()) {
+                  emit (g_out);
+                  return;
+                }
+                const unsigned first = y + 1 == nlo ? left : 0;
+                for (unsigned c = first; c <= left; ++c) {
+                  output[k][y] = uint16_t (c);
+                  bool feasible = true;
+                  for (unsigned j = 0; j < output_safety.size (); ++j) {
+                    const auto [constraint, bit] = output_safety[j];
+                    if (y >> bit & 1)
+                      weight[j] += c;
+                    const auto& truth = b.cardinalities[constraint].truth;
+                    bool reachable = false;
+                    for (unsigned w = weight[j]; w <= weight[j] + remaining - c; ++w)
+                      if (truth[w]) {
+                        reachable = true;
+                        break;
+                      }
+                    feasible = feasible and reachable;
+                  }
+                  if (feasible) {
+                    if (y + 1 < nlo)
+                      self (self, k, y + 1, left - c, remaining - c, g_out);
+                    else if (k + 1 < cls.size ())
+                      self (self, k + 1, 0, std::get<2> (cls[k + 1]), remaining - c, g_out);
+                    else
+                      self (self, k + 1, 0, 0, remaining - c, g_out);
+                  }
+                  for (unsigned j = 0; j < output_safety.size (); ++j)
+                    if (y >> output_safety[j].second & 1)
+                      weight[j] -= c;
+                }
+              };
+              for (unsigned g_out = 0; g_out < ngo; ++g_out)
+                rec (rec, 0, 0, std::get<2> (cls[0]), fm.n, g_out);
+            }
+            // Keep one original move when no safe output survives. The retained
+            // unconditional G monitor rejects it; every stored edge stays original.
+            if (successors.empty ()) {
+              for (unsigned k = 0; k < cls.size (); ++k) {
+                std::fill (output[k].begin (), output[k].end (), 0);
+                output[k][0] = uint16_t (std::get<2> (cls[k]));
+              }
+              emit (0);
+            }
+            // Store only distinct successors, with no duplicate candidate capacity.
+            succ[u].assign (successors.begin (), successors.end ());
             // Next input split.
             unsigned k = 0;
             while (k < occupied.size () and ++pick[k] == in_splits[k].size ())
