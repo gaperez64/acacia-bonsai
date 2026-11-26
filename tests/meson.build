@@ -787,9 +787,12 @@ aiger_mode_test = executable (
   include_directories : inc,
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps + [controller_writer_dep])
 test ('aiger-mode', py,
-      args : [files ('check-aiger-mode.py'), ab_exe, controller_check, aiger_mode_test],
+      args : [files ('check-aiger-mode.py'), ab_exe, controller_check, aiger_mode_test,
+              compiler_profile == 'debug' and (get_option ('b_ndebug') == 'false' or
+                (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release'))
+                ? game_backend_integration.full_path () : ''],
       suite : ['unit', 'cli', 'synthesis'], timeout : 120,
-      depends : [ab_exe, controller_check, aiger_mode_test])
+      depends : [ab_exe, controller_check, aiger_mode_test, game_backend_integration])
 test ('controller-check', py,
       args : [files ('check-controller.py'), ab_exe, controller_check],
       suite : ['unit', 'synthesis'], timeout : 120,
