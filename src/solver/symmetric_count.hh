@@ -10,6 +10,10 @@
 //   - symmetric conjuncts whose index-dependent parts are aggregates over all
 //     indices of one local template: letter-level `&&`/`||` of a Boolean
 //     template, or `&&`/`||` of `GF b` / `FG b` with a Boolean template b.
+// A current-letter Boolean constraint over one family's atoms also qualifies
+// when BDD transposition checks and reconstruction prove it is a count predicate.
+// Output-only count predicates under positive top-level G conjuncts restrict
+// output compositions to accepted weights; their safety monitors remain present.
 // The since-monitor rewrite of G (G gamma -> || G lambda) holds only at position 0.
 // The split itself checks the symmetry, so nothing comes from family names.
 // Each client runs a deterministic local automaton for the local templates,

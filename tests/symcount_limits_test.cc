@@ -41,5 +41,20 @@ int main () {
   ok &= check (expired.outcome == verdict::declined and expired.reason == "deadline" and
                    expired.vertices == 0,
                "an expired deadline should decline on entry");
+
+  // Five candidate weights merge into two successors; only stored edges consume budget.
+  family.members = {"g_0", "g_1", "g_2", "g_3"};
+  std::vector<formula> grants;
+  for (const auto& name : family.members)
+    grants.push_back (formula::ap (name));
+  const auto eventual = formula::F (formula::And (grants));
+  edge_bound.max_edges = 4;
+  const auto merged = solve (eventual, {}, family.members, {&family, 1}, edge_bound);
+  ok &= check (merged.outcome == verdict::realizable and merged.edges == 4,
+               "duplicate successors should fit the actual edge budget");
+  edge_bound.max_edges = 3;
+  const auto too_small = solve (eventual, {}, family.members, {&family, 1}, edge_bound);
+  ok &= check (too_small.outcome == verdict::declined and too_small.reason == "edge limit",
+               "distinct successors must still consume the unchanged edge budget");
   return ok ? 0 : 1;
 }

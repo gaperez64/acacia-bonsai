@@ -17,6 +17,10 @@ cases = {
     "color-reset.tlsf": "REALIZABLE",  # top-level since monitor, reset on the first letter
     "event-collision.tlsf": "UNREALIZABLE",  # legal input name matches an internal event
     "event-renamed.tlsf": "UNREALIZABLE",  # same spec, unused input renamed
+    "pairwise.tlsf": "REALIZABLE",
+    "recursive-exclusion.tlsf": "REALIZABLE",
+    "asymmetric-constraint.tlsf": "DECLINED",
+    "eventual-constraint.tlsf": "REALIZABLE",  # initial weight 4 must remain available
     "partial-family.tlsf": "DECLINED",
     "no-family.tlsf": "DECLINED",
     # Nested since monitors are outside the fragment; reference verdicts below.
@@ -37,6 +41,10 @@ if len(sys.argv) > 2:
         "collector_v3_pb_5_pe_.tlsf": "DECLINED",  # an aggregate in an assumption
         "01.tlsf": "DECLINED",  # no index family
     }
+reasons = {
+    "partial-family.tlsf": "a local conjunct is not instantiated at every index",
+    "asymmetric-constraint.tlsf": "an aggregate covers part of the index range",
+}
 codes = {"REALIZABLE": 0, "UNREALIZABLE": 1, "DECLINED": 2}
 failed = False
 for name, expected in cases.items():
@@ -44,8 +52,7 @@ for name, expected in cases.items():
     done = subprocess.run([binary, path], capture_output=True, text=True, timeout=120)
     word = (done.stdout.split() or ["?"])[0]
     if (word != expected or done.returncode != codes[expected]
-            or (name == "partial-family.tlsf"
-                and "reason=a local conjunct is not instantiated at every index" not in done.stdout)):
+            or (name in reasons and f"reason={reasons[name]}" not in done.stdout)):
         print(f"{path.name}: expected {expected}, got {done.returncode} {done.stdout}{done.stderr}")
         failed = True
 sys.exit(1 if failed else 0)

@@ -117,3 +117,38 @@ the zero-bit initial key and excludes an opposite winner for the original spec.
 | Deterministic local Inf/Fin runs and permanent missing-transition rejection | `Run.local_run`, `Run.mark`, `Run.sink`, `Run.local_encoding` |
 | Initially false since monitors, position-0 rewrite and later-position counterexample | `Run.since_history`, `Run.since_encoding`, `since_later_counterexample` |
 | Flattening exposes positive conjuncts at the original position only | `flatten`, `flatten_correct`, `top_conjunct_replacement` |
+
+## Issue #482 obligations
+
+`CountCardinality.lean` proves that invariance under every index transposition
+makes a Boolean current-letter constraint depend only on its true count
+(`count_factor`, `accepted_weights`), and that the constraint survives count
+canonicalization (`quotient_constraint`). `weighted_constraint` identifies the
+weighted cell sum with the concrete letter count. The cardinality case in
+`CountEngine.event_values`, `Run.cardinality_event` and `Atom.correct` connects
+these events to `Clause.correct` and `engine_spec_verdict`, including arbitrary
+temporal contexts.
+
+`restrict_safety` proves both players' strategy outcome conditions equivalent
+when system choices violating an unconditional G conjunct are removed. System
+strategies must keep every outcome safe; environment strategies need only check
+the remaining safe outcomes, since every removed outcome already loses for the
+system. An empty safe action set remains a system loss. The source objective
+implying the safety conjunct is an explicit premise; it is unavailable for F, X,
+assumptions or disjunctions. `engine_safety_restriction` applies this equivalence
+to specification strategies. `pruned_certificate` transfers either winner's certificate from the filtered
+arena to the full arena, assuming unchanged environment edges and that every
+excluded play loses under the retained safety monitor. `engine_pruned_verdict`
+feeds that certificate into `engine_spec_verdict`. `empty_outputs_loss` verifies
+the even self-loop used when no safe output exists.
+The C++ positive-conjunct and output-ownership guards establish that premise;
+BDD identity, accepted-weight reconstruction and enumeration remain within the
+compiled-code correspondence boundary above. Duplicate successor removal changes
+no edge relation; budgets still bound the stored arena.
+
+| C++ source | Lean port |
+| --- | --- |
+| `solver/symmetric_count.cc#const bool equal = bdd_replace (original, pair) == original;`; `solver/symmetric_count.cc#if (reconstructed != original)` | `invariant`, `count_factor`, `accepted_weights`, `quotient_constraint` |
+| `solver/symmetric_count.cc#cardinalities[j] += c;`; `solver/symmetric_count.cc#fired = b.cardinalities[e.pred].truth[cardinalities[e.pred]];` | `weighted_constraint`, `event_values`, `Run.cardinality_event`, `Atom.correct` |
+| `solver/symmetric_count.cc#if (under_top_g (under_top_g, lowered, false)) {`; `solver/symmetric_count.cc#feasible = feasible and reachable;`; `solver/symmetric_count.cc#succ[u].push_back (u);  // colour 0, even` | `restrict_safety`, `engine_safety_restriction`, `engine_pruned_verdict` |
+| `solver/symmetric_count.cc#count_edges (succ[u].size ());` | Set-valued `Game.edge`, `countGame_edges`; resource accounting after duplicate removal |

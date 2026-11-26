@@ -1,0 +1,11 @@
+INFO { TITLE: "Recursive exclusion" DESCRIPTION: "Mutual exclusion by recursion" SEMANTICS: Mealy TARGET: Mealy }
+GLOBAL {
+  DEFINITIONS {
+    none(i) = i < 0: true otherwise: !g[i] && none(i-1);
+    mutex(i) = i <= 0: true otherwise: (g[i] -> none(i-1)) && mutex(i-1);
+  }
+}
+MAIN {
+  OUTPUTS { g[4]; }
+  GUARANTEES { G mutex(3); &&[0 <= i < 4] G F g[i]; }
+}

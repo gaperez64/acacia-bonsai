@@ -1,0 +1,8 @@
+INFO { TITLE: "Pairwise exclusion" DESCRIPTION: "Symmetric Boolean constraint" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  OUTPUTS { g[4]; }
+  GUARANTEES {
+    &&[0 <= i < 4] G F g[i];
+    G (&&[0 <= i < 4] &&[i < j < 4] !(g[i] && g[j]));
+  }
+}
