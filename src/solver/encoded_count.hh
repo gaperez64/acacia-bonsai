@@ -273,8 +273,7 @@ namespace acacia::symcount {
       size_t max_vertices, max_edges;
       view initial, initial_local;
       std::function<void ()> poll;
-      std::function<std::tuple<unsigned, unsigned, words> (view, unsigned)> read_letter;
-      std::function<std::pair<words, words> (view, view, unsigned)> finish_round;
+      std::function<std::tuple<words, words, unsigned, unsigned> (view, view, unsigned)> finish_round;
       std::function<unsigned (view, view)> find_vertex;
       std::function<bool (size_t, unsigned)> safe_weight;
   };

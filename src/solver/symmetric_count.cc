@@ -839,7 +839,7 @@ namespace acacia::symcount {
         }
         next[0] = s;
         next[1] = col;
-        return std::pair {std::move (next), std::move (moved)};
+        return std::tuple {std::move (next), std::move (moved), g, ev};
       };
       const auto safe_weight = [&] (size_t bus, unsigned weight) {
         return std::ranges::all_of (output_safety, [&] (const auto& item) {
@@ -896,7 +896,7 @@ namespace acacia::symcount {
             const auto emit = [&] (unsigned word) {
               if (++output_candidates > candidate_limit)
                 throw declined ("output split limit");
-              auto [next, moved] = finish_round (state, local, word);
+              auto [next, moved, g, ev] = finish_round (state, local, word);
               encoded->canonicalize (moved, next[4]);
               const auto w = env_vertex (key_for (next, moved));
               if (successors.insert (w).second) {
@@ -1130,7 +1130,7 @@ namespace acacia::symcount {
         try {
           audit ({*encoded, gaut, gvars, evars, succ, witnesses, checked, solution,
                   system_wins, not output_safety.empty (), max_vertices, max_edges,
-                  initial_encoded, initial_local, poll, read_letter, finish_round,
+                  initial_encoded, initial_local, poll, finish_round,
                   find_vertex, safe_weight});
         } catch (const std::runtime_error& error) {
           throw declined (error.what ());

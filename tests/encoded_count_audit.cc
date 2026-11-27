@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
+#include <set>
 #include <spot/tl/parse.hh>
 #include <spot/twaalgos/translate.hh>
 #include <stdexcept>
@@ -30,32 +31,44 @@ namespace {
       unsigned raw = absent, globals = 0, events = 0;
   };
 
-  // Assemble the logical letter from the raw trace and step Spot directly.
-  std::pair<unsigned, unsigned> direct_step (const encoded_audit& a, unsigned state,
-                                             logical_letter previous, logical_letter current) {
-    auto letter = current;
-    if (not a.alphabet.future.empty ()) {
-      if (previous.raw == absent)
-        return {a.global->get_init_state_number (), 0};
-      letter = previous;
-      const auto first_future = a.event_vars.size () - a.alphabet.future.size ();
-      for (size_t k = 0; k < a.alphabet.future.size (); ++k)
-        if (a.alphabet.table (*a.alphabet.future[k], previous.raw, current.raw))
-          letter.events |= 1u << (first_future + k);
-    }
-    const auto label = minterm (a.global_vars, letter.globals)
-                       & minterm (a.event_vars, letter.events);
-    for (const auto& edge : a.global->out (state))
-      if ((label & edge.cond) != bddfalse)
-        return {edge.dst, edge.acc.max_set () - 1};
-    throw std::runtime_error ("no direct logical-letter transition");
-  }
-
   void audit (const encoded_audit& a) {
     const auto& alphabet = a.alphabet;
     const auto raw = spot::parse_infix_psl (alphabet.cert.objective);
     if (not raw.f or not raw.errors.empty ())
       throw std::runtime_error ("invalid encoded objective");
+    unsigned history_mask = 0;
+    auto event_vars = a.event_vars;
+    std::vector<std::pair<const symmetry::encoded_certificate::predicate*, int>> future;
+    const auto& ap_vars = a.global->get_dict ()->var_map;
+    for (const auto& p : alphabet.cert.predicates) {
+      if (std::ranges::none_of (p.slots, [] (auto slot) { return slot.next; }))
+        continue;
+      for (const auto& slot : p.slots)
+        if (not slot.next)
+          history_mask |= alphabet.mask (slot.bus);
+      const auto var = ap_vars.find (p.atom);
+      if (var == ap_vars.end () or std::erase (event_vars, var->second) != 1)
+        throw std::runtime_error ("certified future AP is missing from the event slots");
+      future.emplace_back (&p, var->second);
+    }
+    if (history_mask != alphabet.history_mask)
+      throw std::runtime_error ("history mask disagrees with the certificate");
+
+    // Assemble the logical letter from the raw trace and step Spot directly.
+    const auto direct_step = [&] (unsigned state, logical_letter previous, logical_letter current)
+      -> std::pair<unsigned, unsigned> {
+      if (not future.empty () and previous.raw == absent)
+        return {a.global->get_init_state_number (), 0};
+      const auto& letter = future.empty () ? current : previous;
+      bdd label = minterm (a.global_vars, letter.globals) & minterm (event_vars, letter.events);
+      for (const auto& [p, var] : future)
+        label &= alphabet.table (*p, previous.raw, current.raw) ? bdd_ithvar (var) : bdd_nithvar (var);
+      for (const auto& edge : a.global->out (state))
+        if ((label & edge.cond) != bddfalse)
+          return {edge.dst, edge.acc.max_set () - 1};
+      throw std::runtime_error ("no direct logical-letter transition");
+    };
+
     const unsigned input_mask = alphabet.owner_mask (true);
     const unsigned output_mask = alphabet.owner_mask (false);
     const unsigned output_step = input_mask + 1;
@@ -99,14 +112,12 @@ namespace {
     const auto step = [&] (const trace& source, unsigned word, bool exhaustive) {
       const auto state = view (source.state).first (header);
       const auto local = view (source.state).subspan (header);
-      auto [next, moved] = a.finish_round (state, local, word);
+      auto [next, moved, g, ev] = a.finish_round (state, local, word);
       logical_letter current;
       if (exhaustive) {
-        const auto [g, ev, unused] = a.read_letter (local, word);
         current = {word, g, ev};
-        if (std::pair {next[0], next[1]} != direct_step (a, state[0], source.previous, current)
-            or (not alphabet.future.empty () and
-                (next[2] != g or next[3] != ev or next[4] != (word & alphabet.history_mask))))
+        if (std::pair {next[0], next[1]} != direct_step (state[0], source.previous, current)
+            or (not future.empty () and (next[2] != g or next[3] != ev)))
           throw std::runtime_error ("buffered state or priority disagrees with the raw trace");
       }
       next.insert (next.end (), moved.begin (), moved.end ());
@@ -130,6 +141,14 @@ namespace {
       a.poll ();
       fallback = not safe_word (out);
     }
+    using edge_row = std::set<std::pair<unsigned, unsigned>>;
+    const auto checked_row = [&] (unsigned v) {
+      const auto& game = a.checked.explicit_game;
+      edge_row row;
+      for (auto edge : game.out (v))
+        row.emplace (game.out (edge).front (), game.priority[edge]);
+      return row;
+    };
     const auto replay = [&] (bool exhaustive) {
       spot::twa_graph_ptr strategy;
       std::vector<int> vars;
@@ -148,6 +167,12 @@ namespace {
       std::map<words, unsigned> index;
       std::vector<trace> queue;
       const auto visit = [&] (trace target) {
+        if (exhaustive) {
+          const auto history = future.empty () or target.previous.raw == absent
+                               ? absent : target.previous.raw & history_mask;
+          if (target.state[4] != history)
+            throw std::runtime_error ("packed history disagrees with the raw trace");
+        }
         auto [at, fresh] = index.try_emplace (target.state, queue.size ());
         if (fresh) {
           if (queue.size () >= a.max_vertices / (1 + a.initial_local.size () / 16))
@@ -171,6 +196,7 @@ namespace {
                                            ? std::pair {0u, absent} : chosen (v, p, input_mask);
         const auto last_in = chosen_u == absent ? input_mask : first_in;
         std::set<unsigned> inputs_seen;
+        const auto checked_inputs = exhaustive ? checked_row (v) : edge_row {};
         for (unsigned in = first_in; in <= last_in; ++in) {
           a.poll ();
           unsigned canonical_in = in;
@@ -184,8 +210,10 @@ namespace {
           const auto retained = [&] (unsigned out) {
             return fallback ? out == default_out : safe_word (in | out);
           };
+          const auto checked_outputs = exhaustive ? checked_row (u) : edge_row {};
           if (exhaustive) {
-            inputs_seen.insert (u);
+            if (inputs_seen.insert (u).second and not checked_inputs.contains ({u, 0}))
+              throw std::runtime_error ("neutral input edge missing from the quotient");
             if (a.witnesses[u].size () != a.succ[u].size ())
               throw std::runtime_error ("missing retained output witnesses");
             for (size_t k = 0; k < a.succ[u].size (); ++k) {
@@ -214,16 +242,10 @@ namespace {
             const auto w = lookup (next.state).first;
             if (exhaustive) {
               auto& target = paired[out >> alphabet.input_width];
-              if (target != absent) {
-                const auto& game = a.checked.explicit_game;
-                const bool priority_matches = std::ranges::any_of (game.out (u), [&] (unsigned edge) {
-                  return game.out (edge).front () == w and game.priority[edge] == next.state[1];
-                });
-                if (w != target or not priority_matches)
-                  throw std::runtime_error ("retained output misses its paired successor or priority");
-                target = absent;
-              }
-              if (std::ranges::find (a.succ[u], w) == a.succ[u].end ())
+              if (target != absent and w != target)
+                throw std::runtime_error ("retained output misses its paired successor");
+              target = absent;
+              if (not checked_outputs.contains ({w, next.state[1]}))
                 throw std::runtime_error ("raw output or priority missing from the quotient");
               outputs_seen.insert (w);
             } else if ((chosen_w != absent and w != chosen_w) or a.solution.winner[w] != a.system_wins)

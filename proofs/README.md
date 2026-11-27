@@ -209,8 +209,9 @@ shared accepted-weight predicate, with a legal raw default when no safe
 output exists. The original safety monitor still reads that move. Replay
 transports the representative's default back to the concrete raw state.
 
-At `key_for`, expand the histogram into consecutive ranges in local-state
-order. At `canonicalize`, unpack the saved bus codes and, at the system
+When expanding a count state, reconstruct consecutive coordinate ranges in
+local-state order. `key_for` packs the histogram and its prefix. At
+`canonicalize`, unpack the saved bus codes and, at the system
 turn, the input prefix. Each code identifies its slot mode and either a
 canonical coordinate, an exact fixed code or a residual class. The coordinate's
 range gives its cell. Collect the slot marks at that coordinate and subtract
