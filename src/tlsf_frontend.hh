@@ -15,17 +15,13 @@ namespace acacia::tlsf_frontend {
       std::vector<std::string> inputs;
       std::vector<std::string> outputs;
       specification_metadata metadata;
-      std::shared_ptr<TlsfAst> ast;
-  };
-
-  struct captured_specification {
-      specification objective;
-      tlsf::CapturedAst ast;
+      std::shared_ptr<const TlsfAst> ast;
+      const TlsfValueOrigins* value_origins = nullptr;  // Owned by ast.
   };
 
   specification parse (std::string_view text);
-  captured_specification parse_with_value_origins (std::string_view text);
+  specification parse_with_value_origins (std::string_view text);
   specification load (const std::string& path);
-  captured_specification load_with_value_origins (const std::string& path);
+  specification load_with_value_origins (const std::string& path);
 
 }  // namespace acacia::tlsf_frontend

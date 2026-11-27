@@ -7,7 +7,7 @@
 #include <spot/tl/formula.hh>
 
 namespace acacia::tlsf_frontend {
-  struct captured_specification;
+  struct specification;
 }
 
 namespace symmetry {
@@ -51,8 +51,12 @@ namespace symmetry {
   };
 
   // Run in a bounded worker. Map abnormal worker exits to decline.
-  [[nodiscard]] bool certify_encoded_family (
-    acacia::tlsf_frontend::captured_specification& spec, size_t work,
-    std::chrono::steady_clock::time_point deadline);
+  [[nodiscard]] std::shared_ptr<const encoded_certificate> check_encoded_family (
+      const acacia::tlsf_frontend::specification& spec, size_t work,
+      std::chrono::steady_clock::time_point deadline);
+
+  [[nodiscard]] bool certify_encoded_family (acacia::tlsf_frontend::specification& spec,
+                                             size_t work,
+                                             std::chrono::steady_clock::time_point deadline);
 
 }  // namespace symmetry

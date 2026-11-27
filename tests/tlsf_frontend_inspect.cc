@@ -34,7 +34,7 @@ namespace {
       out << "declined\n";
       return;
     }
-    const auto& logical = *spec.objective.metadata.tlsf_declared_families.front ().logical;
+    const auto& logical = *spec.metadata.tlsf_declared_families.front ().logical;
     const auto& cert = *logical.certificate;
     out << "certified " << cert.moving;
     for (auto c : cert.coordinates)

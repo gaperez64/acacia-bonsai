@@ -75,10 +75,14 @@ namespace acacia::tlsf_frontend {
     return make_specification (tlsf::convert (std::string {text}, "Mealy"));
   }
 
-  captured_specification parse_with_value_origins (std::string_view text) {
+  specification parse_with_value_origins (std::string_view text) {
     record_parse_call ();
     auto result = tlsf::convert_with_value_origins (std::string {text}, "Mealy");
-    return {make_specification (std::move (result.conversion)), std::move (result.ast)};
+    auto spec = make_specification (std::move (result.conversion));
+    auto owner = std::make_shared<tlsf::CapturedAst> (std::move (result.ast));
+    spec.value_origins = owner->value_origins ();
+    spec.ast = {owner, owner->get ()};
+    return spec;
   }
 
   static auto load_with (const std::string& path, auto convert) {
@@ -96,7 +100,7 @@ namespace acacia::tlsf_frontend {
 
   specification load (const std::string& path) { return load_with (path, parse); }
 
-  captured_specification load_with_value_origins (const std::string& path) {
+  specification load_with_value_origins (const std::string& path) {
     return load_with (path, parse_with_value_origins);
   }
 

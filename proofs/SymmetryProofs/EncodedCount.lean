@@ -295,4 +295,24 @@ theorem encoded_local_acceptance {Q L GI GO LI LO : Type} {m k e n : Nat}
     C.source R ↔ C.encoded R.global R.emitted :=
   C.correct R
 
+open Symmetry.Quotient in
+/-- A checked reachable key strategy wins in the legal raw arena for the same
+player. The arena correspondence supplies the canonical key and move witness
+on each owner's turn. -/
+theorem encoded_certificate {V K Γ : Type} {G : Game V} (S : Action G Γ)
+    (H : Game K) (key : V → K)
+    (owner : ∀ v, H.owner (key v) = G.owner v)
+    (prio : ∀ v, H.prio (key v) = G.prio v)
+    (canon : ∀ v, key (S.canon v) = key v)
+    (edges : ∀ v k, H.edge (key v) k ↔ ∃ w, G.edge v w ∧ key w = k)
+    (total : ∀ k, ∃ k', H.edge k k') {p : Bool} {σ : K → K} {root : V}
+    (checked : Certified H maxOdd p σ (key root)) :
+    (∃ τ, Wins G maxOdd p τ root) ∧ ∀ other, ¬ Wins G maxOdd (!p) other root := by
+  obtain ⟨τ, hτ⟩ := checked.wins total
+  have win := S.lift_wins (S.key_wins H key owner prio canon edges hτ)
+  refine ⟨⟨_, win⟩, fun other opposite => ?_⟩
+  cases p
+  · exact exclusive opposite win
+  · exact exclusive win opposite
+
 end Symmetry.EncodedCount

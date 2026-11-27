@@ -275,13 +275,12 @@ int main (int argc, char** argv) {
   using namespace acacia;
   if (argc != 2)
     return 3;
-  auto captured = tlsf_frontend::load_with_value_origins (argv[1]);
+  auto spec = tlsf_frontend::load_with_value_origins (argv[1]);
   if (not symmetry::certify_encoded_family (
-          captured, 1u << 22, std::chrono::steady_clock::now () + std::chrono::seconds (15))) {
+          spec, 1u << 22, std::chrono::steady_clock::now () + std::chrono::seconds (15))) {
     std::cerr << "missing encoded certificate\n";
     return 3;
   }
-  const auto& spec = captured.objective;
   const auto& cert = *spec.metadata.tlsf_declared_families.front ().logical->certificate;
   const auto solve = [&] (const symcount::limits& bound) {
     return symcount::solve_encoded (spec.formula, spec.inputs, spec.outputs, cert, bound, audit);

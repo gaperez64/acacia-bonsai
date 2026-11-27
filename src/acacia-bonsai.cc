@@ -516,7 +516,7 @@ namespace {
       std::optional<int> result;
       try {
         const bool count = arm.kind == portfolio_arm_kind::symcount;
-        acacia::tlsf_frontend::captured_specification count_local;
+        acacia::tlsf_frontend::specification count_local;
         const acacia::tlsf_frontend::specification* count_objective = nullptr;
         if (count) {
           acacia::worker_route ("original_game", "symcount", "unknown");

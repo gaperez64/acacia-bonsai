@@ -2,6 +2,7 @@
 
 #include "error_msg.hh"
 #include "phase_records.hh"
+#include "solver/encoded_family.hh"
 #include "solver/obligation_helper.hh"
 #include "solver/symmetric_count.hh"
 #include "tlsf_frontend.hh"
@@ -27,8 +28,26 @@ namespace acacia {
     // Size from the scope/address-space cap; the parent enforces RSS sharing with parity workers.
     const auto share = obligation::rss_share (1);
     bound.max_vertices = bound.max_edges = std::max<uint64_t> (1, share / 512);
-    const auto result = symcount::solve (parsed.f, objective.inputs, objective.outputs,
-                                         objective.metadata.tlsf_indexed_families (), bound);
+    auto result = symcount::solve (parsed.f, objective.inputs, objective.outputs,
+                                   objective.metadata.tlsf_indexed_families (), bound);
+    if (result.outcome == symcount::verdict::declined && objective.value_origins) {
+      using namespace std::chrono;
+      const auto start = steady_clock::now ();
+      const auto now = phase_clock (CLOCK_MONOTONIC);
+      const auto remaining =
+          deadline_mono_ns ? deadline_mono_ns - std::min (deadline_mono_ns, now) : UINT64_MAX;
+      const auto time =
+          nanoseconds (std::min<uint64_t> (remaining, seconds (15) / nanoseconds (1)));
+      if (const auto cert = symmetry::check_encoded_family (objective, 1u << 22, start + time)) {
+        auto encoded = symcount::solve_encoded (objective.formula, objective.inputs,
+                                                objective.outputs, *cert, bound);
+        if (encoded.outcome != symcount::verdict::declined)
+          result = std::move (encoded);
+      }
+      if (result.outcome == symcount::verdict::declined && deadline_mono_ns &&
+          phase_clock (CLOCK_MONOTONIC) >= deadline_mono_ns)
+        result.reason = "deadline";
+    }
     if (result.outcome == symcount::verdict::declined) {
       worker_decline ("symcount_declined");
       worker_decline_detail (result.reason.c_str ());

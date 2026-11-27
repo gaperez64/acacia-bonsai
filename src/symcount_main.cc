@@ -35,8 +35,8 @@ namespace {
            : r.outcome == verdict::unrealizable ? EXIT_CODE_UNREAL : EXIT_CODE_UNKNOWN;
   }
 
-  std::optional<int> try_encoded (tlsf_frontend::captured_specification& captured,
-                                  symcount::limits bound, symcount::result& physical) {
+  std::optional<int> try_encoded (tlsf_frontend::specification& spec, symcount::limits bound,
+                                  symcount::result& physical) {
     constexpr size_t size = 1024;
     auto* line = static_cast<char*> (
         mmap (nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0));
@@ -44,12 +44,11 @@ namespace {
       return {};
     using namespace std::chrono_literals;
     bound.deadline_mono_ns = phase_clock (CLOCK_MONOTONIC) + (120s / 1ns);
-    const auto worker = subprocess::run<true> (
-        bound.deadline_mono_ns, subprocess::max_optional_memory, [&] {
-          if (not symmetry::certify_encoded_family (
-                  captured, 1u << 22, std::chrono::steady_clock::now () + 15s))
+    const auto worker =
+        subprocess::run<true> (bound.deadline_mono_ns, subprocess::max_optional_memory, [&] {
+          if (not symmetry::certify_encoded_family (spec, 1u << 22,
+                                                    std::chrono::steady_clock::now () + 15s))
             return int (EXIT_CODE_UNKNOWN);
-          const auto& spec = captured.objective;
           const auto& cert = *spec.metadata.tlsf_declared_families.front ().logical->certificate;
           const auto r = symcount::solve_encoded (spec.formula, spec.inputs, spec.outputs,
                                                    cert, bound);
@@ -81,8 +80,7 @@ int main (int argc, char** argv) {
     if (not std::strcmp (argv[i], "--max-vertices"))
       bound.max_vertices = std::strtoull (argv[++i], nullptr, 10);
   try {
-    auto captured = tlsf_frontend::load_with_value_origins (argv[1]);
-    const auto& spec = captured.objective;
+    auto spec = tlsf_frontend::load_with_value_origins (argv[1]);
     // Check before Spot parses a conjunction too large for its uint16_t arity.
     for (const auto& f : spec.metadata.tlsf_indexed_families ())
       if (f.members.size () > UINT16_MAX) {
@@ -94,8 +92,8 @@ int main (int argc, char** argv) {
       return EXIT_CODE_ERROR;
     auto r = symcount::solve (parsed.f, spec.inputs, spec.outputs,
                               spec.metadata.tlsf_indexed_families (), bound);
-    if (r.outcome == verdict::declined and captured.ast.value_origins ())
-      if (auto code = try_encoded (captured, bound, r))
+    if (r.outcome == verdict::declined and spec.value_origins)
+      if (auto code = try_encoded (spec, bound, r))
         return *code;
     char line[1024];
     const auto code = report (r, line, sizeof line);

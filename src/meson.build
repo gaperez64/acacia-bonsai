@@ -45,6 +45,7 @@ ab_sources += [
   'native_gr1_lift_arm.cc',
   'native_param_lift_arm.cc',
   'symcount_arm.cc',
+  'solver/encoded_family.cc',
   'solver/symmetric_count.cc',
 ]
 ab_sources += 'tlsf_frontend.cc'

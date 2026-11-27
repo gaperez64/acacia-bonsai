@@ -613,15 +613,13 @@ namespace symmetry {
     };
   }  // namespace
 
-  bool certify_encoded_family (acacia::tlsf_frontend::captured_specification& spec, size_t work,
-                               std::chrono::steady_clock::time_point deadline) {
-    auto& objective = spec.objective;
-    auto& families = objective.metadata.tlsf_declared_families;
-    const auto* origins = spec.ast.value_origins ();
-    for (auto& family : families)
-      family.logical.reset ();
+  std::shared_ptr<const encoded_certificate> check_encoded_family (
+      const acacia::tlsf_frontend::specification& objective, size_t work,
+      std::chrono::steady_clock::time_point deadline) {
+    const auto* origins = objective.value_origins;
     try {
-      require (origins and origins->complete and objective.metadata.tlsf_effective_target == "Mealy");
+      require (objective.ast and origins and origins->complete and
+               objective.metadata.tlsf_effective_target == "Mealy");
       checker check (work, deadline);
       check.charge (objective.formula.size ());
       auto& result = check.result;
@@ -637,8 +635,8 @@ namespace symmetry {
         require (not f.is (op::ap) or check.names.contains (f));
         return false;
       });
-      check.collect (*origins, families);
-      const auto root = tlsf_ast_root (spec.ast.get ());
+      check.collect (*origins, objective.metadata.tlsf_declared_families);
+      const auto root = tlsf_ast_root (objective.ast.get ());
       require (root);
       result.abstract = check.abstract_tables (check.abstract_selectors (root));
       require (check.equal (exact.f, check.substitute (result.abstract, check.substitutions)));
@@ -646,13 +644,23 @@ namespace symmetry {
 
       const auto certified = std::make_shared<const certificate> (std::move (result));
       check.charge (0);
-      for (size_t b = 0; b < families.size (); ++b)
-        families[b].logical = logical_family {certified, b};
-      return true;
+      return certified;
     } catch (const declined&) {
     } catch (const std::bad_alloc&) {
     }
-    return false;
+    return {};
+  }
+
+  bool certify_encoded_family (acacia::tlsf_frontend::specification& spec, size_t work,
+                               std::chrono::steady_clock::time_point deadline) {
+    const auto cert = check_encoded_family (spec, work, deadline);
+    auto& families = spec.metadata.tlsf_declared_families;
+    for (size_t b = 0; b < families.size (); ++b)
+      if (cert)
+        families[b].logical = logical_family {cert, b};
+      else
+        families[b].logical.reset ();
+    return bool (cert);
   }
 
 }  // namespace symmetry

@@ -239,9 +239,12 @@ for the previous round. This one-round delay preserves max-odd acceptance.
 With only current-letter data the global run steps immediately. Spot
 translation, packed representation, canonical ordering and the C++
 correspondence remain explicit implementation boundaries.
-The standalone decisions check the quotient strategies. The small-instance
-audit replays both winner polarities with concrete witnesses and checks the
-result against an independent translation of the converted objective.
+The standalone and portfolio decisions check the quotient strategy and its
+initial winner. Given the legal arena correspondence, `encoded_certificate`
+transfers the checked strategy to the raw arena and excludes the opposite
+winner. The small-instance audit replays both winner polarities with concrete
+witnesses and checks the result against an independent translation of the
+converted objective.
 
 | C++ source | Lean port |
 | --- | --- |
@@ -250,3 +253,4 @@ result against an independent translation of the converted objective.
 | `solver/symmetric_count.cc#const auto key_for = [&] (std::span<const unsigned> prefix,`; `solver/encoded_count.hh#transport canonicalize (std::vector<unsigned>& local, unsigned& history,`; `solver/encoded_count.hh#if (marked[i] or free_cells.insert (local[i]).second) {`; `solver/encoded_count.hh#if (group.size () > 1)` | `anchor_key_orbit`, `free_member`, `extend_anchor_key`, `residual_key_orbit` |
 | `solver/encoded_count.hh#p.residual.push_back ({b, x, y});`; `solver/encoded_count.hh#word = put (word, b, v.mode == 0 ? src.codes[i] : *src.aliases[i]);` | `raw_permutation_generated` |
 | `solver/symmetric_count.cc#auto [moved, ev] = advance (g, cells);`; `solver/symmetric_count.cc#step (state[2], events);` | `encoded_local_acceptance`, `buffered_trace`, `buffered_priority` |
+| `solver/symmetric_count.cc#if (not parity::check_strategy (checked.explicit_game, solution, &why))`; `solver/symmetric_count.cc#if (solution.winner[0] != (system_wins ? 1 : 0))`; `symcount_arm.cc#if (encoded.outcome != symcount::verdict::declined)` | Checked-root premise and verdict transfer in `encoded_certificate` |
