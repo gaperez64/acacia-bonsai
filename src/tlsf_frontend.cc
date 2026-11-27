@@ -5,7 +5,6 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
-#include <tlsf/convert.hpp>
 #include <utility>
 
 namespace acacia::tlsf_frontend {
@@ -38,26 +37,16 @@ namespace acacia::tlsf_frontend {
     std::vector<symmetry::declared_family> declared_families (tlsf::Conversion& result) {
       std::vector<symmetry::declared_family> families;
       families.reserve (result.indexed_families.size ());
-      auto* bus = result.value_origins ? result.value_origins->buses : nullptr;
       for (auto& family : result.indexed_families) {
         families.push_back ({not family.is_output, family.lo, family.hi,
                              std::move (family.members), symmetry::declared_family::kind::element});
-        if (bus) {
-          families.back ().value_origin = {result.value_origins, bus};
-          bus = bus->next;
-        }
       }
       return families;
     }
 
   }  // namespace
 
-  specification parse (std::string_view text, bool capture_value_origins) {
-    record_parse_call ();
-    const std::string owned {text};
-    // Keep source INFO while lowering directly to Acacia's Mealy frame.
-    auto result = tlsf::convert (owned, "Mealy", capture_value_origins);
-
+  static specification make_specification (tlsf::Conversion result) {
     specification value;
     value.metadata.source_format = "tlsf";
     value.metadata.tlsf_semantics = result.semantics;
@@ -68,7 +57,6 @@ namespace acacia::tlsf_frontend {
     value.metadata.tlsf_has_indexed_conjunction = result.has_indexed_conjunction;
 
     value.ast = std::move (result.ast);
-    value.value_origins = std::move (result.value_origins);
     value.formula = std::move (result.preprocessed_ltl);
     value.metadata.tlsf_normalized_objective = value.formula;
     value.inputs = std::move (result.inputs);
@@ -80,6 +68,18 @@ namespace acacia::tlsf_frontend {
     if (value.formula.empty ())
       throw std::runtime_error ("TLSF conversion produced an empty formula");
     return value;
+  }
+
+  specification parse (std::string_view text) {
+    record_parse_call ();
+    // Keep source INFO while lowering directly to Acacia's Mealy frame.
+    return make_specification (tlsf::convert (std::string {text}, "Mealy"));
+  }
+
+  captured_specification parse_with_value_origins (std::string_view text) {
+    record_parse_call ();
+    auto result = tlsf::convert_with_value_origins (std::string {text}, "Mealy");
+    return {make_specification (std::move (result.conversion)), std::move (result.ast)};
   }
 
   specification load (const std::string& path) {

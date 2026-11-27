@@ -1,23 +1,15 @@
 #include "symcount_arm.hh"
 
-#include "arg_parser.hh"
 #include "error_msg.hh"
 #include "phase_records.hh"
 #include "solver/obligation_helper.hh"
 #include "solver/symmetric_count.hh"
+#include "tlsf_frontend.hh"
 
 #include <spot/tl/parse.hh>
 
 namespace acacia {
-  int run_symcount_arm (const arg_parse_result& args, uint64_t deadline_mono_ns) {
-    worker_route ("original_game", "symcount", "unknown");
-    worker_stage ("symcount");
-    if (!obligation::limit_address_space ()) {
-      worker_stopped ("address_space_limit");
-      return EXIT_CODE_UNKNOWN;
-    }
-    tlsf_frontend::specification child_local;
-    const auto& objective = args.prepare_objective (child_local, true);
+  int run_symcount_arm (const tlsf_frontend::specification& objective, uint64_t deadline_mono_ns) {
     validate_ltl_partition (objective.inputs, objective.outputs);
     for (const auto& f : objective.metadata.tlsf_indexed_families ())
       if (f.members.size () > UINT16_MAX) {

@@ -1065,10 +1065,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       })) {
     acacia::phase_scope conversion_phase ("legacy_parent", "frontend_conversion");
     try {
-      const bool capture_value_origins = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-        return arm.kind == portfolio_arm_kind::symcount;
-      });
-      retval.objective = acacia::tlsf_frontend::parse (retval.tlsf_source, capture_value_origins);
+      retval.objective = acacia::tlsf_frontend::parse (retval.tlsf_source);
       retval.original_tlsf_prepared = true;
       retval.formula_specified = true;
       retval.inputs_specified = true;

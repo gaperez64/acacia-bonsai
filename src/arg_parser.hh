@@ -92,11 +92,19 @@ struct arg_parse_result {
     bool legacy_available = true;
 
     const acacia::tlsf_frontend::specification& prepare_objective (
-        acacia::tlsf_frontend::specification& child_local,
-        bool capture_value_origins = false) const {
+        acacia::tlsf_frontend::specification& child_local) const {
       if (tlsf_specified && !original_tlsf_prepared) {
-        child_local = acacia::tlsf_frontend::parse (tlsf_source, capture_value_origins);
+        child_local = acacia::tlsf_frontend::parse (tlsf_source);
         return child_local;
+      }
+      return objective;
+    }
+
+    const acacia::tlsf_frontend::specification& prepare_count_objective (
+        acacia::tlsf_frontend::captured_specification& child_local) const {
+      if (tlsf_specified && !original_tlsf_prepared) {
+        child_local = acacia::tlsf_frontend::parse_with_value_origins (tlsf_source);
+        return child_local.objective;
       }
       return objective;
     }
