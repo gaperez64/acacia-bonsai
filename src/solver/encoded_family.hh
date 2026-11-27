@@ -12,6 +12,8 @@ namespace acacia::tlsf_frontend {
 
 namespace symmetry {
 
+  // Covers the checked expanded code map and action on the converted objective.
+  // Source-level selector intent, including absence of wraparound, is outside its scope.
   struct encoded_certificate {
       struct bus {
           uint32_t declaration;
@@ -53,7 +55,7 @@ namespace symmetry {
 
   // Run in a bounded worker. Map abnormal worker exits to decline.
   [[nodiscard]] bool certify_encoded_family (
-    acacia::tlsf_frontend::captured_specification& spec, size_t work = 1u << 22,
-    std::chrono::steady_clock::time_point deadline = std::chrono::steady_clock::time_point::max ());
+    acacia::tlsf_frontend::captured_specification& spec, size_t work,
+    std::chrono::steady_clock::time_point deadline);
 
 }  // namespace symmetry

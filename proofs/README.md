@@ -175,6 +175,9 @@ of the raw objective as a premise and transfers preservation to it.
 
 The C++ boundary supplies the domains, owners, bit orders, disjoint code swaps
 and the exact objective with its ordered input and output partitions.
+The certificate covers the checked expanded code map and its action on that
+converted objective. Source-level selector intent, including absence of
+wraparound, is outside its scope.
 Reconstruction compares the converted formula with the expanded abstract
 formula using BDD equality on Boolean shells, temporal congruence, and the
 infinite-word `X` and `G` rewrites. The inspector runs certification in a

@@ -179,15 +179,13 @@ namespace symmetry {
           constants.resize (families.size ());
           for (auto i = origins.instances; i; i = i->next) {
             charge ();
+            // Provenance locates candidates. The expanded cube determines the code.
             if (auto match = equality_cube (read (i->expanded))) {
               auto [bus, code] = *match;
-              require (i->bit_operand_bound <= codes (bus));
               if (not i->bindings) {
                 constants[bus].insert (code);
                 continue;
               }
-              if (not i->bit_operand_bound)
-                continue;
               const auto* d = i->bindings->domain;
               require (not d->outer and d->source_formula_id == i->source_formula_id
                        and d->binder_id and d->count >= 2 and d->count <= codes (bus)
@@ -240,10 +238,16 @@ namespace symmetry {
               }
           }
           std::set<size_t> connected {0};
-          for (size_t n = 0; n < families.size (); ++n)
-            for (const auto& [d, buses] : incidence)
+          for (size_t previous = 0; connected.size () < families.size () and connected.size () != previous;) {
+            previous = connected.size ();
+            for (const auto& [d, buses] : incidence) {
+              charge (buses.size ());
               if (std::ranges::any_of (buses, [&] (size_t b) { return connected.contains (b); }))
                 connected.insert (buses.begin (), buses.end ());
+              if (connected.size () == families.size ())
+                break;
+            }
+          }
           require (connected.size () == families.size ());
           std::ranges::sort (result.binders);
 
@@ -344,7 +348,7 @@ namespace symmetry {
               children.push_back (child (c).id ());
             auto [it, added] = ctx.temporal.try_emplace ({f.kind (), std::move (children)});
             if (added)
-              it->second = bdd_ithvar (dict->register_proposition (fresh (), this));
+              it->second = bdd_ithvar (dict->register_anonymous_variables (1, this));
             value = it->second;
           }
           }
@@ -454,14 +458,13 @@ namespace symmetry {
 
         bool invariant (const certificate::generator& swaps) {
           for (const auto& p : result.predicates) {
+            charge_product (p.slots.size (), swaps.size () + 1);
             if (std::ranges::none_of (p.slots, [&] (auto slot) {
                   return std::ranges::any_of (swaps, [=] (auto s) { return slot.bus == s.bus; });
                 }))
               continue;
-            charge (p.truth.size ());
             for (size_t row = 0; row < p.truth.size (); ++row) {
-              if ((row & 1023) == 0)
-                charge (0);
+              charge_product (p.slots.size (), swaps.size () + 1);
               size_t image = row, stride = 1;
               for (auto slot : p.slots) {
                 auto code = row / stride % codes (slot.bus);

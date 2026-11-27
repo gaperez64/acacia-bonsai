@@ -139,6 +139,50 @@ def main():
         def extra(text, term):
             return text.replace("GUARANTEE {", f"GUARANTEE {{ {term};")
 
+        def same_expansion(control, **variants):
+            plain.write_text(control)
+            objective = run(args.inspector, plain)
+            certificate = inspect(args.inspector, plain)
+            assert certificate[0].startswith("certified "), certificate
+            for label, text in variants.items():
+                plain.write_text(text)
+                assert run(args.inspector, plain) == objective, label
+                assert inspect(args.inspector, plain) == certificate, label
+
+        four = resize(base, 4)
+        wrapped_response = response.replace("request, i)", "request, i+4)").replace(
+            "grant, i)", "grant, i+8)")
+        wrapped = four.replace(response, wrapped_response)
+        unrecognized = wrapped.replace("i <= 0", "i == 0")
+        decoy = four.replace("bit(v,i) == 1", "bit(0,0) == 1 : false\n      other_digit(v,i) == 1")
+        decoy = decoy.replace("    log2_dn(x) =", """
+    other_digit(v,i) = i < 1 : v % 2 otherwise : other_digit(v/2,i-1);
+    log2_dn(x) =""")
+        wrapped_decoy = decoy.replace(response, wrapped_response)
+        ignored = "select(word,code,ignored) = value(word,code);"
+        digit = "digit(w,k) = k <= 0 : w % 2 otherwise : digit(w/2,k-1);"
+        same_expansion(
+            four, direct=wrapped, unrecognized=unrecognized,
+            discarded=unrecognized.replace("DEFINITIONS {", f"DEFINITIONS {{ {digit} {ignored}")
+            .replace("value(request, i+4)", "select(request, i+4, digit(0,0))")
+            .replace("value(grant, i+8)", "select(grant, i+8, digit(0,0))"),
+            unrelated_guard=unrecognized.replace(
+                "DEFINITIONS {", f"DEFINITIONS {{ {digit} "
+                "choose(word,code) = digit(0,0) == 0 : value(word,code) otherwise : false;")
+            .replace("value(request, i+4)", "choose(request, i+4)")
+            .replace("value(grant, i+8)", "choose(grant, i+8)"),
+            discarded_large=four.replace("DEFINITIONS {", f"DEFINITIONS {{ {ignored}")
+            .replace("value(request, i)", "select(request, i, bit(4,0))")
+            .replace("value(grant, i)", "select(grant, i, bit(8,0))"),
+        )
+        same_expansion(decoy, wrapped_decoy=wrapped_decoy,
+                       no_guard=wrapped_decoy.replace("bit(0,0) == 1 : false\n      ", ""))
+        positive("wrapped decoy", wrapped_decoy, 4)
+        same_expansion(extra(base, "G !value(request, 7) && G !value(grant, 7)"),
+                       wrapped_constant=extra(base, "G !value(request, 7) && G !value(grant, 15)"))
+        shifted_domain = four.replace("0 <= i < n]", "8 <= i < n+8]")
+        same_expansion(shifted_domain.replace(", i)", ", i-8)"), wrapped_domain=shifted_domain)
+
         positive("invariant extra bit", extra(resize(base, 4), "G grant[2]"), 4)
         for term in ("G !value(grant, 7)", "G !(grant[2] && (grant[0] <-> !grant[1]))"):
             plain.write_text(extra(base, term))
@@ -167,12 +211,6 @@ def main():
         negative = {
             "alias-only equality": extra(
                 resize(base, 4), "G ((grant[2] && X grant[2]) -> (grant[0] <-> X grant[0]))"),
-            "wrapped constant": extra(base, "G !value(request, 7) && G !value(grant, 15)"),
-            "wrapped operands": resize(
-                base.replace(response, response.replace("request, i", "request, i+4")
-                             .replace("grant, i", "grant, i+8")), 4),
-            "wrapped domain": resize(base.replace(response, response.replace("0 <= i < n",
-                                                                            "8 <= i < n+8")), 4),
             "raw-bit conjunct": extra(base, "G grant[0]"),
             "different equality mask": base.replace("< nbits(n)", "< nbits(n)-1"),
             "misbound selector": extra(
@@ -186,6 +224,7 @@ def main():
         }
         for label, text in negative.items():
             plain.write_text(text)
+            run(args.inspector, plain)
             assert inspect(args.inspector, plain) == ["declined"], label
 
         if args.manifest:
