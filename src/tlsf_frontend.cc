@@ -37,10 +37,9 @@ namespace acacia::tlsf_frontend {
     std::vector<symmetry::declared_family> declared_families (tlsf::Conversion& result) {
       std::vector<symmetry::declared_family> families;
       families.reserve (result.indexed_families.size ());
-      for (auto& family : result.indexed_families) {
+      for (auto& family : result.indexed_families)
         families.push_back ({not family.is_output, family.lo, family.hi,
                              std::move (family.members), symmetry::declared_family::kind::element});
-      }
       return families;
     }
 
