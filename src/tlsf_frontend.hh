@@ -3,6 +3,7 @@
 #include "solver/solver_invoker.hh"
 #include <string_view>
 #include <tlsf/ast_api.h>
+#include <tlsf/convert.h>
 
 #include <memory>
 #include <string>
@@ -16,9 +17,10 @@ namespace acacia::tlsf_frontend {
       std::vector<std::string> outputs;
       specification_metadata metadata;
       std::shared_ptr<TlsfAst> ast;
+      std::shared_ptr<const TlsfValueOrigins> value_origins;
   };
 
-  specification parse (std::string_view text);
+  specification parse (std::string_view text, bool capture_value_origins = false);
   specification load (const std::string& path);
 
 }  // namespace acacia::tlsf_frontend

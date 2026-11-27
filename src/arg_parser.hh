@@ -92,9 +92,10 @@ struct arg_parse_result {
     bool legacy_available = true;
 
     const acacia::tlsf_frontend::specification& prepare_objective (
-        acacia::tlsf_frontend::specification& child_local) const {
+        acacia::tlsf_frontend::specification& child_local,
+        bool capture_value_origins = false) const {
       if (tlsf_specified && !original_tlsf_prepared) {
-        child_local = acacia::tlsf_frontend::parse (tlsf_source);
+        child_local = acacia::tlsf_frontend::parse (tlsf_source, capture_value_origins);
         return child_local;
       }
       return objective;

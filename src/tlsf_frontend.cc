@@ -38,19 +38,25 @@ namespace acacia::tlsf_frontend {
     std::vector<symmetry::declared_family> declared_families (tlsf::Conversion& result) {
       std::vector<symmetry::declared_family> families;
       families.reserve (result.indexed_families.size ());
-      for (auto& family : result.indexed_families)
+      auto* bus = result.value_origins ? result.value_origins->buses : nullptr;
+      for (auto& family : result.indexed_families) {
         families.push_back ({not family.is_output, family.lo, family.hi,
                              std::move (family.members), symmetry::declared_family::kind::element});
+        if (bus) {
+          families.back ().value_origin = {result.value_origins, bus};
+          bus = bus->next;
+        }
+      }
       return families;
     }
 
   }  // namespace
 
-  specification parse (std::string_view text) {
+  specification parse (std::string_view text, bool capture_value_origins) {
     record_parse_call ();
     const std::string owned {text};
     // Keep source INFO while lowering directly to Acacia's Mealy frame.
-    auto result = tlsf::convert (owned, "Mealy");
+    auto result = tlsf::convert (owned, "Mealy", capture_value_origins);
 
     specification value;
     value.metadata.source_format = "tlsf";
@@ -62,6 +68,7 @@ namespace acacia::tlsf_frontend {
     value.metadata.tlsf_has_indexed_conjunction = result.has_indexed_conjunction;
 
     value.ast = std::move (result.ast);
+    value.value_origins = std::move (result.value_origins);
     value.formula = std::move (result.preprocessed_ltl);
     value.metadata.tlsf_normalized_objective = value.formula;
     value.inputs = std::move (result.inputs);

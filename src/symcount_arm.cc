@@ -17,7 +17,7 @@ namespace acacia {
       return EXIT_CODE_UNKNOWN;
     }
     tlsf_frontend::specification child_local;
-    const auto& objective = args.prepare_objective (child_local);
+    const auto& objective = args.prepare_objective (child_local, true);
     validate_ltl_partition (objective.inputs, objective.outputs);
     for (const auto& f : objective.metadata.tlsf_indexed_families ())
       if (f.members.size () > UINT16_MAX) {

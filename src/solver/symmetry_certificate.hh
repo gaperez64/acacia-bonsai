@@ -1,8 +1,11 @@
 #pragma once
 
+#include <memory>
 #include <span>
 #include <string>
 #include <vector>
+
+struct TlsfValueBus;
 
 namespace symmetry {
 
@@ -14,6 +17,7 @@ namespace symmetry {
       long hi = -1;
       std::vector<std::string> members;
       enum class kind { element, opaque } encoding = kind::opaque;
+      std::shared_ptr<const TlsfValueBus> value_origin = {};
   };
 
   using indexed_family_hint = declared_family;

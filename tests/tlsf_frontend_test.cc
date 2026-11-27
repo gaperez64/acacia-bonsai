@@ -195,6 +195,38 @@ MAIN {
                 encoded.inputs == std::vector<std::string> ({"request_0", "request_1", "request_2"}) &&
                     encoded.outputs == std::vector<std::string> ({"grant_0", "grant_1", "grant_2"}));
   ok &= expect_family_views (encoded, true);
+  std::shared_ptr<const TlsfValueBus> retained_bus;
+  {
+    arg_parse_result count;
+    std::ifstream fixture (argv[1]);
+    count.tlsf_source.assign (std::istreambuf_iterator<char> (fixture), {});
+    count.tlsf_specified = true;
+    acacia::tlsf_frontend::specification local;
+    ok &= expect ("ordinary worker skips capture",
+                  !count.prepare_objective (local).value_origins);
+    const auto& captured = count.prepare_objective (local, true);
+    ok &= expect ("count worker captures equivalent conversion",
+                  &captured == &local && captured.value_origins &&
+                      captured.value_origins->complete && !encoded.value_origins &&
+                      captured.formula == encoded.formula && captured.inputs == encoded.inputs &&
+                      captured.outputs == encoded.outputs);
+    ok &= expect_family_views (captured, true);
+    count.objective = std::move (local);
+    count.original_tlsf_prepared = true;
+    const auto& borrowed = count.prepare_objective (local, true);
+    const auto& families = borrowed.metadata.tlsf_declared_families;
+    ok &= expect ("count worker borrows captured parent conversion",
+                  &borrowed == &count.objective && borrowed.value_origins &&
+                      families.size () == 2 && families[0].value_origin.get () ==
+                          borrowed.value_origins->buses && families[1].value_origin &&
+                      families[1].value_origin->is_output);
+    if (!families.empty ())
+      retained_bus = families.front ().value_origin;
+  }
+  ok &= expect ("copied family retains its capture after conversion teardown",
+                retained_bus && retained_bus->proved_bit_width &&
+                    retained_bus->bit_count == encoded.inputs.size () &&
+                    retained_bus->parameter_count == 1 && retained_bus->parameter_ids[0] == 1);
 
   const auto mixed = acacia::tlsf_frontend::parse (R"TLSF(
 INFO {
