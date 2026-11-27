@@ -516,7 +516,6 @@ namespace acacia::symcount {
         const auto source = queue[i];
         const auto state = view (source).first (a.initial.size ());
         const auto local = view (source).subspan (a.initial.size ());
-        const auto [v, p] = a.lookup (source);
         const auto input = [&] (unsigned in, unsigned expected = absent) {
           unsigned canonical_in = in;
           const auto u = a.lookup (source, &canonical_in).first;
@@ -568,6 +567,7 @@ namespace acacia::symcount {
           for (unsigned in = 0; in <= input_mask; ++in)
             input (in);
         } else {
+          const auto [v, p] = a.lookup (source);
           const auto u = a.chosen_target (v);
           input (a.untransport (a.input_words[u], p, input_mask), u);
         }
@@ -577,7 +577,7 @@ namespace acacia::symcount {
         throw std::runtime_error ("lifted strategy fails the converted objective");
     }
 
-    void check_lifted (const encoded_audit& a, const family_map& fm) {
+    void check_lifted (const encoded_audit& a, const family_map& fm, bool audit_raw) {
       if (a.system_wins) {
         // The certificate checks substitution into the converted objective.
         // Project each conjunct onto the coordinates it observes. A single
@@ -606,7 +606,8 @@ namespace acacia::symcount {
               check_lifted_language (a, formula::Not (delay (delay, formula::And (std::move (groups[pin])))),
                                      true, pin);
             }
-          return;
+          if (not audit_raw)
+            return;
         }
       }
       const auto raw = spot::parse_infix_psl (a.alphabet.cert.objective);
@@ -618,7 +619,7 @@ namespace acacia::symcount {
     result run (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs, const family_map& fm,
                 const limits& bound, const encoded_alphabet* encoded = nullptr,
-                bool lift = false, encoded_auditor audit = nullptr) {
+                encoded_auditor audit = nullptr) {
       check_deadline (bound);
       result r;
       r.n = fm.n;
@@ -1119,10 +1120,8 @@ namespace acacia::symcount {
             colour.push_back (0);
             succ.emplace_back ();
             env_key.emplace_back ();
-            if (lift or audit) {
-              input_words.resize (u + 1);
-              input_words[u] = in;
-            }
+            input_words.resize (u + 1);
+            input_words[u] = in;
             if (audit)
               witnesses.resize (u + 1);
             succ[v].push_back (u);
@@ -1356,7 +1355,7 @@ namespace acacia::symcount {
         throw declined ("strategy check failed: " + why);
       if (solution.winner[0] != (system_wins ? 1 : 0))
         throw declined ("solver and strategy disagree on the initial vertex");
-      if (lift or audit) {
+      if (encoded) {
         const auto find_vertex = [&] (std::span<const unsigned> prefix,
                                       std::span<const unsigned> local) {
           const auto found = env_index.find (key_for (prefix, local));
@@ -1369,12 +1368,10 @@ namespace acacia::symcount {
                                       poll, finish_round, find_vertex, safe_weight};
           if (audit)
             audit (replay);
-          if (lift) {
-            phase_scope phase ("symcount", "encoded_strategy_check");
-            check_lifted (replay, fm);
-            check_deadline (bound);
-            r.lifted = true;
-          }
+          phase_scope phase ("symcount", "encoded_strategy_check");
+          check_lifted (replay, fm, audit != nullptr);
+          check_deadline (bound);
+          r.lifted = true;
         } catch (const std::runtime_error& error) {
           throw declined (error.what ());
         }
@@ -1426,7 +1423,7 @@ namespace acacia::symcount {
   result solve_encoded (const std::string& objective, const std::vector<std::string>& inputs,
                         const std::vector<std::string>& outputs,
                         const symmetry::encoded_certificate& cert, const limits& bound,
-                        bool lift, encoded_auditor audit) {
+                        encoded_auditor audit) {
     try {
       check_deadline (bound);
       if (objective != cert.objective or inputs != cert.inputs or outputs != cert.outputs)
@@ -1446,7 +1443,7 @@ namespace acacia::symcount {
           fm.member.emplace (names.back (), std::pair {fm.names.size () - 1, i});
         }
       }
-      return run (cert.abstract, alphabet.inputs, alphabet.outputs, fm, bound, &alphabet, lift, audit);
+      return run (cert.abstract, alphabet.inputs, alphabet.outputs, fm, bound, &alphabet, audit);
     } catch (const declined& d) {
       return {verdict::declined, d.what ()};
     } catch (const std::bad_alloc&) {

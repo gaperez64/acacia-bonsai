@@ -32,6 +32,7 @@ namespace acacia {
     auto result = symcount::solve (parsed.f, objective.inputs, objective.outputs,
                                    objective.metadata.tlsf_indexed_families (), bound);
     if (result.outcome == symcount::verdict::declined && !tlsf_source.empty () &&
+        !objective.metadata.tlsf_declared_families.empty () &&
         (!deadline_mono_ns || phase_clock (CLOCK_MONOTONIC) < deadline_mono_ns)) {
       const auto captured = tlsf_frontend::parse_with_value_origins (tlsf_source);
       using namespace std::chrono;
@@ -43,7 +44,7 @@ namespace acacia {
           nanoseconds (std::min<uint64_t> (remaining, seconds (15) / nanoseconds (1)));
       if (const auto cert = symmetry::check_encoded_family (captured, 1u << 22, start + time)) {
         auto encoded = symcount::solve_encoded (objective.formula, objective.inputs,
-                                                 objective.outputs, *cert, bound, true);
+                                                 objective.outputs, *cert, bound);
         if (encoded.lifted && encoded.outcome != symcount::verdict::declined)
           result = std::move (encoded);
       }

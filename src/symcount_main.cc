@@ -10,8 +10,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <optional>
+#include <sstream>
 #include <spot/tl/parse.hh>
 #include <sys/mman.h>
 
@@ -29,14 +31,14 @@ namespace {
         "vertices=%zu edges=%zu build_s=%.3f solve_s=%.3f check_s=%.3f%s%s%s\n",
         decision, r.n, r.local_states, r.events, r.global_states, r.count_states, r.vertices,
         r.edges, r.build_seconds, r.solve_seconds, r.check_seconds,
-        r.encoded ? " check=quotient" : "",
+        r.lifted ? " check=lifted" : "",
         r.reason.empty () ? "" : " reason=", r.reason.c_str ());
     return r.outcome == verdict::realizable     ? EXIT_CODE_REAL
            : r.outcome == verdict::unrealizable ? EXIT_CODE_UNREAL : EXIT_CODE_UNKNOWN;
   }
 
-  std::optional<int> try_encoded (const tlsf_frontend::specification& spec, symcount::limits bound,
-                                  symcount::result& physical) {
+  std::optional<int> try_encoded (const tlsf_frontend::specification& spec, std::string_view source,
+                                  symcount::limits bound, symcount::result& physical) {
     constexpr size_t size = 1024;
     auto* line = static_cast<char*> (
         mmap (nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0));
@@ -46,13 +48,14 @@ namespace {
     bound.deadline_mono_ns = phase_clock (CLOCK_MONOTONIC) + (120s / 1ns);
     const auto worker =
         subprocess::run<true> (bound.deadline_mono_ns, subprocess::max_optional_memory, [&] {
+          const auto captured = tlsf_frontend::parse_with_value_origins (source);
           const auto cert = symmetry::check_encoded_family (
-              spec, 1u << 22, std::chrono::steady_clock::now () + 15s);
+              captured, 1u << 22, std::chrono::steady_clock::now () + 15s);
           if (not cert)
             return int (EXIT_CODE_UNKNOWN);
           const auto r = symcount::solve_encoded (spec.formula, spec.inputs, spec.outputs,
                                                    *cert, bound);
-          if (r.outcome == verdict::declined)
+          if (not r.lifted or r.outcome == verdict::declined)
             return r.reason == "deadline" ? subprocess::deadline_exit : int (EXIT_CODE_UNKNOWN);
           return report (r, line, size);
         });
@@ -80,7 +83,20 @@ int main (int argc, char** argv) {
     if (not std::strcmp (argv[i], "--max-vertices"))
       bound.max_vertices = std::strtoull (argv[++i], nullptr, 10);
   try {
-    const auto spec = tlsf_frontend::load_with_value_origins (argv[1]);
+    std::ifstream input (argv[1], std::ios::binary);
+    if (not input)
+      throw std::runtime_error (std::string ("unable to open TLSF file: ") + argv[1]);
+    std::ostringstream buffer;
+    buffer << input.rdbuf ();
+    const auto source = std::move (buffer).str ();
+    const auto spec = [&] {
+      try {
+        return tlsf_frontend::parse (source);
+      } catch (const std::exception& e) {
+        throw std::runtime_error (std::string ("unable to convert TLSF file ") + argv[1]
+                                  + ": " + e.what ());
+      }
+    } ();
     // Check before Spot parses a conjunction too large for its uint16_t arity.
     for (const auto& f : spec.metadata.tlsf_indexed_families ())
       if (f.members.size () > UINT16_MAX) {
@@ -92,8 +108,8 @@ int main (int argc, char** argv) {
       return EXIT_CODE_ERROR;
     auto r = symcount::solve (parsed.f, spec.inputs, spec.outputs,
                               spec.metadata.tlsf_indexed_families (), bound);
-    if (r.outcome == verdict::declined and spec.value_origins)
-      if (auto code = try_encoded (spec, bound, r))
+    if (r.outcome == verdict::declined and not spec.metadata.tlsf_declared_families.empty ())
+      if (auto code = try_encoded (spec, source, bound, r))
         return *code;
     char line[1024];
     const auto code = report (r, line, sizeof line);

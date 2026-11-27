@@ -61,7 +61,7 @@ def main():
     portfolio(parity, fixture, legacy=True)
     plain = Path(fixture).parent / "symcount"
     portfolio(parity, plain / "indexed-copy.tlsf", capture=False)
-    portfolio(parity, plain / "no-family.tlsf", reason="no indexed family")
+    portfolio(parity, plain / "no-family.tlsf", capture=False, reason="no indexed family")
     with tempfile.TemporaryDirectory() as directory:
         uncertified = Path(directory) / "uncertified.tlsf"
         width = (int(re.search(r"n = (\d+);", base)[1]) - 1).bit_length()
@@ -105,7 +105,7 @@ def main():
                 path = Path(directory) / f"encoded-{size}-{i}.tlsf"
                 path.write_text(source.replace("GUARANTEE {", f"GUARANTEE {{ {term};"))
                 assert "lifted strategy" in check([audit, path], expected)
-                assert "check=quotient" in check([symcount, path], expected)
+                assert "check=lifted" in check([symcount, path], expected)
                 check([parity, "--arms", "both:parity:spot", "-T", path], expected)
                 if size == 2 and i == 1:
                     portfolio(parity, path, expected=expected)

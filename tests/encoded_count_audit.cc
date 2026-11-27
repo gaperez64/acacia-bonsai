@@ -180,7 +180,7 @@ int main (int argc, char** argv) {
     return 3;
   }
   const auto solve = [&] (const symcount::limits& bound) {
-    return symcount::solve_encoded (spec.formula, spec.inputs, spec.outputs, *cert, bound, true, audit);
+    return symcount::solve_encoded (spec.formula, spec.inputs, spec.outputs, *cert, bound, audit);
   };
   using symcount::verdict;
   for (const auto& [bound, reason] : {
