@@ -743,10 +743,14 @@ test ('moore-synthesis-semantics',
 tlsf_frontend_inspect = executable (
   'tlsf-frontend-inspect',
   '../src/tlsf_frontend.cc',
+  '../src/solver/encoded_family.cc',
   'tlsf_frontend_inspect.cc',
   include_directories : inc,
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
+test ('encoded-family', py,
+      args : [files ('check-encoded-family.py'), tlsf_frontend_inspect, files ('fixtures/encoded-fold.tlsf')],
+      suite : ['unit', 'tlsf'], timeout : 120)
 controller_check = executable (
   'controller-check', 'controller_check.cc',
   dependencies : tlsf_deps + [spot_dep, bddx_dep],

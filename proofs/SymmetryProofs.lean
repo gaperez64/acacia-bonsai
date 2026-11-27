@@ -4,3 +4,4 @@ import SymmetryProofs.CountTemporal
 import SymmetryProofs.CountGame
 import SymmetryProofs.CountEngine
 import SymmetryProofs.CountCardinality
+import SymmetryProofs.EncodedCount

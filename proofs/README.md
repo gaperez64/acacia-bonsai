@@ -163,3 +163,26 @@ duplicate candidates never accumulate in its storage or retained capacity.
 | `solver/symmetric_count.cc#cardinalities[j] += c;`; `solver/symmetric_count.cc#fired = b.cardinalities[e.pred].truth[cardinalities[e.pred]];` | `weighted_constraint`, `event_values`, `Run.cardinality_event`, `Atom.correct` |
 | `solver/symmetric_count.cc#if (under_top_g (under_top_g, lowered, false)) {`; `solver/symmetric_count.cc#feasible = feasible and reachable;`; `solver/symmetric_count.cc#if (successors.empty ()) {`; `solver/symmetric_count.cc#emit (0);` | `restrict_safety`, `translated_cardinality_G`, `engine_safety_restriction`, `safetyCompletion_empty`, `safetyCompletion_excluded`, `engine_pruned_verdict` |
 | `solver/symmetric_count.cc#if (not successors.count (w)) {`; `solver/symmetric_count.cc#succ[u].assign (successors.begin (), successors.end ());` | Set-valued `Game.edge`, `countGame_edges`; bounded workspace and distinct-edge accounting |
+
+## Issue #471 certification obligations
+
+`EncodedCount` connects bit-cube equality to decoding, checks that an
+injective code map decodes its coordinates, and proves that transporting an
+unused code keeps every selector false. `encoded_decomposition_correct`
+substitutes pointwise-equal selector and table traces through a whole LTL
+context. The two-time table denotes the current and next raw letters at
+every position. `generator_checked` combines atomic transport and checked
+whole-objective renaming, and `family_check_sound` extends these checks
+to every product and inverse of the stored generators.
+
+The C++ checker supplies the evaluated domains, declaration owners and
+bit orders, the disjoint code swaps, BDD reconstruction and exact
+objective/partition binding. Lean takes the corresponding bit injection,
+selector transport, table equality and formula reconstruction as premises.
+The inspector constructs the payload without enabling any solver path.
+
+| C++ source | Lean port |
+| --- | --- |
+| `solver/encoded_family.cc#if (f != cube (bus, code, next))`; `solver/encoded_family.cc#require (truth[raw] == (raw == code));` | `cube_decodes`, `decode_encode` |
+| `solver/encoded_family.cc#require (rebuild (rebuild, 0, 0) == original);`; `solver/encoded_family.cc#require (check.equal (exact.f, check.substitute (result.abstract, check.substitutions)));` | `encoded_decomposition_correct` |
+| `solver/encoded_family.cc#if (p.truth[row] != p.truth[image])`; `solver/encoded_family.cc#swaps.push_back ({b, bus.codes[0], bus.codes[i]});`; `solver/encoded_family.cc#require (equal (result.abstract, substitute (result.abstract, rename)));` | `table_action`, `decode_action`, `unused_action`, `generator_checked`, `family_check_sound` |

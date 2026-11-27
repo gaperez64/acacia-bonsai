@@ -1,0 +1,58 @@
+#pragma once
+
+#include "symmetry_certificate.hh"
+
+#include <chrono>
+#include <cstdint>
+#include <spot/tl/formula.hh>
+
+namespace acacia::tlsf_frontend {
+  struct captured_specification;
+}
+
+namespace symmetry {
+
+  struct encoded_certificate {
+      struct bus {
+          uint32_t declaration;
+          bool is_input;
+          // Code bit j is members[j]. Selectors and aliases follow axis order.
+          std::vector<spot::formula> members, selectors, cubes;
+          std::vector<size_t> codes;
+          std::vector<std::optional<size_t>> aliases;
+          std::vector<std::vector<size_t>> unused_classes;
+      };
+      struct slot {
+          size_t bus;
+          bool next;
+          auto operator<=> (const slot&) const = default;
+      };
+      struct predicate {
+          spot::formula atom, substitution;
+          // Mixed radix, first slot least significant. Each radix is the full code space.
+          std::vector<slot> slots;
+          std::vector<bool> truth;
+      };
+      struct swap {
+          size_t bus, first, second;
+      };
+      using generator = std::vector<swap>;
+
+      std::string objective;
+      std::vector<std::string> inputs, outputs;
+      std::vector<uint16_t> parameters;
+      std::vector<std::pair<uint32_t, uint32_t>> binders;  // source formula, binder
+      std::vector<int64_t> coordinates;                     // moving first, then fixed
+      size_t moving = 0;
+      std::vector<bus> buses;
+      std::vector<predicate> predicates;
+      std::vector<generator> generators;
+      spot::formula abstract;
+  };
+
+  // Inspector entry point. On decline the physical declarations are untouched.
+  [[nodiscard]] bool certify_encoded_family (
+    acacia::tlsf_frontend::captured_specification& spec, size_t work = 1u << 22,
+    std::chrono::steady_clock::time_point deadline = std::chrono::steady_clock::time_point::max ());
+
+}  // namespace symmetry
