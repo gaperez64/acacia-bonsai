@@ -30,12 +30,12 @@ namespace {
     std::ostringstream text;
     text << file.rdbuf ();
     auto spec = acacia::tlsf_frontend::parse_with_value_origins (text.str ());
-    if (not symmetry::certify_encoded_family (spec, 1u << 22, deadline)) {
+    const auto checked = symmetry::check_encoded_family (spec, 1u << 22, deadline);
+    if (not checked) {
       out << "declined\n";
       return;
     }
-    const auto& logical = *spec.metadata.tlsf_declared_families.front ().logical;
-    const auto& cert = *logical.certificate;
+    const auto& cert = *checked;
     out << "certified " << cert.moving;
     for (auto c : cert.coordinates)
       out << ' ' << c;

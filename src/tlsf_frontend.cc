@@ -10,7 +10,7 @@
 namespace acacia::tlsf_frontend {
 
   namespace {
-    void record_parse_call () noexcept {
+    void record_parse_call (bool captured) noexcept {
       if (!phase_records_enabled ())
         return;
       static pid_t owner = -1;
@@ -25,8 +25,9 @@ namespace acacia::tlsf_frontend {
       const int length =
           snprintf (line, sizeof line,
                     "{\"event\":\"tlsf_parse\",\"pid\":%ld,\"role\":\"%s\",\"call\":%u,"
-                    "\"mono_ns\":%llu}\n",
+                    "\"captured\":%s,\"mono_ns\":%llu}\n",
                     long (pid), worker ? worker->requested_backend : "parent", ++calls,
+                    captured ? "true" : "false",
                     (unsigned long long) phase_clock (CLOCK_MONOTONIC));
       if (length > 0 && size_t (length) < sizeof line)
         phase_records_send (line, size_t (length));
@@ -70,13 +71,13 @@ namespace acacia::tlsf_frontend {
   }
 
   specification parse (std::string_view text) {
-    record_parse_call ();
+    record_parse_call (false);
     // Keep source INFO while lowering directly to Acacia's Mealy frame.
     return make_specification (tlsf::convert (std::string {text}, "Mealy"));
   }
 
   specification parse_with_value_origins (std::string_view text) {
-    record_parse_call ();
+    record_parse_call (true);
     auto result = tlsf::convert_with_value_origins (std::string {text}, "Mealy");
     auto spec = make_specification (std::move (result.conversion));
     auto owner = std::make_shared<tlsf::CapturedAst> (std::move (result.ast));

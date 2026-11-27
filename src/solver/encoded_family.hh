@@ -4,6 +4,8 @@
 
 #include <chrono>
 #include <cstdint>
+#include <memory>
+#include <optional>
 #include <spot/tl/formula.hh>
 
 namespace acacia::tlsf_frontend {
@@ -54,9 +56,5 @@ namespace symmetry {
   [[nodiscard]] std::shared_ptr<const encoded_certificate> check_encoded_family (
       const acacia::tlsf_frontend::specification& spec, size_t work,
       std::chrono::steady_clock::time_point deadline);
-
-  [[nodiscard]] bool certify_encoded_family (acacia::tlsf_frontend::specification& spec,
-                                             size_t work,
-                                             std::chrono::steady_clock::time_point deadline);
 
 }  // namespace symmetry

@@ -200,11 +200,10 @@ MAIN {
     std::ifstream fixture (argv[1]);
     count.tlsf_source.assign (std::istreambuf_iterator<char> (fixture), {});
     count.tlsf_specified = true;
-    acacia::tlsf_frontend::specification local;
-    const auto& captured = count.prepare_count_objective (local);
-    const auto* origins = local.value_origins;
+    const auto captured = acacia::tlsf_frontend::parse_with_value_origins (count.tlsf_source);
+    const auto* origins = captured.value_origins;
     ok &= expect ("count worker captures equivalent conversion",
-                  &captured == &local && origins && origins->complete &&
+                  origins && origins->complete &&
                       captured.formula == encoded.formula && captured.inputs == encoded.inputs &&
                       captured.outputs == encoded.outputs);
     ok &= expect_family_views (captured, true);
@@ -213,13 +212,13 @@ MAIN {
                   bus && bus->proved_bit_width && bus->bit_count == encoded.inputs.size () &&
                       bus->parameter_count == 1 && bus->parameter_ids[0] == 1 && bus->next &&
                       bus->next->is_output);
-    count.objective = captured;
+    count.objective = encoded;
     count.original_tlsf_prepared = true;
     acacia::tlsf_frontend::specification mixed_local;
-    const auto& borrowed = count.prepare_count_objective (mixed_local);
-    ok &= expect ("count worker borrows captured parent conversion",
-                  &borrowed == &count.objective && borrowed.ast == local.ast &&
-                      borrowed.value_origins == origins && !mixed_local.ast);
+    const auto& borrowed = count.prepare_objective (mixed_local);
+    ok &= expect ("count worker borrows ordinary parent conversion",
+                  &borrowed == &count.objective && borrowed.ast == encoded.ast &&
+                      !borrowed.value_origins && !mixed_local.ast);
   }
 
   const auto mixed = acacia::tlsf_frontend::parse (R"TLSF(

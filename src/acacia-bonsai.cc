@@ -522,7 +522,7 @@ namespace {
           acacia::worker_route ("original_game", "symcount", "unknown");
           acacia::worker_stage ("symcount");
           if (acacia::obligation::limit_address_space ())
-            count_objective = &arg_values.prepare_count_objective (count_local);
+            count_objective = &arg_values.prepare_objective (count_local);
           else
             acacia::worker_stopped ("address_space_limit");
         }
@@ -553,7 +553,8 @@ namespace {
                     arm.kind == portfolio_arm_kind::gr1_real_lift
                 ? acacia::run_native_gr1_lift_arm (arg_values, deadline_mono_ns,
                                                    arm.kind == portfolio_arm_kind::gr1_real_lift)
-            : count_objective ? acacia::run_symcount_arm (*count_objective, deadline_mono_ns)
+            : count_objective ? acacia::run_symcount_arm (*count_objective, arg_values.tlsf_source,
+                                                        deadline_mono_ns)
             : count           ? EXIT_CODE_UNKNOWN
                               : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns);
       } catch (const std::bad_alloc& exception) {

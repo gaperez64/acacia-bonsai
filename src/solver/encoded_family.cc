@@ -618,9 +618,13 @@ namespace symmetry {
       std::chrono::steady_clock::time_point deadline) {
     const auto* origins = objective.value_origins;
     try {
-      require (objective.ast and origins and origins->complete and
+      require (objective.ast and origins and origins->complete and origins->buses and
                objective.metadata.tlsf_effective_target == "Mealy");
       checker check (work, deadline);
+      auto instance = origins->instances;
+      for (; instance and not instance->bindings; instance = instance->next)
+        check.charge ();
+      require (instance);
       check.charge (objective.formula.size ());
       auto& result = check.result;
       result.objective = objective.formula;
@@ -649,18 +653,6 @@ namespace symmetry {
     } catch (const std::bad_alloc&) {
     }
     return {};
-  }
-
-  bool certify_encoded_family (acacia::tlsf_frontend::specification& spec, size_t work,
-                               std::chrono::steady_clock::time_point deadline) {
-    const auto cert = check_encoded_family (spec, work, deadline);
-    auto& families = spec.metadata.tlsf_declared_families;
-    for (size_t b = 0; b < families.size (); ++b)
-      if (cert)
-        families[b].logical = logical_family {cert, b};
-      else
-        families[b].logical.reset ();
-    return bool (cert);
   }
 
 }  // namespace symmetry

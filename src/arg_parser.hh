@@ -100,14 +100,6 @@ struct arg_parse_result {
       return objective;
     }
 
-    const acacia::tlsf_frontend::specification& prepare_count_objective (
-        acacia::tlsf_frontend::specification& child_local) const {
-      if (tlsf_specified && !original_tlsf_prepared) {
-        child_local = acacia::tlsf_frontend::parse_with_value_origins (tlsf_source);
-        return child_local;
-      }
-      return objective;
-    }
 };
 
 arg_parse_result arg_parser (int argc, char** argv);

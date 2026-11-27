@@ -35,7 +35,7 @@ namespace {
            : r.outcome == verdict::unrealizable ? EXIT_CODE_UNREAL : EXIT_CODE_UNKNOWN;
   }
 
-  std::optional<int> try_encoded (tlsf_frontend::specification& spec, symcount::limits bound,
+  std::optional<int> try_encoded (const tlsf_frontend::specification& spec, symcount::limits bound,
                                   symcount::result& physical) {
     constexpr size_t size = 1024;
     auto* line = static_cast<char*> (
@@ -46,12 +46,12 @@ namespace {
     bound.deadline_mono_ns = phase_clock (CLOCK_MONOTONIC) + (120s / 1ns);
     const auto worker =
         subprocess::run<true> (bound.deadline_mono_ns, subprocess::max_optional_memory, [&] {
-          if (not symmetry::certify_encoded_family (spec, 1u << 22,
-                                                    std::chrono::steady_clock::now () + 15s))
+          const auto cert = symmetry::check_encoded_family (
+              spec, 1u << 22, std::chrono::steady_clock::now () + 15s);
+          if (not cert)
             return int (EXIT_CODE_UNKNOWN);
-          const auto& cert = *spec.metadata.tlsf_declared_families.front ().logical->certificate;
           const auto r = symcount::solve_encoded (spec.formula, spec.inputs, spec.outputs,
-                                                   cert, bound);
+                                                   *cert, bound);
           if (r.outcome == verdict::declined)
             return r.reason == "deadline" ? subprocess::deadline_exit : int (EXIT_CODE_UNKNOWN);
           return report (r, line, size);
@@ -80,7 +80,7 @@ int main (int argc, char** argv) {
     if (not std::strcmp (argv[i], "--max-vertices"))
       bound.max_vertices = std::strtoull (argv[++i], nullptr, 10);
   try {
-    auto spec = tlsf_frontend::load_with_value_origins (argv[1]);
+    const auto spec = tlsf_frontend::load_with_value_origins (argv[1]);
     // Check before Spot parses a conjunction too large for its uint16_t arity.
     for (const auto& f : spec.metadata.tlsf_indexed_families ())
       if (f.members.size () > UINT16_MAX) {

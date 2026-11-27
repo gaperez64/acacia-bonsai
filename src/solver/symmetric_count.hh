@@ -40,6 +40,10 @@
 #include <string>
 #include <vector>
 
+namespace symmetry {
+  struct encoded_certificate;
+}
+
 namespace acacia::symcount {
 
   struct encoded_audit;
@@ -71,6 +75,6 @@ namespace acacia::symcount {
   result solve_encoded (const std::string& objective, const std::vector<std::string>& inputs,
                         const std::vector<std::string>& outputs,
                         const symmetry::encoded_certificate& cert,
-                        const limits& bound = {}, encoded_auditor audit = nullptr);
+                        const limits& bound = {}, bool lift = false, encoded_auditor audit = nullptr);
 
 }  // namespace acacia::symcount

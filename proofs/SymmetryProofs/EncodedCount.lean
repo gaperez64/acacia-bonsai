@@ -295,20 +295,27 @@ theorem encoded_local_acceptance {Q L GI GO LI LO : Type} {m k e n : Nat}
     C.source R ↔ C.encoded R.global R.emitted :=
   C.correct R
 
-open Symmetry.Quotient in
-/-- A checked reachable key strategy wins in the legal raw arena for the same
-player. The arena correspondence supplies the canonical key and move witness
-on each owner's turn. -/
+open Symmetry.Quotient Symmetry.CountCardinality in
+/-- Transfer through safety completion on the keys, then lift from the
+unpruned key arena where the raw action supplies every move witness. -/
 theorem encoded_certificate {V K Γ : Type} {G : Game V} (S : Action G Γ)
     (H : Game K) (key : V → K)
     (owner : ∀ v, H.owner (key v) = G.owner v)
     (prio : ∀ v, H.prio (key v) = G.prio v)
     (canon : ∀ v, key (S.canon v) = key v)
     (edges : ∀ v k, H.edge (key v) k ↔ ∃ w, G.edge v w ∧ key w = k)
-    (total : ∀ k, ∃ k', H.edge k k') {p : Bool} {σ : K → K} {root : V}
-    (checked : Certified H maxOdd p σ (key root)) :
+    {root : V}
+    (safe : K → K → Prop) (fallback : K → K)
+    (legal : ∀ k, H.edge k (fallback k))
+    (topG : ∀ π, IsPlay H π → π 0 = key root → maxOdd (fun k => H.prio (π k)) →
+      ∀ k, safe (π k) (π (k + 1)))
+    {p : Bool} {σ : K → K}
+    (checked : Certified (safetyCompletion H safe fallback) maxOdd p σ (key root)) :
     (∃ τ, Wins G maxOdd p τ root) ∧ ∀ other, ¬ Wins G maxOdd (!p) other root := by
-  obtain ⟨τ, hτ⟩ := checked.wins total
+  obtain ⟨τ, hτ⟩ := pruned_certificate H (safetyCompletion H safe fallback) maxOdd (key root)
+    rfl rfl (fun _ _ edge => edge.1) (fun _ _ env edge => ⟨edge, Or.inl env⟩)
+    (fun k => ⟨fallback k, legal k⟩)
+    (safetyCompletion_excluded H safe fallback (key root) maxOdd topG) checked
   have win := S.lift_wins (S.key_wins H key owner prio canon edges hτ)
   refine ⟨⟨_, win⟩, fun other opposite => ?_⟩
   cases p

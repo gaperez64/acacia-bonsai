@@ -111,12 +111,14 @@ namespace acacia::symcount {
       };
 
       transport canonicalize (std::vector<unsigned>& local, unsigned& history,
-                              unsigned* input = nullptr) const {
+                              unsigned* input = nullptr, bool pin_first = false) const {
         transport p {std::vector<unsigned> (local.size (), absent), {}};
         std::vector<unsigned> sorted = local;
-        std::ranges::sort (sorted);
+        std::sort (sorted.begin () + pin_first, sorted.end ());
         std::vector<unsigned> first (sorted.back () + 1);
-        for (size_t i = sorted.size (); i-- > 0;)
+        if (pin_first)
+          p.coord[0] = 0;
+        for (size_t i = sorted.size (); i-- > size_t (pin_first);)
           first[sorted[i]] = i;
         auto mark = [&] (unsigned word, unsigned mask_bits) {
           for (size_t b = 0; b < buses.size (); ++b)
@@ -185,10 +187,11 @@ namespace acacia::symcount {
       // Extend the stabilizer's marked prefix one bus at a time. A free
       // coordinate is represented by the first available member of its cell.
       void moves (bool input, unsigned history, unsigned prefix, std::span<const unsigned> local,
-                  auto&& poll, auto&& safe_weight, auto&& emit) const {
+                  auto&& poll, auto&& safe_weight, auto&& emit, bool pin_first = false) const {
         const unsigned owner = owner_mask (input);
         unsigned scalars = owner;
         std::vector<bool> marked (local.size (), false);
+        marked[0] = pin_first;
         auto mark = [&] (size_t b, unsigned word) {
           const auto i = buses[b].values[code (word, b)].coord;
           if (i != absent)
@@ -256,7 +259,7 @@ namespace acacia::symcount {
       }
   };
 
-  // Borrow the round engine and the checked arena for the optional test replay.
+  // Borrow the round engine and checked arena for the lift and test replay.
   struct encoded_audit {
       using words = std::vector<unsigned>;
       using view = std::span<const unsigned>;
@@ -267,6 +270,7 @@ namespace acacia::symcount {
       const std::vector<int>& event_vars;
       const std::vector<words>& succ;
       const std::vector<words>& witnesses;
+      const words& input_words;
       const parity::arena_game& checked;
       const parity::solution& solution;
       bool system_wins, output_safety;
@@ -276,5 +280,11 @@ namespace acacia::symcount {
       std::function<std::tuple<words, words, unsigned, unsigned> (view, view, unsigned)> finish_round;
       std::function<unsigned (view, view)> find_vertex;
       std::function<bool (size_t, unsigned)> safe_weight;
+
+      std::pair<unsigned, encoded_alphabet::transport> lookup (
+          const words& state, unsigned* in = nullptr) const;
+      unsigned untransport (unsigned word, encoded_alphabet::transport p, unsigned mask) const;
+      unsigned chosen_target (unsigned v) const;
+      bool safe_word (unsigned word) const;
   };
 }  // namespace acacia::symcount

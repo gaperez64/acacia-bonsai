@@ -16,7 +16,7 @@ def check(command, expected):
     return result.stdout
 
 
-def portfolio(binary, fixture, *, legacy=False, reason=None):
+def portfolio(binary, fixture, *, legacy=False, capture=True, expected=0, reason=None):
     arms = "both:symcount:spot"
     if legacy:
         arms += ",unreal:formula:backward"
@@ -27,11 +27,20 @@ def portfolio(binary, fixture, *, legacy=False, reason=None):
             capture_output=True, text=True, timeout=20,
         )
         rows = records(Path(location))
-    assert_parse_calls(rows, {"parent" if legacy else "symcount": 1})
+    parses = {"parent": 1} if legacy else {"symcount": 1}
+    if capture:
+        parses["symcount"] = parses.get("symcount", 0) + 1
+    assert_parse_calls(rows, parses)
+    assert [row["role"] for row in rows
+            if row.get("event") == "tlsf_parse" and row["captured"]] == (
+                ["symcount"] if capture else []), rows
     winners = [row["effective_backend"] for row in rows if row.get("event") == "parent_winner"]
     if reason is None:
-        assert result.returncode == 0 and result.stdout.strip() == "REALIZABLE", result
+        assert result.returncode == expected, result
+        assert result.stdout.strip() == ("UNREALIZABLE" if expected else "REALIZABLE"), result
         assert winners == ["symcount"], rows
+        assert any(row.get("phase") == "encoded_strategy_check" for row in rows) == capture, rows
+        assert any(row.get("event") == "verification_complete" for row in rows) == capture, rows
     else:
         assert result.returncode == 2 and "UNKNOWN" in result.stderr, result
         assert not winners, rows
@@ -51,7 +60,7 @@ def main():
     portfolio(parity, fixture)
     portfolio(parity, fixture, legacy=True)
     plain = Path(fixture).parent / "symcount"
-    portfolio(parity, plain / "indexed-copy.tlsf")
+    portfolio(parity, plain / "indexed-copy.tlsf", capture=False)
     portfolio(parity, plain / "no-family.tlsf", reason="no indexed family")
     with tempfile.TemporaryDirectory() as directory:
         uncertified = Path(directory) / "uncertified.tlsf"
@@ -98,6 +107,8 @@ def main():
                 assert "lifted strategy" in check([audit, path], expected)
                 assert "check=quotient" in check([symcount, path], expected)
                 check([parity, "--arms", "both:parity:spot", "-T", path], expected)
+                if size == 2 and i == 1:
+                    portfolio(parity, path, expected=expected)
 
 
 if __name__ == "__main__":

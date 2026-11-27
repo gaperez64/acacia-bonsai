@@ -1,17 +1,20 @@
 #include "symmetric_count.hh"
 
+#include "controller_check.hh"
 #include "encoded_count.hh"
 #include "formula_normalize.hh"
 #include "parity/game.hh"
-#include <unordered_map>
+#include "phase_records.hh"
 
 #include <algorithm>
+#include <bit>
 #include <chrono>
 #include <ctime>
 #include <limits>
 #include <map>
 #include <set>
 #include <spot/tl/apcollect.hh>
+#include <spot/tl/parse.hh>
 #include <spot/tl/print.hh>
 #include <spot/twa/formula2bdd.hh>
 #include <spot/twaalgos/game.hh>
@@ -19,8 +22,55 @@
 #include <spot/twaalgos/parity.hh>
 #include <spot/twaalgos/translate.hh>
 #include <stdexcept>
+#include <unordered_map>
 
 namespace acacia::symcount {
+  constexpr auto absent = encoded_alphabet::absent;
+
+  std::pair<unsigned, encoded_alphabet::transport> encoded_audit::lookup (
+      const words& state, unsigned* in) const {
+    const auto header = initial.size ();
+    words prefix (state.begin (), state.begin () + header);
+    words local (state.begin () + header, state.end ());
+    auto p = alphabet.canonicalize (local, prefix[4], in);
+    const auto v = find_vertex (prefix, local);
+    if (v == absent)
+      throw std::runtime_error ("raw state missing from the quotient");
+    if (not in)
+      return std::pair {v, std::move (p)};
+    const auto at = std::ranges::find_if (succ[v], [&] (unsigned u) {
+      return input_words[u] == *in;
+    });
+    if (at == succ[v].end ())
+      throw std::runtime_error ("raw input missing from the quotient");
+    return std::pair {*at, std::move (p)};
+  }
+
+  unsigned encoded_audit::untransport (unsigned word, encoded_alphabet::transport p,
+                                      unsigned mask) const {
+    const auto forward = p.coord;
+    for (unsigned i = 0; i < forward.size (); ++i)
+      p.coord[forward[i]] = i;
+    return alphabet.apply (word, mask, p, true);
+  }
+
+  unsigned encoded_audit::chosen_target (unsigned v) const {
+    const auto edge = solution.strategy[v];
+    if (edge == parity::no_vertex)
+      throw std::runtime_error ("missing winning move");
+    return checked.explicit_game.out (edge).front ();
+  }
+
+  bool encoded_audit::safe_word (unsigned word) const {
+    for (size_t b = 0; b < alphabet.buses.size (); ++b)
+      if (not alphabet.cert.buses[b].is_input) {
+        const auto val = alphabet.buses[b].values[alphabet.code (word, b)];
+        if (not safe_weight (b, unsigned (val.mode == 0)))
+          return false;
+      }
+    return true;
+  }
+
   namespace {
     using spot::formula;
     using spot::op;
@@ -381,10 +431,194 @@ namespace acacia::symcount {
       rec (rec, 0, total);
     }
 
+    void check_lifted_language (const encoded_audit& a, formula bad,
+                                bool projected = false, bool pin_first = false) {
+      using words = encoded_audit::words;
+      using view = encoded_audit::view;
+      const auto& alphabet = a.alphabet;
+      const auto strategy = spot::make_twa_graph (a.global->get_dict ());
+      strategy->set_acceptance (0, spot::acc_cond::acc_code::t ());
+      std::vector<int> vars;
+      for (const auto& name : alphabet.raw_names)
+        vars.push_back (strategy->register_ap (name));
+      const auto literal = [] (int var, bool value) {
+        return value ? bdd_ithvar (var) : bdd_nithvar (var);
+      };
+      const auto raw_letter = [&] (unsigned word, unsigned width) {
+        bdd label = bddtrue;
+        for (unsigned i = 0; i < width; ++i)
+          label &= literal (vars[i], word >> i & 1);
+        return label;
+      };
+      spot::atomic_prop_set aps;
+      if (projected)
+        spot::atomic_prop_collect (bad, &aps);
+      const auto picks = [&] (formula atom) { return aps.contains (atom); };
+      std::vector<std::tuple<int, size_t, unsigned>> selectors;
+      for (size_t b = 0; b < alphabet.cert.buses.size (); ++b) {
+        const auto& bus = alphabet.cert.buses[b];
+        for (unsigned i = 0; i < bus.selectors.size (); ++i)
+          if (picks (bus.selectors[i]))
+            selectors.emplace_back (strategy->register_ap (bus.selectors[i]), b, bus.codes[i]);
+      }
+      std::vector<std::pair<int, const symmetry::encoded_certificate::predicate*>> tables;
+      for (const auto& p : alphabet.cert.predicates)
+        if (picks (p.atom))
+          tables.emplace_back (strategy->register_ap (p.atom), &p);
+      unsigned raw_mask = 0;
+      for (unsigned i = 0; i < alphabet.raw_names.size (); ++i)
+        if (picks (formula::ap (alphabet.raw_names[i])))
+          raw_mask |= 1u << i;
+      const auto label = [&] (unsigned word, unsigned previous) {
+        if (not projected)
+          return raw_letter (word, vars.size ());
+        bdd letter = bddtrue;
+        for (unsigned mask = raw_mask; mask; mask &= mask - 1) {
+          const auto i = std::countr_zero (mask);
+          letter &= literal (vars[i], word >> i & 1);
+        }
+        for (auto [var, bus, code] : selectors)
+          letter &= literal (var, alphabet.code (word, bus) == code);
+        for (auto [var, p] : tables) {
+          const bool future = std::ranges::find (alphabet.future, p) != alphabet.future.end ();
+          letter &= literal (var, (not future or previous != absent) and
+                                   alphabet.table (*p, future ? previous : word, word));
+        }
+        return letter;
+      };
+      const unsigned sink = not a.system_wins and a.output_safety;
+      // After a safety violation the counterstrategy can choose zero forever.
+      if (sink) {
+        strategy->new_state ();
+        strategy->new_edge (0, 0, raw_letter (0, alphabet.input_width));
+      }
+      std::unordered_map<words, unsigned, vec_hash> index;
+      std::vector<words> queue;
+      const auto visit = [&] (words prefix, words local) {
+        if (projected)
+          alphabet.canonicalize (local, prefix[4], nullptr, pin_first);
+        prefix.insert (prefix.end (), local.begin (), local.end ());
+        auto [at, fresh] = index.try_emplace (prefix, queue.size ());
+        if (fresh) {
+          if (queue.size () >= a.max_vertices / (1 + a.initial_local.size () / 16))
+            throw std::runtime_error ("concrete state limit");
+          queue.push_back (std::move (prefix));
+          strategy->new_state ();
+        }
+        return at->second + sink;
+      };
+      strategy->set_init_state (visit (words (a.initial.begin (), a.initial.end ()),
+                                       words (a.initial_local.begin (), a.initial_local.end ())));
+      const unsigned input_mask = alphabet.owner_mask (true);
+      const unsigned output_mask = alphabet.owner_mask (false);
+      size_t edges = 0;
+      for (size_t i = 0; i < queue.size (); ++i) {
+        const auto source = queue[i];
+        const auto state = view (source).first (a.initial.size ());
+        const auto local = view (source).subspan (a.initial.size ());
+        const auto [v, p] = a.lookup (source);
+        const auto input = [&] (unsigned in, unsigned expected = absent) {
+          unsigned canonical_in = in;
+          const auto u = a.lookup (source, &canonical_in).first;
+          if (expected != absent and u != expected)
+            throw std::runtime_error ("lifted input misses its paired successor");
+          const auto chosen_w = a.system_wins ? a.chosen_target (u) : absent;
+          bool matched = false, safe = false;
+          const auto output = [&] (unsigned word) {
+            a.poll ();
+            if (++edges > a.max_edges)
+              throw std::runtime_error ("concrete edge limit");
+            unsigned dst = 0;
+            if (not sink or a.safe_word (word)) {
+              auto [next, moved, g, ev] = a.finish_round (state, local, word);
+              words target = next;
+              target.insert (target.end (), moved.begin (), moved.end ());
+              const auto w = a.lookup (target).first;
+              if (chosen_w != absent and w != chosen_w)
+                return;
+              if (a.solution.winner[w] != a.system_wins)
+                throw std::runtime_error ("lifted output misses its winning region");
+              dst = visit (std::move (next), std::move (moved));
+            }
+            matched = true;
+            strategy->new_edge (i + sink, dst, label (word, state[4]));
+          };
+          const auto unrestricted = [] (size_t, unsigned) { return true; };
+          if (a.system_wins) {
+            // Every transported move to the selected key is allowed. Checking
+            // all projected choices also covers deterministic tie breaking.
+            const auto emit = [&] (unsigned word) {
+              safe = true;
+              if (projected or not matched)
+                output (word);
+            };
+            alphabet.moves (false, state[4], in, local, a.poll, a.safe_weight, emit, pin_first);
+            if (not safe)
+              alphabet.moves (false, state[4], in, local, a.poll, unrestricted, emit, pin_first);
+            if (not matched)
+              throw std::runtime_error ("lifted output misses its paired successor");
+          } else {
+            for (unsigned out = 0; out <= output_mask; out += input_mask + 1)
+              output (in | out);
+          }
+        };
+        if (projected) {
+          alphabet.moves (true, state[4], 0, local, a.poll, a.safe_weight, input, pin_first);
+        } else if (a.system_wins) {
+          for (unsigned in = 0; in <= input_mask; ++in)
+            input (in);
+        } else {
+          const auto u = a.chosen_target (v);
+          input (a.untransport (a.input_words[u], p, input_mask), u);
+        }
+      }
+      spot::translator translator (a.global->get_dict ());
+      if (not synthesis::controller_satisfies (translator.run (bad), strategy))
+        throw std::runtime_error ("lifted strategy fails the converted objective");
+    }
+
+    void check_lifted (const encoded_audit& a, const family_map& fm) {
+      if (a.system_wins) {
+        // The certificate checks substitution into the converted objective.
+        // Project each conjunct onto the coordinates it observes. A single
+        // observed client can be renamed to client zero under the checked action.
+        std::vector<formula> conjuncts, groups[2];
+        flatten (a.alphabet.cert.abstract, conjuncts);
+        bool projectable = true;
+        for (const auto& f : conjuncts) {
+          const auto support = indices (f, fm);
+          if (support.size () > 1) {
+            projectable = false;
+            break;
+          }
+          groups[not support.empty ()].push_back (
+              support.empty () ? f : to_template (f, *support.begin (), fm));
+        }
+        if (projectable and not conjuncts.empty ()) {
+          for (unsigned pin = 0; pin < 2; ++pin)
+            if (not groups[pin].empty ()) {
+              const auto delay = [&] (const auto& self, formula f) -> formula {
+                for (auto p : a.alphabet.future)
+                  if (f == p->atom)
+                    return formula::X (f);
+                return f.map ([&] (formula c) { return self (self, c); });
+              };
+              check_lifted_language (a, formula::Not (delay (delay, formula::And (std::move (groups[pin])))),
+                                     true, pin);
+            }
+          return;
+        }
+      }
+      const auto raw = spot::parse_infix_psl (a.alphabet.cert.objective);
+      if (not raw.f or not raw.errors.empty ())
+        throw std::runtime_error ("invalid encoded objective");
+      check_lifted_language (a, a.system_wins ? formula::Not (raw.f) : raw.f);
+    }
+
     result run (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs, const family_map& fm,
                 const limits& bound, const encoded_alphabet* encoded = nullptr,
-                encoded_auditor audit = nullptr) {
+                bool lift = false, encoded_auditor audit = nullptr) {
       check_deadline (bound);
       result r;
       r.n = fm.n;
@@ -779,6 +1013,7 @@ namespace acacia::symcount {
       constexpr size_t header = 5;  // state, incoming priority, buffered letter/events/code
       constexpr auto absent = encoded_alphabet::absent;
       std::vector<std::vector<unsigned>> witnesses;
+      std::vector<unsigned> input_words;
       std::vector<unsigned> global_bits, local_bits;
       const auto bit_for = [] (const auto& names, const auto& name) -> unsigned {
         const auto i = std::ranges::find (names, name);
@@ -871,8 +1106,6 @@ namespace acacia::symcount {
           const auto v = work.back ();
           work.pop_back ();
           const auto state = env_key[v];
-          if (audit and witnesses.size () <= v)
-            witnesses.resize (v + 1);
           std::vector<unsigned> local;
           for (unsigned ls = 0; ls < nls; ++ls)
             local.insert (local.end (), state[header + ls], ls);
@@ -886,10 +1119,12 @@ namespace acacia::symcount {
             colour.push_back (0);
             succ.emplace_back ();
             env_key.emplace_back ();
-            if (audit) {
-              witnesses.resize (u + 1);
-              witnesses[v].push_back (in);
+            if (lift or audit) {
+              input_words.resize (u + 1);
+              input_words[u] = in;
             }
+            if (audit)
+              witnesses.resize (u + 1);
             succ[v].push_back (u);
             std::set<unsigned> successors;
             size_t output_candidates = 0;
@@ -1121,21 +1356,28 @@ namespace acacia::symcount {
         throw declined ("strategy check failed: " + why);
       if (solution.winner[0] != (system_wins ? 1 : 0))
         throw declined ("solver and strategy disagree on the initial vertex");
-      if (audit) {
+      if (lift or audit) {
         const auto find_vertex = [&] (std::span<const unsigned> prefix,
                                       std::span<const unsigned> local) {
           const auto found = env_index.find (key_for (prefix, local));
           return found == env_index.end () ? absent : found->second;
         };
         try {
-          audit ({*encoded, gaut, gvars, evars, succ, witnesses, checked, solution,
-                  system_wins, not output_safety.empty (), max_vertices, max_edges,
-                  initial_encoded, initial_local, poll, finish_round,
-                  find_vertex, safe_weight});
+          const encoded_audit replay {*encoded, gaut, gvars, evars, succ, witnesses, input_words,
+                                      checked, solution, system_wins, not output_safety.empty (),
+                                      max_vertices, max_edges, initial_encoded, initial_local,
+                                      poll, finish_round, find_vertex, safe_weight};
+          if (audit)
+            audit (replay);
+          if (lift) {
+            phase_scope phase ("symcount", "encoded_strategy_check");
+            check_lifted (replay, fm);
+            check_deadline (bound);
+            r.lifted = true;
+          }
         } catch (const std::runtime_error& error) {
           throw declined (error.what ());
         }
-        r.lifted = true;
       }
       r.check_seconds =
           std::chrono::duration<double> (std::chrono::steady_clock::now () - t2).count ();
@@ -1184,7 +1426,7 @@ namespace acacia::symcount {
   result solve_encoded (const std::string& objective, const std::vector<std::string>& inputs,
                         const std::vector<std::string>& outputs,
                         const symmetry::encoded_certificate& cert, const limits& bound,
-                        encoded_auditor audit) {
+                        bool lift, encoded_auditor audit) {
     try {
       check_deadline (bound);
       if (objective != cert.objective or inputs != cert.inputs or outputs != cert.outputs)
@@ -1204,7 +1446,7 @@ namespace acacia::symcount {
           fm.member.emplace (names.back (), std::pair {fm.names.size () - 1, i});
         }
       }
-      return run (cert.abstract, alphabet.inputs, alphabet.outputs, fm, bound, &alphabet, audit);
+      return run (cert.abstract, alphabet.inputs, alphabet.outputs, fm, bound, &alphabet, lift, audit);
     } catch (const declined& d) {
       return {verdict::declined, d.what ()};
     } catch (const std::bad_alloc&) {

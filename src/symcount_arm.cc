@@ -10,7 +10,8 @@
 #include <spot/tl/parse.hh>
 
 namespace acacia {
-  int run_symcount_arm (const tlsf_frontend::specification& objective, uint64_t deadline_mono_ns) {
+  int run_symcount_arm (const tlsf_frontend::specification& objective, std::string_view tlsf_source,
+                        uint64_t deadline_mono_ns) {
     validate_ltl_partition (objective.inputs, objective.outputs);
     for (const auto& f : objective.metadata.tlsf_indexed_families ())
       if (f.members.size () > UINT16_MAX) {
@@ -30,7 +31,9 @@ namespace acacia {
     bound.max_vertices = bound.max_edges = std::max<uint64_t> (1, share / 512);
     auto result = symcount::solve (parsed.f, objective.inputs, objective.outputs,
                                    objective.metadata.tlsf_indexed_families (), bound);
-    if (result.outcome == symcount::verdict::declined && objective.value_origins) {
+    if (result.outcome == symcount::verdict::declined && !tlsf_source.empty () &&
+        (!deadline_mono_ns || phase_clock (CLOCK_MONOTONIC) < deadline_mono_ns)) {
+      const auto captured = tlsf_frontend::parse_with_value_origins (tlsf_source);
       using namespace std::chrono;
       const auto start = steady_clock::now ();
       const auto now = phase_clock (CLOCK_MONOTONIC);
@@ -38,23 +41,24 @@ namespace acacia {
           deadline_mono_ns ? deadline_mono_ns - std::min (deadline_mono_ns, now) : UINT64_MAX;
       const auto time =
           nanoseconds (std::min<uint64_t> (remaining, seconds (15) / nanoseconds (1)));
-      if (const auto cert = symmetry::check_encoded_family (objective, 1u << 22, start + time)) {
+      if (const auto cert = symmetry::check_encoded_family (captured, 1u << 22, start + time)) {
         auto encoded = symcount::solve_encoded (objective.formula, objective.inputs,
-                                                objective.outputs, *cert, bound);
-        if (encoded.outcome != symcount::verdict::declined)
+                                                 objective.outputs, *cert, bound, true);
+        if (encoded.lifted && encoded.outcome != symcount::verdict::declined)
           result = std::move (encoded);
       }
-      if (result.outcome == symcount::verdict::declined && deadline_mono_ns &&
-          phase_clock (CLOCK_MONOTONIC) >= deadline_mono_ns)
-        result.reason = "deadline";
     }
     if (result.outcome == symcount::verdict::declined) {
+      if (deadline_mono_ns && phase_clock (CLOCK_MONOTONIC) >= deadline_mono_ns)
+        result.reason = "deadline";
       worker_decline ("symcount_declined");
       worker_decline_detail (result.reason.c_str ());
       return EXIT_CODE_UNKNOWN;
     }
     const bool real = result.outcome == symcount::verdict::realizable;
-    if (auto* worker = active_worker_record ())
+    if (result.lifted)
+      worker_verified (real ? "REAL" : "UNREAL", real ? "REAL" : "UNREAL");
+    else if (auto* worker = active_worker_record ())
       worker_record_text (worker->proof_polarity, real ? "REAL" : "UNREAL");
     return real ? EXIT_CODE_REAL : EXIT_CODE_UNREAL;
   }
