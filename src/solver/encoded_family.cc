@@ -1,15 +1,17 @@
 #include "encoded_family.hh"
 
+#include "formula_normalize.hh"
 #include "tlsf_frontend.hh"
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cctype>
 #include <limits>
 #include <map>
 #include <set>
 #include <spot/tl/parse.hh>
-#include <spot/twa/formula2bdd.hh>
+#include <spot/twa/bdddict.hh>
 #include <unordered_map>
 
 namespace symmetry {
@@ -50,6 +52,7 @@ namespace symmetry {
         std::map<formula, certificate::slot> raw_bits;
         std::unordered_map<node, formula> parsed, lowered;
         std::map<formula, formula> selectors, substitutions, extracted;
+        std::vector<std::set<size_t>> constants;
 
         checker (size_t work, std::chrono::steady_clock::time_point end)
             : remaining (work), deadline (end) {}
@@ -58,6 +61,11 @@ namespace symmetry {
         void charge (size_t work = 1) {
           require (work <= remaining and std::chrono::steady_clock::now () < deadline);
           remaining -= work;
+        }
+
+        void charge_product (size_t a, size_t b, size_t factor = 1) {
+          require (a <= remaining / b / factor);
+          charge (a * b * factor);
         }
 
         size_t codes (size_t bus) const { return size_t {1} << result.buses[bus].members.size (); }
@@ -113,8 +121,8 @@ namespace symmetry {
 
         // Extract a numeric candidate from literals, then rebuild from declaration order.
         std::optional<std::pair<size_t, size_t>> equality_cube (formula f) {
-          auto literal = [] (formula bit) { return bit.is (op::Not) ? bit[0] : bit; };
-          const auto first = raw_bits.find (literal (f.is (op::And) ? f[0] : f));
+          const auto head = f.is (op::And) ? f[0] : f;
+          const auto first = raw_bits.find (head.is (op::Not) ? head[0] : head);
           if (first == raw_bits.end ())
             return {};
           auto [bus, next] = first->second;
@@ -166,19 +174,24 @@ namespace symmetry {
           }
           require (not result.buses.empty () and result.buses.size () == families.size ());
 
-          std::vector<std::map<site, std::map<int64_t, size_t>>> sites (families.size ());
-          std::vector<std::set<size_t>> constants (families.size ());
+          using code_map = std::map<int64_t, size_t>;
+          std::vector<std::map<site, code_map>> sites (families.size ());
+          constants.resize (families.size ());
           for (auto i = origins.instances; i; i = i->next) {
             charge ();
             if (auto match = equality_cube (read (i->expanded))) {
               auto [bus, code] = *match;
+              require (i->bit_operand_bound <= codes (bus));
               if (not i->bindings) {
                 constants[bus].insert (code);
                 continue;
               }
+              if (not i->bit_operand_bound)
+                continue;
               const auto* d = i->bindings->domain;
               require (not d->outer and d->source_formula_id == i->source_formula_id
-                       and d->binder_id and d->count >= 2 and d->parameter_count
+                       and d->binder_id and d->count >= 2 and d->count <= codes (bus)
+                       and d->parameter_count
                        and std::ranges::includes (dependencies[bus],
                                                   std::span {d->parameter_ids, d->parameter_count}));
               auto& row = sites[bus][{d, i->source_node_id}];
@@ -187,36 +200,43 @@ namespace symmetry {
             }
           }
 
-          std::vector<std::map<int64_t, size_t>> maps (families.size ());
+          std::vector<const code_map*> maps (families.size ());
           std::map<const TlsfValueDomain*, std::set<size_t>> incidence;
+          std::set<const TlsfValueDomain*> domains;
           for (size_t b = 0; b < sites.size (); ++b) {
-            require (not sites[b].empty ());
             for (const auto& [key, row] : sites[b]) {
               const auto* d = key.first;
-              std::vector<int64_t> domain (d->coordinates, d->coordinates + d->count);
-              std::ranges::sort (domain);
-              const std::vector<uint16_t> parameters (d->parameter_ids,
-                                                       d->parameter_ids + d->parameter_count);
-              if (result.coordinates.empty ()) {
-                result.coordinates = domain;
-                result.parameters = parameters;
+              charge ();
+              if (domains.insert (d).second) {
+                charge_product (d->count, std::bit_width (d->count));
+                charge (d->parameter_count);
+                std::vector<int64_t> domain (d->coordinates, d->coordinates + d->count);
+                std::ranges::sort (domain);
+                const std::span parameters {d->parameter_ids, d->parameter_count};
+                if (result.coordinates.empty ()) {
+                  result.coordinates = domain;
+                  result.parameters.assign (parameters.begin (), parameters.end ());
+                }
+                require (result.coordinates == domain
+                         and std::ranges::equal (result.parameters, parameters));
               }
-              require (result.coordinates == domain and result.parameters == parameters);
               // Recursive helper branches can expose the same cube at a partial site.
-              if (row.size () == domain.size ()) {
-                if (maps[b].empty ())
-                  maps[b] = row;
+              if (row.size () == d->count) {
+                if (not maps[b])
+                  maps[b] = &row;
                 auto [it, added] = incidence.try_emplace (d);
                 if (added)
                   result.binders.emplace_back (d->source_formula_id, d->binder_id);
                 it->second.insert (b);
               }
             }
+            require (maps[b]);
             for (const auto& [key, row] : sites[b])
               for (auto [coordinate, code] : row) {
-                require (std::ranges::binary_search (result.coordinates, coordinate));
-                auto it = maps[b].find (coordinate);
-                require (it != maps[b].end () and it->second == code);
+                charge ();
+                auto it = maps[b]->find (coordinate);
+                require (it != maps[b]->end () and it->second == code
+                         and std::ranges::binary_search (result.coordinates, coordinate));
               }
           }
           std::set<size_t> connected {0};
@@ -229,15 +249,9 @@ namespace symmetry {
 
           std::set<int64_t> fixed;
           for (size_t b = 0; b < maps.size (); ++b)
-            for (auto code : constants[b]) {
-              auto it = std::ranges::find_if (maps[b], [=] (const auto& p) { return p.second == code; });
-              if (it == maps[b].end ()) {
-                auto [pos, added] = maps[b].emplace (static_cast<int64_t> (code), code);
-                require (added);
-                it = pos;
-              }
-              fixed.insert (it->first);
-            }
+            for (auto [coordinate, code] : *maps[b])
+              if (constants[b].contains (code))
+                fixed.insert (coordinate);
           std::erase_if (result.coordinates, [&] (auto i) { return fixed.contains (i); });
           result.moving = result.coordinates.size ();
           require (result.moving >= 2);
@@ -247,18 +261,17 @@ namespace symmetry {
             auto& bus = result.buses[b];
             std::set<size_t> used;
             for (auto coordinate : result.coordinates) {
-              require (maps[b].contains (coordinate));
-              const auto code = maps[b].at (coordinate);
+              const auto code = maps[b]->at (coordinate);
               require (used.insert (code).second);
               auto atom = fresh ();
               bus.codes.push_back (code);
               bus.selectors.push_back (atom);
-              bus.cubes.push_back (cube (b, code));
-              const auto truth = truth_table (bus.cubes.back (), {{b, false}});
+              auto raw_cube = cube (b, code);
+              const auto truth = truth_table (raw_cube, {{b, false}});
               for (size_t raw = 0; raw < truth.size (); ++raw)
                 require (truth[raw] == (raw == code));
-              substitutions.emplace (atom, bus.cubes.back ());
-              selectors.emplace (bus.cubes.back (), atom);
+              substitutions.emplace (atom, raw_cube);
+              selectors.emplace (raw_cube, atom);
               selectors.emplace (cube (b, code, true), formula::X (atom));
             }
           }
@@ -277,58 +290,70 @@ namespace symmetry {
           return lowered.emplace (n, f).first->second;
         }
 
+        // Bound the distinct operand-node tuples, including terminal nodes.
+        static size_t states (const bdd& f) { return size_t (bdd_nodecount (f)) + 2; }
+
+        bdd combine (int kind, const bdd& a, const bdd& b) {
+          charge (0);
+          charge_product (states (a), states (b));
+          return bdd_apply (a, b, kind);
+        }
+
+        struct boolean_context {
+            std::map<formula, bdd> memo;
+            std::map<std::pair<op, std::vector<int>>, bdd> temporal;
+        };
+
         // Boolean shells see temporal subformulas as atoms with canonical children.
-        bool equal (formula a, formula b) {
-          if (a == b)
-            return true;
-          std::map<formula, bdd> memo;
-          std::map<std::pair<op, std::vector<int>>, bdd> temporal;
-          auto canon = [&] (auto&& self, formula f) -> bdd {
-            if (auto it = memo.find (f); it != memo.end ())
-              return it->second;
-            charge ();
-            bdd value;
-            if (f.is (op::ap, op::tt, op::ff))
-              value = spot::formula_to_bdd (f, dict, this);
-            else if (boolean_op (f.kind ())) {
-              value = self (self, f[0]);
-              switch (f.kind ()) {
-              case op::Not: value = !value; break;
-              case op::Implies: value = bdd_imp (value, self (self, f[1])); break;
-              case op::Equiv: value = bdd_biimp (value, self (self, f[1])); break;
-              case op::Xor: value ^= self (self, f[1]); break;
-              case op::And:
-              case op::Or:
-                for (unsigned j = 1; j < f.size (); ++j)
-                  value = f.is (op::And) ? value & self (self, f[j]) : value | self (self, f[j]);
-                break;
-              default: throw declined {};
-              }
-            } else if (f.is (op::X) and boolean_op (f[0].kind ())) {
-              value = self (self, distribute_next (f[0]));
-            } else if (f.is (op::G) and f[0].is (op::And)) {
-              value = bddtrue;
-              for (auto c : f[0])
-                value &= self (self, formula::G (c));
-            } else if (f.is (op::G) and f[0].is (op::Implies) and f[0][1].is (op::And)) {
-              value = bddtrue;
-              for (auto c : f[0][1])
-                value &= self (self, formula::G (formula::Implies (f[0][0], c)));
-            } else if (f.is (op::G) and f[0].is (op::G)) {
-              value = self (self, f[0]);
-            } else {
-              std::vector<int> children;
-              for (auto c : f)
-                children.push_back (self (self, c).id ());
-              auto [it, added] = temporal.try_emplace ({f.kind (), std::move (children)});
-              if (added)
-                it->second = bdd_ithvar (dict->register_proposition (fresh (), this));
-              value = it->second;
+        bdd canonical (formula f, boolean_context& ctx) {
+          if (auto it = ctx.memo.find (f); it != ctx.memo.end ())
+            return it->second;
+          charge ();
+          const auto child = [&] (formula c) { return canonical (c, ctx); };
+          bdd value = bddtrue;
+          switch (f.kind ()) {
+          case op::tt: break;
+          case op::ff: value = bddfalse; break;
+          case op::ap: value = bdd_ithvar (dict->register_proposition (f, this)); break;
+          case op::Not: {
+            auto a = child (f[0]);
+            charge (states (a));
+            value = bdd_not (a);
+            break;
+          }
+          case op::Implies: value = combine (bddop_imp, child (f[0]), child (f[1])); break;
+          case op::Equiv: value = combine (bddop_biimp, child (f[0]), child (f[1])); break;
+          case op::Xor: value = combine (bddop_xor, child (f[0]), child (f[1])); break;
+          case op::And:
+          case op::Or:
+            value = child (f[0]);
+            for (unsigned j = 1; j < f.size (); ++j)
+              value = combine (f.is (op::And) ? bddop_and : bddop_or, value, child (f[j]));
+            break;
+          default: {
+            if (f.is (op::X) and boolean_op (f[0].kind ())) {
+              value = child (distribute_next (f[0]));
+              break;
             }
-            charge (bdd_nodecount (value));
-            return memo.emplace (f, value).first->second;
-          };
-          return canon (canon, a) == canon (canon, b);
+            if (f.is (op::G) and acacia::split_globally (f[0], [&] (formula c) {
+                  value = combine (bddop_and, value, child (c));
+                }))
+              break;
+            std::vector<int> children;
+            for (auto c : f)
+              children.push_back (child (c).id ());
+            auto [it, added] = ctx.temporal.try_emplace ({f.kind (), std::move (children)});
+            if (added)
+              it->second = bdd_ithvar (dict->register_proposition (fresh (), this));
+            value = it->second;
+          }
+          }
+          return ctx.memo.emplace (f, value).first->second;
+        }
+
+        bool equal (formula a, formula b) {
+          boolean_context ctx;
+          return a == b or canonical (a, ctx) == canonical (b, ctx);
         }
 
         bool raw_support (formula f, std::set<certificate::slot>& slots) {
@@ -365,10 +390,12 @@ namespace symmetry {
           std::map<int, size_t> positions;
           for (size_t j = 0; j < variables.size (); ++j)
             positions.emplace (variables[j], j);
-          const auto original = spot::formula_to_bdd (substitute (f, labels), dict, this);
+          boolean_context ctx;
+          const auto original = canonical (substitute (f, labels), ctx);
           std::vector<bool> truth;
           truth.reserve (rows);
           for (size_t code = 0; code < rows; ++code) {
+            charge (0);
             bdd cursor = original;
             while (cursor != bddtrue and cursor != bddfalse) {
               charge ();
@@ -377,10 +404,13 @@ namespace symmetry {
             truth.push_back (cursor == bddtrue);
           }
           auto rebuild = [&] (auto&& self, size_t bit, size_t code) -> bdd {
+            charge (0);
             if (bit == variables.size ())
               return truth[code] ? bdd (bddtrue) : bdd (bddfalse);
-            return bdd_ite (bdd_ithvar (variables[bit]), self (self, bit + 1, code | (size_t {1} << bit)),
-                            self (self, bit + 1, code));
+            const auto hi = self (self, bit + 1, code | (size_t {1} << bit));
+            const auto lo = self (self, bit + 1, code);
+            charge_product (states (hi), states (lo), 3);
+            return bdd_ite (bdd_ithvar (variables[bit]), hi, lo);
           };
           require (rebuild (rebuild, 0, 0) == original);
           return truth;
@@ -390,9 +420,9 @@ namespace symmetry {
           if (auto it = extracted.find (f); it != extracted.end ())
             return it->second;
           auto atom = fresh ();
-          result.predicates.push_back ({atom, f, {slots.begin (), slots.end ()}, {}});
-          auto& p = result.predicates.back ();
-          p.truth = truth_table (f, p.slots);
+          std::vector<certificate::slot> support (slots.begin (), slots.end ());
+          auto truth = truth_table (f, support);
+          result.predicates.push_back ({atom, std::move (support), std::move (truth)});
           substitutions.emplace (atom, f);
           return extracted.emplace (f, atom).first->second;
         }
@@ -473,6 +503,8 @@ namespace symmetry {
                     it->second.reset ();
                 }
                 for (auto code : unused) {
+                  if (constants[b].contains (code))
+                    continue;
                   charge (1 + signature[code].size ());
                   auto it = matches.find (signature[code]);
                   if (it == matches.end () or not it->second)
@@ -513,16 +545,19 @@ namespace symmetry {
               unused[b].erase (c);
           }
 
-          for (size_t i = 1; i < result.moving; ++i)
-            if (not invariant (star (i))) {
-              for (size_t b = 0; b < unused.size (); ++b)
-                infer_aliases (b, unused[b]);
-              break;
-            }
+          size_t checked = 1;
+          while (checked < result.moving and invariant (star (checked)))
+            ++checked;
+          if (checked < result.moving) {
+            for (size_t b = 0; b < unused.size (); ++b)
+              infer_aliases (b, unused[b]);
+            require (star (checked).size () > result.buses.size ());
+            checked = 1;
+          }
 
           for (size_t i = 1; i < result.moving; ++i) {
             auto swaps = star (i);
-            require (invariant (swaps));
+            require (i < checked or invariant (swaps));
             std::map<formula, formula> rename;
             for (const auto& bus : result.buses) {
               rename.emplace (bus.selectors[0], bus.selectors[i]);
@@ -538,9 +573,15 @@ namespace symmetry {
               if (alias)
                 unused[b].erase (*alias);
             for (auto code : unused[b]) {
+              if (constants[b].contains (code)) {
+                bus.unused_classes.push_back ({code});
+                continue;
+              }
               bool joined = false;
               for (auto& group : bus.unused_classes) {
                 charge ();
+                if (constants[b].contains (group.front ()))
+                  continue;
                 certificate::generator swap {{b, group.front (), code}};
                 if (invariant (swap)) {
                   result.generators.push_back (std::move (swap));
@@ -596,12 +637,14 @@ namespace symmetry {
       check.check_action ();
 
       const auto certified = std::make_shared<const certificate> (std::move (result));
+      check.charge (0);
       for (size_t b = 0; b < families.size (); ++b)
         families[b].logical = logical_family {certified, b};
       return true;
     } catch (const declined&) {
-      return false;
+    } catch (const std::bad_alloc&) {
     }
+    return false;
   }
 
 }  // namespace symmetry

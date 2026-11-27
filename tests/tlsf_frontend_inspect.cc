@@ -1,13 +1,16 @@
 #include "tlsf_frontend.hh"
+#include "solver/bounded_subprocess.hh"
 #include "solver/encoded_family.hh"
 #include "solver/realizability_simplify.hh"
 
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <span>
 #include <spot/tl/parse.hh>
 #include <sstream>
 #include <string>
+#include <sys/mman.h>
 
 namespace {
 
@@ -20,53 +23,86 @@ namespace {
     std::cout.put ('\0');
   }
 
-  void inspect_encoded (const char* path) {
+  void inspect_encoded (const char* path, std::ostream& out, std::chrono::steady_clock::time_point deadline) {
     std::ifstream file (path);
     if (not file)
       throw std::runtime_error (std::string {"unable to open "} + path);
     std::ostringstream text;
     text << file.rdbuf ();
     auto spec = acacia::tlsf_frontend::parse_with_value_origins (text.str ());
-    if (not symmetry::certify_encoded_family (spec)) {
-      std::cout << "declined\n";
+    if (not symmetry::certify_encoded_family (spec, 1u << 22, deadline)) {
+      out << "declined\n";
       return;
     }
     const auto& logical = *spec.objective.metadata.tlsf_declared_families.front ().logical;
     const auto& cert = *logical.certificate;
-    std::cout << "certified " << cert.moving;
+    out << "certified " << cert.moving;
     for (auto c : cert.coordinates)
-      std::cout << ' ' << c;
-    std::cout << '\n';
+      out << ' ' << c;
+    out << '\n';
     for (const auto& bus : cert.buses) {
-      std::cout << "bus " << bus.is_input << ' ' << bus.members.size ();
+      out << "bus " << bus.is_input << ' ' << bus.members.size ();
       for (size_t i = 0; i < bus.codes.size (); ++i) {
-        std::cout << ' ' << bus.codes[i];
+        out << ' ' << bus.codes[i];
         if (bus.aliases[i])
-          std::cout << '/' << *bus.aliases[i];
+          out << '/' << *bus.aliases[i];
       }
-      std::cout << '\n';
+      out << '\n';
       for (const auto& group : bus.unused_classes) {
-        std::cout << "unused";
+        out << "unused";
         for (auto code : group)
-          std::cout << ' ' << code;
-        std::cout << '\n';
+          out << ' ' << code;
+        out << '\n';
       }
     }
     for (const auto& p : cert.predicates) {
-      std::cout << "table";
+      out << "table";
       for (auto [bus, next] : p.slots)
-        std::cout << ' ' << bus << '/' << next;
-      std::cout << ' ';
+        out << ' ' << bus << '/' << next;
+      out << ' ';
       for (bool value : p.truth)
-        std::cout << value;
-      std::cout << '\n';
+        out << value;
+      out << '\n';
     }
     for (const auto& swaps : cert.generators) {
-      std::cout << "swap";
+      out << "swap";
       for (auto [bus, first, second] : swaps)
-        std::cout << ' ' << bus << '/' << first << '/' << second;
-      std::cout << '\n';
+        out << ' ' << bus << '/' << first << '/' << second;
+      out << '\n';
     }
+  }
+
+  void inspect_encoded (const char* path) {
+    using namespace acacia;
+    constexpr auto duration = std::chrono::seconds (15);
+    struct payload {
+        size_t size;
+        char text[16u << 20];
+    };
+    const auto unmap = [] (payload* p) { munmap (p, sizeof (payload)); };
+    auto* mapping = static_cast<payload*> (mmap (
+        nullptr, sizeof (payload), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0));
+    if (mapping == MAP_FAILED) {
+      std::cout << "declined\n";
+      return;
+    }
+    std::unique_ptr<payload, decltype (unmap)> data (mapping, unmap);
+    const auto deadline = std::chrono::steady_clock::now () + duration;
+    const auto stop_ns = phase_clock (CLOCK_MONOTONIC) + duration / std::chrono::nanoseconds (1);
+    const auto run = subprocess::run<true> (stop_ns, subprocess::max_optional_memory, [&] {
+      std::ostringstream out;
+      inspect_encoded (path, out, deadline);
+      const auto text = out.view ();
+      if (text.size () > sizeof (data->text))
+        return subprocess::resource_exit;
+      std::memcpy (data->text, text.data (), text.size ());
+      data->size = text.size ();
+      return 0;
+    });
+    if (run.code == 0 && std::strcmp (run.cause, "none") == 0)
+      std::cout.write (data->text, data->size);
+    else
+      std::cout << "declined\n";
   }
 
 }  // namespace

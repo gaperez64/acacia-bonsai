@@ -17,7 +17,7 @@ namespace symmetry {
           uint32_t declaration;
           bool is_input;
           // Code bit j is members[j]. Selectors and aliases follow axis order.
-          std::vector<spot::formula> members, selectors, cubes;
+          std::vector<spot::formula> members, selectors;
           std::vector<size_t> codes;
           std::vector<std::optional<size_t>> aliases;
           std::vector<std::vector<size_t>> unused_classes;
@@ -28,7 +28,7 @@ namespace symmetry {
           auto operator<=> (const slot&) const = default;
       };
       struct predicate {
-          spot::formula atom, substitution;
+          spot::formula atom;
           // Mixed radix, first slot least significant. Each radix is the full code space.
           std::vector<slot> slots;
           std::vector<bool> truth;
@@ -46,11 +46,12 @@ namespace symmetry {
       size_t moving = 0;
       std::vector<bus> buses;
       std::vector<predicate> predicates;
+      // Consume only actions witnessed by products of these checked involutions.
       std::vector<generator> generators;
       spot::formula abstract;
   };
 
-  // Inspector entry point. On decline the physical declarations are untouched.
+  // Run in a bounded worker. Map abnormal worker exits to decline.
   [[nodiscard]] bool certify_encoded_family (
     acacia::tlsf_frontend::captured_specification& spec, size_t work = 1u << 22,
     std::chrono::steady_clock::time_point deadline = std::chrono::steady_clock::time_point::max ());

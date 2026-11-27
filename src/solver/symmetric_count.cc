@@ -1,5 +1,6 @@
 #include "symmetric_count.hh"
 
+#include "formula_normalize.hh"
 #include "parity/game.hh"
 #include <unordered_map>
 
@@ -90,23 +91,8 @@ namespace acacia::symcount {
           flatten (c, out);
         return;
       }
-      if (f.is (op::G)) {
-        const formula& g = f[0];
-        if (g.is (op::And)) {
-          for (const auto& c : g)
-            flatten (formula::G (c), out);
-          return;
-        }
-        if (g.is (op::Implies) and g[1].is (op::And)) {
-          for (const auto& c : g[1])
-            flatten (formula::G (formula::Implies (g[0], c)), out);
-          return;
-        }
-        if (g.is (op::G)) {
-          flatten (g, out);
-          return;
-        }
-      }
+      if (f.is (op::G) and split_globally (f[0], [&] (formula c) { flatten (c, out); }))
+        return;
       if (f.is (op::Implies) and f[1].is (op::And)) {
         for (const auto& c : f[1])
           flatten (formula::Implies (f[0], c), out);

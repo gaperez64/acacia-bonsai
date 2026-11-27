@@ -83,4 +83,18 @@ theorem family_check_sound (objective : (Nat → Raw) → Prop)
     intro word
     exact (hp (_ ∘ word)).trans (hq word)
 
+theorem raw_objective_preserved (raw : (Nat → Raw) → Prop) (objective : Objective Atom)
+    (decodeWord : (Nat → Raw) → Valuation Atom)
+    (reconstruct : ∀ word, raw word ↔ objective (decodeWord word))
+    {generators : List (Perm Raw)} (checked : ∀ q ∈ generators, ∃ p : Perm Atom,
+      (∀ word a t, decodeWord (q ∘ word) a t ↔ decodeWord word (p.invFun a) t) ∧
+      (∀ letter, objective (fun a => letter (p.invFun a)) ↔ objective letter))
+    {q : Perm Raw} (witness : Generated generators q) : Preserves raw q := by
+  have decoded : Preserves (objective ∘ decodeWord) q :=
+    family_check_sound (objective ∘ decodeWord) (fun g hg => by
+      obtain ⟨p, atoms, rename⟩ := checked g hg
+      exact generator_checked objective decodeWord g p atoms rename) witness
+  intro word
+  exact (reconstruct _).trans ((decoded word).trans (reconstruct word).symm)
+
 end Symmetry.EncodedCount

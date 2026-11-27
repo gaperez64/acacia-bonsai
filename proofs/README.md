@@ -166,23 +166,32 @@ duplicate candidates never accumulate in its storage or retained capacity.
 
 ## Issue #471 certification obligations
 
-`EncodedCount` connects bit-cube equality to decoding, checks that an
-injective code map decodes its coordinates, and proves that transporting an
-unused code keeps every selector false. `encoded_decomposition_correct`
-substitutes pointwise-equal selector and table traces through a whole LTL
-context. The two-time table denotes the current and next raw letters at
-every position. `generator_checked` combines atomic transport and checked
-whole-objective renaming, and `family_check_sound` extends these checks
-to every product and inverse of the stored generators.
+`EncodedCount` connects bit-cube equality to decoding and proves that
+transporting an unused code keeps every selector false. The two-time table
+uses the current and next raw letters at every position. `generator_checked`
+combines pointwise atom transport and whole-objective renaming.
+`raw_objective_preserved` takes the independently checked reconstruction
+of the raw objective as a premise and transfers preservation to it.
 
-The C++ checker supplies the evaluated domains, declaration owners and
-bit orders, the disjoint code swaps, BDD reconstruction and exact
-objective/partition binding. Lean takes the corresponding bit injection,
-selector transport, table equality and formula reconstruction as premises.
-The inspector constructs the payload without enabling any solver path.
+The C++ boundary supplies the domains, owners, bit orders, disjoint code swaps
+and the exact objective with its ordered input and output partitions.
+Reconstruction compares the converted formula with the expanded abstract
+formula using BDD equality on Boolean shells, temporal congruence, and the
+infinite-word `X` and `G` rewrites. The inspector runs certification in a
+bounded worker and treats worker failure as a decline.
+
+The stored generators are simultaneous coordinate stars on selected codes
+and linked aliases, and separate representative stars in each residual
+class. A consumer must bind the certificate to the same objective and ordered
+partitions and supply a `Generated` witness from these stored swaps for each
+permutation it uses. The theorem covers products and inverses of the recorded
+generators. This makes generation a consumer obligation when using a
+coordinate/class product representation.
 
 | C++ source | Lean port |
 | --- | --- |
-| `solver/encoded_family.cc#if (f != cube (bus, code, next))`; `solver/encoded_family.cc#require (truth[raw] == (raw == code));` | `cube_decodes`, `decode_encode` |
-| `solver/encoded_family.cc#require (rebuild (rebuild, 0, 0) == original);`; `solver/encoded_family.cc#require (check.equal (exact.f, check.substitute (result.abstract, check.substitutions)));` | `encoded_decomposition_correct` |
-| `solver/encoded_family.cc#if (p.truth[row] != p.truth[image])`; `solver/encoded_family.cc#swaps.push_back ({b, bus.codes[0], bus.codes[i]});`; `solver/encoded_family.cc#require (equal (result.abstract, substitute (result.abstract, rename)));` | `table_action`, `decode_action`, `unused_action`, `generator_checked`, `family_check_sound` |
+| `solver/encoded_family.cc#if (f != cube (bus, code, next))`; `solver/encoded_family.cc#require (truth[raw] == (raw == code));` | `cube_decodes`, `decode_encode`, selector trace premise of `encoded_decomposition_correct` |
+| `solver/encoded_family.cc#require (rebuild (rebuild, 0, 0) == original);` | Pointwise table trace premise of `encoded_decomposition_correct` |
+| `solver/encoded_family.cc#if (p.truth[row] != p.truth[image])` | `table_action` |
+| `solver/encoded_family.cc#swaps.push_back ({b, bus.codes[0], bus.codes[i]});`; `solver/encoded_family.cc#require (equal (result.abstract, substitute (result.abstract, rename)));` | `decode_action`, `unused_action`, `generator_checked`, `family_check_sound` |
+| `solver/encoded_family.cc#require (check.equal (exact.f, check.substitute (result.abstract, check.substitutions)));` | `reconstruct` premise of `raw_objective_preserved` |
