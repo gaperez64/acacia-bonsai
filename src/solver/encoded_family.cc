@@ -159,7 +159,6 @@ namespace symmetry {
                      and physical.members.size () == b->bit_count and b->declaration_id
                      and declarations.emplace (b->is_output, b->declaration_id).second);
             auto& bus = result.buses.emplace_back ();
-            bus.declaration = b->declaration_id;
             bus.is_input = not b->is_output;
             const auto& partition = bus.is_input ? result.inputs : result.outputs;
             for (size_t j = 0; j < b->bit_count; ++j) {
@@ -201,6 +200,7 @@ namespace symmetry {
           std::vector<const code_map*> maps (families.size ());
           std::map<const TlsfValueDomain*, std::set<size_t>> incidence;
           std::set<const TlsfValueDomain*> domains;
+          std::span<const uint16_t> parameters;
           for (size_t b = 0; b < sites.size (); ++b) {
             for (const auto& [key, row] : sites[b]) {
               const auto* d = key.first;
@@ -210,22 +210,19 @@ namespace symmetry {
                 charge (d->parameter_count);
                 std::vector<int64_t> domain (d->coordinates, d->coordinates + d->count);
                 std::ranges::sort (domain);
-                const std::span parameters {d->parameter_ids, d->parameter_count};
+                const std::span ids {d->parameter_ids, d->parameter_count};
                 if (result.coordinates.empty ()) {
                   result.coordinates = domain;
-                  result.parameters.assign (parameters.begin (), parameters.end ());
+                  parameters = ids;
                 }
                 require (result.coordinates == domain
-                         and std::ranges::equal (result.parameters, parameters));
+                         and std::ranges::equal (parameters, ids));
               }
               // Recursive helper branches can expose the same cube at a partial site.
               if (row.size () == d->count) {
                 if (not maps[b])
                   maps[b] = &row;
-                auto [it, added] = incidence.try_emplace (d);
-                if (added)
-                  result.binders.emplace_back (d->source_formula_id, d->binder_id);
-                it->second.insert (b);
+                incidence[d].insert (b);
               }
             }
             require (maps[b]);
@@ -238,7 +235,8 @@ namespace symmetry {
               }
           }
           std::set<size_t> connected {0};
-          for (size_t previous = 0; connected.size () < families.size () and connected.size () != previous;) {
+          for (size_t previous = 0;
+               connected.size () < families.size () and connected.size () != previous;) {
             previous = connected.size ();
             for (const auto& [d, buses] : incidence) {
               charge (buses.size ());
@@ -249,7 +247,6 @@ namespace symmetry {
             }
           }
           require (connected.size () == families.size ());
-          std::ranges::sort (result.binders);
 
           std::set<int64_t> fixed;
           for (size_t b = 0; b < maps.size (); ++b)
@@ -290,7 +287,7 @@ namespace symmetry {
           auto f = it == selectors.end ()
                      ? from_ast (n, [&] (node c) { return abstract_selectors (c); }) : it->second;
           if (f.is (op::X))
-            f = distribute_next (f[0]);
+            f = abstract_next (f[0]);
           return lowered.emplace (n, f).first->second;
         }
 
@@ -376,26 +373,33 @@ namespace symmetry {
           return true;
         }
 
+        formula abstract_next (formula f) {
+          if (boolean_op (f.kind ())) {
+            std::set<certificate::slot> slots;
+            // Delay the table atom as a unit when its arguments already span two rounds.
+            if (not raw_support (f, slots)
+                or std::ranges::none_of (slots, &certificate::slot::next))
+              return f.map ([&] (formula c) { return abstract_next (c); });
+          }
+          return formula::X (f);
+        }
+
         std::vector<bool> truth_table (formula f, const std::vector<certificate::slot>& slots) {
-          std::vector<int> variables;
-          std::map<formula, formula> labels;
           size_t rows = 1;
-          for (auto [b, next] : slots) {
+          for (auto slot : slots) {
+            const auto b = slot.bus;
             require (rows <= remaining / codes (b));
             rows *= codes (b);
-            for (auto bit : result.buses[b].members) {
-              auto label = next ? fresh () : bit;
-              if (next)
-                labels.emplace (formula::X (bit), label);
-              variables.push_back (dict->register_proposition (label, this));
-            }
           }
           charge (rows);
-          std::map<int, size_t> positions;
-          for (size_t j = 0; j < variables.size (); ++j)
-            positions.emplace (variables[j], j);
+          const size_t width = std::bit_width (rows) - 1;
           boolean_context ctx;
-          const auto original = canonical (substitute (f, labels), ctx);
+          const auto start = dict->register_anonymous_variables (width, this);
+          auto variable = start;
+          for (auto [b, next] : slots)
+            for (auto bit : result.buses[b].members)
+              ctx.memo.emplace (next ? formula::X (bit) : bit, bdd_ithvar (variable++));
+          const auto original = canonical (f, ctx);
           std::vector<bool> truth;
           truth.reserve (rows);
           for (size_t code = 0; code < rows; ++code) {
@@ -403,18 +407,19 @@ namespace symmetry {
             bdd cursor = original;
             while (cursor != bddtrue and cursor != bddfalse) {
               charge ();
-              cursor = ((code >> positions.at (bdd_var (cursor))) & 1) ? bdd_high (cursor) : bdd_low (cursor);
+              cursor = ((code >> (bdd_var (cursor) - start)) & 1)
+                         ? bdd_high (cursor) : bdd_low (cursor);
             }
             truth.push_back (cursor == bddtrue);
           }
           auto rebuild = [&] (auto&& self, size_t bit, size_t code) -> bdd {
             charge (0);
-            if (bit == variables.size ())
+            if (bit == width)
               return truth[code] ? bdd (bddtrue) : bdd (bddfalse);
             const auto hi = self (self, bit + 1, code | (size_t {1} << bit));
             const auto lo = self (self, bit + 1, code);
             charge_product (states (hi), states (lo), 3);
-            return bdd_ite (bdd_ithvar (variables[bit]), hi, lo);
+            return bdd_ite (bdd_ithvar (start + bit), hi, lo);
           };
           require (rebuild (rebuild, 0, 0) == original);
           return truth;

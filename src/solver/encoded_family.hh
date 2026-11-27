@@ -16,7 +16,6 @@ namespace symmetry {
   // Source-level selector intent, including absence of wraparound, is outside its scope.
   struct encoded_certificate {
       struct bus {
-          uint32_t declaration;
           bool is_input;
           // Code bit j is members[j]. Selectors and aliases follow axis order.
           std::vector<spot::formula> members, selectors;
@@ -42,8 +41,6 @@ namespace symmetry {
 
       std::string objective;
       std::vector<std::string> inputs, outputs;
-      std::vector<uint16_t> parameters;
-      std::vector<std::pair<uint32_t, uint32_t>> binders;  // source formula, binder
       std::vector<int64_t> coordinates;                     // moving first, then fixed
       size_t moving = 0;
       std::vector<bus> buses;

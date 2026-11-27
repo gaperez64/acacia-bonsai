@@ -25,7 +25,7 @@ relative to `src/`.
 | `solver/k_bounded_safety_aut.hh#bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner) {`; `solver/k_schedule.hh#? kmax : std::min (kmax, k + kinc);`; `solver/equivariant_k_bounded_safety_aut.hh#const auto next_k = detail::checked_next_k (k, kinc);`; `solver/equivariant_k_bounded_safety_aut.hh#const auto next_k = detail::checked_next_k (k, kinc);` | Early exits, `bump`, `AdaptiveReach`, shared and ordinary schedules (both equivariant increments) |
 | `solver/solver_invoker.cc#input_aps.swap (output_aps);` | `swapFrame`, `swapped_engine_cpre` |
 | `../tests/equivariant_pre_test.cc#bool run_mixed_io_family_case () {` | `Reproducer331`, mixed I/O regression fixture |
-| `solver/symmetric_count.cc#counts[ls & ~reset] += c;` | `push_counts`, `countTransition`, `count_successor` |
+| `solver/symmetric_count.cc#ls &= ~reset;`; `solver/symmetric_count.cc#counts[moved[k]] += std::get<2> (cells[k]);` | `push_counts`, `countTransition`, `count_successor` |
 
 `#` marks an exact source line. Run `python3 tests/check-proof-references.py`
 from the repository root to check anchor counts and proof reference coverage.
@@ -161,7 +161,7 @@ duplicate candidates never accumulate in its storage or retained capacity.
 | --- | --- |
 | `solver/symmetric_count.cc#const bool equal = bdd_replace (original, pair) == original;`; `solver/symmetric_count.cc#if (reconstructed != original)` | `invariant`, `count_factor`, `accepted_weights`, `quotient_constraint` |
 | `solver/symmetric_count.cc#cardinalities[j] += c;`; `solver/symmetric_count.cc#fired = b.cardinalities[e.pred].truth[cardinalities[e.pred]];` | `weighted_constraint`, `event_values`, `Run.cardinality_event`, `Atom.correct` |
-| `solver/symmetric_count.cc#if (under_top_g (under_top_g, lowered, false)) {`; `solver/symmetric_count.cc#feasible = feasible and reachable;`; `solver/symmetric_count.cc#if (successors.empty ()) {`; `solver/symmetric_count.cc#emit (0);` | `restrict_safety`, `translated_cardinality_G`, `engine_safety_restriction`, `safetyCompletion_empty`, `safetyCompletion_excluded`, `engine_pruned_verdict` |
+| `solver/symmetric_count.cc#if (under_top_g (under_top_g, lowered, false)) {`; `solver/symmetric_count.cc#feasible = feasible and feasible_weight (constraint, weight[j],`; `solver/symmetric_count.cc#if (successors.empty ()) {`; `solver/symmetric_count.cc#emit (0);` | `restrict_safety`, `translated_cardinality_G`, `engine_safety_restriction`, `safetyCompletion_empty`, `safetyCompletion_excluded`, `engine_pruned_verdict` |
 | `solver/symmetric_count.cc#if (not successors.count (w)) {`; `solver/symmetric_count.cc#succ[u].assign (successors.begin (), successors.end ());` | Set-valued `Game.edge`, `countGame_edges`; bounded workspace and distinct-edge accounting |
 
 ## Issue #471 certification obligations
@@ -198,3 +198,39 @@ coordinate/class product representation.
 | `solver/encoded_family.cc#if (p.truth[row] != p.truth[image])` | `table_action` |
 | `solver/encoded_family.cc#swaps.push_back ({b, bus.codes[0], bus.codes[i]});`; `solver/encoded_family.cc#require (equal (result.abstract, substitute (result.abstract, rename)));` | `decode_action`, `unused_action`, `generator_checked`, `family_check_sound` |
 | `solver/encoded_family.cc#require (check.equal (exact.f, check.substitute (result.abstract, check.substitutions)));` | `reconstruct` premise of `raw_objective_preserved` |
+
+
+## Issue #471 standalone count game
+
+Each owned bus contributes one raw code. The selected mode has weight one.
+Fixed codes, linked aliases and residual codes have moving weight zero.
+Availability comes from the certified alphabet. Formula safety uses the
+shared accepted-weight predicate, with a legal raw default when no safe
+output exists. The original safety monitor still reads that move. Replay
+transports the representative's default back to the concrete raw state.
+
+A count cell is refined by saved table anchors and then by the current inputs.
+Ordered anchor marks identify the chosen member of a cell. An unmarked member
+can be picked precisely when its remaining count is positive. The residual
+class uses the same rule for repeating a mark or choosing a different member.
+The code action extends each coordinate permutation through the linked fibers
+and acts independently in each residual class. The finite star proof requires
+these extensions to preserve identity and composition.
+
+The local run advances on each concrete letter. The global run reads the
+buffered global bits and count events together with the table values one round
+later. Round zero emits neutral priority and leaves the global state initial.
+The alternating priority trace therefore differs by one round, and max-odd
+acceptance is preserved. Spot translation, packed representation, canonical
+ordering and the C++ correspondence remain explicit implementation boundaries.
+The standalone decisions check the quotient strategies. The small-instance
+audit replays both winner polarities with concrete witnesses and checks the
+result against an independent translation of the converted objective.
+
+| C++ source | Lean port |
+| --- | --- |
+| `solver/symmetric_count.cc#if (objective != cert.objective or inputs != cert.inputs or outputs != cert.outputs)` | Binding premise of `raw_objective_preserved` |
+| `solver/encoded_count.hh#if (not allowed (b, unsigned (i != absent and mode == 0)))`; `solver/symmetric_count.cc#emit (in);` | `legal_split`, `CountCardinality.safetyCompletion_empty` |
+| `solver/encoded_count.hh#if (marked[i] or free_cells.insert (local[i]).second) {`; `solver/encoded_count.hh#if (i != absent and p.coord[i] == absent)`; `solver/encoded_count.hh#if (group.size () > 1)` | `anchor_key_orbit`, `free_member`, `extend_anchor_key`, `residual_key_orbit` |
+| `solver/encoded_count.hh#p.residual.push_back ({b, x, y});`; `solver/encoded_count.hh#word = put (word, b, v.mode == 0 ? src.codes[i] : *src.aliases[i]);` | `raw_permutation_generated` |
+| `solver/symmetric_count.cc#auto [moved, ev] = advance (g, cells);`; `solver/symmetric_count.cc#step (state[2], events);` | `encoded_local_acceptance`, `buffered_trace`, `buffered_priority` |

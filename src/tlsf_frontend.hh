@@ -26,5 +26,6 @@ namespace acacia::tlsf_frontend {
   specification parse (std::string_view text);
   captured_specification parse_with_value_origins (std::string_view text);
   specification load (const std::string& path);
+  captured_specification load_with_value_origins (const std::string& path);
 
 }  // namespace acacia::tlsf_frontend

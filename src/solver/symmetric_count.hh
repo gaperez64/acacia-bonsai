@@ -57,11 +57,17 @@ namespace acacia::symcount {
       unsigned n = 0, local_states = 0, events = 0, global_states = 0;
       size_t count_states = 0, vertices = 0, edges = 0;
       double build_seconds = 0, solve_seconds = 0, check_seconds = 0;
+      bool encoded = false, lifted = false;
   };
 
   result solve (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs,
                 std::span<const symmetry::declared_family> families,
                 const limits& bound = {});
+
+  result solve_encoded (const std::string& objective, const std::vector<std::string>& inputs,
+                        const std::vector<std::string>& outputs,
+                        const symmetry::encoded_certificate& cert,
+                        const limits& bound = {}, bool audit = false);
 
 }  // namespace acacia::symcount

@@ -81,17 +81,23 @@ namespace acacia::tlsf_frontend {
     return {make_specification (std::move (result.conversion)), std::move (result.ast)};
   }
 
-  specification load (const std::string& path) {
+  static auto load_with (const std::string& path, auto convert) {
     std::ifstream input {path};
     if (not input)
       throw std::runtime_error ("unable to open TLSF file: " + path);
     std::ostringstream contents;
     contents << input.rdbuf ();
     try {
-      return parse (contents.str ());
+      return convert (contents.str ());
     } catch (const std::exception& error) {
       throw std::runtime_error ("unable to convert TLSF file " + path + ": " + error.what ());
     }
+  }
+
+  specification load (const std::string& path) { return load_with (path, parse); }
+
+  captured_specification load_with_value_origins (const std::string& path) {
+    return load_with (path, parse_with_value_origins);
   }
 
 }  // namespace acacia::tlsf_frontend
