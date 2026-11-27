@@ -42,6 +42,9 @@
 
 namespace acacia::symcount {
 
+  struct encoded_audit;
+  using encoded_auditor = void (*) (const encoded_audit&);
+
   struct limits {
       size_t max_vertices = size_t (1) << 24;
       size_t max_edges = size_t (1) << 24;
@@ -68,6 +71,6 @@ namespace acacia::symcount {
   result solve_encoded (const std::string& objective, const std::vector<std::string>& inputs,
                         const std::vector<std::string>& outputs,
                         const symmetry::encoded_certificate& cert,
-                        const limits& bound = {}, bool audit = false);
+                        const limits& bound = {}, encoded_auditor audit = nullptr);
 
 }  // namespace acacia::symcount

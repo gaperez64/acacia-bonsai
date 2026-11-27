@@ -3,8 +3,16 @@
 #include "encoded_family.hh"
 
 #include <algorithm>
+#include <functional>
 #include <set>
 #include <span>
+#include <spot/twa/twagraph.hh>
+#include <tuple>
+
+namespace acacia::parity {
+  struct arena_game;
+  struct solution;
+}
 
 namespace acacia::symcount {
   // Raw letters are packed by owner, with each bus in declaration bit order.
@@ -177,7 +185,7 @@ namespace acacia::symcount {
       // Extend the stabilizer's marked prefix one bus at a time. A free
       // coordinate is represented by the first available member of its cell.
       void moves (bool input, unsigned history, unsigned prefix, std::span<const unsigned> local,
-                  auto&& poll, auto&& allowed, auto&& emit) const {
+                  auto&& poll, auto&& safe_weight, auto&& emit) const {
         const unsigned owner = owner_mask (input);
         unsigned scalars = owner;
         std::vector<bool> marked (local.size (), false);
@@ -212,7 +220,7 @@ namespace acacia::symcount {
           const auto choose = [&] (unsigned x) {
             poll ();
             const auto [i, mode] = buses[b].values[x];
-            if (not allowed (b, unsigned (i != absent and mode == 0)))
+            if (not input and not safe_weight (b, unsigned (mode == 0)))
               return;
             const bool fresh = i != absent and not marked[i];
             if (fresh)
@@ -246,5 +254,28 @@ namespace acacia::symcount {
         };
         visit (visit, 0, prefix);
       }
+  };
+
+  // Borrow the round engine and the checked arena for the optional test replay.
+  struct encoded_audit {
+      using words = std::vector<unsigned>;
+      using view = std::span<const unsigned>;
+
+      const encoded_alphabet& alphabet;
+      const spot::twa_graph_ptr& global;
+      const std::vector<int>& global_vars;
+      const std::vector<int>& event_vars;
+      const std::vector<words>& succ;
+      const std::vector<words>& witnesses;
+      const parity::arena_game& checked;
+      const parity::solution& solution;
+      bool system_wins, output_safety;
+      size_t max_vertices, max_edges;
+      view initial, initial_local;
+      std::function<void ()> poll;
+      std::function<std::tuple<unsigned, unsigned, words> (view, unsigned)> read_letter;
+      std::function<std::pair<words, words> (view, view, unsigned)> finish_round;
+      std::function<unsigned (view, view)> find_vertex;
+      std::function<bool (size_t, unsigned)> safe_weight;
   };
 }  // namespace acacia::symcount

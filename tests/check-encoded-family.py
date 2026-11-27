@@ -158,7 +158,13 @@ def main():
     other_digit(v,i) = i < 1 : v % 2 otherwise : other_digit(v/2,i-1);
     log2_dn(x) =""")
         wrapped_decoy = decoy.replace(response, wrapped_response)
-        same_expansion(four, direct=wrapped)
+        same_expansion(
+            four, direct=wrapped,
+            discarded_large=four.replace(
+                "DEFINITIONS {", "DEFINITIONS { select(word,code,ignored) = value(word,code);")
+            .replace("value(request, i)", "select(request, i, bit(4,0))")
+            .replace("value(grant, i)", "select(grant, i, bit(8,0))"),
+        )
         same_expansion(decoy, wrapped_decoy=wrapped_decoy,
                        no_guard=wrapped_decoy.replace("bit(0,0) == 1 : false\n      ", ""))
         positive("wrapped decoy", wrapped_decoy, 4)

@@ -209,20 +209,35 @@ shared accepted-weight predicate, with a legal raw default when no safe
 output exists. The original safety monitor still reads that move. Replay
 transports the representative's default back to the concrete raw state.
 
-A count cell is refined by saved table anchors and then by the current inputs.
-Ordered anchor marks identify the chosen member of a cell. An unmarked member
-can be picked precisely when its remaining count is positive. The residual
-class uses the same rule for repeating a mark or choosing a different member.
+At `key_for`, expand the histogram into consecutive ranges in local-state
+order. At `canonicalize`, unpack the saved bus codes and, at the system
+turn, the input prefix. Each code identifies its slot mode and either a
+canonical coordinate, an exact fixed code or a residual class. The coordinate's
+range gives its cell. Collect the slot marks at that coordinate and subtract
+one from its cell's count for each distinct marked coordinate to recover the
+marked-cell histogram. Selected codes and linked aliases keep their separate
+modes even when they mark the same coordinate. Equality of the canonical
+residual codes within each bus and class recovers the repeat relation.
+
+Input choices extend the saved anchors one bus at a time. Output choices
+extend the saved anchors and the current input marks. In each extension a
+marked coordinate can be reused, or an unmarked cell can supply a member
+when its remaining count is positive. A residual class supplies a repeat or
+a distinct member by the same rule. Fixed codes and their aliases stay exact.
+Moving aliases mark their coordinates. Scalar bits vary independently on
+their owner's turn and stay exact in the current input prefix and buffered
+global letter where used.
 The code action extends each coordinate permutation through the linked fibers
 and acts independently in each residual class. The finite star proof requires
 these extensions to preserve identity and composition.
 
-The local run advances on each concrete letter. The global run reads the
-buffered global bits and count events together with the table values one round
-later. Round zero emits neutral priority and leaves the global state initial.
-The alternating priority trace therefore differs by one round, and max-odd
-acceptance is preserved. Spot translation, packed representation, canonical
-ordering and the C++ correspondence remain explicit implementation boundaries.
+The local run advances on each concrete letter. With a future table, round
+zero emits neutral priority and leaves the global state initial. Each later
+round reads the buffered global bits and count events with the table values
+for the previous round. This one-round delay preserves max-odd acceptance.
+With only current-letter data the global run steps immediately. Spot
+translation, packed representation, canonical ordering and the C++
+correspondence remain explicit implementation boundaries.
 The standalone decisions check the quotient strategies. The small-instance
 audit replays both winner polarities with concrete witnesses and checks the
 result against an independent translation of the converted objective.
@@ -230,7 +245,7 @@ result against an independent translation of the converted objective.
 | C++ source | Lean port |
 | --- | --- |
 | `solver/symmetric_count.cc#if (objective != cert.objective or inputs != cert.inputs or outputs != cert.outputs)` | Binding premise of `raw_objective_preserved` |
-| `solver/encoded_count.hh#if (not allowed (b, unsigned (i != absent and mode == 0)))`; `solver/symmetric_count.cc#emit (in);` | `legal_split`, `CountCardinality.safetyCompletion_empty` |
-| `solver/encoded_count.hh#if (marked[i] or free_cells.insert (local[i]).second) {`; `solver/encoded_count.hh#if (i != absent and p.coord[i] == absent)`; `solver/encoded_count.hh#if (group.size () > 1)` | `anchor_key_orbit`, `free_member`, `extend_anchor_key`, `residual_key_orbit` |
+| `solver/encoded_count.hh#self (self, b + 1, put (word, b, x));`; `solver/symmetric_count.cc#emit (in);` | `legal_split`, `CountCardinality.safetyCompletion_empty` |
+| `solver/symmetric_count.cc#const auto key_for = [&] (std::span<const unsigned> prefix,`; `solver/encoded_count.hh#transport canonicalize (std::vector<unsigned>& local, unsigned& history,`; `solver/encoded_count.hh#if (marked[i] or free_cells.insert (local[i]).second) {`; `solver/encoded_count.hh#if (group.size () > 1)` | `anchor_key_orbit`, `free_member`, `extend_anchor_key`, `residual_key_orbit` |
 | `solver/encoded_count.hh#p.residual.push_back ({b, x, y});`; `solver/encoded_count.hh#word = put (word, b, v.mode == 0 ? src.codes[i] : *src.aliases[i]);` | `raw_permutation_generated` |
 | `solver/symmetric_count.cc#auto [moved, ev] = advance (g, cells);`; `solver/symmetric_count.cc#step (state[2], events);` | `encoded_local_acceptance`, `buffered_trace`, `buffered_priority` |
