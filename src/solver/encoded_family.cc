@@ -46,6 +46,7 @@ namespace symmetry {
     struct checker {
         size_t remaining;
         std::chrono::steady_clock::time_point deadline;
+        bool guarded;
         certificate result;
         spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
         std::set<formula> names;
@@ -54,8 +55,8 @@ namespace symmetry {
         std::map<formula, formula> selectors, substitutions, extracted;
         std::vector<std::set<size_t>> constants;
 
-        checker (size_t work, std::chrono::steady_clock::time_point end)
-            : remaining (work), deadline (end) {}
+        checker (size_t work, std::chrono::steady_clock::time_point end, bool guarded)
+            : remaining (work), deadline (end), guarded (guarded) {}
         ~checker () { dict->unregister_all_my_variables (this); }
 
         void charge (size_t work = 1) {
@@ -441,7 +442,7 @@ namespace symmetry {
             return it->second;
           // A complete exclusion under until is a current raw-bus observation.
           // This lets the original-objective lift check project the whole clause.
-          if (f.is (op::U) and f[0].is (op::And) and f[0].size () == result.moving)
+          if (guarded and f.is (op::U) and f[0].is (op::And) and f[0].size () == result.moving)
             for (size_t b = 0; b < result.buses.size (); ++b) {
               charge (result.moving);
               std::vector<formula> excluded;
@@ -628,12 +629,12 @@ namespace symmetry {
 
   std::shared_ptr<const encoded_certificate> check_encoded_family (
       const acacia::tlsf_frontend::specification& objective, size_t work,
-      std::chrono::steady_clock::time_point deadline) {
+      std::chrono::steady_clock::time_point deadline, bool guarded) {
     const auto* origins = objective.value_origins;
     try {
       require (objective.ast and origins and origins->complete and origins->buses and
                objective.metadata.tlsf_effective_target == "Mealy");
-      checker check (work, deadline);
+      checker check (work, deadline, guarded);
       auto instance = origins->instances;
       for (; instance and not instance->bindings; instance = instance->next)
         check.charge ();

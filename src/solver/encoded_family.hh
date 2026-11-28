@@ -55,6 +55,6 @@ namespace symmetry {
   // Run in a bounded worker. Map abnormal worker exits to decline.
   [[nodiscard]] std::shared_ptr<const encoded_certificate> check_encoded_family (
       const acacia::tlsf_frontend::specification& spec, size_t work,
-      std::chrono::steady_clock::time_point deadline);
+      std::chrono::steady_clock::time_point deadline, bool guarded = false);
 
 }  // namespace symmetry

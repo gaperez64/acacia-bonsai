@@ -1435,17 +1435,22 @@ namespace acacia::symcount {
 
   result solve (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs,
-                std::span<const symmetry::declared_family> families, const limits& bound) {
+                std::span<const symmetry::declared_family> families, const limits& bound,
+                bool guarded, std::vector<unsigned>* retry_sizes) {
     if (deadline_expired (bound))
       return {verdict::declined, "deadline"};
     // Try each family size, largest first; families of that size are indexed together.
     std::set<unsigned, std::greater<>> sizes;
-    for (const auto& f : families)
-      if (f.members.size () >= 2)
-        sizes.insert (unsigned (f.members.size ()));
+    if (guarded) {
+      if (retry_sizes)
+        sizes.insert (retry_sizes->begin (), retry_sizes->end ());
+    } else {
+      for (const auto& f : families)
+        if (f.members.size () >= 2)
+          sizes.insert (unsigned (f.members.size ()));
+    }
     result last;
     last.reason = "no indexed family";
-    std::vector<family_map> retry;
     for (unsigned n : sizes) {
       family_map fm;
       fm.n = n;
@@ -1457,29 +1462,17 @@ namespace acacia::symcount {
         for (unsigned k = 0; k < n; ++k)
           fm.member[f.members[k]] = {j, k};
       }
-      classification_pass pass;
+      classification_pass pass {.guarded = guarded};
       try {
         return run (spec, inputs, outputs, fm, bound, pass);
       } catch (const declined& d) {
-        if (pass.retry)
-          retry.push_back (std::move (fm));
+        if (pass.retry and retry_sizes)
+          retry_sizes->push_back (n);
         last = result {};
         last.n = n;
         last.reason = d.what ();
         if (deadline_expired (bound))
           return {verdict::declined, "deadline"};
-      }
-    }
-    // Exhaust the original family choices before attempting the guarded fragment.
-    for (const auto& fm : retry) {
-      classification_pass pass {.guarded = true};
-      try {
-        return run (spec, inputs, outputs, fm, bound, pass);
-      } catch (const declined& d) {
-        if (deadline_expired (bound))
-          return {verdict::declined, "deadline"};
-        if (fm.n == last.n)
-          last.reason = d.what ();
       }
     }
     return last;
@@ -1488,7 +1481,8 @@ namespace acacia::symcount {
   result solve_encoded (const std::string& objective, const std::vector<std::string>& inputs,
                         const std::vector<std::string>& outputs,
                         const symmetry::encoded_certificate& cert, const limits& bound,
-                        encoded_auditor audit) {
+                        encoded_auditor audit, bool guarded) {
+    classification_pass pass {.guarded = guarded};
     try {
       check_deadline (bound);
       if (objective != cert.objective or inputs != cert.inputs or outputs != cert.outputs)
@@ -1508,17 +1502,9 @@ namespace acacia::symcount {
           fm.member.emplace (names.back (), std::pair {fm.names.size () - 1, i});
         }
       }
-      classification_pass pass;
-      try {
-        return run (cert.abstract, alphabet.inputs, alphabet.outputs, fm, bound, pass, &alphabet, audit);
-      } catch (const declined&) {
-        if (not pass.retry or deadline_expired (bound))
-          throw;
-      }
-      pass = {.guarded = true};
       return run (cert.abstract, alphabet.inputs, alphabet.outputs, fm, bound, pass, &alphabet, audit);
     } catch (const declined& d) {
-      return {verdict::declined, d.what ()};
+      return {.reason = d.what (), .retry = pass.retry and not deadline_expired (bound)};
     } catch (const std::bad_alloc&) {
       return {verdict::declined, "resource"};
     }

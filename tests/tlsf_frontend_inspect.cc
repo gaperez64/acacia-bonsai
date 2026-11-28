@@ -30,7 +30,7 @@ namespace {
     std::ostringstream text;
     text << file.rdbuf ();
     auto spec = acacia::tlsf_frontend::parse_with_value_origins (text.str ());
-    const auto checked = symmetry::check_encoded_family (spec, 1u << 22, deadline);
+    const auto checked = symmetry::check_encoded_family (spec, 1u << 22, deadline, true);
     if (not checked) {
       out << "declined\n";
       return;

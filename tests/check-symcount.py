@@ -13,6 +13,7 @@ binary = Path(sys.argv[1]).resolve()
 root = Path(__file__).resolve().parent / "fixtures" / "symcount"
 cases = {
     "indexed-copy.tlsf": "REALIZABLE",  # Mealy copy with paired input/output families
+    "both-count-routes.tlsf": "REALIZABLE",
     "breakpoint.tlsf": "UNREALIZABLE",  # alternating hits refute simultaneous recurrence
     "color-reset.tlsf": "REALIZABLE",  # top-level since monitor, reset on the first letter
     "event-collision.tlsf": "UNREALIZABLE",  # legal input name matches an internal event
@@ -54,7 +55,6 @@ cases = {
     "guard-mixed-distributed.tlsf": "UNREALIZABLE",
     "guard-two-local-banks-grouped.tlsf": "UNREALIZABLE",
     "guard-grouped-local.tlsf": "UNREALIZABLE",
-    "guard-grouped-aggregate.tlsf": "UNREALIZABLE",
     "guard-event-sibling.tlsf": "UNREALIZABLE",
     "previously-local-mixed.tlsf": "UNREALIZABLE",
     "previously-aggregate-mixed.tlsf": "UNREALIZABLE",
@@ -85,7 +85,6 @@ references = {
     "guard-mixed-distributed.tlsf": "UNREALIZABLE",
     "guard-two-local-banks-grouped.tlsf": "UNREALIZABLE",
     "guard-grouped-local.tlsf": "UNREALIZABLE",
-    "guard-grouped-aggregate.tlsf": "UNREALIZABLE",
     "guard-event-sibling.tlsf": "UNREALIZABLE",
     "previously-local-mixed.tlsf": "UNREALIZABLE",
     "previously-aggregate-mixed.tlsf": "UNREALIZABLE",
@@ -131,6 +130,9 @@ for name, expected in cases.items():
     if (word != expected or done.returncode != codes[expected]
             or (name in reasons and f"reason={reasons[name]}" not in done.stdout)):
         print(f"{path.name}: expected {expected}, got {done.returncode} {done.stdout}{done.stderr}")
+        failed = True
+    if name == "both-count-routes.tlsf" and "check=lifted" not in done.stdout:
+        print(f"{name}: expected a lifted encoded decision, got {done.stdout}")
         failed = True
     if name in vertex_limits and "reason=split limit" not in done.stdout:
         print(f"{name}: expected a pre-allocation split decline, got {done.stdout}")

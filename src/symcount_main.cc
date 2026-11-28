@@ -38,23 +38,26 @@ namespace {
   }
 
   std::optional<int> try_encoded (const tlsf_frontend::specification& spec, std::string_view source,
-                                  symcount::limits bound, symcount::result& physical) {
+                                  const symcount::limits& bound, symcount::result& physical,
+                                  bool guarded, bool& retry_encoded) {
     constexpr size_t size = 1024;
+    constexpr int retry_exit = 8;
     auto* line = static_cast<char*> (
         mmap (nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0));
     if (line == MAP_FAILED)
       return {};
     using namespace std::chrono_literals;
-    bound.deadline_mono_ns = phase_clock (CLOCK_MONOTONIC) + (120s / 1ns);
     const auto worker =
         subprocess::run<true> (bound.deadline_mono_ns, subprocess::max_optional_memory, [&] {
           const auto captured = tlsf_frontend::parse_with_value_origins (source);
           const auto cert = symmetry::check_encoded_family (
-              captured, 1u << 22, std::chrono::steady_clock::now () + 15s);
+              captured, 1u << 22, std::chrono::steady_clock::now () + 15s, guarded);
           if (not cert)
             return int (EXIT_CODE_UNKNOWN);
           const auto r = symcount::solve_encoded (spec.formula, spec.inputs, spec.outputs,
-                                                   *cert, bound);
+                                                  *cert, bound, nullptr, guarded);
+          if (r.retry)
+            return retry_exit;
           if (not r.lifted or r.outcome == verdict::declined)
             return r.reason == "deadline" ? subprocess::deadline_exit : int (EXIT_CODE_UNKNOWN);
           return report (r, line, size);
@@ -66,6 +69,7 @@ namespace {
     munmap (line, size);
     if (decided)
       return worker.code;
+    retry_encoded = std::strcmp (worker.cause, "none") == 0 and worker.code == retry_exit;
     if (std::strcmp (worker.cause, "deadline") == 0)
       physical.reason = "deadline";
     return {};
@@ -106,11 +110,29 @@ int main (int argc, char** argv) {
     auto parsed = spot::parse_infix_psl (spec.formula);
     if (parsed.format_errors (std::cerr))
       return EXIT_CODE_ERROR;
-    auto r = symcount::solve (parsed.f, spec.inputs, spec.outputs,
-                              spec.metadata.tlsf_indexed_families (), bound);
-    if (r.outcome == verdict::declined and not spec.metadata.tlsf_declared_families.empty ())
-      if (auto code = try_encoded (spec, source, bound, r))
-        return *code;
+    using namespace std::chrono_literals;
+    bound.deadline_mono_ns = phase_clock (CLOCK_MONOTONIC) + (120s / 1ns);
+    symcount::result r;
+    std::vector<unsigned> retry_sizes;
+    bool retry_encoded = false;
+    for (bool guarded : {false, true}) {
+      if (not guarded or not retry_sizes.empty ()) {
+        auto physical = symcount::solve (parsed.f, spec.inputs, spec.outputs,
+                                         spec.metadata.tlsf_indexed_families (), bound,
+                                         guarded, &retry_sizes);
+        if (not guarded or physical.outcome != verdict::declined or physical.n == r.n)
+          r = std::move (physical);
+      }
+      if (r.outcome != verdict::declined)
+        break;
+      if (phase_clock (CLOCK_MONOTONIC) >= bound.deadline_mono_ns) {
+        r.reason = "deadline";
+        break;
+      }
+      if (not spec.metadata.tlsf_declared_families.empty () and (not guarded or retry_encoded))
+        if (auto code = try_encoded (spec, source, bound, r, guarded, retry_encoded))
+          return *code;
+    }
     char line[1024];
     const auto code = report (r, line, sizeof line);
     std::fputs (line, stdout);

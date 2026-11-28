@@ -250,8 +250,8 @@ portfolio also model-checks the lifted strategy. For system conjuncts that
 observe at most one moving client, it uses a vocabulary whose substitution
 into the converted objective was checked by the certificate. Each replay
 fixes the observed client and includes every projected move to the selected
-key. A complete exclusion of one bus's moving selectors on the left of until
-is certified as a current raw-bus table, so it needs no pinned client.
+key. The guarded encoded retry certifies a complete exclusion of one bus's moving
+selectors on the left of until as a current raw-bus table, so it needs no pinned client.
 Other objectives use concrete replay and the original converted formula.
 Small-instance tests exhaustively replay the retained raw edges for both
 winner polarities.
@@ -265,5 +265,5 @@ winner polarities.
 | `solver/symmetric_count.cc#const auto key_for = [&] (std::span<const unsigned> prefix,`; `solver/encoded_count.hh#transport canonicalize (std::vector<unsigned>& local, unsigned& history,`; `solver/encoded_count.hh#if (marked[i] or free_cells.insert (local[i]).second) {`; `solver/encoded_count.hh#if (group.size () > 1)` | `anchor_key_orbit`, `free_member`, `extend_anchor_key`, `residual_key_orbit` |
 | `solver/encoded_count.hh#p.residual.push_back ({b, x, y});`; `solver/encoded_count.hh#word = put (word, b, v.mode == 0 ? src.codes[i] : *src.aliases[i]);` | `raw_permutation_generated` |
 | `solver/symmetric_count.cc#auto [moved, ev] = advance (g, cells);`; `solver/symmetric_count.cc#step (state[2], events);` | `encoded_local_acceptance`, `buffered_trace`, `buffered_priority` |
-| `solver/symmetric_count.cc#if (not parity::check_strategy (checked.explicit_game, solution, &why))`; `solver/symmetric_count.cc#if (solution.winner[0] != (system_wins ? 1 : 0))`; `symcount_arm.cc#if (encoded.lifted && encoded.outcome != symcount::verdict::declined)` | Checked-root premise and verdict transfer in `encoded_certificate` |
+| `solver/symmetric_count.cc#if (not parity::check_strategy (checked.explicit_game, solution, &why))`; `solver/symmetric_count.cc#if (solution.winner[0] != (system_wins ? 1 : 0))`; `symcount_arm.cc#if (encoded.lifted && encoded.outcome != symcount::verdict::declined) {` | Checked-root premise and verdict transfer in `encoded_certificate` |
 | `solver/symmetric_count.cc#if (not synthesis::controller_satisfies (translator.run (bad), strategy))` | Runtime objective check on the lifted strategy |

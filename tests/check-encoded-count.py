@@ -62,6 +62,10 @@ def main():
     plain = Path(fixture).parent / "symcount"
     portfolio(parity, plain / "indexed-copy.tlsf", capture=False)
     portfolio(parity, plain / "no-family.tlsf", capture=False, reason="no indexed family")
+    portfolio(parity, plain / "both-count-routes.tlsf")
+    width_limit = Path(fixture).with_name("encoded-until-width-14.tlsf")
+    assert "check=lifted" in check([symcount, width_limit], 0)
+    portfolio(parity, width_limit)
     with tempfile.TemporaryDirectory() as directory:
         uncertified = Path(directory) / "uncertified.tlsf"
         width = (int(re.search(r"n = (\d+);", base)[1]) - 1).bit_length()

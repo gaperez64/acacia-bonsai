@@ -66,16 +66,19 @@ namespace acacia::symcount {
       size_t count_states = 0, vertices = 0, edges = 0;
       double build_seconds = 0, solve_seconds = 0, check_seconds = 0;
       bool encoded = false, lifted = false;
+      bool retry = false;
   };
 
   result solve (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs,
                 std::span<const symmetry::declared_family> families,
-                const limits& bound = {});
+                const limits& bound = {}, bool guarded = false,
+                std::vector<unsigned>* retry_sizes = nullptr);
 
   result solve_encoded (const std::string& objective, const std::vector<std::string>& inputs,
                         const std::vector<std::string>& outputs,
                         const symmetry::encoded_certificate& cert,
-                        const limits& bound = {}, encoded_auditor audit = nullptr);
+                        const limits& bound = {}, encoded_auditor audit = nullptr,
+                        bool guarded = false);
 
 }  // namespace acacia::symcount

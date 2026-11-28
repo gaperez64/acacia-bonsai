@@ -173,14 +173,22 @@ int main (int argc, char** argv) {
   if (argc != 2)
     return 3;
   auto spec = tlsf_frontend::load_with_value_origins (argv[1]);
-  const auto cert = symmetry::check_encoded_family (
-      spec, 1u << 22, std::chrono::steady_clock::now () + std::chrono::seconds (15));
+  const auto certify = [&] (bool guarded) {
+    return symmetry::check_encoded_family (
+        spec, 1u << 22, std::chrono::steady_clock::now () + std::chrono::seconds (15), guarded);
+  };
+  const auto cert = certify (false);
   if (not cert) {
     std::cerr << "missing encoded certificate\n";
     return 3;
   }
   const auto solve = [&] (const symcount::limits& bound) {
-    return symcount::solve_encoded (spec.formula, spec.inputs, spec.outputs, *cert, bound, audit);
+    auto r = symcount::solve_encoded (spec.formula, spec.inputs, spec.outputs, *cert, bound, audit);
+    if (r.retry)
+      if (const auto guarded = certify (true))
+        return symcount::solve_encoded (spec.formula, spec.inputs, spec.outputs,
+                                        *guarded, bound, audit, true);
+    return r;
   };
   using symcount::verdict;
   for (const auto& [bound, reason] : {

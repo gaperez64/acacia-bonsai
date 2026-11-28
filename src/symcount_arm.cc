@@ -7,6 +7,7 @@
 #include "solver/symmetric_count.hh"
 #include "tlsf_frontend.hh"
 
+#include <optional>
 #include <spot/tl/parse.hh>
 
 namespace acacia {
@@ -29,12 +30,26 @@ namespace acacia {
     // Size from the scope/address-space cap; the parent enforces RSS sharing with parity workers.
     const auto share = obligation::rss_share (1);
     bound.max_vertices = bound.max_edges = std::max<uint64_t> (1, share / 512);
-    auto result = symcount::solve (parsed.f, objective.inputs, objective.outputs,
-                                   objective.metadata.tlsf_indexed_families (), bound);
-    if (result.outcome == symcount::verdict::declined && !tlsf_source.empty () &&
-        !objective.metadata.tlsf_declared_families.empty () &&
-        (!deadline_mono_ns || phase_clock (CLOCK_MONOTONIC) < deadline_mono_ns)) {
-      const auto captured = tlsf_frontend::parse_with_value_origins (tlsf_source);
+    symcount::result result;
+    std::vector<unsigned> retry_sizes;
+    bool retry_encoded = false;
+    std::optional<tlsf_frontend::specification> captured;
+    for (bool guarded : {false, true}) {
+      if (!guarded || !retry_sizes.empty ()) {
+        auto physical = symcount::solve (parsed.f, objective.inputs, objective.outputs,
+                                         objective.metadata.tlsf_indexed_families (), bound,
+                                         guarded, &retry_sizes);
+        if (!guarded || physical.outcome != symcount::verdict::declined || physical.n == result.n)
+          result = std::move (physical);
+      }
+      if (result.outcome != symcount::verdict::declined)
+        break;
+      if (tlsf_source.empty () || objective.metadata.tlsf_declared_families.empty () ||
+          (guarded && !retry_encoded) ||
+          (deadline_mono_ns && phase_clock (CLOCK_MONOTONIC) >= deadline_mono_ns))
+        continue;
+      if (!captured)
+        captured.emplace (tlsf_frontend::parse_with_value_origins (tlsf_source));
       using namespace std::chrono;
       const auto start = steady_clock::now ();
       const auto now = phase_clock (CLOCK_MONOTONIC);
@@ -42,11 +57,14 @@ namespace acacia {
           deadline_mono_ns ? deadline_mono_ns - std::min (deadline_mono_ns, now) : UINT64_MAX;
       const auto time =
           nanoseconds (std::min<uint64_t> (remaining, seconds (15) / nanoseconds (1)));
-      if (const auto cert = symmetry::check_encoded_family (captured, 1u << 22, start + time)) {
+      if (const auto cert = symmetry::check_encoded_family (*captured, 1u << 22, start + time, guarded)) {
         auto encoded = symcount::solve_encoded (objective.formula, objective.inputs,
-                                                 objective.outputs, *cert, bound);
-        if (encoded.lifted && encoded.outcome != symcount::verdict::declined)
+                                                objective.outputs, *cert, bound, nullptr, guarded);
+        retry_encoded = encoded.retry;
+        if (encoded.lifted && encoded.outcome != symcount::verdict::declined) {
           result = std::move (encoded);
+          break;
+        }
       }
     }
     if (result.outcome == symcount::verdict::declined) {
