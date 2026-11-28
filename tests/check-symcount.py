@@ -35,9 +35,9 @@ cases = {
     "under-f.tlsf": "REALIZABLE",
     "under-implication.tlsf": "DECLINED",
     "under-disjunction.tlsf": "REALIZABLE",
-    "under-assumption.tlsf": "DECLINED",
-    "strict-under-assumption.tlsf": "DECLINED",
-    "strict-moore-under-assumption.tlsf": "DECLINED",
+    "under-assumption.tlsf": "REALIZABLE",
+    "strict-under-assumption.tlsf": "REALIZABLE",
+    "strict-moore-under-assumption.tlsf": "REALIZABLE",
     "moore-under-x.tlsf": "REALIZABLE",
     "strict-moore-under-x.tlsf": "REALIZABLE",
     "input-composition-budget.tlsf": "DECLINED",
@@ -47,12 +47,17 @@ cases = {
     "pruned-duplicate-storage.tlsf": "DECLINED",
     "partial-family.tlsf": "DECLINED",
     "no-family.tlsf": "DECLINED",
+    "guard-false-sink.tlsf": "REALIZABLE",
+    "guard-late-failure.tlsf": "REALIZABLE",
+    "guard-pending-prefix.tlsf": "UNREALIZABLE",
+    "guard-mixed.tlsf": "DECLINED",
+    "guard-incomplete.tlsf": "DECLINED",
     # Nested since monitors are outside the fragment; reference verdicts below.
     "since-under-x.tlsf": "DECLINED",  # REALIZABLE
     "since-under-next.tlsf": "DECLINED",  # REALIZABLE
     "since-negated-next.tlsf": "DECLINED",  # UNREALIZABLE
 }
-# Independent parity verdicts for the generated-event counterexamples.
+# Independent parity verdicts for the guarded and generated-event cases.
 references = {
     "local-event-a.tlsf": "UNREALIZABLE",
     "local-event-b.tlsf": "UNREALIZABLE",
@@ -64,6 +69,11 @@ references = {
     "strict-under-assumption.tlsf": "REALIZABLE",
     "strict-moore-under-assumption.tlsf": "REALIZABLE",
     "under-implication.tlsf": "REALIZABLE",
+    "guard-false-sink.tlsf": "REALIZABLE",
+    "guard-late-failure.tlsf": "REALIZABLE",
+    "guard-pending-prefix.tlsf": "UNREALIZABLE",
+    "guard-mixed.tlsf": "REALIZABLE",
+    "guard-incomplete.tlsf": "REALIZABLE",
 }
 vertex_limits = {
     "input-composition-budget.tlsf": 1,
@@ -88,6 +98,8 @@ if len(sys.argv) > 2:
 reasons = {
     "partial-family.tlsf": "a local conjunct is not instantiated at every index",
     "asymmetric-constraint.tlsf": "an aggregate covers part of the index range",
+    "guard-mixed.tlsf": "mixed local guards",
+    "guard-incomplete.tlsf": "a local conjunct is not instantiated at every index",
 }
 codes = {"REALIZABLE": 0, "UNREALIZABLE": 1, "DECLINED": 2}
 failed = False

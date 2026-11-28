@@ -61,6 +61,8 @@ def check_certificate(lines, size, distinguished=False, codes=None):
     assert ["1/0", "1/1", stable] in tables
     if distinguished:
         assert ["0/0", "0" + "1" * (capacity[0] - 1)] in tables
+        excluded = "".join(str(int(code not in expected_codes)) for code in range(capacity[1]))
+        assert ["1/0", excluded] in tables
     for *slots, truth in tables:
         owners = [int(slot.split("/")[0]) for slot in slots]
         for swaps in generators:

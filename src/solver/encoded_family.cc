@@ -439,6 +439,19 @@ namespace symmetry {
         formula abstract_tables (formula f) {
           if (auto it = extracted.find (f); it != extracted.end ())
             return it->second;
+          // A complete exclusion under until is a current raw-bus observation.
+          // This lets the original-objective lift check project the whole clause.
+          if (f.is (op::U) and f[0].is (op::And) and f[0].size () == result.moving)
+            for (size_t b = 0; b < result.buses.size (); ++b) {
+              charge (result.moving);
+              std::vector<formula> excluded;
+              for (size_t i = 0; i < result.moving; ++i)
+                excluded.push_back (formula::Not (result.buses[b].selectors[i]));
+              if (f[0] == formula::And (excluded)) {
+                auto now = add_table (substitute (f[0], substitutions), {{b, false}});
+                return extracted.emplace (f, formula::U (now, abstract_tables (f[1]))).first->second;
+              }
+            }
           std::set<certificate::slot> slots;
           if (raw_support (f, slots) and not slots.empty ())
             return add_table (f, slots);

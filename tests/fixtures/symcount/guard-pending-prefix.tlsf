@@ -1,0 +1,11 @@
+INFO { TITLE: "Only the prefix can open a pending request" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { r[2]; }
+  OUTPUTS { g[2]; enable; }
+  GUARANTEES {
+    !enable;
+    X G enable;
+    G (&&[0 <= i < 2] !g[i]);
+    (F enable) -> G (&&[0 <= i < 2] ((!enable && r[i]) -> F g[i]));
+  }
+}

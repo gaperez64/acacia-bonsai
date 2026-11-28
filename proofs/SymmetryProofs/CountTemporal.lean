@@ -324,6 +324,9 @@ inductive Flatten : Formula → List Formula → Prop where
   | always_imp {p q r : Formula} {qs rs : List Formula} : Flatten (.always (.imp p q)) qs → Flatten (.always (.imp p r)) rs →
       Flatten (.always (.imp p (.conj q r))) (qs ++ rs)
   | imp {p q r : Formula} {qs rs : List Formula} : Flatten (.imp p q) qs → Flatten (.imp p r) rs → Flatten (.imp p (.conj q r)) (qs ++ rs)
+  | imp_always_conj {p q r : Formula} {qs rs : List Formula} :
+      Flatten (.imp p (.always q)) qs → Flatten (.imp p (.always r)) rs →
+      Flatten (.imp p (.always (.conj q r))) (qs ++ rs)
   | always_always {p : Formula} {ps : List Formula} : Flatten (.always p) ps → Flatten (.always (.always p)) ps
 
 -- Flattened leaves are positive conjuncts AT THE ORIGINAL POSITION; symmetric_count.cc:67–97,310–333.
@@ -347,6 +350,10 @@ theorem flatten_correct {p : Formula} {ps : List Formula} (h : Flatten p ps) (t 
     simp only [Formula.eval] at ihq ihr
     change (_ → _ ∧ _) ↔ _
     rw [(flatten _ _ _ t).2.2.1, ihq, ihr]
+    simp only [List.mem_append, or_imp, forall_and]
+  | imp_always_conj hq hr ihq ihr =>
+    simp only [Formula.eval] at ihq ihr ⊢
+    rw [(flatten _ _ (fun _ => True) t).1, (flatten _ _ _ t).2.2.1, ihq, ihr]
     simp only [List.mem_append, or_imp, forall_and]
   | always_always hp ih =>
     simp only [Formula.eval] at ih

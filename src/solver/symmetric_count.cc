@@ -134,7 +134,7 @@ namespace acacia::symcount {
       return walk.map ([&] (const formula& c) { return to_template (c, k, fm); });
     }
 
-    // Split into conjuncts, pushing G over conjunctions and implication consequents.
+    // Expose positive conjuncts at the original position, retaining their guards.
     void flatten (const formula& f, std::vector<formula>& out) {
       if (f.is (op::tt))
         return;
@@ -145,10 +145,15 @@ namespace acacia::symcount {
       }
       if (f.is (op::G) and split_globally (f[0], [&] (formula c) { flatten (c, out); }))
         return;
-      if (f.is (op::Implies) and f[1].is (op::And)) {
-        for (const auto& c : f[1])
-          flatten (formula::Implies (f[0], c), out);
-        return;
+      if (f.is (op::Implies)) {
+        const auto emit = [&] (formula c) { flatten (formula::Implies (f[0], c), out); };
+        if (f[1].is (op::And)) {
+          for (const auto& c : f[1])
+            emit (c);
+          return;
+        }
+        if (f[1].is (op::G) and f[1][0].is (op::And) and split_globally (f[1][0], emit))
+          return;
       }
       out.push_back (f);
     }
@@ -695,14 +700,28 @@ namespace acacia::symcount {
       std::vector<formula> conjuncts, global;
       flatten (lowered, conjuncts);
       std::map<formula, std::set<unsigned>> local;
+      formula local_guard = formula::tt ();
       for (const auto& c : conjuncts) {
-        const auto ix = indices (c, fm);
+        auto ix = indices (c, fm);
+        formula body = c, guard = formula::tt ();
+        // An antecedent on the same client can stay inside its local template.
+        if (c.is (op::Implies) and c[1].is (op::G) and
+            (ix.size () > 1 or (ix.size () == 1 and indices (c[0], fm).empty ()))) {
+          auto consequent = indices (c[1], fm);
+          if (consequent.size () == 1) {
+            body = c[1];
+            guard = c[0];
+            ix = std::move (consequent);
+          }
+        }
         if (ix.empty ())
           global.push_back (c);
         else if (ix.size () == 1) {
-          require_aps (c, b.ap_names, "generated event in a local template");
-          if (not local[to_template (c, *ix.begin (), fm)].insert (*ix.begin ()).second)
-            continue;  // a repeated conjunct
+          if (not local.empty () and guard != local_guard)
+            throw declined ("mixed local guards");
+          local_guard = guard;
+          require_aps (body, b.ap_names, "generated event in a local template");
+          local[to_template (body, *ix.begin (), fm)].insert (*ix.begin ());
         }
         else {
           formula g, lambda;
@@ -734,6 +753,8 @@ namespace acacia::symcount {
           throw declined ("a local conjunct is not instantiated at every index");
         templates.push_back (t);
       }
+      // The guard must be expressible by the global letters and existing events.
+      local_guard = b.aggregates (local_guard);
 
       // Local automaton for the conjunction of the templates.
       std::vector<int> gvars, lvars;
@@ -846,8 +867,7 @@ namespace acacia::symcount {
           since_pred[b.preds[p].mark] = p;
 
       // Global parity automaton over the global letters and the events.
-      std::vector<formula> all = global;
-      all.insert (all.end (), requirements.begin (), requirements.end ());
+      global.push_back (formula::Implies (local_guard, formula::And (requirements)));
       std::vector<int> evars;
       for (const auto& e : b.events)
         evars.push_back (b.dict->register_proposition (e.ap, &b.owner_token));
@@ -862,7 +882,7 @@ namespace acacia::symcount {
       gtr.set_pref (spot::postprocessor::Deterministic | spot::postprocessor::Complete |
                     spot::postprocessor::Colored);
       check_deadline (bound);
-      auto gaut = gtr.run (formula::And (all));
+      auto gaut = gtr.run (formula::And (global));
       check_deadline (bound);
       if (not spot::is_deterministic (gaut) or not spot::is_complete (gaut))
         throw declined ("no complete deterministic global parity automaton");
