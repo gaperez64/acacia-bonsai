@@ -51,6 +51,9 @@ cases = {
     "guard-late-failure.tlsf": "REALIZABLE",
     "guard-pending-prefix.tlsf": "UNREALIZABLE",
     "guard-mixed.tlsf": "DECLINED",
+    "guard-mixed-distributed.tlsf": "UNREALIZABLE",
+    "previously-local-mixed.tlsf": "UNREALIZABLE",
+    "guard-asymmetric.tlsf": "DECLINED",
     "guard-incomplete.tlsf": "DECLINED",
     # Nested since monitors are outside the fragment; reference verdicts below.
     "since-under-x.tlsf": "DECLINED",  # REALIZABLE
@@ -73,6 +76,9 @@ references = {
     "guard-late-failure.tlsf": "REALIZABLE",
     "guard-pending-prefix.tlsf": "UNREALIZABLE",
     "guard-mixed.tlsf": "REALIZABLE",
+    "guard-mixed-distributed.tlsf": "UNREALIZABLE",
+    "previously-local-mixed.tlsf": "UNREALIZABLE",
+    "guard-asymmetric.tlsf": "UNREALIZABLE",
     "guard-incomplete.tlsf": "REALIZABLE",
 }
 vertex_limits = {

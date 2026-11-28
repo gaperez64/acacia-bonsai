@@ -135,18 +135,23 @@ namespace acacia::symcount {
     }
 
     // Expose positive conjuncts at the original position, retaining their guards.
-    void flatten (const formula& f, std::vector<formula>& out) {
+    void flatten (const formula& f, const auto& leaf, const auto& spans_clients,
+                  formula shared_guard = {}) {
       if (f.is (op::tt))
         return;
+      const auto descend = [&] (formula c) { flatten (c, leaf, spans_clients, shared_guard); };
       if (f.is (op::And)) {
         for (const auto& c : f)
-          flatten (c, out);
+          descend (c);
         return;
       }
-      if (f.is (op::G) and split_globally (f[0], [&] (formula c) { flatten (c, out); }))
+      if (f.is (op::G) and split_globally (f[0], descend))
         return;
       if (f.is (op::Implies)) {
-        const auto emit = [&] (formula c) { flatten (formula::Implies (f[0], c), out); };
+        const formula guard = f[0];
+        if (guard != shared_guard and spans_clients (f))
+          shared_guard = guard;
+        const auto emit = [&] (formula c) { descend (formula::Implies (guard, c)); };
         if (f[1].is (op::And)) {
           for (const auto& c : f[1])
             emit (c);
@@ -155,7 +160,7 @@ namespace acacia::symcount {
         if (f[1].is (op::G) and f[1][0].is (op::And) and split_globally (f[1][0], emit))
           return;
       }
-      out.push_back (f);
+      leaf (f, shared_guard);
     }
 
     // A per-client predicate: a local-automaton mark, entering the sink, a letter,
@@ -588,7 +593,8 @@ namespace acacia::symcount {
         // Project each conjunct onto the coordinates it observes. A single
         // observed client can be renamed to client zero under the checked action.
         std::vector<formula> conjuncts, groups[2];
-        flatten (a.alphabet.cert.abstract, conjuncts);
+        flatten (a.alphabet.cert.abstract, [&] (formula c, formula) { conjuncts.push_back (c); },
+                 [] (const formula&) { return false; });
         bool projectable = true;
         for (const auto& f : conjuncts) {
           const auto support = indices (f, fm);
@@ -697,16 +703,28 @@ namespace acacia::symcount {
         }
       }
       // Classify conjuncts, retaining the original objective and its safety monitor.
-      std::vector<formula> conjuncts, global;
-      flatten (lowered, conjuncts);
+      std::vector<std::pair<formula, formula>> conjuncts;
+      std::vector<formula> global;
+      const auto spans_clients = [&] (const formula& f) {
+        if (indices (f, fm).size () > 1)
+          return true;
+        if (b.events.empty ())
+          return false;
+        // A lowered cardinality still represents several clients.
+        spot::atomic_prop_set aps;
+        spot::atomic_prop_collect (f, &aps);
+        return std::any_of (b.events.begin (), b.events.end (),
+                           [&] (const auto& e) { return aps.count (e.ap) != 0; });
+      };
+      flatten (lowered, [&] (formula c, formula shared_guard) { conjuncts.emplace_back (c, shared_guard); },
+               spans_clients);
       std::map<formula, std::set<unsigned>> local;
       formula local_guard = formula::tt ();
-      for (const auto& c : conjuncts) {
+      for (const auto& [c, shared_guard] : conjuncts) {
         auto ix = indices (c, fm);
         formula body = c, guard = formula::tt ();
-        // An antecedent on the same client can stay inside its local template.
-        if (c.is (op::Implies) and c[1].is (op::G) and
-            (ix.size () > 1 or (ix.size () == 1 and indices (c[0], fm).empty ()))) {
+        // Keep implications that were already local in their original templates.
+        if (c.is (op::Implies) and c[1].is (op::G) and c[0] == shared_guard) {
           auto consequent = indices (c[1], fm);
           if (consequent.size () == 1) {
             body = c[1];

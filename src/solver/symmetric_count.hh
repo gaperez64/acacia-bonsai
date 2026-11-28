@@ -6,7 +6,7 @@
 // consequents, into
 //   - index-free conjuncts,
 //   - local conjuncts: one template, over the index-free APs and index 0's
-//     family members, instantiated at every index exactly once,
+//     family members, instantiated at every index,
 //     with one common position-0 guard expressible in the global formula,
 //   - symmetric conjuncts whose index-dependent parts are aggregates over all
 //     indices of one local template: letter-level `&&`/`||` of a Boolean

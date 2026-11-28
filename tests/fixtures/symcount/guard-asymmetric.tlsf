@@ -1,0 +1,9 @@
+INFO { TITLE: "guard-asymmetric" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { r[3]; }
+  OUTPUTS { g[3]; }
+  GUARANTEES {
+    G (&&[0 <= i < 3] g[i]);
+    (r[0] -> r[1]) -> G (&&[0 <= i < 3] (r[i] -> !g[i]));
+  }
+}
