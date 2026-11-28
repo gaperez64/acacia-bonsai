@@ -2,6 +2,21 @@
 
 [Measurement protocol](README.md) and [evidence index](evidence-index.tsv).
 
+## 2026-11-28: One common guard lets the count arm decide the prioritized encoded arbiters (#471)
+
+Archive `guard471-gate-20261128`. When the count arm's existing classification declines, it
+retries once with `A -> G(AND_i T_i)` split into complete local orbits under one common guard A,
+which must reduce to global letters or symmetric aggregates; the generated local acceptance,
+including the sink, sits under `A -> ...` in the global formula, and only unconditional safety
+prunes moves. Master's physical and encoded attempts run first and unchanged, so the guard only
+adds coverage; on 142 fixtures and review reproducers it kept all 78 master verdicts and routes.
+Against master eed62a8c, G0, G1, G4 and G5 pass, and G3 is flat (SYNTCOMP25 166 → 166;
+SYNTCOMP26 169 → 170 only through load_balancer_unreal1 n=6,4 at the cap, which the control also
+flips). The full SYNTCOMP26 screen at 17 s and 6G solves 1,408 instead of 1,404 with no loss, no
+verdict conflict and PAR-2 4,733.1 → 4,588.8 s: prioritized_arbiter_enc n=12 to 15 (0.34 to
+0.49 s), with n=10 also falling from 8.3 to 0.27 s. The tlsfobf-renamed screen solves 1,409 with
+all four gains, no conflict and no plain-only flip.
+
 ## 2026-11-28: The count arm now decides three binary-encoded arbiters (#471)
 
 Archive `enc471-gate-20261128`. tlsf-tools now records how each output bus was expanded from
