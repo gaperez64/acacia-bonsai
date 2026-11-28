@@ -25,7 +25,7 @@ relative to `src/`.
 | `solver/k_bounded_safety_aut.hh#bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner) {`; `solver/k_schedule.hh#? kmax : std::min (kmax, k + kinc);`; `solver/equivariant_k_bounded_safety_aut.hh#const auto next_k = detail::checked_next_k (k, kinc);`; `solver/equivariant_k_bounded_safety_aut.hh#const auto next_k = detail::checked_next_k (k, kinc);` | Early exits, `bump`, `AdaptiveReach`, shared and ordinary schedules (both equivariant increments) |
 | `solver/solver_invoker.cc#input_aps.swap (output_aps);` | `swapFrame`, `swapped_engine_cpre` |
 | `../tests/equivariant_pre_test.cc#bool run_mixed_io_family_case () {` | `Reproducer331`, mixed I/O regression fixture |
-| `solver/symmetric_count.cc#counts[ls & ~reset] += c;` | `push_counts`, `countTransition`, `count_successor` |
+| `solver/symmetric_count.cc#ls &= ~reset;`; `solver/symmetric_count.cc#counts[moved[k]] += std::get<2> (cells[k]);` | `push_counts`, `countTransition`, `count_successor` |
 
 `#` marks an exact source line. Run `python3 tests/check-proof-references.py`
 from the repository root to check anchor counts and proof reference coverage.
@@ -161,5 +161,104 @@ duplicate candidates never accumulate in its storage or retained capacity.
 | --- | --- |
 | `solver/symmetric_count.cc#const bool equal = bdd_replace (original, pair) == original;`; `solver/symmetric_count.cc#if (reconstructed != original)` | `invariant`, `count_factor`, `accepted_weights`, `quotient_constraint` |
 | `solver/symmetric_count.cc#cardinalities[j] += c;`; `solver/symmetric_count.cc#fired = b.cardinalities[e.pred].truth[cardinalities[e.pred]];` | `weighted_constraint`, `event_values`, `Run.cardinality_event`, `Atom.correct` |
-| `solver/symmetric_count.cc#if (under_top_g (under_top_g, lowered, false)) {`; `solver/symmetric_count.cc#feasible = feasible and reachable;`; `solver/symmetric_count.cc#if (successors.empty ()) {`; `solver/symmetric_count.cc#emit (0);` | `restrict_safety`, `translated_cardinality_G`, `engine_safety_restriction`, `safetyCompletion_empty`, `safetyCompletion_excluded`, `engine_pruned_verdict` |
+| `solver/symmetric_count.cc#if (under_top_g (under_top_g, lowered, false)) {`; `solver/symmetric_count.cc#feasible = feasible and feasible_weight (constraint, weight[j],`; `solver/symmetric_count.cc#if (successors.empty ()) {`; `solver/symmetric_count.cc#emit (0);` | `restrict_safety`, `translated_cardinality_G`, `engine_safety_restriction`, `safetyCompletion_empty`, `safetyCompletion_excluded`, `engine_pruned_verdict` |
 | `solver/symmetric_count.cc#if (not successors.count (w)) {`; `solver/symmetric_count.cc#succ[u].assign (successors.begin (), successors.end ());` | Set-valued `Game.edge`, `countGame_edges`; bounded workspace and distinct-edge accounting |
+
+## Issue #471 certification obligations
+
+`EncodedCount` connects bit-cube equality to decoding and proves that
+transporting an unused code keeps every selector false. The two-time table
+uses the current and next raw letters at every position. `generator_checked`
+combines pointwise atom transport and whole-objective renaming.
+`raw_objective_preserved` takes the independently checked reconstruction
+of the raw objective as a premise and transfers preservation to it.
+
+The C++ boundary supplies the domains, owners, bit orders, disjoint code swaps
+and the exact objective with its ordered input and output partitions.
+The certificate covers the checked expanded code map and its action on that
+converted objective. Source-level selector intent, including absence of
+wraparound, is outside its scope.
+Reconstruction compares the converted formula with the expanded abstract
+formula using BDD equality on Boolean shells, temporal congruence, and the
+infinite-word `X` and `G` rewrites. The inspector runs certification in a
+bounded worker and treats worker failure as a decline.
+
+The stored generators are simultaneous coordinate stars on selected codes
+and linked aliases, and separate representative stars in each residual
+class. A consumer must bind the certificate to the same objective and ordered
+partitions and supply a `Generated` witness from these stored swaps for each
+permutation it uses. The theorem covers products and inverses of the recorded
+generators. This makes generation a consumer obligation when using a
+coordinate/class product representation.
+
+| C++ source | Lean port |
+| --- | --- |
+| `solver/encoded_family.cc#if (f != cube (bus, code, next))`; `solver/encoded_family.cc#require (truth[raw] == (raw == code));` | `cube_decodes`, `decode_encode`, selector trace premise of `encoded_decomposition_correct` |
+| `solver/encoded_family.cc#require (rebuild (rebuild, 0, 0) == original);` | Pointwise table trace premise of `encoded_decomposition_correct` |
+| `solver/encoded_family.cc#if (p.truth[row] != p.truth[image])` | `table_action` |
+| `solver/encoded_family.cc#swaps.push_back ({b, bus.codes[0], bus.codes[i]});`; `solver/encoded_family.cc#require (equal (result.abstract, substitute (result.abstract, rename)));` | `decode_action`, `unused_action`, `generator_checked`, `family_check_sound` |
+| `solver/encoded_family.cc#require (check.equal (exact.f, check.substitute (result.abstract, check.substitutions)));` | `reconstruct` premise of `raw_objective_preserved` |
+
+
+## Issue #471 standalone count game
+
+Each owned bus contributes one raw code. The selected mode has weight one.
+Fixed codes, linked aliases and residual codes have moving weight zero.
+Availability comes from the certified alphabet. Formula safety uses the
+shared accepted-weight predicate, with a legal raw default when no safe
+output exists. The original safety monitor still reads that move. Replay
+transports the representative's default back to the concrete raw state.
+
+When expanding a count state, reconstruct consecutive coordinate ranges in
+local-state order. `key_for` packs the histogram and its prefix. At
+`canonicalize`, unpack the saved bus codes and, at the system
+turn, the input prefix. Each code identifies its slot mode and either a
+canonical coordinate, an exact fixed code or a residual class. The coordinate's
+range gives its cell. Collect the slot marks at that coordinate and subtract
+one from its cell's count for each distinct marked coordinate to recover the
+marked-cell histogram. Selected codes and linked aliases keep their separate
+modes even when they mark the same coordinate. Equality of the canonical
+residual codes within each bus and class recovers the repeat relation.
+
+Input choices extend the saved anchors one bus at a time. Output choices
+extend the saved anchors and the current input marks. In each extension a
+marked coordinate can be reused, or an unmarked cell can supply a member
+when its remaining count is positive. A residual class supplies a repeat or
+a distinct member by the same rule. Fixed codes and their aliases stay exact.
+Moving aliases mark their coordinates. Scalar bits vary independently on
+their owner's turn and stay exact in the current input prefix and buffered
+global letter where used.
+The code action extends each coordinate permutation through the linked fibers
+and acts independently in each residual class. The finite star proof requires
+these extensions to preserve identity and composition.
+
+The local run advances on each concrete letter. With a future table, round
+zero emits neutral priority and leaves the global state initial. Each later
+round reads the buffered global bits and count events with the table values
+for the previous round. This one-round delay preserves max-odd acceptance.
+With only current-letter data the global run steps immediately. Spot
+translation, packed representation, canonical ordering and the C++
+correspondence remain explicit implementation boundaries.
+The standalone and portfolio decisions check the quotient strategy and its
+initial winner. Given the legal arena correspondence and the retained
+unconditional safety monitor, `encoded_certificate` first transfers the
+certificate from the safety-completed key arena to the unpruned key arena.
+It then lifts to the raw arena and excludes the opposite winner. The
+portfolio also model-checks the lifted strategy. For system conjuncts that
+observe at most one moving client, it uses a vocabulary whose substitution
+into the converted objective was checked by the certificate. Each replay
+fixes the observed client and includes every projected move to the selected
+key. Other objectives use concrete replay and the original converted formula.
+Small-instance tests exhaustively replay the retained raw edges for both
+winner polarities.
+
+| C++ source | Lean port |
+| --- | --- |
+| `solver/symmetric_count.cc#if (objective != cert.objective or inputs != cert.inputs or outputs != cert.outputs)` | Binding premise of `raw_objective_preserved` |
+| `solver/encoded_count.hh#self (self, b + 1, put (word, b, x));` | `legal_split` |
+| `solver/encoded_count.hh#if (not input and not safe_weight (b, unsigned (mode == 0)))`; `solver/symmetric_count.cc#emit (in);` | `CountCardinality.safetyCompletion_empty`, `CountCardinality.safetyCompletion_excluded` and `CountCardinality.pruned_certificate` on keys |
+| `solver/symmetric_count.cc#const auto key_for = [&] (std::span<const unsigned> prefix,`; `solver/encoded_count.hh#transport canonicalize (std::vector<unsigned>& local, unsigned& history,`; `solver/encoded_count.hh#if (marked[i] or free_cells.insert (local[i]).second) {`; `solver/encoded_count.hh#if (group.size () > 1)` | `anchor_key_orbit`, `free_member`, `extend_anchor_key`, `residual_key_orbit` |
+| `solver/encoded_count.hh#p.residual.push_back ({b, x, y});`; `solver/encoded_count.hh#word = put (word, b, v.mode == 0 ? src.codes[i] : *src.aliases[i]);` | `raw_permutation_generated` |
+| `solver/symmetric_count.cc#auto [moved, ev] = advance (g, cells);`; `solver/symmetric_count.cc#step (state[2], events);` | `encoded_local_acceptance`, `buffered_trace`, `buffered_priority` |
+| `solver/symmetric_count.cc#if (not parity::check_strategy (checked.explicit_game, solution, &why))`; `solver/symmetric_count.cc#if (solution.winner[0] != (system_wins ? 1 : 0))`; `symcount_arm.cc#if (encoded.lifted && encoded.outcome != symcount::verdict::declined)` | Checked-root premise and verdict transfer in `encoded_certificate` |
+| `solver/symmetric_count.cc#if (not synthesis::controller_satisfies (translator.run (bad), strategy))` | Runtime objective check on the lifted strategy |

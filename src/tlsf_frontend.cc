@@ -5,13 +5,12 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
-#include <tlsf/convert.hpp>
 #include <utility>
 
 namespace acacia::tlsf_frontend {
 
   namespace {
-    void record_parse_call () noexcept {
+    void record_parse_call (bool captured) noexcept {
       if (!phase_records_enabled ())
         return;
       static pid_t owner = -1;
@@ -26,8 +25,9 @@ namespace acacia::tlsf_frontend {
       const int length =
           snprintf (line, sizeof line,
                     "{\"event\":\"tlsf_parse\",\"pid\":%ld,\"role\":\"%s\",\"call\":%u,"
-                    "\"mono_ns\":%llu}\n",
+                    "\"captured\":%s,\"mono_ns\":%llu}\n",
                     long (pid), worker ? worker->requested_backend : "parent", ++calls,
+                    captured ? "true" : "false",
                     (unsigned long long) phase_clock (CLOCK_MONOTONIC));
       if (length > 0 && size_t (length) < sizeof line)
         phase_records_send (line, size_t (length));
@@ -46,12 +46,7 @@ namespace acacia::tlsf_frontend {
 
   }  // namespace
 
-  specification parse (std::string_view text) {
-    record_parse_call ();
-    const std::string owned {text};
-    // Keep source INFO while lowering directly to Acacia's Mealy frame.
-    auto result = tlsf::convert (owned, "Mealy");
-
+  static specification make_specification (tlsf::Conversion result) {
     specification value;
     value.metadata.source_format = "tlsf";
     value.metadata.tlsf_semantics = result.semantics;
@@ -75,17 +70,39 @@ namespace acacia::tlsf_frontend {
     return value;
   }
 
-  specification load (const std::string& path) {
+  specification parse (std::string_view text) {
+    record_parse_call (false);
+    // Keep source INFO while lowering directly to Acacia's Mealy frame.
+    return make_specification (tlsf::convert (std::string {text}, "Mealy"));
+  }
+
+  specification parse_with_value_origins (std::string_view text) {
+    record_parse_call (true);
+    auto result = tlsf::convert_with_value_origins (std::string {text}, "Mealy");
+    auto spec = make_specification (std::move (result.conversion));
+    auto owner = std::make_shared<tlsf::CapturedAst> (std::move (result.ast));
+    spec.value_origins = owner->value_origins ();
+    spec.ast = {owner, owner->get ()};
+    return spec;
+  }
+
+  static auto load_with (const std::string& path, auto convert) {
     std::ifstream input {path};
     if (not input)
       throw std::runtime_error ("unable to open TLSF file: " + path);
     std::ostringstream contents;
     contents << input.rdbuf ();
     try {
-      return parse (contents.str ());
+      return convert (contents.str ());
     } catch (const std::exception& error) {
       throw std::runtime_error ("unable to convert TLSF file " + path + ": " + error.what ());
     }
+  }
+
+  specification load (const std::string& path) { return load_with (path, parse); }
+
+  specification load_with_value_origins (const std::string& path) {
+    return load_with (path, parse_with_value_origins);
   }
 
 }  // namespace acacia::tlsf_frontend

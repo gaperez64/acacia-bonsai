@@ -99,6 +99,7 @@ struct arg_parse_result {
       }
       return objective;
     }
+
 };
 
 arg_parse_result arg_parser (int argc, char** argv);

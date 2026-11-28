@@ -2,6 +2,20 @@
 
 [Measurement protocol](README.md) and [evidence index](evidence-index.tsv).
 
+## 2026-11-28: The count arm now decides three binary-encoded arbiters (#471)
+
+Archive `enc471-gate-20261128`. tlsf-tools now records how each output bus was expanded from
+its parameter, and the count arm certifies a bus as value-encoded from that checked expanded
+map, decodes it into one virtual atom per value, and solves the decoded family when its
+physical form declines. Before publishing, it lifts the strategy back to the encoded outputs and
+checks it against the converted objective; a failed lift declines. Against master 54f90d88, G0,
+G1, G4 and G5 pass. G3 is flat on both panels: SYNTCOMP25 166 → 166, and SYNTCOMP26 169 → 170
+only through load_balancer_unreal1 n=6,4 at the 17 s cap, which the control also flips. The full
+SYNTCOMP26 screen at 17 s and 6G solves 1,404 instead of 1,401 with no loss, no verdict conflict
+and PAR-2 4,848.1 → 4,730.6 s: full_arbiter_enc n=10 and 12 (0.41 and 0.78 s) and
+simple_arbiter_enc n=32 (0.46 s). prioritized_arbiter_enc n=12 to 15 still time out. The
+tlsfobf-renamed screen solves 1,406 with all three gains, no conflict and no plain-only flip.
+
 ## 2026-11-26: The count arm now decides five more arbiters, with mutual exclusion as a count (#482)
 
 Archive `card482-gate-20261126`. The count arm accepts a Boolean constraint over one family's

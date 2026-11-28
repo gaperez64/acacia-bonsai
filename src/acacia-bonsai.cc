@@ -513,13 +513,31 @@ namespace {
       acacia::worker_exit (code);
     }
     if (arm.kind != portfolio_arm_kind::legacy) {
+      std::optional<int> result;
       try {
+        const bool count = arm.kind == portfolio_arm_kind::symcount;
+        acacia::tlsf_frontend::specification count_local;
+        const acacia::tlsf_frontend::specification* count_objective = nullptr;
+        if (count) {
+          acacia::worker_route ("original_game", "symcount", "unknown");
+          acacia::worker_stage ("symcount");
+          if (acacia::obligation::limit_address_space ())
+            count_objective = &arg_values.prepare_objective (count_local);
+          else
+            acacia::worker_stopped ("address_space_limit");
+        }
         // A native-only portfolio has no legacy normalization boundary. Use one
         // existing child to prepare eligibility, while its siblings already run.
         if (eligibility_channel) {
           try {
-            acacia::obligation::publish_eligibility (eligibility_channel,
-                                                    helper_objective (arg_values));
+            if (count && !count_objective)
+              eligibility_channel->eligible.store (acacia::obligation::eligibility::error,
+                                                   std::memory_order_release);
+            else
+              acacia::obligation::publish_eligibility (
+                  eligibility_channel, count_objective
+                                           ? helper_objective (arg_values, *count_objective)
+                                           : helper_objective (arg_values));
           } catch (...) {
             eligibility_channel->eligible.store (acacia::obligation::eligibility::error,
                                                    std::memory_order_release);
@@ -528,23 +546,17 @@ namespace {
 # ifdef ACACIA_NATIVE_TEST_HOOKS
         acacia::native_attribution_test_exception ();
 # endif
-        const int result =
+        result =
             arm.kind == portfolio_arm_kind::gr1
                 ? acacia::run_native_gr1_arm (arg_values, arm.unreal, arm.both, deadline_mono_ns)
             : arm.kind == portfolio_arm_kind::gr1_lift ||
                     arm.kind == portfolio_arm_kind::gr1_real_lift
                 ? acacia::run_native_gr1_lift_arm (arg_values, deadline_mono_ns,
                                                    arm.kind == portfolio_arm_kind::gr1_real_lift)
-            : arm.kind == portfolio_arm_kind::symcount
-                ? acacia::run_symcount_arm (arg_values, deadline_mono_ns)
-                : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns);
-        if (result != EXIT_CODE_REAL && result != EXIT_CODE_UNREAL &&
-            acacia::active_worker_record () &&
-            std::strcmp (acacia::active_worker_record ()->reason, "none") == 0)
-          acacia::worker_stopped ("inconclusive");
-        acacia::worker_terminal (result);
-        acacia::phase_records_summary (arm.native_name ());
-        acacia::worker_exit (result);
+            : count_objective ? acacia::run_symcount_arm (*count_objective, arg_values.tlsf_source,
+                                                        deadline_mono_ns)
+            : count           ? EXIT_CODE_UNKNOWN
+                              : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns);
       } catch (const std::bad_alloc& exception) {
         acacia::native_arm_diagnostic (arm.native_name (), "native_exception", -1,
                                        exception.what (),
@@ -556,9 +568,19 @@ namespace {
         acacia::native_arm_diagnostic (arm.native_name (), "native_exception", -1,
                                        "unknown exception");
       }
-      acacia::worker_terminal (EXIT_CODE_UNKNOWN);
-      acacia::phase_records_summary ("native");
-      acacia::worker_exit (EXIT_CODE_UNKNOWN);
+      if (result && *result != EXIT_CODE_REAL && *result != EXIT_CODE_UNREAL &&
+          acacia::active_worker_record () &&
+          std::strcmp (acacia::active_worker_record ()->reason, "none") == 0)
+        acacia::worker_stopped ("inconclusive");
+      if (!result && eligibility_channel && arm.kind == portfolio_arm_kind::symcount) {
+        auto pending = acacia::obligation::eligibility::pending;
+        eligibility_channel->eligible.compare_exchange_strong (
+            pending, acacia::obligation::eligibility::error, std::memory_order_release);
+      }
+      const int code = result.value_or (EXIT_CODE_UNKNOWN);
+      acacia::worker_terminal (code);
+      acacia::phase_records_summary (result ? arm.native_name () : "native");
+      acacia::worker_exit (code);
     }
     acacia::selected_oracle_layout = arg_values.oracle_layout;
     auto backend = arm.legacy->backend;

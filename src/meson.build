@@ -45,6 +45,7 @@ ab_sources += [
   'native_gr1_lift_arm.cc',
   'native_param_lift_arm.cc',
   'symcount_arm.cc',
+  'solver/encoded_family.cc',
   'solver/symmetric_count.cc',
 ]
 ab_sources += 'tlsf_frontend.cc'
@@ -62,7 +63,7 @@ ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
 
 # #454: the count-quotiented game, standalone until it becomes an arm.
 symcount_exe = executable ('acacia-symcount',
-  ['symcount_main.cc', 'solver/symmetric_count.cc', 'tlsf_frontend.cc'],
+  ['symcount_main.cc', 'solver/symmetric_count.cc', 'solver/encoded_family.cc', 'tlsf_frontend.cc'],
   link_with : [parity_lib],
   include_directories : inc,
   install : false,

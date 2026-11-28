@@ -511,6 +511,7 @@ game_backend_integration_sources += [
   '../src/native_gr1_lift_arm.cc',
   '../src/native_param_lift_arm.cc',
   '../src/symcount_arm.cc',
+  '../src/solver/encoded_family.cc',
   '../src/solver/symmetric_count.cc',
 ]
 game_backend_integration_sources += '../src/tlsf_frontend.cc'
@@ -743,10 +744,23 @@ test ('moore-synthesis-semantics',
 tlsf_frontend_inspect = executable (
   'tlsf-frontend-inspect',
   '../src/tlsf_frontend.cc',
+  '../src/solver/encoded_family.cc',
   'tlsf_frontend_inspect.cc',
   include_directories : inc,
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
 )
+test ('encoded-family', py,
+      args : [files ('check-encoded-family.py'), tlsf_frontend_inspect, files ('fixtures/encoded-fold.tlsf')],
+      suite : ['unit', 'tlsf'], timeout : 120)
+encoded_count_audit = executable (
+  'encoded-count-audit', 'encoded_count_audit.cc',
+  '../src/tlsf_frontend.cc', '../src/solver/encoded_family.cc', '../src/solver/symmetric_count.cc',
+  include_directories : inc, link_with : parity_lib, dependencies : tlsf_deps + [spot_dep, bddx_dep],
+)
+test ('encoded-count', py,
+      args : [files ('check-encoded-count.py'), encoded_count_audit, symcount_exe, ab_exe,
+              files ('fixtures/encoded-fold.tlsf')],
+      suite : ['unit', 'symcount'], timeout : 120)
 controller_check = executable (
   'controller-check', 'controller_check.cc',
   dependencies : tlsf_deps + [spot_dep, bddx_dep],
