@@ -62,6 +62,10 @@ def main():
     plain = Path(fixture).parent / "symcount"
     portfolio(parity, plain / "indexed-copy.tlsf", capture=False)
     portfolio(parity, plain / "no-family.tlsf", capture=False, reason="no indexed family")
+    portfolio(parity, plain / "both-count-routes.tlsf")
+    width_limit = Path(fixture).with_name("encoded-until-width-14.tlsf")
+    assert "check=lifted" in check([symcount, width_limit], 0)
+    portfolio(parity, width_limit)
     with tempfile.TemporaryDirectory() as directory:
         uncertified = Path(directory) / "uncertified.tlsf"
         width = (int(re.search(r"n = (\d+);", base)[1]) - 1).bit_length()
@@ -89,6 +93,17 @@ def main():
                 terms.append((1, text, f"X ({request_stable}); G (||[0 <= i < n] value(grant, i))"))
                 immediate = text.replace(" <-> X grant[i]", " <-> grant[i]")
                 terms.append((0, immediate, "true"))
+                guarded = text.replace("INPUTS {", "INPUTS { active;").replace(
+                    "INVARIANTS {", "ASSUMPTIONS { G F active; }\n  INVARIANTS {")
+                fixed = text.replace("&&[0 <= i < n]", "&&[0 < i < n]").replace(
+                    "INVARIANTS {", "ASSUMPTIONS { G F (||[0 <= i < nbits(n)] request[i]); }\n"
+                    "  INVARIANTS { G (value(request, 0) -> X "
+                    "((&&[0 < i < n] !value(grant, i)) U value(grant, 0)));")
+                terms.extend([
+                    (0, guarded, "true"),
+                    (1, guarded, "G (&&[0 <= i < n] !value(grant, i))"),
+                    (0, fixed, "true"),
+                ])
             if size == 4:
                 residual = aliases.replace("i < nbits(n)] (grant[i]", "i < nbits(n+1)] (grant[i]")
                 terms.extend([

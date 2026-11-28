@@ -1,0 +1,9 @@
+INFO { TITLE: "guard-two-local-banks-grouped" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { enable; backup; }
+  OUTPUTS { g[2]; }
+  GUARANTEES {
+    enable -> (&&[0 <= i < 2] G !g[i]);
+    backup -> (&&[0 <= i < 2] G g[i]);
+  }
+}

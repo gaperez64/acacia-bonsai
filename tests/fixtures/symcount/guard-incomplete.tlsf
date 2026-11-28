@@ -1,0 +1,8 @@
+INFO { TITLE: "Incomplete guarded local orbit" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { r[2]; enable; }
+  OUTPUTS { g[2]; }
+  GUARANTEES {
+    enable -> G ((&&[0 <= i < 2] (r[i] -> F g[i])) && (r[0] -> X F g[0]));
+  }
+}

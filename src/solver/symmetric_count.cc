@@ -79,6 +79,11 @@ namespace acacia::symcount {
         using std::runtime_error::runtime_error;
     };
 
+    struct classification_pass {
+        bool guarded = false;
+        bool retry = false;
+    };
+
     uint64_t now_ns () {
       timespec ts;
       clock_gettime (CLOCK_MONOTONIC, &ts);
@@ -134,23 +139,33 @@ namespace acacia::symcount {
       return walk.map ([&] (const formula& c) { return to_template (c, k, fm); });
     }
 
-    // Split into conjuncts, pushing G over conjunctions and implication consequents.
-    void flatten (const formula& f, std::vector<formula>& out) {
+    // Expose positive conjuncts at the original position, retaining their guards.
+    void flatten (const formula& f, const auto& leaf, const auto& spans_clients,
+                  bool guarded = false, formula shared_guard = {}) {
       if (f.is (op::tt))
         return;
+      const auto descend = [&] (formula c) { flatten (c, leaf, spans_clients, guarded, shared_guard); };
       if (f.is (op::And)) {
         for (const auto& c : f)
-          flatten (c, out);
+          descend (c);
         return;
       }
-      if (f.is (op::G) and split_globally (f[0], [&] (formula c) { flatten (c, out); }))
+      if (f.is (op::G) and split_globally (f[0], descend))
         return;
-      if (f.is (op::Implies) and f[1].is (op::And)) {
-        for (const auto& c : f[1])
-          flatten (formula::Implies (f[0], c), out);
-        return;
+      if (f.is (op::Implies)) {
+        const formula guard = f[0];
+        if (guarded and guard != shared_guard and spans_clients (f))
+          shared_guard = guard;
+        const auto emit = [&] (formula c) { descend (formula::Implies (guard, c)); };
+        if (f[1].is (op::And)) {
+          for (const auto& c : f[1])
+            emit (c);
+          return;
+        }
+        if (guarded and f[1].is (op::G) and f[1][0].is (op::And) and split_globally (f[1][0], emit))
+          return;
       }
-      out.push_back (f);
+      leaf (f, shared_guard);
     }
 
     // A per-client predicate: a local-automaton mark, entering the sink, a letter,
@@ -577,13 +592,14 @@ namespace acacia::symcount {
         throw std::runtime_error ("lifted strategy fails the converted objective");
     }
 
-    void check_lifted (const encoded_audit& a, const family_map& fm, bool audit_raw) {
+    void check_lifted (const encoded_audit& a, const family_map& fm, bool audit_raw, bool guarded) {
       if (a.system_wins) {
         // The certificate checks substitution into the converted objective.
         // Project each conjunct onto the coordinates it observes. A single
         // observed client can be renamed to client zero under the checked action.
         std::vector<formula> conjuncts, groups[2];
-        flatten (a.alphabet.cert.abstract, conjuncts);
+        flatten (a.alphabet.cert.abstract, [&] (formula c, formula) { conjuncts.push_back (c); },
+                 [] (const formula&) { return false; }, guarded);
         bool projectable = true;
         for (const auto& f : conjuncts) {
           const auto support = indices (f, fm);
@@ -618,7 +634,7 @@ namespace acacia::symcount {
 
     result run (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs, const family_map& fm,
-                const limits& bound, const encoded_alphabet* encoded = nullptr,
+                const limits& bound, classification_pass& pass, const encoded_alphabet* encoded = nullptr,
                 encoded_auditor audit = nullptr) {
       check_deadline (bound);
       result r;
@@ -692,17 +708,44 @@ namespace acacia::symcount {
         }
       }
       // Classify conjuncts, retaining the original objective and its safety monitor.
-      std::vector<formula> conjuncts, global;
-      flatten (lowered, conjuncts);
+      pass.retry = not pass.guarded;
+      std::vector<std::pair<formula, formula>> conjuncts;
+      std::vector<formula> global;
+      const auto spans_clients = [&] (const formula& f) {
+        if (indices (f, fm).size () > 1)
+          return true;
+        if (b.events.empty ())
+          return false;
+        // A lowered cardinality still represents several clients.
+        spot::atomic_prop_set aps;
+        spot::atomic_prop_collect (f, &aps);
+        return std::any_of (b.events.begin (), b.events.end (),
+                           [&] (const auto& e) { return aps.count (e.ap) != 0; });
+      };
+      flatten (lowered, [&] (formula c, formula shared_guard) { conjuncts.emplace_back (c, shared_guard); },
+               spans_clients, pass.guarded);
       std::map<formula, std::set<unsigned>> local;
-      for (const auto& c : conjuncts) {
-        const auto ix = indices (c, fm);
+      formula local_guard = formula::tt ();
+      for (const auto& [c, shared_guard] : conjuncts) {
+        auto ix = indices (c, fm);
+        formula body = c, guard = formula::tt ();
+        // Keep implications that were already local in their original templates.
+        if (c.is (op::Implies) and c[1].is (op::G) and c[0] == shared_guard) {
+          auto consequent = indices (c[1], fm);
+          if (consequent.size () == 1) {
+            body = c[1];
+            guard = c[0];
+            ix = std::move (consequent);
+          }
+        }
         if (ix.empty ())
           global.push_back (c);
         else if (ix.size () == 1) {
-          require_aps (c, b.ap_names, "generated event in a local template");
-          if (not local[to_template (c, *ix.begin (), fm)].insert (*ix.begin ()).second)
-            continue;  // a repeated conjunct
+          if (not local.empty () and guard != local_guard)
+            throw declined ("mixed local guards");
+          local_guard = guard;
+          require_aps (body, b.ap_names, "generated event in a local template");
+          local[to_template (body, *ix.begin (), fm)].insert (*ix.begin ());
         }
         else {
           formula g, lambda;
@@ -734,6 +777,10 @@ namespace acacia::symcount {
           throw declined ("a local conjunct is not instantiated at every index");
         templates.push_back (t);
       }
+      // The guard must be expressible by the global letters and existing events.
+      if (pass.guarded)
+        local_guard = b.aggregates (local_guard);
+      pass.retry = false;
 
       // Local automaton for the conjunction of the templates.
       std::vector<int> gvars, lvars;
@@ -846,8 +893,10 @@ namespace acacia::symcount {
           since_pred[b.preds[p].mark] = p;
 
       // Global parity automaton over the global letters and the events.
-      std::vector<formula> all = global;
-      all.insert (all.end (), requirements.begin (), requirements.end ());
+      if (local_guard.is (op::tt))
+        global.insert (global.end (), requirements.begin (), requirements.end ());
+      else
+        global.push_back (formula::Implies (local_guard, formula::And (requirements)));
       std::vector<int> evars;
       for (const auto& e : b.events)
         evars.push_back (b.dict->register_proposition (e.ap, &b.owner_token));
@@ -862,7 +911,7 @@ namespace acacia::symcount {
       gtr.set_pref (spot::postprocessor::Deterministic | spot::postprocessor::Complete |
                     spot::postprocessor::Colored);
       check_deadline (bound);
-      auto gaut = gtr.run (formula::And (all));
+      auto gaut = gtr.run (formula::And (global));
       check_deadline (bound);
       if (not spot::is_deterministic (gaut) or not spot::is_complete (gaut))
         throw declined ("no complete deterministic global parity automaton");
@@ -1369,7 +1418,7 @@ namespace acacia::symcount {
           if (audit)
             audit (replay);
           phase_scope phase ("symcount", "encoded_strategy_check");
-          check_lifted (replay, fm, audit != nullptr);
+          check_lifted (replay, fm, audit != nullptr, pass.guarded);
           check_deadline (bound);
           r.lifted = true;
         } catch (const std::runtime_error& error) {
@@ -1386,14 +1435,20 @@ namespace acacia::symcount {
 
   result solve (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs,
-                std::span<const symmetry::declared_family> families, const limits& bound) {
+                std::span<const symmetry::declared_family> families, const limits& bound,
+                bool guarded, std::vector<unsigned>* retry_sizes) {
     if (deadline_expired (bound))
       return {verdict::declined, "deadline"};
     // Try each family size, largest first; families of that size are indexed together.
     std::set<unsigned, std::greater<>> sizes;
-    for (const auto& f : families)
-      if (f.members.size () >= 2)
-        sizes.insert (unsigned (f.members.size ()));
+    if (guarded) {
+      if (retry_sizes)
+        sizes.insert (retry_sizes->begin (), retry_sizes->end ());
+    } else {
+      for (const auto& f : families)
+        if (f.members.size () >= 2)
+          sizes.insert (unsigned (f.members.size ()));
+    }
     result last;
     last.reason = "no indexed family";
     for (unsigned n : sizes) {
@@ -1407,9 +1462,12 @@ namespace acacia::symcount {
         for (unsigned k = 0; k < n; ++k)
           fm.member[f.members[k]] = {j, k};
       }
+      classification_pass pass {.guarded = guarded};
       try {
-        return run (spec, inputs, outputs, fm, bound);
+        return run (spec, inputs, outputs, fm, bound, pass);
       } catch (const declined& d) {
+        if (pass.retry and retry_sizes)
+          retry_sizes->push_back (n);
         last = result {};
         last.n = n;
         last.reason = d.what ();
@@ -1423,7 +1481,8 @@ namespace acacia::symcount {
   result solve_encoded (const std::string& objective, const std::vector<std::string>& inputs,
                         const std::vector<std::string>& outputs,
                         const symmetry::encoded_certificate& cert, const limits& bound,
-                        encoded_auditor audit) {
+                        encoded_auditor audit, bool guarded) {
+    classification_pass pass {.guarded = guarded};
     try {
       check_deadline (bound);
       if (objective != cert.objective or inputs != cert.inputs or outputs != cert.outputs)
@@ -1443,9 +1502,9 @@ namespace acacia::symcount {
           fm.member.emplace (names.back (), std::pair {fm.names.size () - 1, i});
         }
       }
-      return run (cert.abstract, alphabet.inputs, alphabet.outputs, fm, bound, &alphabet, audit);
+      return run (cert.abstract, alphabet.inputs, alphabet.outputs, fm, bound, pass, &alphabet, audit);
     } catch (const declined& d) {
-      return {verdict::declined, d.what ()};
+      return {.reason = d.what (), .retry = pass.retry and not deadline_expired (bound)};
     } catch (const std::bad_alloc&) {
       return {verdict::declined, "resource"};
     }

@@ -13,6 +13,7 @@ binary = Path(sys.argv[1]).resolve()
 root = Path(__file__).resolve().parent / "fixtures" / "symcount"
 cases = {
     "indexed-copy.tlsf": "REALIZABLE",  # Mealy copy with paired input/output families
+    "both-count-routes.tlsf": "REALIZABLE",
     "breakpoint.tlsf": "UNREALIZABLE",  # alternating hits refute simultaneous recurrence
     "color-reset.tlsf": "REALIZABLE",  # top-level since monitor, reset on the first letter
     "event-collision.tlsf": "UNREALIZABLE",  # legal input name matches an internal event
@@ -35,9 +36,9 @@ cases = {
     "under-f.tlsf": "REALIZABLE",
     "under-implication.tlsf": "DECLINED",
     "under-disjunction.tlsf": "REALIZABLE",
-    "under-assumption.tlsf": "DECLINED",
-    "strict-under-assumption.tlsf": "DECLINED",
-    "strict-moore-under-assumption.tlsf": "DECLINED",
+    "under-assumption.tlsf": "REALIZABLE",
+    "strict-under-assumption.tlsf": "REALIZABLE",
+    "strict-moore-under-assumption.tlsf": "REALIZABLE",
     "moore-under-x.tlsf": "REALIZABLE",
     "strict-moore-under-x.tlsf": "REALIZABLE",
     "input-composition-budget.tlsf": "DECLINED",
@@ -47,12 +48,25 @@ cases = {
     "pruned-duplicate-storage.tlsf": "DECLINED",
     "partial-family.tlsf": "DECLINED",
     "no-family.tlsf": "DECLINED",
+    "guard-false-sink.tlsf": "REALIZABLE",
+    "guard-late-failure.tlsf": "REALIZABLE",
+    "guard-pending-prefix.tlsf": "UNREALIZABLE",
+    "guard-mixed.tlsf": "DECLINED",
+    "guard-mixed-distributed.tlsf": "UNREALIZABLE",
+    "guard-two-local-banks-grouped.tlsf": "UNREALIZABLE",
+    "guard-grouped-local.tlsf": "UNREALIZABLE",
+    "guard-event-sibling.tlsf": "UNREALIZABLE",
+    "previously-local-mixed.tlsf": "UNREALIZABLE",
+    "previously-aggregate-mixed.tlsf": "UNREALIZABLE",
+    "previously-aggregate-two-guards.tlsf": "UNREALIZABLE",
+    "guard-asymmetric.tlsf": "DECLINED",
+    "guard-incomplete.tlsf": "DECLINED",
     # Nested since monitors are outside the fragment; reference verdicts below.
     "since-under-x.tlsf": "DECLINED",  # REALIZABLE
     "since-under-next.tlsf": "DECLINED",  # REALIZABLE
     "since-negated-next.tlsf": "DECLINED",  # UNREALIZABLE
 }
-# Independent parity verdicts for the generated-event counterexamples.
+# Independent parity verdicts for the guarded and generated-event cases.
 references = {
     "local-event-a.tlsf": "UNREALIZABLE",
     "local-event-b.tlsf": "UNREALIZABLE",
@@ -64,6 +78,19 @@ references = {
     "strict-under-assumption.tlsf": "REALIZABLE",
     "strict-moore-under-assumption.tlsf": "REALIZABLE",
     "under-implication.tlsf": "REALIZABLE",
+    "guard-false-sink.tlsf": "REALIZABLE",
+    "guard-late-failure.tlsf": "REALIZABLE",
+    "guard-pending-prefix.tlsf": "UNREALIZABLE",
+    "guard-mixed.tlsf": "REALIZABLE",
+    "guard-mixed-distributed.tlsf": "UNREALIZABLE",
+    "guard-two-local-banks-grouped.tlsf": "UNREALIZABLE",
+    "guard-grouped-local.tlsf": "UNREALIZABLE",
+    "guard-event-sibling.tlsf": "UNREALIZABLE",
+    "previously-local-mixed.tlsf": "UNREALIZABLE",
+    "previously-aggregate-mixed.tlsf": "UNREALIZABLE",
+    "previously-aggregate-two-guards.tlsf": "UNREALIZABLE",
+    "guard-asymmetric.tlsf": "UNREALIZABLE",
+    "guard-incomplete.tlsf": "REALIZABLE",
 }
 vertex_limits = {
     "input-composition-budget.tlsf": 1,
@@ -88,6 +115,8 @@ if len(sys.argv) > 2:
 reasons = {
     "partial-family.tlsf": "a local conjunct is not instantiated at every index",
     "asymmetric-constraint.tlsf": "an aggregate covers part of the index range",
+    "guard-mixed.tlsf": "mixed local guards",
+    "guard-incomplete.tlsf": "a local conjunct is not instantiated at every index",
 }
 codes = {"REALIZABLE": 0, "UNREALIZABLE": 1, "DECLINED": 2}
 failed = False
@@ -101,6 +130,9 @@ for name, expected in cases.items():
     if (word != expected or done.returncode != codes[expected]
             or (name in reasons and f"reason={reasons[name]}" not in done.stdout)):
         print(f"{path.name}: expected {expected}, got {done.returncode} {done.stdout}{done.stderr}")
+        failed = True
+    if name == "both-count-routes.tlsf" and "check=lifted" not in done.stdout:
+        print(f"{name}: expected a lifted encoded decision, got {done.stdout}")
         failed = True
     if name in vertex_limits and "reason=split limit" not in done.stdout:
         print(f"{name}: expected a pre-allocation split decline, got {done.stdout}")

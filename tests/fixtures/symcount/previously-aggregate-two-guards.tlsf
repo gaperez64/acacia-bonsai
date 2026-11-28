@@ -1,0 +1,9 @@
+INFO { TITLE: "previously-aggregate-two-guards" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { r[2]; enable; backup; }
+  OUTPUTS { g[2]; }
+  GUARANTEES {
+    enable -> G (&&[0 <= i < 2] (r[i] -> g[i]));
+    backup -> G (&&[0 <= i < 2] (r[i] -> !g[i]));
+  }
+}

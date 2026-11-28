@@ -1,0 +1,9 @@
+INFO { TITLE: "guard-mixed-distributed" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { enable; backup; }
+  OUTPUTS { g[2]; }
+  GUARANTEES {
+    &&[0 <= i < 2] (enable -> G !g[i]);
+    &&[0 <= i < 2] (backup -> G g[i]);
+  }
+}

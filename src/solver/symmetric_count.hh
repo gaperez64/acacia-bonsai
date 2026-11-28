@@ -6,7 +6,8 @@
 // consequents, into
 //   - index-free conjuncts,
 //   - local conjuncts: one template, over the index-free APs and index 0's
-//     family members, instantiated at every index exactly once,
+//     family members, instantiated at every index,
+//     with one common position-0 guard expressible in the global formula,
 //   - symmetric conjuncts whose index-dependent parts are aggregates over all
 //     indices of one local template: letter-level `&&`/`||` of a Boolean
 //     template, or `&&`/`||` of `GF b` / `FG b` with a Boolean template b.
@@ -65,16 +66,19 @@ namespace acacia::symcount {
       size_t count_states = 0, vertices = 0, edges = 0;
       double build_seconds = 0, solve_seconds = 0, check_seconds = 0;
       bool encoded = false, lifted = false;
+      bool retry = false;
   };
 
   result solve (const spot::formula& spec, const std::vector<std::string>& inputs,
                 const std::vector<std::string>& outputs,
                 std::span<const symmetry::declared_family> families,
-                const limits& bound = {});
+                const limits& bound = {}, bool guarded = false,
+                std::vector<unsigned>* retry_sizes = nullptr);
 
   result solve_encoded (const std::string& objective, const std::vector<std::string>& inputs,
                         const std::vector<std::string>& outputs,
                         const symmetry::encoded_certificate& cert,
-                        const limits& bound = {}, encoded_auditor audit = nullptr);
+                        const limits& bound = {}, encoded_auditor audit = nullptr,
+                        bool guarded = false);
 
 }  // namespace acacia::symcount

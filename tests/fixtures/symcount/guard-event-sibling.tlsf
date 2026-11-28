@@ -1,0 +1,9 @@
+INFO { TITLE: "guard-event-sibling" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { r[2]; enable; }
+  OUTPUTS { g[2]; }
+  GUARANTEES {
+    &&[0 <= i < 2] (enable -> (G (r[i] -> g[i]) && G (g[0] || g[1])));
+    G (&&[0 <= i < 2] (r[i] -> X !g[i]));
+  }
+}

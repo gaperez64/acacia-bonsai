@@ -1,0 +1,30 @@
+INFO { TITLE: "Encoded arbiter fold" SEMANTICS: Mealy TARGET: Mealy }
+GLOBAL {
+  PARAMETERS { n = 3; }
+  DEFINITIONS {
+    value(bus,v) = value'(bus,v,0,SIZEOF bus);
+    value'(bus,v,i,j) =
+      i >= j        : true
+      bit(v,i) == 1 : value'(bus,v,i + 1,j) &&  bus[i]
+      otherwise     : value'(bus,v,i + 1,j) && !bus[i];
+    bit(v,i) =
+      i <= 0     : v % 2
+      otherwise  : bit(v / 2,i - 1);
+    log2_dn(x) =
+      x <= 1    : 0
+      otherwise : 1 + log2_dn(x/2);
+    nbits(x) =
+      x == 0    : 0
+      otherwise : 1 + log2_dn(x-1);
+  }
+}
+MAIN {
+  INPUTS { request[nbits(n)]; }
+  OUTPUTS { enable; spare0; spare1; spare2; spare3; spare4; spare5; spare6; spare7; spare8; spare9; spare10; spare11; spare12; grant[nbits(n)]; }
+  INVARIANTS {
+    &&[0 <= i < n] (value(request, i) -> F value(grant, i));
+  }
+  GUARANTEE {
+    (&&[0 <= i < n] !value(grant,i)) U enable;
+  }
+}

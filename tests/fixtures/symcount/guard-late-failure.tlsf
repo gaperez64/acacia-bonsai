@@ -1,0 +1,12 @@
+INFO { TITLE: "Guard fails only in the limit" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { r[2]; }
+  OUTPUTS { g[2]; pulse; }
+  GUARANTEES {
+    pulse;
+    X pulse;
+    F G !pulse;
+    G (&&[0 <= i < 2] !g[i]);
+    (G F pulse) -> G (&&[0 <= i < 2] F G (r[i] -> g[i]));
+  }
+}

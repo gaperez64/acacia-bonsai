@@ -447,8 +447,11 @@ theorem Atom.correct (A : Atom E) (R : Run E n) (t : Nat) :
 
 -- The parser's positive top conjuncts. Arbitrary temporal contexts are allowed for
 -- pointwise-correct atoms; since and local acceptance are rewritten only at position 0.
+-- Guarded local acceptance uses the same run as localAcceptance or totalLocal.
+-- Its guard affects the acceptance proposition alone.
 inductive Clause {GlobalLetter LocalLetter : Type} (E : Tables Q L GlobalLetter LocalLetter marks monitors events) where
   | temporal (context : (Nat → GlobalLetter) → (Atom E → Trace) → Prop)
+  | guarded (guard : (Nat → GlobalLetter) → (Atom E → Trace) → Prop) (body : Clause E)
   | since (j : Fin monitors) (k : Fin events)
       (kind : E.kind k = .allInf) (pred : E.pred k = .since j)
   | localAcceptance {a b : Nat} (inf : Fin a → Fin marks) (fin : Fin b → Fin marks)
@@ -465,6 +468,7 @@ inductive Clause {GlobalLetter LocalLetter : Type} (E : Tables Q L GlobalLetter 
 noncomputable def Clause.source (C : Clause E) (R : Run E n) : Prop :=
   match C with
   | .temporal context => context R.global (fun A => A.source R)
+  | .guarded guard body => guard R.global (fun A => A.source R) → body.source R
   | .since j _ _ _ => sinceSpec (fun t => E.gamma j (R.global t) = true)
       (fun i t => E.lambda j (R.global t) (R.letter i t) = true) 0
   | .localAcceptance inf fin .. | .totalLocal inf fin .. =>
@@ -473,6 +477,7 @@ noncomputable def Clause.source (C : Clause E) (R : Run E n) : Prop :=
 def Clause.encoded (C : Clause E) (g : Nat → GI × GO) (ev : Nat → Nat → Bool) : Prop :=
   match C with
   | .temporal context => context g (fun A => A.encoded ev)
+  | .guarded guard body => guard g (fun A => A.encoded ev) → body.encoded g ev
   | .since j k _ _ => GF (fun t => E.gamma j (g t) ≠ true) 0 ∨ FG (fun t => ev t k ≠ true) 0
   | .localAcceptance _ _ ie fe se .. =>
       (∀ j, GF (fun t => ev t (ie j) = true) 0) ∧
@@ -481,11 +486,13 @@ def Clause.encoded (C : Clause E) (g : Nat → GI × GO) (ev : Nat → Nat → B
       (∀ j, GF (fun t => ev t (ie j) = true) 0) ∧ (∀ j, FG (fun t => ev t (fe j) ≠ true) 0)
 
 theorem Clause.correct (C : Clause E) (R : Run E n) : C.source R ↔ C.encoded R.global R.emitted := by
-  cases C with
-  | temporal context =>
-    have he : (fun A : Atom E => A.source R) = fun A => A.encoded R.emitted :=
-      funext fun A => funext fun t => propext (A.correct R t)
-    exact Iff.of_eq (congrArg (context R.global) he)
+  have he : (fun A : Atom E => A.source R) = fun A => A.encoded R.emitted :=
+    funext fun A => funext fun t => propext (A.correct R t)
+  induction C with
+  | temporal context => exact Iff.of_eq (congrArg (context R.global) he)
+  | guarded guard body ih =>
+    -- The antecedent reads the same word, and the entire body uses its position-0 encoding.
+    simp only [Clause.source, Clause.encoded, he, ih]
   | since j k hk hp => exact R.since_encoding k j hk hp
   | localAcceptance inf fin ie fe se hi hf hs => exact R.local_encoding inf fin ie fe se hi hf hs
   | totalLocal inf fin ie fe hi hf total =>

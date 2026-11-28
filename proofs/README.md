@@ -26,6 +26,7 @@ relative to `src/`.
 | `solver/solver_invoker.cc#input_aps.swap (output_aps);` | `swapFrame`, `swapped_engine_cpre` |
 | `../tests/equivariant_pre_test.cc#bool run_mixed_io_family_case () {` | `Reproducer331`, mixed I/O regression fixture |
 | `solver/symmetric_count.cc#ls &= ~reset;`; `solver/symmetric_count.cc#counts[moved[k]] += std::get<2> (cells[k]);` | `push_counts`, `countTransition`, `count_successor` |
+| `solver/symmetric_count.cc#if (guarded and f[1].is (op::G) and f[1][0].is (op::And) and split_globally (f[1][0], emit))`; `solver/symmetric_count.cc#global.push_back (formula::Implies (local_guard, formula::And (requirements)));` | `Flatten.imp_always_conj`, `flatten_correct`, `Clause.guarded`, `Clause.correct` |
 
 `#` marks an exact source line. Run `python3 tests/check-proof-references.py`
 from the repository root to check anchor counts and proof reference coverage.
@@ -89,7 +90,7 @@ and `Symmetry.CountEngine`. Counts and transition tables are mathematical;
 the compiled-code, BDD and machine-arithmetic boundary still applies.
 `Translates` assumes only correctness of the global parity translator for the
 **encoded** formula. `Clause.correct` proves the original-to-encoded equivalence,
-including local Inf/Fin/sink acceptance and position-0 since conjuncts.
+including guarded local Inf/Fin/sink acceptance and position-0 since conjuncts.
 `Certified` requires strategy entries only on reachable count keys; the adapter
 completes unvisited entries and chooses raw indexed edge witnesses before
 canonicalization. `engine_spec_verdict` transfers either certified winner from
@@ -115,6 +116,7 @@ the zero-bit initial key and excludes an opposite winner for the original spec.
 | Actual emitted letter events and all four finite temporal aggregates at every suffix | `Run.letter_event`, `Run.any_event`, `Run.all_event`, `Run.all_inf`, `Run.any_inf`, `Run.all_fin`, `Run.any_fin` |
 | Prefix independence and substitution in arbitrary contexts and polarities | `gf_suffix`, `fg_suffix`, `context` |
 | Deterministic local Inf/Fin runs and permanent missing-transition rejection | `Run.local_run`, `Run.mark`, `Run.sink`, `Run.local_encoding` |
+| Distribute G in a position-0 implication consequent and guard the full local acceptance encoding on the same run | `Flatten.imp_always_conj`, `flatten_correct`, `Clause.guarded`, `Clause.correct` |
 | Initially false since monitors, position-0 rewrite and later-position counterexample | `Run.since_history`, `Run.since_encoding`, `since_later_counterexample` |
 | Flattening exposes positive conjuncts at the original position only | `flatten`, `flatten_correct`, `top_conjunct_replacement` |
 
@@ -248,17 +250,20 @@ portfolio also model-checks the lifted strategy. For system conjuncts that
 observe at most one moving client, it uses a vocabulary whose substitution
 into the converted objective was checked by the certificate. Each replay
 fixes the observed client and includes every projected move to the selected
-key. Other objectives use concrete replay and the original converted formula.
+key. The guarded encoded retry certifies a complete exclusion of one bus's moving
+selectors on the left of until as a current raw-bus table, so it needs no pinned client.
+Other objectives use concrete replay and the original converted formula.
 Small-instance tests exhaustively replay the retained raw edges for both
 winner polarities.
 
 | C++ source | Lean port |
 | --- | --- |
 | `solver/symmetric_count.cc#if (objective != cert.objective or inputs != cert.inputs or outputs != cert.outputs)` | Binding premise of `raw_objective_preserved` |
+| `solver/encoded_family.cc#auto now = add_table (substitute (f[0], substitutions), {{b, false}});` | `encoded_decomposition_correct`, `raw_objective_preserved` |
 | `solver/encoded_count.hh#self (self, b + 1, put (word, b, x));` | `legal_split` |
 | `solver/encoded_count.hh#if (not input and not safe_weight (b, unsigned (mode == 0)))`; `solver/symmetric_count.cc#emit (in);` | `CountCardinality.safetyCompletion_empty`, `CountCardinality.safetyCompletion_excluded` and `CountCardinality.pruned_certificate` on keys |
 | `solver/symmetric_count.cc#const auto key_for = [&] (std::span<const unsigned> prefix,`; `solver/encoded_count.hh#transport canonicalize (std::vector<unsigned>& local, unsigned& history,`; `solver/encoded_count.hh#if (marked[i] or free_cells.insert (local[i]).second) {`; `solver/encoded_count.hh#if (group.size () > 1)` | `anchor_key_orbit`, `free_member`, `extend_anchor_key`, `residual_key_orbit` |
 | `solver/encoded_count.hh#p.residual.push_back ({b, x, y});`; `solver/encoded_count.hh#word = put (word, b, v.mode == 0 ? src.codes[i] : *src.aliases[i]);` | `raw_permutation_generated` |
 | `solver/symmetric_count.cc#auto [moved, ev] = advance (g, cells);`; `solver/symmetric_count.cc#step (state[2], events);` | `encoded_local_acceptance`, `buffered_trace`, `buffered_priority` |
-| `solver/symmetric_count.cc#if (not parity::check_strategy (checked.explicit_game, solution, &why))`; `solver/symmetric_count.cc#if (solution.winner[0] != (system_wins ? 1 : 0))`; `symcount_arm.cc#if (encoded.lifted && encoded.outcome != symcount::verdict::declined)` | Checked-root premise and verdict transfer in `encoded_certificate` |
+| `solver/symmetric_count.cc#if (not parity::check_strategy (checked.explicit_game, solution, &why))`; `solver/symmetric_count.cc#if (solution.winner[0] != (system_wins ? 1 : 0))`; `symcount_arm.cc#if (encoded.lifted && encoded.outcome != symcount::verdict::declined) {` | Checked-root premise and verdict transfer in `encoded_certificate` |
 | `solver/symmetric_count.cc#if (not synthesis::controller_satisfies (translator.run (bad), strategy))` | Runtime objective check on the lifted strategy |
