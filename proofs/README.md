@@ -26,7 +26,7 @@ relative to `src/`.
 | `solver/solver_invoker.cc#input_aps.swap (output_aps);` | `swapFrame`, `swapped_engine_cpre` |
 | `../tests/equivariant_pre_test.cc#bool run_mixed_io_family_case () {` | `Reproducer331`, mixed I/O regression fixture |
 | `solver/symmetric_count.cc#ls &= ~reset;`; `solver/symmetric_count.cc#counts[moved[k]] += std::get<2> (cells[k]);` | `push_counts`, `countTransition`, `count_successor` |
-| `solver/symmetric_count.cc#if (f[1].is (op::G) and f[1][0].is (op::And) and split_globally (f[1][0], emit))`; `solver/symmetric_count.cc#global.push_back (formula::Implies (local_guard, formula::And (requirements)));` | `Flatten.imp_always_conj`, `flatten_correct`, `Clause.guarded`, `Clause.correct` |
+| `solver/symmetric_count.cc#if (guarded and f[1].is (op::G) and f[1][0].is (op::And) and split_globally (f[1][0], emit))`; `solver/symmetric_count.cc#global.push_back (formula::Implies (local_guard, formula::And (requirements)));` | `Flatten.imp_always_conj`, `flatten_correct`, `Clause.guarded`, `Clause.correct` |
 
 `#` marks an exact source line. Run `python3 tests/check-proof-references.py`
 from the repository root to check anchor counts and proof reference coverage.

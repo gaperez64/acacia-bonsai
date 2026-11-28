@@ -1,0 +1,9 @@
+INFO { TITLE: "previously-aggregate-mixed" SEMANTICS: Mealy TARGET: Mealy }
+MAIN {
+  INPUTS { r[2]; enable; }
+  OUTPUTS { g[2]; }
+  GUARANTEES {
+    enable -> G (&&[0 <= i < 2] (r[i] -> g[i]));
+    G (&&[0 <= i < 2] (r[i] -> X !g[i]));
+  }
+}

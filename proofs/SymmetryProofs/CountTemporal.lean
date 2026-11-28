@@ -266,7 +266,7 @@ theorem since_later_counterexample :
   · obtain ⟨_, _, hn⟩ := h 1 (Nat.le_refl _); exact hn True.intro
   · exact ha a (Nat.le_refl _) (hm a)
 
--- Flatten only conjunctive consequents and positive outer G; symmetric_count.cc:67–97.
+-- Flatten only conjunctive consequents and positive outer G; see flatten in symmetric_count.cc.
 theorem flatten (p q r : Trace) (t : Nat) :
     (G (fun u => p u ∧ q u) t ↔ G p t ∧ G q t) ∧
     (G (fun u => p u → q u ∧ r u) t ↔ G (fun u => p u → q u) t ∧ G (fun u => p u → r u) t) ∧
@@ -296,7 +296,7 @@ def localAccepts (step : L → A → B → Option (L × (Fin marks → Bool)))
   (∀ j, GF (localMark step initial global letter (inf j)) 0) ∧
   (∀ j, FG (fun t => ¬ localMark step initial global letter (fin j) t) 0)
 
--- This small syntax records precisely the parser positions that flatten traverses; symmetric_count.cc:67–97.
+-- This syntax records the positions that flatten in symmetric_count.cc traverses.
 inductive Formula where
   | top
   | atom (p : Trace)
@@ -315,7 +315,7 @@ def Formula.eval : Formula → Trace
   | .neg p => fun t => ¬ p.eval t
   | .next p => fun t => p.eval (t + 1)
 
--- No rule traverses X, negation, or an implication antecedent; symmetric_count.cc:67–97,310–333.
+-- Neither pass of flatten in symmetric_count.cc traverses X, negation, or an implication antecedent.
 inductive Flatten : Formula → List Formula → Prop where
   | leaf (p : Formula) : Flatten p [p]
   | top : Flatten .top []
@@ -329,7 +329,7 @@ inductive Flatten : Formula → List Formula → Prop where
       Flatten (.imp p (.always (.conj q r))) (qs ++ rs)
   | always_always {p : Formula} {ps : List Formula} : Flatten (.always p) ps → Flatten (.always (.always p)) ps
 
--- Flattened leaves are positive conjuncts AT THE ORIGINAL POSITION; symmetric_count.cc:67–97,310–333.
+-- Both passes of flatten in symmetric_count.cc expose positive conjuncts at the original position.
 theorem flatten_correct {p : Formula} {ps : List Formula} (h : Flatten p ps) (t : Nat) : p.eval t ↔ ∀ q ∈ ps, q.eval t := by
   induction h with
   | leaf => simp
@@ -360,7 +360,7 @@ theorem flatten_correct {p : Formula} {ps : List Formula} (h : Flatten p ps) (t 
     change G (G _) t ↔ _
     rw [(flatten _ (fun _ => True) (fun _ => True) t).2.2.2, ih]
 
--- A position-0 equivalence, such as since_zero, may replace exposed leaves only; symmetric_count.cc:310–333.
+-- The conjunct classifier in symmetric_count.cc applies since_zero only to exposed leaves.
 theorem top_conjunct_replacement {p : Formula} {ps : List Formula} (h : Flatten p ps) (replacement : Formula → Trace)
     (equiv : ∀ q ∈ ps, q.eval 0 ↔ replacement q 0) :
     p.eval 0 ↔ ∀ q ∈ ps, replacement q 0 := by
